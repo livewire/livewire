@@ -1,0 +1,28 @@
+{
+  "name": "laravel-livewire",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm run development",
+    "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "watch": "npm run development -- --watch",
+    "watch-poll": "npm run watch -- --watch-poll",
+    "hot": "cross-env NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "prod": "npm run production",
+    "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+  },
+  "author": "Caleb Porzio",
+  "license": "MIT",
+  "devDependencies": {
+    "axios": "^0.18.0",
+    "cross-env": "^5.2.0",
+    "cross-spawn": "^6.0.5",
+    "false": "^0.0.4",
+    "get-form-data": "^2.0.0",
+    "laravel-mix": "^4.0.14",
+    "morphdom": "^2.3.3",
+    "vue-template-compiler": "^2.5.22"
+  }
+}
