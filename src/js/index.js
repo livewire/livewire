@@ -3,6 +3,7 @@ import HttpConnection from './HttpConnection'
 import Backend from './Backend'
 import renameme from './renameme'
 import RootManager from './RootManager'
+const prefix = require('./prefix.js')()
 const morphdom = require('morphdom');
 
 const backend = new Backend(new HttpConnection)
@@ -22,7 +23,7 @@ if (roots.count) {
             morphdom(roots.find(component).el.firstElementChild, dom, {
                 onBeforeElChildrenUpdated(from, to) {
                     // This allows nesting components
-                    if (from.hasAttribute('livewire:root')) {
+                    if (from.hasAttribute(`${prefix}:root`)) {
                         return false
                     }
                 },
@@ -56,7 +57,7 @@ function sendMethod(method, params, el) {
             method,
             params,
         },
-        component: el.closest('[livewire\\:root]').getAttribute('livewire:root')
+        component: el.closest(`[${prefix}\\:root]`).getAttribute(`${prefix}:root`)
     })
 }
 
@@ -64,30 +65,30 @@ function sendSync(model, el) {
     backend.message({
         event: 'sync',
         payload: { model, value: el.value },
-        component: el.closest('[livewire\\:root]').getAttribute('livewire:root')
+        component: el.closest(`[${prefix}\\:root]`).getAttribute(`${prefix}:root`)
     })
 }
 
 function initializeNode(node) {
-    if (node.hasAttribute('livewire:click')) {
+    if (node.hasAttribute(`${prefix}:click`)) {
         renameme.attachClick(node, (method, params, el) => {
             sendMethod(method, params, el)
         })
     }
 
-    if (node.hasAttribute('livewire:submit')) {
+    if (node.hasAttribute(`${prefix}:submit`)) {
         renameme.attachSubmit(node, (method, params, el) => {
             sendMethod(method, [params], el)
         })
     }
 
-    if (node.hasAttribute('livewire:keydown.enter')) {
+    if (node.hasAttribute(`${prefix}:keydown.enter`)) {
         renameme.attachEnter(node, (method, params, el) => {
             sendMethod(method, params, el)
         })
     }
 
-    if (node.hasAttribute('livewire:sync')) {
+    if (node.hasAttribute(`${prefix}:sync`)) {
         renameme.attachSync(node, (model, el) => {
             sendSync(model, el)
         })

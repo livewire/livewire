@@ -8,11 +8,13 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class TestableLivewire
 {
+    protected $prefix;
     protected $component;
     protected $rawDom;
 
     public function __construct($component)
     {
+        $this->prefix = Livewire::prefix();
         $this->component = $component;
         $this->resetDom();
     }
@@ -23,7 +25,7 @@ class TestableLivewire
 
         throw_unless($node->count(), new \Exception('Can\'t find element with selector: [' . $selector . ']'));
 
-        if ($dataName = $node->attr('livewire--sync')) {
+        if ($dataName = $node->attr("{$this->prefix}--sync")) {
             $this->component->sync($dataName, $text);
             $this->resetDom();
         }
@@ -41,9 +43,9 @@ class TestableLivewire
 
         throw_unless($node->count(), new \Exception('Can\'t find element with selector: [' . $selector . ']'));
 
-        $methodName = $node->attr('livewire--click');
+        $methodName = $node->attr("{$this->prefix}--click");
 
-        throw_unless($methodName, new \Exception('Cannot find value for [livewire:click] on element: [' . $selector . ']'));
+        throw_unless($methodName, new \Exception("Cannot find value for [{$this->prefix}:click] on element: [" . $selector . ']'));
 
         if (str_contains($methodName, '(')) {
             preg_match('/\((.*)\)/', $methodName, $match);
@@ -63,9 +65,9 @@ class TestableLivewire
     {
         $button = $this->crawler->filter($selector);
 
-        $form = $button->parents()->filter('[livewire--submit]');
+        $form = $button->parents()->filter("[{$this->prefix}--submit]");
 
-        $this->component->{$form->attr('livewire--submit')}($this->inputs);
+        $this->component->{$form->attr("{$this->prefix}--submit")}($this->inputs);
         $this->resetDom();
 
         return $this;
@@ -77,7 +79,7 @@ class TestableLivewire
 
         $node = $this->crawler->filter($selector);
 
-        $methodName = $node->attr('livewire--keydown--enter');
+        $methodName = $node->attr("{$this->prefix}--keydown--enter");
         $this->component->{$methodName}();
 
         $this->resetDom();
@@ -125,9 +127,9 @@ class TestableLivewire
     public function convertColonsToDoubleDashes($input)
     {
         return
-            str_replace('livewire--keydown.enter', 'livewire--keydown--enter',
-                str_replace('livewire:', 'livewire--',
-                    str_replace('wire:', 'wire--',
+            str_replace("{$this->prefix}--keydown.enter", "{$this->prefix}--keydown--enter",
+                str_replace("{$this->prefix}:", "{$this->prefix}--",
+                    str_replace("{$this->prefix}:", "{$this->prefix}--",
                         $input
                     )
                 )

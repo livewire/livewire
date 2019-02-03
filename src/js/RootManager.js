@@ -1,33 +1,34 @@
 import Root from "./Root";
+const prefix = require('./prefix.js')()
 
 export default class {
     constructor(backend) {
         this.backend = backend
 
-        const els = document.querySelectorAll('[livewire\\:root]')
+        const els = document.querySelectorAll(`[${prefix}\\:root]`)
 
         this.roots = {}
 
         Array.from(els).forEach(el => {
-            this.roots[el.getAttribute('livewire:root')] = new Root(el)
+            this.roots[el.getAttribute(`${prefix}:root`)] = new Root(el)
 
-            if (el.closest('[livewire\\:root]')) {
-                this.roots[el.getAttribute('livewire:root')].setParent(el.closest('[livewire\\:root]'))
+            if (el.closest(`[${prefix}\\:root]`)) {
+                this.roots[el.getAttribute(`${prefix}:root`)].setParent(el.closest(`[${prefix}\\:root]`))
             }
         })
     }
 
     add(el) {
-        this.roots[el.getAttribute('livewire:root')] = new Root(el)
+        this.roots[el.getAttribute(`${prefix}:root`)] = new Root(el)
         this.backend.message({
             event: 'init',
             payload: {},
-            component: el.getAttribute('livewire:root'),
+            component: el.getAttribute(`${prefix}:root`),
         })
     }
 
     isRoot(el) {
-        return el.hasAttribute('livewire:root')
+        return el.hasAttribute(`${prefix}:root`)
     }
 
     init() {

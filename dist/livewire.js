@@ -3040,6 +3040,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
+var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
+
 var _default =
 /*#__PURE__*/
 function () {
@@ -3049,13 +3051,13 @@ function () {
     _classCallCheck(this, _default);
 
     this.backend = backend;
-    var els = document.querySelectorAll('[livewire\\:root]');
+    var els = document.querySelectorAll("[".concat(prefix, "\\:root]"));
     this.roots = {};
     Array.from(els).forEach(function (el) {
-      _this.roots[el.getAttribute('livewire:root')] = new _Root__WEBPACK_IMPORTED_MODULE_0__["default"](el);
+      _this.roots[el.getAttribute("".concat(prefix, ":root"))] = new _Root__WEBPACK_IMPORTED_MODULE_0__["default"](el);
 
-      if (el.closest('[livewire\\:root]')) {
-        _this.roots[el.getAttribute('livewire:root')].setParent(el.closest('[livewire\\:root]'));
+      if (el.closest("[".concat(prefix, "\\:root]"))) {
+        _this.roots[el.getAttribute("".concat(prefix, ":root"))].setParent(el.closest("[".concat(prefix, "\\:root]")));
       }
     });
   }
@@ -3063,17 +3065,17 @@ function () {
   _createClass(_default, [{
     key: "add",
     value: function add(el) {
-      this.roots[el.getAttribute('livewire:root')] = new _Root__WEBPACK_IMPORTED_MODULE_0__["default"](el);
+      this.roots[el.getAttribute("".concat(prefix, ":root"))] = new _Root__WEBPACK_IMPORTED_MODULE_0__["default"](el);
       this.backend.message({
         event: 'init',
         payload: {},
-        component: el.getAttribute('livewire:root')
+        component: el.getAttribute("".concat(prefix, ":root"))
       });
     }
   }, {
     key: "isRoot",
     value: function isRoot(el) {
-      return el.hasAttribute('livewire:root');
+      return el.hasAttribute("".concat(prefix, ":root"));
     }
   }, {
     key: "init",
@@ -3181,6 +3183,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
+
 var morphdom = __webpack_require__(/*! morphdom */ "./node_modules/morphdom/dist/morphdom.js");
 
 var backend = new _Backend__WEBPACK_IMPORTED_MODULE_2__["default"](new _HttpConnection__WEBPACK_IMPORTED_MODULE_1__["default"]());
@@ -3197,7 +3201,7 @@ if (roots.count) {
       morphdom(roots.find(component).el.firstElementChild, dom, {
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(from, to) {
           // This allows nesting components
-          if (from.hasAttribute('livewire:root')) {
+          if (from.hasAttribute("".concat(prefix, ":root"))) {
             return false;
           }
         },
@@ -3228,7 +3232,7 @@ function sendMethod(method, params, el) {
       method: method,
       params: params
     },
-    component: el.closest('[livewire\\:root]').getAttribute('livewire:root')
+    component: el.closest("[".concat(prefix, "\\:root]")).getAttribute("".concat(prefix, ":root"))
   });
 }
 
@@ -3239,35 +3243,57 @@ function sendSync(model, el) {
       model: model,
       value: el.value
     },
-    component: el.closest('[livewire\\:root]').getAttribute('livewire:root')
+    component: el.closest("[".concat(prefix, "\\:root]")).getAttribute("".concat(prefix, ":root"))
   });
 }
 
 function initializeNode(node) {
-  if (node.hasAttribute('livewire:click')) {
+  if (node.hasAttribute("".concat(prefix, ":click"))) {
     _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachClick(node, function (method, params, el) {
       sendMethod(method, params, el);
     });
   }
 
-  if (node.hasAttribute('livewire:submit')) {
+  if (node.hasAttribute("".concat(prefix, ":submit"))) {
     _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachSubmit(node, function (method, params, el) {
       sendMethod(method, [params], el);
     });
   }
 
-  if (node.hasAttribute('livewire:keydown.enter')) {
+  if (node.hasAttribute("".concat(prefix, ":keydown.enter"))) {
     _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachEnter(node, function (method, params, el) {
       sendMethod(method, params, el);
     });
   }
 
-  if (node.hasAttribute('livewire:sync')) {
+  if (node.hasAttribute("".concat(prefix, ":sync"))) {
     _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachSync(node, function (model, el) {
       sendSync(model, el);
     });
   }
 }
+
+/***/ }),
+
+/***/ "./src/js/prefix.js":
+/*!**************************!*\
+  !*** ./src/js/prefix.js ***!
+  \**************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var prefix = null;
+
+module.exports = function () {
+  if (prefix === null) {
+    console.log('hey');
+    prefix = (document.querySelector('meta[name="livewire-prefix"]') || {
+      content: 'livewire'
+    }).content;
+  }
+
+  return prefix;
+};
 
 /***/ }),
 
@@ -3282,14 +3308,17 @@ function initializeNode(node) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var get_form_data__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! get-form-data */ "./node_modules/get-form-data/es/index.js");
 
+
+var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
+
 /* harmony default export */ __webpack_exports__["default"] = ({
   getRoot: function getRoot(component) {
-    return document.querySelector("[livewire\\:root=\"".concat(component, "\"]"));
+    return document.querySelector("[".concat(prefix, "\\:root=\"").concat(component, "\"]"));
   },
 
   get livewireElements() {
     var hold = [];
-    var tags = document.evaluate('//*[@*[starts-with(name(), "livewire")]]', document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+    var tags = document.evaluate("//*[@*[starts-with(name(), \"".concat(prefix, "\")]]"), document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
     var node = tags.iterateNext();
 
     while (node) {
@@ -3304,7 +3333,7 @@ __webpack_require__.r(__webpack_exports__);
     var _this = this;
 
     el.addEventListener('click', function (e) {
-      var _this$parseOutMethodA = _this.parseOutMethodAndParams(el.getAttribute('livewire:click')),
+      var _this$parseOutMethodA = _this.parseOutMethodAndParams(el.getAttribute("".concat(prefix, ":click"))),
           method = _this$parseOutMethodA.method,
           params = _this$parseOutMethodA.params;
 
@@ -3317,7 +3346,7 @@ __webpack_require__.r(__webpack_exports__);
     el.addEventListener('submit', function (e) {
       e.preventDefault();
 
-      var _this2$parseOutMethod = _this2.parseOutMethodAndParams(el.getAttribute('livewire:submit')),
+      var _this2$parseOutMethod = _this2.parseOutMethodAndParams(el.getAttribute("".concat(prefix, ":submit"))),
           method = _this2$parseOutMethod.method;
 
       var params = Object(get_form_data__WEBPACK_IMPORTED_MODULE_0__["default"])(e.target);
@@ -3329,7 +3358,7 @@ __webpack_require__.r(__webpack_exports__);
 
     el.addEventListener('keydown', function (e) {
       if (e.keyCode == '13') {
-        var _this3$parseOutMethod = _this3.parseOutMethodAndParams(el.getAttribute('livewire:keydown.enter')),
+        var _this3$parseOutMethod = _this3.parseOutMethodAndParams(el.getAttribute("".concat(prefix, ":keydown.enter"))),
             method = _this3$parseOutMethod.method,
             params = _this3$parseOutMethod.params;
 
@@ -3339,7 +3368,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   attachSync: function attachSync(el, callback) {
     el.addEventListener('input', function (e) {
-      var model = el.getAttribute('livewire:sync');
+      var model = el.getAttribute("".concat(prefix, ":sync"));
       callback(model, el);
     });
   },
@@ -3352,7 +3381,7 @@ __webpack_require__.r(__webpack_exports__);
       method = matches[1];
       params = matches[2].split(', ').map(function (param) {
         if (eval('typeof ' + param) === 'undefined') {
-          return document.querySelector('[livewire\\:model="' + param + '"]').value;
+          return document.querySelector("[".concat(prefix, "\\:model=\"") + param + '"]').value;
         }
 
         return eval(param);

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class LivewireManager
 {
+    protected $prefix = 'livewire';
     protected $components = [];
 
     public function register($name, $viewClass)
@@ -28,5 +29,15 @@ class LivewireManager
         return '<script>'
             . File::get(__DIR__ . '/../dist/livewire.js')
             . '</script>';
+    }
+
+    public function prefix()
+    {
+        return $this->prefix;
+    }
+
+    public function setPrefix($prefix)
+    {
+        $this->prefix = $prefix;
     }
 }

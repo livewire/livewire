@@ -1,13 +1,14 @@
 import getFormData from 'get-form-data'
+const prefix = require('./prefix.js')()
 
 export default {
     getRoot(component) {
-        return document.querySelector(`[livewire\\:root="${component}"]`)
+        return document.querySelector(`[${prefix}\\:root="${component}"]`)
     },
 
     get livewireElements() {
         let hold = [];
-        var tags = document.evaluate('//*[@*[starts-with(name(), "livewire")]]', document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
+        var tags = document.evaluate(`//*[@*[starts-with(name(), "${prefix}")]]`, document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
 
         var node = tags.iterateNext()
 
@@ -21,7 +22,7 @@ export default {
 
     attachClick(el, callback) {
         el.addEventListener('click', e => {
-            const { method, params } = this.parseOutMethodAndParams(el.getAttribute('livewire:click'))
+            const { method, params } = this.parseOutMethodAndParams(el.getAttribute(`${prefix}:click`))
             callback(method, params, e.target)
         })
     },
@@ -30,7 +31,7 @@ export default {
         el.addEventListener('submit', e => {
             e.preventDefault()
 
-            const { method } = this.parseOutMethodAndParams(el.getAttribute('livewire:submit'))
+            const { method } = this.parseOutMethodAndParams(el.getAttribute(`${prefix}:submit`))
             const params = getFormData(e.target)
 
             callback(method, params, e.target)
@@ -40,7 +41,7 @@ export default {
     attachEnter(el, callback) {
         el.addEventListener('keydown', e => {
             if (e.keyCode == '13') {
-                const { method, params } = this.parseOutMethodAndParams(el.getAttribute('livewire:keydown.enter'))
+                const { method, params } = this.parseOutMethodAndParams(el.getAttribute(`${prefix}:keydown.enter`))
                 callback(method, params, e.target)
             }
         })
@@ -48,7 +49,7 @@ export default {
 
     attachSync(el, callback) {
         el.addEventListener('input', e => {
-            const model = el.getAttribute('livewire:sync')
+            const model = el.getAttribute(`${prefix}:sync`)
             callback(model, el)
         })
     },
@@ -62,7 +63,7 @@ export default {
             method = matches[1]
             params = matches[2].split(', ').map(param => {
                 if (eval('typeof ' + param) === 'undefined') {
-                    return document.querySelector('[livewire\\:model="' + param + '"]').value
+                    return document.querySelector(`[${prefix}\\:model="` + param + '"]').value
                 }
 
                 return eval(param)

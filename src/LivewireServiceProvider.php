@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 use Ratchet\Http\HttpServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
@@ -21,8 +22,10 @@ class LivewireServiceProvider extends ServiceProvider
     public function register()
     {
         Blade::directive('livewire', function ($expression) {
+            $prefix = Livewire::prefix();
+
             return <<<EOT
-<div livewire:root="<?php echo $expression; ?>">
+<div {$prefix}:root="<?php echo $expression; ?>">
     <div>
         <?php
         echo "waiting...";
@@ -33,7 +36,8 @@ EOT;
         });
 
         Blade::directive('click', function ($expression) {
-            return "livewire:click=\"<?php echo($expression); ?>\"";
+            $prefix = Livewire::prefix();
+            return "{$prefix}:click=\"<?php echo($expression); ?>\"";
         });
 
         Artisan::command('livewire', function () {
