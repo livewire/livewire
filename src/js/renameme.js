@@ -1,4 +1,4 @@
-import getFormData from 'get-form-data'
+import { debounce } from './utils'
 const prefix = require('./prefix.js')()
 
 export default {
@@ -27,12 +27,19 @@ export default {
         })
     },
 
+    attachFormInput(el, callback) {
+        el.addEventListener('input', debounce(200, e => {
+            const input = el.getAttribute(`${prefix}:form.sync`)
+            const form = el.closest(`[${prefix}\\:form]`).getAttribute(`${prefix}:form`)
+            callback(form, input, el)
+        }))
+    },
+
     attachSubmit(el, callback) {
         el.addEventListener('submit', e => {
             e.preventDefault()
 
-            const { method } = this.parseOutMethodAndParams(el.getAttribute(`${prefix}:submit`))
-            const params = getFormData(e.target)
+            const { method, params } = this.parseOutMethodAndParams(el.getAttribute(`${prefix}:submit`))
 
             callback(method, params, e.target)
         })
@@ -48,10 +55,10 @@ export default {
     },
 
     attachSync(el, callback) {
-        el.addEventListener('input', e => {
+        el.addEventListener('input', debounce(200, e => {
             const model = el.getAttribute(`${prefix}:sync`)
             callback(model, el)
-        })
+        }))
     },
 
     parseOutMethodAndParams(rawMethod) {

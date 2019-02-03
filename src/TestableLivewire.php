@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Symfony\Component\DomCrawler\Crawler;
+use Illuminate\Validation\ValidationException;
 
 class TestableLivewire
 {
@@ -16,6 +17,7 @@ class TestableLivewire
     {
         $this->prefix = Livewire::prefix();
         $this->component = $component;
+        $this->component->mounted();
         $this->resetDom();
     }
 
@@ -25,7 +27,13 @@ class TestableLivewire
 
         throw_unless($node->count(), new \Exception('Can\'t find element with selector: [' . $selector . ']'));
 
-        if ($dataName = $node->attr("{$this->prefix}--sync")) {
+        if ($dataName = $node->attr("{$this->prefix}--form--sync")) {
+            $form = $node->parents()->filter("[{$this->prefix}--form]");
+
+            $formName = $form->attr("{$this->prefix}--form");
+            $this->component->formInput($formName, $dataName, $text);
+            $this->resetDom();
+        } elseif ($dataName = $node->attr("{$this->prefix}--sync")) {
             $this->component->sync($dataName, $text);
             $this->resetDom();
         }
@@ -119,7 +127,7 @@ class TestableLivewire
 
     public function fromView($nameOfViewVariable, $callback)
     {
-        $callback($this->component->render()->{$nameOfViewVariable});
+        $callback($this->component->view()->{$nameOfViewVariable});
 
         return $this;
     }
@@ -127,10 +135,12 @@ class TestableLivewire
     public function convertColonsToDoubleDashes($input)
     {
         return
-            str_replace("{$this->prefix}--keydown.enter", "{$this->prefix}--keydown--enter",
-                str_replace("{$this->prefix}:", "{$this->prefix}--",
+            str_replace("{$this->prefix}--form.sync", "{$this->prefix}--form--sync",
+                str_replace("{$this->prefix}--keydown.enter", "{$this->prefix}--keydown--enter",
                     str_replace("{$this->prefix}:", "{$this->prefix}--",
-                        $input
+                        str_replace("{$this->prefix}:", "{$this->prefix}--",
+                            $input
+                        )
                     )
                 )
             );
@@ -138,8 +148,12 @@ class TestableLivewire
 
     public function resetDom()
     {
-        $this->crawler = new Crawler(
-            $this->rawDom = $this->convertColonsToDoubleDashes($this->component->render()->render())
-        );
+        try {
+            $this->crawler = new Crawler(
+                $this->rawDom = $this->convertColonsToDoubleDashes($this->component->view()->render())
+            );
+        } catch (ValidationException $th) {
+            dd('hye');
+        }
     }
 }

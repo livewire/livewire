@@ -20,7 +20,6 @@
     "cross-env": "^5.2.0",
     "cross-spawn": "^6.0.5",
     "false": "^0.0.4",
-    "get-form-data": "^2.0.0",
     "laravel-mix": "^4.0.14",
     "morphdom": "^2.3.3",
     "vue-template-compiler": "^2.5.22"

@@ -59,7 +59,7 @@ class SocketHandler implements MessageComponentInterface
 
         $from->send(json_encode([
             'component' => $component,
-            'dom' => $this->liveViewsByResourceId[$from->resourceId][$component]->render()->render(),
+            'dom' => $this->liveViewsByResourceId[$from->resourceId][$component]->view()->render(),
         ]));
 
     }

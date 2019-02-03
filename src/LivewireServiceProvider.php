@@ -11,6 +11,7 @@ use Livewire\Livewire;
 use Ratchet\Http\HttpServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
+use Illuminate\Validation\ValidationException;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -90,28 +91,38 @@ EOT
                 $livewire = Livewire::activate($component, new \StdClass);
             }
 
-            switch ($event) {
-                case 'init':
-                    $livewire->mounted();
-                    break;
-                case 'sync':
-                    $livewire->sync($payload['model'], $payload['value']);
-            // // If we don't return early we cost too much in rendering AND break input elements for some reason.
-            // return;
-                    break;
-                case 'fireMethod':
-                    $livewire->{$payload['method']}(...$payload['params']);
-                    break;
-                default:
-                    throw new \Exception('Unrecongnized event: ' . $event);
-                    break;
+            try {
+                switch ($event) {
+                    case 'init':
+                        $livewire->mounted();
+                        break;
+                    case 'form-input':
+                        $livewire->formInput($payload['form'], $payload['input'], $payload['value']);
+                        break;
+                    case 'sync':
+                        $livewire->sync($payload['model'], $payload['value']);
+                        // // If we don't return early we cost too much in rendering AND break input elements for some reason.
+                        // return;
+                        break;
+                    case 'fireMethod':
+                        $livewire->{$payload['method']}(...$payload['params']);
+                        break;
+                    default:
+                        throw new \Exception('Unrecongnized event: ' . $event);
+                        break;
+                }
+            } catch (ValidationException $e) {
+                $errors = $e->validator->errors();
             }
 
-            $dom = $livewire->render()->render();
+            $dom = $livewire->view($errors ?? null)->render();
+            $refreshForms = $livewire->formsThatNeedInputRefreshing();
+            $livewire->clearFormRefreshes();
 
             return [
                 'component' => $component,
                 'serialized' => encrypt($livewire),
+                'refreshForms' => $refreshForms,
                 'dom' => $dom,
             ];
         });

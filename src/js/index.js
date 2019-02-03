@@ -19,6 +19,7 @@ if (roots.count) {
         onMessageReceived(payload) {
             const component = payload.component;
             const dom = payload.dom;
+            const formsInNeedOfRefresh = payload.refreshForms;
 
             morphdom(roots.find(component).el.firstElementChild, dom, {
                 onBeforeElChildrenUpdated(from, to) {
@@ -30,7 +31,25 @@ if (roots.count) {
 
                 onBeforeElUpdated(el) {
                     // This will need work. But is essentially "input persistance"
-                    return ! (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')
+                    const isInput = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')
+
+                    if (isInput) {
+                        if (el.type === 'submit') {
+                            return true
+                        }
+
+                        const isInForm = el.hasAttribute(`${prefix}:form.sync`)
+
+                        if (isInForm) {
+                            const formName = el.closest(`[${prefix}\\:form]`).getAttribute(`${prefix}:form`)
+                            if (Array.from(formsInNeedOfRefresh).includes(formName)) {
+                                return true
+                            } {
+                                return false
+                            }
+                        }
+                        return false
+                    }
                 },
 
                 onNodeAdded(node) {
@@ -68,11 +87,24 @@ function sendSync(model, el) {
     })
 }
 
+function sendFormInput(form, input, el) {
+    backend.message({
+        event: 'form-input',
+        payload: { form, input, value: el.value },
+        component: el.closest(`[${prefix}\\:root]`).getAttribute(`${prefix}:root`)
+    })
+}
+
 function initializeNode(node) {
-    console.log(`${prefix}:click`)
     if (node.hasAttribute(`${prefix}:click`)) {
         renameme.attachClick(node, (method, params, el) => {
             sendMethod(method, params, el)
+        })
+    }
+
+    if (node.hasAttribute(`${prefix}:form.sync`)) {
+        renameme.attachFormInput(node, (form, input, el) => {
+            sendFormInput(form, input, el)
         })
     }
 
