@@ -3207,7 +3207,7 @@ if (roots.count) {
         },
         onBeforeElUpdated: function onBeforeElUpdated(el) {
           // This will need work. But is essentially "input persistance"
-          return !(el == document.activeElement && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'));
+          return !(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
         },
         onNodeAdded: function onNodeAdded(node) {
           if (typeof node.hasAttribute !== 'function') {
@@ -3248,6 +3248,8 @@ function sendSync(model, el) {
 }
 
 function initializeNode(node) {
+  console.log("".concat(prefix, ":click"));
+
   if (node.hasAttribute("".concat(prefix, ":click"))) {
     _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachClick(node, function (method, params, el) {
       sendMethod(method, params, el);
@@ -3286,7 +3288,6 @@ var prefix = null;
 
 module.exports = function () {
   if (prefix === null) {
-    console.log('hey');
     prefix = (document.querySelector('meta[name="livewire-prefix"]') || {
       content: 'livewire'
     }).content;

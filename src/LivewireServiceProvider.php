@@ -14,13 +14,10 @@ use Ratchet\WebSocket\WsServer;
 
 class LivewireServiceProvider extends ServiceProvider
 {
-    public function boot()
-    {
-        $this->app->singleton('livewire', LivewireManager::class);
-    }
-
     public function register()
     {
+        $this->app->singleton('livewire', LivewireManager::class);
+
         Blade::directive('livewire', function ($expression) {
             $prefix = Livewire::prefix();
 

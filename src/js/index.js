@@ -30,8 +30,7 @@ if (roots.count) {
 
                 onBeforeElUpdated(el) {
                     // This will need work. But is essentially "input persistance"
-                    return ! (el == document.activeElement
-                        && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'))
+                    return ! (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')
                 },
 
                 onNodeAdded(node) {
@@ -70,6 +69,7 @@ function sendSync(model, el) {
 }
 
 function initializeNode(node) {
+    console.log(`${prefix}:click`)
     if (node.hasAttribute(`${prefix}:click`)) {
         renameme.attachClick(node, (method, params, el) => {
             sendMethod(method, params, el)
