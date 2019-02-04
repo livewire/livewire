@@ -14,7 +14,8 @@
         "illuminate/support": "^5.7",
         "illuminate/validation": "^5.7",
         "opis/closure": "^3.1",
-        "yosymfony/resource-watcher": "^2.0"
+        "yosymfony/resource-watcher": "^2.0",
+        "symfony/process": "^4.2"
     },
     "extra": {
         "laravel": {

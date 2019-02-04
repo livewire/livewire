@@ -4,9 +4,10 @@ export default class {
     }
 
     init(config) {
-        this.connection.connect()
-        this.connection.onOpen(config.onConnect)
-        this.connection.onMessage(config.onMessageReceived)
+        this.connection.connect({
+            onOpen: config.onConnect,
+            onMessage: config.onMessageReceived,
+        })
     }
 
     message(payload) {

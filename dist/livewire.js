@@ -2703,9 +2703,10 @@ function () {
   _createClass(_default, [{
     key: "init",
     value: function init(config) {
-      this.connection.connect();
-      this.connection.onOpen(config.onConnect);
-      this.connection.onMessage(config.onMessageReceived);
+      this.connection.connect({
+        onOpen: config.onConnect,
+        onMessage: config.onMessageReceived
+      });
     }
   }, {
     key: "message",
@@ -2942,25 +2943,27 @@ function () {
 
   _createClass(_default, [{
     key: "connect",
-    value: function connect() {
+    value: function connect(config) {
+      var _this = this;
+
       this.wsConnection = new WebSocket('ws://localhost:8080');
+      this.wsConnection.onopen = config.onOpen;
+
+      this.wsConnection.onmessage = function (e) {
+        config.onMessage(JSON.parse(e.data));
+      };
+
+      this.wsConnection.onclose = function () {
+        console.log('Connection closed');
+        setTimeout(function () {
+          _this.connect(config);
+        }, 1000);
+      };
     }
   }, {
     key: "sendMessage",
     value: function sendMessage(payload) {
       this.wsConnection.send(JSON.stringify(payload));
-    }
-  }, {
-    key: "onOpen",
-    value: function onOpen(callback) {
-      this.wsConnection.onopen = callback;
-    }
-  }, {
-    key: "onMessage",
-    value: function onMessage(callback) {
-      this.wsConnection.onmessage = function (e) {
-        callback(JSON.parse(e.data));
-      };
     }
   }]);
 

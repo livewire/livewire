@@ -1,19 +1,17 @@
 export default class {
-    connect() {
+    connect(config) {
         this.wsConnection = new WebSocket('ws://localhost:8080');
+        this.wsConnection.onopen = config.onOpen
+        this.wsConnection.onmessage = e => {
+            config.onMessage(JSON.parse(e.data))
+        }
+        this.wsConnection.onclose = () => {
+            console.log('Connection closed')
+            setTimeout(() => {this.connect(config)}, 1000)
+        }
     }
 
     sendMessage(payload) {
         this.wsConnection.send(JSON.stringify(payload))
-    }
-
-    onOpen(callback) {
-        this.wsConnection.onopen = callback
-    }
-
-    onMessage(callback) {
-        this.wsConnection.onmessage = e => {
-            callback(JSON.parse(e.data))
-        }
     }
 }
