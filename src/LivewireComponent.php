@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Support\Fluent;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
+use Opis\Closure\SerializableClosure;
 
 abstract class LivewireComponent
 {
@@ -16,7 +17,7 @@ abstract class LivewireComponent
     {
         $this->connection = $connection;
         $this->component = $component;
-        $this->forms = new Fluent;
+        $this->forms = new LivewireFormCollection;
     }
 
     abstract public function render();
@@ -35,13 +36,9 @@ abstract class LivewireComponent
         $this->{$model} = $value;
     }
 
-    public function form($name, $rules = null)
+    public function makeSerializable($callback)
     {
-        if ($rules) {
-            $this->forms->{$name} = new LivewireForm($rules);
-        }
-
-        return $this->forms->{$name};
+        return new SerializableClosure($callback);
     }
 
     public function formInput($form, $input, $value)

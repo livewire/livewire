@@ -7,11 +7,12 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Ratchet\Http\HttpServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
-use Illuminate\Validation\ValidationException;
+use SuperClosure\Serializer;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -82,7 +83,6 @@ EOT
             $event = request('event');
             $payload = request('payload');
             $component = request('component');
-            $dom = '<div>hey there</div>';
             $serialized = request('serialized');
 
             if ($serialized) {

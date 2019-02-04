@@ -9,8 +9,16 @@ class LivewireForm {
     public $errors;
     protected $rules;
     protected $values;
-    protected $isValid = false;
     protected $needsInputRefresh = false;
+
+    public function defaults($values)
+    {
+        foreach ($values as $key => $value) {
+            $this->values[$key] = $value;
+        }
+
+        $this->defaultValues =  $this->values;
+    }
 
     public function needsInputRefresh()
     {
@@ -49,9 +57,7 @@ class LivewireForm {
 
     public function clear()
     {
-        $this->values = array_map(function () {
-            return null;
-        }, $this->values);
+        $this->values = $this->defaultValues;
 
         $this->setForRefresh();
     }
