@@ -45,12 +45,13 @@ EOT;
         });
 
         Artisan::command('livewire:watch', function () {
-            $finder = new Finder();
-            $finder->files()
+            $finder = (new Finder())
+                ->files()
                 ->name('*.php')
                 ->in([
-                    app_path('Http/Livewire'),
-                    resource_path('views/livewire'),
+                    app_path(),
+                    base_path('tests'),
+                    resource_path('views'),
                 ]);
 
             $watcher = new \Yosymfony\ResourceWatcher\ResourceWatcher(
@@ -59,25 +60,27 @@ EOT;
                 new \Yosymfony\ResourceWatcher\Crc32ContentHash()
             );
 
-            sorryagain:
+            start_process:
 
             $process = new Process('php artisan livewire');
             $process->start(function ($type, $output) use ($process) {
                 if ($type === $process::OUT) {
-                    $this->line($output);
+                    fwrite(STDOUT, $output);
                 } else {
                     $this->alert($output);
                 }
             });
 
             while ($process->isRunning()) {
-                $result = $watcher->findChanges();
-                if ($result->hasChanges()) {
+                if ($watcher->findChanges()->hasChanges()) {
                     $process->stop();
-                    $this->info('restarted');
-                    goto sorryagain;
+
+                    $this->info('[Livewire process restarted]');
+
+                    goto start_process;
                 }
-                usleep(500000);
+
+                usleep($pointFiveSeconds = 500000);
             }
         });
 

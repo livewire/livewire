@@ -3011,6 +3011,42 @@ if (roots.count) {
       var dom = payload.dom;
       var formsInNeedOfRefresh = payload.refreshForms;
       morphdom(roots.find(component).el.firstElementChild, dom, {
+        onBeforeNodeAdded: function onBeforeNodeAdded(node) {
+          if (typeof node.hasAttribute !== 'function') {
+            return;
+          }
+
+          if (node.hasAttribute("".concat(prefix, ":transition"))) {
+            var transitionName = node.getAttribute("".concat(prefix, ":transition"));
+            node.classList.add("".concat(transitionName, "-enter"));
+            node.classList.add("".concat(transitionName, "-enter-active"));
+            setTimeout(function () {
+              node.classList.remove("".concat(transitionName, "-enter"));
+              setTimeout(function () {
+                node.classList.remove("".concat(transitionName, "-enter-active"));
+              }, 500);
+            }, 65);
+          }
+        },
+        onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
+          if (typeof node.hasAttribute !== 'function') {
+            return;
+          }
+
+          if (node.hasAttribute("".concat(prefix, ":transition"))) {
+            var transitionName = node.getAttribute("".concat(prefix, ":transition"));
+            node.classList.add("".concat(transitionName, "-leave-active"));
+            setTimeout(function () {
+              node.classList.add("".concat(transitionName, "-leave-to"));
+              setTimeout(function () {
+                node.classList.remove("".concat(transitionName, "-leave-active"));
+                node.classList.remove("".concat(transitionName, "-leave-to"));
+                node.remove();
+              }, 500);
+            }, 65);
+            return false;
+          }
+        },
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(from, to) {
           // This allows nesting components
           if (from.hasAttribute("".concat(prefix, ":root"))) {

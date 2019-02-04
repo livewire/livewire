@@ -22,6 +22,47 @@ if (roots.count) {
             const formsInNeedOfRefresh = payload.refreshForms;
 
             morphdom(roots.find(component).el.firstElementChild, dom, {
+                onBeforeNodeAdded(node) {
+                    if (typeof node.hasAttribute !== 'function') {
+                        return
+                    }
+                    if (node.hasAttribute(`${prefix}:transition`)) {
+                        const transitionName = node.getAttribute(`${prefix}:transition`)
+
+                        node.classList.add(`${transitionName}-enter`)
+                        node.classList.add(`${transitionName}-enter-active`)
+
+                        setTimeout(() => {
+                            node.classList.remove(`${transitionName}-enter`)
+                            setTimeout(() => {
+                                node.classList.remove(`${transitionName}-enter-active`)
+                            }, 500)
+                        }, 65)
+                    }
+                },
+
+                onBeforeNodeDiscarded(node) {
+                    if (typeof node.hasAttribute !== 'function') {
+                        return
+                    }
+                    if (node.hasAttribute(`${prefix}:transition`)) {
+                        const transitionName = node.getAttribute(`${prefix}:transition`)
+
+                        node.classList.add(`${transitionName}-leave-active`)
+
+                        setTimeout(() => {
+                        node.classList.add(`${transitionName}-leave-to`)
+                            setTimeout(() => {
+                                node.classList.remove(`${transitionName}-leave-active`)
+                                node.classList.remove(`${transitionName}-leave-to`)
+                                node.remove()
+                            }, 500)
+                        }, 65)
+
+                        return false
+                    }
+                },
+
                 onBeforeElChildrenUpdated(from, to) {
                     // This allows nesting components
                     if (from.hasAttribute(`${prefix}:root`)) {
