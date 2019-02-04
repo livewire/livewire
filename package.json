@@ -1,7 +1,8 @@
 {
   "name": "laravel-livewire",
   "version": "0.1.0",
-  "description": "",
+  "description": "@todo",
+  "repository": "@todo",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -16,10 +17,10 @@
   "author": "Caleb Porzio",
   "license": "MIT",
   "devDependencies": {
-    "@retailmenot/morphdom-plugins": "^1.0.1",
     "axios": "^0.18.0",
     "cross-env": "^5.2.0",
     "cross-spawn": "^6.0.5",
+    "debounce": "^1.2.0",
     "false": "^0.0.4",
     "laravel-mix": "^4.0.14",
     "morphdom": "^2.3.3",

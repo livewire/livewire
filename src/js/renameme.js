@@ -1,4 +1,4 @@
-import { debounce } from './utils'
+import debounce from 'debounce'
 const prefix = require('./prefix.js')()
 
 export default {
@@ -28,11 +28,11 @@ export default {
     },
 
     attachFormInput(el, callback) {
-        el.addEventListener('input', debounce(200, e => {
+        el.addEventListener('input', debounce(e => {
             const input = el.getAttribute(`${prefix}:form.sync`)
             const form = el.closest(`[${prefix}\\:form]`).getAttribute(`${prefix}:form`)
             callback(form, input, el)
-        }))
+        }, 200))
     },
 
     attachSubmit(el, callback) {
@@ -55,10 +55,10 @@ export default {
     },
 
     attachSync(el, callback) {
-        el.addEventListener('input', debounce(200, e => {
+        el.addEventListener('input', debounce(e => {
             const model = el.getAttribute(`${prefix}:sync`)
             callback(model, el)
-        }))
+        }, 200))
     },
 
     parseOutMethodAndParams(rawMethod) {

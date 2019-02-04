@@ -12,6 +12,9 @@ abstract class ConnectionHandler
         $component = $payload['component'];
         $payload = $payload['payload'];
 
+        // Hash values to know what needs to by not-persisted (sync) in the front-end
+        $instance->createHashesForDiffing();
+
         try {
             switch ($event) {
                 case 'init':
@@ -38,27 +41,15 @@ abstract class ConnectionHandler
 
         $dom = $instance->view($errors ?? null)->render();
         $refreshForms = $instance->formsThatNeedInputRefreshing();
+        $refreshSyncs = $instance->syncsThatNeedInputRefreshing();
         $instance->clearFormRefreshes();
+        $instance->clearSyncRefreshes();
 
         return [
             'component' => $component,
             'refreshForms' => $refreshForms,
+            'refreshSyncs' => $refreshSyncs,
             'dom' => $dom,
         ];
-
-        switch ($event) {
-            case 'init':
-                $instance->mounted();
-                break;
-            case 'sync':
-                $instance->sync($payload->model, $payload->value);
-                break;
-            case 'fireMethod':
-                $instance->{$payload->method}(...$payload->params);
-                break;
-            default:
-                throw new \Exception('Unrecongnized event: ' . $event);
-                break;
-        }
     }
 }

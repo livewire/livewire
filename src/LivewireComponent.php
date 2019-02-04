@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Fluent;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
@@ -9,9 +10,16 @@ use Opis\Closure\SerializableClosure;
 
 abstract class LivewireComponent
 {
+    protected $hashes = [];
+    protected $exemptFromHashDiffing = [];
     protected $connection;
     protected $component;
     protected $forms;
+
+    protected $propertiesExemptFromHashing = [
+        'hashes', 'exemptFromHashDiffing', 'connection',
+        'component', 'forms',
+    ];
 
     public function __construct($connection, $component)
     {
@@ -32,6 +40,8 @@ abstract class LivewireComponent
         if (method_exists($this, 'onSync' . studly_case($model))) {
             $this->{'onSync' . studly_case($model)}($value);
         }
+
+        $this->exemptFromHashDiffing[] = $model;
 
         $this->{$model} = $value;
     }
@@ -62,6 +72,44 @@ abstract class LivewireComponent
         foreach ($this->forms->toArray() as $form) {
             $form->refreshed();
         }
+    }
+
+    public function createHashesForDiffing()
+    {
+        $properties = array_map(function ($prop) {
+            return $prop->getName();
+        }, (new \ReflectionClass($this))->getProperties());
+
+        $properties = array_diff($properties, $this->propertiesExemptFromHashing);
+
+        foreach ($properties as $property) {
+            // For now only has strings and numbers to not be too slow.
+            if (is_string($this->{$property}) || is_numeric($this->{$property})) {
+                $this->hashes[$property] = Hash::make($this->{$property});
+            }
+        }
+    }
+
+    public function syncsThatNeedInputRefreshing()
+    {
+        $pile = [];
+        foreach ($this->hashes as $prop => $hash) {
+            if (in_array($prop, $this->exemptFromHashDiffing)) {
+                continue;
+            }
+            // For now only has strings and numbers to not be too slow.
+            if (! Hash::check($this->{$prop}, $hash)) {
+                $pile[] = $prop;
+            }
+        }
+
+        return $pile;
+    }
+
+    public function clearSyncRefreshes()
+    {
+        $this->hashes = [];
+        $this->exemptFromHashDiffing = [];
     }
 
     public function refresh()

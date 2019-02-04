@@ -18,112 +18,44 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
 use Yosymfony\ResourceWatcher\ResourceCacheMemory;
 use Yosymfony\ResourceWatcher\ResourceWatcher;
+use Livewire\Commands\LivewireStartCommand;
+use Livewire\Commands\LivewireWatchCommand;
+use Livewire\Commands\LivewireMakeCommand;
 
 class LivewireServiceProvider extends ServiceProvider
 {
     public function register()
     {
         $this->app->singleton('livewire', LivewireManager::class);
-
-        Blade::directive('livewire', function ($expression) {
-            $prefix = Livewire::prefix();
-
-            return <<<EOT
-<div {$prefix}:root="<?php echo $expression; ?>">
-    <div>
-        <?php
-        echo "waiting...";
-        ?>
-    </div>
-</div>
-EOT;
-        });
-
-        Blade::directive('click', function ($expression) {
-            $prefix = Livewire::prefix();
-            return "{$prefix}:click=\"<?php echo($expression); ?>\"";
-        });
-
-        Artisan::command('livewire:watch', function () {
-            $finder = (new Finder())
-                ->files()
-                ->name('*.php')
-                ->in([
-                    app_path(),
-                    base_path('tests'),
-                    resource_path('views'),
-                ]);
-
-            $watcher = new \Yosymfony\ResourceWatcher\ResourceWatcher(
-                new \Yosymfony\ResourceWatcher\ResourceCacheMemory(),
-                $finder,
-                new \Yosymfony\ResourceWatcher\Crc32ContentHash()
-            );
-
-            start_process:
-
-            $process = new Process('php artisan livewire');
-            $process->start(function ($type, $output) use ($process) {
-                if ($type === $process::OUT) {
-                    fwrite(STDOUT, $output);
-                } else {
-                    $this->alert($output);
-                }
-            });
-
-            while ($process->isRunning()) {
-                if ($watcher->findChanges()->hasChanges()) {
-                    $process->stop();
-
-                    $this->info('[Livewire process restarted]');
-
-                    goto start_process;
-                }
-
-                usleep($pointFiveSeconds = 500000);
-            }
-        });
-
-        Artisan::command('livewire', function () {
-            $handler = new SocketConnectionHandler($this);
-
-            IoServer::factory(
-                new HttpServer(new WsServer($handler)),
-                8080
-            )->run();
-        });
-
-        Artisan::command('make:livewire {component}', function ($component) {
-            $directory = app_path('Http/Livewire');
-            $file = $directory . '/' . $component . '.php';
-
-            if (File::exists($file)) {
-                $this->error('Whoops, looks like the view already exists: [' . $filePath . ']');
-            }
-
-            if (! File::exists($directory)) {
-                File::makeDirectory($directory);
-            }
-
-            File::put($file, <<<EOT
-<?php
-
-namespace App\Http\Livewire;
-
-class $component extends Livewire
-{
-    public function render()
-    {
-        //
     }
-}
 
-EOT
-);
+    public function boot()
+    {
+        $this->registerRoutes();
+        $this->registerCommands();
+        $this->registerBladeDirectives();
+    }
 
-            $this->info("Livewire component [{$component}] successfully created");
-        });
-
+    public function registerRoutes()
+    {
         Route::post('/fake-websockets/message', HttpConnectionHandler::class);
+    }
+
+    public function registerCommands()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                LivewireStartCommand::class,
+                LivewireWatchCommand::class,
+                LivewireMakeCommand::class,
+            ]);
+        }
+    }
+
+    public function registerBladeDirectives()
+    {
+        Blade::directive('livewire', function ($expression) {
+            return "<?php echo \Livewire\Livewire::call({$expression}) ?>";
+        });
     }
 }

@@ -6,7 +6,7 @@ import RootManager from './RootManager'
 const prefix = require('./prefix.js')()
 const morphdom = require('morphdom');
 
-const backend = new Backend(new WebSocketConnection)
+const backend = new Backend(new HttpConnection)
 
 const roots = new RootManager(backend)
 
@@ -20,6 +20,7 @@ if (roots.count) {
             const component = payload.component;
             const dom = payload.dom;
             const formsInNeedOfRefresh = payload.refreshForms;
+            const syncsInNeedOfRefresh = payload.refreshSyncs;
 
             morphdom(roots.find(component).el.firstElementChild, dom, {
                 onBeforeNodeAdded(node) {
@@ -89,6 +90,18 @@ if (roots.count) {
                                 return false
                             }
                         }
+
+                        const isSync = el.hasAttribute(`${prefix}:sync`)
+
+                        if (isSync) {
+                            const syncName = el.getAttribute(`${prefix}:sync`)
+                            if (Array.from(syncsInNeedOfRefresh).includes(syncName)) {
+                                return true
+                            } {
+                                return false
+                            }
+                        }
+
                         return false
                     }
                 },

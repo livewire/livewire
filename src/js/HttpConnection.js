@@ -1,8 +1,10 @@
 import Axios from "axios";
 
 export default class {
-    connect() {
+    connect(config) {
         this.serializedComponents = {}
+        this.onMessageCallback = config.onMessage
+        config.onOpen()
     }
 
     sendMessage(payload) {
@@ -12,11 +14,6 @@ export default class {
                 this.onMessageCallback(response.data)
                 this.serializedComponents[payload.component] = response.data.serialized
             })
-    }
-
-    onOpen(callback) {
-        callback()
-        // this.wsConnection.onopen = callback
     }
 
     onMessage(callback) {

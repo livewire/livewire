@@ -1754,6 +1754,87 @@ module.exports = {
 
 /***/ }),
 
+/***/ "./node_modules/debounce/index.js":
+/*!****************************************!*\
+  !*** ./node_modules/debounce/index.js ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/**
+ * Returns a function, that, as long as it continues to be invoked, will not
+ * be triggered. The function will be called after it stops being called for
+ * N milliseconds. If `immediate` is passed, trigger the function on the
+ * leading edge, instead of the trailing. The function also has a property 'clear' 
+ * that is a function which will clear the timer to prevent previously scheduled executions. 
+ *
+ * @source underscore.js
+ * @see http://unscriptable.com/2009/03/20/debouncing-javascript-methods/
+ * @param {Function} function to wrap
+ * @param {Number} timeout in ms (`100`)
+ * @param {Boolean} whether to execute at the beginning (`false`)
+ * @api public
+ */
+function debounce(func, wait, immediate){
+  var timeout, args, context, timestamp, result;
+  if (null == wait) wait = 100;
+
+  function later() {
+    var last = Date.now() - timestamp;
+
+    if (last < wait && last >= 0) {
+      timeout = setTimeout(later, wait - last);
+    } else {
+      timeout = null;
+      if (!immediate) {
+        result = func.apply(context, args);
+        context = args = null;
+      }
+    }
+  };
+
+  var debounced = function(){
+    context = this;
+    args = arguments;
+    timestamp = Date.now();
+    var callNow = immediate && !timeout;
+    if (!timeout) timeout = setTimeout(later, wait);
+    if (callNow) {
+      result = func.apply(context, args);
+      context = args = null;
+    }
+
+    return result;
+  };
+
+  debounced.clear = function() {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
+  
+  debounced.flush = function() {
+    if (timeout) {
+      result = func.apply(context, args);
+      context = args = null;
+      
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
+
+  return debounced;
+};
+
+// Adds compatibility for ES modules
+debounce.debounce = debounce;
+
+module.exports = debounce;
+
+
+/***/ }),
+
 /***/ "./node_modules/is-buffer/index.js":
 /*!*****************************************!*\
   !*** ./node_modules/is-buffer/index.js ***!
@@ -2755,8 +2836,10 @@ function () {
 
   _createClass(_default, [{
     key: "connect",
-    value: function connect() {
+    value: function connect(config) {
       this.serializedComponents = {};
+      this.onMessageCallback = config.onMessage;
+      config.onOpen();
     }
   }, {
     key: "sendMessage",
@@ -2771,11 +2854,6 @@ function () {
 
         _this.serializedComponents[payload.component] = response.data.serialized;
       });
-    }
-  }, {
-    key: "onOpen",
-    value: function onOpen(callback) {
-      callback(); // this.wsConnection.onopen = callback
     }
   }, {
     key: "onMessage",
@@ -2998,7 +3076,7 @@ var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
 
 var morphdom = __webpack_require__(/*! morphdom */ "./node_modules/morphdom/dist/morphdom.js");
 
-var backend = new _Backend__WEBPACK_IMPORTED_MODULE_2__["default"](new _WebSocketConnection__WEBPACK_IMPORTED_MODULE_0__["default"]());
+var backend = new _Backend__WEBPACK_IMPORTED_MODULE_2__["default"](new _HttpConnection__WEBPACK_IMPORTED_MODULE_1__["default"]());
 var roots = new _RootManager__WEBPACK_IMPORTED_MODULE_4__["default"](backend);
 
 if (roots.count) {
@@ -3010,6 +3088,7 @@ if (roots.count) {
       var component = payload.component;
       var dom = payload.dom;
       var formsInNeedOfRefresh = payload.refreshForms;
+      var syncsInNeedOfRefresh = payload.refreshSyncs;
       morphdom(roots.find(component).el.firstElementChild, dom, {
         onBeforeNodeAdded: function onBeforeNodeAdded(node) {
           if (typeof node.hasAttribute !== 'function') {
@@ -3068,6 +3147,20 @@ if (roots.count) {
               var formName = el.closest("[".concat(prefix, "\\:form]")).getAttribute("".concat(prefix, ":form"));
 
               if (Array.from(formsInNeedOfRefresh).includes(formName)) {
+                return true;
+              }
+
+              {
+                return false;
+              }
+            }
+
+            var isSync = el.hasAttribute("".concat(prefix, ":sync"));
+
+            if (isSync) {
+              var syncName = el.getAttribute("".concat(prefix, ":sync"));
+
+              if (Array.from(syncsInNeedOfRefresh).includes(syncName)) {
                 return true;
               }
 
@@ -3193,7 +3286,8 @@ module.exports = function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/js/utils.js");
+/* harmony import */ var debounce__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! debounce */ "./node_modules/debounce/index.js");
+/* harmony import */ var debounce__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(debounce__WEBPACK_IMPORTED_MODULE_0__);
 
 
 var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
@@ -3228,11 +3322,11 @@ var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
     });
   },
   attachFormInput: function attachFormInput(el, callback) {
-    el.addEventListener('input', Object(_utils__WEBPACK_IMPORTED_MODULE_0__["debounce"])(200, function (e) {
+    el.addEventListener('input', debounce__WEBPACK_IMPORTED_MODULE_0___default()(function (e) {
       var input = el.getAttribute("".concat(prefix, ":form.sync"));
       var form = el.closest("[".concat(prefix, "\\:form]")).getAttribute("".concat(prefix, ":form"));
       callback(form, input, el);
-    }));
+    }, 200));
   },
   attachSubmit: function attachSubmit(el, callback) {
     var _this2 = this;
@@ -3261,10 +3355,10 @@ var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
     });
   },
   attachSync: function attachSync(el, callback) {
-    el.addEventListener('input', Object(_utils__WEBPACK_IMPORTED_MODULE_0__["debounce"])(200, function (e) {
+    el.addEventListener('input', debounce__WEBPACK_IMPORTED_MODULE_0___default()(function (e) {
       var model = el.getAttribute("".concat(prefix, ":sync"));
       callback(model, el);
-    }));
+    }, 200));
   },
   parseOutMethodAndParams: function parseOutMethodAndParams(rawMethod) {
     var params = [];
@@ -3288,36 +3382,6 @@ var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
     };
   }
 });
-
-/***/ }),
-
-/***/ "./src/js/utils.js":
-/*!*************************!*\
-  !*** ./src/js/utils.js ***!
-  \*************************/
-/*! exports provided: debounce */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "debounce", function() { return debounce; });
-function debounce(delay, fn) {
-  var timerId;
-  return function () {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    if (timerId) {
-      clearTimeout(timerId);
-    }
-
-    timerId = setTimeout(function () {
-      fn.apply(void 0, args);
-      timerId = null;
-    }, delay);
-  };
-}
 
 /***/ }),
 

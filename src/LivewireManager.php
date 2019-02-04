@@ -40,4 +40,17 @@ class LivewireManager
     {
         $this->prefix = $prefix;
     }
+
+    public function call($component)
+    {
+        return <<<EOT
+<div {$this->prefix()}:root="{$component}">
+    <div>
+        <?php
+        echo "waiting...";
+        ?>
+    </div>
+</div>
+EOT;
+    }
 }
