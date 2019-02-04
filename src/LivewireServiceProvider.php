@@ -39,8 +39,12 @@ EOT;
             return "{$prefix}:click=\"<?php echo($expression); ?>\"";
         });
 
+        Artisan::comand('livewire:watch', function () {
+
+        });
+
         Artisan::command('livewire', function () {
-            $handler = new SocketHandler($this);
+            $handler = new SocketConnectionHandler($this);
 
             IoServer::factory(
                 new HttpServer(new WsServer($handler)),
@@ -79,52 +83,6 @@ EOT
             $this->info("Livewire component [{$component}] successfully created");
         });
 
-        Route::post('/fake-websockets/message', function () {
-            $event = request('event');
-            $payload = request('payload');
-            $component = request('component');
-            $serialized = request('serialized');
-
-            if ($serialized) {
-                $livewire = decrypt($serialized);
-            } else {
-                $livewire = Livewire::activate($component, new \StdClass);
-            }
-
-            try {
-                switch ($event) {
-                    case 'init':
-                        $livewire->mounted();
-                        break;
-                    case 'form-input':
-                        $livewire->formInput($payload['form'], $payload['input'], $payload['value']);
-                        break;
-                    case 'sync':
-                        $livewire->sync($payload['model'], $payload['value']);
-                        // // If we don't return early we cost too much in rendering AND break input elements for some reason.
-                        // return;
-                        break;
-                    case 'fireMethod':
-                        $livewire->{$payload['method']}(...$payload['params']);
-                        break;
-                    default:
-                        throw new \Exception('Unrecongnized event: ' . $event);
-                        break;
-                }
-            } catch (ValidationException $e) {
-                $errors = $e->validator->errors();
-            }
-
-            $dom = $livewire->view($errors ?? null)->render();
-            $refreshForms = $livewire->formsThatNeedInputRefreshing();
-            $livewire->clearFormRefreshes();
-
-            return [
-                'component' => $component,
-                'serialized' => encrypt($livewire),
-                'refreshForms' => $refreshForms,
-                'dom' => $dom,
-            ];
-        });
+        Route::post('/fake-websockets/message', HttpConnectionHandler::class);
     }
 }

@@ -6,7 +6,7 @@ import RootManager from './RootManager'
 const prefix = require('./prefix.js')()
 const morphdom = require('morphdom');
 
-const backend = new Backend(new HttpConnection)
+const backend = new Backend(new WebSocketConnection)
 
 const roots = new RootManager(backend)
 

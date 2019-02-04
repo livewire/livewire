@@ -2995,7 +2995,7 @@ var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
 
 var morphdom = __webpack_require__(/*! morphdom */ "./node_modules/morphdom/dist/morphdom.js");
 
-var backend = new _Backend__WEBPACK_IMPORTED_MODULE_2__["default"](new _HttpConnection__WEBPACK_IMPORTED_MODULE_1__["default"]());
+var backend = new _Backend__WEBPACK_IMPORTED_MODULE_2__["default"](new _WebSocketConnection__WEBPACK_IMPORTED_MODULE_0__["default"]());
 var roots = new _RootManager__WEBPACK_IMPORTED_MODULE_4__["default"](backend);
 
 if (roots.count) {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "684ede8baec3c5e9ecd22c7929b9fce1",
+    "content-hash": "a9e8515aca63c32e8e9d662a6e958561",
     "packages": [
         {
             "name": "cboden/ratchet",
@@ -1698,6 +1698,59 @@
             "description": "Symfony Translation Component",
             "homepage": "https://symfony.com",
             "time": "2019-01-03T09:07:35+00:00"
+        },
+        {
+            "name": "yosymfony/resource-watcher",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/yosymfony/resource-watcher.git",
+                "reference": "937ec60269f9d6e092357a9e1948f97a738dc0dc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/yosymfony/resource-watcher/zipball/937ec60269f9d6e092357a9e1948f97a738dc0dc",
+                "reference": "937ec60269f9d6e092357a9e1948f97a738dc0dc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6",
+                "symfony/finder": "^2.7|^3.0|^4.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^5.7",
+                "symfony/filesystem": "^2.7|^3.0|^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Yosymfony\\ResourceWatcher\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Victor Puertas",
+                    "email": "vpgugr@gmail.com"
+                }
+            ],
+            "description": "A simple resource watcher using Symfony Finder",
+            "homepage": "http://yosymfony.com",
+            "keywords": [
+                "finder",
+                "resources",
+                "symfony",
+                "watcher"
+            ],
+            "time": "2018-05-12T22:34:25+00:00"
         }
     ],
     "packages-dev": [

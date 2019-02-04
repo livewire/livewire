@@ -13,7 +13,8 @@
         "symfony/dom-crawler": "^4.2",
         "illuminate/support": "^5.7",
         "illuminate/validation": "^5.7",
-        "opis/closure": "^3.1"
+        "opis/closure": "^3.1",
+        "yosymfony/resource-watcher": "^2.0"
     },
     "extra": {
         "laravel": {
