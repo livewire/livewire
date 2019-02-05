@@ -33,6 +33,8 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^7.5"
+        "phpunit/phpunit": "^7.5",
+        "illuminate/view": "^5.7",
+        "laravel/framework": "^5.7"
     }
 }

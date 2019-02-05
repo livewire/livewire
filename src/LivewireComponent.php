@@ -74,6 +74,11 @@ abstract class LivewireComponent
         }
     }
 
+    public function onRequest()
+    {
+        $this->createHashesForDiffing();
+    }
+
     public function createHashesForDiffing()
     {
         $properties = array_map(function ($prop) {
@@ -84,13 +89,13 @@ abstract class LivewireComponent
 
         foreach ($properties as $property) {
             // For now only has strings and numbers to not be too slow.
-            if (is_string($this->{$property}) || is_numeric($this->{$property})) {
-                $this->hashes[$property] = Hash::make($this->{$property});
+            if (is_null($this->{$property}) || is_string($this->{$property}) || is_numeric($this->{$property})) {
+                $this->hashes[$property] = crc32($this->{$property});
             }
         }
     }
 
-    public function syncsThatNeedInputRefreshing()
+    public function dirtySyncs()
     {
         $pile = [];
         foreach ($this->hashes as $prop => $hash) {
@@ -98,7 +103,7 @@ abstract class LivewireComponent
                 continue;
             }
             // For now only has strings and numbers to not be too slow.
-            if (! Hash::check($this->{$prop}, $hash)) {
+            if (crc32($this->{$prop}) !== $hash) {
                 $pile[] = $prop;
             }
         }

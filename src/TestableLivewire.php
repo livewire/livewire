@@ -13,9 +13,9 @@ class TestableLivewire
     protected $component;
     protected $rawDom;
 
-    public function __construct($component)
+    public function __construct($component, $prefix)
     {
-        $this->prefix = Livewire::prefix();
+        $this->prefix = $prefix;
         $this->component = $component;
         $this->component->mounted();
         $this->resetDom();

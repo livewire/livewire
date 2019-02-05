@@ -12,8 +12,7 @@ abstract class ConnectionHandler
         $component = $payload['component'];
         $payload = $payload['payload'];
 
-        // Hash values to know what needs to by not-persisted (sync) in the front-end
-        $instance->createHashesForDiffing();
+        $instance->onRequest();
 
         try {
             switch ($event) {
@@ -41,7 +40,7 @@ abstract class ConnectionHandler
 
         $dom = $instance->view($errors ?? null)->render();
         $refreshForms = $instance->formsThatNeedInputRefreshing();
-        $refreshSyncs = $instance->syncsThatNeedInputRefreshing();
+        $refreshSyncs = $instance->dirtySyncs();
         $instance->clearFormRefreshes();
         $instance->clearSyncRefreshes();
 

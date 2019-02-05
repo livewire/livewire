@@ -21,7 +21,7 @@ class LivewireManager
 
     public function mock($name)
     {
-        return new TestableLivewire($this->activate($name, new \StdClass));
+        return new TestableLivewire($this->activate($name, new \StdClass), $this->prefix());
     }
 
     public function script()
