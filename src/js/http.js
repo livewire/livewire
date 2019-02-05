@@ -1,11 +1,16 @@
 import Axios from "axios";
 
-export default class {
-    connect(config) {
+export default {
+    init(onMessage) {
+        this.onMessageCallback = onMessage
         this.serializedComponents = {}
-        this.onMessageCallback = config.onMessage
-        config.onOpen()
-    }
+
+        return Promise.resolve(this)
+    },
+
+    rejectOnClose() {
+        return Promise.resolve()
+    },
 
     sendMessage(payload) {
         const thing = this.serializedComponents[payload.component] || null
@@ -14,7 +19,7 @@ export default class {
                 this.onMessageCallback(response.data)
                 this.serializedComponents[payload.component] = response.data.serialized
             })
-    }
+    },
 
     onMessage(callback) {
         this.onMessageCallback = callback

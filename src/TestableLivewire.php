@@ -34,7 +34,7 @@ class TestableLivewire
             $this->component->formInput($formName, $dataName, $text);
             $this->resetDom();
         } elseif ($dataName = $node->attr("{$this->prefix}--sync")) {
-            $this->component->sync($dataName, $text);
+            $this->component->syncInput($dataName, $text);
             $this->resetDom();
         }
 

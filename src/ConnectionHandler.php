@@ -12,7 +12,7 @@ abstract class ConnectionHandler
         $component = $payload['component'];
         $payload = $payload['payload'];
 
-        $instance->onRequest();
+        $instance->beforeAction();
 
         try {
             switch ($event) {
@@ -23,7 +23,7 @@ abstract class ConnectionHandler
                     $instance->formInput($payload['form'], $payload['input'], $payload['value']);
                     break;
                 case 'sync':
-                    $instance->sync($payload['model'], $payload['value']);
+                    $instance->syncInput($payload['model'], $payload['value']);
                     // // If we don't return early we cost too much in rendering AND break input elements for some reason.
                     // return;
                     break;
@@ -39,15 +39,13 @@ abstract class ConnectionHandler
         }
 
         $dom = $instance->view($errors ?? null)->render();
-        $refreshForms = $instance->formsThatNeedInputRefreshing();
-        $refreshSyncs = $instance->dirtySyncs();
-        $instance->clearFormRefreshes();
-        $instance->clearSyncRefreshes();
+        $dirtyInputs = $instance->dirtyInputs();
+
+        $instance->afterAction();
 
         return [
             'component' => $component,
-            'refreshForms' => $refreshForms,
-            'refreshSyncs' => $refreshSyncs,
+            'dirtyInputs' => $dirtyInputs,
             'dom' => $dom,
         ];
     }

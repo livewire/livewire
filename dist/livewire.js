@@ -2756,119 +2756,6 @@ process.umask = function() { return 0; };
 
 /***/ }),
 
-/***/ "./src/js/Backend.js":
-/*!***************************!*\
-  !*** ./src/js/Backend.js ***!
-  \***************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return _default; });
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-var _default =
-/*#__PURE__*/
-function () {
-  function _default(connection) {
-    _classCallCheck(this, _default);
-
-    this.connection = connection;
-  }
-
-  _createClass(_default, [{
-    key: "init",
-    value: function init(config) {
-      this.connection.connect({
-        onOpen: config.onConnect,
-        onMessage: config.onMessageReceived
-      });
-    }
-  }, {
-    key: "message",
-    value: function message(payload) {
-      this.connection.sendMessage(payload);
-    }
-  }]);
-
-  return _default;
-}();
-
-
-
-/***/ }),
-
-/***/ "./src/js/HttpConnection.js":
-/*!**********************************!*\
-  !*** ./src/js/HttpConnection.js ***!
-  \**********************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return _default; });
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var _default =
-/*#__PURE__*/
-function () {
-  function _default() {
-    _classCallCheck(this, _default);
-  }
-
-  _createClass(_default, [{
-    key: "connect",
-    value: function connect(config) {
-      this.serializedComponents = {};
-      this.onMessageCallback = config.onMessage;
-      config.onOpen();
-    }
-  }, {
-    key: "sendMessage",
-    value: function sendMessage(payload) {
-      var _this = this;
-
-      var thing = this.serializedComponents[payload.component] || null;
-      axios__WEBPACK_IMPORTED_MODULE_0___default.a.post('/fake-websockets/message', _objectSpread({}, payload, {
-        serialized: thing
-      })).then(function (response) {
-        _this.onMessageCallback(response.data);
-
-        _this.serializedComponents[payload.component] = response.data.serialized;
-      });
-    }
-  }, {
-    key: "onMessage",
-    value: function onMessage(callback) {
-      this.onMessageCallback = callback;
-    }
-  }]);
-
-  return _default;
-}();
-
-
-
-/***/ }),
-
 /***/ "./src/js/Root.js":
 /*!************************!*\
   !*** ./src/js/Root.js ***!
@@ -2908,147 +2795,226 @@ function () {
 
 /***/ }),
 
-/***/ "./src/js/RootManager.js":
+/***/ "./src/js/connection.js":
+/*!******************************!*\
+  !*** ./src/js/connection.js ***!
+  \******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _webSocket_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./webSocket.js */ "./src/js/webSocket.js");
+/* harmony import */ var _http_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./http.js */ "./src/js/http.js");
+
+
+/**
+ * I'm so sorry for how rediculously hard to follow this all is.
+ * I'm just so sorry...
+ */
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  connection: null,
+  onMessageCallback: null,
+  init: function init() {
+    var _this = this;
+
+    var onMessage = function onMessage(payload) {
+      _this.onMessageCallback(payload);
+    };
+
+    var fallback = function fallback() {
+      console.log('use http instead of websockets');
+      _http_js__WEBPACK_IMPORTED_MODULE_1__["default"].init(onMessage).then(function (connection) {
+        _this.connection = connection;
+      });
+    };
+
+    return new Promise(function (resolve) {
+      _webSocket_js__WEBPACK_IMPORTED_MODULE_0__["default"].init(onMessage, fallback).catch(function () {
+        console.log('websockets didnt work');
+        return _http_js__WEBPACK_IMPORTED_MODULE_1__["default"].init(onMessage);
+      }).then(function (connection) {
+        console.log('use websockets or http');
+        _this.connection = connection;
+        resolve();
+      });
+    });
+  },
+  onMessage: function onMessage(callback) {
+    this.onMessageCallback = callback;
+  },
+  sendMethod: function sendMethod(method, params, component) {
+    this.sendMessage({
+      event: 'fireMethod',
+      payload: {
+        method: method,
+        params: params
+      },
+      component: component
+    });
+  },
+  sendSync: function sendSync(model, value, component) {
+    this.sendMessage({
+      event: 'sync',
+      payload: {
+        model: model,
+        value: value
+      },
+      component: component
+    });
+  },
+  sendMessage: function sendMessage(payload) {
+    this.connection.sendMessage(payload);
+  }
+});
+
+/***/ }),
+
+/***/ "./src/js/handleMorph.js":
 /*!*******************************!*\
-  !*** ./src/js/RootManager.js ***!
+  !*** ./src/js/handleMorph.js ***!
   \*******************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return _default; });
-/* harmony import */ var _Root__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Root */ "./src/js/Root.js");
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
+/* harmony import */ var _roots_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./roots.js */ "./src/js/roots.js");
+/* harmony import */ var _nodeInitializer_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./nodeInitializer.js */ "./src/js/nodeInitializer.js");
 var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
 
-var _default =
-/*#__PURE__*/
-function () {
-  function _default(backend) {
-    var _this = this;
+var morphdom = __webpack_require__(/*! morphdom */ "./node_modules/morphdom/dist/morphdom.js");
 
-    _classCallCheck(this, _default);
 
-    this.backend = backend;
-    var els = document.querySelectorAll("[".concat(prefix, "\\:root]"));
-    this.roots = {};
-    Array.from(els).forEach(function (el) {
-      _this.roots[el.getAttribute("".concat(prefix, ":root"))] = new _Root__WEBPACK_IMPORTED_MODULE_0__["default"](el);
 
-      if (el.closest("[".concat(prefix, "\\:root]"))) {
-        _this.roots[el.getAttribute("".concat(prefix, ":root"))].setParent(el.closest("[".concat(prefix, "\\:root]")));
+/* harmony default export */ __webpack_exports__["default"] = (function (component, dom, dirtyInputs) {
+  morphdom(_roots_js__WEBPACK_IMPORTED_MODULE_0__["default"].find(component).el.firstElementChild, dom, {
+    onBeforeNodeAdded: function onBeforeNodeAdded(node) {
+      if (typeof node.hasAttribute !== 'function') {
+        return;
       }
-    });
-  }
 
-  _createClass(_default, [{
-    key: "add",
-    value: function add(el) {
-      this.roots[el.getAttribute("".concat(prefix, ":root"))] = new _Root__WEBPACK_IMPORTED_MODULE_0__["default"](el);
-      this.backend.message({
-        event: 'init',
-        payload: {},
-        component: el.getAttribute("".concat(prefix, ":root"))
-      });
-    }
-  }, {
-    key: "isRoot",
-    value: function isRoot(el) {
-      return el.hasAttribute("".concat(prefix, ":root"));
-    }
-  }, {
-    key: "init",
-    value: function init() {
-      var _this2 = this;
+      if (node.hasAttribute("".concat(prefix, ":transition"))) {
+        var transitionName = node.getAttribute("".concat(prefix, ":transition"));
+        node.classList.add("".concat(transitionName, "-enter"));
+        node.classList.add("".concat(transitionName, "-enter-active"));
+        setTimeout(function () {
+          node.classList.remove("".concat(transitionName, "-enter"));
+          setTimeout(function () {
+            node.classList.remove("".concat(transitionName, "-enter-active"));
+          }, 500);
+        }, 65);
+      }
+    },
+    onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
+      if (typeof node.hasAttribute !== 'function') {
+        return;
+      }
 
-      Object.keys(this.roots).forEach(function (key) {
-        _this2.backend.message({
-          event: 'init',
-          payload: {},
-          component: key
-        });
-      });
-    }
-  }, {
-    key: "find",
-    value: function find(componentName) {
-      return this.roots[componentName];
-    }
-  }, {
-    key: "count",
-    get: function get() {
-      return Object.keys(this.roots).length;
-    }
-  }]);
+      if (node.hasAttribute("".concat(prefix, ":transition"))) {
+        var transitionName = node.getAttribute("".concat(prefix, ":transition"));
+        node.classList.add("".concat(transitionName, "-leave-active"));
+        setTimeout(function () {
+          node.classList.add("".concat(transitionName, "-leave-to"));
+          setTimeout(function () {
+            node.classList.remove("".concat(transitionName, "-leave-active"));
+            node.classList.remove("".concat(transitionName, "-leave-to"));
+            node.remove();
+          }, 500);
+        }, 65);
+        return false;
+      }
+    },
+    onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(from, to) {
+      // This allows nesting components
+      if (from.hasAttribute("".concat(prefix, ":root"))) {
+        return false;
+      }
+    },
+    onBeforeElUpdated: function onBeforeElUpdated(el) {
+      // This will need work. But is essentially "input persistance"
+      var isInput = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA';
 
-  return _default;
-}();
+      if (isInput) {
+        if (el.type === 'submit') {
+          return true;
+        }
 
+        var isSync = el.hasAttribute("".concat(prefix, ":sync"));
 
+        if (isSync) {
+          var syncName = el.getAttribute("".concat(prefix, ":sync"));
+
+          if (Array.from(dirtyInputs).includes(syncName)) {
+            return true;
+          }
+
+          {
+            return false;
+          }
+        }
+
+        return false;
+      }
+    },
+    onNodeAdded: function onNodeAdded(node) {
+      if (typeof node.hasAttribute !== 'function') {
+        return;
+      }
+
+      if (_roots_js__WEBPACK_IMPORTED_MODULE_0__["default"].isRoot(node)) {
+        _roots_js__WEBPACK_IMPORTED_MODULE_0__["default"].add(node);
+      } else {
+        Object(_nodeInitializer_js__WEBPACK_IMPORTED_MODULE_1__["default"])(node);
+      }
+    }
+  });
+});
 
 /***/ }),
 
-/***/ "./src/js/WebSocketConnection.js":
-/*!***************************************!*\
-  !*** ./src/js/WebSocketConnection.js ***!
-  \***************************************/
+/***/ "./src/js/http.js":
+/*!************************!*\
+  !*** ./src/js/http.js ***!
+  \************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return _default; });
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var _default =
-/*#__PURE__*/
-function () {
-  function _default() {
-    _classCallCheck(this, _default);
+/* harmony default export */ __webpack_exports__["default"] = ({
+  init: function init(onMessage) {
+    this.onMessageCallback = onMessage;
+    this.serializedComponents = {};
+    return Promise.resolve(this);
+  },
+  rejectOnClose: function rejectOnClose() {
+    return Promise.resolve();
+  },
+  sendMessage: function sendMessage(payload) {
+    var _this = this;
+
+    var thing = this.serializedComponents[payload.component] || null;
+    axios__WEBPACK_IMPORTED_MODULE_0___default.a.post('/fake-websockets/message', _objectSpread({}, payload, {
+      serialized: thing
+    })).then(function (response) {
+      _this.onMessageCallback(response.data);
+
+      _this.serializedComponents[payload.component] = response.data.serialized;
+    });
+  },
+  onMessage: function onMessage(callback) {
+    this.onMessageCallback = callback;
   }
-
-  _createClass(_default, [{
-    key: "connect",
-    value: function connect(config) {
-      var _this = this;
-
-      this.wsConnection = new WebSocket('ws://localhost:8080');
-      this.wsConnection.onopen = config.onOpen;
-
-      this.wsConnection.onmessage = function (e) {
-        config.onMessage(JSON.parse(e.data));
-      };
-
-      this.wsConnection.onclose = function () {
-        console.log('Connection closed');
-        setTimeout(function () {
-          _this.connect(config);
-        }, 1000);
-      };
-    }
-  }, {
-    key: "sendMessage",
-    value: function sendMessage(payload) {
-      this.wsConnection.send(JSON.stringify(payload));
-    }
-  }]);
-
-  return _default;
-}();
-
-
+});
 
 /***/ }),
 
@@ -3061,198 +3027,64 @@ function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _WebSocketConnection__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./WebSocketConnection */ "./src/js/WebSocketConnection.js");
-/* harmony import */ var _HttpConnection__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./HttpConnection */ "./src/js/HttpConnection.js");
-/* harmony import */ var _Backend__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Backend */ "./src/js/Backend.js");
-/* harmony import */ var _renameme__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./renameme */ "./src/js/renameme.js");
-/* harmony import */ var _RootManager__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./RootManager */ "./src/js/RootManager.js");
+/* harmony import */ var _connection_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./connection.js */ "./src/js/connection.js");
+/* harmony import */ var _roots_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./roots.js */ "./src/js/roots.js");
+/* harmony import */ var _handleMorph_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./handleMorph.js */ "./src/js/handleMorph.js");
 
 
+
+_connection_js__WEBPACK_IMPORTED_MODULE_0__["default"].init().then(function () {
+  _connection_js__WEBPACK_IMPORTED_MODULE_0__["default"].onMessage(function (payload) {
+    Object(_handleMorph_js__WEBPACK_IMPORTED_MODULE_2__["default"])(payload.component, payload.dom, payload.dirtyInputs);
+  });
+  _roots_js__WEBPACK_IMPORTED_MODULE_1__["default"].init();
+});
+
+/***/ }),
+
+/***/ "./src/js/nodeInitializer.js":
+/*!***********************************!*\
+  !*** ./src/js/nodeInitializer.js ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _renameme__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./renameme */ "./src/js/renameme.js");
+/* harmony import */ var _connection_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./connection.js */ "./src/js/connection.js");
+/* harmony import */ var _roots_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./roots.js */ "./src/js/roots.js");
 
 
 
 
 var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
 
-var morphdom = __webpack_require__(/*! morphdom */ "./node_modules/morphdom/dist/morphdom.js");
-
-var backend = new _Backend__WEBPACK_IMPORTED_MODULE_2__["default"](new _HttpConnection__WEBPACK_IMPORTED_MODULE_1__["default"]());
-var roots = new _RootManager__WEBPACK_IMPORTED_MODULE_4__["default"](backend);
-
-if (roots.count) {
-  backend.init({
-    onConnect: function onConnect() {
-      roots.init();
-    },
-    onMessageReceived: function onMessageReceived(payload) {
-      var component = payload.component;
-      var dom = payload.dom;
-      var formsInNeedOfRefresh = payload.refreshForms;
-      var syncsInNeedOfRefresh = payload.refreshSyncs;
-      morphdom(roots.find(component).el.firstElementChild, dom, {
-        onBeforeNodeAdded: function onBeforeNodeAdded(node) {
-          if (typeof node.hasAttribute !== 'function') {
-            return;
-          }
-
-          if (node.hasAttribute("".concat(prefix, ":transition"))) {
-            var transitionName = node.getAttribute("".concat(prefix, ":transition"));
-            node.classList.add("".concat(transitionName, "-enter"));
-            node.classList.add("".concat(transitionName, "-enter-active"));
-            setTimeout(function () {
-              node.classList.remove("".concat(transitionName, "-enter"));
-              setTimeout(function () {
-                node.classList.remove("".concat(transitionName, "-enter-active"));
-              }, 500);
-            }, 65);
-          }
-        },
-        onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
-          if (typeof node.hasAttribute !== 'function') {
-            return;
-          }
-
-          if (node.hasAttribute("".concat(prefix, ":transition"))) {
-            var transitionName = node.getAttribute("".concat(prefix, ":transition"));
-            node.classList.add("".concat(transitionName, "-leave-active"));
-            setTimeout(function () {
-              node.classList.add("".concat(transitionName, "-leave-to"));
-              setTimeout(function () {
-                node.classList.remove("".concat(transitionName, "-leave-active"));
-                node.classList.remove("".concat(transitionName, "-leave-to"));
-                node.remove();
-              }, 500);
-            }, 65);
-            return false;
-          }
-        },
-        onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(from, to) {
-          // This allows nesting components
-          if (from.hasAttribute("".concat(prefix, ":root"))) {
-            return false;
-          }
-        },
-        onBeforeElUpdated: function onBeforeElUpdated(el) {
-          // This will need work. But is essentially "input persistance"
-          var isInput = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA';
-
-          if (isInput) {
-            if (el.type === 'submit') {
-              return true;
-            }
-
-            var isInForm = el.hasAttribute("".concat(prefix, ":form.sync"));
-
-            if (isInForm) {
-              var formName = el.closest("[".concat(prefix, "\\:form]")).getAttribute("".concat(prefix, ":form"));
-
-              if (Array.from(formsInNeedOfRefresh).includes(formName)) {
-                return true;
-              }
-
-              {
-                return false;
-              }
-            }
-
-            var isSync = el.hasAttribute("".concat(prefix, ":sync"));
-
-            if (isSync) {
-              var syncName = el.getAttribute("".concat(prefix, ":sync"));
-
-              if (Array.from(syncsInNeedOfRefresh).includes(syncName)) {
-                return true;
-              }
-
-              {
-                return false;
-              }
-            }
-
-            return false;
-          }
-        },
-        onNodeAdded: function onNodeAdded(node) {
-          if (typeof node.hasAttribute !== 'function') {
-            return;
-          }
-
-          if (roots.isRoot(node)) {
-            roots.add(node);
-          } else {
-            initializeNode(node);
-          }
-        }
-      });
-    }
-  });
-}
-
-function sendMethod(method, params, el) {
-  backend.message({
-    event: 'fireMethod',
-    payload: {
-      method: method,
-      params: params
-    },
-    component: el.closest("[".concat(prefix, "\\:root]")).getAttribute("".concat(prefix, ":root"))
-  });
-}
-
-function sendSync(model, el) {
-  backend.message({
-    event: 'sync',
-    payload: {
-      model: model,
-      value: el.value
-    },
-    component: el.closest("[".concat(prefix, "\\:root]")).getAttribute("".concat(prefix, ":root"))
-  });
-}
-
-function sendFormInput(form, input, el) {
-  backend.message({
-    event: 'form-input',
-    payload: {
-      form: form,
-      input: input,
-      value: el.value
-    },
-    component: el.closest("[".concat(prefix, "\\:root]")).getAttribute("".concat(prefix, ":root"))
-  });
-}
-
-function initializeNode(node) {
+/* harmony default export */ __webpack_exports__["default"] = (function (node) {
   if (node.hasAttribute("".concat(prefix, ":click"))) {
-    _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachClick(node, function (method, params, el) {
-      sendMethod(method, params, el);
-    });
-  }
-
-  if (node.hasAttribute("".concat(prefix, ":form.sync"))) {
-    _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachFormInput(node, function (form, input, el) {
-      sendFormInput(form, input, el);
+    _renameme__WEBPACK_IMPORTED_MODULE_0__["default"].attachClick(node, function (method, params, el) {
+      _connection_js__WEBPACK_IMPORTED_MODULE_1__["default"].sendMethod(method, params, _roots_js__WEBPACK_IMPORTED_MODULE_2__["default"].getRootNameFromEl(el));
     });
   }
 
   if (node.hasAttribute("".concat(prefix, ":submit"))) {
-    _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachSubmit(node, function (method, params, el) {
-      sendMethod(method, [params], el);
+    _renameme__WEBPACK_IMPORTED_MODULE_0__["default"].attachSubmit(node, function (method, params, el) {
+      sendMethod(method, [params], _roots_js__WEBPACK_IMPORTED_MODULE_2__["default"].getRootNameFromEl(el));
     });
   }
 
   if (node.hasAttribute("".concat(prefix, ":keydown.enter"))) {
-    _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachEnter(node, function (method, params, el) {
-      sendMethod(method, params, el);
+    _renameme__WEBPACK_IMPORTED_MODULE_0__["default"].attachEnter(node, function (method, params, el) {
+      _connection_js__WEBPACK_IMPORTED_MODULE_1__["default"].sendMethod(method, params, _roots_js__WEBPACK_IMPORTED_MODULE_2__["default"].getRootNameFromEl(el));
     });
   }
 
   if (node.hasAttribute("".concat(prefix, ":sync"))) {
-    _renameme__WEBPACK_IMPORTED_MODULE_3__["default"].attachSync(node, function (model, el) {
-      sendSync(model, el);
+    _renameme__WEBPACK_IMPORTED_MODULE_0__["default"].attachSync(node, function (model, el) {
+      _connection_js__WEBPACK_IMPORTED_MODULE_1__["default"].sendSync(model, _roots_js__WEBPACK_IMPORTED_MODULE_2__["default"].getRootNameFromEl(el));
     });
   }
-}
+});
 
 /***/ }),
 
@@ -3380,6 +3212,113 @@ var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
       method: method,
       params: params
     };
+  }
+});
+
+/***/ }),
+
+/***/ "./src/js/roots.js":
+/*!*************************!*\
+  !*** ./src/js/roots.js ***!
+  \*************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _Root__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Root */ "./src/js/Root.js");
+/* harmony import */ var _connection_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./connection.js */ "./src/js/connection.js");
+
+
+
+var prefix = __webpack_require__(/*! ./prefix.js */ "./src/js/prefix.js")();
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  roots: {},
+  init: function init() {
+    var _this = this;
+
+    var els = document.querySelectorAll("[".concat(prefix, "\\:root]"));
+    Array.from(els).forEach(function (el) {
+      _this.roots[el.getAttribute("".concat(prefix, ":root"))] = new _Root__WEBPACK_IMPORTED_MODULE_0__["default"](el);
+
+      if (el.closest("[".concat(prefix, "\\:root]"))) {
+        _this.roots[el.getAttribute("".concat(prefix, ":root"))].setParent(el.closest("[".concat(prefix, "\\:root]")));
+      }
+    });
+    this.sendMessage();
+  },
+  add: function add(el) {
+    this.roots[el.getAttribute("".concat(prefix, ":root"))] = new _Root__WEBPACK_IMPORTED_MODULE_0__["default"](el);
+    _connection_js__WEBPACK_IMPORTED_MODULE_1__["default"].sendMessage({
+      event: 'init',
+      payload: {},
+      component: el.getAttribute("".concat(prefix, ":root"))
+    });
+  },
+  isRoot: function isRoot(el) {
+    return el.hasAttribute("".concat(prefix, ":root"));
+  },
+  sendMessage: function sendMessage() {
+    Object.keys(this.roots).forEach(function (key) {
+      _connection_js__WEBPACK_IMPORTED_MODULE_1__["default"].sendMessage({
+        event: 'init',
+        payload: {},
+        component: key
+      });
+    });
+  },
+  getRootNameFromEl: function getRootNameFromEl(el) {
+    return el.closest("[".concat(prefix, "\\:root]")).getAttribute("".concat(prefix, ":root"));
+  },
+  find: function find(componentName) {
+    return this.roots[componentName];
+  },
+
+  get count() {
+    return Object.keys(this.roots).length;
+  }
+
+});
+
+/***/ }),
+
+/***/ "./src/js/webSocket.js":
+/*!*****************************!*\
+  !*** ./src/js/webSocket.js ***!
+  \*****************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ({
+  // That's a fun param name lol:
+  init: function init(onMessage, fallbackCallback) {
+    var _this = this;
+
+    return new Promise(function (resolve, reject) {
+      _this.wsConnection = new WebSocket('ws://localhost:8080');
+
+      _this.wsConnection.onerror = function (e) {
+        reject();
+      };
+
+      _this.wsConnection.onclose = function () {
+        fallbackCallback();
+      };
+
+      _this.wsConnection.onopen = function () {
+        resolve(_this);
+      };
+
+      _this.wsConnection.onmessage = function (e) {
+        onMessage(JSON.parse(e.data));
+      };
+    });
+  },
+  sendMessage: function sendMessage(payload) {
+    this.wsConnection.send(JSON.stringify(payload));
   }
 });
 

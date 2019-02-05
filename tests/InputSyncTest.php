@@ -8,9 +8,9 @@ use Livewire\LivewireManager;
 class InputSyncTest extends TestCase
 {
     /** @test */
-    function can_sync_data()
+    function can_sync_input_data()
     {
-        $this->instance->sync('modelnumber', '123abc');
+        $this->instance->syncInput('modelnumber', '123abc');
         $this->assertequals('123abc', $this->instance->modelnumber);
     }
 
@@ -18,12 +18,12 @@ class InputSyncTest extends TestCase
     function synced_data_shows_up_as_dirty_if_changed_from_something_other_than_sync()
     {
         $this->instance->onRequest();
-        $this->instance->sync('modelnumber', '123abc');
-        $this->assertEmpty($this->instance->dirtySyncs());
+        $this->instance->syncInput('modelnumber', '123abc');
+        $this->assertEmpty($this->instance->dirtyInputs());
 
         $this->instance->onRequest();
         $this->instance->changeModelNumber('456def');
-        $this->assertContains('modelNumber', $this->instance->dirtySyncs());
+        $this->assertContains('modelNumber', $this->instance->dirtyInputs());
     }
 
     public function setUp()

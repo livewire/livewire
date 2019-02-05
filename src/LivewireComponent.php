@@ -2,7 +2,9 @@
 
 namespace Livewire;
 
+use Closure;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Fluent;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
@@ -35,7 +37,18 @@ abstract class LivewireComponent
         //
     }
 
-    public function sync($model, $value)
+    public function validated($fields)
+    {
+        $result = [];
+        foreach ((array) $fields as $field) {
+            $result[$field] = $this->{$field};
+        }
+
+        return Validator::make($result, $this->validates)
+            ->validate();
+    }
+
+    public function syncInput($model, $value)
     {
         if (method_exists($this, 'onSync' . studly_case($model))) {
             $this->{'onSync' . studly_case($model)}($value);
@@ -46,27 +59,6 @@ abstract class LivewireComponent
         $this->{$model} = $value;
     }
 
-    public function makeSerializable($callback)
-    {
-        return new SerializableClosure($callback);
-    }
-
-    public function formInput($form, $input, $value)
-    {
-        throw_unless($this->forms[$form], new \Exception('register form: '.$form));
-
-        $this->forms[$form]->updateValue($input, $value);
-    }
-
-    public function formsThatNeedInputRefreshing()
-    {
-        return array_filter(
-            array_map(function ($form, $name) {
-                return $form->needsInputRefresh() ? $name : false;
-            }, $this->forms->toArray(), array_keys($this->forms->toArray()))
-        );
-    }
-
     public function clearFormRefreshes()
     {
         foreach ($this->forms->toArray() as $form) {
@@ -74,20 +66,19 @@ abstract class LivewireComponent
         }
     }
 
-    public function onRequest()
+    public function beforeAction()
     {
         $this->createHashesForDiffing();
     }
 
+    public function afterAction()
+    {
+        $this->clearSyncRefreshes();
+    }
+
     public function createHashesForDiffing()
     {
-        $properties = array_map(function ($prop) {
-            return $prop->getName();
-        }, (new \ReflectionClass($this))->getProperties());
-
-        $properties = array_diff($properties, $this->propertiesExemptFromHashing);
-
-        foreach ($properties as $property) {
+        foreach ($this->getUserDefinedProps() as $property) {
             // For now only has strings and numbers to not be too slow.
             if (is_null($this->{$property}) || is_string($this->{$property}) || is_numeric($this->{$property})) {
                 $this->hashes[$property] = crc32($this->{$property});
@@ -95,7 +86,7 @@ abstract class LivewireComponent
         }
     }
 
-    public function dirtySyncs()
+    public function dirtyInputs()
     {
         $pile = [];
         foreach ($this->hashes as $prop => $hash) {
@@ -103,8 +94,11 @@ abstract class LivewireComponent
                 continue;
             }
             // For now only has strings and numbers to not be too slow.
-            if (crc32($this->{$prop}) !== $hash) {
-                $pile[] = $prop;
+
+            if (is_null($this->{$prop}) || is_string($this->{$prop}) || is_numeric($this->{$prop})) {
+                if (crc32($this->{$prop}) !== $hash) {
+                    $pile[] = $prop;
+                }
             }
         }
 
@@ -117,14 +111,6 @@ abstract class LivewireComponent
         $this->exemptFromHashDiffing = [];
     }
 
-    public function refresh()
-    {
-        $this->connection->send(json_encode([
-            'component' => $this->component,
-            'dom' => $this->render()->render(),
-        ]));
-    }
-
     public function view($errors = null)
     {
         $errors = $errors ? (new ViewErrorBag)->put('default', $errors) : new ViewErrorBag;
@@ -132,8 +118,38 @@ abstract class LivewireComponent
         return $this->render()->with('forms', $this->forms)->with('errors', $errors);
     }
 
+    public function getProps()
+    {
+        return array_map(function ($prop) {
+            return $prop->getName();
+        }, (new \ReflectionClass($this))->getProperties());
+    }
+
+    public function getUserDefinedProps()
+    {
+        return array_diff($this->getProps(), $this->propertiesExemptFromHashing);
+    }
+
+    public function makeSerializable($callback)
+    {
+        return new SerializableClosure($callback);
+    }
+
     public function __toString()
     {
         return $this->view();
+    }
+
+    public function __sleep()
+    {
+        // Prepare all callbacks for serialization.
+        // PHP cannot serialize closures by default.
+        foreach ($props = $this->getProps() as $prop) {
+            if ($this->{$prop} instanceof Closure) {
+                $this->{$prop} = $this->makeSerializable($this->{$prop});
+            }
+        }
+
+        return $props;
     }
 }
