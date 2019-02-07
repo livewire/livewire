@@ -1,24 +1,41 @@
 export default {
-    // That's a fun param name lol:
-    init(onMessage, fallbackCallback) {
+    onMessage: null,
+    fallback: null,
+
+    init() {
         return new Promise((resolve, reject) => {
             this.wsConnection = new WebSocket('ws://localhost:8080');
-            this.wsConnection.onerror = e => {
-                reject()
-            }
-
-            this.wsConnection.onclose = () => {
-                fallbackCallback()
-            }
 
             this.wsConnection.onopen = () => {
                 resolve(this)
             }
 
-            this.wsConnection.onmessage = e => {
-                onMessage(JSON.parse(e.data))
+            this.wsConnection.onerror = e => {
+                reject(e)
             }
         })
+    },
+
+    wireUp() {
+        this.wsConnection.onclose = () => {
+            console.log('retrying connection')
+            setTimeout(() => {
+                this.init()
+                    .then(() => {
+                        console.log('all good')
+                        this.wireUp()
+                    })
+                    .catch(() => {
+                        console.log('didnt work, switching to http')
+                        this.fallback()
+                    })
+            }, 200);
+        }
+
+
+        this.wsConnection.onmessage = e => {
+            this.onMessage.call(this, JSON.parse(e.data))
+        }
     },
 
     sendMessage(payload) {

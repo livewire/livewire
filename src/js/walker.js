@@ -4,6 +4,7 @@
 export default {
     root: null,
     callback: null,
+    depth: 0,
 
     walk(root, callback) {
         this.root = root
@@ -18,6 +19,7 @@ export default {
 
         let child = this.getFirstChild(node)
         if (child) {
+            this.depth++
             return this.start(child)
         } else {
             return this.goToNextSiblingOrUpToParent(node)
@@ -29,9 +31,10 @@ export default {
         if (sibling) {
             return this.start(sibling)
         } else {
-            if (node.parentNode === this.root) {
+            if (this.depth < 0) {
                 return
             } else {
+                this.depth--
                 return this.goToNextSiblingOrUpToParent(node.parentNode)
             }
         }
@@ -41,12 +44,13 @@ export default {
         const child = node.firstChild
 
         if (child && child.nodeType !== Node.ELEMENT_NODE) {
-            return this.getFirstChild(child)
+            return this.getNextSibling(child)
         }
         return child
     },
 
     getNextSibling(node) {
+        if (node === null) debugger
         const sibling = node.nextSibling
 
         if (sibling && sibling.nodeType !== Node.ELEMENT_NODE) {

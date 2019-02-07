@@ -6,18 +6,21 @@ use Illuminate\Validation\ValidationException;
 
 abstract class ConnectionHandler
 {
-    public function handle($payload, $instance)
+    public function handle($payload)
     {
         $event = $payload['event'] ?? 'init';
+        $serialized = $payload['serialized'];
         $component = $payload['component'];
         $payload = $payload['payload'];
+
+        $instance = decrypt($serialized);
 
         $instance->beforeAction();
 
         try {
             switch ($event) {
-                case 'init':
-                    $instance->mounted();
+                case 'refresh':
+                    // Do nothing.
                     break;
                 case 'form-input':
                     $instance->formInput($payload['form'], $payload['input'], $payload['value']);
@@ -38,7 +41,7 @@ abstract class ConnectionHandler
             $errors = $e->validator->errors();
         }
 
-        $dom = $instance->view($errors ?? null)->render();
+        $dom = $instance->view($component, $errors ?? null)->render();
         $dirtyInputs = $instance->dirtyInputs();
 
         $instance->afterAction();
@@ -47,6 +50,7 @@ abstract class ConnectionHandler
             'component' => $component,
             'dirtyInputs' => $dirtyInputs,
             'dom' => $dom,
+            'serialized' => encrypt($instance),
         ];
     }
 }

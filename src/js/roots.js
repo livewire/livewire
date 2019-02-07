@@ -1,53 +1,38 @@
 import Root from "./Root";
-import connection from './connection.js'
 const prefix = require('./prefix.js')()
 
 export default {
     roots: {},
+    allRoots: {},
 
     init() {
-        const els = document.querySelectorAll(`[${prefix}\\:root]`)
+        const el = document.querySelector(`[${prefix}\\:root-id]`)
 
-        Array.from(els).forEach(el => {
-            this.roots[el.getAttribute(`${prefix}:root`)] = new Root(el)
-
-            if (el.closest(`[${prefix}\\:root]`)) {
-                this.roots[el.getAttribute(`${prefix}:root`)].setParent(el.closest(`[${prefix}\\:root]`))
-            }
-        })
-
-        this.sendMessage()
+        const componentId = el.getAttribute(`${prefix}:root-id`)
+        const root = new Root(componentId, el, true)
+        this.roots[root.id] = root
+        this.allRoots[root.id] = root
+        window.roots = this
     },
 
-    add(el) {
-        this.roots[el.getAttribute(`${prefix}:root`)] = new Root(el)
-        connection.sendMessage({
-            event: 'init',
-            payload: {},
-            component: el.getAttribute(`${prefix}:root`),
-        })
+    add(id, root) {
+        this.allRoots[id] = root
     },
 
     isRoot(el) {
-        return el.hasAttribute(`${prefix}:root`)
+        return (typeof el.hasAttribute === 'function') && el.hasAttribute(`${prefix}:root-id`)
     },
 
-    sendMessage() {
-        Object.keys(this.roots).forEach(key => {
-            connection.sendMessage({
-                event: 'init',
-                payload: {},
-                component: key,
-            })
-        })
+    getRootIdFromEl(el) {
+        return el.closest(`[${prefix}\\:root-id]`).getAttribute(`${prefix}:root-id`)
     },
 
-    getRootNameFromEl(el) {
-        return el.closest(`[${prefix}\\:root]`).getAttribute(`${prefix}:root`)
+    find(id) {
+        return this.allRoots[id]
     },
 
-    find(componentName) {
-        return this.roots[componentName]
+    findByEl(el) {
+        return this.find(this.getRootIdFromEl(el))
     },
 
     get count() {

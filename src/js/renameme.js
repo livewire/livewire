@@ -27,14 +27,6 @@ export default {
         })
     },
 
-    attachFormInput(el, callback) {
-        el.addEventListener('input', debounce(e => {
-            const input = el.getAttribute(`${prefix}:form.sync`)
-            const form = el.closest(`[${prefix}\\:form]`).getAttribute(`${prefix}:form`)
-            callback(form, input, el)
-        }, 200))
-    },
-
     attachSubmit(el, callback) {
         el.addEventListener('submit', e => {
             e.preventDefault()

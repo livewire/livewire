@@ -1,65 +1,62 @@
 import webSocket from './webSocket.js'
 import http from './http.js'
+import roots from './roots.js';
 
-/**
- * I'm so sorry for how rediculously hard to follow this all is.
- * I'm just so sorry...
- */
 export default {
     connection: null,
-    onMessageCallback: null,
 
-    init() {
-        const onMessage = (payload) => {
-            this.onMessageCallback(payload)
+    init: async function () {
+        try {
+            this.connection = await webSocket.init()
+            console.log('using websockets')
+        } catch (error) {
+            this.connection = http.init()
+            console.log('using http')
         }
 
-        const fallback = () => {
-            console.log('use http instead of websockets')
-            http.init(onMessage).then(connection => {
-                this.connection = connection
-            })
+        this.connection.fallback = () => {
+            console.log('switching back to http')
+            this.connection = http.init()
         }
 
-        return new Promise(resolve => {
-            webSocket.init(onMessage, fallback)
-                .catch(() => {
-                    console.log('websockets didnt work')
-                    return http.init(onMessage)
-                })
-                .then(connection => {
-                    console.log('use websockets or http')
-                    this.connection = connection
-                    resolve()
-                })
-        })
+        this.connection.onMessage = (payload) => {
+            this.onMessage(payload)
+        }
+
+        this.connection.wireUp()
+
+        return this.connection
     },
 
-    onMessage(callback) {
-        this.onMessageCallback = callback
+    onMessage(payload) {
+        roots.find(payload.component).replace(payload.dom, payload.dirtyInputs)
+        roots.find(payload.component).serialized = payload.serialized
     },
 
-    sendMethod(method, params, component) {
+    sendMessage(payload, root) {
+        this.connection.sendMessage({
+            ...payload,
+            ...{
+                component: root.id,
+                serialized: root.serialized,
+            },
+        });
+    },
+
+    sendMethod(method, params, root) {
         this.sendMessage({
             event: 'fireMethod',
             payload: {
                 method,
                 params,
             },
-            component
-        })
+        }, root)
     },
 
-    sendSync(model, value, component) {
+    sendSync(model, value, root) {
         this.sendMessage({
             event: 'sync',
             payload: { model, value },
-            component,
-        })
+        }, root)
     },
-
-    sendMessage(payload) {
-        this.connection.sendMessage(payload);
-    },
-
 }

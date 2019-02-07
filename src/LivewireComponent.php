@@ -14,21 +14,11 @@ abstract class LivewireComponent
 {
     protected $hashes = [];
     protected $exemptFromHashDiffing = [];
-    protected $connection;
-    protected $component;
-    protected $forms;
 
     protected $propertiesExemptFromHashing = [
         'hashes', 'exemptFromHashDiffing', 'connection',
         'component', 'forms',
     ];
-
-    public function __construct($connection, $component)
-    {
-        $this->connection = $connection;
-        $this->component = $component;
-        $this->forms = new LivewireFormCollection;
-    }
 
     abstract public function render();
 
@@ -57,13 +47,6 @@ abstract class LivewireComponent
         $this->exemptFromHashDiffing[] = $model;
 
         $this->{$model} = $value;
-    }
-
-    public function clearFormRefreshes()
-    {
-        foreach ($this->forms->toArray() as $form) {
-            $form->refreshed();
-        }
     }
 
     public function beforeAction()
@@ -111,11 +94,11 @@ abstract class LivewireComponent
         $this->exemptFromHashDiffing = [];
     }
 
-    public function view($errors = null)
+    public function view($id, $errors = null)
     {
         $errors = $errors ? (new ViewErrorBag)->put('default', $errors) : new ViewErrorBag;
 
-        return $this->render()->with('forms', $this->forms)->with('errors', $errors);
+        return $this->render()->with('errors', $errors)->with('id', $id);
     }
 
     public function getProps()
@@ -133,11 +116,6 @@ abstract class LivewireComponent
     public function makeSerializable($callback)
     {
         return new SerializableClosure($callback);
-    }
-
-    public function __toString()
-    {
-        return $this->view();
     }
 
     public function __sleep()

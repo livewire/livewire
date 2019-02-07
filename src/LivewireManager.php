@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\File;
 class LivewireManager
 {
     protected $prefix = 'livewire';
+    protected $jsObject = [
+        'components' => []
+    ];
     protected $components = [];
 
     public function register($name, $viewClass)
@@ -14,9 +17,9 @@ class LivewireManager
         $this->components[$name] = $viewClass;
     }
 
-    public function activate($name, $connection)
+    public function activate($name)
     {
-        return new $this->components[$name]($connection, $name);
+        return new $this->components[$name]($name);
     }
 
     public function mock($name)
@@ -28,7 +31,7 @@ class LivewireManager
     {
         return '<script>'
             . File::get(__DIR__ . '/../dist/livewire.js')
-            . '</script>';
+            . '</script><script>window.Livewire = '.json_encode($this->jsObject).'</script>';
     }
 
     public function prefix()
@@ -41,16 +44,20 @@ class LivewireManager
         $this->prefix = $prefix;
     }
 
-    public function call($component)
+    public function mount($component)
     {
-        return <<<EOT
-<div {$this->prefix()}:root="{$component}">
-    <div>
-        <?php
-        echo "waiting...";
-        ?>
-    </div>
-</div>
-EOT;
+        $id = str_random(20);
+        $instance = $this->activate($component);
+        $instance->mounted();
+        $dom = $instance->view($id)->render();
+        $serialized = encrypt($instance);
+
+        $this->jsObject['components'][$id] = [
+            'id' => $id,
+            'serialized' => $serialized,
+            'dom' => $dom,
+        ];
+
+        return $dom;
     }
 }

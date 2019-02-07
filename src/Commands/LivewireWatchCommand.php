@@ -52,7 +52,7 @@ class LivewireWatchCommand extends Command
                 goto start_process;
             }
 
-            usleep($pointFiveSeconds = 500000);
+            usleep($pointFiveSeconds = 250000);
         }
     }
 }

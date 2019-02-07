@@ -1,27 +1,20 @@
 import Axios from "axios";
 
 export default {
-    init(onMessage) {
-        this.onMessageCallback = onMessage
-        this.serializedComponents = {}
+    onMessage: null,
 
-        return Promise.resolve(this)
+    init() {
+        return this
     },
 
-    rejectOnClose() {
-        return Promise.resolve()
+    wireUp() {
+        //
     },
 
     sendMessage(payload) {
-        const thing = this.serializedComponents[payload.component] || null
-        Axios.post('/fake-websockets/message', {...payload, ...{ serialized: thing}})
+        Axios.post('/fake-websockets/message', payload)
             .then(response => {
-                this.onMessageCallback(response.data)
-                this.serializedComponents[payload.component] = response.data.serialized
+                this.onMessage.call(this, response.data)
             })
     },
-
-    onMessage(callback) {
-        this.onMessageCallback = callback
-    }
 }

@@ -55,7 +55,7 @@ class LivewireServiceProvider extends ServiceProvider
     public function registerBladeDirectives()
     {
         Blade::directive('livewire', function ($expression) {
-            return "<?php echo \Livewire\Livewire::call({$expression}) ?>";
+            return "<?php echo \Livewire\Livewire::mount({$expression}) ?>";
         });
     }
 }

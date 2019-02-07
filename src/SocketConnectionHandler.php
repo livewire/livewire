@@ -12,43 +12,28 @@ use Ratchet\WebSocket\WsServer;
 class SocketConnectionHandler extends ConnectionHandler implements MessageComponentInterface
 {
     protected $output;
-    protected $clients;
-    protected $liveViewsByResourceId;
 
     public function __construct($console)
     {
         $this->output = $console;
-        $this->clients = new \SplObjectStorage;
-        $this->liveViewsByResourceId = [];
     }
 
     public function onOpen(ConnectionInterface $conn)
     {
-        $this->liveViewsByResourceId[$conn->resourceId] = [];
-        $this->clients->attach($conn);
-
         $this->output->info("Connection opened: ({$conn->resourceId})");
     }
 
     public function onMessage(ConnectionInterface $from, $msg)
     {
         $stuff = json_decode($msg, $asArray = true);
-        $component = $stuff['component'];
-        $event = $stuff['event'];
 
-        if (! isset($this->liveViewsByResourceId[$from->resourceId][$component])) {
-            $this->liveViewsByResourceId[$from->resourceId][$component] = Livewire::activate($component, $from);
-        }
+        $this->output->info("Event received: ({$stuff['event']})");
 
-        $this->output->info("Event received: ({$event})");
-
-        $from->send(json_encode($this->handle($stuff, $this->liveViewsByResourceId[$from->resourceId][$component])));
+        $from->send(json_encode($this->handle($stuff)));
     }
 
     public function onClose(ConnectionInterface $conn)
     {
-        $this->clients->detach($conn);
-
         $this->output->info("Connection closed: ({$conn->resourceId})");
     }
 
