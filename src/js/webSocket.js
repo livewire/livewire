@@ -1,6 +1,7 @@
 export default {
     onMessage: null,
     fallback: null,
+    refreshDom: null,
 
     init() {
         return new Promise((resolve, reject) => {
@@ -24,12 +25,13 @@ export default {
                     .then(() => {
                         console.log('all good')
                         this.wireUp()
+                        this.refreshDom()
                     })
                     .catch(() => {
                         console.log('didnt work, switching to http')
                         this.fallback()
                     })
-            }, 200);
+            }, 400);
         }
 
 

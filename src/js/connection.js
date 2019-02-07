@@ -23,6 +23,9 @@ export default {
             this.onMessage(payload)
         }
 
+        // I'm sorry for these terrible things.
+        this.connection.refreshDom = this.refreshDom.bind(this)
+
         this.connection.wireUp()
 
         return this.connection
@@ -58,5 +61,11 @@ export default {
             event: 'sync',
             payload: { model, value },
         }, root)
+    },
+
+    refreshDom() {
+        Object.keys(roots.allRoots).forEach(id => {
+            this.sendMessage({event: 'refresh', payload: {}}, roots.allRoots[id])
+        })
     },
 }
