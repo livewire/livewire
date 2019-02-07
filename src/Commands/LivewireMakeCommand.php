@@ -32,7 +32,7 @@ class LivewireMakeCommand extends Command
             return;
         }
 
-        $this->ensureDirectoryExists();
+        $this->ensureDirectoryExists($directory);
 
         $this->makeFile($filePath, $component);
 
