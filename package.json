@@ -23,7 +23,6 @@
     "debounce": "^1.2.0",
     "false": "^0.0.4",
     "laravel-mix": "^4.0.14",
-    "morphdom": "^2.3.3",
     "vue-template-compiler": "^2.5.22"
   }
 }

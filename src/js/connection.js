@@ -17,6 +17,9 @@ export default {
         this.connection.fallback = () => {
             console.log('switching back to http')
             this.connection = http.init()
+            this.connection.onMessage = (payload) => {
+                this.onMessage(payload)
+            }
         }
 
         this.connection.onMessage = (payload) => {

@@ -43,6 +43,7 @@ class LivewireWatchCommand extends Command
             }
         });
 
+        // @todo - this loop is resource costly - maybe too fast?
         while ($process->isRunning()) {
             if ($watcher->findChanges()->hasChanges()) {
                 $process->stop();

@@ -41,7 +41,7 @@ abstract class ConnectionHandler
             $errors = $e->validator->errors();
         }
 
-        $dom = $instance->view($component, $errors ?? null)->render();
+        $dom = $instance->dom($component, $errors ?? null);
         $dirtyInputs = $instance->dirtyInputs();
 
         $instance->afterAction();

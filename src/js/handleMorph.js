@@ -1,5 +1,5 @@
 const prefix = require('./prefix.js')()
-const morphdom = require('morphdom');
+import morphdom from './morphdom'
 import roots from './roots.js'
 import initializeNode from './nodeInitializer.js'
 
@@ -7,10 +7,14 @@ export default function (el, dom, dirtyInputs) {
     morphdom(el, dom, {
         childrenOnly: false,
 
+        getNodeKey(node) {
+            return node.id;
+        },
+
         onBeforeNodeAdded(node) {
-            // if (typeof node.hasAttribute !== 'function') {
-            //     return
-            // }
+            if (typeof node.hasAttribute !== 'function') {
+                return
+            }
 
             // if (node.hasAttribute(`${prefix}:root-id`) && !from.isSameNode(el)) {
             //     console.log('should hit (added)')
@@ -18,25 +22,25 @@ export default function (el, dom, dirtyInputs) {
             // }
             // console.log('before node added: ', node)
             // console.log(node)
-            // if (node.hasAttribute(`${prefix}:transition`)) {
-            //     const transitionName = node.getAttribute(`${prefix}:transition`)
+            if (node.hasAttribute(`${prefix}:transition`)) {
+                const transitionName = node.getAttribute(`${prefix}:transition`)
 
-            //     node.classList.add(`${transitionName}-enter`)
-            //     node.classList.add(`${transitionName}-enter-active`)
+                node.classList.add(`${transitionName}-enter`)
+                node.classList.add(`${transitionName}-enter-active`)
 
-            //     setTimeout(() => {
-            //         node.classList.remove(`${transitionName}-enter`)
-            //         setTimeout(() => {
-            //             node.classList.remove(`${transitionName}-enter-active`)
-            //         }, 500)
-            //     }, 65)
-            // }
+                setTimeout(() => {
+                    node.classList.remove(`${transitionName}-enter`)
+                    setTimeout(() => {
+                        node.classList.remove(`${transitionName}-enter-active`)
+                    }, 500)
+                }, 65)
+            }
         },
 
         onBeforeNodeDiscarded(node) {
-            // if (typeof node.hasAttribute !== 'function') {
-            //     return
-            // }
+            if (typeof node.hasAttribute !== 'function') {
+                return
+            }
 
             // if (node.hasAttribute(`${prefix}:root-id`) && !from.isSameNode(el)) {
             //     console.log('should hit (added)')
@@ -46,22 +50,22 @@ export default function (el, dom, dirtyInputs) {
             // if (typeof node.hasAttribute !== 'function') {
             //     return
             // }
-            // if (node.hasAttribute(`${prefix}:transition`)) {
-            //     const transitionName = node.getAttribute(`${prefix}:transition`)
+            if (node.hasAttribute(`${prefix}:transition`)) {
+                const transitionName = node.getAttribute(`${prefix}:transition`)
 
-            //     node.classList.add(`${transitionName}-leave-active`)
+                node.classList.add(`${transitionName}-leave-active`)
 
-            //     setTimeout(() => {
-            //     node.classList.add(`${transitionName}-leave-to`)
-            //         setTimeout(() => {
-            //             node.classList.remove(`${transitionName}-leave-active`)
-            //             node.classList.remove(`${transitionName}-leave-to`)
-            //             node.remove()
-            //         }, 500)
-            //     }, 65)
+                setTimeout(() => {
+                node.classList.add(`${transitionName}-leave-to`)
+                    setTimeout(() => {
+                        node.classList.remove(`${transitionName}-leave-active`)
+                        node.classList.remove(`${transitionName}-leave-to`)
+                        node.remove()
+                    }, 500)
+                }, 65)
 
-            //     return false
-            // }
+                return false
+            }
         },
 
         onBeforeElChildrenUpdated(from, to) {

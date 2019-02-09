@@ -16,8 +16,7 @@ abstract class LivewireComponent
     protected $exemptFromHashDiffing = [];
 
     protected $propertiesExemptFromHashing = [
-        'hashes', 'exemptFromHashDiffing', 'connection',
-        'component', 'forms',
+        'hashes', 'exemptFromHashDiffing',
     ];
 
     abstract public function render();
@@ -94,11 +93,25 @@ abstract class LivewireComponent
         $this->exemptFromHashDiffing = [];
     }
 
-    public function view($id, $errors = null)
+    public function dom($id, $errors = null)
     {
         $errors = $errors ? (new ViewErrorBag)->put('default', $errors) : new ViewErrorBag;
 
-        return $this->render()->with('errors', $errors)->with('id', $id);
+        $dom = $this->render()->with([
+            'id' => $id,
+            'errors' => $errors,
+        ])->render();
+
+        return $this->attachIdToRootNode($dom, $id);
+    }
+
+    public function attachIdToRootNode($domString, $id)
+    {
+        return preg_replace('/(<[a-zA-Z0-9\-]*)/', '$1 wire:root-id="'.$id.'"', $domString, $limit = 1);
+    }
+
+    public function getPropValue($prop) {
+        return $this->{$prop};
     }
 
     public function getProps()

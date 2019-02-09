@@ -22,7 +22,7 @@ class LivewireManager
         return new $this->components[$name]($name);
     }
 
-    public function mock($name)
+    public function test($name)
     {
         return new TestableLivewire($this->activate($name, new \StdClass), $this->prefix());
     }
@@ -49,7 +49,7 @@ class LivewireManager
         $id = str_random(20);
         $instance = $this->activate($component);
         $instance->mounted();
-        $dom = $instance->view($id)->render();
+        $dom = $instance->dom($id);
         $serialized = encrypt($instance);
 
         $this->jsObject['components'][$id] = [
