@@ -23,8 +23,8 @@ class ComponentRootHasIdAttributeTest extends TestCase
         $component = $this->livewire->activate('dummy');
 
         $this->assertEquals(0, strpos(
-            trim($component->dom('some-id')),
-            '<div wire:root-id="some-id"'
+            trim($component->output()),
+            '<div wire:root-id="'.$component->id.'"'
         ));
     }
 }

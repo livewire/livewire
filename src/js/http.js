@@ -12,7 +12,7 @@ export default {
     },
 
     sendMessage(payload) {
-        Axios.post('/fake-websockets/message', payload)
+        Axios.post('/livewire/message', payload)
             .then(response => {
                 this.onMessage.call(this, response.data)
             })

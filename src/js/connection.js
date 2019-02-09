@@ -35,40 +35,37 @@ export default {
     },
 
     onMessage(payload) {
-        roots.find(payload.component).replace(payload.dom, payload.dirtyInputs)
-        roots.find(payload.component).serialized = payload.serialized
+        roots.find(payload.id).replace(payload.dom, payload.dirtyInputs)
+        roots.find(payload.id).serialized = payload.serialized
     },
 
-    sendMessage(payload, root) {
+    sendMessage(data, root) {
         this.connection.sendMessage({
-            ...payload,
-            ...{
-                component: root.id,
-                serialized: root.serialized,
-            },
+            ...data,
+            ...{ serialized: root.serialized },
         });
     },
 
     sendMethod(method, params, root) {
         this.sendMessage({
             event: 'fireMethod',
-            payload: {
+            data: {
                 method,
                 params,
             },
         }, root)
     },
 
-    sendSync(model, value, root) {
+    sendSync(name, value, root) {
         this.sendMessage({
-            event: 'sync',
-            payload: { model, value },
+            event: 'syncInput',
+            data: { name, value },
         }, root)
     },
 
     refreshDom() {
         Object.keys(roots.allRoots).forEach(id => {
-            this.sendMessage({event: 'refresh', payload: {}}, roots.allRoots[id])
+            this.sendMessage({event: 'refresh', data: {}}, roots.allRoots[id])
         })
     },
 }

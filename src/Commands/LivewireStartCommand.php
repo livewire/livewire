@@ -2,11 +2,12 @@
 
 namespace Livewire\Commands;
 
-use Illuminate\Console\Command;
-use Livewire\SocketConnectionHandler;
 use Ratchet\Http\HttpServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
+use Illuminate\Console\Command;
+use Livewire\SocketConnectionHandler;
+use Livewire\Connection\WebSocketConnectionHandler;
 
 class LivewireStartCommand extends Command
 {
@@ -19,7 +20,7 @@ class LivewireStartCommand extends Command
         IoServer::factory(
             new HttpServer(
                 new WsServer(
-                    new SocketConnectionHandler($this)
+                    new WebSocketConnectionHandler($this)
                 )
             ),
             8080

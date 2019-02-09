@@ -17,7 +17,39 @@ class LivewireWatchCommand extends Command
 
     public function handle()
     {
-        $finder = (new Finder())
+        $watcher = $this->fileWatcher();
+
+        // This is for a goto() later on.
+        start_process:
+
+        $process = $this->runLivewireStartCommand();
+
+        // @todo - this loop is resource costly - maybe too fast?
+        while ($process->isRunning()) {
+            if ($watcher->findChanges()->hasChanges()) {
+                $process->stop();
+
+                $this->info('[Livewire Restarted]');
+
+                goto start_process;
+            }
+
+            usleep($pointTwoFiveSeconds = 250000);
+        }
+    }
+
+    protected function fileWatcher()
+    {
+        return new ResourceWatcher(
+            new ResourceCacheMemory(),
+            $this->filesToWatch(),
+            new Crc32ContentHash()
+        );
+    }
+
+    protected function filesToWatch()
+    {
+        return (new Finder())
             ->files()
             ->name('*.php')
             ->in([
@@ -25,35 +57,20 @@ class LivewireWatchCommand extends Command
                 base_path('tests'),
                 resource_path('views'),
             ]);
+    }
 
-        $watcher = new ResourceWatcher(
-            new ResourceCacheMemory(),
-            $finder,
-            new Crc32ContentHash()
-        );
-
-        start_process:
-
+    public function runLivewireStartCommand()
+    {
+        // "Come in start command...start command, do you copy?"
         $process = new Process('php artisan livewire:start');
+
         $process->start(function ($type, $output) use ($process) {
+            // Capture and forward child process ("start" command) output.
             if ($type === $process::OUT) {
                 fwrite(STDOUT, $output);
             } else {
                 $this->alert($output);
             }
         });
-
-        // @todo - this loop is resource costly - maybe too fast?
-        while ($process->isRunning()) {
-            if ($watcher->findChanges()->hasChanges()) {
-                $process->stop();
-
-                $this->info('[Livewire process restarted]');
-
-                goto start_process;
-            }
-
-            usleep($pointFiveSeconds = 250000);
-        }
     }
 }

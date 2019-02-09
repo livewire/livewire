@@ -169,14 +169,14 @@ class TestableLivewire
 
     public function __get($property)
     {
-        return $this->component->getPropValue($property);
+        return $this->component->getPropertyValue($property);
     }
 
     public function resetDom()
     {
         try {
             $this->crawler = new Crawler(
-                $this->rawDom = $this->convertColonsToDoubleDashes($this->component->dom(null))
+                $this->rawDom = $this->convertColonsToDoubleDashes($this->component->output(null))
             );
         } catch (ValidationException $th) {
             dd('hye');

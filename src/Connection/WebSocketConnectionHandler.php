@@ -1,15 +1,11 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Connection;
 
 use Ratchet\ConnectionInterface;
-use Ratchet\Http\HttpServer;
 use Ratchet\MessageComponentInterface;
-use Ratchet\RFC6455\Messaging\MessageInterface;
-use Ratchet\Server\IoServer;
-use Ratchet\WebSocket\WsServer;
 
-class SocketConnectionHandler extends ConnectionHandler implements MessageComponentInterface
+class WebSocketConnectionHandler extends ConnectionHandler implements MessageComponentInterface
 {
     protected $output;
 
@@ -25,11 +21,15 @@ class SocketConnectionHandler extends ConnectionHandler implements MessageCompon
 
     public function onMessage(ConnectionInterface $from, $msg)
     {
-        $stuff = json_decode($msg, $asArray = true);
+        $payload = json_decode($msg, $asArray = true);
 
-        $this->output->info("Event received: ({$stuff['event']})");
+        $this->output->info("Event received: ({$payload['event']})");
 
-        $from->send(json_encode($this->handle($stuff)));
+        $from->send(json_encode($this->handle(
+            $payload['event'],
+            $payload['data'],
+            $payload['serialized']
+        )));
     }
 
     public function onClose(ConnectionInterface $conn)
@@ -39,8 +39,8 @@ class SocketConnectionHandler extends ConnectionHandler implements MessageCompon
 
     public function onError(ConnectionInterface $conn, \Exception $e)
     {
-        $conn->close();
-        dd($e);
+        // Not sure if closing the connection after an error is best or not?
+        // $conn->close();
 
         $this->output->warn("Error: ({$e->getMessage()})");
     }

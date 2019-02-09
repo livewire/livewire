@@ -10,11 +10,11 @@ export default class Root {
         this.children = {}
         this.id = id
         console.log(id)
-        this.serialized = window.Livewire.components[this.id].serialized
+        this.serialized = window.Livewire.componentsById[this.id].serialized
 
         if (forceUpdate) {
-            morphdom(el, window.Livewire.components[this.id].dom)
-            // handleMorph(this.el, window.Livewire.components[this.id].dom, [])
+            morphdom(el, window.Livewire.componentsById[this.id].dom)
+            // handleMorph(this.el, window.Livewire.componentsById[this.id].dom, [])
         }
         this.inititializeNodes()
     }
