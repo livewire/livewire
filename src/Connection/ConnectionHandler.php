@@ -8,7 +8,7 @@ abstract class ConnectionHandler
 {
     public function handle($event, $data, $serialized)
     {
-        $instance = decrypt($payload['serialized']);
+        $instance = decrypt($serialized);
 
         try {
             $this->processEvent($event, $instance, $data);

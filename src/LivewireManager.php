@@ -61,7 +61,7 @@ class LivewireManager
         $instance->mounted();
         $serialized = encrypt($instance);
 
-        $this->jsObject['componentsById'][$id] = [
+        $this->jsObject['componentsById'][$instance->id] = [
             'id' => $instance->id,
             'serialized' => $serialized,
             'dom' => $dom,
