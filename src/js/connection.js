@@ -35,8 +35,7 @@ export default {
     },
 
     onMessage(payload) {
-        roots.find(payload.id).replace(payload.dom, payload.dirtyInputs)
-        roots.find(payload.id).serialized = payload.serialized
+        roots.find(payload.id).replace(payload.dom, payload.dirtyInputs, payload.serialized)
     },
 
     sendMessage(data, root) {

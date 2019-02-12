@@ -15,6 +15,8 @@ abstract class LivewireComponent
 
     public $id;
     public $prefix;
+    protected $children = [];
+    protected $mountedChildren = [];
 
     public function __construct($id, $prefix)
     {
@@ -26,22 +28,45 @@ abstract class LivewireComponent
 
     public function output($errors = null)
     {
+        $this->mountedChildren = [];
+
         $dom = $this->render()->with([
             'errors' => (new ViewErrorBag)
                 ->put('default', $errors ?: new MessageBag),
+            'livewire' => $this,
         ])->render();
 
-        return $this->attachIdToRootNode($dom);
+        // This allows us to recognize when a previosuly rendered child,
+        // is no longer being rendered, we can clear their "children"
+        // entry so that we don't still return dummy data.
+        foreach ($this->children as $childName => $id) {
+            if (! in_array($childName, $this->mountedChildren)) {
+                unset($this->children[$childName]);
+            }
+        }
+
+        return $dom;
     }
 
-    public function attachIdToRootNode($rawDom)
+    public function mountChild($componentName)
     {
-        return preg_replace(
-            '/(<[a-zA-Z0-9\-]*)/',
-            sprintf('$1 %s:root-id="%s"', $this->prefix, $this->id),
-            $rawDom,
-            $limit = 1
-        );
+        $this->mountedChildren[] = $componentName;
+
+        // Note: this only allows for one child component of each type in a component.
+        if ($id = $this->children[$componentName] ?? false) {
+            return [
+                // The "id" is included here as a key for morphdom.
+                sprintf('<div wire:root="%s" id="%s">no-content</div>', $id, $id),
+                $id,
+                'not-serialized',
+            ];
+        }
+
+        [$dom, $id, $serialized] = app('livewire')->mount($componentName);
+
+        $this->children[$componentName] = $id;
+
+        return [$dom, $id, $serialized];
     }
 
     public function getPropertyValue($prop) {

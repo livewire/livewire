@@ -3,8 +3,8 @@ import morphdom from './morphdom'
 import roots from './roots.js'
 import initializeNode from './nodeInitializer.js'
 
-export default function (el, dom, dirtyInputs) {
-    morphdom(el, dom, {
+export default function (root, dom, dirtyInputs) {
+    morphdom(root.el, dom, {
         childrenOnly: false,
 
         getNodeKey(node) {
@@ -69,13 +69,13 @@ export default function (el, dom, dirtyInputs) {
         },
 
         onBeforeElChildrenUpdated(from, to) {
-            if (from.hasAttribute(`${prefix}:root-id`) && !from.isSameNode(el)) {
+            if (from.hasAttribute(`${prefix}:root-id`) && !from.isSameNode(root.el)) {
                 return false
             }
         },
 
         onBeforeElUpdated(from, to) {
-            if (from.hasAttribute(`${prefix}:root-id`) && !from.isSameNode(el)) {
+            if (from.hasAttribute(`${prefix}:root-id`) && !from.isSameNode(root.el)) {
                 return false
             }
             // console.log('before from updated: ', from, to)
@@ -105,6 +105,10 @@ export default function (el, dom, dirtyInputs) {
         onNodeAdded(node) {
             if (typeof node.hasAttribute !== 'function') {
                 return
+            }
+
+            if (roots.isRoot(node)) {
+                root.addChildRoot(node)
             }
 
             initializeNode(node)

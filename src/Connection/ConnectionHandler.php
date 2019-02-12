@@ -8,6 +8,8 @@ abstract class ConnectionHandler
 {
     public function handle($event, $data, $serialized)
     {
+        app('livewire')->isRunningOnPageLoad = false;
+
         $instance = decrypt($serialized);
 
         try {
@@ -16,11 +18,16 @@ abstract class ConnectionHandler
             $errors = $e->validator->errors();
         }
 
+        $id = $instance->id;
+        $dom = $instance->output($errors ?? null);
+        $dirtyInputs = $instance->dirtyInputs();
+        $serialized = encrypt($instance);
+
         return [
-            'id' => $instance->id,
-            'dom' => $instance->output($errors ?? null),
-            'dirtyInputs' => $instance->dirtyInputs(),
-            'serialized' => encrypt($instance),
+            'id' => $id,
+            'dom' => app('livewire')->wrap($dom, $id, $serialized),
+            'dirtyInputs' => $dirtyInputs,
+            'serialized' => $serialized,
         ];
     }
 

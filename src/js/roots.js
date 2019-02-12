@@ -6,9 +6,7 @@ export default {
     allRoots: {},
 
     init() {
-        const els = document.querySelectorAll(`[${prefix}\\:root-id]`)
-
-        els.forEach(el => {
+        this.rootElements().forEach(el => {
             const componentId = el.getAttribute(`${prefix}:root-id`)
             const root = new Root(componentId, el, true)
             this.roots[root.id] = root
@@ -39,5 +37,24 @@ export default {
 
     get count() {
         return Object.keys(this.roots).length
+    },
+
+    rootElements() {
+        // In CSS, it's simple to select all elements that DO have a certain ancestor.
+        // However, it's not simple (kinda impossible) to select elements that DONT have
+        // a certain ancestor. Therefore, we will flip the logic (select all roots that have
+        // have a root ancestor), then select all roots, then take a diff of the two.
+
+        // Convert NodeLists to Arrays. Ew.
+        const allEls = Array.prototype.slice.call(
+            document.querySelectorAll(`[${prefix}\\:root-id]`)
+        )
+        const onlyChildEls = Array.prototype.slice.call(
+            document.querySelectorAll(`[${prefix}\\:root-id] [${prefix}\\:root-id]`)
+        )
+
+        return allEls.filter(el => {
+            return ! onlyChildEls.includes(el)
+        })
     },
 }

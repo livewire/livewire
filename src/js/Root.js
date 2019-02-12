@@ -10,10 +10,10 @@ export default class Root {
         this.children = {}
         this.id = id
         console.log(id)
-        this.serialized = window.Livewire.componentsById[this.id].serialized
+        this.serialized = el.getAttribute(`${prefix}:root-serialized`)
 
         if (forceUpdate) {
-            morphdom(el, window.Livewire.componentsById[this.id].dom)
+            // morphdom(el, window.Livewire.componentsById[this.id].dom)
             // handleMorph(this.el, window.Livewire.componentsById[this.id].dom, [])
         }
         this.inititializeNodes()
@@ -30,10 +30,7 @@ export default class Root {
             }
 
             if (roots.isRoot(node)) {
-                const id = node.getAttribute(`${prefix}:root-id`)
-                const root = new Root(id, node)
-                this.children[root.id] = root
-                roots.add(root.id, root)
+                this.addChildRoot(node)
                 return false
             }
 
@@ -41,7 +38,15 @@ export default class Root {
         })
     }
 
-    replace(dom, dirtyInputs) {
-        handleMorph(this.el, dom, dirtyInputs)
+    addChildRoot(node) {
+        const id = node.getAttribute(`${prefix}:root-id`)
+        const root = new Root(id, node)
+        this.children[root.id] = root
+        roots.add(root.id, root)
+    }
+
+    replace(dom, dirtyInputs, serialized) {
+        this.serialized = serialized;
+        handleMorph(this, dom, dirtyInputs)
     }
 }

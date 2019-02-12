@@ -8,6 +8,7 @@ class LivewireManager
 {
     protected $prefix = 'wire';
     protected $componentsByName = [];
+    public $isRunningOnPageLoad = true;
     protected $jsObject = [
         'componentsById' => []
     ];
@@ -61,12 +62,16 @@ class LivewireManager
         $instance->mounted();
         $serialized = encrypt($instance);
 
-        $this->jsObject['componentsById'][$instance->id] = [
-            'id' => $instance->id,
-            'serialized' => $serialized,
-            'dom' => $dom,
-        ];
+        return [$dom, $instance->id, $serialized];
+    }
 
-        return $dom;
+    public function wrap($dom, $id, $serialized)
+    {
+        return preg_replace(
+            '/(<[a-zA-Z0-9\-]*)/',
+            sprintf('$1 %s:root-id="%s" id="%s" %s:root-serialized="%s"', $this->prefix, $id, $id, $this->prefix, $serialized),
+            $dom,
+            $limit = 1
+        );
     }
 }
