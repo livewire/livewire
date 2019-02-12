@@ -7,6 +7,7 @@ export default {
         return new Promise((resolve, reject) => {
             this.wsConnection = new WebSocket(`ws://${window.location.hostname}:6001`);
 
+            console.log('tried')
             this.wsConnection.onopen = () => {
                 resolve(this)
             }
