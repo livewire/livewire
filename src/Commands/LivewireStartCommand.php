@@ -23,7 +23,7 @@ class LivewireStartCommand extends Command
                     new WebSocketConnectionHandler($this)
                 )
             ),
-            80
+            8080
         )->run();
     }
 }

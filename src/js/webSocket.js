@@ -5,7 +5,7 @@ export default {
 
     init() {
         return new Promise((resolve, reject) => {
-            this.wsConnection = new WebSocket(`ws://${window.location.hostname}:80`);
+            this.wsConnection = new WebSocket(`ws://${window.location.hostname}:8080`);
 
             console.log('tried')
             this.wsConnection.onopen = () => {
