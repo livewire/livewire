@@ -10,24 +10,28 @@ export default function (node) {
 
     if (node.hasAttribute(`${prefix}:click`)) {
         renameme.attachClick(node, (method, params, el) => {
+            console.time('request')
             connection.sendMethod(method, params, roots.findByEl(el))
         })
     }
 
     if (node.hasAttribute(`${prefix}:submit`)) {
         renameme.attachSubmit(node, (method, params, el) => {
+        console.time('request')
             connection.sendMethod(method, [params], roots.findByEl(el))
         })
     }
 
     if (node.hasAttribute(`${prefix}:keydown.enter`)) {
         renameme.attachEnter(node, (method, params, el) => {
+        console.time('request')
             connection.sendMethod(method, params, roots.findByEl(el))
         })
     }
 
     if (node.hasAttribute(`${prefix}:sync`)) {
         renameme.attachSync(node, (model, el) => {
+        console.time('request')
             connection.sendSync(model, el.value, roots.findByEl(el))
         })
     }

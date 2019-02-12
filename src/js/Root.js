@@ -48,5 +48,7 @@ export default class Root {
     replace(dom, dirtyInputs, serialized) {
         this.serialized = serialized;
         handleMorph(this, dom, dirtyInputs)
+
+        console.timeEnd('request')
     }
 }
