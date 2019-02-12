@@ -72,5 +72,7 @@ class LivewireWatchCommand extends Command
                 $this->alert($output);
             }
         });
+
+        return $process;
     }
 }
