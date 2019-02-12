@@ -50,6 +50,9 @@ trait TracksDirtySyncedInputs
     {
         return collect($this->hashes)
             ->filter(function ($hash, $prop) {
+                return is_string($this->{$prop}) || is_numeric($this->{$prop}) || is_null($this->{$prop});
+            })
+            ->filter(function ($hash, $prop) {
                 // Only return the hashes/props that have changed.
                 return crc32($this->{$prop}) !== $hash;
             })

@@ -31,7 +31,7 @@ export default {
         if (sibling) {
             return this.start(sibling)
         } else {
-            if (this.depth < 0) {
+            if (this.depth === 1) {
                 return
             } else {
                 this.depth--

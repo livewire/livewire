@@ -24,7 +24,7 @@ export default class Root {
     }
 
     inititializeNodes() {
-        walker.walk(this.el, node => {
+        walker.walk(this.el, (node) => {
             if (this.el.isSameNode(node)) {
                 return
             }

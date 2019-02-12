@@ -6,12 +6,14 @@ export default {
     allRoots: {},
 
     init() {
-        const el = document.querySelector(`[${prefix}\\:root-id]`)
+        const els = document.querySelectorAll(`[${prefix}\\:root-id]`)
 
-        const componentId = el.getAttribute(`${prefix}:root-id`)
-        const root = new Root(componentId, el, true)
-        this.roots[root.id] = root
-        this.allRoots[root.id] = root
+        els.forEach(el => {
+            const componentId = el.getAttribute(`${prefix}:root-id`)
+            const root = new Root(componentId, el, true)
+            this.roots[root.id] = root
+            this.allRoots[root.id] = root
+        })
         window.roots = this
     },
 
