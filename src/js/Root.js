@@ -51,4 +51,16 @@ export default class Root {
 
         console.timeEnd('request')
     }
+
+    setLoading(refName) {
+        this.el.querySelectorAll(`[${prefix}\\:loading="${refName}"]`).forEach(el => {
+            el.classList.remove('hidden')
+        })
+    }
+
+    unsetLoading(refName) {
+        this.el.querySelectorAll(`[${prefix}\\:loading="${refName}"]`).forEach(el => {
+            el.classList.add('hidden')
+        })
+    }
 }

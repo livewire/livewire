@@ -28,6 +28,7 @@ abstract class ConnectionHandler
             'dom' => app('livewire')->wrap($dom, $id, $serialized),
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
+            'ref' => $data['ref'] ?? null,
         ];
     }
 

@@ -36,6 +36,9 @@ export default {
 
     onMessage(payload) {
         roots.find(payload.id).replace(payload.dom, payload.dirtyInputs, payload.serialized)
+        if (payload.ref) {
+            roots.find(payload.id).unsetLoading(payload.ref)
+        }
     },
 
     sendMessage(data, root) {
@@ -45,12 +48,17 @@ export default {
         });
     },
 
-    sendMethod(method, params, root) {
+    sendMethod(method, params, root, ref) {
+        if (ref) {
+            root.setLoading(ref)
+        }
+
         this.sendMessage({
             event: 'fireMethod',
             data: {
                 method,
                 params,
+                ref,
             },
         }, root)
     },

@@ -15,10 +15,15 @@ export default function (node) {
         })
     }
 
+    if (node.hasAttribute(`${prefix}:loading`)) {
+        node.classList.add('hidden')
+    }
+
     if (node.hasAttribute(`${prefix}:submit`)) {
         renameme.attachSubmit(node, (method, params, el) => {
-        console.time('request')
-            connection.sendMethod(method, [params], roots.findByEl(el))
+            const root = roots.findByEl(el);
+
+            connection.sendMethod(method, [params], root, el.getAttribute(`${prefix}:ref`))
         })
     }
 
