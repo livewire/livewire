@@ -34,6 +34,7 @@ class LivewireMakeCommand extends Command
 
         $this->ensureDirectoryExists($directory);
 
+        // @todo - strip out .php if added on the end
         $this->makeFile($filePath, $component);
 
         $this->info(str_replace('{component}', $component, $this->messages['file_created']));

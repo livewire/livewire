@@ -6,14 +6,16 @@ import roots from './roots.js';
 import handleMorph from './handleMorph.js';
 
 export default class Root {
-    constructor(id, el, parent) {
+    constructor(id, el, parent, dontInitialize) {
         this.children = {}
         this.parent = parent
         this.id = id
         console.log(id)
         this.serialized = el.getAttribute(`${prefix}:root-serialized`)
 
-        this.inititializeNodes()
+        if (!dontInitialize) {
+            this.inititializeNodes()
+        }
     }
 
     get el() {
@@ -35,9 +37,9 @@ export default class Root {
         })
     }
 
-    addChildRoot(node) {
+    addChildRoot(node, dontInitialize) {
         const id = node.getAttribute(`${prefix}:root-id`)
-        const root = new Root(id, node, this)
+        const root = new Root(id, node, this, dontInitialize)
         this.children[root.id] = root
         roots.add(root.id, root)
     }

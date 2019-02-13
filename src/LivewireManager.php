@@ -54,10 +54,10 @@ class LivewireManager
         $this->prefix = $prefix;
     }
 
-    public function mount($component)
+    public function mount($component, ...$props)
     {
         $instance = $this->activate($component);
-        $instance->created();
+        $instance->created(...$props);
         $dom = $instance->output();
         $instance->mounted();
         $serialized = encrypt($instance);

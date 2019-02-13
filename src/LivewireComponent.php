@@ -60,7 +60,7 @@ abstract class LivewireComponent
         return $dom;
     }
 
-    public function mountChild($componentName)
+    public function mountChild($componentName, ...$props)
     {
         $this->mountedChildren[] = $componentName;
 
@@ -74,7 +74,7 @@ abstract class LivewireComponent
             ];
         }
 
-        [$dom, $id, $serialized] = app('livewire')->mount($componentName);
+        [$dom, $id, $serialized] = app('livewire')->mount($componentName, ...$props);
 
         $this->children[$componentName] = $id;
 

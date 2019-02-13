@@ -108,7 +108,8 @@ export default function (root, dom, dirtyInputs) {
             }
 
             if (roots.isRoot(node)) {
-                root.addChildRoot(node)
+                // The "true" means don't initialize because this will
+                root.addChildRoot(node, true)
             }
 
             initializeNode(node)
