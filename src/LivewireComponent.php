@@ -17,6 +17,8 @@ abstract class LivewireComponent
     public $prefix;
     protected $children = [];
     protected $mountedChildren = [];
+    public $redirectTo;
+    public $callOnParent;
 
     public function __construct($id, $prefix)
     {
@@ -25,6 +27,16 @@ abstract class LivewireComponent
     }
 
     abstract public function render();
+
+    public function redirectTo($url)
+    {
+        $this->redirectTo = $url;
+    }
+
+    public function callOnParent($method)
+    {
+        $this->callOnParent = $method;
+    }
 
     public function output($errors = null)
     {

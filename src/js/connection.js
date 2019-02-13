@@ -35,9 +35,18 @@ export default {
     },
 
     onMessage(payload) {
+        if (payload.redirectTo) {
+            window.location.href = payload.redirectTo
+            return
+        }
+
         roots.find(payload.id).replace(payload.dom, payload.dirtyInputs, payload.serialized)
         if (payload.ref) {
             roots.find(payload.id).unsetLoading(payload.ref)
+        }
+
+        if (payload.callOnParent) {
+            this.sendMethod(payload.callOnParent, [], roots.find(payload.id).parent)
         }
     },
 

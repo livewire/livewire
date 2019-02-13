@@ -8,7 +8,7 @@ trait TracksDirtySyncedInputs
 {
     protected $hashes = [];
     protected $exemptFromHashDiffing = [
-        'hashes', 'exemptFromHashDiffing',
+        'redirectTo', 'callOnParent', 'hashes', 'exemptFromHashDiffing',
     ];
 
     // Not in love with these method names.

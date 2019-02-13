@@ -6,16 +6,13 @@ import roots from './roots.js';
 import handleMorph from './handleMorph.js';
 
 export default class Root {
-    constructor(id, el, forceUpdate) {
+    constructor(id, el, parent) {
         this.children = {}
+        this.parent = parent
         this.id = id
         console.log(id)
         this.serialized = el.getAttribute(`${prefix}:root-serialized`)
 
-        if (forceUpdate) {
-            // morphdom(el, window.Livewire.componentsById[this.id].dom)
-            // handleMorph(this.el, window.Livewire.componentsById[this.id].dom, [])
-        }
         this.inititializeNodes()
     }
 
@@ -40,7 +37,7 @@ export default class Root {
 
     addChildRoot(node) {
         const id = node.getAttribute(`${prefix}:root-id`)
-        const root = new Root(id, node)
+        const root = new Root(id, node, this)
         this.children[root.id] = root
         roots.add(root.id, root)
     }

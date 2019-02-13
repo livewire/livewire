@@ -8,7 +8,7 @@ export default {
     init() {
         this.rootElements().forEach(el => {
             const componentId = el.getAttribute(`${prefix}:root-id`)
-            const root = new Root(componentId, el, true)
+            const root = new Root(componentId, el)
             this.roots[root.id] = root
             this.allRoots[root.id] = root
         })

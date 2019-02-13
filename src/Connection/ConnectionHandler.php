@@ -19,8 +19,12 @@ abstract class ConnectionHandler
         }
 
         $id = $instance->id;
+        if ($instance->redirectTo) {
+            return ['redirectTo' => $instance->redirectTo];
+        }
         $dom = $instance->output($errors ?? null);
         $dirtyInputs = $instance->dirtyInputs();
+        $callOnParent = $instance->callOnParent;
         $serialized = encrypt($instance);
 
         return [
@@ -29,6 +33,7 @@ abstract class ConnectionHandler
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
             'ref' => $data['ref'] ?? null,
+            'callOnParent' => $callOnParent,
         ];
     }
 
