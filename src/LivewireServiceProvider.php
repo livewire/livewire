@@ -44,7 +44,7 @@ class LivewireServiceProvider extends ServiceProvider
     public function registerBladeDirectives()
     {
         Blade::directive('livewire', function ($expression) {
-            return "<?php list(\$dom, \$id, \$serialized) = isset(\$livewire) ? \$livewire->mountChild({$expression}) : \Livewire\Livewire::mount({$expression}); echo \Livewire\Livewire::wrap(\$dom, \$id, \$serialized); ?>";
+            return "<?php list(\$dom, \$id, \$serialized) = isset(\$wrapped) ? \$wrapped->mountChild({$expression}) : \Livewire\Livewire::mount({$expression}); echo \Livewire\Livewire::wrap(\$dom, \$id, \$serialized); ?>";
         });
     }
 }

@@ -14,4 +14,9 @@ trait ReceivesEvents
 
         $this->{$name} = $value;
     }
+
+    public function fireMethod($method, $params)
+    {
+        $this->wrapped->{$method}(...$params);
+    }
 }

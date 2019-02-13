@@ -17,13 +17,10 @@ trait CanBeSerialized
 
     public function __wakeup()
     {
-        $this->hashCurrentObjectPropertiesForEasilyDetectingChangesLater();
     }
 
     public function __sleep()
     {
-        $this->resetObjectPropertyHashes();
-
         // Prepare all callbacks for serialization.
         // PHP cannot serialize closures on its own.
         foreach ($props = $this->getObjectProperties() as $prop) {

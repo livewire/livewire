@@ -57,9 +57,11 @@ class LivewireManager
     public function mount($component, ...$props)
     {
         $instance = $this->activate($component);
-        $instance->created(...$props);
-        $dom = $instance->output();
-        $instance->mounted();
+
+        $wrapped = LivewireComponentWrapper::wrap($instance);
+        $wrapped->created(...$props);
+        $dom = $wrapped->output();
+        $wrapped->mounted();
         $serialized = encrypt($instance);
 
         return [$dom, $instance->id, $serialized];

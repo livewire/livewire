@@ -3,6 +3,7 @@
 namespace Livewire\Connection;
 
 use Illuminate\Validation\ValidationException;
+use Livewire\LivewireComponentWrapper;
 
 abstract class ConnectionHandler
 {
@@ -11,9 +12,10 @@ abstract class ConnectionHandler
         app('livewire')->isRunningOnPageLoad = false;
 
         $instance = decrypt($serialized);
+        $wrapped = LivewireComponentWrapper::wrap($instance);
 
         try {
-            $this->processEvent($event, $instance, $data);
+            $this->processEvent($event, $wrapped, $data);
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
         }
@@ -22,13 +24,14 @@ abstract class ConnectionHandler
         if ($instance->redirectTo) {
             return ['redirectTo' => $instance->redirectTo];
         }
-        $dom = $instance->output($errors ?? null);
-        $dirtyInputs = $instance->dirtyInputs();
+        $dom = $wrapped->output($errors ?? null);
+        $dirtyInputs = $wrapped->dirtyInputs();
         $callOnParent = $instance->callOnParent;
         $serialized = encrypt($instance);
 
         return [
             'id' => $id,
+            // @todo - get rid of bad word "wrap"
             'dom' => app('livewire')->wrap($dom, $id, $serialized),
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
@@ -37,24 +40,24 @@ abstract class ConnectionHandler
         ];
     }
 
-    public function processEvent($event, $instance, $data)
+    public function processEvent($event, $wrapped, $data)
     {
-        $instance->beforeUpdate();
+        $wrapped->beforeUpdate();
 
         switch ($event) {
             case 'refresh':
                 break;
             case 'syncInput':
-                $instance->syncInput($data['name'], $data['value']);
+                $wrapped->syncInput($data['name'], $data['value']);
                 break;
             case 'fireMethod':
-                $instance->{$data['method']}(...$data['params']);
+                $wrapped->fireMethod($data['method'], $data['params']);
                 break;
             default:
                 throw new \Exception('Unrecongnized event: ' . $event);
                 break;
         }
 
-        $instance->updated();
+        $wrapped->updated();
     }
 }

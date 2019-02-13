@@ -7,16 +7,12 @@ use Illuminate\Support\ViewErrorBag;
 
 abstract class LivewireComponent
 {
-    use Concerns\TracksDirtySyncedInputs,
-        Concerns\HasLifecycleHooks,
-        Concerns\CanBeSerialized,
-        Concerns\ReceivesEvents,
+    use Concerns\CanBeSerialized,
         Concerns\ValidatesInput;
 
     public $id;
     public $prefix;
-    protected $children = [];
-    protected $mountedChildren = [];
+    public $children = [];
     public $redirectTo;
     public $callOnParent;
 
@@ -40,8 +36,6 @@ abstract class LivewireComponent
 
     public function output($errors = null)
     {
-        $this->mountedChildren = [];
-
         $dom = $this->render()->with([
             'errors' => (new ViewErrorBag)
                 ->put('default', $errors ?: new MessageBag),
@@ -60,29 +54,8 @@ abstract class LivewireComponent
         return $dom;
     }
 
-    public function mountChild($componentName, ...$props)
-    {
-        $this->mountedChildren[] = $componentName;
-
-        // Note: this only allows for one child component of each type in a component.
-        if ($id = $this->children[$componentName] ?? false) {
-            return [
-                // The "id" is included here as a key for morphdom.
-                sprintf('<div wire:root="%s" id="%s">no-content</div>', $id, $id),
-                $id,
-                'not-serialized',
-            ];
-        }
-
-        [$dom, $id, $serialized] = app('livewire')->mount($componentName, ...$props);
-
-        $this->children[$componentName] = $id;
-
-        return [$dom, $id, $serialized];
-    }
-
     public function getPropertyValue($prop) {
-        // This is used by the test wrapper. Otherwise,
+        // This is used by wrappers. Otherwise,
         // users would have to declare props as "public".
         return $this->{$prop};
     }
