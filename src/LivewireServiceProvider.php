@@ -2,10 +2,12 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Route as RouteFacade;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\ServiceProvider;
 use Livewire\Commands\LivewireMakeCommand;
 use Livewire\Commands\LivewireStartCommand;
 use Livewire\Commands\LivewireWatchCommand;
@@ -22,12 +24,13 @@ class LivewireServiceProvider extends ServiceProvider
     {
         $this->registerRoutes();
         $this->registerCommands();
+        $this->registerRouterMacros();
         $this->registerBladeDirectives();
     }
 
     public function registerRoutes()
     {
-        Route::post('/livewire/message', HttpConnectionHandler::class);
+        RouteFacade::post('/livewire/message', HttpConnectionHandler::class);
     }
 
     public function registerCommands()
@@ -39,6 +42,35 @@ class LivewireServiceProvider extends ServiceProvider
                 LivewireWatchCommand::class,
             ]);
         }
+    }
+
+    public function registerRouterMacros()
+    {
+        Route::macro('layout', function ($layout) {
+            $this->action['layout'] = isset($this->action['layout'])
+                ? $this->action['layout'].$layout
+                : $layout;
+
+            return $this;
+        });
+
+        Route::macro('section', function ($section) {
+            $this->action['section'] = $section;
+
+            return $this;
+        });
+
+        Router::macro('livewire', function ($uri, $component) {
+            return $this->get($uri, function () use ($component) {
+                $route = $this->current();
+
+                return app('view')->file(__DIR__ . '/livewire-view.blade.php', [
+                    'layout' => $route->getAction('layout') ?? 'layouts.app',
+                    'section' => $route->getAction('section') ?? 'content',
+                    'component' => $component,
+                ]);
+            });
+        });
     }
 
     public function registerBladeDirectives()

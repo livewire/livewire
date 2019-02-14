@@ -19,12 +19,9 @@ class LivewireManager
 
     public function activate($name)
     {
-        throw_unless(
-            isset($this->componentsByName[$name]),
-            new \Exception('Livewire component not registered: [' . $name . ']')
-        );
+        $componentClass = $this->componentsByName[$name] ?? $name;
 
-        return new $this->componentsByName[$name](str_random(20), $this->prefix);
+        return new $componentClass(str_random(20), $this->prefix);
     }
 
     public function test($name)
@@ -74,5 +71,20 @@ class LivewireManager
             $dom,
             $limit = 1
         );
+    }
+
+    public function layout($layout)
+    {
+        return (new LivewireRouteDefinition())->layout($layout);
+    }
+
+    public function section($section)
+    {
+        return (new LivewireRouteDefinition())->section($section);
+    }
+
+    public function get($uri, $component, $options = [])
+    {
+        return (new LivewireRouteDefinition())->get($uri, $component);
     }
 }
