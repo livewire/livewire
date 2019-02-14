@@ -9,8 +9,6 @@ abstract class ConnectionHandler
 {
     public function handle($event, $data, $serialized)
     {
-        app('livewire')->isRunningOnPageLoad = false;
-
         $instance = decrypt($serialized);
         $wrapped = LivewireComponentWrapper::wrap($instance);
 
@@ -20,10 +18,11 @@ abstract class ConnectionHandler
             $errors = $e->validator->errors();
         }
 
-        $id = $instance->id;
         if ($instance->redirectTo) {
             return ['redirectTo' => $instance->redirectTo];
         }
+
+        $id = $instance->id;
         $dom = $wrapped->output($errors ?? null);
         $dirtyInputs = $wrapped->dirtyInputs();
         $callOnParent = $instance->callOnParent;
@@ -31,8 +30,7 @@ abstract class ConnectionHandler
 
         return [
             'id' => $id,
-            // @todo - get rid of bad word "wrap"
-            'dom' => app('livewire')->wrap($dom, $id, $serialized),
+            'dom' => app('livewire')->injectDataForJsInComponentRootAttributes($dom, $id, $serialized),
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
             'ref' => $data['ref'] ?? null,

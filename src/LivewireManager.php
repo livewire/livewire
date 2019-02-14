@@ -8,7 +8,6 @@ class LivewireManager
 {
     protected $prefix = 'wire';
     protected $componentsByName = [];
-    public $isRunningOnPageLoad = true;
     protected $jsObject = [
         'componentsById' => []
     ];
@@ -31,7 +30,7 @@ class LivewireManager
     public function test($name)
     {
         return new TestableLivewire(
-            $this->activate($name),
+            LivewireComponentWrapper::wrap($this->activate($name)),
             $this->prefix()
         );
     }
@@ -67,7 +66,7 @@ class LivewireManager
         return [$dom, $instance->id, $serialized];
     }
 
-    public function wrap($dom, $id, $serialized)
+    public function injectDataForJsInComponentRootAttributes($dom, $id, $serialized)
     {
         return preg_replace(
             '/(<[a-zA-Z0-9\-]*)/',

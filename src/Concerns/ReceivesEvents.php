@@ -12,10 +12,10 @@ trait ReceivesEvents
 
         $this->removeFromDirtyPropertiesList($name);
 
-        $this->{$name} = $value;
+        $this->wrapped->setPropertyValue($name, $value);
     }
 
-    public function fireMethod($method, $params)
+    public function fireMethod($method, $params = [])
     {
         $this->wrapped->{$method}(...$params);
     }

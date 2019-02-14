@@ -12,14 +12,15 @@ class TestableLivewire
     protected $prefix;
     protected $component;
     protected $inputs = [];
-    protected $rawDom;
+    public $rawDom;
 
     public function __construct($component, $prefix)
     {
         $this->prefix = $prefix;
         $this->component = $component;
-        $this->component->mounted();
+        $this->component->created();
         $this->resetDom();
+        $this->component->mounted();
     }
 
     public function type($selector, $text)
@@ -58,7 +59,7 @@ class TestableLivewire
             $parameters = [];
         }
 
-        $this->component->{$methodName}(...$parameters);
+        $this->component->fireMethod($methodName, $parameters);
         $this->resetDom();
 
         return $this;
@@ -70,7 +71,7 @@ class TestableLivewire
 
         $form = $button->parents()->filter("[{$this->prefix}--submit]");
 
-        $this->component->{$form->attr("{$this->prefix}--submit")}($this->inputs);
+        $this->component->fireMethod($form->attr("{$this->prefix}--submit"), $this->inputs);
         $this->resetDom();
 
         return $this;
@@ -83,7 +84,7 @@ class TestableLivewire
         $node = $this->crawler->filter($this->formatSelector($selector));
 
         $methodName = $node->attr("{$this->prefix}--keydown--enter");
-        $this->component->{$methodName}();
+        $this->component->fireMethod($methodName);
 
         $this->resetDom();
 
@@ -161,7 +162,8 @@ class TestableLivewire
 
     public function __call($method, $params)
     {
-        $return = $this->component->{$method}($params);
+        $return = $this->component->fireMethod($method, $params);
+
         $this->resetDom();
 
         return $return;
@@ -169,7 +171,7 @@ class TestableLivewire
 
     public function __get($property)
     {
-        return $this->component->getPropertyValue($property);
+        return $this->component->wrapped->getPropertyValue($property);
     }
 
     public function resetDom()
@@ -181,5 +183,12 @@ class TestableLivewire
         } catch (ValidationException $th) {
             dd('hye');
         }
+    }
+
+    public function tap($callback)
+    {
+        $callback($this);
+
+        return $this;
     }
 }

@@ -17,6 +17,7 @@ trait CanBeSerialized
 
     public function __wakeup()
     {
+        //
     }
 
     public function __sleep()

@@ -12,7 +12,7 @@ class LivewireComponentWrapper
         Concerns\TracksChildren,
         Concerns\ReceivesEvents;
 
-    protected $wrapped;
+    public $wrapped;
 
     public function __construct($wrapped)
     {

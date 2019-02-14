@@ -12,9 +12,10 @@ abstract class LivewireComponent
 
     public $id;
     public $prefix;
-    public $children = [];
     public $redirectTo;
     public $callOnParent;
+    // This gets used a way to track data between requests by the wrapper.
+    public $children = [];
 
     public function __construct($id, $prefix)
     {
@@ -34,29 +35,13 @@ abstract class LivewireComponent
         $this->callOnParent = $method;
     }
 
-    public function output($errors = null)
-    {
-        $dom = $this->render()->with([
-            'errors' => (new ViewErrorBag)
-                ->put('default', $errors ?: new MessageBag),
-            'livewire' => $this,
-        ])->render();
-
-        // This allows us to recognize when a previosuly rendered child,
-        // is no longer being rendered, we can clear their "children"
-        // entry so that we don't still return dummy data.
-        foreach ($this->children as $childName => $id) {
-            if (! in_array($childName, $this->mountedChildren)) {
-                unset($this->children[$childName]);
-            }
-        }
-
-        return $dom;
-    }
-
     public function getPropertyValue($prop) {
         // This is used by wrappers. Otherwise,
         // users would have to declare props as "public".
         return $this->{$prop};
+    }
+
+    public function setPropertyValue($prop, $value) {
+        return $this->{$prop} = $value;
     }
 }
