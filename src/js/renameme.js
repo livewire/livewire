@@ -66,10 +66,15 @@ export default {
         })
     },
 
-    attachEnter(el, callback) {
+    attachEnter(el, callback, modifiers, value) {
         el.addEventListener('keydown', e => {
-            if (e.keyCode == '13') {
-                const { method, params } = this.parseOutMethodAndParams(el.getAttribute(`${prefix}:keydown.enter`))
+            if (modifiers.length === 0) {
+                const { method, params } = this.parseOutMethodAndParams(value)
+                this.debounceOnTimeout(callback)(method, params, e.target)
+            }
+
+            if (modifiers.includes('enter') && e.keyCode == '13') {
+                const { method, params } = this.parseOutMethodAndParams(value)
                 this.debounceOnTimeout(callback)(method, params, e.target)
             }
         })

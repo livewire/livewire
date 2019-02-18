@@ -4,41 +4,26 @@ export default {
     refreshDom: null,
 
     init() {
-        return new Promise((resolve, reject) => {
-            this.wsConnection = new WebSocket(`ws://${window.location.hostname}:6001`);
+        this.wsConnection = new WebSocket(`ws://${window.location.hostname}:6001`);
 
-            console.log('tried')
-            this.wsConnection.onopen = () => {
-                resolve(this)
-            }
-
-            this.wsConnection.onerror = e => {
-                reject(e)
-            }
-        })
-    },
-
-    wireUp() {
-        this.wsConnection.onclose = () => {
-            console.log('retrying connection')
-            setTimeout(() => {
-                this.init()
-                    .then(() => {
-                        console.log('all good')
-                        this.wireUp()
-                        this.refreshDom()
-                    })
-                    .catch(() => {
-                        console.log('didnt work, switching to http')
-                        this.fallback()
-                    })
-            }, 400);
+        this.wsConnection.onopen = () => {
+            console.log('Successfully connected to websocket server')
         }
 
+        this.wsConnection.onerror = e => {
+            throw new Error('Can\'t connect to websocket server')
+        }
+
+        this.wsConnection.onclose = () => {
+            throw new Error('Lost websocket connection')
+        }
 
         this.wsConnection.onmessage = e => {
             this.onMessage.call(this, JSON.parse(e.data))
         }
+    },
+
+    wireUp() {
     },
 
     sendMessage(payload) {

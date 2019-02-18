@@ -5,7 +5,7 @@ import { closestByAttribute, getAttribute, extractDirectivesModifiersAndValuesFr
 
 export default class NodeInitializer {
     constructor(connection) {
-        this.connection = connection
+        this.connection = connection.init()
     }
 
     findByEl(el) {
@@ -43,7 +43,7 @@ export default class NodeInitializer {
         if (Object.keys(directives).includes('keydown')) {
             renameme.attachEnter(node, (method, params, el) => {
                 this.connection.sendMethod(method, params, this.findByEl(el))
-            })
+            }, directives['keydown'].modifiers, directives['keydown'].value)
         }
 
         if (Object.keys(directives).includes('sync')) {

@@ -7,6 +7,16 @@ export default class Connection {
         this.driver.onMessage = (payload) => {
             this.onMessage(payload)
         }
+
+        this.driver.refreshDom = (payload) => {
+            this.refreshDom()
+        }
+    }
+
+    init() {
+        this.driver.init()
+
+        return this
     }
 
     onMessage(payload) {
@@ -35,12 +45,19 @@ export default class Connection {
         });
     }
 
+    refreshDom() {
+        rootsStore.forEach(root => {
+            this.sendMessage({ id: root.id, event: 'refresh' }, root)
+        })
+    }
+
     sendMethod(method, params, root, ref, fromCallOnParent) {
         if (ref) {
             root.setLoading(ref)
         }
 
         this.sendMessage({
+            id: root.id,
             event: 'fireMethod',
             data: {
                 method,

@@ -2,6 +2,7 @@ import walker from './walker.js'
 import { hasAttribute, getAttribute, elByAttributeAndValue, elsByAttributeAndValue, preserveActiveElement } from './domHelpers'
 const prefix = require('./prefix.js')()
 import morphdom from './morphdom/index.js'
+import rootsStore from './rootsStore'
 
 export default class Component {
     constructor(el, nodeInitializer, parent, dontInitialize) {
@@ -38,13 +39,13 @@ export default class Component {
     addChildRoot(node, dontInitialize) {
         const component = new Component(node, this.nodeInitializer, this, dontInitialize)
         this.children[component.id] = component
-        livewire.add(component.id, component)
+        rootsStore[component.id] = component
     }
 
     replace(dom, dirtyInputs, serialized) {
         this.serialized = serialized;
 
-        // Prevent morphdom from moving and input element and it losing it's focus.
+        // Prevent morphdom from moving an input element and it losing it's focus.
         preserveActiveElement(() => {
             this.handleMorph(dom, dirtyInputs)
         })

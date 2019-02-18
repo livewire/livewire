@@ -1,0 +1,93 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test adding element 1`] = `
+"<body><div id=\\"app\\">
+        <div wire:root-id=\\"componentA\\" wire:root-serialized=\\"empty\\">
+            <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
+                <span>Something updated</span>
+                <button>hey</button>
+            </form>
+        </div>
+    </div></body>"
+`;
+
+exports[`test adding element inside nested component 1`] = `
+"<body><div id=\\"app\\">
+        <div wire:root-id=\\"componentA\\" wire:root-serialized=\\"empty\\">
+            <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
+                <button></button>
+            </form>
+
+            <div wire:root-id=\\"componentB\\" wire:root-serialized=\\"empty\\">
+            <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
+                <button>button</button>
+                <div>something added</div>
+            </form>
+        </div>
+        </div>
+    </div></body>"
+`;
+
+exports[`test adding element outside nested component 1`] = `
+"<body><div id=\\"app\\">
+        <div wire:root-id=\\"componentA\\" wire:root-serialized=\\"empty\\">
+            <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
+                <button>button</button>
+                <div>something added</div>
+            </form>
+
+            <div wire:root-id=\\"componentB\\" wire:root-serialized=\\"empty\\">
+                <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                    <div id=\\"spinner\\" class=\\"\\" wire:loading=\\"submitEl\\"></div>
+                    <button></button>
+                </form>
+            </div>
+        </div>
+    </div></body>"
+`;
+
+exports[`test adding element with sibling components 1`] = `
+"<body><div id=\\"app\\">
+        <div wire:root-id=\\"componentA\\" wire:root-serialized=\\"empty\\">
+            <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
+                <button></button>
+            </form>
+        </div>
+
+        <div wire:root-id=\\"componentB\\" wire:root-serialized=\\"empty\\">
+            <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
+                <button>button</button>
+                <div>something added</div>
+            </form>
+        </div>
+    </div></body>"
+`;
+
+exports[`test basic click 1`] = `
+"<body><div id=\\"app\\">
+        <div wire:root-id=\\"componentA\\" wire:root-serialized=\\"empty\\">
+            <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                <div id=\\"spinner\\" class=\\"\\" wire:loading=\\"submitEl\\"></div>
+                <button></button>
+            </form>
+        </div>
+    </div></body>"
+`;
+
+exports[`test removing nested component 1`] = `
+"<body><div id=\\"app\\">
+        <div wire:root-id=\\"componentA\\" wire:root-serialized=\\"empty\\">
+            <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
+                <button>button</button>
+                <div>something added</div>
+            </form>
+        </div>
+    </div></body>"
+`;

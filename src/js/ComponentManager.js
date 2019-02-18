@@ -5,7 +5,6 @@ const prefix = require('./prefix.js')()
 export default class ComponentManager {
     constructor(nodeInitializer) {
         this.nodeInitializer = nodeInitializer
-        this.components = {}
     }
 
     init() {

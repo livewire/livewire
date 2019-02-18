@@ -4,7 +4,7 @@ export default {
     onMessage: null,
     lastTimeARequestWasSent: null,
 
-    wireUp() {
+    init() {
         //
     },
 
