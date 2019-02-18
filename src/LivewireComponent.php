@@ -23,22 +23,24 @@ abstract class LivewireComponent
         $this->prefix = $prefix;
     }
 
-    abstract public function render();
-
     public function redirectTo($url)
     {
         $this->redirectTo = $url;
     }
 
-    public function callOnParent($method)
+    public function callOnParent($method, ...$params)
     {
-        $this->callOnParent = $method;
+        $this->callOnParent = ['method' => $method, 'params' => $params];
     }
 
     public function getPropertyValue($prop) {
         // This is used by wrappers. Otherwise,
         // users would have to declare props as "public".
         return $this->{$prop};
+    }
+
+    public function hasProperty($prop) {
+        return property_exists($this, $prop);
     }
 
     public function setPropertyValue($prop, $value) {

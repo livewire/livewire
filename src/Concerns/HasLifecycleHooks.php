@@ -9,7 +9,10 @@ trait HasLifecycleHooks
     // This is bad, will fix - but stupid PHP strict mode throwing "declaration not compatible" crap
     public function __call($method, $params)
     {
-        if ($method === 'created') {
+        if (method_exists($this->wrapped, 'created')) {
+            $this->wrapped->created(...$params);
+            return;
+        } else {
             return;
         }
 

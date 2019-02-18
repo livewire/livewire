@@ -10,6 +10,7 @@ class SyncInputTest extends TestCase
     /** @test */
     function can_sync_input_data()
     {
+        echo 'hey';
         $this->instance->syncInput('modelnumber', '123abc');
         $this->assertequals('123abc', $this->instance->modelnumber);
     }

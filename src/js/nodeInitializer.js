@@ -1,43 +1,60 @@
 import renameme from './renameme'
-import connection from './connection.js'
-import roots from './roots.js'
+import rootsStore from './rootsStore'
 const prefix = require('./prefix.js')()
+import { closestByAttribute, getAttribute, extractDirectivesModifiersAndValuesFromEl } from './domHelpers'
 
-export default function (node) {
-    if (typeof node.hasAttribute !== 'function') {
-        return
+export default class NodeInitializer {
+    constructor(connection) {
+        this.connection = connection
     }
 
-    if (node.hasAttribute(`${prefix}:click`)) {
-        renameme.attachClick(node, (method, params, el) => {
-            console.time('request')
-            connection.sendMethod(method, params, roots.findByEl(el))
-        })
+    findByEl(el) {
+        return rootsStore[this.getRootIdFromEl(el)]
     }
 
-    if (node.hasAttribute(`${prefix}:loading`)) {
-        node.classList.add('hidden')
+    getRootIdFromEl(el) {
+        return getAttribute(closestByAttribute(el, 'root-id'), 'root-id')
     }
 
-    if (node.hasAttribute(`${prefix}:submit`)) {
-        renameme.attachSubmit(node, (method, params, el) => {
-            const root = roots.findByEl(el);
+    initialize(node) {
+        // Make sure it's an ElementNode and not a TextNode or something
+        if (typeof node.hasAttribute !== 'function') return
 
-            connection.sendMethod(method, [params], root, el.getAttribute(`${prefix}:ref`))
-        })
-    }
+        const directives = extractDirectivesModifiersAndValuesFromEl(node)
 
-    if (node.hasAttribute(`${prefix}:keydown.enter`)) {
-        renameme.attachEnter(node, (method, params, el) => {
-        console.time('request')
-            connection.sendMethod(method, params, roots.findByEl(el))
-        })
-    }
+        if (Object.keys(directives).includes('click')) {
+            renameme.attachClick(node, (method, params, el) => {
+                this.connection.sendMethod(method, params, this.findByEl(el))
+            }, directives['click'].modifiers, directives['click'].value)
+        }
 
-    if (node.hasAttribute(`${prefix}:sync`)) {
-        renameme.attachSync(node, (model, el) => {
-        console.time('request')
-            connection.sendSync(model, el.value, roots.findByEl(el))
-        })
+        if (Object.keys(directives).includes('loading')) {
+            node.classList.add('hidden')
+        }
+
+        if (Object.keys(directives).includes('submit')) {
+            renameme.attachSubmit(node, (method, params, el) => {
+                const root = this.findByEl(el);
+
+                this.connection.sendMethod(method, [params], root, el.getAttribute(`${prefix}:ref`))
+            })
+        }
+
+        if (Object.keys(directives).includes('keydown')) {
+            renameme.attachEnter(node, (method, params, el) => {
+                this.connection.sendMethod(method, params, this.findByEl(el))
+            })
+        }
+
+        if (Object.keys(directives).includes('sync')) {
+            renameme.attachSync(node, (model, el) => {
+
+                const value = el.type === 'checkbox'
+                    ? el.checked
+                    : el.value
+
+                this.connection.sendSync(model, value, this.findByEl(el))
+            })
+        }
     }
 }

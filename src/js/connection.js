@@ -1,63 +1,41 @@
-import webSocket from './webSocket.js'
-import http from './http.js'
-import roots from './roots.js';
+import rootsStore from './rootsStore';
 
-export default {
-    connection: null,
+export default class Connection {
+    constructor(driver) {
+        this.driver = driver
 
-    init: async function () {
-        try {
-            this.connection = await webSocket.init()
-            console.log('using websockets')
-        } catch (error) {
-            this.connection = http.init()
-            console.log('using http')
-        }
-
-        this.connection.fallback = () => {
-            console.log('switching back to http')
-            this.connection = http.init()
-            this.connection.onMessage = (payload) => {
-                this.onMessage(payload)
-            }
-        }
-
-        this.connection.onMessage = (payload) => {
+        this.driver.onMessage = (payload) => {
             this.onMessage(payload)
         }
-
-        // I'm sorry for these terrible things.
-        this.connection.refreshDom = this.refreshDom.bind(this)
-
-        this.connection.wireUp()
-
-        return this.connection
-    },
+    }
 
     onMessage(payload) {
-        if (payload.redirectTo) {
-            window.location.href = payload.redirectTo
+        const { id, dom, dirtyInputs, serialized, redirectTo, ref, callOnParent } = payload
+
+        if (redirectTo) {
+            window.location.href = redirectTo
             return
         }
 
-        roots.find(payload.id).replace(payload.dom, payload.dirtyInputs, payload.serialized)
-        if (payload.ref) {
-            roots.find(payload.id).unsetLoading(payload.ref)
+        rootsStore[id].replace(dom, dirtyInputs, serialized)
+
+        if (ref) {
+            rootsStore[id].unsetLoading(ref)
         }
 
-        if (payload.callOnParent) {
-            this.sendMethod(payload.callOnParent, [], roots.find(payload.id).parent)
+        if (callOnParent) {
+            this.sendMethod(callOnParent.method, callOnParent.params, rootsStore[id].parent, true)
         }
-    },
+    }
 
-    sendMessage(data, root) {
-        this.connection.sendMessage({
+    sendMessage(data, root, fromCallOnParent) {
+        this.driver.sendMessage({
             ...data,
             ...{ serialized: root.serialized },
         });
-    },
+    }
 
-    sendMethod(method, params, root, ref) {
+    sendMethod(method, params, root, ref, fromCallOnParent) {
         if (ref) {
             root.setLoading(ref)
         }
@@ -69,19 +47,13 @@ export default {
                 params,
                 ref,
             },
-        }, root)
-    },
+        }, root, fromCallOnParent)
+    }
 
     sendSync(name, value, root) {
         this.sendMessage({
             event: 'syncInput',
             data: { name, value },
         }, root)
-    },
-
-    refreshDom() {
-        Object.keys(roots.allRoots).forEach(id => {
-            this.sendMessage({event: 'refresh', data: {}}, roots.allRoots[id])
-        })
-    },
+    }
 }

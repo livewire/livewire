@@ -32,7 +32,7 @@ class LivewireComponentWrapper
             return $this->wrapped->render()->with([
                 'errors' => (new ViewErrorBag)
                     ->put('default', $errors ?: new MessageBag),
-                'wrapper' => $this,
+                'wrapped' => $this,
             ])->render();
         });
     }

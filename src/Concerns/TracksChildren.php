@@ -4,7 +4,7 @@ namespace Livewire\Concerns;
 
 trait TracksChildren
 {
-    protected $mountedChildren;
+    protected $mountedChildren = [];
 
     protected function trackChildrenBeingMounted($renderCallback)
     {
@@ -24,7 +24,7 @@ trait TracksChildren
         return $dom;
     }
 
-    public function mountChild($componentName, ...$props)
+    public function mountChild($componentName, ...$options)
     {
         $this->mountedChildren[] = $componentName;
 
@@ -32,13 +32,16 @@ trait TracksChildren
         if ($id = $this->wrapped->children[$componentName] ?? false) {
             return [
                 // The "id" is included here as a key for morphdom.
-                sprintf('<div wire:root="%s" id="%s">no-content</div>', $id, $id),
+                // @todo - if the root element of a component is not a "div", things will break,
+                // because we are passing in a dummy div and morphdom will whink it's a completely
+                // different component.
+                app('livewire')->injectDataForJsInComponentRootAttributes('<div></div>', $id, 'not-serialized'),
                 $id,
                 'not-serialized',
             ];
         }
 
-        [$dom, $id, $serialized] = app('livewire')->mount($componentName, ...$props);
+        [$dom, $id, $serialized] = app('livewire')->mount($componentName, ...$options);
 
         $this->wrapped->children[$componentName] = $id;
 

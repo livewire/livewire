@@ -18,9 +18,6 @@ trait TracksDirtySyncedInputs
     {
         $this->hashes = collect($this->wrapped->getObjectProperties())
             ->filter(function ($prop) {
-                return ! in_array($prop, $this->exemptFromHashDiffing);
-            })
-            ->filter(function ($prop) {
                 // For now, I only care about strings & numbers. We can add more things to
                 // dirty check later, but want to keep things light and fast.
                 return is_null($propValue = $this->wrapped->getPropertyValue($prop))
@@ -37,6 +34,9 @@ trait TracksDirtySyncedInputs
     public function dirtyInputs()
     {
         return collect($this->hashes)
+            ->reject(function ($hash, $prop) {
+                return in_array($prop, $this->exemptFromHashDiffing);
+            })
             ->filter(function ($hash, $prop) {
                 return is_string($this->wrapped->getPropertyValue($prop)) || is_numeric($this->wrapped->getPropertyValue($prop)) || is_null($this->wrapped->getPropertyValue($prop));
             })

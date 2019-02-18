@@ -6,8 +6,8 @@ trait ReceivesEvents
 {
     public function syncInput($name, $value)
     {
-        if (method_exists($this, 'onSync' . studly_case($name))) {
-            $this->{'onSync' . studly_case($name)}($value);
+        if (method_exists($this->wrapped, 'onSync' . studly_case($name))) {
+            $this->wrapped->{'onSync' . studly_case($name)}($value);
         }
 
         $this->removeFromDirtyPropertiesList($name);

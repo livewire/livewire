@@ -11,12 +11,12 @@ use Ratchet\WebSocket\WsServer;
 
 class LivewireMakeCommand extends Command
 {
-    protected $signature = 'livewire:make {component}';
+    protected $signature = 'livewire:make {component} {--view : Generate a view for the livewire component}';
 
     protected $description = '@todo';
 
     protected $messages = [
-        'file_exists' => '@todo - Whoops, looks like the view already exists: [{filePath}]',
+        'file_exists' => '@todo - Whoops, looks like the file already exists: [{filePath}]',
         'file_created' => '@todo - Livewire component [{component}] successfully created',
     ];
 
@@ -37,6 +37,23 @@ class LivewireMakeCommand extends Command
         // @todo - strip out .php if added on the end
         $this->makeFile($filePath, $component);
 
+        if ($this->option('view')) {
+            $filePath = sprintf('%s/%s.blade.php',
+                $directory = array_first(config('view.paths')) . '/livewire',
+                kebab_case($this->argument('component'))
+            );
+
+            if (File::exists($filePath)) {
+                $this->error(str_replace('{filePath}', $filePath, $this->messages['file_exists']));
+                return;
+            }
+
+            $this->ensureDirectoryExists($directory);
+
+            // @todo - strip out .blade.php if added on the end
+            $this->makeView($filePath);
+        }
+
         $this->info(str_replace('{component}', $component, $this->messages['file_created']));
     }
 
@@ -49,18 +66,33 @@ class LivewireMakeCommand extends Command
 
     protected function makeFile($filePath, $component)
     {
+        $viewName = kebab_case($component);
+
         File::put($filePath, <<<EOT
 <?php
 
 namespace App\Http\Livewire;
 
-class $component extends Livewire
+use Livewire\LivewireComponent;
+
+class {$component} extends LivewireComponent
 {
     public function render()
     {
-        //
+        return view('livewire.{$viewName}');
     }
 }
+
+EOT
+);
+    }
+
+    protected function makeView($filePath)
+    {
+        File::put($filePath, <<<EOT
+<div>
+    {{-- Go effing nuts. --}}
+</div>
 
 EOT
 );

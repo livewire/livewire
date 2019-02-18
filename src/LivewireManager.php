@@ -17,9 +17,14 @@ class LivewireManager
         $this->componentsByName[$name] = $viewClass;
     }
 
+    public function getComponentClass($component)
+    {
+        return $this->componentsByName[$component] ?? $component;
+    }
+
     public function activate($name)
     {
-        $componentClass = $this->componentsByName[$name] ?? $name;
+        $componentClass = $this->getComponentClass($name);
 
         return new $componentClass(str_random(20), $this->prefix);
     }
@@ -50,12 +55,12 @@ class LivewireManager
         $this->prefix = $prefix;
     }
 
-    public function mount($component, ...$props)
+    public function mount($component, ...$options)
     {
         $instance = $this->activate($component);
 
         $wrapped = LivewireComponentWrapper::wrap($instance);
-        $wrapped->created(...$props);
+        $wrapped->created(...$options);
         $dom = $wrapped->output();
         $wrapped->mounted();
         $serialized = encrypt($instance);
