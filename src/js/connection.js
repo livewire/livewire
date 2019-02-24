@@ -20,7 +20,7 @@ export default class Connection {
     }
 
     onMessage(payload) {
-        const { id, dom, dirtyInputs, serialized, redirectTo, ref, callOnParent } = payload
+        const { id, dom, dirtyInputs, serialized, redirectTo, ref, emitEvent } = payload
 
         if (redirectTo) {
             window.location.href = redirectTo
@@ -33,12 +33,12 @@ export default class Connection {
             store.componentsById[id].unsetLoading(ref)
         }
 
-        if (callOnParent) {
-            this.sendMethod(callOnParent.method, callOnParent.params, store.componentsById[id].parent, true)
+        if (emitEvent) {
+            this.sendEvent(emitEvent.name, emitEvent.params, store.componentsById[id])
         }
     }
 
-    sendMessage(data, root, fromCallOnParent) {
+    sendMessage(data, root) {
         this.driver.sendMessage({
             ...data,
             ...{ serialized: root.serialized },
@@ -51,7 +51,7 @@ export default class Connection {
         })
     }
 
-    sendMethod(method, params, root, ref, fromCallOnParent) {
+    sendMethod(method, params, root, ref) {
         if (ref) {
             root.setLoading(ref)
         }
@@ -64,7 +64,7 @@ export default class Connection {
                 params,
                 ref,
             },
-        }, root, fromCallOnParent)
+        }, root)
     }
 
     sendEvent(name, params, component, ref) {
