@@ -3,16 +3,17 @@
 namespace Livewire;
 
 use Illuminate\Routing\Route;
-use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Commands\LivewireMakeCommand;
 use Livewire\Commands\LivewireStartCommand;
 use Livewire\Commands\LivewireWatchCommand;
 use Livewire\Connection\HttpConnectionHandler;
-use Illuminate\Routing\RouteRegistrar;
+use Livewire\Macros\RouteMacros;
+use Livewire\Macros\RouterMacros;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -31,8 +32,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerRoutes()
     {
+        // I'm guessing it's not cool to rely on the users "web" middleware stack.
+        // @todo - figure out what to do here re: middleware.
         RouteFacade::post('/livewire/message', HttpConnectionHandler::class)->middleware('web');
-        // @todo - make sure web middleware's cool.
     }
 
     public function registerCommands()
@@ -48,116 +50,14 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerRouterMacros()
     {
-        Route::macro('layout', function ($layout) {
-            $this->action['layout'] = isset($this->action['layout'])
-                ? $this->action['layout'].$layout
-                : $layout;
-
-            return $this;
-        });
-
-        Route::macro('section', function ($section) {
-            $this->action['section'] = $section;
-
-            return $this;
-        });
-
-        Router::macro('layout', function ($layout) {
-            return (new class($this) extends RouteRegistrar {
-                public function __construct(\Illuminate\Routing\Router $router)
-                {
-                    array_push($this->allowedAttributes, 'layout', 'section');
-
-                    parent::__construct($router);
-
-                    return $this;
-                }
-            })->layout($layout);
-        });
-
-        Router::macro('section', function ($section) {
-            return (new class($this) extends RouteRegistrar {
-                public function __construct(\Illuminate\Routing\Router $router)
-                {
-                    array_push($this->allowedAttributes, 'layout', 'section');
-
-                    parent::__construct($router);
-
-                    return $this;
-                }
-            })->section($section);
-        });
-
-        Router::macro('livewire', function ($uri, $component) {
-            return $this->get($uri, function (...$params) use ($component) {
-                $componentClass = app('livewire')->getComponentClass($component);
-
-                $route = $this->current();
-                // Cache the current route action (this callback actually), just to be safe.
-                $cache = $route->getAction('uses');
-
-                // We'll set the route action to be the "created" method from the chosen
-                // Livewire component, to get the proper implicit bindings.
-                $route->uses($componentClass . '@created');
-                // This is normally handled in the "SubstituteBindings" middleware, but
-                // because that middleware has already ran, we need to run them again.
-                $this->substituteBindings($route);
-                $this->substituteImplicitBindings($route);
-
-                // Now we take all that we have gathered and convert it into a nice
-                // array of parameters to pass into the "created" method.
-                if ((new \ReflectionClass($componentClass))->hasMethod('created')) {
-                    $method = (new \ReflectionClass($componentClass))->getMethod('created');
-                    $options = $route->resolveMethodDependencies($route->parameters(), $method);
-                } else {
-                    $options = [];
-                }
-
-                // Restore the original route action.
-                $route->uses($cache);
-
-                return app('view')->file(__DIR__ . '/livewire-view.blade.php', [
-                    'layout' => $route->getAction('layout') ?? 'layouts.app',
-                    'section' => $route->getAction('section') ?? 'content',
-                    'component' => $componentClass,
-                    'componentOptions' => array_values($options),
-                ]);
-            });
-        });
+        Route::mixin(new RouteMacros);
+        Router::mixin(new RouterMacros);
     }
 
     public function registerBladeDirectives()
     {
-        Blade::directive('livewire', function ($expression) {
-            // This "internalKey" is a key that will only be used on the server-side.
-            // It is set outside the string, so that it is stored as a literal in the
-            // compiled view which will be persisted across multiple ajax requests.
-            // When a view is updated, this key will change, forcing the server to mount
-            // children that would otherwise just be stubbed out. I think this is fine,
-            // because if a user updates a view, they would want a re-mount anyways?
-            $internalKey = str_random(20);
-
-            return <<<EOT
-<?php
-    list(\$dom, \$id, \$serialized) = isset(\$wrapped)
-        ? \$wrapped->mountChild('{$internalKey}', {$expression})
-        : \Livewire\Livewire::mount({$expression});
-
-    if (isset(\$wrapped)) {
-        \$wrapped->setCurrentChildInView(\$id);
-    }
-
-    echo \Livewire\Livewire::injectDataForJsInComponentRootAttributes(\$dom, \$id, \$serialized);
-?>
-EOT;
-        });
-
-        Blade::directive('on', function ($expression) {
-            return "<?php if (isset(\$wrapped)) { \$wrapped->prepareListenerForRegistration({$expression}); } ?>";
-        });
-
-        Blade::directive('endlivewire', function ($expression) {
-            return "<?php if (isset(\$wrapped)) { \$wrapped->registerListeners(); } ?>";
-        });
+        Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
+        Blade::directive('on', [LivewireBladeDirectives::class, 'on']);
+        Blade::directive('endlivewire', [LivewireBladeDirectives::class, 'endlivewire']);
     }
 }
