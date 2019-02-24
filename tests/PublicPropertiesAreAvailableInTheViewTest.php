@@ -9,30 +9,32 @@ use Livewire\LivewireManager;
 use Illuminate\View\Factory;
 use Livewire\LivewireComponentWrapper;
 
-class ComponentRootHasIdAttributeTest extends TestCase
+class PublicPropertiesAreAvailableInTheViewTest extends TestCase
 {
     public function setUp()
     {
-        ($this->livewire = app(LivewireManager::class))->register('dummy', ComponentRootHasIdStub::class);
+        ($this->livewire = app(LivewireManager::class))->register('dummy', Dummy::class);
 
         parent::setUp();
     }
 
     /** @test */
-    function root_has_id_property()
+    function public_property_is_accessible_in_view()
     {
         $component = LivewireComponentWrapper::wrap($this->livewire->activate('dummy'));
 
-        $this->assertEquals(0, strpos(
-            trim($component->output()),
-            '<div wire:root-id="'.$component->id.'"'
+        $this->assertTrue(str_contains(
+            $component->output(),
+            'Caleb'
         ));
     }
 }
 
-class ComponentRootHasIdStub extends LivewireComponent {
+class Dummy extends LivewireComponent {
+    public $name = 'Caleb';
+
     public function render()
     {
-        return app('view')->make('root-id-test');
+        return app('view')->make('public-properties-test');
     }
 }

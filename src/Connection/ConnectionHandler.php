@@ -13,7 +13,7 @@ abstract class ConnectionHandler
         $wrapped = LivewireComponentWrapper::wrap($instance);
 
         try {
-            $this->processEvent($event, $wrapped, $data);
+            $this->processEvent($event, $wrapped, $data, $instance->id);
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
         }
@@ -38,7 +38,7 @@ abstract class ConnectionHandler
         ];
     }
 
-    public function processEvent($event, $wrapped, $data)
+    public function processEvent($event, $wrapped, $data, $id)
     {
         $wrapped->beforeUpdate();
 
@@ -47,6 +47,9 @@ abstract class ConnectionHandler
                 break;
             case 'syncInput':
                 $wrapped->syncInput($data['name'], $data['value']);
+                break;
+            case 'fireEvent':
+                $wrapped->fireEvent($data['childId'], $data['name'], $data['params']);
                 break;
             case 'fireMethod':
                 $wrapped->fireMethod($data['method'], $data['params']);

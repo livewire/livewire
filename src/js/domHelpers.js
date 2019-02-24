@@ -52,3 +52,67 @@ export function extractDirectivesModifiersAndValuesFromEl(el) {
 
     return directives
 }
+
+export function isComponentRootEl(el) {
+    return hasAttribute(el, 'root-id')
+}
+
+export function transitionElementIn(el) {
+    if (el.hasAttribute(`${prefix}:transition`)) {
+        const transitionName = el.getAttribute(`${prefix}:transition`)
+
+        el.classList.add(`${transitionName}-enter`)
+        el.classList.add(`${transitionName}-enter-active`)
+
+        setTimeout(() => {
+            el.classList.remove(`${transitionName}-enter`)
+            setTimeout(() => {
+                el.classList.remove(`${transitionName}-enter-active`)
+            }, 500)
+        }, 65)
+    }
+}
+
+export function transitionElementOut(el) {
+    if (el.hasAttribute(`${prefix}:transition`)) {
+        const transitionName = el.getAttribute(`${prefix}:transition`)
+
+        el.classList.add(`${transitionName}-leave-active`)
+
+        setTimeout(() => {
+        el.classList.add(`${transitionName}-leave-to`)
+            setTimeout(() => {
+                el.classList.remove(`${transitionName}-leave-active`)
+                el.classList.remove(`${transitionName}-leave-to`)
+                el.remove()
+            }, 500)
+        }, 65)
+
+        return false
+    }
+    return true
+}
+
+export function shouldUpdateInputElementGivenItHasBeenUpdatedViaSync(el, dirtyInputs) {
+    // This will need work. But is essentially "input persistance"
+    const isInput = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')
+
+    if (isInput) {
+        if (el.type === 'submit') {
+            return true
+        }
+
+        const isSync = hasAttribute(el, 'sync')
+
+        if (isSync) {
+            const syncName = getAttribute(el, 'sync')
+            if (Array.from(dirtyInputs).includes(syncName)) {
+                return true
+            } {
+                return false
+            }
+        }
+
+        return false
+    }
+}

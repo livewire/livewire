@@ -1,11 +1,10 @@
 import simulant from 'jsdom-simulant'
+import http from 'httpConnection'
 import NodeInitializer from 'NodeInitializer'
 import ComponentManager from 'ComponentManager'
 import Connection from 'Connection'
-import rootsStore from 'rootsStore'
 
 export function fireEventAndStopBeforeSendingToServer (selector, event, options) {
-    const http = require('http')
     http.sendMessage = jest.fn()
 
     const nodeInitializer = new NodeInitializer(new Connection(http))
@@ -16,7 +15,6 @@ export function fireEventAndStopBeforeSendingToServer (selector, event, options)
 }
 
 export function fireEventAndExecuteCallbackWhileWaitingForServerToRespondWithDom (selector, event, callback, dom) {
-    const http = require('http')
     http.sendMessage = jest.fn(function({ id }) {
         callback()
 
@@ -31,7 +29,6 @@ export function fireEventAndExecuteCallbackWhileWaitingForServerToRespondWithDom
 }
 
 export function fireEventAndMakeServerRespondWithDom (selector, event, dom) {
-    const http = require('http')
     http.sendMessage = jest.fn(function({ id }) {
         this.onMessage({ id, dom })
     })
@@ -45,7 +42,6 @@ export function fireEventAndMakeServerRespondWithDom (selector, event, dom) {
 
 export function fireEventAndGetPayloadBeingSentToServer (selector, event, options) {
     return new Promise((resolve) => {
-        const http = require('http')
         http.sendMessage = jest.fn(function (payload) {
             resolve(payload)
         })

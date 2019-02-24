@@ -42,7 +42,7 @@ class LivewireManager
         return '<script>'
             . File::get(__DIR__ . '/../dist/livewire.js')
             . '</script>'
-            . '<script>window.Livewire = '.json_encode($this->jsObject).'</script>';
+            . '<script>Livewire.start()</script>';
     }
 
     public function prefix()

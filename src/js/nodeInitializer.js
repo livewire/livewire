@@ -1,5 +1,5 @@
 import renameme from './renameme'
-import rootsStore from './rootsStore'
+import store from './store'
 const prefix = require('./prefix.js')()
 import { closestByAttribute, getAttribute, extractDirectivesModifiersAndValuesFromEl } from './domHelpers'
 
@@ -9,7 +9,7 @@ export default class NodeInitializer {
     }
 
     findByEl(el) {
-        return rootsStore[this.getRootIdFromEl(el)]
+        return store.componentsById[this.getRootIdFromEl(el)]
     }
 
     getRootIdFromEl(el) {
@@ -24,6 +24,13 @@ export default class NodeInitializer {
 
         if (Object.keys(directives).includes('click')) {
             renameme.attachClick(node, (method, params, el) => {
+                if (method === '$emit') {
+                    let eventName
+                    [eventName, ...params] = params
+                    this.connection.sendEvent(eventName, params, this.findByEl(el))
+                    return
+                }
+
                 this.connection.sendMethod(method, params, this.findByEl(el))
             }, directives['click'].modifiers, directives['click'].value)
         }

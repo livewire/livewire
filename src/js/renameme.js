@@ -84,7 +84,7 @@ export default {
         el.addEventListener('input', debounce(e => {
             const model = e.target.getAttribute(`${prefix}:sync`)
             callback(model, e.target)
-        }, 250))
+        }, 150))
     },
 
     parseOutMethodAndParams(rawMethod) {

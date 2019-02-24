@@ -4,13 +4,13 @@ use Livewire\Livewire;
 use Livewire\LivewireComponent;
 use PHPUnit\Framework\TestCase;
 use Livewire\LivewireManager;
+use Livewire\LivewireComponentWrapper;
 
 class SyncInputTest extends TestCase
 {
     /** @test */
     function can_sync_input_data()
     {
-        echo 'hey';
         $this->instance->syncInput('modelnumber', '123abc');
         $this->assertequals('123abc', $this->instance->modelnumber);
     }
@@ -26,17 +26,17 @@ class SyncInputTest extends TestCase
         $this->assertEmpty($this->instance->dirtyInputs());
 
         $this->instance = unserialize(serialize($this->instance));
-        $this->instance->changeModelNumber('456def');
+        $this->instance->wrapped->changeModelNumber('456def');
         $this->assertContains('modelNumber', $this->instance->dirtyInputs());
     }
 
     public function setUp()
     {
-        $this->instance = new Faucet('faucet', new \StdClass);
+        $this->instance = LivewireComponentWrapper::wrap(new FaucetStub('id', $prefix = 'wire'));
     }
 }
 
-class Faucet extends LivewireComponent {
+class FaucetStub extends LivewireComponent {
     public $modelNumber;
 
     public function changeModelNumber($number)

@@ -1,11 +1,11 @@
-import ComponentManager from './ComponentManager.js'
-import http from './http.js'
+import ComponentManager from './ComponentManager'
+import http from './httpConnection'
 import websockets from './webSocket'
-import NodeInitializer from './NodeInitializer.js'
-import Connection from './Connection.js'
+import NodeInitializer from './NodeInitializer'
+import Connection from './Connection'
 
-export default {
-    init(options) {
+const livewire = {
+    start(options) {
         if (! options) {
             options = {};
         }
@@ -25,3 +25,9 @@ export default {
         roots.init()
     }
 }
+
+if (!window.Livewire) {
+    window.Livewire = livewire
+}
+
+export default livewire

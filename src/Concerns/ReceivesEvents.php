@@ -13,6 +13,18 @@ trait ReceivesEvents
         $this->removeFromDirtyPropertiesList($name);
 
         $this->wrapped->setPropertyValue($name, $value);
+
+        if (method_exists($this->wrapped, $method = 'after' . studly_case($name) . 'Synced')) {
+            $this->wrapped->{$method}($value);
+        }
+    }
+
+    public function fireEvent($componentId, $event, $params)
+    {
+        $this->fireMethod(
+            $this->listeners($componentId)[$event],
+            $params
+        );
     }
 
     public function fireMethod($method, $params = [])

@@ -1,4 +1,4 @@
-import rootsStore from './rootsStore';
+import store from './store';
 
 export default class Connection {
     constructor(driver) {
@@ -27,14 +27,14 @@ export default class Connection {
             return
         }
 
-        rootsStore[id].replace(dom, dirtyInputs, serialized)
+        store.componentsById[id].replace(dom, dirtyInputs, serialized)
 
         if (ref) {
-            rootsStore[id].unsetLoading(ref)
+            store.componentsById[id].unsetLoading(ref)
         }
 
         if (callOnParent) {
-            this.sendMethod(callOnParent.method, callOnParent.params, rootsStore[id].parent, true)
+            this.sendMethod(callOnParent.method, callOnParent.params, store.componentsById[id].parent, true)
         }
     }
 
@@ -65,6 +65,23 @@ export default class Connection {
                 ref,
             },
         }, root, fromCallOnParent)
+    }
+
+    sendEvent(name, params, component, ref) {
+        if (ref) {
+            component.setLoading(ref)
+        }
+
+        this.sendMessage({
+            id: component.parent.id,
+            event: 'fireEvent',
+            data: {
+                childId: component.id,
+                name,
+                params,
+                ref,
+            },
+        }, component.parent)
     }
 
     sendSync(name, value, root) {

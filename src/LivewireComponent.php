@@ -16,6 +16,7 @@ abstract class LivewireComponent
     public $callOnParent;
     // This gets used a way to track data between requests by the wrapper.
     public $children = [];
+    public $listenersByChildComponentId = [];
 
     public function __construct($id, $prefix)
     {

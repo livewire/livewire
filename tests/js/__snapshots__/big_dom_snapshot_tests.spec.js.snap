@@ -69,11 +69,28 @@ exports[`test adding element with sibling components 1`] = `
     </div></body>"
 `;
 
+exports[`test adding nested component 1`] = `
+"<body><div id=\\"app\\">
+        <div wire:root-id=\\"componentA\\" wire:root-serialized=\\"empty\\">
+            <form id=\\"yih\\" wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
+                <button>button</button>
+
+                <div wire:root-id=\\"componentB\\" wire:root-serialized=\\"empty\\">
+                    <div id=\\"yo\\" wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
+                        <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div></body>"
+`;
+
 exports[`test basic click 1`] = `
 "<body><div id=\\"app\\">
         <div wire:root-id=\\"componentA\\" wire:root-serialized=\\"empty\\">
             <form wire:submit=\\"doSomething\\" wire:ref=\\"submitEl\\">
-                <div id=\\"spinner\\" class=\\"\\" wire:loading=\\"submitEl\\"></div>
+                <div id=\\"spinner\\" class=\\"hidden\\" wire:loading=\\"submitEl\\"></div>
                 <button></button>
             </form>
         </div>

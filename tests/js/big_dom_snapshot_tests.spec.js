@@ -10,7 +10,7 @@ test('test basic click', () => {
         </div>
     </div>`
 
-    fireEventAndMakeServerRespondWithDom('button', 'click', document.querySelector(`[wire\\:root-id="componentA"]`))
+    fireEventAndMakeServerRespondWithDom('button', 'click', document.querySelector(`[wire\\:root-id="componentA"]`).outerHTML)
 
     expect(document.body.outerHTML).toMatchSnapshot();
 })
@@ -125,6 +125,34 @@ test('test adding element outside nested component', () => {
 
             <div wire:root-id="componentB" wire:root-serialized="empty">
             </div>
+        </div>`
+    )
+
+    expect(document.body.outerHTML).toMatchSnapshot();
+})
+
+test('test adding nested component', () => {
+    document.body.innerHTML = `<div id="app">
+        <div wire:root-id="componentA" wire:root-serialized="empty">
+            <form wire:submit="doSomething" wire:ref="submitEl">
+                <div id="spinner" class="hidden" wire:loading="submitEl"></div>
+                <button>button</button>
+            </form>
+        </div>
+    </div>`
+
+    fireEventAndMakeServerRespondWithDom('[wire:root-id="componentA"] button', 'click',
+        `<div wire:root-id="componentA" wire:root-serialized="empty">
+            <form id="yih" wire:submit="doSomething" wire:ref="submitEl">
+                <div id="spinner" class="hidden" wire:loading="submitEl"></div>
+                <button>button</button>
+
+                <div wire:root-id="componentB" wire:root-serialized="empty">
+                    <div id="yo" wire:submit="doSomething" wire:ref="submitEl">
+                        <div id="spinner" class="hidden" wire:loading="submitEl"></div>
+                    </div>
+                </div>
+            </form>
         </div>`
     )
 

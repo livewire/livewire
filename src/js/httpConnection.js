@@ -12,6 +12,7 @@ export default {
         var timestamp = (new Date()).valueOf();
         this.lastTimeARequestWasSent = timestamp;
 
+        // @todo - Figure out not relying on app's csrf stuff in bootstrap.js
         Axios.post('/livewire/message', payload)
             .then(response => {
                 if (timestamp < this.lastTimeARequestWasSent) {
@@ -20,5 +21,6 @@ export default {
 
                 this.onMessage.call(this, response.data)
             })
+            // @todo: catch 419 session expired.
     },
 }

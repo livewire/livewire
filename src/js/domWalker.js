@@ -50,7 +50,6 @@ export default {
     },
 
     getNextSibling(node) {
-        if (node === null) debugger
         const sibling = node.nextSibling
 
         if (sibling && sibling.nodeType !== Node.ELEMENT_NODE) {

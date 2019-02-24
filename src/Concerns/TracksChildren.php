@@ -24,12 +24,11 @@ trait TracksChildren
         return $dom;
     }
 
-    public function mountChild($componentName, ...$options)
+    public function mountChild($internalKey, $componentName, ...$options)
     {
-        $this->mountedChildren[] = $componentName;
+        $this->mountedChildren[] = $internalKey;
 
-        // Note: this only allows for one child component of each type in a component.
-        if ($id = $this->wrapped->children[$componentName] ?? false) {
+        if ($id = $this->wrapped->children[$internalKey] ?? false) {
             return [
                 // The "id" is included here as a key for morphdom.
                 // @todo - if the root element of a component is not a "div", things will break,
@@ -43,7 +42,7 @@ trait TracksChildren
 
         [$dom, $id, $serialized] = app('livewire')->mount($componentName, ...$options);
 
-        $this->wrapped->children[$componentName] = $id;
+        $this->wrapped->children[$internalKey] = $id;
 
         return [$dom, $id, $serialized];
     }

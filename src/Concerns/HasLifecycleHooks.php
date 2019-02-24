@@ -33,6 +33,8 @@ trait HasLifecycleHooks
 
     public function updated()
     {
-        //
+        if (method_exists($this->wrapped, 'updated')) {
+            $this->wrapped->updated();
+        }
     }
 }
