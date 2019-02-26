@@ -61,7 +61,6 @@ export default {
         modal.style.padding = '50px'
         modal.style.backgroundColor = 'rgba(0, 0, 0, .6)'
         modal.style.zIndex = 200000
-        modal.addEventListener('click', () => this.hideHtmlModal(modal))
 
         let iframe = document.createElement('iframe')
         iframe.style.backgroundColor = 'white'
@@ -75,6 +74,14 @@ export default {
         iframe.contentWindow.document.open()
         iframe.contentWindow.document.write(page.outerHTML)
         iframe.contentWindow.document.close()
+
+        // Close on click.
+        modal.addEventListener('click', () => this.hideHtmlModal(modal))
+
+        // Close on escape key press.
+        modal.setAttribute('tabindex', 0)
+        modal.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.hideHtmlModal(modal) })
+        modal.focus()
     },
 
     hideHtmlModal(modal) {
