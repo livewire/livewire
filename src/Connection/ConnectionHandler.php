@@ -25,7 +25,7 @@ abstract class ConnectionHandler
         $id = $instance->id;
         $dom = $wrapped->output($errors ?? null);
         $dirtyInputs = $wrapped->dirtyInputs();
-        $callOnParent = $instance->callOnParent;
+        $emitEvent = $instance->emitEvent;
         $serialized = encrypt($instance);
 
         return [
@@ -34,7 +34,7 @@ abstract class ConnectionHandler
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
             'ref' => $data['ref'] ?? null,
-            'callOnParent' => $callOnParent,
+            'emitEvent' => $emitEvent,
         ];
     }
 

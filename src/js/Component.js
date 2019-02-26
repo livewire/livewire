@@ -10,6 +10,7 @@ export default class Component {
         this.parent = parent
         this.id = getAttribute(el, 'root-id')
         this.serialized = getAttribute(el, 'root-serialized')
+        this.loadingElsByTargetRef = {}
     }
 
     attachListenersAndAddChildComponents() {
@@ -47,14 +48,22 @@ export default class Component {
         })
     }
 
+    addLoadingEl(el, ref) {
+        if (this.loadingElsByTargetRef[ref]) {
+            this.loadingElsByTargetRef[ref].push(el)
+        } else {
+            this.loadingElsByTargetRef[ref] = [el]
+        }
+    }
+
     setLoading(refName) {
-        elsByAttributeAndValue('loading', refName, this.el).forEach(el => {
+        (this.loadingElsByTargetRef[refName] || []).forEach(el => {
             el.classList.remove('hidden')
         })
     }
 
     unsetLoading(refName) {
-        elsByAttributeAndValue('loading', refName, this.el).forEach(el => {
+        (this.loadingElsByTargetRef[refName] || []).forEach(el => {
             el.classList.add('hidden')
         })
     }

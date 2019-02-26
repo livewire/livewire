@@ -20,9 +20,15 @@ const livewire = {
 
         const nodeInitializer = new NodeInitializer(new Connection(driverInstance))
 
-        const roots = new ComponentManager(nodeInitializer)
+        this.roots = new ComponentManager(nodeInitializer)
 
-        roots.init()
+        this.roots.init()
+    },
+
+    stop() {
+        if (this.roots) {
+            this.roots.destroy()
+        }
     }
 }
 

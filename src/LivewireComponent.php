@@ -13,7 +13,7 @@ abstract class LivewireComponent
     public $id;
     public $prefix;
     public $redirectTo;
-    public $callOnParent;
+    public $emitEvent;
     // This gets used a way to track data between requests by the wrapper.
     public $children = [];
     public $listenersByChildComponentId = [];
@@ -24,14 +24,14 @@ abstract class LivewireComponent
         $this->prefix = $prefix;
     }
 
-    public function redirectTo($url)
+    public function redirect($url)
     {
         $this->redirectTo = $url;
     }
 
-    public function callOnParent($method, ...$params)
+    public function emit($eventName, ...$params)
     {
-        $this->callOnParent = ['method' => $method, 'params' => $params];
+        $this->emitEvent = ['name' => $eventName, 'params' => $params];
     }
 
     public function getPropertyValue($prop) {

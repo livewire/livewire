@@ -12,10 +12,13 @@ export default class ComponentManager {
     init() {
         this.rootComponentElements.forEach(el => {
             const component = new Component(el, this.nodeInitializer)
-            component.attachListenersAndAddChildComponents()
-
             store.componentsById[component.id] = component
+            component.attachListenersAndAddChildComponents()
         })
+    }
+
+    destroy() {
+        store.componentsById = {}
     }
 
     get rootComponentElements() {
