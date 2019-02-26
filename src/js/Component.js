@@ -10,7 +10,6 @@ export default class Component {
         this.parent = parent
         this.id = getAttribute(el, 'root-id')
         this.serialized = getAttribute(el, 'root-serialized')
-        this.loadingElsByTargetRef = {}
         this.syncQueue = {}
     }
 
@@ -66,13 +65,13 @@ export default class Component {
     }
 
     setLoading(refName) {
-        (this.loadingElsByTargetRef[refName] || []).forEach(el => {
+        elsByAttributeAndValue('loading', refName, this.el).forEach(el => {
             el.classList.remove('hidden')
         })
     }
 
     unsetLoading(refName) {
-        (this.loadingElsByTargetRef[refName] || []).forEach(el => {
+        elsByAttributeAndValue('loading', refName, this.el).forEach(el => {
             el.classList.add('hidden')
         })
     }

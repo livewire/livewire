@@ -84,7 +84,7 @@ test('test keydown', async () => {
     </div>
     `
 
-    const payload = await fireEventAndGetPayloadBeingSentToServer('input', 'keydown', { keyCode: 13})
+    const payload = await fireEventAndGetPayloadBeingSentToServer('input', 'keydown', { key: "Enter"})
 
     expect(payload.event).toEqual('fireMethod')
     expect(payload.data.method).toEqual('doSomething')
@@ -97,7 +97,7 @@ test('test keydown with keycode', async () => {
     </div>
     `
 
-    const payload = await fireEventAndGetPayloadBeingSentToServer('input', 'keydown', { keyCode: 13})
+    const payload = await fireEventAndGetPayloadBeingSentToServer('input', 'keydown', { key: "Enter" })
 
     expect(payload.event).toEqual('fireMethod')
     expect(payload.data.method).toEqual('doSomething')

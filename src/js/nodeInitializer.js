@@ -43,9 +43,7 @@ export default class NodeInitializer {
         }
 
         if (directives.has('loading')) {
-            const ref = directives.get('loading').value
-            const root = this.findByEl(node);
-            root.addLoadingEl(node, ref)
+            // @todo - The loading functionality needs to really be thought out.
         }
 
         if (directives.has('submit')) {
