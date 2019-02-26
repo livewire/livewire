@@ -7,13 +7,18 @@ use Livewire\LivewireComponentWrapper;
 
 abstract class ConnectionHandler
 {
+    public function wrap($instance)
+    {
+        return LivewireComponentWrapper::wrap($instance);
+    }
+
     public function handle($event, $data, $serialized)
     {
         $instance = decrypt($serialized);
-        $wrapped = LivewireComponentWrapper::wrap($instance);
+        $wrapped = $this->wrap($instance);
 
         try {
-            foreach ($data['syncQueue'] as $model => $value) {
+            foreach ($data['syncQueue'] ?? [] as $model => $value) {
                 $wrapped->lazySyncInput($model, $value);
             }
 

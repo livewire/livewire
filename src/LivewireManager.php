@@ -11,6 +11,7 @@ class LivewireManager
     protected $jsObject = [
         'componentsById' => []
     ];
+    protected $isTesting = false;
 
     public function register($name, $viewClass)
     {
@@ -31,10 +32,9 @@ class LivewireManager
 
     public function test($name)
     {
-        return new TestableLivewire(
-            LivewireComponentWrapper::wrap($this->activate($name)),
-            $this->prefix()
-        );
+        $this->isTesting = true;
+
+        return new TestableLivewire($name, $this->prefix);
     }
 
     public function script()
@@ -59,7 +59,12 @@ class LivewireManager
     {
         $instance = $this->activate($component);
 
-        $wrapped = LivewireComponentWrapper::wrap($instance);
+        if ($this->isTesting) {
+            $wrapped = TestableLivewireComponentWrapper::wrap($instance);
+        } else {
+            $wrapped = LivewireComponentWrapper::wrap($instance);
+        }
+
         $wrapped->created(...$options);
         $dom = $wrapped->output();
         $wrapped->mounted();

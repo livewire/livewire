@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Symfony\Component\DomCrawler\Crawler;
 use Illuminate\Validation\ValidationException;
+use Livewire\Connection\TestConnectionHandler;
 
 class TestableLivewire
 {
@@ -16,11 +17,21 @@ class TestableLivewire
 
     public function __construct($component, $prefix)
     {
+        [$dom, $id, $serialized] = app('livewire')->mount($component);
+
         $this->prefix = $prefix;
-        $this->component = $component;
-        $this->component->created();
-        $this->resetDom();
-        $this->component->mounted();
+        $this->serialized = $serialized;
+
+        $this->crawler = new Crawler(
+            $this->rawDom = $this->convertColonsToDoubleDashes($dom)
+        );
+    }
+
+    public function dump()
+    {
+        echo $this->rawDom;
+
+        return $this;
     }
 
     public function type($selector, $text)
@@ -29,9 +40,8 @@ class TestableLivewire
 
         throw_unless($node->count(), new \Exception('Can\'t find element with selector: [' . $selector . ']'));
 
-        if ($dataName = $node->attr("{$this->prefix}--sync")) {
-            $this->component->syncInput($dataName, $text);
-            $this->resetDom();
+        if (($dataName = $node->attr("{$this->prefix}--colon--model")) || ($dataName = $node->attr("{$this->prefix}--colon--model--dot--lazy"))) {
+            $this->syncInput($dataName, $text);
         }
 
         if ($inputName = $node->attr('name')) {
@@ -47,7 +57,8 @@ class TestableLivewire
 
         throw_unless($node->count(), new \Exception('Can\'t find element with selector: [' . $selector . ']'));
 
-        $methodName = $node->attr("{$this->prefix}--click");
+
+        $methodName = $node->attr("{$this->prefix}--colon--click");
 
         throw_unless($methodName, new \Exception("Cannot find value for [{$this->prefix}:click] on element: [" . $selector . ']'));
 
@@ -59,8 +70,16 @@ class TestableLivewire
             $parameters = [];
         }
 
-        $this->component->fireMethod($methodName, $parameters);
-        $this->resetDom();
+        $result = (new TestConnectionHandler)->handle('fireMethod', [
+            'method' => $methodName,
+            'params' => $parameters,
+            'ref' => null,
+        ], $this->serialized);
+
+        $this->serialized = $result['serialized'];
+        $this->crawler = new Crawler(
+            $this->rawDom = $this->convertColonsToDoubleDashes($result['dom'])
+        );
 
         return $this;
     }
@@ -83,10 +102,9 @@ class TestableLivewire
 
         $node = $this->crawler->filter($this->formatSelector($selector));
 
-        $methodName = $node->attr("{$this->prefix}--keydown--enter");
-        $this->component->fireMethod($methodName);
+        $methodName = $node->attr("{$this->prefix}--colon--keydown--dot--enter");
 
-        $this->resetDom();
+        $this->fireMethod($methodName);
 
         return $this;
     }
@@ -139,25 +157,25 @@ class TestableLivewire
 
     public function convertColonsToDoubleDashes($input)
     {
-        return
-            str_replace("{$this->prefix}--form.sync", "{$this->prefix}--form--sync",
-                str_replace("{$this->prefix}--keydown.enter", "{$this->prefix}--keydown--enter",
-                    str_replace("{$this->prefix}:", "{$this->prefix}--",
-                        str_replace("{$this->prefix}:", "{$this->prefix}--",
-                            $input
-                        )
-                    )
-                )
-            );
+        preg_match_all('/(wire:.*)="/', $input, $matches);
+        $rawDirectives = $matches[1];
+
+        foreach ($rawDirectives as $rawDirective) {
+            $replacedColons = str_replace(':', '--colon--', $rawDirective);
+            $replacedPeriods = str_replace('.', '--dot--', $replacedColons);
+            $input = str_replace($rawDirective, $replacedPeriods, $input);
+        }
+
+        return $input;
     }
 
     public function formatSelector($selector)
     {
         if (strpos($selector, '@') === 0) {
-            return '[wire--hook="'.substr($selector, 1, strlen($selector)).'"]';
+            $selector = '[wire:ref="'.substr($selector, 1, strlen($selector)).'"]';
         }
 
-        return str_replace(':', '--', $selector);
+        return $this->convertColonsToDoubleDashes($selector);
     }
 
     public function __call($method, $params)
@@ -178,7 +196,7 @@ class TestableLivewire
     {
         try {
             $this->crawler = new Crawler(
-                $this->rawDom = $this->convertColonsToDoubleDashes($this->component->output(null))
+                $this->rawDom = $this->convertColonsToDoubleDashes($this->component->output())
             );
         } catch (ValidationException $th) {
             dd('hye');
@@ -190,5 +208,37 @@ class TestableLivewire
         $callback($this);
 
         return $this;
+    }
+
+    public function toHtml($node)
+    {
+        return $node->getNode(0)->ownerDocument->saveXML($node->getNode(0));
+    }
+
+    public function fireMethod($method, $parameters = [])
+    {
+        $result = (new TestConnectionHandler)->handle('fireMethod', [
+            'method' => $method,
+            'params' => $parameters,
+            'ref' => null,
+        ], $this->serialized);
+
+        $this->serialized = $result['serialized'];
+        $this->crawler = new Crawler(
+            $this->rawDom = $this->convertColonsToDoubleDashes($result['dom'])
+        );
+    }
+
+    public function syncInput($name, $value)
+    {
+        $result = (new TestConnectionHandler)->handle('syncInput', [
+            'name' => $name,
+            'value' => $value,
+        ], $this->serialized);
+
+        $this->serialized = $result['serialized'];
+        $this->crawler = new Crawler(
+            $this->rawDom = $this->convertColonsToDoubleDashes($result['dom'])
+        );
     }
 }
