@@ -40,18 +40,45 @@ export default {
                 })
             } else {
                 response.text().then(response => {
-                    var iframe = document.createElement('iframe');
-                    var wrapper = document.createElement('div');
-                    wrapper.classList.add('absolute', 'pin', 'p-8', 'overflow-none')
-                    iframe.classList.add('w-full', 'h-full', 'rounded', 'shadow')
-                    document.body.appendChild(wrapper);
-                    wrapper.appendChild(iframe)
-                    iframe.contentWindow.document.open();
-                    iframe.contentWindow.document.write(response);
-                    iframe.contentWindow.document.close();
+                    this.showHtmlModal(response)
                 })
             }
         })
             // @todo: catch 419 session expired.
     },
+
+    // This code and concept is all Jonathan Reinink - thanks main!
+    showHtmlModal(html) {
+        let page = document.createElement('html')
+        page.innerHTML = html
+        page.querySelectorAll('a').forEach(a => a.setAttribute('target', '_top'))
+
+        let modal = document.createElement('div')
+        modal.id = 'burst-error'
+        modal.style.position = 'fixed'
+        modal.style.width = '100vw'
+        modal.style.height = '100vh'
+        modal.style.padding = '50px'
+        modal.style.backgroundColor = 'rgba(0, 0, 0, .6)'
+        modal.style.zIndex = 200000
+        modal.addEventListener('click', () => this.hideHtmlModal(modal))
+
+        let iframe = document.createElement('iframe')
+        iframe.style.backgroundColor = 'white'
+        iframe.style.borderRadius = '5px'
+        iframe.style.width = '100%'
+        iframe.style.height = '100%'
+        modal.appendChild(iframe)
+
+        document.body.prepend(modal)
+        document.body.style.overflow = 'hidden'
+        iframe.contentWindow.document.open()
+        iframe.contentWindow.document.write(page.outerHTML)
+        iframe.contentWindow.document.close()
+    },
+
+    hideHtmlModal(modal) {
+        modal.outerHTML = ''
+        document.body.style.overflow = 'visible'
+    }
 }

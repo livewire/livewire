@@ -74,7 +74,7 @@ export default {
                 this.debounceOnTimeout(callback)(method, params, e.target)
             }
 
-            if (modifiers.includes('enter') && e.keyCode == '13') {
+            if (modifiers.includes(e.key.split(/[_\s]/).join("-").toLowerCase())) {
                 const { method, params } = this.parseOutMethodAndParams(value)
                 this.debounceOnTimeout(callback)(method, params, e.target)
             }

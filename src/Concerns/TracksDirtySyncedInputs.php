@@ -33,6 +33,7 @@ trait TracksDirtySyncedInputs
 
     public function dirtyInputs()
     {
+        dump($this->exemptFromHashDiffing);
         return collect($this->hashes)
             ->reject(function ($hash, $prop) {
                 return in_array($prop, $this->exemptFromHashDiffing);

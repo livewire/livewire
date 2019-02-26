@@ -20,8 +20,6 @@ class LivewireComponentWrapper
     public function __construct($wrapped)
     {
         $this->wrapped = $wrapped;
-
-        $this->hashCurrentObjectPropertiesForEasilyDetectingChangesLater();
     }
 
     public static function wrap($wrapped)
