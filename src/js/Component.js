@@ -11,6 +11,7 @@ export default class Component {
         this.id = getAttribute(el, 'root-id')
         this.serialized = getAttribute(el, 'root-serialized')
         this.loadingElsByTargetRef = {}
+        this.syncQueue = {}
     }
 
     attachListenersAndAddChildComponents() {
@@ -54,6 +55,14 @@ export default class Component {
         } else {
             this.loadingElsByTargetRef[ref] = [el]
         }
+    }
+
+    queueSyncInput(model, value) {
+        this.syncQueue[model] = value
+    }
+
+    clearSyncQueue() {
+        this.syncQueue = {}
     }
 
     setLoading(refName) {

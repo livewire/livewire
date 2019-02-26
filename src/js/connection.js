@@ -39,10 +39,14 @@ export default class Connection {
     }
 
     sendMessage(data, root, minWait) {
+        data.data.syncQueue = root.syncQueue
+
         this.driver.sendMessage({
             ...data,
             ...{ serialized: root.serialized },
         }, minWait);
+
+        root.clearSyncQueue()
     }
 
     refreshDom() {

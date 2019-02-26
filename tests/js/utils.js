@@ -53,3 +53,21 @@ export function fireEventAndGetPayloadBeingSentToServer (selector, event, option
         simulant.fire(document.querySelector(selector), event, options)
     })
 }
+
+export function fireEvent (selector, event, options) {
+    simulant.fire(document.querySelector(selector), event, options)
+}
+
+export function callbackAndGetPayloadBeingSentToServer (callback) {
+    return new Promise((resolve) => {
+        http.sendMessage = jest.fn(function (payload) {
+            resolve(payload)
+        })
+
+        const nodeInitializer = new NodeInitializer(new Connection(http))
+        const livewire = new ComponentManager(nodeInitializer)
+        livewire.init()
+
+        callback()
+    })
+}

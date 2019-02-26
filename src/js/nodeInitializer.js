@@ -2,6 +2,7 @@ import renameme from './renameme'
 import store from './store'
 const prefix = require('./prefix.js')()
 import { closestByAttribute, getAttribute, extractDirectivesModifiersAndValuesFromEl } from './domHelpers'
+import ElementDirectives from './ElementDirectives';
 
 export default class NodeInitializer {
     constructor(connection) {
@@ -20,11 +21,11 @@ export default class NodeInitializer {
         // Make sure it's an ElementNode and not a TextNode or something
         if (typeof node.hasAttribute !== 'function') return
 
-        const directives = extractDirectivesModifiersAndValuesFromEl(node)
+        const directives = new ElementDirectives(node)
 
-        if (Object.keys(directives).includes('click')) {
-            if (directives['click'].modifiers.includes('min')) {
-                var waitTime = Number((directives['click'].modifiers.filter(item => item.match(/.*ms/))[0] || '0ms').match('(.*)ms')[1])
+        if (directives.has('click')) {
+            if (directives.get('click').modifiers.includes('min')) {
+                var waitTime = Number((directives.get('click').modifiers.filter(item => item.match(/.*ms/))[0] || '0ms').match('(.*)ms')[1])
             } else {
                 var waitTime = 0
             }
@@ -38,16 +39,16 @@ export default class NodeInitializer {
                 }
 
                 this.connection.sendMethod(method, params, this.findByEl(el), el.getAttribute(`${prefix}:ref`), waitTime)
-            }, directives['click'].modifiers, directives['click'].value)
+            }, directives.get('click').modifiers, directives.get('click').value)
         }
 
-        if (Object.keys(directives).includes('loading')) {
-            const ref = directives['loading'].value
+        if (directives.has('loading')) {
+            const ref = directives.get('loading').value
             const root = this.findByEl(node);
             root.addLoadingEl(node, ref)
         }
 
-        if (Object.keys(directives).includes('submit')) {
+        if (directives.has('submit')) {
             renameme.attachSubmit(node, (method, params, el) => {
                 const root = this.findByEl(el);
 
@@ -55,20 +56,23 @@ export default class NodeInitializer {
             })
         }
 
-        if (Object.keys(directives).includes('keydown')) {
+        if (directives.has('keydown')) {
             renameme.attachEnter(node, (method, params, el) => {
                 this.connection.sendMethod(method, params, this.findByEl(el))
-            }, directives['keydown'].modifiers, directives['keydown'].value)
+            }, directives.get('keydown').modifiers, directives.get('keydown').value)
         }
 
-        if (Object.keys(directives).includes('sync')) {
+        if (directives.has('model')) {
             renameme.attachSync(node, (model, el) => {
-
                 const value = el.type === 'checkbox'
                     ? el.checked
                     : el.value
 
-                this.connection.sendSync(model, value, this.findByEl(el))
+                if (directives.get('model').modifiers.includes('lazy')) {
+                    this.findByEl(el).queueSyncInput(model, value)
+                } else {
+                    this.connection.sendSync(model, value, this.findByEl(el))
+                }
             })
         }
     }

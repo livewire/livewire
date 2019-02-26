@@ -1,4 +1,4 @@
-import { fireEventAndGetPayloadBeingSentToServer } from './utils'
+import { callbackAndGetPayloadBeingSentToServer, fireEvent, fireEventAndGetPayloadBeingSentToServer } from './utils'
 
 test('test click', async () => {
     document.body.innerHTML = `
@@ -57,18 +57,24 @@ test('test click with string param', async () => {
     expect(payload.data.params).toEqual(['hey'])
 })
 
-test('test click with model param', async () => {
+test('click_with_model_param', async () => {
     document.body.innerHTML = `
     <div wire:root-id="test-id" wire:root-serialized="test-serialized">
-        <input value="this" wire:model="hey">
-        <button wire:click="doSomething(hey)">Button</button>
+        <input value="this" wire:model.lazy="hey">
+        <button wire:click="doSomething">Button</button>
     </div>
     `
-    const payload = await fireEventAndGetPayloadBeingSentToServer('button', 'click')
+    const payload = await callbackAndGetPayloadBeingSentToServer(() => {
+        document.querySelector('input').value = 'that'
+        fireEvent('input', 'input')
+
+        fireEvent('button', 'click')
+    })
 
     expect(payload.event).toEqual('fireMethod')
     expect(payload.data.method).toEqual('doSomething')
-    expect(payload.data.params).toEqual(['this'])
+    expect(payload.data.params).toEqual([])
+    expect(payload.data.syncQueue).toEqual({hey: 'that'})
 })
 
 test('test keydown', async () => {
@@ -116,7 +122,7 @@ test('test submit', async () => {
 test('test sync', async () => {
     document.body.innerHTML = `
     <div wire:root-id="test-id" wire:root-serialized="test-serialized">
-        <input name="email" value="test" wire:sync="email">
+        <input name="email" value="test" wire:model="email">
     </div>
     `
 

@@ -13,6 +13,10 @@ abstract class ConnectionHandler
         $wrapped = LivewireComponentWrapper::wrap($instance);
 
         try {
+            foreach ($data['syncQueue'] as $model => $value) {
+                $wrapped->syncInput($model, $value);
+            }
+
             $this->processEvent($event, $wrapped, $data, $instance->id);
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();

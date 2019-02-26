@@ -1,3 +1,5 @@
+import ElementDirectives from './ElementDirectives.js';
+
 const prefix = require('./prefix.js')()
 
 export function getAttribute(el, attribute) {
@@ -34,23 +36,6 @@ export function elByAttribute(attribute) {
 
 export function elsByAttribute(attribute) {
     return document.querySelectorAll(`[${prefix}\\:${attribute}]`)
-}
-
-export function extractDirectivesModifiersAndValuesFromEl(el) {
-    let directives = {}
-
-    el.getAttributeNames()
-        // Filter only the livewire directives.
-        .filter(name => name.match(new RegExp(prefix + ':')))
-        // Parse out the event, modifiers, and value from it.
-        .forEach(name => {
-            let directive, modifiers
-            [directive, ...modifiers] = name.replace(new RegExp(prefix + ':'), '').split('.')
-
-            directives[directive] = { modifiers, value: el.getAttribute(name) }
-        })
-
-    return directives
 }
 
 export function isComponentRootEl(el) {
@@ -102,15 +87,10 @@ export function shouldUpdateInputElementGivenItHasBeenUpdatedViaSync(el, dirtyIn
             return true
         }
 
-        const isSync = hasAttribute(el, 'sync')
+        const directives = new ElementDirectives(el)
 
-        if (isSync) {
-            const syncName = getAttribute(el, 'sync')
-            if (Array.from(dirtyInputs).includes(syncName)) {
-                return true
-            } {
-                return false
-            }
+        if (directives.has('model')) {
+            return Array.from(dirtyInputs).includes(directives.get('model').value)
         }
 
         return false

@@ -1,4 +1,5 @@
 import debounce from './debounce.js'
+import ElementDirectives from './ElementDirectives.js';
 const prefix = require('./prefix.js')()
 
 export default {
@@ -82,7 +83,8 @@ export default {
 
     attachSync(el, callback) {
         el.addEventListener('input', debounce(e => {
-            const model = e.target.getAttribute(`${prefix}:sync`)
+            const directives = new ElementDirectives(e.target)
+            const model = directives.get('model').value
             callback(model, e.target)
         }, 150))
     },
