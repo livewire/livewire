@@ -3,12 +3,9 @@ import http from './httpConnection'
 import websockets from './webSocket'
 import NodeInitializer from './NodeInitializer'
 import Connection from './Connection'
-import Turbolinks from "turbolinks";
 
 const livewire = {
     start(options) {
-        Turbolinks.start()
-
         if (! options) {
             options = {};
         }
@@ -23,10 +20,15 @@ const livewire = {
 
         const nodeInitializer = new NodeInitializer(new Connection(driverInstance))
 
-        const roots = new ComponentManager(nodeInitializer)
-        document.addEventListener("turbolinks:load", function () {
-            roots.init()
-        })
+        this.roots = new ComponentManager(nodeInitializer)
+
+        this.roots.init()
+    },
+
+    stop() {
+        if (this.roots) {
+            this.roots.destroy()
+        }
     }
 }
 

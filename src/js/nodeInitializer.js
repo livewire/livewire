@@ -23,6 +23,12 @@ export default class NodeInitializer {
         const directives = extractDirectivesModifiersAndValuesFromEl(node)
 
         if (Object.keys(directives).includes('click')) {
+            if (directives['click'].modifiers.includes('min')) {
+                var waitTime = Number((directives['click'].modifiers.filter(item => item.match(/.*ms/))[0] || '0ms').match('(.*)ms')[1])
+            } else {
+                var waitTime = 0
+            }
+
             renameme.attachClick(node, (method, params, el) => {
                 if (method === '$emit') {
                     let eventName
@@ -31,12 +37,14 @@ export default class NodeInitializer {
                     return
                 }
 
-                this.connection.sendMethod(method, params, this.findByEl(el))
+                this.connection.sendMethod(method, params, this.findByEl(el), el.getAttribute(`${prefix}:ref`), waitTime)
             }, directives['click'].modifiers, directives['click'].value)
         }
 
         if (Object.keys(directives).includes('loading')) {
-            node.classList.add('hidden')
+            const ref = directives['loading'].value
+            const root = this.findByEl(node);
+            root.addLoadingEl(node, ref)
         }
 
         if (Object.keys(directives).includes('submit')) {

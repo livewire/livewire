@@ -38,11 +38,11 @@ export default class Connection {
         }
     }
 
-    sendMessage(data, root) {
+    sendMessage(data, root, minWait) {
         this.driver.sendMessage({
             ...data,
             ...{ serialized: root.serialized },
-        });
+        }, minWait);
     }
 
     refreshDom() {
@@ -51,7 +51,7 @@ export default class Connection {
         })
     }
 
-    sendMethod(method, params, root, ref) {
+    sendMethod(method, params, root, ref, minWait) {
         if (ref) {
             root.setLoading(ref)
         }
@@ -64,7 +64,7 @@ export default class Connection {
                 params,
                 ref,
             },
-        }, root)
+        }, root, minWait)
     }
 
     sendEvent(name, params, component, ref) {
