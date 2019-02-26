@@ -24,7 +24,7 @@ abstract class LivewireComponent
         $this->prefix = $prefix;
     }
 
-    public function redirectTo($url)
+    public function redirect($url)
     {
         $this->redirectTo = $url;
     }
