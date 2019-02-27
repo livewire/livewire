@@ -1,4 +1,4 @@
-const prefix = require('./prefix.js')()
+const prefix = require('./Prefix.js')()
 
 export default class {
     constructor(el) {

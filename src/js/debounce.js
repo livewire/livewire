@@ -1,4 +1,4 @@
-import renameme from './renameme.js'
+import renameme from './Renameme.js'
 
 // This is kindof like a normal debouncer, except it behaves like both "immediate" and
 // "non-immediate". I'll try to graph the differences:

@@ -1,6 +1,6 @@
-import debounce from './debounce.js'
+import debounce from './Debounce.js'
 import ElementDirectives from './ElementDirectives.js';
-const prefix = require('./prefix.js')()
+const prefix = require('./Prefix.js')()
 
 export default {
     // This is soooo bad, but it currently get's set inside "debounce"

@@ -1,6 +1,6 @@
 import ComponentManager from './ComponentManager'
-import http from './httpConnection'
-import websockets from './webSocket'
+import http from './HttpConnection'
+import websockets from './WebSocket'
 import NodeInitializer from './NodeInitializer'
 import Connection from './Connection'
 

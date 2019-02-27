@@ -1,7 +1,7 @@
-import renameme from './renameme'
-import store from './store'
-const prefix = require('./prefix.js')()
-import { closestByAttribute, getAttribute, extractDirectivesModifiersAndValuesFromEl } from './domHelpers'
+import renameme from './Renameme'
+import store from './Store'
+const prefix = require('./Prefix.js')()
+import { closestByAttribute, getAttribute, extractDirectivesModifiersAndValuesFromEl } from './DomHelpers'
 import ElementDirectives from './ElementDirectives';
 
 export default class NodeInitializer {

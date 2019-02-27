@@ -1,6 +1,6 @@
 import ElementDirectives from './ElementDirectives.js';
 
-const prefix = require('./prefix.js')()
+const prefix = require('./Prefix.js')()
 
 export function getAttribute(el, attribute) {
     return el.getAttribute(`${prefix}:${attribute}`)

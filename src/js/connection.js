@@ -1,4 +1,4 @@
-import store from './store';
+import store from './Store';
 
 export default class Connection {
     constructor(driver) {
