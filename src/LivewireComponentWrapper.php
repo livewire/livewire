@@ -20,6 +20,8 @@ class LivewireComponentWrapper
     public function __construct($wrapped)
     {
         $this->wrapped = $wrapped;
+
+        $this->hashCurrentObjectPropertiesForEasilyDetectingChangesLater();
     }
 
     public static function wrap($wrapped)
@@ -49,7 +51,6 @@ class LivewireComponentWrapper
 
     public function listeners($componentId = null)
     {
-        // @todo - throw an error if the listener isn't registered.
         return $componentId
             ? $this->wrapped->listenersByChildComponentId[$componentId]
             : $this->wrapped->listenersByChildComponentId;

@@ -32,7 +32,7 @@ trait TracksChildren
             return [
                 // The "id" is included here as a key for morphdom.
                 // @todo - if the root element of a component is not a "div", things will break,
-                // because we are passing in a dummy div and morphdom will whink it's a completely
+                // because we are passing in a dummy div and morphdom will think it's a completely
                 // different component.
                 app('livewire')->injectDataForJsInComponentRootAttributes('<div></div>', $id, 'not-serialized'),
                 $id,

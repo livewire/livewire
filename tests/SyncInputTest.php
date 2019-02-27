@@ -11,28 +11,34 @@ class SyncInputTest extends TestCase
     /** @test */
     function can_sync_input_data()
     {
-        $this->instance->syncInput('modelnumber', '123abc');
-        $this->assertequals('123abc', $this->instance->modelnumber);
+        $instance = LivewireComponentWrapper::wrap(new FaucetStub('id', 'wire'));
+        $instance->syncInput('modelNumber', '123abc');
+        $this->assertequals('123abc', $instance->modelNumber);
     }
 
     /** @test */
     function synced_data_shows_up_as_dirty_if_changed_from_something_other_than_sync()
     {
-        // The dirty input detection system is cleaned out inside
-        // serialization hooks (sleep, wakeup). Therefore we must serialize them
-        // to simulate a new request.
-        $this->instance = unserialize(serialize($this->instance));
-        $this->instance->syncInput('modelnumber', '123abc');
-        $this->assertEmpty($this->instance->dirtyInputs());
+        $component = new FaucetStub('id', $prefix = 'wire');
 
-        $this->instance = unserialize(serialize($this->instance));
-        $this->instance->wrapped->changeModelNumber('456def');
-        $this->assertContains('modelNumber', $this->instance->dirtyInputs());
+        $instance = LivewireComponentWrapper::wrap($component);
+        $instance->syncInput('modelNumber', '123abc');
+        $this->assertEmpty($instance->dirtyInputs());
+
+        // We need to re-wrap the the component to reset the dirtyInput tracking.
+        $instance = LivewireComponentWrapper::wrap($component);
+        $instance->wrapped->changeModelNumber('456def');
+        $this->assertContains('modelNumber', $instance->dirtyInputs());
     }
 
-    public function setUp()
+    /** @test */
+    function lazy_synced_data_doesnt_shows_up_as_dirty()
     {
-        $this->instance = LivewireComponentWrapper::wrap(new FaucetStub('id', $prefix = 'wire'));
+        $component = new FaucetStub('id', $prefix = 'wire');
+
+        $instance = LivewireComponentWrapper::wrap($component);
+        $instance->lazySyncInput('modelNumber', '123abc');
+        $this->assertEmpty($instance->dirtyInputs());
     }
 }
 
@@ -46,6 +52,6 @@ class FaucetStub extends LivewireComponent {
 
     public function render()
     {
-        // return View::make()
+        //
     }
 }

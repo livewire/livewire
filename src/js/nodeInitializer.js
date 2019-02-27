@@ -42,10 +42,6 @@ export default class NodeInitializer {
             }, directives.get('click').modifiers, directives.get('click').value)
         }
 
-        if (directives.has('loading')) {
-            // @todo - The loading functionality needs to really be thought out.
-        }
-
         if (directives.has('submit')) {
             renameme.attachSubmit(node, (method, params, el) => {
                 const root = this.findByEl(el);

@@ -25,9 +25,9 @@ trait ReceivesEvents
             $this->wrapped->{'onSync' . studly_case($name)}($value);
         }
 
-        // $this->removeFromDirtyPropertiesList($name);
-
         $this->wrapped->setPropertyValue($name, $value);
+
+        $this->rehashProperty($name);
 
         if (method_exists($this->wrapped, $method = 'after' . studly_case($name) . 'Synced')) {
             $this->wrapped->{$method}($value);

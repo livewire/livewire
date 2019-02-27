@@ -10,7 +10,6 @@ export default {
         var timestamp = (new Date()).valueOf();
         this.lastTimeARequestWasSent = timestamp;
 
-        // @todo - Figure out not relying on app's csrf stuff in bootstrap.js
         const token = document.head.querySelector('meta[name="csrf-token"]').content
 
         Promise.all([
@@ -44,7 +43,6 @@ export default {
                 })
             }
         })
-            // @todo: catch 419 session expired.
     },
 
     // This code and concept is all Jonathan Reinink - thanks main!

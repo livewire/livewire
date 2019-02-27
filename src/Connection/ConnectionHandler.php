@@ -22,8 +22,6 @@ abstract class ConnectionHandler
                 $wrapped->lazySyncInput($model, $value);
             }
 
-            $wrapped->hashCurrentObjectPropertiesForEasilyDetectingChangesLater();
-
             $this->processEvent($event, $wrapped, $data, $instance->id);
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();

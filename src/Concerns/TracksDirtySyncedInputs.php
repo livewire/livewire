@@ -31,9 +31,13 @@ trait TracksDirtySyncedInputs
             ->toArray();
     }
 
+    public function rehashProperty($property)
+    {
+        $this->hashes[$property] = crc32($this->wrapped->getPropertyValue($property));
+    }
+
     public function dirtyInputs()
     {
-        dump($this->exemptFromHashDiffing);
         return collect($this->hashes)
             ->reject(function ($hash, $prop) {
                 return in_array($prop, $this->exemptFromHashDiffing);
