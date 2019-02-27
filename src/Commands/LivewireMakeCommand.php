@@ -24,7 +24,7 @@ class LivewireMakeCommand extends Command
     {
         $filePath = sprintf('%s/%s.php',
             $directory = app_path('Http/Livewire'),
-            $component = $this->argument('component')
+            $component = rtrim($this->argument('component'), '.php')
         );
 
         if (File::exists($filePath)) {
@@ -34,7 +34,6 @@ class LivewireMakeCommand extends Command
 
         $this->ensureDirectoryExists($directory);
 
-        // @todo - strip out .php if added on the end
         $this->makeFile($filePath, $component);
 
         if ($this->option('view')) {
@@ -50,7 +49,6 @@ class LivewireMakeCommand extends Command
 
             $this->ensureDirectoryExists($directory);
 
-            // @todo - strip out .blade.php if added on the end
             $this->makeView($filePath);
         }
 
