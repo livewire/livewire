@@ -12,7 +12,6 @@ abstract class LivewireComponent
     public $emitEvent;
     public $redirectTo;
     public $children = [];
-    public $validates = [];
     public $listenersByInternalChildComponentId = [];
 
     public function __construct($id, $prefix)

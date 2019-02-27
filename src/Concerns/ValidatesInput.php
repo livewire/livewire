@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Validator;
 
 trait ValidatesInput
 {
+    protected $validates;
+
     public function validate($fields = null)
     {
         $fields = $fields ?: array_keys($this->validates);

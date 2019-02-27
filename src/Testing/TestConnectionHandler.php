@@ -3,7 +3,7 @@
 namespace Livewire\Testing;
 
 use Livewire\Connection\ConnectionHandler;
-use Livewire\TestableLivewireComponentWrapper;
+use Livewire\Testing\TestableLivewireComponentWrapper;
 
 class TestConnectionHandler extends ConnectionHandler
 {

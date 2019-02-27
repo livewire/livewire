@@ -3,6 +3,8 @@
 namespace Livewire;
 
 use Illuminate\Support\Facades\File;
+use Livewire\Testing\TestableLivewire;
+use Livewire\Testing\TestableLivewireComponentWrapper;
 
 class LivewireManager
 {
