@@ -7,34 +7,30 @@ use Illuminate\Support\Facades\File;
 class LivewireManager
 {
     protected $prefix = 'wire';
-    protected $componentsByName = [];
-    protected $jsObject = [
-        'componentsById' => []
-    ];
+    protected $componentAliases = [];
     protected $isTesting = false;
 
-    public function register($name, $viewClass)
+    public function prefix($prefix = null)
     {
-        $this->componentsByName[$name] = $viewClass;
+        // Yes, this is both a getter and a setter. Fight me.
+        return $this->prefix = $prefix ?: $this->prefix;
     }
 
-    public function getComponentClass($component)
+    public function component($alias, $viewClass)
     {
-        return $this->componentsByName[$component] ?? $component;
+        $this->componentAliases[$alias] = $viewClass;
     }
 
-    public function activate($name)
+    public function getComponentClass($aliasOrClass)
     {
-        $componentClass = $this->getComponentClass($name);
+        return $this->componentAliases[$aliasOrClass] ?? $aliasOrClass;
+    }
+
+    public function activate($componentAliasOrClass)
+    {
+        $componentClass = $this->getComponentClass($componentAliasOrClass);
 
         return new $componentClass(str_random(20), $this->prefix);
-    }
-
-    public function test($name)
-    {
-        $this->isTesting = true;
-
-        return new TestableLivewire($name, $this->prefix);
     }
 
     public function script()
@@ -43,16 +39,6 @@ class LivewireManager
             . File::get(__DIR__ . '/../dist/livewire.js')
             . '</script>'
             . '<script>Livewire.start()</script>';
-    }
-
-    public function prefix()
-    {
-        return $this->prefix;
-    }
-
-    public function setPrefix($prefix)
-    {
-        $this->prefix = $prefix;
     }
 
     public function mount($component, ...$options)
@@ -73,7 +59,7 @@ class LivewireManager
         return [$dom, $instance->id, $serialized];
     }
 
-    public function injectDataForJsInComponentRootAttributes($dom, $id, $serialized)
+    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $serialized)
     {
         return preg_replace(
             '/(<[a-zA-Z0-9\-]*)/',
@@ -83,18 +69,10 @@ class LivewireManager
         );
     }
 
-    public function layout($layout)
+    public function test($name)
     {
-        return (new LivewireRouteDefinition())->layout($layout);
-    }
+        $this->isTesting = true;
 
-    public function section($section)
-    {
-        return (new LivewireRouteDefinition())->section($section);
-    }
-
-    public function get($uri, $component, $options = [])
-    {
-        return (new LivewireRouteDefinition())->get($uri, $component);
+        return new TestableLivewire($name, $this->prefix);
     }
 }

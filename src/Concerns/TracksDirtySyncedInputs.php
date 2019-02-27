@@ -7,26 +7,26 @@ use Illuminate\Support\Facades\Hash;
 trait TracksDirtySyncedInputs
 {
     protected $hashes = [];
-    protected $exemptFromHashDiffing = [];
+    protected $exemptFromHashing = [];
 
-    protected function removeFromDirtyPropertiesList($name)
+    protected function removeFromDirtyInputsList($name)
     {
-        $this->exemptFromHashDiffing[] = $name;
+        $this->exemptFromHashing[] = $name;
     }
 
     public function hashCurrentObjectPropertiesForEasilyDetectingChangesLater()
     {
-        $this->hashes = collect($this->wrapped->getObjectProperties())
-            ->filter(function ($prop) {
+        $this->hashes = collect($this->wrapped->getPublicPropertiesDefinedBySubClass())
+            ->filter(function ($value, $prop) {
                 // For now, I only care about strings & numbers. We can add more things to
-                // dirty check later, but want to keep things light and fast.
-                return is_null($propValue = $this->wrapped->getPropertyValue($prop))
-                    || is_string($propValue)
-                    || is_numeric($propValue);
+                // dirty check later, but I want to keep things light and fast.
+                return is_null($value)
+                    || is_string($value)
+                    || is_numeric($value);
             })
-            ->mapWithKeys(function ($prop) {
+            ->mapWithKeys(function ($value, $prop) {
                 // Using crc32 because it's fast, and this doesn't have to be secure.
-                return [$prop => crc32($this->wrapped->getPropertyValue($prop))];
+                return [$prop => crc32($value)];
             })
             ->toArray();
     }
@@ -40,7 +40,7 @@ trait TracksDirtySyncedInputs
     {
         return collect($this->hashes)
             ->reject(function ($hash, $prop) {
-                return in_array($prop, $this->exemptFromHashDiffing);
+                return in_array($prop, $this->exemptFromHashing);
             })
             ->filter(function ($hash, $prop) {
                 return is_string($this->wrapped->getPropertyValue($prop)) || is_numeric($this->wrapped->getPropertyValue($prop)) || is_null($this->wrapped->getPropertyValue($prop));

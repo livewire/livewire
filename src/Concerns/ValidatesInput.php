@@ -6,13 +6,18 @@ use Illuminate\Support\Facades\Validator;
 
 trait ValidatesInput
 {
-    public function validated($fields = null)
+    public function validate($fields = null)
     {
         $fields = $fields ?: array_keys($this->validates);
 
         $result = [];
+
         foreach ((array) $fields as $field) {
-            throw_unless($this->hasProperty($field), new \Exception('No property found for validation: [' . $field . ']'));
+            throw_unless(
+                $this->hasProperty($field),
+                new \Exception('No property found for validation: [' . $field . ']')
+            );
+
             $result[$field] = $this->{$field};
         }
 

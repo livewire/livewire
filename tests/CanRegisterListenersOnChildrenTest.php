@@ -15,8 +15,8 @@ class CanRegisterListenersOnChildrenTest extends TestCase
     {
         parent::setUp();
 
-        app('livewire')->register('dummy', ParentWithListenersStub::class);
-        app('livewire')->register('dummy-child', ChildWithEventsStub::class);
+        app('livewire')->component('dummy', ParentWithListenersStub::class);
+        app('livewire')->component('dummy-child', ChildWithEventsStub::class);
     }
 
     /** @test */
@@ -40,7 +40,7 @@ class CanRegisterListenersOnChildrenTest extends TestCase
 
         $response = $this->withoutExceptionHandling()->post('/livewire/message', [
             'id' => $component->id,
-            'event' => 'fireEvent',
+            'type' => 'fireEvent',
             'data' => [
                 'name' => 'someEvent',
                 'childId' => head($component->children),

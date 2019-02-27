@@ -6,43 +6,48 @@ trait ReceivesEvents
 {
     public function syncInput($name, $value)
     {
-        if (method_exists($this->wrapped, 'onSync' . studly_case($name))) {
-            $this->wrapped->{'onSync' . studly_case($name)}($value);
-        }
+        $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) {
+            $this->removeFromDirtyInputsList($name);
 
-        $this->removeFromDirtyPropertiesList($name);
-
-        $this->wrapped->setPropertyValue($name, $value);
-
-        if (method_exists($this->wrapped, $method = 'after' . studly_case($name) . 'Synced')) {
-            $this->wrapped->{$method}($value);
-        }
+            $this->wrapped->setPropertyValue($name, $value);
+        });
     }
 
     public function lazySyncInput($name, $value)
     {
-        if (method_exists($this->wrapped, 'onSync' . studly_case($name))) {
-            $this->wrapped->{'onSync' . studly_case($name)}($value);
+        $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) {
+            $this->wrapped->setPropertyValue($name, $value);
+
+            $this->rehashProperty($name);
+        });
+    }
+
+    protected function callBeforeAndAferSyncHooks($name, $value, $callback)
+    {
+        // Sticking with the "beforeX", "Xed" naming convention.
+        $beforeMethod = 'before' . studly_case($name) . 'Sync';
+        $afterMethod = camel_case($name) . 'Synced';
+
+        if (method_exists($this->wrapped, $beforeMethod)) {
+            $this->wrapped->{$beforeMethod}($value);
         }
 
-        $this->wrapped->setPropertyValue($name, $value);
+        $callback($name, $value);
 
-        $this->rehashProperty($name);
-
-        if (method_exists($this->wrapped, $method = 'after' . studly_case($name) . 'Synced')) {
-            $this->wrapped->{$method}($value);
+        if (method_exists($this->wrapped, $afterMethod)) {
+            $this->wrapped->{$afterMethod}($value);
         }
     }
 
     public function fireEvent($componentId, $event, $params)
     {
-        $this->fireMethod(
+        $this->callMethod(
             $this->listeners($componentId)[$event],
             $params
         );
     }
 
-    public function fireMethod($method, $params = [])
+    public function callMethod($method, $params = [])
     {
         $this->wrapped->{$method}(...$params);
     }

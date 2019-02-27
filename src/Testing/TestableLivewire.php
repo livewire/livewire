@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Testing;
 
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -70,7 +70,7 @@ class TestableLivewire
             $parameters = [];
         }
 
-        $result = (new TestConnectionHandler)->handle('fireMethod', [
+        $result = (new TestConnectionHandler)->handle('callMethod', [
             'method' => $methodName,
             'params' => $parameters,
             'ref' => null,
@@ -90,7 +90,7 @@ class TestableLivewire
 
         $form = $button->parents()->filter("[{$this->prefix}--submit]");
 
-        $this->component->fireMethod($form->attr("{$this->prefix}--submit"), $this->inputs);
+        $this->component->callMethod($form->attr("{$this->prefix}--submit"), $this->inputs);
         $this->resetDom();
 
         return $this;
@@ -104,7 +104,7 @@ class TestableLivewire
 
         $methodName = $node->attr("{$this->prefix}--colon--keydown--dot--enter");
 
-        $this->fireMethod($methodName);
+        $this->callMethod($methodName);
 
         return $this;
     }
@@ -180,7 +180,7 @@ class TestableLivewire
 
     public function __call($method, $params)
     {
-        $return = $this->component->fireMethod($method, $params);
+        $return = $this->component->callMethod($method, $params);
 
         $this->resetDom();
 
@@ -215,9 +215,9 @@ class TestableLivewire
         return $node->getNode(0)->ownerDocument->saveXML($node->getNode(0));
     }
 
-    public function fireMethod($method, $parameters = [])
+    public function callMethod($method, $parameters = [])
     {
-        $result = (new TestConnectionHandler)->handle('fireMethod', [
+        $result = (new TestConnectionHandler)->handle('callMethod', [
             'method' => $method,
             'params' => $parameters,
             'ref' => null,

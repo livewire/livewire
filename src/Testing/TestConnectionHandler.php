@@ -1,8 +1,8 @@
 <?php
 
-namespace Livewire\Connection;
+namespace Livewire\Testing;
 
-use Livewire\Livewire;
+use Livewire\Connection\ConnectionHandler;
 use Livewire\TestableLivewireComponentWrapper;
 
 class TestConnectionHandler extends ConnectionHandler

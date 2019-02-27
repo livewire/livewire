@@ -6,35 +6,31 @@ use BadMethodCallException;
 
 trait HasLifecycleHooks
 {
-    // This is bad, will fix - but stupid PHP strict mode throwing "declaration not compatible" crap
-    public function __call($method, $params)
+    public function created(...$params)
     {
         if (method_exists($this->wrapped, 'created')) {
             $this->wrapped->created(...$params);
-            return;
-        } else {
-            return;
         }
-
-        throw new BadMethodCallException(sprintf(
-            'Call to undefined method %s::%s()', static::class, $method
-        ));
     }
 
-    public function mounted()
+    public function mounted(...$params)
     {
-        //
+        if (method_exists($this->wrapped, 'mounted')) {
+            $this->wrapped->mounted(...$params);
+        }
     }
 
-    public function beforeUpdate()
+    public function beforeUpdate(...$params)
     {
-        //
+        if (method_exists($this->wrapped, 'beforeUpdate')) {
+            $this->wrapped->beforeUpdate(...$params);
+        }
     }
 
-    public function updated()
+    public function updated(...$params)
     {
         if (method_exists($this->wrapped, 'updated')) {
-            $this->wrapped->updated();
+            $this->wrapped->updated(...$params);
         }
     }
 }

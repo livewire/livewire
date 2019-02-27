@@ -2,9 +2,6 @@
 
 namespace Livewire;
 
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\ViewErrorBag;
-
 abstract class LivewireComponent
 {
     use Concerns\CanBeSerialized,
@@ -12,11 +9,11 @@ abstract class LivewireComponent
 
     public $id;
     public $prefix;
-    public $redirectTo;
     public $emitEvent;
-    // This gets used a way to track data between requests by the wrapper.
+    public $redirectTo;
     public $children = [];
-    public $listenersByChildComponentId = [];
+    public $validates = [];
+    public $listenersByInternalChildComponentId = [];
 
     public function __construct($id, $prefix)
     {
@@ -32,6 +29,20 @@ abstract class LivewireComponent
     public function emit($eventName, ...$params)
     {
         $this->emitEvent = ['name' => $eventName, 'params' => $params];
+    }
+
+    public function getPublicPropertiesDefinedBySubClass()
+    {
+        $publicProperties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PUBLIC);
+        $data = [];
+
+        foreach ($publicProperties as $property) {
+            if ($property->getDeclaringClass()->getName() !== self::class) {
+                $data[$property->getName()] = $property->getValue($this);
+            }
+        }
+
+        return $data;
     }
 
     public function getPropertyValue($prop) {

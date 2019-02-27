@@ -22,6 +22,21 @@ class LivewireMakeCommand extends Command
 
     public function handle()
     {
+        $this->makeFile($filePath);
+
+        if ($this->option('view')) {
+            $this->makeView($filePath);
+        }
+
+        $this->info(str_replace(
+            '{component}',
+            $this->argument('component'),
+            $this->messages['file_created']
+        ));
+    }
+
+    protected function makeFile($filePath)
+    {
         $filePath = sprintf('%s/%s.php',
             $directory = app_path('Http/Livewire'),
             $component = rtrim($this->argument('component'), '.php')
@@ -34,36 +49,6 @@ class LivewireMakeCommand extends Command
 
         $this->ensureDirectoryExists($directory);
 
-        $this->makeFile($filePath, $component);
-
-        if ($this->option('view')) {
-            $filePath = sprintf('%s/%s.blade.php',
-                $directory = array_first(config('view.paths')) . '/livewire',
-                kebab_case($this->argument('component'))
-            );
-
-            if (File::exists($filePath)) {
-                $this->error(str_replace('{filePath}', $filePath, $this->messages['file_exists']));
-                return;
-            }
-
-            $this->ensureDirectoryExists($directory);
-
-            $this->makeView($filePath);
-        }
-
-        $this->info(str_replace('{component}', $component, $this->messages['file_created']));
-    }
-
-    protected function ensureDirectoryExists($directory)
-    {
-        if (! File::exists($directory)) {
-            File::makeDirectory($directory);
-        }
-    }
-
-    protected function makeFile($filePath, $component)
-    {
         $viewName = kebab_case($component);
 
         File::put($filePath, <<<EOT
@@ -87,6 +72,18 @@ EOT
 
     protected function makeView($filePath)
     {
+        $filePath = sprintf('%s/%s.blade.php',
+            $directory = array_first(config('view.paths')) . '/livewire',
+            kebab_case($this->argument('component'))
+        );
+
+        if (File::exists($filePath)) {
+            $this->error(str_replace('{filePath}', $filePath, $this->messages['file_exists']));
+            return;
+        }
+
+        $this->ensureDirectoryExists($directory);
+
         File::put($filePath, <<<EOT
 <div>
     {{-- Go effing nuts. --}}
@@ -94,5 +91,12 @@ EOT
 
 EOT
 );
+    }
+
+    protected function ensureDirectoryExists($directory)
+    {
+        if (! File::exists($directory)) {
+            File::makeDirectory($directory);
+        }
     }
 }

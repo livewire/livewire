@@ -62,7 +62,7 @@ export default class Connection {
 
         this.sendMessage({
             id: root.id,
-            event: 'fireMethod',
+            event: 'callMethod',
             data: {
                 method,
                 params,

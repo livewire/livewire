@@ -2,14 +2,13 @@
 
 namespace Livewire\Concerns;
 
-trait TracksChildren
+trait MountsChildren
 {
     protected $mountedChildren = [];
 
     protected function trackChildrenBeingMounted($renderCallback)
     {
-        // The view gets rendered in this callback, therefore rendering
-        // all children declared inside the biew.
+        // The view gets rendered inside this callback.
         $dom = $renderCallback();
 
         // This allows us to recognize when a previosuly rendered child,
@@ -26,6 +25,7 @@ trait TracksChildren
 
     public function mountChild($internalKey, $componentName, ...$options)
     {
+        // If the child is new, we mount it. If not, we stub it out.
         $this->mountedChildren[] = $internalKey;
 
         if ($id = $this->wrapped->children[$internalKey] ?? false) {
@@ -34,7 +34,7 @@ trait TracksChildren
                 // @todo - if the root element of a component is not a "div", things will break,
                 // because we are passing in a dummy div and morphdom will think it's a completely
                 // different component.
-                app('livewire')->injectDataForJsInComponentRootAttributes('<div></div>', $id, 'not-serialized'),
+                app('livewire')->injectComponentDataAsHtmlAttributesInRootElement('<div></div>', $id, 'not-serialized'),
                 $id,
                 'not-serialized',
             ];

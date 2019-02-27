@@ -12,7 +12,7 @@ abstract class ConnectionHandler
         return LivewireComponentWrapper::wrap($instance);
     }
 
-    public function handle($event, $data, $serialized)
+    public function handle($type, $data, $serialized)
     {
         $instance = decrypt($serialized);
         $wrapped = $this->wrap($instance);
@@ -22,7 +22,7 @@ abstract class ConnectionHandler
                 $wrapped->lazySyncInput($model, $value);
             }
 
-            $this->processEvent($event, $wrapped, $data, $instance->id);
+            $this->processMessage($type, $wrapped, $data, $instance->id);
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
         }
@@ -39,7 +39,9 @@ abstract class ConnectionHandler
 
         return [
             'id' => $id,
-            'dom' => app('livewire')->injectDataForJsInComponentRootAttributes($dom, $id, $serialized),
+            'dom' => app('livewire')->injectComponentDataAsHtmlAttributesInRootElement(
+                $dom, $id, $serialized
+            ),
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
             'ref' => $data['ref'] ?? null,
@@ -47,11 +49,11 @@ abstract class ConnectionHandler
         ];
     }
 
-    public function processEvent($event, $wrapped, $data, $id)
+    public function processMessage($type, $wrapped, $data, $id)
     {
         $wrapped->beforeUpdate();
 
-        switch ($event) {
+        switch ($type) {
             case 'refresh':
                 break;
             case 'syncInput':
@@ -60,11 +62,11 @@ abstract class ConnectionHandler
             case 'fireEvent':
                 $wrapped->fireEvent($data['childId'], $data['name'], $data['params']);
                 break;
-            case 'fireMethod':
-                $wrapped->fireMethod($data['method'], $data['params']);
+            case 'callMethod':
+                $wrapped->callMethod($data['method'], $data['params']);
                 break;
             default:
-                throw new \Exception('Unrecongnized event: ' . $event);
+                throw new \Exception('Unrecongnized message type: ' . $type);
                 break;
         }
 

@@ -13,7 +13,7 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
 {
     public function setUp()
     {
-        ($this->livewire = app(LivewireManager::class))->register('dummy', Dummy::class);
+        ($this->livewire = app(LivewireManager::class))->component('dummy', Dummy::class);
 
         parent::setUp();
     }

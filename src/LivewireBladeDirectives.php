@@ -21,10 +21,10 @@ list(\$dom, \$id, \$serialized) = isset(\$wrapped)
     : \Livewire\Livewire::mount({$expression});
 
 if (isset(\$wrapped)) {
-    \$wrapped->setCurrentChildInView(\$id);
+    \$wrapped->setCurrentChildBeingRenderedInView(\$id);
 }
 
-echo \Livewire\Livewire::injectDataForJsInComponentRootAttributes(\$dom, \$id, \$serialized);
+echo \Livewire\Livewire::injectComponentDataAsHtmlAttributesInRootElement(\$dom, \$id, \$serialized);
 ?>
 EOT;
     }

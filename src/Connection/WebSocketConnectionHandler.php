@@ -23,10 +23,10 @@ class WebSocketConnectionHandler extends ConnectionHandler implements MessageCom
     {
         $payload = json_decode($msg, $asArray = true);
 
-        $this->output->info("Event received: ({$payload['event']})");
+        $this->output->info("Message received: ({$payload['type']})");
 
         $from->send(json_encode($this->handle(
-            $payload['event'],
+            $payload['type'],
             $payload['data'],
             $payload['serialized']
         )));

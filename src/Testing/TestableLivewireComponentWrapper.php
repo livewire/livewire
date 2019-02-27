@@ -1,8 +1,8 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Testing;
 
-use Livewire\LivewireComponent;
+use Livewire\LivewireComponentWrapper;
 
 class TestableLivewireComponentWrapper extends LivewireComponentWrapper
 {

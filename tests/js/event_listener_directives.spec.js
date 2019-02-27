@@ -8,7 +8,7 @@ test('test click', async () => {
     `
     const payload = await fireEventAndGetPayloadBeingSentToServer('button', 'click')
 
-    expect(payload.event).toEqual('fireMethod')
+    expect(payload.event).toEqual('callMethod')
     expect(payload.data.method).toEqual('doSomething')
 })
 
@@ -52,7 +52,7 @@ test('test click with string param', async () => {
     `
     const payload = await fireEventAndGetPayloadBeingSentToServer('button', 'click')
 
-    expect(payload.event).toEqual('fireMethod')
+    expect(payload.event).toEqual('callMethod')
     expect(payload.data.method).toEqual('doSomething')
     expect(payload.data.params).toEqual(['hey'])
 })
@@ -71,7 +71,7 @@ test('click_with_model_param', async () => {
         fireEvent('button', 'click')
     })
 
-    expect(payload.event).toEqual('fireMethod')
+    expect(payload.event).toEqual('callMethod')
     expect(payload.data.method).toEqual('doSomething')
     expect(payload.data.params).toEqual([])
     expect(payload.data.syncQueue).toEqual({hey: 'that'})
@@ -86,7 +86,7 @@ test('test keydown', async () => {
 
     const payload = await fireEventAndGetPayloadBeingSentToServer('input', 'keydown', { key: "Enter"})
 
-    expect(payload.event).toEqual('fireMethod')
+    expect(payload.event).toEqual('callMethod')
     expect(payload.data.method).toEqual('doSomething')
 })
 
@@ -99,7 +99,7 @@ test('test keydown with keycode', async () => {
 
     const payload = await fireEventAndGetPayloadBeingSentToServer('input', 'keydown', { key: "Enter" })
 
-    expect(payload.event).toEqual('fireMethod')
+    expect(payload.event).toEqual('callMethod')
     expect(payload.data.method).toEqual('doSomething')
 })
 
@@ -115,7 +115,7 @@ test('test submit', async () => {
 
     const payload = await fireEventAndGetPayloadBeingSentToServer('button', 'click')
 
-    expect(payload.event).toEqual('fireMethod')
+    expect(payload.event).toEqual('callMethod')
     expect(payload.data.method).toEqual('doSomething')
 })
 
