@@ -10,7 +10,13 @@ export default {
         var timestamp = (new Date()).valueOf();
         this.lastTimeARequestWasSent = timestamp;
 
-        const token = document.head.querySelector('meta[name="csrf-token"]').content
+        const tokenTag = document.head.querySelector('meta[name="csrf-token"]')
+
+        if (! tokenTag) {
+            throw new Error('Whoops, looks like you haven\'t added a "csrf-token" meta tag');
+        }
+
+        const token = tokenTag.content
 
         Promise.all([
             fetch('/livewire/message', {

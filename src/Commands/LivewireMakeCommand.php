@@ -22,10 +22,10 @@ class LivewireMakeCommand extends Command
 
     public function handle()
     {
-        $this->makeFile($filePath);
+        $this->makeFile();
 
         if ($this->option('view')) {
-            $this->makeView($filePath);
+            $this->makeView();
         }
 
         $this->info(str_replace(
@@ -35,7 +35,7 @@ class LivewireMakeCommand extends Command
         ));
     }
 
-    protected function makeFile($filePath)
+    protected function makeFile()
     {
         $filePath = sprintf('%s/%s.php',
             $directory = app_path('Http/Livewire'),
@@ -70,7 +70,7 @@ EOT
 );
     }
 
-    protected function makeView($filePath)
+    protected function makeView()
     {
         $filePath = sprintf('%s/%s.blade.php',
             $directory = array_first(config('view.paths')) . '/livewire',

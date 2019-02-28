@@ -54,7 +54,8 @@ class TestableLivewire
         // exact, full directive. So instead, I'm ripping out the modifiers and placing
         // them in their own separate attribute that DOMCrawler will play nice with.
         foreach ($this->getRawDirectives($subject) as $rawDirective) {
-            preg_match('/wire:(.*)$/', $rawDirective, $matches);
+            preg_match('/wire:(.*)="(.*)"/', $rawDirective, $matches);
+            dd($matches);
             $results = explode('.', $matches[1]);
             $directive = $results[0];
             unset($results[0]);
@@ -73,15 +74,23 @@ class TestableLivewire
 
     public function getRawDirectives($subject)
     {
-        preg_match_all('/('.$this->prefix.':.*)="/', $subject, $matches);
+        preg_match_all('/('.$this->prefix.':[.]*)="/', $subject, $matches);
         return $matches[1];
     }
 
     public function formatSelector($selector)
     {
+        dd($this->replaceSpecialCharactersWithPlaceholders($selector));
         return $this->replaceSpecialCharactersWithPlaceholders(
-            $this->interpretAtSymbolsAsRefShortcuts($selector)
+            $this->stripDirectiveModifiers(
+                $this->interpretAtSymbolsAsRefShortcuts($selector)
+            )
         );
+    }
+
+    public function stripDirectiveModifiers()
+    {
+        // $matches = preg_match('/\[wire:(.*)=/', '[wire:click="yeah"]', $matches);
     }
 
     public function interpretAtSymbolsAsRefShortcuts($selector)

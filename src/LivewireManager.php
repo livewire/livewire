@@ -35,7 +35,7 @@ class LivewireManager
         return new $componentClass(str_random(20), $this->prefix);
     }
 
-    public function script()
+    public function scripts()
     {
         return '<script>'
             . File::get(__DIR__ . '/../dist/livewire.js')
