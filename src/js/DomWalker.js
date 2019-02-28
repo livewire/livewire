@@ -2,12 +2,10 @@
 // conditionally not-traversing down a node.
 
 export default {
-    root: null,
     callback: null,
     depth: 0,
 
     walk(root, callback) {
-        this.root = root
         this.callback = callback
         return this.start(root)
     },

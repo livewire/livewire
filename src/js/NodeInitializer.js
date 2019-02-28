@@ -1,4 +1,4 @@
-import renameme from './Renameme'
+import listenerManager from './EventListenerManager'
 import store from './Store'
 const prefix = require('./Prefix.js')()
 import { closestByAttribute, getAttribute, extractDirectivesModifiersAndValuesFromEl } from './DomHelpers'
@@ -9,11 +9,11 @@ export default class NodeInitializer {
         this.connection = connection.init()
     }
 
-    findByEl(el) {
-        return store.componentsById[this.getRootIdFromEl(el)]
+    componentByEl(el) {
+        return store.componentsById[this.getComponentIdFromEl(el)]
     }
 
-    getRootIdFromEl(el) {
+    getComponentIdFromEl(el) {
         return getAttribute(closestByAttribute(el, 'root-id'), 'root-id')
     }
 
@@ -25,47 +25,49 @@ export default class NodeInitializer {
 
         if (directives.has('click')) {
             if (directives.get('click').modifiers.includes('min')) {
-                var waitTime = Number((directives.get('click').modifiers.filter(item => item.match(/.*ms/))[0] || '0ms').match('(.*)ms')[1])
+                var waitTime = Number(
+                    (directives.get('click').modifiers.filter(item => item.match(/.*ms/))[0] || '0ms').match('(.*)ms')[1]
+                )
             } else {
                 var waitTime = 0
             }
 
-            renameme.attachClick(node, (method, params, el) => {
+            listenerManager.attachClick(node, (method, params, el) => {
                 if (method === '$emit') {
                     let eventName
                     [eventName, ...params] = params
-                    this.connection.sendEvent(eventName, params, this.findByEl(el))
+                    this.connection.sendEvent(eventName, params, this.componentByEl(el))
                     return
                 }
 
-                this.connection.sendMethod(method, params, this.findByEl(el), el.getAttribute(`${prefix}:ref`), waitTime)
+                this.connection.sendMethod(method, params, this.componentByEl(el), el.getAttribute(`${prefix}:ref`), waitTime)
             }, directives.get('click').modifiers, directives.get('click').value)
         }
 
         if (directives.has('submit')) {
-            renameme.attachSubmit(node, (method, params, el) => {
-                const root = this.findByEl(el);
+            listenerManager.attachSubmit(node, (method, params, el) => {
+                const component = this.componentByEl(el);
 
-                this.connection.sendMethod(method, [params], root, el.getAttribute(`${prefix}:ref`))
+                this.connection.sendMethod(method, [params], component, el.getAttribute(`${prefix}:ref`))
             })
         }
 
         if (directives.has('keydown')) {
-            renameme.attachEnter(node, (method, params, el) => {
-                this.connection.sendMethod(method, params, this.findByEl(el))
+            listenerManager.attachEnter(node, (method, params, el) => {
+                this.connection.sendMethod(method, params, this.componentByEl(el))
             }, directives.get('keydown').modifiers, directives.get('keydown').value)
         }
 
         if (directives.has('model')) {
-            renameme.attachSync(node, (model, el) => {
+            listenerManager.attachSync(node, (model, el) => {
                 const value = el.type === 'checkbox'
                     ? el.checked
                     : el.value
 
                 if (directives.get('model').modifiers.includes('lazy')) {
-                    this.findByEl(el).queueSyncInput(model, value)
+                    this.componentByEl(el).queueSyncInput(model, value)
                 } else {
-                    this.connection.sendSync(model, value, this.findByEl(el))
+                    this.connection.sendSync(model, value, this.componentByEl(el))
                 }
             })
         }

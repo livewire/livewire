@@ -1,4 +1,4 @@
-import renameme from './Renameme.js'
+import listenerManager from './EventListenerManager'
 
 // This is kindof like a normal debouncer, except it behaves like both "immediate" and
 // "non-immediate". I'll try to graph the differences:
@@ -16,7 +16,6 @@ import renameme from './Renameme.js'
 // only typing one key, but two ajax requests getting sent.
 
 export default function debounce(func, wait) {
-
     var timeout;
     var timesInterupted = 0;
 	return function() {
@@ -31,13 +30,13 @@ export default function debounce(func, wait) {
 
         timeout = setTimeout(function () {
             timeout = null;
-            renameme.timeout = 0
+            listenerManager.timeout = 0
             if (timesInterupted > 0) {
                 func.apply(context, args);
                 timesInterupted = 0
             }
         }, wait);
-        renameme.timeout = wait
+        listenerManager.timeout = wait
 
 		if (callNow) {
             func.apply(context, args);

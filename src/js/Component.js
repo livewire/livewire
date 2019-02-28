@@ -1,7 +1,6 @@
-import domWalker from './DomWalker.js'
+import domWalker from './DomWalker'
 import { shouldUpdateInputElementGivenItHasBeenUpdatedViaSync, transitionElementIn, transitionElementOut, isComponentRootEl, getAttribute, elByAttributeAndValue, elsByAttributeAndValue, preserveActiveElement } from './DomHelpers'
-const prefix = require('./Prefix.js')()
-import morphdom from './morphdom/index.js'
+import morphdom from './morphdom/index'
 import store from './Store'
 
 export default class Component {

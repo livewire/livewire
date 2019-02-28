@@ -1,6 +1,6 @@
 import Component from "./Component";
 import store from './Store'
-const prefix = require('./Prefix.js')()
+const prefix = require('./Prefix')()
 
 export default class ComponentManager {
     constructor(nodeInitializer) {

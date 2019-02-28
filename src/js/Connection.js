@@ -8,8 +8,8 @@ export default class Connection {
             this.onMessage(payload)
         }
 
-        this.driver.refreshDom = (payload) => {
-            this.refreshDom()
+        this.driver.refresh = (payload) => {
+            this.refresh()
         }
     }
 
@@ -21,63 +21,58 @@ export default class Connection {
 
     onMessage(payload) {
         const { id, dom, dirtyInputs, serialized, redirectTo, ref, emitEvent } = payload
+        const component = store.componentsById[id]
 
         if (redirectTo) {
             window.location.href = redirectTo
             return
         }
 
-        store.componentsById[id].replace(dom, dirtyInputs, serialized)
+        component.replace(dom, dirtyInputs, serialized)
 
-        if (ref) {
-            store.componentsById[id].unsetLoading(ref)
-        }
+        ref && component.unsetLoading(ref)
 
-        if (emitEvent) {
-            this.sendEvent(emitEvent.name, emitEvent.params, store.componentsById[id])
-        }
+        emitEvent && this.sendEvent(emitEvent.name, emitEvent.params, component)
     }
 
-    sendMessage(data, root, minWait) {
-        data.data.syncQueue = root.syncQueue
+    sendMessage(data, component, minWait) {
+        // This sends over lazilly updated wire:model attributes.
+        data.data.syncQueue = component.syncQueue
 
         this.driver.sendMessage({
             ...data,
-            ...{ serialized: root.serialized },
+            ...{
+                id: component.id,
+                serialized: component.serialized,
+            },
         }, minWait);
 
-        root.clearSyncQueue()
+        component.clearSyncQueue()
     }
 
-    refreshDom() {
-        rootsStore.forEach(root => {
-            this.sendMessage({ id: root.id, event: 'refresh' }, root)
+    refresh() {
+        componentsStore.forEach(component => {
+            this.sendMessage({ id: component.id, event: 'refresh' }, component)
         })
     }
 
-    sendMethod(method, params, root, ref, minWait) {
-        if (ref) {
-            root.setLoading(ref)
-        }
+    sendMethod(method, params, component, ref, minWait) {
+        ref && component.setLoading(ref)
 
         this.sendMessage({
-            id: root.id,
             event: 'callMethod',
             data: {
                 method,
                 params,
                 ref,
             },
-        }, root, minWait)
+        }, component, minWait)
     }
 
     sendEvent(name, params, component, ref) {
-        if (ref) {
-            component.setLoading(ref)
-        }
+        ref && component.setLoading(ref)
 
         this.sendMessage({
-            id: component.parent.id,
             event: 'fireEvent',
             data: {
                 childId: component.id,
@@ -88,10 +83,10 @@ export default class Connection {
         }, component.parent)
     }
 
-    sendSync(name, value, root) {
+    sendSync(name, value, component) {
         this.sendMessage({
             event: 'syncInput',
             data: { name, value },
-        }, root)
+        }, component)
     }
 }

@@ -4,7 +4,7 @@ import websockets from './WebSocket'
 import NodeInitializer from './NodeInitializer'
 import Connection from './Connection'
 
-const livewire = {
+const Livewire = {
     start(options) {
         if (! options) {
             options = {};
@@ -20,20 +20,20 @@ const livewire = {
 
         const nodeInitializer = new NodeInitializer(new Connection(driverInstance))
 
-        this.roots = new ComponentManager(nodeInitializer)
+        this.components = new ComponentManager(nodeInitializer)
 
-        this.roots.init()
+        this.components.init()
     },
 
     stop() {
-        if (this.roots) {
-            this.roots.destroy()
+        if (this.components) {
+            this.components.destroy()
         }
     }
 }
 
 if (!window.Livewire) {
-    window.Livewire = livewire
+    window.Livewire = Livewire
 }
 
-export default livewire
+export default Livewire

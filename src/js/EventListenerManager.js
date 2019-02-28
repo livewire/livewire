@@ -3,11 +3,11 @@ import ElementDirectives from './ElementDirectives.js';
 const prefix = require('./Prefix.js')()
 
 export default {
-    // This is soooo bad, but it currently get's set inside "debounce"
+    // This is soooo bad, but it currently get's set inside "./Debounce.js"
     timeout: 0,
 
     // Eff me, this function prevents some weird front-end behavior.
-    // It's too complicated for me to go into detail right now.
+    // It's too complicated for me to go into detail right now, sorry everyone.
     debounceOnTimeout(callback) {
         var outerContext = this
         return function () {
@@ -20,24 +20,6 @@ export default {
                 callback.apply(context, args);
             }
         }
-    },
-
-    getRoot(component) {
-        return document.querySelector(`[${prefix}\\:root="${component}"]`)
-    },
-
-    get livewireElements() {
-        let hold = [];
-        var tags = document.evaluate(`//*[@*[starts-with(name(), "${prefix}")]]`, document, null, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null)
-
-        var node = tags.iterateNext()
-
-        while (node) {
-            hold.push(node)
-            node = tags.iterateNext()
-        }
-
-        return hold
     },
 
     attachClick(el, callback, modifiers, value) {
