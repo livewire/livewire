@@ -1,7 +1,7 @@
 import { fireEventAndExecuteCallbackWhileWaitingForServerToRespondWithDom } from './utils'
 
 test('test loading', () => {
-    document.body.innerHTML = `<div wire:root-id="test-id" wire:root-serialized="test-serialized">
+    document.body.innerHTML = `<div wire:id="test-id" wire:serialized="test-serialized">
         <form wire:submit="doSomething" wire:ref="submitEl">
             <div id="spinner" class="hidden" wire:loading="submitEl"></div>
             <button></button>

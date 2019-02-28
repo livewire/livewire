@@ -14,7 +14,7 @@ export default class NodeInitializer {
     }
 
     getComponentIdFromEl(el) {
-        return getAttribute(closestByAttribute(el, 'root-id'), 'root-id')
+        return getAttribute(closestByAttribute(el, 'id'), 'id')
     }
 
     initialize(node) {
@@ -46,6 +46,13 @@ export default class NodeInitializer {
 
         if (directives.has('submit')) {
             listenerManager.attachSubmit(node, (method, params, el) => {
+                if (method === '$emit') {
+                    let eventName
+                    [eventName, ...params] = params
+                    this.connection.sendEvent(eventName, params, this.componentByEl(el))
+                    return
+                }
+
                 const component = this.componentByEl(el);
 
                 this.connection.sendMethod(method, [params], component, el.getAttribute(`${prefix}:ref`))
@@ -54,6 +61,13 @@ export default class NodeInitializer {
 
         if (directives.has('keydown')) {
             listenerManager.attachEnter(node, (method, params, el) => {
+                if (method === '$emit') {
+                    let eventName
+                    [eventName, ...params] = params
+                    this.connection.sendEvent(eventName, params, this.componentByEl(el))
+                    return
+                }
+
                 this.connection.sendMethod(method, params, this.componentByEl(el))
             }, directives.get('keydown').modifiers, directives.get('keydown').value)
         }

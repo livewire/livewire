@@ -39,7 +39,7 @@ export function elsByAttribute(attribute) {
 }
 
 export function isComponentRootEl(el) {
-    return hasAttribute(el, 'root-id')
+    return hasAttribute(el, 'id')
 }
 
 export function transitionElementIn(el) {

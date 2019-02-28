@@ -7,8 +7,8 @@ export default class Component {
     constructor(el, nodeInitializer, parent) {
         this.nodeInitializer = nodeInitializer
         this.parent = parent
-        this.id = getAttribute(el, 'root-id')
-        this.serialized = getAttribute(el, 'root-serialized')
+        this.id = getAttribute(el, 'id')
+        this.serialized = getAttribute(el, 'serialized')
         this.syncQueue = {}
     }
 
@@ -29,7 +29,7 @@ export default class Component {
     get el() {
         // I made this a getter, so that we aren't ever getting a stale DOM element.
         // If it's too slow, we can re-evaluate it.
-        return elByAttributeAndValue('root-id', this.id)
+        return elByAttributeAndValue('id', this.id)
     }
 
     addChildComponent(el) {

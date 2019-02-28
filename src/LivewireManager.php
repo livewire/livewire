@@ -65,7 +65,7 @@ class LivewireManager
     {
         return preg_replace(
             '/(<[a-zA-Z0-9\-]*)/',
-            sprintf('$1 %s:root-id="%s" id="%s" %s:root-serialized="%s"', $this->prefix, $id, $id, $this->prefix, $serialized),
+            sprintf('$1 %s:id="%s" id="%s" %s:serialized="%s"', $this->prefix, $id, $id, $this->prefix, $serialized),
             $dom,
             $limit = 1
         );

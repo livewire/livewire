@@ -73,6 +73,6 @@ class ChildWithEventsStub extends LivewireComponent {
 
     public function render()
     {
-        return app('view')->make('root-id-test');
+        return app('view')->make('id-test');
     }
 }

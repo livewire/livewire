@@ -60,7 +60,7 @@ export default class Connection {
         ref && component.setLoading(ref)
 
         this.sendMessage({
-            event: 'callMethod',
+            type: 'callMethod',
             data: {
                 method,
                 params,
@@ -73,7 +73,7 @@ export default class Connection {
         ref && component.setLoading(ref)
 
         this.sendMessage({
-            event: 'fireEvent',
+            type: 'fireEvent',
             data: {
                 childId: component.id,
                 name,
@@ -85,7 +85,7 @@ export default class Connection {
 
     sendSync(name, value, component) {
         this.sendMessage({
-            event: 'syncInput',
+            type: 'syncInput',
             data: { name, value },
         }, component)
     }

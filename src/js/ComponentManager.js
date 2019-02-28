@@ -29,10 +29,10 @@ export default class ComponentManager {
 
         // Convert NodeLists to Arrays so we can use ".includes()". Ew.
         const allEls = Array.prototype.slice.call(
-            document.querySelectorAll(`[${prefix}\\:root-id]`)
+            document.querySelectorAll(`[${prefix}\\:id]`)
         )
         const onlyChildEls = Array.prototype.slice.call(
-            document.querySelectorAll(`[${prefix}\\:root-id] [${prefix}\\:root-id]`)
+            document.querySelectorAll(`[${prefix}\\:id] [${prefix}\\:id]`)
         )
 
         return allEls.filter(el => {

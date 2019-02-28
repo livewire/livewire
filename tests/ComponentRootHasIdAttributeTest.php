@@ -25,7 +25,7 @@ class ComponentRootHasIdAttributeTest extends TestCase
 
         $this->assertEquals(0, strpos(
             trim($component->output()),
-            '<div wire:root-id="'.$component->id.'"'
+            '<div wire:id="'.$component->id.'"'
         ));
     }
 }
@@ -33,6 +33,6 @@ class ComponentRootHasIdAttributeTest extends TestCase
 class ComponentRootHasIdStub extends LivewireComponent {
     public function render()
     {
-        return app('view')->make('root-id-test');
+        return app('view')->make('id-test');
     }
 }
