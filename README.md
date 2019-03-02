@@ -2,6 +2,9 @@
 
 Livewire is a view-layer framework for Laravel that will blow your freaking mind.
 
+[Blow my mind](#blow-my-mind)
+[Installation](#installation)
+
 # Blow my mind
 Let me take you on a quick journey through time to show you the need Livewire meets. If your mind is not blown by the end of this, I'll give you your money back.
 
@@ -177,13 +180,36 @@ class Todos extends LivewireComponent
 ## Mind blown?
 If you followed along, you'll see, Livewire is an interesting blend of paradaigms and syntax you're used to in both the frontend and the backend in the same tool. If you're happy with what you see and want to get started, read on. If you want to know how this wizardry is possible, check out "how does livewire work?". If you it didn't click and you're confused, maybe try building a sample app and toying with it to see if the use cases become clear.
 
-# Quickstart
-## Installation
+# Installation
+Livewire has both a PHP component AND a Javascript component. You need to make sure both are available in your project before you can use it.
+
+## Install via composer
 `composer require calebporzio/livewire`
 
-Add `{!! Livewire::scripts() !!}` to your `app.blade.php` file.
+## Include Javascript via snippet
+To get started quickly, you can include the following snippet at the end of the `<body>` in your html page:
 
-## Setting up your first component
+```html
+        ...
+        <script>{!! Livewire::scripts() !!}</script>
+        <script>Livewire.start()</script>
+    </body>
+</html>
+```
+
+## Include Javascript via NPM
+If you have a more sophistocated javascript build setup, you can install and import Livewire via NPM.
+
+`npm install laravel-livewire --save`
+
+```js
+import Livewire from 'laravel-livewire'
+
+Livewire.start()
+```
+
+## Rendering your first Livewire component
+
 Run `artisan livewire:make Counter` to generate a new Livewire Component here: `app/Http/Livewire/Counter.php`.
 
 Note: you can optionally add the `—view` flag to generate a corresponding view in: `resources/views/livewire/counter.blade.php`
