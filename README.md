@@ -2,8 +2,8 @@
 
 Livewire is a view-layer framework for Laravel that will blow your freaking mind.
 
-[Blow my mind](#blow-my-mind)
-[Installation](#installation)
+* [Blow my mind](#blow-my-mind)
+* [Installation](#installation)
 
 # Blow my mind
 Let me take you on a quick journey through time to show you the need Livewire meets. If your mind is not blown by the end of this, I'll give you your money back.
