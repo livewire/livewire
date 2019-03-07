@@ -1,28 +1,34 @@
 import domWalker from './DomWalker'
-import { shouldUpdateInputElementGivenItHasBeenUpdatedViaSync, transitionElementIn, transitionElementOut, isComponentRootEl, getAttribute, elByAttributeAndValue, elsByAttributeAndValue, preserveActiveElement } from './DomHelpers'
 import morphdom from './morphdom/index'
 import store from './Store'
+import NodeInitializer from './NodeInitializer'
+import LivewireElement from './LivewireElement'
 
 export default class Component {
-    constructor(el, nodeInitializer, parent) {
-        this.nodeInitializer = nodeInitializer
+    constructor(el, connection, parent) {
+        this.connection = connection
+        this.nodeInitializer = new NodeInitializer(connection)
         this.parent = parent
-        this.id = getAttribute(el, 'id')
-        this.serialized = getAttribute(el, 'serialized')
+        this.id = el.getAttribute('id')
+        this.serialized = el.getAttribute('serialized')
         this.syncQueue = {}
     }
 
     attachListenersAndAddChildComponents() {
         domWalker.walk(this.el, (node) => {
-            if (this.el.isSameNode(node)) {
+            if (typeof node.hasAttribute !== 'function') return
+
+            const el = new LivewireElement(node)
+
+            if (el.isSameNode(this.el)) {
                 return
             }
 
-            if (isComponentRootEl(node)) {
-                this.addChildComponent(node)
+            if (el.isComponentRootEl()) {
+                this.addChildComponent(el)
             }
 
-            this.nodeInitializer.initialize(node);
+            this.nodeInitializer.initialize(el);
         })
     }
 
@@ -33,7 +39,7 @@ export default class Component {
     }
 
     addChildComponent(el) {
-        const component = new Component(el, this.nodeInitializer, this)
+        const component = new Component(el, this.connection, this)
 
         store.componentsById[component.id] = component
     }
@@ -55,7 +61,7 @@ export default class Component {
         }
     }
 
-    queueSyncInput(model, value) {
+    queueModelSync(model, value) {
         this.syncQueue[model] = value
     }
 
@@ -80,37 +86,51 @@ export default class Component {
             onBeforeNodeAdded: node => {
                 if (typeof node.hasAttribute !== 'function') return
 
-                transitionElementIn(node)
+                const el = new LivewireElement(node)
+
+                el.transitionElementIn()
             },
 
             onBeforeNodeDiscarded: node => {
                 if (typeof node.hasAttribute !== 'function') return
 
-                return transitionElementOut(node)
+                const el = new LivewireElement(node)
+
+                return el.transitionElementOut()
             },
 
-            onBeforeElChildrenUpdated: from => {
-                if (isComponentRootEl(from) && ! from.isSameNode(this.el)) {
+            onBeforeElChildrenUpdated: node => {
+                if (typeof node.hasAttribute !== 'function') return
+
+                const el = new LivewireElement(node)
+
+                if (el.isComponentRootEl() && ! el.isSameNode(this.el)) {
                     return false
                 }
             },
 
-            onBeforeElUpdated: from => {
-                if (isComponentRootEl(from) && ! from.isSameNode(this.el)) {
+            onBeforeElUpdated: node => {
+                if (typeof node.hasAttribute !== 'function') return
+
+                const el = new LivewireElement(node)
+
+                if (el.isComponentRootEl() && ! el.isSameNode(this.el)) {
                     return false
                 }
 
-                return shouldUpdateInputElementGivenItHasBeenUpdatedViaSync(from, dirtyInputs)
+                return el.shouldUpdateInputElementGivenItHasBeenUpdatedViaSync(dirtyInputs)
             },
 
             onNodeAdded: (node) => {
                 if (typeof node.hasAttribute !== 'function') return
 
-                if (isComponentRootEl(node)) {
-                    this.addChildComponent(node)
+                const el = new LivewireElement(node)
+
+                if (el.isComponentRootEl()) {
+                    this.addChildComponent(el)
                 }
 
-                this.nodeInitializer.initialize(node)
+                this.nodeInitializer.initialize(el)
             },
         });
     }

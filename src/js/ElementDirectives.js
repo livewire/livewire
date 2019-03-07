@@ -3,7 +3,7 @@ const prefix = require('./Prefix.js')()
 export default class {
     constructor(el) {
         this.el = el
-        this.directives = this.extractTypeModifiersAndValue(el)
+        this.directives = this.extractTypeModifiersAndValue()
     }
 
     all() {
@@ -18,17 +18,17 @@ export default class {
         return this.directives[type]
     }
 
-    extractTypeModifiersAndValue(el) {
+    extractTypeModifiersAndValue() {
         let directives = {}
 
-        el.getAttributeNames()
+        this.el.getAttributeNames()
             // Filter only the livewire directives.
             .filter(name => name.match(new RegExp(prefix + ':')))
             // Parse out the type, modifiers, and value from it.
             .forEach(name => {
                 const [type, ...modifiers] = name.replace(new RegExp(prefix + ':'), '').split('.')
 
-                directives[type] = { type, modifiers, value: el.getAttribute(name) }
+                directives[type] = { type, modifiers, value: this.el.getAttribute(name) }
             })
 
         return directives

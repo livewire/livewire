@@ -1,42 +1,35 @@
 import debounce from './Debounce.js'
 import store from './Store'
-const prefix = require('./Prefix.js')()
-import { closestByAttribute, getAttribute } from './DomHelpers'
 import ElementDirectives from './ElementDirectives';
+import LivewireElement from './LivewireElement';
+const prefix = require('./Prefix.js')()
 
-export default class NodeInitializer {
+export default class {
     constructor(connection) {
         this.connection = connection.init()
     }
 
-    initialize(node) {
-        // Make sure it's an ElementNode and not a TextNode or something.
-        if (typeof node.hasAttribute !== 'function') return
-
+    initialize(el) {
         // Parse out "direcives", "modifiers", and "value" from livewire attributes.
-        const directives = new ElementDirectives(node)
-
-        directives.all().forEach(directive => {
+        el.directives.all().forEach(directive => {
             if (directive.type === 'model') {
-                this.attachModelListener(node, directive)
+                this.attachModelListener(el, directive)
+            } else {
+                this.attachDomListener(el, directive)
             }
-
-            this.attachDomListener(node, directive)
         })
     }
 
     attachModelListener(el, directive) {
         el.addEventListener('input', debounce(e => {
             const model = directive.value
-
-            const value = e.target.type === 'checkbox'
-                ? e.target.checked
-                : e.target.value
+            const el = new LivewireElement(e.target)
+            const value = el.valueFromInputOrCheckbox()
 
             if (directive.modifiers.includes('lazy')) {
-                this.componentByEl(e.target).queueSyncInput(model, value)
+                this.componentByEl(el).queueSyncInput(model, value)
             } else {
-                this.connection.sendSync(model, value, this.componentByEl(e.target))
+                this.connection.sendModelSync(model, value, this.componentByEl(el))
             }
         }, 150))
     }
@@ -57,35 +50,45 @@ export default class NodeInitializer {
     }
 
     attachListener(el, directive, callback) {
-        if (directive.modifiers.includes('min')) {
-            var waitTime = Number(
-                (directive.modifiers.filter(item => item.match(/.*ms/))[0] || '0ms').match('(.*)ms')[1]
-            )
-        } else {
-            var waitTime = 0
-        }
-
         el.addEventListener(directive.type, (e => {
             if (callback && callback(e) !== false) {
                 return
             }
+
+            const el = new LivewireElement(e.target)
 
             // This is outside the conditional below so "wire:click.prevent" without
             // a value still prevents default.
             this.preventOrStop(e, directive.modifiers)
 
             if (directive.value) {
+                const component = this.componentByEl(el)
                 const { method, params } = this.parseOutMethodAndParams(directive.value)
 
                 if (method === '$emit') {
                     const [eventName, ...otherParams] = params
-                    this.connection.sendEvent(eventName, otherParams, this.componentByEl(e.target))
+                    this.connection.sendEvent(eventName, otherParams, component)
                     return
                 }
 
-                this.connection.sendMethod(method, params, this.componentByEl(e.target), e.target.getAttribute(`${prefix}:ref`), waitTime)
+                this.connection.sendMethod(
+                    method,
+                    params,
+                    component,
+                    el.getAttribute('ref'),
+                    this.extractMinWaitModifier(directive)
+                )
             }
         }))
+    }
+
+    extractMinWaitModifier(directive) {
+        // If there is a ".min" modifier
+        return directive.modifiers.includes('min')
+            // Extract a subsequent .Xms modifier
+            ? Number(
+                (directive.modifiers.filter(item => item.match(/.*ms/))[0] || '0ms').match('(.*)ms')[1]
+            ): 0
     }
 
     parseOutMethodAndParams(rawMethod) {
@@ -122,6 +125,6 @@ export default class NodeInitializer {
     }
 
     getComponentIdFromEl(el) {
-        return getAttribute(closestByAttribute(el, 'id'), 'id')
+        return el.closestByAttribute('id').getAttribute('id')
     }
 }

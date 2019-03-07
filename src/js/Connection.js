@@ -83,7 +83,7 @@ export default class Connection {
         }, component.parent)
     }
 
-    sendSync(name, value, component) {
+    sendModelSync(name, value, component) {
         this.sendMessage({
             type: 'syncInput',
             data: { name, value },

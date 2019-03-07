@@ -18,11 +18,11 @@ const Livewire = {
             var driverInstance = http
         }
 
-        const nodeInitializer = new NodeInitializer(new Connection(driverInstance))
+        const connection = new Connection(driverInstance)
 
-        this.components = new ComponentManager(nodeInitializer)
+        this.components = new ComponentManager(connection)
 
-        this.components.init()
+        this.components.mount()
     },
 
     stop() {
