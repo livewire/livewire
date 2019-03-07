@@ -1,4 +1,3 @@
-import debounce from './Debounce.js'
 import ElementDirectives from './ElementDirectives.js';
 const prefix = require('./Prefix.js')()
 
@@ -22,53 +21,13 @@ export default {
         }
     },
 
-    attachClick(el, callback, modifiers, value) {
-        el.addEventListener('click', (e => {
-            if (modifiers.includes('prevent')) {
-                e.preventDefault()
-            }
-
-            if (modifiers.includes('stop')) {
-                e.stopPropagation()
-            }
-
-            if (value) {
-                const { method, params } = this.parseOutMethodAndParams(value)
-                this.debounceOnTimeout(callback)(method, params, e.target)
-            }
-        }))
-    },
-
     attachSubmit(el, callback) {
-        el.addEventListener('submit', e => {
-            e.preventDefault()
-
-            const { method, params } = this.parseOutMethodAndParams(el.getAttribute(`${prefix}:submit`))
-
-            this.debounceOnTimeout(callback)(method, params, e.target)
-        })
     },
 
     attachEnter(el, callback, modifiers, value) {
-        el.addEventListener('keydown', e => {
-            if (modifiers.length === 0) {
-                const { method, params } = this.parseOutMethodAndParams(value)
-                this.debounceOnTimeout(callback)(method, params, e.target)
-            }
-
-            if (modifiers.includes(e.key.split(/[_\s]/).join("-").toLowerCase())) {
-                const { method, params } = this.parseOutMethodAndParams(value)
-                this.debounceOnTimeout(callback)(method, params, e.target)
-            }
-        })
     },
 
     attachSync(el, callback) {
-        el.addEventListener('input', debounce(e => {
-            const directives = new ElementDirectives(e.target)
-            const model = directives.get('model').value
-            callback(model, e.target)
-        }, 150))
     },
 
     parseOutMethodAndParams(rawMethod) {
@@ -88,5 +47,19 @@ export default {
         }
 
         return { method, params }
+    },
+
+    attachEvent(event) {
+
+    },
+
+    preventOrStop(event, modifiers) {
+        if (modifiers.includes('prevent')) {
+            event.preventDefault()
+        }
+
+        if (modifiers.includes('stop')) {
+            event.stopPropagation()
+        }
     }
 }

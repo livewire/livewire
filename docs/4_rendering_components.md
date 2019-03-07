@@ -2,6 +2,9 @@
 
 There are two ways to render livewire components:
 
+// Dedicated Route
+// Include in existing page
+
 ## 1. The @livewire Blade directive
 
 Let's say we have a Livewire component in `App\Http\Livewire\Counter.php`, the simplest way to render it in a browser, is to include it in a normal Laravel blade view via the `@livewire` directive.

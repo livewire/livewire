@@ -55,7 +55,6 @@ class TestableLivewire
         // them in their own separate attribute that DOMCrawler will play nice with.
         foreach ($this->getRawDirectives($subject) as $rawDirective) {
             preg_match('/wire:(.*)="(.*)"/', $rawDirective, $matches);
-            dd($matches);
             $results = explode('.', $matches[1]);
             $directive = $results[0];
             unset($results[0]);
@@ -80,7 +79,6 @@ class TestableLivewire
 
     public function formatSelector($selector)
     {
-        dd($this->replaceSpecialCharactersWithPlaceholders($selector));
         return $this->replaceSpecialCharactersWithPlaceholders(
             $this->stripDirectiveModifiers(
                 $this->interpretAtSymbolsAsRefShortcuts($selector)

@@ -8,6 +8,7 @@ use Livewire\LivewireComponent;
 use Livewire\LivewireManager;
 use Illuminate\View\Factory;
 use Livewire\LivewireComponentWrapper;
+use CalebPorzio\GitDown;
 
 class CanRegisterListenersOnChildrenTest extends TestCase
 {

@@ -3,29 +3,32 @@ const prefix = require('./Prefix.js')()
 export default class {
     constructor(el) {
         this.el = el
-        this.modifiersAndValuesByDirective = this.extractDirectivesModifiersAndValues(el)
+        this.directives = this.extractTypeModifiersAndValue(el)
     }
 
-    has(directive) {
-        return Object.keys(this.modifiersAndValuesByDirective).includes(directive)
+    all() {
+        return Object.values(this.directives)
     }
 
-    get(directive) {
-        return this.modifiersAndValuesByDirective[directive]
+    has(type) {
+        return Object.keys(this.directives).includes(type)
     }
 
-    extractDirectivesModifiersAndValues(el) {
+    get(type) {
+        return this.directives[type]
+    }
+
+    extractTypeModifiersAndValue(el) {
         let directives = {}
 
         el.getAttributeNames()
             // Filter only the livewire directives.
             .filter(name => name.match(new RegExp(prefix + ':')))
-            // Parse out the event, modifiers, and value from it.
+            // Parse out the type, modifiers, and value from it.
             .forEach(name => {
-                let directive, modifiers
-                [directive, ...modifiers] = name.replace(new RegExp(prefix + ':'), '').split('.')
+                const [type, ...modifiers] = name.replace(new RegExp(prefix + ':'), '').split('.')
 
-                directives[directive] = { modifiers, value: el.getAttribute(name) }
+                directives[type] = { type, modifiers, value: el.getAttribute(name) }
             })
 
         return directives

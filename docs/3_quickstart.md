@@ -1,10 +1,15 @@
 # Quickstart
 
-(Make sure you have installed everything. Go [here](docs/installation.md) for instructions)
+// Im stuck here
+A) List out explicit instructions to create app.blade.php
+B) Just use the component syntax
+C) Make assumptions about the Laravel developer's skill
 
-Run `php artisan livewire:make Counter --view` to generate a new Livewire Component here: `app/Http/Livewire/Counter.php`.
+// Also, I should change this to just a plain Hello World, no Counter. But have a section with Examples: Counter, Todo, Contacts
 
-You should now have a component: `App\Http\Livewire\Counter.php`
+Now that you have everything installed, run `php artisan livewire:make Counter --view` to generate a new Livewire Component (`app/Http/Livewire/Counter.php`), and it's corresponding view (`resources/views/livewire/counter.blade.php`).
+
+**Component**
 ```php
 class Counter extends LivewireComponent
 {
@@ -15,7 +20,7 @@ class Counter extends LivewireComponent
 }
 ```
 
-And a view: `resources/views/livewire/counter.blade.php`
+**View**
 ```
 <div>
     {{-- Go effing nuts. --}}

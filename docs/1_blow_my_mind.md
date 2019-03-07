@@ -3,10 +3,10 @@ Let me take you on a quick journey through time to show you the need Livewire me
 
 Consider the age old "TODO" functionality an app might need.
 
-![A user typing todos into an input field, hitting enter, and seeing a todo list update.](./todo_demo.gif)
+![A user typing todos into an input field, hitting enter, and seeing a todo list update.](todo_demo.gif)
 
 ### All-backend
-At the dawn of time, our ancestors were building app in the traditional MVC style. The way they would have achieved dynamic functionality, was through form submissions and full-page reloads. They would have utilized a Route, a Controller, and a View everytime they needed to update a webpage. Let's look at some sample code that we believe looks something like what they would have wrote:
+At the dawn of time, our ancestors were building apps in the traditional MVC style. The way they would have achieved dynamic functionality, was through form submissions and full-page reloads. They would have utilized a Route, a Controller, and a View everytime they needed to update a webpage. Let's look at some sample code that we believe looks something like what they would have wrote:
 
 *route*
 ```php
@@ -136,7 +136,7 @@ Route::livewire('/todos', Todos::class);
 ```
 
 *Livewire component*
-```
+```php
 class Todos extends LivewireComponent
 {
     public $title;
@@ -171,4 +171,4 @@ class Todos extends LivewireComponent
 ```
 
 ## Mind blown?
-If you followed along, you'll see, Livewire is an interesting blend of paradaigms and syntax you're used to in both the frontend and the backend in the same tool. If you're happy with what you see and want to get started, read on. If you want to know how this wizardry is possible, check out "how does livewire work?". If you it didn't click and you're confused, maybe try building a sample app and toying with it to see if the use cases become clear.
+If you followed along, you'll see, Livewire is an interesting blend of paradaigms and syntax you're used to in both the frontend and the backend in the same tool. If you're happy with what you see and want to get started, read on. If you want to know how this wizardry is possible, check out "how does livewire work?". If it didn't click and you're confused, maybe try building a sample app and toying with it to see if the use cases become clear.

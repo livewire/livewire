@@ -33,9 +33,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerRoutes()
     {
-        // if ($this->app->environment('local')) {
-            $this->registerDocsRoutes();
-        // }
+        $this->registerDocsRoutes();
 
         // I'm guessing it's not cool to rely on the users "web" middleware stack.
         // @todo - figure out what to do here re: middleware.
@@ -64,7 +62,7 @@ class LivewireServiceProvider extends ServiceProvider
                     $template = __DIR__ . '/../docs/template.blade.php';
                     $css = file_get_contents(__DIR__ . '/../docs/template.css');
 
-                    $parsed = $this->processMarkdownViaTheGithubApi($file['contents']);
+                    $parsed = (new \GitDown\GitDown)->parseAndCache($file['contents']);
 
                     return View::file($template, [
                         'css' => $css,
@@ -74,27 +72,6 @@ class LivewireServiceProvider extends ServiceProvider
                     ]);
                 });
             });
-    }
-
-    public function processMarkdownViaTheGithubApi($input)
-    {
-        return cache()->remember(crc32($input), $minutes = 1200, function () use ($input) {
-            $ch = curl_init();
-
-            curl_setopt($ch, CURLOPT_URL, "https://api.github.com/markdown/raw");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: text/x-markdown',
-                'User-Agent: Livewire Docs',
-            ]);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $input);
-
-            $output = curl_exec($ch);
-            curl_close($ch);
-
-            return $output;
-        });
     }
 
     public function registerCommands()

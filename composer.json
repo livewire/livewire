@@ -15,7 +15,8 @@
         "illuminate/validation": "^5.7",
         "yosymfony/resource-watcher": "^2.0",
         "symfony/process": "^4.2",
-        "erusev/parsedown": "^1.7"
+        "erusev/parsedown": "^1.7",
+        "calebporzio/gitdown": "^1.3"
     },
     "extra": {
         "laravel": {
