@@ -25,6 +25,7 @@ Livewire is a view-layer framework for Laravel that will blow your freaking mind
 
 
 ## TODO
+* input debouncing is only good when you add an "id" to the input
 * 2 options: the directive OR the route macro (routing) (route-model binding)
 * binding data `wire:model`
 * listening for events`wire:click`, `wire:submit`, `wire:keydown`

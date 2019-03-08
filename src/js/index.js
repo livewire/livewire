@@ -1,8 +1,7 @@
-import ComponentManager from './ComponentManager'
 import http from './HttpConnection'
-import websockets from './WebSocket'
-import NodeInitializer from './NodeInitializer'
+import websocket from './WebSocket'
 import Connection from './Connection'
+import ComponentManager from './ComponentManager'
 
 const Livewire = {
     start(options) {
@@ -10,13 +9,9 @@ const Livewire = {
             options = {};
         }
 
-        const driver = options.driver || 'http'
-
-        if (driver === 'websockets') {
-            var driverInstance = websockets
-        } else {
-            var driverInstance = http
-        }
+        const driverInstance = options.driver === 'websocket'
+            ? websocket
+            : http
 
         const connection = new Connection(driverInstance)
 
@@ -26,9 +21,7 @@ const Livewire = {
     },
 
     stop() {
-        if (this.components) {
-            this.components.destroy()
-        }
+        this.components && this.components.destroy()
     }
 }
 

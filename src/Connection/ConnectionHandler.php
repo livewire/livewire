@@ -38,13 +38,12 @@ abstract class ConnectionHandler
         $serialized = encrypt($instance);
 
         return [
-            'id' => $id,
+            'componentId' => $id,
             'dom' => app('livewire')->injectComponentDataAsHtmlAttributesInRootElement(
                 $dom, $id, $serialized
             ),
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
-            'ref' => $data['ref'] ?? null,
             'emitEvent' => $emitEvent,
         ];
     }

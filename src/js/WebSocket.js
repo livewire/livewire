@@ -21,10 +21,6 @@ export default {
         }
     },
 
-    wireUp() {
-        //
-    },
-
     sendMessage(payload) {
         this.ws.send(JSON.stringify(payload))
     }

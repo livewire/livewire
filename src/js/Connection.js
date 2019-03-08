@@ -1,8 +1,28 @@
 import store from './Store';
+import MethodMessage from './MethodMessage';
+import EventMessage from './EventMessage';
+import ModelMessage from './ModelMessage';
 
 export default class Connection {
     constructor(driver) {
         this.driver = driver
+
+        // This is a very crude "locking" mechanism.
+        // The problem scenerio:
+        // A user clicks a button twice, sending two messages to the server
+        // The first message's response hasn't been received before the second one is sent
+        // Because of this, there are two problems:
+        // A) The ui will do a "blip" update
+        // B) The second message will send the same serialized object as the first message,
+        //    effectively wiping out any component state the first message changed.
+        // There are plenty of different strategies we can employ here, but I figure,
+        // we'll start with the simplest: lock the UI until the most recent message is received.
+        // This means, if a user clicks a button and the message round-trip takes a while,
+        // the UI will not respond to any clicks while it's waiting. And not only that,
+        // it will crudely discard any clicks made during that time. I personally think this is
+        // a feature, so there is no "catch-up" that builds, like if we implemented a message queue.
+
+        this.lockingMessage = null
 
         this.driver.onMessage = (payload) => {
             this.onMessage(payload)
@@ -20,73 +40,59 @@ export default class Connection {
     }
 
     onMessage(payload) {
-        const { id, dom, dirtyInputs, serialized, redirectTo, ref, emitEvent } = payload
-        const component = store.componentsById[id]
+        // For now, we can safely (I think) assume the message in the lock, is the appropriate
+        // message to retrive. When we need something more sophisticated, we can simply send
+        // the message's id in the request, and do some lookup to retreive it here.
+        const message = this.lockingMessage
 
-        if (redirectTo) {
-            window.location.href = redirectTo
+        message.storeResponse(payload)
+
+        // Delegate to the component everything except handling the component
+        // emiting an event, we'll handle that in the callback.
+        message.component.receiveMessage(message, ({name, params, component}) => {
+            this.sendEvent(name, params, component)
+        })
+
+        this.lockingMessage = null
+    }
+
+    sendMessage(message) {
+        if (this.lockingMessage !== null) {
             return
         }
 
-        component.replace(dom, dirtyInputs, serialized)
+        this.lockingMessage = message
 
-        ref && component.unsetLoading(ref)
+        message.prepareForSend()
 
-        emitEvent && this.sendEvent(emitEvent.name, emitEvent.params, component)
+        this.driver.sendMessage(message.payload());
     }
 
-    sendMessage(data, component, minWait) {
-        // This sends over lazilly updated wire:model attributes.
-        data.data.syncQueue = component.syncQueue
+    sendMethod(method, params, component, ref) {
+        const message = new MethodMessage(
+            method,
+            params,
+            ref,
+            component
+        )
 
-        this.driver.sendMessage({
-            ...data,
-            ...{
-                id: component.id,
-                serialized: component.serialized,
-            },
-        }, minWait);
-
-        component.clearSyncQueue()
-    }
-
-    refresh() {
-        componentsStore.forEach(component => {
-            this.sendMessage({ id: component.id, event: 'refresh' }, component)
-        })
-    }
-
-    sendMethod(method, params, component, ref, minWait) {
-        ref && component.setLoading(ref)
-
-        this.sendMessage({
-            type: 'callMethod',
-            data: {
-                method,
-                params,
-                ref,
-            },
-        }, component, minWait)
+        this.sendMessage(message)
     }
 
     sendEvent(name, params, component, ref) {
-        ref && component.setLoading(ref)
+        const message = new EventMessage(
+            name,
+            params,
+            ref,
+            component
+        )
 
-        this.sendMessage({
-            type: 'fireEvent',
-            data: {
-                childId: component.id,
-                name,
-                params,
-                ref,
-            },
-        }, component.parent)
+        this.sendMessage(message)
     }
 
     sendModelSync(name, value, component) {
-        this.sendMessage({
-            type: 'syncInput',
-            data: { name, value },
-        }, component)
+        const message = new ModelMessage(name, value, component)
+
+        this.sendMessage(message)
     }
 }

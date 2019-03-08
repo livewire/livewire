@@ -12,12 +12,34 @@ export default class {
     initialize(el) {
         // Parse out "direcives", "modifiers", and "value" from livewire attributes.
         el.directives.all().forEach(directive => {
-            if (directive.type === 'model') {
-                this.attachModelListener(el, directive)
-            } else {
-                this.attachDomListener(el, directive)
+            switch (directive.type) {
+                case 'loading-class':
+                    setTimeout(() => {
+                        this.registerElementForLoading(el, directive)
+                        // Sorry for the setTimeout
+                    }, 500)
+                    break;
+
+                case 'model':
+                    this.attachModelListener(el, directive)
+                    break;
+
+                default:
+                    this.attachDomListener(el, directive)
+                    break;
             }
         })
+    }
+
+    registerElementForLoading(el, directive) {
+        // "this.componentByEl" is broken because the node we have to work with
+        // doesn't have a component parent for some reason yet.
+        // this.componentByEl(el).addLoadinnigEl(
+        //     el,
+        //     directive.value,
+        //     el.directives.get('loading-target'),
+        //     directive.modifiers.includes('remove')
+        // )
     }
 
     attachModelListener(el, directive) {
@@ -59,7 +81,7 @@ export default class {
 
             // This is outside the conditional below so "wire:click.prevent" without
             // a value still prevents default.
-            this.preventOrStop(e, directive.modifiers)
+            this.preventAndStop(e, directive.modifiers)
 
             if (directive.value) {
                 const component = this.componentByEl(el)
@@ -76,19 +98,9 @@ export default class {
                     params,
                     component,
                     el.getAttribute('ref'),
-                    this.extractMinWaitModifier(directive)
                 )
             }
         }))
-    }
-
-    extractMinWaitModifier(directive) {
-        // If there is a ".min" modifier
-        return directive.modifiers.includes('min')
-            // Extract a subsequent .Xms modifier
-            ? Number(
-                (directive.modifiers.filter(item => item.match(/.*ms/))[0] || '0ms').match('(.*)ms')[1]
-            ): 0
     }
 
     parseOutMethodAndParams(rawMethod) {
@@ -110,18 +122,14 @@ export default class {
         return { method, params }
     }
 
-    preventOrStop(event, modifiers) {
-        if (modifiers.includes('prevent')) {
-            event.preventDefault()
-        }
+    preventAndStop(event, modifiers) {
+        modifiers.includes('prevent') && event.preventDefault()
 
-        if (modifiers.includes('stop')) {
-            event.stopPropagation()
-        }
+        modifiers.includes('stop') && event.stopPropagation()
     }
 
     componentByEl(el) {
-        return store.componentsById[this.getComponentIdFromEl(el)]
+        return store.findComponent(this.getComponentIdFromEl(el))
     }
 
     getComponentIdFromEl(el) {

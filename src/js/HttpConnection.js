@@ -1,15 +1,11 @@
 export default {
     onMessage: null,
-    lastTimeARequestWasSent: null,
 
     init() {
         //
     },
 
-    sendMessage(payload, minWait) {
-        var timestamp = (new Date()).valueOf();
-        this.lastTimeARequestWasSent = timestamp;
-
+    sendMessage(payload) {
         const tokenTag = document.head.querySelector('meta[name="csrf-token"]')
 
         if (! tokenTag) {
@@ -18,27 +14,17 @@ export default {
 
         const token = tokenTag.content
 
-        Promise.all([
-            fetch('/livewire/message', {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                // This enables "cookies".
-                credentials: "same-origin",
-                headers: {
-                    'X-CSRF-TOKEN': token,
-                    'Content-Type': 'application/json',
-                    'Accept': 'text/html, application/xhtml+xml',
-                    // "Accept": "application/json, text-plain, */*",
-                },
-            }),
-            new Promise(resolve => setTimeout(resolve, minWait || 0)),
-        ]).then(([response]) => {
-            if (timestamp < this.lastTimeARequestWasSent) {
-                return
-            }
-
-            window.response = response
-
+        fetch('/livewire/message', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            // This enables "cookies".
+            credentials: "same-origin",
+            headers: {
+                'X-CSRF-TOKEN': token,
+                'Content-Type': 'application/json',
+                'Accept': 'text/html, application/xhtml+xml',
+            },
+        }).then(response => {
             if (response.ok) {
                 response.text().then(response => {
                     this.onMessage.call(this, JSON.parse(response))

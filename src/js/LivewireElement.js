@@ -1,6 +1,13 @@
 import ElementDirectives from "./ElementDirectives";
 const prefix = require('./Prefix.js')()
 
+/**
+ * This is intended to isolate all native DOM operations. The operations that happen
+ * one specific element will be instance methods, the operations you would normally
+ * perform on the "document" (like "document.querySelector") will be static methods.
+ * Consider this a decorator for the ElementNode JavaScript object. (Hence the
+ * method forwarding I have to do at the bottom)
+ */
 export default class LivewireElement {
     constructor(el) {
         this.el = el
@@ -26,6 +33,30 @@ export default class LivewireElement {
         }).map(el => {
             return new LivewireElement(el)
         })
+    }
+
+    static byAttributeAndValue(attribute, value) {
+        return new LivewireElement(document.querySelector(`[${prefix}\\:${attribute}="${value}"]`))
+    }
+
+    static elsByAttributeAndValue(attribute, value, scope) {
+        return Array.prototype.slice.call(
+            (scope || document).querySelectorAll(`[${prefix}\\:${attribute}="${value}"]`)
+        ).map(el => {
+            return new LivewireElement(el)
+        })
+    }
+
+    static preserveActiveElement(callback) {
+        const cached = document.activeElement
+
+        callback()
+
+        cached.focus()
+    }
+
+    rawNode() {
+        return this.el
     }
 
     transitionElementIn() {
@@ -103,13 +134,35 @@ export default class LivewireElement {
             : this.el.value
     }
 
-    // Forward isSameNode.
-    isSameNode() {
-        return this.el.isSameNode(...arguments)
+    // Forward the following methods.
+
+    isSameNode(el) {
+        // We need to drop down to the raw node if we are comparing
+        // to another "LivewireElement" Instance.
+        if (el.rawNode()) {
+            return this.el.isSameNode(el.rawNode())
+        }
+
+        return this.el.isSameNode(el)
     }
 
-    // Forward addEventListener.
+    getAttributeNames() {
+        return this.el.getAttributeNames(...arguments)
+    }
+
     addEventListener() {
         return this.el.addEventListener(...arguments)
+    }
+
+    get classList() {
+        return this.el.classList
+    }
+
+    querySelector() {
+        return this.el.querySelector(...arguments)
+    }
+
+    querySelectorAll() {
+        return this.el.querySelectorAll(...arguments)
     }
 }
