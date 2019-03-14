@@ -1,7 +1,10 @@
 
 export default class {
-    constructor(component) {
+    constructor(component, actionQueue, syncQueue) {
         this.component = component
+        this.actionQueue = actionQueue
+        this.syncQueue = syncQueue
+
         this.id = Math.random().toString(36).substring(7)
     }
 
@@ -10,21 +13,11 @@ export default class {
     }
 
     payload() {
-        // This sends over lazilly updated wire:model attributes.
-        const syncQueue = this.component.syncQueue
-
-        this.component.clearSyncQueue()
-
         return {
-            type: this.type,
             serialized: this.component.serialized,
-            data: {
-                ...this.payloadPortion,
-                ...{
-                    syncQueue: syncQueue,
-                    componentId: this.component.id,
-                },
-            }
+            componentId: this.component.id,
+            syncQueue: this.syncQueue,
+            actionQueue: this.actionQueue,
         }
     }
 

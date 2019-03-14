@@ -1,77 +1,69 @@
 import debounce from './Debounce.js'
 import store from './Store'
-import ElementDirectives from './ElementDirectives';
 import LivewireElement from './LivewireElement';
+import MethodAction from './MethodAction.js';
+import ModelAction from './ModelAction.js';
+import EventAction from './EventAction.js';
 const prefix = require('./Prefix.js')()
 
 export default class {
-    constructor(connection) {
-        this.connection = connection.init()
-    }
-
-    initialize(el) {
+    initialize(el, component) {
         // Parse out "direcives", "modifiers", and "value" from livewire attributes.
         el.directives.all().forEach(directive => {
             switch (directive.type) {
                 case 'loading-class':
-                    setTimeout(() => {
-                        this.registerElementForLoading(el, directive)
-                        // Sorry for the setTimeout
-                    }, 500)
+                    this.registerElementForLoading(el, directive, component)
                     break;
 
                 case 'model':
-                    this.attachModelListener(el, directive)
+                    this.attachModelListener(el, directive, component)
                     break;
 
                 default:
-                    this.attachDomListener(el, directive)
+                    this.attachDomListener(el, directive, component)
                     break;
             }
         })
     }
 
-    registerElementForLoading(el, directive) {
-        // "this.componentByEl" is broken because the node we have to work with
-        // doesn't have a component parent for some reason yet.
-        // this.componentByEl(el).addLoadinnigEl(
-        //     el,
-        //     directive.value,
-        //     el.directives.get('loading-target'),
-        //     directive.modifiers.includes('remove')
-        // )
+    registerElementForLoading(el, directive, component) {
+        component.addLoadingEl(
+            el,
+            directive.value,
+            directive.modifiers.includes('remove')
+        )
     }
 
-    attachModelListener(el, directive) {
+    attachModelListener(el, directive, component) {
         el.addEventListener('input', debounce(e => {
             const model = directive.value
             const el = new LivewireElement(e.target)
             const value = el.valueFromInputOrCheckbox()
 
-            if (directive.modifiers.includes('lazy')) {
-                this.componentByEl(el).queueSyncInput(model, value)
+            if (directive.modifiers.includes('live')) {
+                component.addAction(new ModelAction(model, value))
             } else {
-                this.connection.sendModelSync(model, value, this.componentByEl(el))
+                component.queueSyncInput(model, value)
             }
         }, 150))
     }
 
-    attachDomListener(el, directive) {
+    attachDomListener(el, directive, component) {
         switch (directive.type) {
             case 'keydown':
-                this.attachListener(el, directive, (e) => {
+                this.attachListener(el, directive, component, (e) => {
                     // Only handle listener if no, or matching key modifiers are passed.
                     return ! (directive.modifiers.length === 0
                         || directive.modifiers.includes(e.key.split(/[_\s]/).join("-").toLowerCase()))
                 })
                 break;
             default:
-                this.attachListener(el, directive)
+                this.attachListener(el, directive, component)
                 break;
         }
     }
 
-    attachListener(el, directive, callback) {
+    attachListener(el, directive, component, callback) {
         el.addEventListener(directive.type, (e => {
             if (callback && callback(e) !== false) {
                 return
@@ -84,21 +76,16 @@ export default class {
             this.preventAndStop(e, directive.modifiers)
 
             if (directive.value) {
-                const component = this.componentByEl(el)
                 const { method, params } = this.parseOutMethodAndParams(directive.value)
 
                 if (method === '$emit') {
                     const [eventName, ...otherParams] = params
-                    this.connection.sendEvent(eventName, otherParams, component)
+
+                    component.parent.addAction(new EventAction(eventName, otherParams, component.id))
                     return
                 }
 
-                this.connection.sendMethod(
-                    method,
-                    params,
-                    component,
-                    el.getAttribute('ref'),
-                )
+                component.addAction(new MethodAction(method, params))
             }
         }))
     }

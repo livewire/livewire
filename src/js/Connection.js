@@ -68,16 +68,6 @@ export default class Connection {
         this.driver.sendMessage(message.payload());
     }
 
-    sendMethod(method, params, component, ref) {
-        const message = new MethodMessage(
-            method,
-            params,
-            ref,
-            component
-        )
-
-        this.sendMessage(message)
-    }
 
     sendEvent(name, params, component, ref) {
         const message = new EventMessage(

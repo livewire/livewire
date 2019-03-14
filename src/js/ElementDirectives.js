@@ -1,3 +1,5 @@
+import ElementDirective from './ElementDirective.js';
+
 const prefix = require('./Prefix.js')()
 
 export default class {
@@ -28,7 +30,7 @@ export default class {
             .forEach(name => {
                 const [type, ...modifiers] = name.replace(new RegExp(prefix + ':'), '').split('.')
 
-                directives[type] = { type, modifiers, value: this.el.getAttribute(name) }
+                directives[type] = new ElementDirective(type, modifiers, name, this.el)
             })
 
         return directives

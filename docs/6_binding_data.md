@@ -18,8 +18,8 @@ class FavoriteColor extends LivewireComponent
 **favorite-color.blade.php**
 ```html
 <div>
-    <input wire:model="color">
-    <h1>My favorite color is: {{ $color }}</h1>
+    <input wire:model="todo">
+    <button wire:click="addTodo">Add Todo</button>
 </div>
 ```
 
@@ -29,14 +29,14 @@ If this isn't clicking, trying going through the [Quickstart Guide](docs/quickst
 
 Also, if you want to know how this magic works under the hood, check out [Under The Hood](docs/under_the_hood.md)
 
-## Lazy updating
+## Live updating
 
 You can add the `wire:model` directive to any element that dispatches `input` events (usually this means input elements). This in mind, this can mean a lot of round-trips to the server and back while a user is typing into an input element. If you don't need the component property to update in real-time, only before you perform some action in Livewire, you can use the `.lazy` modifier.
 
 For example, if we add a `.lazy` modifier to the `model` directive, we can cut down on requests:
 ```html
 <div>
-    <input wire:model.lazy="todo">
+    <input wire:model="todo">
     <button wire:click="addTodo">Add Todo</button>
 </div>
 ```

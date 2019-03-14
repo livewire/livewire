@@ -139,7 +139,7 @@ export default class LivewireElement {
     isSameNode(el) {
         // We need to drop down to the raw node if we are comparing
         // to another "LivewireElement" Instance.
-        if (el.rawNode()) {
+        if (typeof el.rawNode === 'function') {
             return this.el.isSameNode(el.rawNode())
         }
 

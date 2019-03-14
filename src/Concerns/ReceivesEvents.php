@@ -49,6 +49,12 @@ trait ReceivesEvents
 
     public function callMethod($method, $params = [])
     {
+        if ($method === '$set') {
+            $prop = array_shift($params);
+            $this->syncInput($prop, head($params));
+            return;
+        }
+
         $this->wrapped->{$method}(...$params);
     }
 }

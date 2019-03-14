@@ -1,31 +1,61 @@
 import domWalker from './DomWalker'
+import { debounce } from 'lodash'
 import store from './Store'
+import Message from './Message'
 import morphdom from './morphdom/index'
 import LivewireElement from './LivewireElement'
 
 export default class Component {
-    constructor(el, nodeInitializer, parent) {
+    constructor(el, nodeInitializer, connection, parent) {
         this.serialized = el.getAttribute('serialized')
         this.nodeInitializer = nodeInitializer
-        this.loadingElsWithNoTarget = []
-        this.loadingElsByTargetRef = {}
+        this.connection = connection
+        this.loadingEls = []
         this.id = el.getAttribute('id')
         this.parent = parent
+        this.syncQueue = {}
+        this.actionQueue = []
+    }
+
+    addAction(action) {
+        this.actionQueue.push(action)
+
+        // This debounce is here in-case two events fire at the "same" time:
+        // For example: if you are listening for a click on element A,
+        // and a "blur" on element B. If element B has focus, and then,
+        // you click on element A, the blur event will fire before the "click"
+        // event. This debounce captures them both in the actionsQueue and sends
+        // them off at the same time.
+        // Note: currently, it's set to 3ms, that might not be the right amount, we'll see.
+        debounce(this.fireMessage, 5).apply(this)
+    }
+
+    fireMessage() {
+        this.connection.sendMessage(new Message(
+            this,
+            this.actionQueue,
+            this.syncQueue,
+        ))
+
+        this.actionQueue = []
         this.syncQueue = {}
     }
 
     attachListenersAndProcessChildComponents(callback) {
+        // This starts as the root component, but will become children as they are encountered.
+        var currentComponent = this
+
         domWalker.walk(this.el.rawNode(), (node) => {
             if (typeof node.hasAttribute !== 'function') return
             if (node.isSameNode(this.el.rawNode())) return
 
             const el = new LivewireElement(node)
 
-            this.nodeInitializer.initialize(el);
-
             if (el.isComponentRootEl()) {
-                callback(el)
+                currentComponent = callback.apply(this, [el])
             }
+
+            this.nodeInitializer.initialize(el, currentComponent);
         })
     }
 
@@ -42,7 +72,7 @@ export default class Component {
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (message.response.redirectTo) {
-            window.location.href = redirectTo
+            window.location.href = message.response.redirectTo
             return
         }
 
@@ -61,7 +91,7 @@ export default class Component {
         })
     }
 
-    queueModelSync(model, value) {
+    queueSyncInput(model, value) {
         this.syncQueue[model] = value
     }
 
@@ -69,25 +99,12 @@ export default class Component {
         this.syncQueue = {}
     }
 
-    addLoadingEl(el, value, ref, remove) {
-        if (ref) {
-            // There's gotta be a more elegant way...
-            if (this.loadingElsByTargetRef[ref].length) {
-                this.loadingElsByTargetRef[ref].push({el, value, remove})
-            } else {
-                this.loadingElsByTargetRef[ref] = [{el, value, remove}]
-            }
-        } else {
-            this.loadingElsWithNoTarget.push({el, value, remove})
-        }
+    addLoadingEl(el, value, remove) {
+        this.loadingEls.push({el, value, remove})
     }
 
     setLoading(refName) {
-        const allEls = this.loadingElsWithNoTarget.concat(
-            this.loadingElsByTargetRef[refName] || []
-        )
-
-        allEls.forEach(el => {
+        this.loadingEls.forEach(el => {
             if (el.remove) {
                 el.el.classList.remove(el.value)
             } else {
@@ -95,7 +112,7 @@ export default class Component {
             }
         })
 
-        return allEls
+        return this.loadingEls
     }
 
     unsetLoading(loadingEls) {
@@ -109,6 +126,7 @@ export default class Component {
     }
 
     handleMorph(dom, dirtyInputs) {
+        var currentComponent = this
         morphdom(this.el.rawNode(), dom, {
             onBeforeNodeAdded: node => {
                 if (typeof node.hasAttribute !== 'function') return
@@ -148,16 +166,26 @@ export default class Component {
                 return el.shouldUpdateInputElementGivenItHasBeenUpdatedViaSync(dirtyInputs)
             },
 
+            onElUpdated: (node) => {
+                if (typeof node.hasAttribute !== 'function') return
+            },
+
+            onNodeDiscarded: node => {
+                if (typeof node.hasAttribute !== 'function') return
+
+                this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
+            },
+
             onNodeAdded: (node) => {
                 if (typeof node.hasAttribute !== 'function') return
 
                 const el = new LivewireElement(node)
 
                 if (el.isComponentRootEl()) {
-                    store.addComponent(new Component(el, this.nodeInitializer, this))
+                    currentComponent = store.addComponent(new Component(el, this.nodeInitializer, this.connection, this))
                 }
 
-                this.nodeInitializer.initialize(el)
+                this.nodeInitializer.initialize(el, currentComponent)
             },
         });
     }

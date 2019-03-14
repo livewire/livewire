@@ -1,3 +1,4 @@
+// From Caleb: I had to change all the "isSameNode"s to "isEqualNode"s and now everything is working great!
 'use strict';
 
 import { compareNodeNames, toElement, moveChildren, createElementNS, doc } from './util';
@@ -177,7 +178,7 @@ export default function morphdomFactory(morphAttrs) {
                 delete fromNodesLookup[toElKey];
             }
 
-            if (toNode.isSameNode && toNode.isSameNode(fromNode)) {
+            if (toNode.isEqualNode && toNode.isEqualNode(fromNode)) {
                 return;
             }
 
@@ -210,7 +211,7 @@ export default function morphdomFactory(morphAttrs) {
                     while (curFromNodeChild) {
                         fromNextSibling = curFromNodeChild.nextSibling;
 
-                        if (curToNodeChild.isSameNode && curToNodeChild.isSameNode(curFromNodeChild)) {
+                        if (curToNodeChild.isEqualNode && curToNodeChild.isEqualNode(curFromNodeChild)) {
                             curToNodeChild = toNextSibling;
                             curFromNodeChild = fromNextSibling;
                             continue outer;

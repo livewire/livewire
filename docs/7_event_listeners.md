@@ -66,3 +66,11 @@ arrow-up |
 ```
 
 In the above example, the handler will only be called if `event.key` is equal to 'PageDown'.
+
+## Special functions
+In Livewire, there are some "special" functions usually prefixed with a "$" symbol:
+
+Function | Description
+--- | ---
+$set(_prop_, _value_) | Shortcut to update the value of a prop
+$emit(_event_, _param_) | Emit an event on the parent component

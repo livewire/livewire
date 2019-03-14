@@ -12,17 +12,19 @@ abstract class ConnectionHandler
         return LivewireComponentWrapper::wrap($instance);
     }
 
-    public function handle($type, $data, $serialized)
+    public function handle($actionQueue, $syncQueue, $serialized)
     {
         $instance = decrypt($serialized);
         $wrapped = $this->wrap($instance);
 
         try {
-            foreach ($data['syncQueue'] ?? [] as $model => $value) {
+            foreach ($syncQueue ?? [] as $model => $value) {
                 $wrapped->lazySyncInput($model, $value);
             }
 
-            $this->processMessage($type, $wrapped, $data, $instance->id);
+            foreach ($actionQueue as $action) {
+                $this->processMessage($action['type'], $action['payload'], $wrapped);
+            }
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
         }
@@ -48,7 +50,7 @@ abstract class ConnectionHandler
         ];
     }
 
-    public function processMessage($type, $wrapped, $data, $id)
+    public function processMessage($type, $data, $wrapped)
     {
         $wrapped->beforeUpdate();
 
