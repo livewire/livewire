@@ -1,12 +1,8 @@
-# Blow my mind
-Let me take you on a quick journey through time to show you the need Livewire meets. If your mind is not blown by the end of this, I'll give you your money back.
-
-Consider the age old "TODO" functionality an app might need.
-
-![A user typing todos into an input field, hitting enter, and seeing a todo list update.](todo_demo.gif)
+# What is Livewire?
+The best way to explain Livewire, is to walk through a few code samples.
 
 ### All-backend
-At the dawn of time, our ancestors were building apps in the traditional MVC style. The way they would have achieved dynamic functionality, was through form submissions and full-page reloads. They would have utilized a Route, a Controller, and a View everytime they needed to update a webpage. Let's look at some sample code that we believe looks something like what they would have wrote:
+Here is how you would normally create a "todo" app in the classic MVC, full-page reload style.
 
 *route*
 ```php
@@ -48,7 +44,7 @@ TodoController extends Controller
 ```
 
 ## All-frontend
-Fast-forward to 2019. Javascript is taking over the world. Gone are the dark days of full-page reloads, everything is done in a browser, in real-time, without reloading the page. Front-end frameworks like React, Angular, and Vue make listening for user events, tracking state, and making server requests in the background via Ajax a cinch. Here is how TODO apps are being written now-adays: (we'll use Vue for this example)
+Today, Javascript-heavy front-ends are becoming the standard. Let's take a look at what the TODO app looks like in this paradaigm. For this example, we're going to user VueJs.
 
 *Vue routes*
 ```javscript
@@ -128,7 +124,9 @@ TodoController extends Controller
 ```
 
 ## Frontent <3 Backend
-The all-backend approach was so simple, so clean, so easily testable. However, every user interaction required a full-page reload, and this just wasn't enough. We went all crazy with SPAs and completely separated the front-end from the backend. We thought this was better for some reason. Our front-ends were buttery smooth, but we were writing twice as much code as before and managing two codebases, not to mention testing both parts seperately and together was rediculously hard. The complexity was just overwhelming. Now, in the future, the line between front-end and backend will become fuzzy as we come up with frameworks that take care of the tedius front-end wiring we were doing before. Introducing: Livewire.
+The full-page reload approach is simple, clean, and easily testable. However, every user interaction requires a full-page reload. Alternatively, the JS-heavy front-end provides the user with a smooth UI, but at the cost of adding loads of complexity to the application and essentially maintaining two separate code-bases for one application.
+
+Livewire attempts to solve the pain points of both paradaigms by allowing you to write & manage the UI in Laravel/PHP, but provide the user with a smooth interface. Take a look at what the TODO app looks like written using Livewire.
 
 *routes file*
 ```php
@@ -170,5 +168,5 @@ class Todos extends LivewireComponent
 </div>
 ```
 
-## Mind blown?
+## Cool huh?
 If you followed along, you'll see, Livewire is an interesting blend of paradaigms and syntax you're used to in both the frontend and the backend in the same tool. If you're happy with what you see and want to get started, read on. If you want to know how this wizardry is possible, check out "how does livewire work?". If it didn't click and you're confused, maybe try building a sample app and toying with it to see if the use cases become clear.

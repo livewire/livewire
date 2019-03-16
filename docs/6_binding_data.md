@@ -10,7 +10,7 @@ class FavoriteColor extends LivewireComponent
 
     public function render()
     {
-        return view('livewire.favorite-color')->with('color', $this->color);
+        return view('livewire.favorite-color');
     }
 }
 ```
@@ -18,27 +18,27 @@ class FavoriteColor extends LivewireComponent
 **favorite-color.blade.php**
 ```html
 <div>
-    <input wire:model="todo">
-    <button wire:click="addTodo">Add Todo</button>
+    <input wire:model="color">
+    <button wire:click="storeColor">Store Favorite Color</button>
 </div>
 ```
 
-Anytime the value of the `<input>` element is updated, the class property `$this->color` in `FavoriteColor.php` will be automatically updated, and the new value will be passed down to view and re-rendered.
-
-If this isn't clicking, trying going through the [Quickstart Guide](docs/quickstart.md). Seeing it work in real life may fix that.
-
-Also, if you want to know how this magic works under the hood, check out [Under The Hood](docs/under_the_hood.md)
+When the `<button>` is clicked, the `storeColor` method will fire in the component, but before it fires, the `$color` property will be set to the current value in the `<input>` field.
 
 ## Live updating
 
-You can add the `wire:model` directive to any element that dispatches `input` events (usually this means input elements). This in mind, this can mean a lot of round-trips to the server and back while a user is typing into an input element. If you don't need the component property to update in real-time, only before you perform some action in Livewire, you can use the `.lazy` modifier.
+By default, Livewire "lazilly updates" the value of `$color`. In other words, it doesn't send update the value everytime the user types in the `<input>` field, only when the user performs a Livewire action on the page, in this case, that means clicking the `<button>` element.
 
-For example, if we add a `.lazy` modifier to the `model` directive, we can cut down on requests:
+If for some reason, this isn't desirable, for instance if you are doing real-time validation on an input element or live-updating search results, you can add the `live` modifier to the `wire:model` attribute.
+
 ```html
 <div>
-    <input wire:model="todo">
-    <button wire:click="addTodo">Add Todo</button>
+    <input wire:model.live="search">
+
+    @if ($errors->has('search'))
+        <span>{{ $errors->first('search')</span>
+    @endif
 </div>
 ```
 
-Now the value of `$this->todo` in the Livewire component will only be updated when the user clicks the "Add Todo" button, instead of the value updating every time the user types into the input.
+Now, everytime the user types into the `<input>` field, the `$search` property on the Livewire component will be updated.

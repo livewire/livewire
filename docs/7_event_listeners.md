@@ -1,8 +1,8 @@
 # Event Listeners
 
-Livewire currently offers a handful of directives to make listening to browser events trivial. The comon format for all of them is: `wire:[browser event]="[component method]"`.
+Livewire currently offers a handful of directives to make listening to browser events trivial. The common format for all of them is: `wire:[browser event]="[component method]"`.
 
-Here are the event directives currently implemented in Livewire:
+Here are some common events you may need to listen for:
 
 Event | Directive
 --- | ---
@@ -38,14 +38,12 @@ Modifier | Description
 --- | ---
 stop | Equivelant of `event.stopPropogation()`
 prevent | Equivelant of `event.preventDefault()`
-min.Xms | Set a minimum loading time in milliseconds. This is useful for when you are showing a loading wheel for an action, and don't want it to dissapear too quickly, so the user feels like something important is processing.
-
 
 ## Keydown Modifiers
 
 To listen for specific keys on **keydown** events, you can pass the name of the key as a modifier. You can directly use any valid key names exposed via [KeyboardEvent.key](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) as modifiers by converting them to kebab-case.
 
-Here is a quick list of some common ones that are available:
+Here is a quick list of some common ones you may need:
 
 Key |
 --- |
@@ -74,3 +72,29 @@ Function | Description
 --- | ---
 $set(_prop_, _value_) | Shortcut to update the value of a prop
 $emit(_event_, _param_) | Emit an event on the parent component
+
+You can pass these as the value of an event listener to do special things in Livewire.
+
+Let's take `$set()` for example. It can be used to manually set a component property's value. Consider the `Counter` component's view.
+
+**Before**
+```
+<div>
+    {{ $count }}
+    <button wire:click="increment">+</button>
+    <button wire:click="decrement">-</button>
+</div>
+```
+
+**After**
+```
+<div>
+    {{ $count }}
+    <button wire:click="$set('count', {{ $count + 1 }})">+</button>
+    <button wire:click="$set('count', {{ $count - 1 }})">-</button>
+</div>
+```
+
+Notice that we are no longer calling the `increment` and `decrement` functions, we are direcly specifying, in blade, what we want data set to.
+
+This can save on lots of redundant, one-line component methods that only exist to set, or toggle the value of component property.

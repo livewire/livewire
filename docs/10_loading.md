@@ -4,18 +4,51 @@ Because Livewire makes a roundtrip to the server every time an action is trigger
 
 Let's say we have a `Checkout` component that charges a user's credit card. Because something like processing a credit card can take a decent amount of time, it would make sense to provide the user with some kind of loading indicator.
 
-Fortunately, Livewire makes this kind of thing simple. We can add a `wire:ref="checkout-button"` directive to the element that performs the action, and then reference that "ref" name in a loading directive attached to our loading element. Take a look below.
+Fortunately, Livewire makes this kind of thing simple. We can use the `wire:loading-class` directive to specify any classes we want added during the loading phase. If we want the inverse functionality (to remove a class), we can add the `.remove` modifier to the directive. For example:
 
 **view**
 ```html
 <div>
     <input wire:model="cardNumber">
-    <input wire:model="cvv">
-    <button wire:click="checkout" wire:ref="checkout-button">Checkout</button>
+    <button wire:click="checkout">Checkout</button>
 
-    <div wire:loading="checkout-button">Processing Payment...</div>
+    <div class="hidden" wire:loading-class.remove="hidden">
+        Processing Payment...
+    </div>
 </div>
 ```
 
-Let's break down what's happening here:
-* When the user clicks "Checkout", Livewire will look for any *wire:loading* directives that reference it's *wire:ref* and set it's CSS display property to whatever it was set at load.
+When the "Checkout" button is clicked, the "Processing Payment..." message will show. When the payment is finished processing, the message will dissapear.
+
+## Targeting specific actions
+The method outlined above works great for simple components, however, it's common to want to only show loading indicators for specific actions. Consider the following example:
+
+**view**
+```html
+<div>
+    <input wire:model="cardNumber">
+    <button wire:click="checkout">Checkout</button>
+    <button wire:click="cancel">Cancel</button>
+
+    <div class="hidden" wire:loading-class.remove="hidden">
+        Processing Payment...
+    </div>
+</div>
+```
+
+Notice, we've added a "Cancel" button to the checkout form. If the user clicks the "Cancel" button, the "Processing Payment..." message will show briefly. This is clearly undesireable, therefore Livewire offers two directives. You can add `wire:loading-target` the loading indicator, and pass in the name of a `ref` you define by attaching `wire:ref` to the target. Let's look at the adapted example:
+
+**view**
+```html
+<div>
+    <input wire:model="cardNumber">
+    <button wire:click="checkout" wire:ref="checkout-button">Checkout</button>
+    <button wire:click="cancel">Cancel</button>
+
+    <div class="hidden" wire:loading-class.remove="hidden" wire:loading-target="checkout-button">
+        Processing Payment...
+    </div>
+</div>
+```
+
+Now, when the "Checkout" button is clicked, the loading indicator will load, but not when the "Cancel" button is clicked.

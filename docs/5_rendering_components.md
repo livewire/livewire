@@ -2,8 +2,8 @@
 
 There are two ways to render livewire components:
 
-// Dedicated Route
-// Include in existing page
+1. Sprinkle them into an existing blade view.
+2. Render an entire page as a Livewire component.
 
 ## 1. The @livewire Blade directive
 
@@ -30,12 +30,12 @@ public function boot()
 }
 ```
 
-Now you can just pass the component alias into the directive:
+Now you can pass the component alias into the directive:
 ```
 @livewire('counter')
 ```
 
-Additionally, you can pass initial data into a component by passing additional parameters into the `@livewire` directive. For example, let's say we have an `ShowContact` Livewire component that needs to know which contact to show. Here's how you would pass in the contact id.
+Additionally, you can pass data into a component by passing additional parameters into the `@livewire` directive. For example, let's say we have an `ShowContact` Livewire component that needs to know which contact to show. Here's how you would pass in the contact id.
 
 ```
 @livewire('show-contact', $contactId)
@@ -55,17 +55,15 @@ class ShowContact extends LivewireComponent
 }
 ```
 
-Using the `@livewire` blade directive hopefully feels natural to you as there is no special syntax to learn. However, if you have a Livewire component that is an entire page in your app, it may feel combersome to return a view from your controller who's sole purpose is rendering a directive. In this case, Livewire offers some automatic routing magic that allows you to bypass writing controllers entirely!
+Using the `@livewire` blade directive hopefully feels natural to you as there is no special syntax to learn. However, if this becomes redundant, you can bypass Laravel Controllers alltogether. To do so, Livewire offers a convenient routing helper.
 
 ## 2. Livewire routing helper
 
-Livewire provides some handy routing helpers to allow you to bypass writing unnescessary code like transparent Controllers and Views. Check it out:
-
 ```php
-// Before:
+// Before
 Route::get('/home', 'HomeController@show');
 
-// After:
+// After
 Route::livewire('/home', App\Http\Livewire\Counter::class);
 ```
 
@@ -116,7 +114,7 @@ class ShowContact extends LivewireComponent
 }
 ```
 
-As you can see, the `created` method in a Livewire component is acting like a controller method would as far as it's parameters go.
+As you can see, the `created` method in a Livewire component is acting like a controller method would as far as it's parameters go. If you visit `/contact/123`, the `$id` variable passed into the `created` method will contain the value `123`.
 
 Like you would expect, Livewire components implement all functionality you're used to in your controllers including route model binding. For example:
 
@@ -137,3 +135,5 @@ class ShowContact extends LivewireComponent
     }
 }
 ```
+
+Now, after visiting `/contact/123`, the value passed into `created` will be an instance of the `Contact` model with id `123`.

@@ -1,8 +1,8 @@
 # Lifecycle Hooks
 
-Each Livewire component undergoes a lifecycle (created, updated, destroyed). Lifecycle hooks allow you to run your own code at an event of your choosing.
+Each Livewire component undergoes a lifecycle (created, updated, destroyed). Lifecycle hooks allow you to run code at any part of the component's lifecyle.
 
-Because Livewire is heavily inspired by VueJs, it borrows Vue's lifecycle hook concept and naming convention.
+Because Livewire is heavily inspired by VueJs, it borrows Vue's lifecycle hook naming conventions.
 
 Hooks | Description
 --- | ---
@@ -13,15 +13,26 @@ updated | Runs after actions
 
 **Example**
 ```php
-class Todos extends LivewireComponent
+class HelloWorld extends LivewireComponent
 {
-    public $todos;
-
     public function created()
     {
-        $this->todos = Todo::all();
+        //
     }
 
-    // ...
+    public function mounted()
+    {
+        //
+    }
+
+    public function beforeUpdate()
+    {
+        //
+    }
+
+    public function updated()
+    {
+        //
+    }
 }
 ```

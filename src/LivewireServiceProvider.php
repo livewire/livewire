@@ -65,6 +65,7 @@ class LivewireServiceProvider extends ServiceProvider
                     $parsed = (new \GitDown\GitDown)->parseAndCache($file['contents']);
 
                     return View::file($template, [
+                        'svgPath' => __DIR__ . '/../docs/logo.svg',
                         'css' => $css,
                         'title' => $file['title'],
                         'content' => $parsed,

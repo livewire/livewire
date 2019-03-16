@@ -1,8 +1,8 @@
 # Nesting Components
 
-Similar to other component-driven front-end frameworks, Livewire components can be nested. Composing components is an incredibly powerful architectural feature, however, it comes with some costs, which I will be sure to address later on.
+Similar to other component-driven front-end frameworks, Livewire components can be nested. Component composition is an incredibly powerful architectural tool.
 
-Nesting components is as simple and straightforward as you'd hope. Let's assume the Blade view below belongs to a component called `ShoppingCart`. This component shows a a list of products in your cart, but the checkout form is handled by a child component called `CheckoutForm`.
+Nesting components is as simple and straightforward as you'd hope. Let's assume the Blade view below belongs to a component called `ShoppingCart`. This component displays a list of products in your cart, but the checkout form is handled by a child component called `CheckoutForm`.
 
 **livewire/shopping-cart.blade.php**
 ```html
@@ -59,11 +59,13 @@ class CheckoutForm extends LivewireComponent
 }
 ```
 
+_Note: unlike JS frameworks like Vue, child components will not be updated when data passed into them changes. This is a limitation of the back-end paradaigm and may be possible in the future, but unfortunately, is not right now.
+
 Now, we've covered rendering a child component and passing data down into it. But what about communicating up from the child to the parent component? For this Livewire offers a simple event emission system similar to Vue's. Let's take a look:
 
 Let's imagine the `CheckoutForm` component has a "cancel" button that communicates to the parent to hide the checkout form. Before we continue, let's prepare the `ShoppingCart` to listen for a "cancel" event from the child.
 
-First, we need to register an event listener for the "cancel" event. These listeners are straightforward, they expect you to pass them an event name, and the method you want to be called when the event fires.
+First, we need to register an event listener in the parent for the "cancel" event. These listeners are straightforward, they expect you to pass them an event name, and the method you want to be called when the event fires.
 
 **livewire/shopping-cart.blade.php**
 ```html
@@ -137,4 +139,4 @@ class CheckoutForm extends LivewireComponent
 ## Gotchas, Cavaets, and Tips
 * Contrary to what you might think, components can actually make your application faster. Breaking a large component up into smaller ones means there is less information that has to passed back and forth to the server after each action.
 * Always prefer the `wire:X="$emit('X')" syntax to the `$this->emit('X')` syntax becuase the former only triggers one network request, where the latter requires two.
-* If you are used to front-end frameworks like VueJs, you might be used to creating very small utility components for things like `<input>` elements. Livewire is not meant for things like that. In those cases, you should use Blade components and includes. They often better suited for those tasks anyway.
+* If you are used to front-end frameworks like VueJs, you might be used to creating very small utility components for things like `<input>` elements. Livewire is not meant for things like that. In those cases, you should use Blade components and includes. They are often better suited for those tasks anyway.

@@ -1,10 +1,33 @@
 # CSS Transitions
 
-One of the benefits of using Livewire is utilizing familiar backend functionality like Blade, while making sophisticated, smooth front-ends. Livewire provides a simple CSS Transition system to help acheive this effect.
+One of the benefits of using Livewire is utilizing familiar backend functionality like Blade, while making smooth front-ends. Livewire provides a simple CSS Transition system to help acheive this effect.
 
-Again, Livewire borrows VueJs's transition syntax, so if you are familiar with Vue, this should be familiar to you.
+Livewire provides a basic "fade" transition out-of-the-box.
 
-Let's say we want to add a "fade in and out" transition to a confirmation modal in our component. To achieve this, we need to first, declare the transition in our view using Livewire's `wire:transition` directive.
+**view**
+```html
+<div>
+    [...]
+
+    @if($showConfirmationModal)
+        <div wire:transition.fade>
+            [...]
+        </div>
+    @endif
+</div>
+```
+
+When `$showConfirmationModal` is `true`, it's contents are shown. When `$showConfirmationModal` becomes `false`, the contents will fade out, rather than dissapear instantly.
+
+You can control the length of this fade by adding an additional time modifier. The following directive will cause the element to fade in and out for a duration of one second.
+
+`wire:transition.fade.1s`
+
+## Custom transitions
+
+For custom transitions, Livewire borrows VueJs's transition syntax.
+
+Let's say we want to add a "fade in and out" transition to a confirmation modal in our component. To achieve this, we need to first declare the transition in our view using Livewire's `wire:transition` directive.
 
 **view**
 ```html
@@ -35,7 +58,7 @@ As you can see, Livewire applies the following four classes to the component you
 
 Class | Description
 --- | ---
-.[transition]-enter | This get's added before the transition in
-.[transition]-enter-active | This is added during the transition in
-.[transition]-leave-active | This gets added add the beginning of the transition out
-.[transition]-leave-to | This gets added after the transition is actively out
+.[transition]-enter | This gets added before the transition in
+.[transition]-enter-active | This gets added one frame after the transition starts
+.[transition]-leave-active | This gets added during the transition out
+.[transition]-leave-to | This gets added one frame after the transition finishes
