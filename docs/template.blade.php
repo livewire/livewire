@@ -55,7 +55,7 @@
     {{-- </div> --}}
     {{-- <div style="height: 4px; background-color: #000; width: 100%"></div> --}}
 
-    <div class="bg-yellow border-b-2 border-grey-darkest flex items-center justify-between">
+    <div class="bg-yellow border-b border-grey-darkest flex items-center justify-between">
         <div class="w-full">
             <div class="pl-6 py-4">
                 <input type="text" class="w-2/3 bg-yellow-lightest border border-black outline-none px-3 py-2 rounded text-xl" placeholder="Search">

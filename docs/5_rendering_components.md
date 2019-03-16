@@ -1,4 +1,4 @@
-# Rendering a component
+# Rendering A Component
 
 There are two ways to render livewire components:
 
