@@ -27,9 +27,12 @@ export default class {
     }
 
     registerElementForLoading(el, directive, component) {
+        const refName = el.directives.get('loading-target') ? el.directives.get('loading-target').value : null
+
         component.addLoadingEl(
             el,
             directive.value,
+            refName,
             directive.modifiers.includes('remove')
         )
     }
@@ -41,7 +44,7 @@ export default class {
             const value = el.valueFromInputOrCheckbox()
 
             if (directive.modifiers.includes('live')) {
-                component.addAction(new ModelAction(model, value))
+                component.addAction(new ModelAction(model, value, el))
             } else {
                 component.queueSyncInput(model, value)
             }
@@ -81,11 +84,11 @@ export default class {
                 if (method === '$emit') {
                     const [eventName, ...otherParams] = params
 
-                    component.parent.addAction(new EventAction(eventName, otherParams, component.id))
+                    component.parent.addAction(new EventAction(eventName, otherParams, component.id, el))
                     return
                 }
 
-                component.addAction(new MethodAction(method, params))
+                component.addAction(new MethodAction(method, params, el))
             }
         }))
     }

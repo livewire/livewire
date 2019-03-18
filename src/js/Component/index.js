@@ -1,16 +1,16 @@
-import domWalker from './DomWalker'
+import domWalker from '../DomWalker'
 import { debounce } from 'lodash'
-import store from './Store'
-import Message from './Message'
-import morphdom from './morphdom/index'
-import LivewireElement from './LivewireElement'
+import store from '../Store'
+import Message from '../Message'
+import morphdom from '../morphdom/index'
+import LivewireElement from '../LivewireElement'
+import handleLoadingDirectives from './handle_loading_directives'
 
-export default class Component {
+class Component {
     constructor(el, nodeInitializer, connection, parent) {
         this.serialized = el.getAttribute('serialized')
         this.nodeInitializer = nodeInitializer
         this.connection = connection
-        this.loadingEls = []
         this.id = el.getAttribute('id')
         this.parent = parent
         this.syncQueue = {}
@@ -99,32 +99,6 @@ export default class Component {
         this.syncQueue = {}
     }
 
-    addLoadingEl(el, value, remove) {
-        this.loadingEls.push({el, value, remove})
-    }
-
-    setLoading(refName) {
-        this.loadingEls.forEach(el => {
-            if (el.remove) {
-                el.el.classList.remove(el.value)
-            } else {
-                el.el.classList.add(el.value)
-            }
-        })
-
-        return this.loadingEls
-    }
-
-    unsetLoading(loadingEls) {
-        loadingEls.forEach(el => {
-            if (el.remove) {
-                el.el.classList.add(el.value)
-            } else {
-                el.el.classList.remove(el.value)
-            }
-        })
-    }
-
     handleMorph(dom, dirtyInputs) {
         var currentComponent = this
         morphdom(this.el.rawNode(), dom, {
@@ -190,3 +164,7 @@ export default class Component {
         });
     }
 }
+
+Object.assign(Component.prototype, handleLoadingDirectives)
+
+export default Component

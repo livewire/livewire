@@ -9,7 +9,13 @@ export default class {
     }
 
     prepareForSend() {
-        this.loadingEls = this.component.setLoading(this.ref)
+        const refs = this.actionQueue
+            .map(action => {
+                return action.el.ref
+            })
+            .filter(ref => ref)
+
+        this.loadingEls = this.component.setLoading(refs)
     }
 
     payload() {

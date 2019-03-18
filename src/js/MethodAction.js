@@ -1,8 +1,8 @@
 import Action from './Action'
 
 export default class extends Action {
-    constructor(method, params) {
-        super()
+    constructor(method, params, el) {
+        super(el)
 
         this.type = 'callMethod'
         this.payload = {

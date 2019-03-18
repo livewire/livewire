@@ -134,6 +134,12 @@ export default class LivewireElement {
             : this.el.value
     }
 
+    get ref() {
+        return this.directives.get('ref')
+            ? this.directives.get('ref').value
+            : null
+    }
+
     // Forward the following methods.
 
     isSameNode(el) {
