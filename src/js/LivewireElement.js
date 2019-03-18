@@ -14,6 +14,12 @@ export default class LivewireElement {
         this.directives = new ElementDirectives(el)
     }
 
+    nextFrame(fn) {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(fn.bind(this));
+        });
+    }
+
     static rootComponentElementsWithNoParents() {
         // In CSS, it's simple to select all elements that DO have a certain ancestor.
         // However, it's not simple (kinda impossible) to select elements that DONT have
@@ -60,39 +66,73 @@ export default class LivewireElement {
     }
 
     transitionElementIn() {
-        if (this.directives.has('transition')) {
-            const transitionName = this.directives.get('transition').value
+        if (! this.directives.has('transition')) return
+        const directive = this.directives.get('transition')
 
-            this.el.classList.add(`${transitionName}-enter`)
-            this.el.classList.add(`${transitionName}-enter-active`)
+        if (directive.modifiers.includes('fade')) {
+            const rawDuration = directive.modifiers.find(mod => mod.match(/(.*)ms/))
+            const duration = rawDuration ? rawDuration.replace('ms', '') : '300'
+
+            this.el.style.opacity = 0
+            this.el.style.transition = `opacity ${Number(duration) / 1000}s ease`
+
+            this.nextFrame(() => {
+                this.el.style.opacity = 1
+            })
+
+            return
+        }
+
+        const transitionName = directive.value
+
+        this.el.classList.add(`${transitionName}-enter`)
+        this.el.classList.add(`${transitionName}-enter-active`)
+
+        this.nextFrame(() => {
+            this.el.classList.remove(`${transitionName}-enter`)
+
+            const duration = Number(getComputedStyle(this.el).transitionDuration.replace('s', '')) * 1000
 
             setTimeout(() => {
-                this.el.classList.remove(`${transitionName}-enter`)
-                setTimeout(() => {
-                    this.el.classList.remove(`${transitionName}-enter-active`)
-                }, 500)
-            }, 65)
-        }
+                this.el.classList.remove(`${transitionName}-enter-active`)
+            }, duration)
+        })
     }
 
     transitionElementOut() {
-        if (this.directives.get('transition')) {
-            const transitionName = this.directives.get('transition').value
+        if (!this.directives.has('transition')) return true
+        const directive = this.directives.get('transition')
 
-            this.el.classList.add(`${transitionName}-leave-active`)
+        if (directive.modifiers.includes('fade')) {
+            const rawDuration = directive.modifiers.find(mod => mod.match(/(.*)ms/))
+            const duration = rawDuration ? rawDuration.replace('ms', '') : '300'
 
-            setTimeout(() => {
-                this.el.classList.add(`${transitionName}-leave-to`)
-                    setTimeout(() => {
-                        this.el.classList.remove(`${transitionName}-leave-active`)
-                        this.el.classList.remove(`${transitionName}-leave-to`)
-                        this.el.remove()
-                    }, 500)
-            }, 65)
+            this.nextFrame(() => {
+                this.el.style.opacity = 0
+
+                setTimeout(() => {
+                    this.el.remove()
+                }, duration);
+            })
 
             return false
         }
-        return true
+
+        const transitionName = directive.value
+
+        this.el.classList.add(`${transitionName}-leave-active`)
+
+        this.nextFrame(() => {
+            this.el.classList.add(`${transitionName}-leave`)
+
+            const duration = Number(getComputedStyle(this.el).transitionDuration.replace('s', '')) * 1000
+
+            setTimeout(() => {
+                this.el.remove()
+            }, duration)
+        })
+
+        return false
     }
 
     closestByAttribute(attribute) {

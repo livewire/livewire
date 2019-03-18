@@ -1,3 +1,4 @@
+import LivewireElement from "../LivewireElement";
 
 export default {
     loadingEls: [],
@@ -12,6 +13,16 @@ export default {
             }
         } else {
             this.loadingEls.push({el, value, remove})
+        }
+    },
+
+    removeLoadingEl(node) {
+        const el = new LivewireElement(node)
+
+        this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
+
+        if (el.ref in this.loadingElsByRef) {
+            delete this.loadingElsByRef[el.ref]
         }
     },
 

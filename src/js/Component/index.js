@@ -147,7 +147,7 @@ class Component {
             onNodeDiscarded: node => {
                 if (typeof node.hasAttribute !== 'function') return
 
-                this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
+                this.removeLoadingEl(node)
             },
 
             onNodeAdded: (node) => {
