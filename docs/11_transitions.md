@@ -25,7 +25,7 @@ You can control the length of this fade by adding an additional time modifier. T
 
 ## Custom transitions
 
-For custom transitions, Livewire borrows VueJs's transition syntax.
+For custom transitions, Livewire uses VueJs's transition syntax.
 
 Let's say we want to add a "fade in and out" transition to a confirmation modal in our component. To achieve this, we need to first declare the transition in our view using Livewire's `wire:transition` directive.
 
@@ -46,19 +46,19 @@ Now, we need to provide the appropriate CSS selectors in our app's stylesheet fo
 
 ```css
 .fade-enter-active, .fade-leave-active {
-  transition: all .2s ease;
+  transition: opacity .2s;
 }
 
-.fade-enter, .fade-leave-to {
+.fade-enter, .fade-leave {
   opacity: 0;
 }
 ```
 
-As you can see, Livewire applies the following four classes to the component you want to transition before adding or removing the element from the page:
+As you can see, Livewire applies the following four classes to the component at different times before adding or removing the element from the page:
 
 Class | Description
 --- | ---
-.[transition]-enter | This gets added before the transition in
-.[transition]-enter-active | This gets added one frame after the transition starts
-.[transition]-leave-active | This gets added during the transition out
-.[transition]-leave-to | This gets added one frame after the transition finishes
+.[transition]-enter | is added at the beginning of the transition-in phase, and removed one frame after
+.[transition]-enter-active | is added during the entire transition-in phase
+.[transition]-leave-active | is added during the entire transition-out phase
+.[transition]-leave-to | is added one frame after the transition-out phase begins
