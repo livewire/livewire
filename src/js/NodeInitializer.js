@@ -38,6 +38,18 @@ export default class {
     }
 
     attachModelListener(el, directive, component) {
+        if (! directive.modifiers.includes('live')) {
+            el.addEventListener('input', e => {
+                const model = directive.value
+                const el = new LivewireElement(e.target)
+                const value = el.valueFromInputOrCheckbox()
+
+                component.queueSyncInput(model, value)
+            })
+            return
+        }
+
+        // Only debounce input when we need to send network
         el.addEventListener('input', debounce(e => {
             const model = directive.value
             const el = new LivewireElement(e.target)

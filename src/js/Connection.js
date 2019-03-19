@@ -1,5 +1,4 @@
-import store from './Store';
-import MethodMessage from './MethodMessage';
+import { dispatch } from './utils';
 import EventMessage from './EventMessage';
 import ModelMessage from './ModelMessage';
 
@@ -54,6 +53,8 @@ export default class Connection {
         })
 
         this.lockingMessage = null
+
+        dispatch('livewire:update')
     }
 
     sendMessage(message) {
