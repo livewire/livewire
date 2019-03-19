@@ -2,7 +2,7 @@
 
 Livewire supports 2 styles of testing it's components:
 1. Unit testing
-2. End-to-end testing
+2. End-to-end testing (still in development)
 
 For these demonstrations, we will be using a simple Counter component like the following:
 
@@ -64,6 +64,8 @@ class CounterTest extends TestCase
 ```
 
 ## End-to-end Testing
+
+_Note: This style of testing is currently under development and likely won't work as expected._
 
 ```php
 class CounterTest extends TestCase

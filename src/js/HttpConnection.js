@@ -6,13 +6,18 @@ export default {
     },
 
     sendMessage(payload) {
-        const tokenTag = document.head.querySelector('meta[name="csrf-token"]')
+         const tokenTag = document.head.querySelector('meta[name="csrf-token"]')
+         let token
 
         if (! tokenTag) {
-            throw new Error('Whoops, looks like you haven\'t added a "csrf-token" meta tag');
-        }
+            if (! window.Livewire.token) {
+                throw new Error('Whoops, looks like you haven\'t added a "csrf-token" meta tag');
+            }
 
-        const token = tokenTag.content
+            token = window.Livewire.token
+        } else {
+            token = tokenTag.content
+        }
 
         fetch('/livewire/message', {
             method: 'POST',

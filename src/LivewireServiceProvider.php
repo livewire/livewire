@@ -62,7 +62,9 @@ class LivewireServiceProvider extends ServiceProvider
                     $template = __DIR__ . '/../docs/template.blade.php';
                     $css = file_get_contents(__DIR__ . '/../docs/template.css');
 
-                    $parsed = (new \GitDown\GitDown)->parseAndCache($file['contents']);
+                    $parsed = (new \GitDown\GitDown(
+                        '8e97a88f6778e690af1501f608f3856ba0a439a4'
+                    ))->parseAndCache($file['contents']);
 
                     return View::file($template, [
                         'svgPath' => __DIR__ . '/../docs/logo.svg',

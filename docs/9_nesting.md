@@ -138,5 +138,5 @@ class CheckoutForm extends LivewireComponent
 
 ## Gotchas, Cavaets, and Tips
 * Contrary to what you might think, components can actually make your application faster. Breaking a large component up into smaller ones means there is less information that has to passed back and forth to the server after each action.
-* Always prefer the `wire:X="$emit('X')" syntax to the `$this->emit('X')` syntax becuase the former only triggers one network request, where the latter requires two.
+* Always prefer the `wire:X="$emit('X')"` syntax to the `$this->emit('X')` syntax becuase the former only triggers one network request, where the latter requires two.
 * If you are used to front-end frameworks like VueJs, you might be used to creating very small utility components for things like `<input>` elements. Livewire is not meant for things like that. In those cases, you should use Blade components and includes. They are often better suited for those tasks anyway.

@@ -40,6 +40,7 @@ class LivewireManager
         return '<script>'
             . File::get(__DIR__ . '/../dist/livewire.js')
             . '</script>'
+            . '<script>Livewire.token = "'.csrf_token().'"</script>'
             . '<script>Livewire.start()</script>';
     }
 

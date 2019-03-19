@@ -31,7 +31,7 @@ trait MakesCallsToComponent
     public function sendMessage($message, $payload)
     {
         $result = (new TestConnectionHandler)
-            ->handle($message, $payload, $this->serialized);
+            ->handle([['type' => $message, 'payload' => $payload]], [], $this->serialized);
 
         $this->updateComponent($result['dom'], $result['serialized']);
     }

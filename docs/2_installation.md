@@ -2,7 +2,7 @@
 Livewire has both a PHP component AND a Javascript component. You need to make sure both are available in your project before you can use it.
 
 ## Install via composer
-`composer require laravel-livewire/livewire`
+`composer require calebporzio/livewire`
 
 ## Include Javascript via snippet
 To get started quickly, you can include the following snippet at the end of the `<body>` in your html page:

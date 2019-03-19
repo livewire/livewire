@@ -79,7 +79,7 @@ class TestableLivewire
 
     public function formatSelector($selector)
     {
-        return $this->replaceSpecialCharactersWithPlaceholders(
+        $hey = $this->replaceSpecialCharactersWithPlaceholders(
             $this->stripDirectiveModifiers(
                 $this->interpretAtSymbolsAsRefShortcuts($selector)
             )
@@ -88,6 +88,7 @@ class TestableLivewire
 
     public function stripDirectiveModifiers()
     {
+        // TODO: get this style of testing working.
         // $matches = preg_match('/\[wire:(.*)=/', '[wire:click="yeah"]', $matches);
     }
 
@@ -114,5 +115,15 @@ class TestableLivewire
     public function toHtml($node)
     {
         return $node->getNode(0)->ownerDocument->saveXML($node->getNode(0));
+    }
+
+    public function __get($property)
+    {
+        return decrypt($this->serialized)->{$property};
+    }
+
+    public function __call($method, $params)
+    {
+        return $this->callMethod($method, $params);
     }
 }
