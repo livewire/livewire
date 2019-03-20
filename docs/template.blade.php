@@ -12,6 +12,10 @@
             background-color: #FFE771;
         }
 
+        .bg-yellow-lightest {
+            background-color: hsla(56, 74%, 98%, 1);
+        }
+
         body {
             margin: 0;
         }
