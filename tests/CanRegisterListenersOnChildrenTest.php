@@ -12,7 +12,7 @@ use CalebPorzio\GitDown;
 
 class CanRegisterListenersOnChildrenTest extends TestCase
 {
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -40,13 +40,15 @@ class CanRegisterListenersOnChildrenTest extends TestCase
         $component->output();
 
         $response = $this->withoutExceptionHandling()->post('/livewire/message', [
-            'id' => $component->id,
-            'type' => 'fireEvent',
-            'data' => [
-                'name' => 'someEvent',
-                'childId' => head($component->children),
-                'params' => [],
-            ],
+            'actionQueue' => [[
+                'type' => 'fireEvent',
+                'payload' => [
+                    'name' => 'someEvent',
+                    'childId' => head($component->children),
+                    'params' => [],
+                ],
+            ]],
+            'syncQueue' => [],
             'serialized' => encrypt($component->wrapped),
         ]);
     }
@@ -74,6 +76,6 @@ class ChildWithEventsStub extends LivewireComponent {
 
     public function render()
     {
-        return app('view')->make('id-test');
+        return app('view')->make('root-id-test');
     }
 }

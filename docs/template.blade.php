@@ -75,7 +75,7 @@
         <div class="p-8 pt-4 border-r" style="border-color:#444">
             <ul class="list-reset">
                 @foreach ($links as $path => $linkTitle)
-                    <li class="mb-2"><a class="no-underline text-black" href="{{ $path }}">
+                    <li class="mb-2"><a class="no-underline text-black text-sm" href="{{ $path }}">
                         {!! $linkTitle === $title ? '<strong>'.$linkTitle.'</strong>' : $linkTitle !!}
                     </a></li>
                 @endforeach

@@ -2,7 +2,7 @@ import Message from './Message'
 
 export default class extends Message {
     constructor(name, params, ref, component) {
-        super(component.parent)
+        super(component.parent, [], [])
 
         this.ref = ref
         this.type = 'fireEvent'

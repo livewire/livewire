@@ -1,5 +1,6 @@
 import { dispatch } from './utils';
 import EventMessage from './EventMessage';
+import EventAction from './EventAction.js';
 import ModelMessage from './ModelMessage';
 
 export default class Connection {
@@ -48,8 +49,9 @@ export default class Connection {
 
         // Delegate to the component everything except handling the component
         // emiting an event, we'll handle that in the callback.
-        message.component.receiveMessage(message, ({name, params, component}) => {
-            this.sendEvent(name, params, component)
+        message.component.receiveMessage(message, ({name, params}) => {
+            // this is under a 5ms debounce, so the message lock will be freed by the time it executes.
+            message.component.parent.addAction(new EventAction(name, params, message.component.id))
         })
 
         this.lockingMessage = null

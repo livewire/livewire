@@ -26,7 +26,7 @@ class Component {
         // you click on element A, the blur event will fire before the "click"
         // event. This debounce captures them both in the actionsQueue and sends
         // them off at the same time.
-        // Note: currently, it's set to 3ms, that might not be the right amount, we'll see.
+        // Note: currently, it's set to 5ms, that might not be the right amount, we'll see.
         debounce(this.fireMessage, 5).apply(this)
     }
 

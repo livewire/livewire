@@ -11,7 +11,7 @@ use Livewire\LivewireComponentWrapper;
 
 class ComponentRootHasIdAttributeTest extends TestCase
 {
-    public function setUp()
+    protected function setUp(): void
     {
         ($this->livewire = app(LivewireManager::class))->component('dummy', ComponentRootHasIdStub::class);
 
@@ -33,6 +33,6 @@ class ComponentRootHasIdAttributeTest extends TestCase
 class ComponentRootHasIdStub extends LivewireComponent {
     public function render()
     {
-        return app('view')->make('id-test');
+        return app('view')->make('root-id-test');
     }
 }

@@ -11,7 +11,7 @@ use Livewire\LivewireComponentWrapper;
 
 class PublicPropertiesAreAvailableInTheViewTest extends TestCase
 {
-    public function setUp()
+    protected function setUp(): void
     {
         ($this->livewire = app(LivewireManager::class))->component('dummy', Dummy::class);
 
