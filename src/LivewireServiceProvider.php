@@ -85,6 +85,10 @@ class LivewireServiceProvider extends ServiceProvider
                 LivewireStartCommand::class,
                 LivewireWatchCommand::class,
             ]);
+
+            Artisan::command('livewire:docs', function () {
+                exec(sprintf('open "%s"', url('/livewire/docs/installation')));
+            })->describe('Open the docs in your browser.');
         }
     }
 
