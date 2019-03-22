@@ -10,6 +10,15 @@ Running Livewire's WebSocket server is as simple as running one artisan commmand
 
 Livewire is now listening for connections from clients. To configure the JS portion of Livewire to connect using WebSockets, pass in the following configuration.
 
+**(If you are injecting the JavaScript)**
+```php
+    ...
+    {!! Livewire::scripts(['driver' => 'websocket']) !!}
+    </body>
+</html>
+```
+
+**(If you are importing the JavaScript from NPM)**
 ```js
 Livewire.start({ driver: 'websocket' })
 ```

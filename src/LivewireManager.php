@@ -35,13 +35,13 @@ class LivewireManager
         return new $componentClass(str_random(20), $this->prefix);
     }
 
-    public function scripts()
+    public function scripts($options = [])
     {
         return '<script>'
             . File::get(__DIR__ . '/../dist/livewire.js')
             . '</script>'
             . '<script>Livewire.token = "'.csrf_token().'"</script>'
-            . '<script>Livewire.start()</script>';
+            . '<script>Livewire.start('.json_encode($options).')</script>';
     }
 
     public function mount($component, ...$options)
