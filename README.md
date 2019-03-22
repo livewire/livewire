@@ -13,7 +13,7 @@ To get set up, you will need to pull down 2 repositories: `livewire`, and `livew
 1. Pull down `livewire`: `git clone https://github.com/calebporzio/livewire.git`
 2. Go into the directory (`cd livewire`) and `composer install` and `npm install`
 3. Go out of the directory (`cd ..`) and pull down `livewire-app`: `git clone https://github.com/calebporzio/livewire-app.git`
-4. Go into the directory (`cd livewire`) and `composer install` and `npm install`
+4. Go into the directory (`cd livewire-app`) and `composer install` and `npm install`
 5. Open the `livewire-app` in your browser (assuming you use laravel-valet), go to `http://livewire-app.test`
 6. Open the docs in your browser: from `livewire-app`, run `php artisan docs` (or go to `/livewire/docs/installation`)
 
