@@ -31,12 +31,8 @@ export default class Connection {
         this.driver.refresh = (payload) => {
             this.refresh()
         }
-    }
 
-    init() {
         this.driver.init()
-
-        return this
     }
 
     onMessage(payload) {
