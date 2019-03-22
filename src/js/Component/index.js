@@ -103,6 +103,16 @@ class Component {
     handleMorph(dom, dirtyInputs) {
         var currentComponent = this
         morphdom(this.el.rawNode(), dom, {
+            getNodeKey: node => {
+                if (typeof node.hasAttribute !== 'function') return
+
+                if (node.hasAttribute('key')) {
+                    return node.getAttribute('key')
+                } else {
+                    return node.id
+                }
+            },
+
             onBeforeNodeAdded: node => {
                 if (typeof node.hasAttribute !== 'function') return
 

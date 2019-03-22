@@ -1,5 +1,6 @@
 # CSS Transitions
 
+## Simple fade transition
 One of the benefits of using Livewire is utilizing familiar backend functionality like Blade, while making smooth front-ends. Livewire provides a simple CSS Transition system to help acheive this effect.
 
 Livewire provides a basic "fade" transition out-of-the-box.
@@ -22,6 +23,12 @@ When `$showConfirmationModal` is `true`, it's contents are shown. When `$showCon
 You can control the length of this fade by adding an additional time modifier. The following directive will cause the element to fade in and out for a duration of one second.
 
 `wire:transition.fade.1s`
+
+*Note: if your element isn't transitioning in and out as expected, it's possible Livewire is having a hard time keeping track of it. In those cases, add a unique `key` attribute to the element like so:
+
+```
+<div wire:transition.fade key="unique-key">
+```
 
 ## Custom transitions
 
