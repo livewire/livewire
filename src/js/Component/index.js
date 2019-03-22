@@ -1,6 +1,7 @@
 import domWalker from '../DomWalker'
 import { debounce } from 'lodash'
 import store from '../Store'
+import { addMixin } from '../utils'
 import Message from '../Message'
 import morphdom from '../morphdom/index'
 import LivewireElement from '../LivewireElement'
@@ -165,6 +166,6 @@ class Component {
     }
 }
 
-Object.assign(Component.prototype, handleLoadingDirectives)
+addMixin(Component, handleLoadingDirectives)
 
 export default Component
