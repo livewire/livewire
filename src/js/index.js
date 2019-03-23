@@ -1,7 +1,7 @@
-import http from './HttpConnection'
-import websocket from './WebSocket'
-import Connection from './Connection'
-import ComponentManager from './ComponentManager'
+import http from './connection/http'
+import websocket from './connection/websocket'
+import Connection from './connection'
+import ComponentManager from './component_manager'
 
 const Livewire = {
     start(options) {

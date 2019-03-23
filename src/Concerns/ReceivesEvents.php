@@ -55,6 +55,10 @@ trait ReceivesEvents
             return;
         }
 
+        if ($method === '$refresh') {
+            return;
+        }
+
         $this->wrapped->{$method}(...$params);
     }
 }

@@ -1,10 +1,9 @@
-import debounce from './Debounce.js'
-import store from './Store'
-import LivewireElement from './LivewireElement';
-import MethodAction from './MethodAction.js';
-import ModelAction from './ModelAction.js';
-import EventAction from './EventAction.js';
-const prefix = require('./Prefix.js')()
+import { kebabCase } from './utils'
+import debounce from './debounce'
+import EventAction from './action/event'
+import ModelAction from './action/model'
+import MethodAction from './action/method'
+import LivewireElement from './dom/element'
 
 export default class {
     initialize(el, component) {
@@ -13,6 +12,10 @@ export default class {
             switch (directive.type) {
                 case 'loading-class':
                     this.registerElementForLoading(el, directive, component)
+                    break;
+
+                case 'interval':
+                    this.fireActionOnInterval(el, directive, component)
                     break;
 
                 case 'model':
@@ -27,7 +30,8 @@ export default class {
     }
 
     registerElementForLoading(el, directive, component) {
-        const refName = el.directives.get('loading-target') ? el.directives.get('loading-target').value : null
+        const refName = el.directives.get('loading-target')
+            && el.directives.get('loading-target').value
 
         component.addLoadingEl(
             el,
@@ -37,25 +41,24 @@ export default class {
         )
     }
 
+    fireActionOnInterval(el, directive, component) {
+        const method = directive.method || '$refresh'
+
+        setInterval(() => {
+            component.addAction(new MethodAction(method, directive.params, el))
+        }, directive.durationOr(500));
+    }
+
     attachModelListener(el, directive, component) {
-        if (! directive.modifiers.includes('live')) {
-            el.addEventListener('input', e => {
-                const model = directive.value
-                const el = new LivewireElement(e.target)
-                const value = el.valueFromInputOrCheckbox()
+        const isLive = directive.modifiers.includes('live')
+        const debounceOrDont = isLive ? debounce : fn => fn
 
-                component.queueSyncInput(model, value)
-            })
-            return
-        }
-
-        // Only debounce input when we need to send network
-        el.addEventListener('input', debounce(e => {
+        el.addEventListener('input', debounceOrDont(e => {
             const model = directive.value
             const el = new LivewireElement(e.target)
             const value = el.valueFromInputOrCheckbox()
 
-            if (directive.modifiers.includes('live')) {
+            if (isLive) {
                 component.addAction(new ModelAction(model, value, el))
             } else {
                 component.queueSyncInput(model, value)
@@ -69,7 +72,7 @@ export default class {
                 this.attachListener(el, directive, component, (e) => {
                     // Only handle listener if no, or matching key modifiers are passed.
                     return ! (directive.modifiers.length === 0
-                        || directive.modifiers.includes(e.key.split(/[_\s]/).join("-").toLowerCase()))
+                        || directive.modifiers.includes(kebabCase(e.key)))
                 })
                 break;
             default:
@@ -91,50 +94,21 @@ export default class {
             this.preventAndStop(e, directive.modifiers)
 
             if (directive.value) {
-                const { method, params } = this.parseOutMethodAndParams(directive.value)
-
-                if (method === '$emit') {
-                    const [eventName, ...otherParams] = params
+                if (directive.method === '$emit') {
+                    const [eventName, ...otherParams] = directive.params
 
                     component.parent.addAction(new EventAction(eventName, otherParams, component.id, el))
                     return
                 }
 
-                component.addAction(new MethodAction(method, params, el))
+                component.addAction(new MethodAction(directive.method, directive.params, el))
             }
         }))
-    }
-
-    parseOutMethodAndParams(rawMethod) {
-        let params = []
-        let method = rawMethod
-
-        if (method.match(/(.*)\((.*)\)/)) {
-            const matches = method.match(/(.*)\((.*)\)/)
-            method = matches[1]
-            params = matches[2].split(', ').map(param => {
-                if (eval('typeof ' + param) === 'undefined') {
-                    return document.querySelector(`[${prefix}\\:model="` + param + '"]').value
-                }
-
-                return eval(param)
-            })
-        }
-
-        return { method, params }
     }
 
     preventAndStop(event, modifiers) {
         modifiers.includes('prevent') && event.preventDefault()
 
         modifiers.includes('stop') && event.stopPropagation()
-    }
-
-    componentByEl(el) {
-        return store.findComponent(this.getComponentIdFromEl(el))
-    }
-
-    getComponentIdFromEl(el) {
-        return el.closestByAttribute('id').getAttribute('id')
     }
 }

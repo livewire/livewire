@@ -1,10 +1,10 @@
-import domWalker from '../DomWalker'
+import domWalker from '../dom/tree_walker'
 import { debounce } from 'lodash'
-import store from '../Store'
+import store from '../store'
 import { addMixin } from '../utils'
-import Message from '../Message'
-import morphdom from '../morphdom/index'
-import LivewireElement from '../LivewireElement'
+import Message from '../message'
+import morphdom from '../dom/morphdom'
+import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
 
 class Component {

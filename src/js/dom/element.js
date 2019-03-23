@@ -1,5 +1,5 @@
-import ElementDirectives from "./ElementDirectives";
-const prefix = require('./Prefix.js')()
+import ElementDirectives from "./directive_manager";
+const prefix = require('./prefix.js')()
 
 /**
  * This is intended to isolate all native DOM operations. The operations that happen
@@ -70,11 +70,8 @@ export default class LivewireElement {
         const directive = this.directives.get('transition')
 
         if (directive.modifiers.includes('fade')) {
-            const rawDuration = directive.modifiers.find(mod => mod.match(/(.*)ms/))
-            const duration = rawDuration ? rawDuration.replace('ms', '') : '300'
-
             this.el.style.opacity = 0
-            this.el.style.transition = `opacity ${Number(duration) / 1000}s ease`
+            this.el.style.transition = `opacity ${directive.durationOr(300) / 1000}s ease`
 
             this.nextFrame(() => {
                 this.el.style.opacity = 1
@@ -104,15 +101,12 @@ export default class LivewireElement {
         const directive = this.directives.get('transition')
 
         if (directive.modifiers.includes('fade')) {
-            const rawDuration = directive.modifiers.find(mod => mod.match(/(.*)ms/))
-            const duration = rawDuration ? rawDuration.replace('ms', '') : '300'
-
             this.nextFrame(() => {
                 this.el.style.opacity = 0
 
                 setTimeout(() => {
                     this.el.remove()
-                }, duration);
+                }, directive.durationOr(300));
             })
 
             return false

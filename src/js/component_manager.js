@@ -1,7 +1,7 @@
-import store from './Store'
-import Component from "./Component";
-import LivewireElement from "./LivewireElement";
-import NodeInitializer from "./NodeInitializer";
+import store from './store'
+import Component from "./component";
+import LivewireElement from "./dom/element";
+import NodeInitializer from "./node_initializer";
 
 export default class ComponentManager {
     constructor(connection) {

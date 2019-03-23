@@ -4,7 +4,6 @@ namespace Livewire;
 
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
-use Livewire\LivewireComponent;
 
 class LivewireComponentWrapper
 {

@@ -1,5 +1,3 @@
-import listenerManager from './EventListenerManager'
-
 // This is kindof like a normal debouncer, except it behaves like both "immediate" and
 // "non-immediate". I'll try to graph the differences:
 // [normal] =    .......|
@@ -30,13 +28,11 @@ export default function debounce(func, wait) {
 
         timeout = setTimeout(function () {
             timeout = null;
-            listenerManager.timeout = 0
             if (timesInterupted > 0) {
                 func.apply(context, args);
                 timesInterupted = 0
             }
         }, wait);
-        listenerManager.timeout = wait
 
 		if (callNow) {
             func.apply(context, args);

@@ -1,7 +1,5 @@
-import { dispatch } from './utils';
-import EventMessage from './EventMessage';
-import EventAction from './EventAction.js';
-import ModelMessage from './ModelMessage';
+import { dispatch } from '../utils'
+import EventAction from '../action/event'
 
 export default class Connection {
     constructor(driver) {
@@ -65,23 +63,5 @@ export default class Connection {
         message.prepareForSend()
 
         this.driver.sendMessage(message.payload());
-    }
-
-
-    sendEvent(name, params, component, ref) {
-        const message = new EventMessage(
-            name,
-            params,
-            ref,
-            component
-        )
-
-        this.sendMessage(message)
-    }
-
-    sendModelSync(name, value, component) {
-        const message = new ModelMessage(name, value, component)
-
-        this.sendMessage(message)
     }
 }

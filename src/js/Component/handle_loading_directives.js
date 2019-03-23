@@ -1,4 +1,4 @@
-import LivewireElement from "../LivewireElement";
+import LivewireElement from "../dom/element";
 
 export default {
     loadingEls: [],

@@ -1,6 +1,6 @@
-import ElementDirective from './ElementDirective.js';
+import ElementDirective from './directive';
 
-const prefix = require('./Prefix.js')()
+const prefix = require('./prefix.js')()
 
 export default class {
     constructor(el) {

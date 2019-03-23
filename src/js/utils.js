@@ -44,3 +44,7 @@ export function addMixin(classTarget, ...sources) {
     });
     return classTarget.prototype;
 }
+
+export function kebabCase(subject) {
+    return subject.split(/[_\s]/).join("-").toLowerCase()
+}
