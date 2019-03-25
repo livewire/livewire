@@ -4,14 +4,10 @@ namespace Livewire\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Livewire\SocketConnectionHandler;
-use Ratchet\Http\HttpServer;
-use Ratchet\Server\IoServer;
-use Ratchet\WebSocket\WsServer;
 
 class LivewireMakeCommand extends Command
 {
-    protected $signature = 'livewire:make {component} {--view : Generate a view for the livewire component}';
+    protected $signature = 'livewire:make {component}';
 
     protected $description = '@todo';
 
@@ -24,9 +20,7 @@ class LivewireMakeCommand extends Command
     {
         $this->makeFile();
 
-        if ($this->option('view')) {
-            $this->makeView();
-        }
+        $this->makeView();
 
         $this->info(str_replace(
             '{component}',
