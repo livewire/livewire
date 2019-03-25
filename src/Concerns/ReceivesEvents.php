@@ -49,16 +49,26 @@ trait ReceivesEvents
 
     public function callMethod($method, $params = [])
     {
-        if ($method === '$set') {
-            $prop = array_shift($params);
-            $this->syncInput($prop, head($params));
-            return;
-        }
+        switch ($method) {
+            case '$set':
+                $prop = array_shift($params);
+                $this->syncInput($prop, head($params));
+                return;
+                break;
 
-        if ($method === '$refresh') {
-            return;
-        }
+            case '$toggle':
+                $prop = array_shift($params);
+                $this->syncInput($prop, ! $this->wrapped->{$prop});
+                return;
+                break;
 
-        $this->wrapped->{$method}(...$params);
+            case '$refresh':
+                return;
+                break;
+
+            default:
+                $this->wrapped->{$method}(...$params);
+                break;
+        }
     }
 }

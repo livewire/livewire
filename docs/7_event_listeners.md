@@ -70,7 +70,9 @@ In Livewire, there are some "special" functions usually prefixed with a "$" symb
 
 Function | Description
 --- | ---
-$set(_prop_, _value_) | Shortcut to update the value of a prop
+$set(_property_, _value_) | Shortcut to update the value of a property
+$toggle(_property_) | Shortcut to toggle boolean properties on or off
+$refresh | Will re-render the component without firing any action
 $emit(_event_, _param_) | Emit an event on the parent component
 
 You can pass these as the value of an event listener to do special things in Livewire.
