@@ -44,8 +44,7 @@ class Component {
             this.syncQueue,
         ))
 
-        this.syncQueue = {}
-        this.actionQueue = []
+        this.clearSyncQueue() && this.clearActionQueue()
     }
 
     queueSyncInput(model, value) {
@@ -57,7 +56,7 @@ class Component {
     }
 
     clearActionQueue() {
-        this.syncQueue = []
+        this.actionQueue = []
     }
 
     attachListenersAndProcessChildComponents(callback) {
