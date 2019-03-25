@@ -96,7 +96,7 @@ export default class LivewireElement {
         })
     }
 
-    transitionElementOut() {
+    transitionElementOut(onDiscarded) {
         if (!this.directives.has('transition')) return true
         const directive = this.directives.get('transition')
 
@@ -105,6 +105,8 @@ export default class LivewireElement {
                 this.el.style.opacity = 0
 
                 setTimeout(() => {
+                    onDiscarded(this.el)
+
                     this.el.remove()
                 }, directive.durationOr(300));
             })
@@ -122,6 +124,8 @@ export default class LivewireElement {
             const duration = Number(getComputedStyle(this.el).transitionDuration.replace('s', '')) * 1000
 
             setTimeout(() => {
+                onDiscarded(this.el)
+
                 this.el.remove()
             }, duration)
         })

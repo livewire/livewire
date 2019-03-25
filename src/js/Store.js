@@ -1,5 +1,5 @@
 
-var store = {
+const store = {
     componentsById: {},
 
     addComponent(component) {

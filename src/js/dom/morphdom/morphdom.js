@@ -1,4 +1,12 @@
 // From Caleb: I had to change all the "isSameNode"s to "isEqualNode"s and now everything is working great!
+/**
+ * I pulled in my own version of morphdom, so I could tweak it as needed.
+ * Here are the tweaks I've made so far:
+ *
+ * 1) Changed all the "isSameNode"s to "isEqualNode"s so that morhing doesn't check by reference, only by equality.
+ * 2) Automatically filter out any non-"ElementNode"s from the lifecycle hooks.
+ */
+
 'use strict';
 
 import { compareNodeNames, toElement, moveChildren, createElementNS, doc } from './util';
@@ -12,6 +20,13 @@ function noop() {}
 
 function defaultGetNodeKey(node) {
     return node.id;
+}
+
+function callHook(hook, ...params) {
+    // Don't call hook on non-"DOMElement" elements.
+    if (typeof params[0].hasAttribute !== 'function') return
+
+    return hook(...params)
 }
 
 export default function morphdomFactory(morphAttrs) {
@@ -60,7 +75,7 @@ export default function morphdomFactory(morphAttrs) {
 
                     var key = undefined;
 
-                    if (skipKeyedNodes && (key = getNodeKey(curChild))) {
+                    if (skipKeyedNodes && (key = callHook(getNodeKey, curChild))) {
                         // If we are skipping keyed nodes then we add the key
                         // to a list so that it can be handled at the very end.
                         addKeyedRemoval(key);
@@ -68,7 +83,7 @@ export default function morphdomFactory(morphAttrs) {
                         // Only report the node as discarded if it is not keyed. We do this because
                         // at the end we loop through all keyed elements that were unmatched
                         // and then discard them in one final pass.
-                        onNodeDiscarded(curChild);
+                        callHook(onNodeDiscarded, curChild);
                         if (curChild.firstChild) {
                             walkDiscardedChildNodes(curChild, skipKeyedNodes);
                         }
@@ -88,7 +103,7 @@ export default function morphdomFactory(morphAttrs) {
          * @return {undefined}
          */
         function removeNode(node, parentNode, skipKeyedNodes) {
-            if (onBeforeNodeDiscarded(node) === false) {
+            if (callHook(onBeforeNodeDiscarded, node) === false) {
                 return;
             }
 
@@ -96,7 +111,7 @@ export default function morphdomFactory(morphAttrs) {
                 parentNode.removeChild(node);
             }
 
-            onNodeDiscarded(node);
+            callHook(onNodeDiscarded, node);
             walkDiscardedChildNodes(node, skipKeyedNodes);
         }
 
@@ -108,7 +123,7 @@ export default function morphdomFactory(morphAttrs) {
         //
         //     var el;
         //     while((el = treeWalker.nextNode())) {
-        //         var key = getNodeKey(el);
+        //         var key = callHook(getNodeKey, el);
         //         if (key) {
         //             fromNodesLookup[key] = el;
         //         }
@@ -121,7 +136,7 @@ export default function morphdomFactory(morphAttrs) {
         //     var nodeIterator = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT);
         //     var el;
         //     while((el = nodeIterator.nextNode())) {
-        //         var key = getNodeKey(el);
+        //         var key = callHook(getNodeKey, el);
         //         if (key) {
         //             fromNodesLookup[key] = el;
         //         }
@@ -132,7 +147,7 @@ export default function morphdomFactory(morphAttrs) {
             if (node.nodeType === ELEMENT_NODE) {
                 var curChild = node.firstChild;
                 while (curChild) {
-                    var key = getNodeKey(curChild);
+                    var key = callHook(getNodeKey, curChild);
                     if (key) {
                         fromNodesLookup[key] = curChild;
                     }
@@ -148,13 +163,13 @@ export default function morphdomFactory(morphAttrs) {
         indexTree(fromNode);
 
         function handleNodeAdded(el) {
-            onNodeAdded(el);
+            callHook(onNodeAdded, el);
 
             var curChild = el.firstChild;
             while (curChild) {
                 var nextSibling = curChild.nextSibling;
 
-                var key = getNodeKey(curChild);
+                var key = callHook(getNodeKey, curChild);
                 if (key) {
                     var unmatchedFromEl = fromNodesLookup[key];
                     if (unmatchedFromEl && compareNodeNames(curChild, unmatchedFromEl)) {
@@ -169,7 +184,7 @@ export default function morphdomFactory(morphAttrs) {
         }
 
         function morphEl(fromEl, toEl, childrenOnly) {
-            var toElKey = getNodeKey(toEl);
+            var toElKey = callHook(getNodeKey, toEl);
             var curFromNodeKey;
 
             if (toElKey) {
@@ -183,14 +198,14 @@ export default function morphdomFactory(morphAttrs) {
             }
 
             if (!childrenOnly) {
-                if (onBeforeElUpdated(fromEl, toEl) === false) {
+                if (callHook(onBeforeElUpdated, fromEl, toEl) === false) {
                     return;
                 }
 
                 morphAttrs(fromEl, toEl);
-                onElUpdated(fromEl);
+                callHook(onElUpdated, fromEl);
 
-                if (onBeforeElChildrenUpdated(fromEl, toEl) === false) {
+                if (callHook(onBeforeElChildrenUpdated, fromEl, toEl) === false) {
                     return;
                 }
             }
@@ -206,7 +221,7 @@ export default function morphdomFactory(morphAttrs) {
 
                 outer: while (curToNodeChild) {
                     toNextSibling = curToNodeChild.nextSibling;
-                    curToNodeKey = getNodeKey(curToNodeChild);
+                    curToNodeKey = callHook(getNodeKey, curToNodeChild);
 
                     while (curFromNodeChild) {
                         fromNextSibling = curFromNodeChild.nextSibling;
@@ -217,7 +232,7 @@ export default function morphdomFactory(morphAttrs) {
                             continue outer;
                         }
 
-                        curFromNodeKey = getNodeKey(curFromNodeChild);
+                        curFromNodeKey = callHook(getNodeKey, curFromNodeChild);
 
                         var curFromNodeType = curFromNodeChild.nodeType;
 
@@ -331,7 +346,7 @@ export default function morphdomFactory(morphAttrs) {
                         fromEl.appendChild(matchingFromEl);
                         morphEl(matchingFromEl, curToNodeChild);
                     } else {
-                        var onBeforeNodeAddedResult = onBeforeNodeAdded(curToNodeChild);
+                        var onBeforeNodeAddedResult = callHook(onBeforeNodeAdded, curToNodeChild);
                         if (onBeforeNodeAddedResult !== false) {
                             if (onBeforeNodeAddedResult) {
                                 curToNodeChild = onBeforeNodeAddedResult;
@@ -354,7 +369,7 @@ export default function morphdomFactory(morphAttrs) {
                 // to be removed
                 while (curFromNodeChild) {
                     fromNextSibling = curFromNodeChild.nextSibling;
-                    if ((curFromNodeKey = getNodeKey(curFromNodeChild))) {
+                    if ((curFromNodeKey = callHook(getNodeKey, curFromNodeChild))) {
                         // Since the node is keyed it might be matched up later so we defer
                         // the actual removal to later
                         addKeyedRemoval(curFromNodeKey);
@@ -383,7 +398,7 @@ export default function morphdomFactory(morphAttrs) {
             if (morphedNodeType === ELEMENT_NODE) {
                 if (toNodeType === ELEMENT_NODE) {
                     if (!compareNodeNames(fromNode, toNode)) {
-                        onNodeDiscarded(fromNode);
+                        callHook(onNodeDiscarded, fromNode);
                         morphedNode = moveChildren(fromNode, createElementNS(toNode.nodeName, toNode.namespaceURI));
                     }
                 } else {
@@ -407,7 +422,7 @@ export default function morphdomFactory(morphAttrs) {
         if (morphedNode === toNode) {
             // The "to node" was not compatible with the "from node" so we had to
             // toss out the "from node" and use the "to node"
-            onNodeDiscarded(fromNode);
+            callHook(onNodeDiscarded, fromNode);
         } else {
             morphEl(morphedNode, toNode, childrenOnly);
 

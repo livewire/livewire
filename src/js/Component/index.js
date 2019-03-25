@@ -1,21 +1,27 @@
-import domWalker from '../dom/tree_walker'
-import { debounce } from 'lodash'
 import store from '../store'
-import { addMixin } from '../util'
 import Message from '../message'
+import { debounce } from 'lodash'
+import { addMixin } from '../util'
 import morphdom from '../dom/morphdom'
+import domWalker from '../dom/tree_walker'
 import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
 
 class Component {
     constructor(el, nodeInitializer, connection, parent) {
         this.serialized = el.getAttribute('serialized')
+        this.id = el.getAttribute('id')
         this.nodeInitializer = nodeInitializer
         this.connection = connection
-        this.id = el.getAttribute('id')
         this.parent = parent
         this.syncQueue = {}
         this.actionQueue = []
+    }
+
+    get el() {
+        // I made this a getter, so that we aren't ever getting a stale DOM element.
+        // If it's too slow, we can re-evaluate it.
+        return LivewireElement.byAttributeAndValue('id', this.id)
     }
 
     addAction(action) {
@@ -38,13 +44,24 @@ class Component {
             this.syncQueue,
         ))
 
-        this.actionQueue = []
+        this.clearActionQueue() && this.clearSyncQueue()
+    }
+
+    queueSyncInput(model, value) {
+        this.syncQueue[model] = value
+    }
+
+    clearSyncQueue() {
         this.syncQueue = {}
+    }
+
+    clearActionQueue() {
+        this.syncQueue = []
     }
 
     attachListenersAndProcessChildComponents(callback) {
         // This starts as the root component, but will become children as they are encountered.
-        var currentComponent = this
+        let componentBeingWalked = this
 
         domWalker.walk(this.el.rawNode(), (node) => {
             if (typeof node.hasAttribute !== 'function') return
@@ -53,17 +70,11 @@ class Component {
             const el = new LivewireElement(node)
 
             if (el.isComponentRootEl()) {
-                currentComponent = callback.apply(this, [el])
+                componentBeingWalked = callback.apply(this, [el])
             }
 
-            this.nodeInitializer.initialize(el, currentComponent);
+            this.nodeInitializer.initialize(el, componentBeingWalked);
         })
-    }
-
-    get el() {
-        // I made this a getter, so that we aren't ever getting a stale DOM element.
-        // If it's too slow, we can re-evaluate it.
-        return LivewireElement.byAttributeAndValue('id', this.id)
     }
 
     receiveMessage(message, eventCallback) {
@@ -92,58 +103,40 @@ class Component {
         })
     }
 
-    queueSyncInput(model, value) {
-        this.syncQueue[model] = value
-    }
-
-    clearSyncQueue() {
-        this.syncQueue = {}
-    }
-
     handleMorph(dom, dirtyInputs) {
-        var currentComponent = this
+        let currentComponent = this
+
         morphdom(this.el.rawNode(), dom, {
             getNodeKey: node => {
-                if (typeof node.hasAttribute !== 'function') return
-
-                if (node.hasAttribute('key')) {
-                    return node.getAttribute('key')
-                } else {
-                    return node.id
-                }
+                // This allows the tracking of elements by the "key" attribute, like in VueJs.
+                return node.hasAttribute('key')
+                    ? node.getAttribute('key')
+                    : node.id
             },
 
             onBeforeNodeAdded: node => {
-                if (typeof node.hasAttribute !== 'function') return
-
-                const el = new LivewireElement(node)
-
-                el.transitionElementIn()
+                return (new LivewireElement(node)).transitionElementIn()
             },
 
             onBeforeNodeDiscarded: node => {
-                if (typeof node.hasAttribute !== 'function') return
-
-                const el = new LivewireElement(node)
-
-                return el.transitionElementOut()
+                return (new LivewireElement(node)).transitionElementOut(nodeDiscarded => {
+                    this.removeLoadingEl(nodeDiscarded)
+                })
             },
 
             onBeforeElChildrenUpdated: node => {
-                if (typeof node.hasAttribute !== 'function') return
-
                 const el = new LivewireElement(node)
 
+                // Don't update the DOM of child components. They will update themselves.
                 if (el.isComponentRootEl() && ! el.isSameNode(this.el)) {
                     return false
                 }
             },
 
             onBeforeElUpdated: node => {
-                if (typeof node.hasAttribute !== 'function') return
-
                 const el = new LivewireElement(node)
 
+                // Don't update the child component DOM root element.
                 if (el.isComponentRootEl() && ! el.isSameNode(this.el)) {
                     return false
                 }
@@ -152,21 +145,20 @@ class Component {
             },
 
             onElUpdated: (node) => {
-                if (typeof node.hasAttribute !== 'function') return
+                //
             },
 
             onNodeDiscarded: node => {
-                if (typeof node.hasAttribute !== 'function') return
-
+                // Elements with loading directives are stored, release this
+                // element from storage because it no longer exists on the DOM.
                 this.removeLoadingEl(node)
             },
 
             onNodeAdded: (node) => {
-                if (typeof node.hasAttribute !== 'function') return
-
                 const el = new LivewireElement(node)
 
                 if (el.isComponentRootEl()) {
+                    // We've encountered a new child component, let's register and initialize it.
                     currentComponent = store.addComponent(new Component(el, this.nodeInitializer, this.connection, this))
                 }
 
