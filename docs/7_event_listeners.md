@@ -65,8 +65,8 @@ arrow-up |
 
 In the above example, the handler will only be called if `event.key` is equal to 'PageDown'.
 
-## Special functions
-In Livewire, there are some "special" functions usually prefixed with a "$" symbol:
+## Special actions
+In Livewire, there are some "special" actions that are usually prefixed with a "$" symbol:
 
 Function | Description
 --- | ---
