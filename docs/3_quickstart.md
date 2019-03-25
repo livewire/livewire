@@ -1,6 +1,6 @@
 # Quickstart
 
-Now that you have everything installed, run `php artisan livewire:make Counter --view` to generate a new Livewire Component (`app/Http/Livewire/Counter.php`), and it's corresponding view (`resources/views/livewire/counter.blade.php`).
+Now that you have everything installed, run `php artisan livewire:make Counter` to generate a new Livewire Component (`app/Http/Livewire/Counter.php`), and it's corresponding view (`resources/views/livewire/counter.blade.php`).
 
 **Component**
 ```php

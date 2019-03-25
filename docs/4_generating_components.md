@@ -7,8 +7,9 @@ To generate a `Counter` component, we can run:
 php artisan livewire:make Counter
 ```
 
-This will generate a new file called: `App\Http\Livewire\Counter.php` with the following contents:
+This will generate a new component and view file with the following contents:
 
+`App\Http\Livewire\Counter.php`
 ```php
 <?php
 
@@ -25,10 +26,9 @@ class Counter extends LivewireComponent
 }
 ```
 
-To automatically generate the blade view, add the `--view` flag to the command:
-
+`resources/views/livewire/counter.blade.php`
+```php
+<div>
+    //
+</div>
 ```
-php artisan livewire:make Counter --view
-```
-
-By adding this flag, the command will also generate a blade view in: `resources/views/livewire/counter.blade.php`
