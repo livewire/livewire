@@ -14,7 +14,7 @@ Note: I'm assuming you have a folder for all your projects and are serving that 
 2. Create or `cd` into a Laravel project that shares the same parent folder as `livewire`
 3. Run `composer config repositories.local '{"type": "path", "url": "../livewire"}' --file composer.json`
 4. Now `composer require calebporzio/livewire:dev-master`
-5. Now run `artisan livewire:docs` to open the docs in your browser.
+5. Navigate to `http://[your-app].test/livewire/docs/blow_my_mind` to view documentation (or run `php artisan livewire:docs`)
 
 ## How you can help
 
