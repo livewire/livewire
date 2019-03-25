@@ -39,9 +39,9 @@ class LivewireManager
     {
         return '<script>'
             . File::get(__DIR__ . '/../dist/livewire.js')
-            . '</script>'
-            . '<script>Livewire.token = "'.csrf_token().'"</script>'
-            . '<script>Livewire.start('.json_encode($options).')</script>';
+            . 'window.livewire = new Livewire('.json_encode($options).');'
+            . 'window.livewire_token = "'.csrf_token().'";'
+            . '</script>';
     }
 
     public function mount($component, ...$options)

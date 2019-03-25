@@ -10,11 +10,11 @@ export default {
          let token
 
         if (! tokenTag) {
-            if (! window.Livewire.token) {
+            if (! window.livewire_token) {
                 throw new Error('Whoops, looks like you haven\'t added a "csrf-token" meta tag');
             }
 
-            token = window.Livewire.token
+            token = window.livewire_token
         } else {
             token = tokenTag.content
         }

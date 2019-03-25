@@ -1,7 +1,7 @@
 import domWalker from '../dom/tree_walker'
 import { debounce } from 'lodash'
 import store from '../store'
-import { addMixin } from '../utils'
+import { addMixin } from '../util'
 import Message from '../message'
 import morphdom from '../dom/morphdom'
 import LivewireElement from '../dom/element'

@@ -1,5 +1,5 @@
 // This is kindof like a normal debouncer, except it behaves like both "immediate" and
-// "non-immediate". I'll try to graph the differences:
+// "non-immediate" strategies. I'll try to visually demonstrate the differences:
 // [normal] =    .......|
 // [immediate] = |.......
 // [both] =      |......|
@@ -13,13 +13,14 @@
 // Note: I also added a checker in here ("wasInterupted") for the the case of a user
 // only typing one key, but two ajax requests getting sent.
 
-export default function debounce(func, wait) {
+export function debounce(func, wait) {
     var timeout;
     var timesInterupted = 0;
+
 	return function() {
         var context = this, args = arguments;
 
-        var callNow = !timeout;
+        var callNow = ! timeout;
 
         if (timeout) {
             clearTimeout(timeout);

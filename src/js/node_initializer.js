@@ -1,5 +1,4 @@
-import { kebabCase } from './utils'
-import debounce from './debounce'
+import { debounce, kebabCase } from './util'
 import EventAction from './action/event'
 import ModelAction from './action/model'
 import MethodAction from './action/method'

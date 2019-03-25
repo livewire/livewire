@@ -1,4 +1,4 @@
-import { dispatch } from '../utils'
+import { dispatch } from '../util'
 import EventAction from '../action/event'
 
 export default class Connection {

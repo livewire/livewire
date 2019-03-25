@@ -1,27 +1,26 @@
-import http from './connection/http'
-import websocket from './connection/websocket'
+import drivers from './connection/drivers'
 import Connection from './connection'
 import ComponentManager from './component_manager'
 
-const Livewire = {
-    start(options) {
-        if (! options) {
-            options = {};
-        }
+class Livewire {
+    constructor({ driver } = { driver: 'http' }) {
+        this.componentManager = new ComponentManager(
+            new Connection(drivers[driver])
+        )
 
-        const driverInstance = options.driver === 'websocket'
-            ? websocket
-            : http
+        this.start()
+    }
 
-        const connection = new Connection(driverInstance)
-
-        this.components = new ComponentManager(connection)
-
-        this.components.mount()
-    },
+    restart() {
+        this.stop() && this.start()
+    }
 
     stop() {
-        this.components && this.components.destroy()
+        this.componentManager && this.componentManager.destroy()
+    }
+
+    start() {
+        this.componentManager.mount()
     }
 }
 
