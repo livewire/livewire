@@ -149,6 +149,10 @@ export default class LivewireElement {
         return this.el.getAttribute(`${prefix}:${attribute}`)
     }
 
+    setAttribute(attribute, value) {
+        return this.el.setAttribute(`${prefix}:${attribute}`, value)
+    }
+
     shouldUpdateInputElementGivenItHasBeenUpdatedViaSync(dirtyInputs) {
         // This will need work. But is essentially "input persistance"
         const isInput = (this.el.tagName === 'INPUT' || this.el.tagName === 'TEXTAREA')

@@ -8,18 +8,13 @@ If you are one of those people, please read through this entire README so we're 
 
 ## Get set up locally
 
-To get set up, you will need to pull down 2 repositories: `livewire`, and `livewire-app` (A Laravel project that uses livewire). I recently ripped out all the Jest tests in favor of some basic Dusk tests in the `livewire-app`, so working off that project is important for now.
+Note: I'm assuming you have a folder for all your projects and are serving that with Valet.
 
 1. Pull down `livewire`: `git clone https://github.com/calebporzio/livewire.git`
-2. Go into the directory (`cd livewire`) and `composer install` and `npm install`
-3. Go out of the directory (`cd ..`) and pull down `livewire-app`: `git clone https://github.com/calebporzio/livewire-app.git`
-4. Go into the directory (`cd livewire-app`) and `composer install` and `npm install`
-5. Open the `livewire-app` in your browser (assuming you use laravel-valet), go to `http://livewire-app.test`
-6. Open the docs in your browser: from `livewire-app`, run `php artisan docs` (or go to `/livewire/docs/installation`)
-
-A couple notes:
-* The "Livewire App" does not pull livewire in from packagist, it looks one directory up for a folder called `livewire` and creates a symlink to it in the vendor directory - this way, you can make changes in `livewire` and use them instanty in the `livewire-app`
-* I've version controlled the `.env` file for `livewire-app` to make setup easy.
+2. Create or `cd` into a Laravel project that shares the same parent folder as `livewire`
+3. Run `composer config repositories.local '{"type": "path", "url": "../livewire"}' --file composer.json`
+4. Now `composer require calebporzio/livewire:dev-master`
+5. Now run `artisan livewire:docs` to open the docs in your browser.
 
 ## How you can help
 

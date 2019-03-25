@@ -80,7 +80,8 @@ class Component {
     receiveMessage(message, eventCallback) {
         // Note: I'm sure there is an abstraction called "MessageResponse" that makes sense.
         // Let's just keep an eye on this for now. Sorry for the LoD violation.
-        this.serialized = message.response.serialized;
+        this.serialized = message.response.serialized
+        (new LivewireElement(this.el)).setAttribute('serialized', this.serialized)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (message.response.redirectTo) {
