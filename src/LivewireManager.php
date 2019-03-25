@@ -38,13 +38,20 @@ class LivewireManager
     public function scripts($options = null)
     {
         $options = $options ? json_encode($options) : '';
+        $jsInclude = File::get(__DIR__ . '/../dist/livewire.js');
+        $csrf = csrf_token();
 
-        return '<script>'
-            . File::get(__DIR__ . '/../dist/livewire.js')
-            . '</script><script>'
-            . 'window.livewire = new Livewire('.$options.');'
-            // . 'window.livewire_token = "'.csrf_token().'";'
-            . '</script>';
+        return <<<EOT
+<script>
+    {$jsInclude}
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        window.livewire = new Livewire({$options});
+        window.livewire_token = "{$csrf}";
+    });
+</script>
+EOT;
     }
 
     public function mount($component, ...$options)
