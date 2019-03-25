@@ -9,7 +9,7 @@ Livewire has both a PHP component AND a Javascript component. You need to make s
 There are two methods available to include the JavaScript portion of Livewire.
 
 ### Method 1: Include via snippet
-To get started quickly, you can include the following snippet at the end of the `<body>` in your html page:
+To get started quickly, you can include the following snippet at the end of the `<body>` in your html page. It is recommended that you put this in a layout file such as `resources/views/layouts/app.blade.php`. You can create this layout file in a new laravel project by executing `artisan make:auth`.
 
 ```html
         ...

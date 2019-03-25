@@ -35,12 +35,15 @@ class LivewireManager
         return new $componentClass(str_random(20), $this->prefix);
     }
 
-    public function scripts($options = [])
+    public function scripts($options = null)
     {
+        $options = $options ? json_encode($options) : '';
+
         return '<script>'
             . File::get(__DIR__ . '/../dist/livewire.js')
-            . 'window.livewire = new Livewire('.json_encode($options).');'
-            . 'window.livewire_token = "'.csrf_token().'";'
+            . '</script><script>'
+            . 'window.livewire = new Livewire('.$options.');'
+            // . 'window.livewire_token = "'.csrf_token().'";'
             . '</script>';
     }
 

@@ -87,7 +87,7 @@ class LivewireServiceProvider extends ServiceProvider
             ]);
 
             Artisan::command('livewire:docs', function () {
-                exec(sprintf('open "%s"', url('/livewire/docs/installation')));
+                exec(sprintf('open "%s"', url('/livewire/docs/blow_my_mind')));
             })->describe('Open the docs in your browser.');
         }
     }

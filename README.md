@@ -27,7 +27,7 @@ A very small, well-scoped PR that even just renames a variable is super valuable
 ### Write more tests
 Livewire is currently lacking in tests. I have a handful of Unit tests, but they are not well thought out and only cover a small portion of the code base.
 
-As for JavaScript testing, I started out with some basic Jest snapshot tests with axios mocking, but it's a PITA to maintain them and getting the dom plugin to work well can be annoying as well. Therefore, I ripped them out and wrote a few simple Dusk tests. The problem with the Dusk approach, is they need to live in a separate "app" environment, so you have to run and maintain them from `livewire-app`. This is an obvios problem, so any thoughts/solutions are welcomed.
+As for JavaScript testing, I started out with some basic Jest snapshot tests with axios mocking, but it's a PITA to maintain them and getting the dom plugin to work well can be annoying as well. Therefore, I ripped them out and wrote a few simple Dusk tests. The problem with the Dusk approach, is they need to live in a separate "app" environment, so you have to run and maintain them from the `livewire-app` repo. This is an obvios problem, so any thoughts/solutions are welcomed.
 
 ### The "feature testing" testing feature (lol)
 Ideally, a user could write Livewire tests like they would write Dusk tests: `$this->assertSee()->click()`. I have created a basic implementation in `TestableLivewire.php`, but after other refactors, it is broken and in need of love. There are currently 2 problems to tackle:
