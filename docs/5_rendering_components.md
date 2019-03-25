@@ -2,62 +2,12 @@
 
 There are two ways to render livewire components:
 
-1. Sprinkle them into an existing blade view.
-2. Render an entire page as a Livewire component.
+1. Render an entire page as a Livewire component.
+2. Include them into existing blade views.
 
-## 1. The @livewire Blade directive
+## 1. Livewire routes
 
-Let's say we have a Livewire component in `App\Http\Livewire\Counter.php`, the simplest way to render it in a browser, is to include it in a normal Laravel blade view via the `@livewire` directive.
-
-Let's assume we have a route like `Route::get('/home', 'HomeController@show')`, and `HomeController` returns a view named `home.blade.php`. We can include our `Counter` component like so:
-
-```html
-@extends('layouts.app')
-
-@section('content')
-    {-- Some HTML --}
-    @livewire(App\Http\Livewire\Counter::class)
-@endsection
-```
-
-For some, it might feel weird passing an expression like `App\Http\Livewire\Counter::class` into a blade diretive. If this is the case for you, you can register component aliases in a ServiceProvider and just use those in your views like so:
-
-**AppServiceProvider.php**
-```
-public function boot()
-{
-    Livewire::component('counter', Counter::class);
-}
-```
-
-Now you can pass the component alias into the directive:
-```
-@livewire('counter')
-```
-
-Additionally, you can pass data into a component by passing additional parameters into the `@livewire` directive. For example, let's say we have an `ShowContact` Livewire component that needs to know which contact to show. Here's how you would pass in the contact id.
-
-```
-@livewire('show-contact', $contactId)
-```
-
-Any additional parameters passed into Livewire components, will be made available through the `created` lifecycle hook.
-
-```php
-class ShowContact extends LivewireComponent
-{
-    public $contact;
-
-    public function created($contactId)
-    {
-        $this->contact = Contact::find($id)d;
-    }
-}
-```
-
-Using the `@livewire` blade directive hopefully feels natural to you as there is no special syntax to learn. However, if this becomes redundant, you can bypass Laravel Controllers alltogether. To do so, Livewire offers a convenient routing helper.
-
-## 2. Livewire routing helper
+Like you saw in [Quickstart](/livewire/docs/quickstart), you point route endpoints to Livewire components like so:
 
 ```php
 // Before
@@ -137,3 +87,52 @@ class ShowContact extends LivewireComponent
 ```
 
 Now, after visiting `/contact/123`, the value passed into `created` will be an instance of the `Contact` model with id `123`.
+
+## 2. The @livewire Blade directive
+
+Let's assume we have a route like `Route::get('/home', 'HomeController@show')`, and `HomeController` returns a view named `home.blade.php`. We can include a component called `Counter` like so:
+
+```html
+@extends('layouts.app')
+
+@section('content')
+
+    @livewire(App\Http\Livewire\Counter::class)
+
+@endsection
+```
+
+For some, it might feel weird passing an expression like `App\Http\Livewire\Counter::class` into a blade diretive. If this is the case for you, you can register component aliases in a ServiceProvider and just use those in your views like so:
+
+**AppServiceProvider.php**
+```
+public function boot()
+{
+    Livewire::component('counter', Counter::class);
+}
+```
+
+Now you can pass the component alias into the directive:
+```
+@livewire('counter')
+```
+
+Additionally, you can pass data into a component by passing additional parameters into the `@livewire` directive. For example, let's say we have an `ShowContact` Livewire component that needs to know which contact to show. Here's how you would pass in the contact id.
+
+```
+@livewire('show-contact', $contactId)
+```
+
+Any additional parameters passed into Livewire components, will be made available through the `created` lifecycle hook.
+
+```php
+class ShowContact extends LivewireComponent
+{
+    public $contact;
+
+    public function created($contactId)
+    {
+        $this->contact = Contact::find($id)d;
+    }
+}
+```
