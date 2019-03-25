@@ -80,7 +80,7 @@ You can pass these as the value of an event listener to do special things in Liv
 Let's take `$set()` for example. It can be used to manually set a component property's value. Consider the `Counter` component's view.
 
 **Before**
-```
+```php
 <div>
     {{ $count }}
     <button wire:click="increment">+</button>
@@ -89,7 +89,7 @@ Let's take `$set()` for example. It can be used to manually set a component prop
 ```
 
 **After**
-```
+```php
 <div>
     {{ $count }}
     <button wire:click="$set('count', {{ $count + 1 }})">+</button>

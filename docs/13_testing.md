@@ -7,7 +7,7 @@ Livewire supports 2 styles of testing it's components:
 For these demonstrations, we will be using a simple Counter component like the following:
 
 **App\Http\Livewire\Counter.php**
-```
+```php
 class Counter extends LivewireComponent
 {
     public $count = 0;
@@ -32,7 +32,7 @@ class Counter extends LivewireComponent
 With a view that looks like:
 
 **resources/views/livewire/counter.blade.php**
-```
+```php
 <div>
     {{ $count }}
     <button wire:click="increment">+</button>

@@ -92,7 +92,7 @@ Now, after visiting `/contact/123`, the value passed into `created` will be an i
 
 Let's assume we have a route like `Route::get('/home', 'HomeController@show')`, and `HomeController` returns a view named `home.blade.php`. We can include a component called `Counter` like so:
 
-```html
+```php
 @extends('layouts.app')
 
 @section('content')
@@ -105,7 +105,7 @@ Let's assume we have a route like `Route::get('/home', 'HomeController@show')`, 
 For some, it might feel weird passing an expression like `App\Http\Livewire\Counter::class` into a blade diretive. If this is the case for you, you can register component aliases in a ServiceProvider and just use those in your views like so:
 
 **AppServiceProvider.php**
-```
+```php
 public function boot()
 {
     Livewire::component('counter', Counter::class);
@@ -113,13 +113,13 @@ public function boot()
 ```
 
 Now you can pass the component alias into the directive:
-```
+```php
 @livewire('counter')
 ```
 
 Additionally, you can pass data into a component by passing additional parameters into the `@livewire` directive. For example, let's say we have an `ShowContact` Livewire component that needs to know which contact to show. Here's how you would pass in the contact id.
 
-```
+```php
 @livewire('show-contact', $contactId)
 ```
 

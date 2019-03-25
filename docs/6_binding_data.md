@@ -31,7 +31,7 @@ By default, Livewire "lazilly updates" the value of `$color`. In other words, it
 
 If for some reason, this isn't desirable, for instance if you are doing real-time validation on an input element or live-updating search results, you can add the `live` modifier to the `wire:model` attribute.
 
-```html
+```php
 <div>
     <input wire:model.live="search">
 

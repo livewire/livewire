@@ -5,7 +5,7 @@ Similar to other component-driven front-end frameworks, Livewire components can 
 Nesting components is as simple and straightforward as you'd hope. Let's assume the Blade view below belongs to a component called `ShoppingCart`. This component displays a list of products in your cart, but the checkout form is handled by a child component called `CheckoutForm`.
 
 **livewire/shopping-cart.blade.php**
-```html
+```php
 <div>
     <ul>
         @foreach ($cart->products as $product)
@@ -68,7 +68,7 @@ Let's imagine the `CheckoutForm` component has a "cancel" button that communicat
 First, we need to register an event listener in the parent for the "cancel" event. These listeners are straightforward, they expect you to pass them an event name, and the method you want to be called when the event fires.
 
 **livewire/shopping-cart.blade.php**
-```html
+```php
 <div>
     [...]
 
@@ -103,7 +103,7 @@ There are 2 ways to emit an event in a component: from the view, and from the co
 
 ### From The View
 **livewire/checkout-form.blade.php**
-```html
+```php
 <div>
     [...]
 

@@ -7,7 +7,7 @@ Let's say we have a `Checkout` component that charges a user's credit card. Beca
 Fortunately, Livewire makes this kind of thing simple. We can use the `wire:loading-class` directive to specify any classes we want added during the loading phase. If we want the inverse functionality (to remove a class), we can add the `.remove` modifier to the directive. For example:
 
 **view**
-```html
+```php
 <div>
     <input wire:model="cardNumber">
     <button wire:click="checkout">Checkout</button>
@@ -24,7 +24,7 @@ When the "Checkout" button is clicked, the "Processing Payment..." message will 
 The method outlined above works great for simple components, however, it's common to want to only show loading indicators for specific actions. Consider the following example:
 
 **view**
-```html
+```php
 <div>
     <input wire:model="cardNumber">
     <button wire:click="checkout">Checkout</button>
@@ -39,7 +39,7 @@ The method outlined above works great for simple components, however, it's commo
 Notice, we've added a "Cancel" button to the checkout form. If the user clicks the "Cancel" button, the "Processing Payment..." message will show briefly. This is clearly undesireable, therefore Livewire offers two directives. You can add `wire:loading-target` the loading indicator, and pass in the name of a `ref` you define by attaching `wire:ref` to the target. Let's look at the adapted example:
 
 **view**
-```html
+```php
 <div>
     <input wire:model="cardNumber">
     <button wire:click="checkout" wire:ref="checkout-button">Checkout</button>

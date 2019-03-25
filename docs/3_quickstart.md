@@ -4,7 +4,11 @@
 
 ## Generate component
 
-Run `php artisan livewire:make Counter` to generate a new Livewire Component (`app/Http/Livewire/Counter.php`), and it's corresponding view (`resources/views/livewire/counter.blade.php`).
+Run the following command to generate a new Livewire Component (`app/Http/Livewire/Counter.php`), and it's corresponding view (`resources/views/livewire/counter.blade.php`).
+
+```bash
+> php artisan livewire:make Counter
+```
 
 **Component**
 ```php
@@ -18,7 +22,7 @@ class Counter extends LivewireComponent
 ```
 
 **View**
-```
+```html
 <div>
     {{-- Go effing nuts. --}}
 </div>
@@ -31,7 +35,7 @@ Before we continue, make sure you have an `app` layout stored in `resources/view
 _Note: These files are generated automatically for you if you ran `php artisan make:auth` when creating your Laravel app._
 
 **resources/views/layouts/app.blade.php**
-```
+```html
 <html>
     ...
     <body>
@@ -46,7 +50,7 @@ _Note: These files are generated automatically for you if you ran `php artisan m
 In your `routes/web.php` file, you can register the component route like so:
 
 **routes/web.php**
-```
+```php
 Route::livewire('/counter', App\Http\Livewire\Counter::class);
 ```
 
@@ -57,7 +61,7 @@ Now, if you visit the `/counter` endpoint in your browser, you should see a blan
  Let's add some basic counting functionality to our component. Replace the generated content of your Counter component and view with the following:
 
 **App\Http\Livewire\Counter.php**
-```
+```php
 class Counter extends LivewireComponent
 {
     public $count = 0;
@@ -80,7 +84,7 @@ class Counter extends LivewireComponent
 ```
 
 **resources/views/livewire/counter.blade.php**
-```
+```html
 <div>
     {{ $count }}
     <button wire:click="increment">+</button>
