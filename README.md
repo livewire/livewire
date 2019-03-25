@@ -6,7 +6,7 @@ This project isn't currently ready for the wild. I am currently only looking for
 
 If you are one of those people, please read through this entire README so we're all on the same page.
 
-## Get set up locally
+## Get set up for local development and contribution
 
 Note: I'm assuming you have a folder for all your projects and are serving that with Valet.
 
