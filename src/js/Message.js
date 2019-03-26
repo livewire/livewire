@@ -30,14 +30,13 @@ export default class {
     }
 
     storeResponse(payload) {
-        const { dom, dirtyInputs, serialized, redirectTo, emitEvent } = payload
-
         this.response = {
             dom: payload.dom,
             dirtyInputs: payload.dirtyInputs,
             serialized: payload.serialized,
-            redirectTo: redirectTo,
-            emitEvent: emitEvent,
+            redirectTo: payload.redirectTo,
+            emitEvent: payload.emitEvent,
+            forQueryString: payload.forQueryString,
         }
     }
 }

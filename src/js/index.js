@@ -4,6 +4,13 @@ import ComponentManager from './component_manager'
 
 class Livewire {
     constructor({ driver } = { driver: 'http' }) {
+        // @todo - document.
+        window.onpopstate = event => {
+            if (event.state.livewirePath) {
+                window.location.href = event.state.livewirePath
+            }
+        }
+
         this.componentManager = new ComponentManager(
             new Connection(drivers[driver])
         )
@@ -12,7 +19,8 @@ class Livewire {
     }
 
     restart() {
-        this.stop() && this.start()
+        this.stop()
+        this.start()
     }
 
     stop() {

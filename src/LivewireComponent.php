@@ -11,6 +11,7 @@ abstract class LivewireComponent
     public $prefix;
     public $emitEvent;
     public $redirectTo;
+    public $forQueryString = [];
     public $children = [];
     public $listenersByInternalChildComponentId = [];
 
@@ -28,6 +29,11 @@ abstract class LivewireComponent
     public function emit($eventName, ...$params)
     {
         $this->emitEvent = ['name' => $eventName, 'params' => $params];
+    }
+
+    public function pushToQueryString($data)
+    {
+        $this->forQueryString = array_merge($this->forQueryString, $data);
     }
 
     public function getPublicPropertiesDefinedBySubClass()

@@ -27,6 +27,7 @@
     "jest": "^24.1.0",
     "jsdom-simulant": "^1.1.2",
     "laravel-mix": "^4.0.14",
+    "query-string": "^5.1.1",
     "turbolinks": "^5.2.0",
     "vue-template-compiler": "^2.5.22"
   }

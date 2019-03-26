@@ -37,6 +37,8 @@ abstract class ConnectionHandler
         $dom = $wrapped->output($errors ?? null);
         $dirtyInputs = $wrapped->dirtyInputs();
         $emitEvent = $instance->emitEvent;
+        $forQueryString = $instance->forQueryString;
+        $instance->forQueryString = [];
         $serialized = encrypt($instance);
 
         return [
@@ -47,6 +49,7 @@ abstract class ConnectionHandler
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
             'emitEvent' => $emitEvent,
+            'forQueryString' => $forQueryString,
         ];
     }
 

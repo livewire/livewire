@@ -1,7 +1,7 @@
 import store from '../store'
 import Message from '../message'
 import { debounce } from 'lodash'
-import { addMixin } from '../util'
+import { addMixin, updateQueryString } from '../util'
 import morphdom from '../dom/morphdom'
 import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
@@ -43,7 +43,8 @@ class Component {
             this.syncQueue,
         ))
 
-        this.clearSyncQueue() && this.clearActionQueue()
+        this.clearSyncQueue()
+        this.clearActionQueue()
     }
 
     queueSyncInput(model, value) {
@@ -67,6 +68,10 @@ class Component {
         if (message.response.redirectTo) {
             window.location.href = message.response.redirectTo
             return
+        }
+
+        if (message.response.forQueryString) {
+            updateQueryString(message.response.forQueryString)
         }
 
         this.replaceDom(message.response.dom, message.response.dirtyInputs)
