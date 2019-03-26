@@ -3,7 +3,6 @@ import Message from '../message'
 import { debounce } from 'lodash'
 import { addMixin } from '../util'
 import morphdom from '../dom/morphdom'
-import domWalker from '../dom/tree_walker'
 import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
 
@@ -57,24 +56,6 @@ class Component {
 
     clearActionQueue() {
         this.actionQueue = []
-    }
-
-    attachListenersAndProcessChildComponents(callback) {
-        // This starts as the root component, but will become children as they are encountered.
-        let componentBeingWalked = this
-
-        domWalker.walk(this.el.rawNode(), (node) => {
-            if (typeof node.hasAttribute !== 'function') return
-            if (node.isSameNode(this.el.rawNode())) return
-
-            const el = new LivewireElement(node)
-
-            if (el.isComponentRootEl()) {
-                componentBeingWalked = callback.apply(this, [el])
-            }
-
-            this.nodeInitializer.initialize(el, componentBeingWalked);
-        })
     }
 
     receiveMessage(message, eventCallback) {

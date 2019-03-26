@@ -1,14 +1,16 @@
 // A little DOM walker I made, because document.TreeWalker isn't good at
 // conditionally not-traversing down a node.
 
-export default {
-    callback: null,
-    depth: 0,
+export default class {
+    constructor() {
+        this.callback = null
+        this.depth = 0
+    }
 
     walk(root, callback) {
         this.callback = callback
         return this.start(root)
-    },
+    }
 
     start(node) {
         if (this.callback(node) === false) {
@@ -22,9 +24,13 @@ export default {
         } else {
             return this.goToNextSiblingOrUpToParent(node)
         }
-    },
+    }
 
     goToNextSiblingOrUpToParent(node) {
+        if (this.depth === 0) {
+            return
+        }
+
         let sibling = this.getNextSibling(node)
         if (sibling) {
             return this.start(sibling)
@@ -36,7 +42,7 @@ export default {
                 return this.goToNextSiblingOrUpToParent(node.parentNode)
             }
         }
-    },
+    }
 
     getFirstChild(node) {
         const child = node.firstChild
@@ -45,7 +51,7 @@ export default {
             return this.getNextSibling(child)
         }
         return child
-    },
+    }
 
     getNextSibling(node) {
         const sibling = node.nextSibling
@@ -54,5 +60,5 @@ export default {
             return this.getNextSibling(sibling)
         }
         return sibling
-    },
+    }
 }
