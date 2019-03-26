@@ -85,8 +85,6 @@ class Component {
     }
 
     handleMorph(dom, dirtyInputs) {
-        let currentComponent = this
-
         morphdom(this.el.rawNode(), dom, {
             getNodeKey: node => {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
@@ -138,9 +136,13 @@ class Component {
             onNodeAdded: (node) => {
                 const el = new LivewireElement(node)
 
+                let currentComponent;
+
                 if (el.isComponentRootEl()) {
                     // We've encountered a new child component, let's register and initialize it.
                     currentComponent = store.addComponent(new Component(el, this.nodeInitializer, this.connection, this))
+                } else {
+                    currentComponent = store.findComponent(el.closestByAttribute('id').getAttribute('id'))
                 }
 
                 this.nodeInitializer.initialize(el, currentComponent)

@@ -25,6 +25,9 @@ trait MountsChildren
 
     public function mountChild($internalKey, $componentName, ...$options)
     {
+        // I'm adding the component name to the "internalKey" to support dynamic components.
+        $internalKey = $internalKey.$componentName;
+
         // If the child is new, we mount it. If not, we stub it out.
         $this->mountedChildren[] = $internalKey;
 
