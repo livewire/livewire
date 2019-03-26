@@ -35,7 +35,6 @@ export default class ComponentManager {
 
             if (el.isComponentRootEl()) {
                 const childComponent = callback(el, component)
-                debugger
                 this.attachListenersAndProcessChildComponents(callback, childComponent)
                 return false;
             } else {
