@@ -35,7 +35,6 @@ export default class {
             dirtyInputs: payload.dirtyInputs,
             serialized: payload.serialized,
             redirectTo: payload.redirectTo,
-            emitEvent: payload.emitEvent,
             forQueryString: payload.forQueryString,
         }
     }

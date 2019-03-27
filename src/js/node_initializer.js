@@ -1,5 +1,4 @@
 import { debounce, kebabCase } from './util'
-import EventAction from './action/event'
 import ModelAction from './action/model'
 import MethodAction from './action/method'
 import LivewireElement from './dom/element'
@@ -93,13 +92,6 @@ export default class {
             this.preventAndStop(e, directive.modifiers)
 
             if (directive.value) {
-                if (directive.method === '$emit') {
-                    const [eventName, ...otherParams] = directive.params
-
-                    component.parent.addAction(new EventAction(eventName, otherParams, component.id, el))
-                    return
-                }
-
                 component.addAction(new MethodAction(directive.method, directive.params, el))
             }
         }))

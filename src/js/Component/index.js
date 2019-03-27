@@ -1,8 +1,8 @@
-import store from '../store'
 import Message from '../message'
 import { debounce } from 'lodash'
-import { addMixin, updateQueryString } from '../util'
+import { addMixin } from '../util'
 import morphdom from '../dom/morphdom'
+import TreeWalker from '../dom/tree_walker'
 import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
 
@@ -12,9 +12,23 @@ class Component {
         this.id = el.getAttribute('id')
         this.nodeInitializer = nodeInitializer
         this.connection = connection
-        this.parent = parent
         this.syncQueue = {}
         this.actionQueue = []
+
+        this.initialize(el)
+    }
+
+    initialize(el) {
+        const walker = new TreeWalker
+
+        walker.walk(el.rawNode(), (node) => {
+            if (typeof node.hasAttribute !== 'function') return
+            if (node.isSameNode(this.el.rawNode())) return
+
+            const el = new LivewireElement(node)
+
+            this.nodeInitializer.initialize(el, this)
+        })
     }
 
     get el() {
@@ -59,7 +73,7 @@ class Component {
         this.actionQueue = []
     }
 
-    receiveMessage(message, eventCallback) {
+    receiveMessage(message) {
         // Note: I'm sure there is an abstraction called "MessageResponse" that makes sense.
         // Let's just keep an eye on this for now. Sorry for the LoD violation.
         this.serialized = message.response.serialized
@@ -70,16 +84,9 @@ class Component {
             return
         }
 
-        if (message.response.forQueryString) {
-            updateQueryString(message.response.forQueryString)
-        }
-
         this.replaceDom(message.response.dom, message.response.dirtyInputs)
 
         this.unsetLoading(message.loadingEls)
-
-        // This means "$this->emit()" was called in the component.
-        message.response.emitEvent && eventCallback(message.response.emitEvent)
     }
 
     replaceDom(rawDom, dirtyInputs) {
@@ -109,21 +116,11 @@ class Component {
             },
 
             onBeforeElChildrenUpdated: node => {
-                const el = new LivewireElement(node)
-
-                // Don't update the DOM of child components. They will update themselves.
-                if (el.isComponentRootEl() && ! el.isSameNode(this.el)) {
-                    return false
-                }
+                //
             },
 
             onBeforeElUpdated: node => {
                 const el = new LivewireElement(node)
-
-                // Don't update the child component DOM root element.
-                if (el.isComponentRootEl() && ! el.isSameNode(this.el)) {
-                    return false
-                }
 
                 return el.shouldUpdateInputElementGivenItHasBeenUpdatedViaSync(dirtyInputs)
             },
@@ -139,18 +136,7 @@ class Component {
             },
 
             onNodeAdded: (node) => {
-                const el = new LivewireElement(node)
-
-                let currentComponent;
-
-                if (el.isComponentRootEl()) {
-                    // We've encountered a new child component, let's register and initialize it.
-                    currentComponent = store.addComponent(new Component(el, this.nodeInitializer, this.connection, this))
-                } else {
-                    currentComponent = store.findComponent(el.closestByAttribute('id').getAttribute('id'))
-                }
-
-                this.nodeInitializer.initialize(el, currentComponent)
+                this.nodeInitializer.initialize(new LivewireElement(node), this)
             },
         });
     }
