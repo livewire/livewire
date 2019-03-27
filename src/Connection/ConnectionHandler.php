@@ -36,9 +36,6 @@ abstract class ConnectionHandler
         $id = $instance->id;
         $dom = $wrapped->output($errors ?? null);
         $dirtyInputs = $wrapped->dirtyInputs();
-        $emitEvent = $instance->emitEvent;
-        $forQueryString = $instance->forQueryString;
-        $instance->forQueryString = [];
         $serialized = encrypt($instance);
 
         return [
@@ -48,8 +45,6 @@ abstract class ConnectionHandler
             ),
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
-            'emitEvent' => $emitEvent,
-            'forQueryString' => $forQueryString,
         ];
     }
 
@@ -62,9 +57,6 @@ abstract class ConnectionHandler
                 break;
             case 'syncInput':
                 $wrapped->syncInput($data['name'], $data['value']);
-                break;
-            case 'fireEvent':
-                $wrapped->fireEvent($data['childId'], $data['name'], $data['params']);
                 break;
             case 'callMethod':
                 $wrapped->callMethod($data['method'], $data['params']);

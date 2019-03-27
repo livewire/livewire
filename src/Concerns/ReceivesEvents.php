@@ -39,14 +39,6 @@ trait ReceivesEvents
         }
     }
 
-    public function fireEvent($componentId, $event, $params)
-    {
-        $this->callMethod(
-            $this->listeners($componentId)[$event],
-            $params
-        );
-    }
-
     public function callMethod($method, $params = [])
     {
         switch ($method) {

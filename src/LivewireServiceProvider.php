@@ -101,7 +101,5 @@ class LivewireServiceProvider extends ServiceProvider
     public function registerBladeDirectives()
     {
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
-        Blade::directive('on', [LivewireBladeDirectives::class, 'on']);
-        Blade::directive('endlivewire', [LivewireBladeDirectives::class, 'endlivewire']);
     }
 }

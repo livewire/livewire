@@ -9,11 +9,7 @@ abstract class LivewireComponent
 
     public $id;
     public $prefix;
-    public $emitEvent;
     public $redirectTo;
-    public $forQueryString = [];
-    public $children = [];
-    public $listenersByInternalChildComponentId = [];
 
     public function __construct($id, $prefix)
     {
@@ -24,16 +20,6 @@ abstract class LivewireComponent
     public function redirect($url)
     {
         $this->redirectTo = $url;
-    }
-
-    public function emit($eventName, ...$params)
-    {
-        $this->emitEvent = ['name' => $eventName, 'params' => $params];
-    }
-
-    public function pushToQueryString($data)
-    {
-        $this->forQueryString = array_merge($this->forQueryString, $data);
     }
 
     public function getPublicPropertiesDefinedBySubClass()

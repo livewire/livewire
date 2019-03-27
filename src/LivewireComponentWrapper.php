@@ -9,7 +9,6 @@ class LivewireComponentWrapper
 {
     use Concerns\TracksDirtySyncedInputs,
         Concerns\HasLifecycleHooks,
-        Concerns\MountsChildren,
         Concerns\RegistersListeners,
         Concerns\ReceivesEvents;
 
@@ -29,16 +28,13 @@ class LivewireComponentWrapper
 
     public function output($errors = null)
     {
-        return $this->trackChildrenBeingMounted(function () use ($errors) {
-            return $this->wrapped->render()
-                ->with([
-                    'errors' => (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
-                    'wrapped' => $this,
-                ])
-                // Automatically inject all public properties into the blade view.
-                ->with($this->wrapped->getPublicPropertiesDefinedBySubClass())
-                ->render();
-        });
+        return $this->wrapped->render()
+            ->with([
+                'errors' => (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
+            ])
+            // Automatically inject all public properties into the blade view.
+            ->with($this->wrapped->getPublicPropertiesDefinedBySubClass())
+            ->render();
     }
 
     public function __get($property)
