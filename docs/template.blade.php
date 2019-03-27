@@ -29,7 +29,7 @@
 
     <div class="flex pt-12">
         {{-- Sidebar --}}
-        <div class="p-8 pt-4 border-r" style="border-color:#444">
+        <div class="p-8 pt-4" style="border-color:#444">
             <ul class="list-reset">
                 @foreach ($links as $path => $linkTitle)
                     <li class="mb-2"><a class="no-underline text-black text-sm" href="{{ $path }}">

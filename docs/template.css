@@ -18,15 +18,32 @@ body {
     overflow: hidden;
 }
 
+[char="fade"] {
+    position: relative;
+}
+
+[char="fade"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #F1F7F8;
+    opacity: .5;
+}
+
 [title="Component"] div {
     margin-bottom: 0 !important;
 }
 
 [title="Component"] pre {
+    padding: 0 !important;
     background-color: transparent !important;
 }
 
 [title="Component"] p {
+    z-index: 1;
     font-weight: bold;
     margin-bottom: 0 !important;
     position: absolute;
@@ -41,21 +58,23 @@ body {
 }
 
 [title="Component__view"] p {
-    color: #f1f7f8;
+    color: #d0e4e7;
 }
 
 [title="Component__class"] {
     position: relative;
     background: #f1f7f8;
+    padding: 16px;
 }
 
 [title="Component__view"] {
     position: relative;
     background: #004857;
+    padding: 16px;
 }
 
 [title="Component__view"] pre {
-    color: #fff;
+    color: #d9ebee;
 }
 
 
@@ -66,10 +85,6 @@ body {
 
 .markdown-body code, .markdown-body tt {
     background-color: #f1f7f8;
-}
-
-.markdown-body h1, .markdown-body h2 {
-    border-bottom: 1px solid #444;
 }
 
 .markdown-body {
