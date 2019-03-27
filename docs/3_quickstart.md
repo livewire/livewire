@@ -10,7 +10,10 @@ Run the following command to generate a new Livewire Component (`app/Http/Livewi
 > php artisan livewire:make Counter
 ```
 
-**Component**
+<div title="Component">
+<div title="Component__class">
+
+Counter.php
 ```php
 class Counter extends LivewireComponent
 {
@@ -21,12 +24,18 @@ class Counter extends LivewireComponent
 }
 ```
 
-**View**
+</div>
+<div title="Component__view">
+
+counter.blade.php
 ```html
 <div>
     {{-- Go effing nuts. --}}
 </div>
 ```
+
+</div>
+</div>
 
 ## Set up Blade layout file
 
@@ -60,7 +69,10 @@ Now, if you visit the `/counter` endpoint in your browser, you should see a blan
 
  Let's add some basic counting functionality to our component. Replace the generated content of your Counter component and view with the following:
 
-**App\Http\Livewire\Counter.php**
+<div title="Component">
+<div title="Component__class">
+
+Counter.php
 ```php
 class Counter extends LivewireComponent
 {
@@ -83,7 +95,10 @@ class Counter extends LivewireComponent
 }
 ```
 
-**resources/views/livewire/counter.blade.php**
+</div>
+<div title="Component__view">
+
+counter.blade.php
 ```html
 <div>
     {{ $count }}
@@ -91,6 +106,8 @@ class Counter extends LivewireComponent
     <button wire:click="decrement">-</button>
 </div>
 ```
+</div>
+</div>
 
 ## View it in the browser
 

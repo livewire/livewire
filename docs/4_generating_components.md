@@ -9,6 +9,9 @@ To generate a `Counter` component, we can run:
 
 This will generate a new component and view file with the following contents:
 
+<div title="Component">
+<div title="Component__class">
+
 `App\Http\Livewire\Counter.php`
 ```php
 <?php
@@ -26,9 +29,14 @@ class Counter extends LivewireComponent
 }
 ```
 
+</div>
+<div title="Component__view">
+
 `resources/views/livewire/counter.blade.php`
 ```php
 <div>
     //
 </div>
 ```
+</div>
+</div>
