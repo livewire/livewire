@@ -1,6 +1,6 @@
-# Event Listeners
+# Event Actions
 
-Livewire currently offers a handful of directives to make listening to browser events trivial. The common format for all of them is: `wire:[browser event]="[component method]"`.
+Livewire currently offers a handful of directives to make listening to browser events trivial. The common format for all of them is: `wire:[event]="[action]"`.
 
 Here are some common events you may need to listen for:
 

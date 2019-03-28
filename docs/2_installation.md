@@ -1,16 +1,13 @@
 # Installation
 Livewire has both a PHP component AND a Javascript component. You need to make sure both are available in your project before you can use it.
 
-## Install via composer
+## Include PHP (via composer)
 ```bash
 > composer require calebporzio/livewire
 ```
 
-## Include JavaScript portion
+## Include JavaScript (via snippet)
 
-There are two methods available to include the JavaScript portion of Livewire.
-
-### Method 1: Include via snippet
 To get started quickly, you can include the following snippet at the end of the `<body>` in your html page. It is recommended that you put this in a layout file such as `resources/views/layouts/app.blade.php`. You can create this layout file in a new laravel project by executing `artisan make:auth`.
 
 <div title="Component"><div title="Component__class"><div char="fade">
@@ -31,8 +28,8 @@ To get started quickly, you can include the following snippet at the end of the 
 ```
 </div></div></div>
 
-### Method 2: Include via NPM
-If you have a more sophistocated javascript build setup, you can install and import Livewire via NPM.
+## Include JavaScript (via NPM)
+If you have a more sophistocated javascript build setup, you can alternatively install and import Livewire via NPM.
 
 ```bash
 > npm install laravel-livewire --save-dev
@@ -41,5 +38,5 @@ If you have a more sophistocated javascript build setup, you can install and imp
 ```js
 import Livewire from 'laravel-livewire'
 
-Livewire.start()
+window.livewire = new Livewire
 ```

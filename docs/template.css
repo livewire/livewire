@@ -16,6 +16,7 @@ body {
     position: relative;
     border-radius: 6px;
     overflow: hidden;
+    margin-bottom: 16px;
 }
 
 [char="fade"] {
@@ -77,10 +78,43 @@ body {
     color: #d9ebee;
 }
 
+/* Warning */
+
+[title="Warning"] {
+    margin-bottom: 16px;
+    margin-top: 24px;
+    display: flex;
+    background-color: #ff707e;
+    border-radius: 6px;
+    padding: 16px;
+    font-size: 14px;
+}
+
+[title="Warning__content"] {
+    flex: 1;
+    margin-bottom: 0 !important;
+}
+
+[title="Warning__content"] p {
+    color: white;
+}
+
+[title="Warning"] code {
+    color: #222;
+}
+
+[title="Warning"]::before {
+    content: url(https://s3.us-east-2.amazonaws.com/calebporzio.com/svgs/alarm.svg);
+    width: 35px;
+    display: block;
+    margin-right: 16px;
+    color: white;
+}
 
 .markdown-body .highlight pre, .markdown-body pre {
     background-color: #f1f7f8;
     border-radius: 6px;
+    margin-bottom: 16px;
 }
 
 .markdown-body code, .markdown-body tt {
