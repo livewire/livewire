@@ -10,8 +10,6 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Commands\LivewireMakeCommand;
-use Livewire\Commands\LivewireStartCommand;
-use Livewire\Commands\LivewireWatchCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
@@ -82,12 +80,10 @@ class LivewireServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 LivewireMakeCommand::class,
-                LivewireStartCommand::class,
-                LivewireWatchCommand::class,
             ]);
 
             Artisan::command('livewire:docs', function () {
-                exec(sprintf('open "%s"', url('/livewire/docs/blow_my_mind')));
+                exec(sprintf('open "%s"', url('/livewire/docs/quickstart')));
             })->describe('Open the docs in your browser.');
         }
     }
