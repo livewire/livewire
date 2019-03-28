@@ -48,7 +48,7 @@ export default class {
     }
 
     attachModelListener(el, directive, component) {
-        const isLive = directive.modifiers.includes('live')
+        const isLive = ! directive.modifiers.includes('lazy')
         const debounceOrDont = isLive ? debounce : fn => fn
 
         el.addEventListener('input', debounceOrDont(e => {
