@@ -1,7 +1,10 @@
-# Form Validation
+# Input Validation
 
 Consider the following Livewire component:
 
+<div title="Component"><div title="Component__class">
+
+ContactForm
 ```php
 class ContactForm extends LivewireComponent
 {
@@ -18,88 +21,92 @@ class ContactForm extends LivewireComponent
     }
 }
 ```
+</div><div title="Component__view">
 
-```php
+contact-form.blade.php
+```html
 <div>
-    Email: <input wire:model="email">
+    Email: <input wire:model.lazy="email">
 
     <button wire:click="saveContact">Save Contact</button>
 </div>
 ```
+</div></div>
 
-## Defining validation rules
+We can add validation to this form almost exactly how you would in a controller. Take a look:
 
-You can define validation rules using the `$validates` class property in your component. All the standard Laravel validation rules are supported.
+<div title="Component"><div title="Component__class">
 
-```php
-class ContactForm extends LivewireComponent
-{
-    public $email;
-
-    public $validates = [
-        'email' => 'required|email',
-    ];
-
-    [...]
-}
-```
-
-## Running the validator
-
-To run this validator against your component's data, you can use a built-in function called `$this->validate()`.
+ContactForm
+<div char="fade">
 
 ```php
 class ContactForm extends LivewireComponent
 {
     public $email;
-
-    public $validates = [
-        'email' => 'required|email',
-    ];
 
     public function saveContact()
     {
-        Contact::create($this->validate())
+```
+</div>
+
+```php
+        $validatedData = $this->validate([
+            'email' => 'required|email',
+        ]);
+
+        // Execution doesn't reach here if validation fails.
+
+        Contact::create($validatedData);
+```
+<div char="fade">
+
+```php
+    }
+
+    public function render()
+    {
+        return view('livewire.contact-form');
     }
 }
 ```
+</div></div><div title="Component__view">
 
-`$this->validate()` will run the rules provided by `$this->validates` and return an array of validated data, keyed by names.
+contact-form.blade.php
+<div char="fade">
 
-You can optionally specify only specific data you want validated. For example:
-
-```php
-$this->validates = [
-    'name' => 'required|min:6',
-    'title' => 'required|min:8',
-    'dob' => 'required',
-];
-
-// Will ignore "dob" validation.
-$this->validate(['name', 'title']);
-```
-
-## Accessing validation errors
-
-Dealing with Livewire validation errors should feel exactly like dealing with normal Laravel validation errors. Livewire provides the standard `$errors` object to every view, and you can access all the errors like you normall would.
-
-```php
+```html
 <div>
-    Email: <input wire:model="email">
+    Email: <input wire:model.lazy="email">
 
+```
+</div>
+
+```html
     @if($errors->has('email'))
         <span>{{ $errors->first('email') }}</span>
     @endif
+```
+<div char="fade">
 
+```html
     <button wire:click="saveContact">Save Contact</button>
 </div>
 ```
+</div></div></div>
+
+> Note: Livewire exposes the same `$errors` object as Laravel, for more information, reference the [Laravel Docs](https://laravel.com/docs/5.8/validation#quick-displaying-the-validation-errors).
 
 ## Custom validators
 
-If you wish to use your own validation system in Livewire, that isn't a problem. Livewire will catch `ValidationException`s and provide the errors to the view just like using the stock `$this->validates()` method.
+If you wish to use your own validation system in Livewire, that isn't a problem. Livewire will catch `ValidationException`s and provide the errors to the view just like using `$this->validate()`.
 
 For example:
+
+<div title="Component"><div title="Component__class">
+
+ContactForm
+<div char="fade">
 
 ```php
 class ContactForm extends LivewireComponent
@@ -108,25 +115,50 @@ class ContactForm extends LivewireComponent
 
     public function saveContact()
     {
-        $validated = Validator::make(['email' => $this->email], [
-            'email' => 'required|email',
+```
+</div>
+
+```php
+        $validatedData = Validator::make(
+            ['email' => $this->email],
+            ['email' => 'required|email'],
+            ['required' => 'The :attribute field is required'],
         ])->validate();
 
-        Contact::create($validated);
+        Contact::create($validatedData);
+```
+<div char="fade">
+
+```php
+    }
+
+    public function render()
+    {
+        return view('livewire.contact-form');
     }
 }
 ```
+</div></div><div title="Component__view">
 
-Displaying errors in the view is the same as before.
+contact-form.blade.php
+<div char="fade">
 
-```php
+```html
 <div>
-    Email: <input wire:model="email">
+    Email: <input wire:model.lazy="email">
 
+```
+</div>
+
+```html
     @if($errors->has('email'))
         <span>{{ $errors->first('email') }}</span>
     @endif
+```
+<div char="fade">
 
+```html
     <button wire:click="saveContact">Save Contact</button>
 </div>
 ```
+</div></div></div>

@@ -19,20 +19,6 @@ body {
     margin-bottom: 16px;
 }
 
-[char="fade"] {
-    position: relative;
-}
-
-[char="fade"]::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #F1F7F8;
-    opacity: .5;
-}
 
 [title="Component"] div {
     margin-bottom: 0 !important;
@@ -76,6 +62,27 @@ body {
 
 [title="Component__view"] pre {
     color: #d9ebee;
+}
+
+/* Fade */
+
+[char="fade"] {
+    position: relative;
+}
+
+[char="fade"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #F1F7F8;
+    opacity: .5;
+}
+
+[title="Component__view"] [char="fade"]::before {
+    background: #064856;
 }
 
 /* Warning */
