@@ -1,31 +1,37 @@
 # Lifecycle Hooks
 
-Each Livewire component undergoes a lifecycle (created, updated, destroyed). Lifecycle hooks allow you to run code at any part of the component's lifecyle.
-
-Because Livewire is heavily inspired by VueJs, it borrows Vue's lifecycle hook naming conventions.
+Each Livewire component undergoes a lifecycle (created, updating, updated). Lifecycle hooks allow you to run code at any part of the component's lifecyle, or before specific actions are handled.
 
 Hooks | Description
 --- | ---
-created | Runs as soon as the Livewire component is instantiated
-mounted | Runs immediately after the Livewire component has rendered for the first time
-beforeUpdate | Runs before actions such as: `wire:click="addTodo"`
-updated | Runs after actions
+created | Runs immediately after the Livewire component is instantiated
+updating | Runs before any update to the Livewire component
+updatingAttributeEmail | Runs before a property called `$email` is updated
+updated | Runs after any update to the Livewire component
+updatedAttributeEmail | Runs after a property called `$email` is updated
 
 **Example**
 ```php
 class HelloWorld extends LivewireComponent
 {
+    public $email;
+
     public function created()
     {
         //
     }
 
-    public function mounted()
+    public function updating()
     {
         //
     }
 
-    public function beforeUpdate()
+    public function updatingEmail($value)
+    {
+        Validator::make(['email' => $value], ['email' => 'required'])->validate();
+    }
+
+    public function updatedEmail()
     {
         //
     }

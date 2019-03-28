@@ -17,6 +17,17 @@ class TestConnectionHandler extends ConnectionHandler
         ]], [], $serialized);
     }
 
+    public static function updateProperty($name, $value, $serialized)
+    {
+        return (new static)([[
+            'type' => 'syncInput',
+            'payload' => [
+                'name' => $name,
+                'value' => $value,
+            ],
+        ]], [], $serialized);
+    }
+
     public function __invoke($actionQueue, $syncQueue, $serialized)
     {
         return $this->handle($actionQueue, $syncQueue, $serialized);

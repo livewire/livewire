@@ -20,10 +20,10 @@ trait HasLifecycleHooks
         }
     }
 
-    public function beforeUpdate(...$params)
+    public function updating(...$params)
     {
-        if (method_exists($this->wrapped, 'beforeUpdate')) {
-            $this->wrapped->beforeUpdate(...$params);
+        if (method_exists($this->wrapped, 'updating')) {
+            $this->wrapped->updating(...$params);
         }
     }
 

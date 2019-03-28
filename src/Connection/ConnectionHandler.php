@@ -50,7 +50,7 @@ abstract class ConnectionHandler
 
     public function processMessage($type, $data, $wrapped)
     {
-        $wrapped->beforeUpdate();
+        $wrapped->updating();
 
         switch ($type) {
             case 'refresh':

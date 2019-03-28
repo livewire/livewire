@@ -24,9 +24,8 @@ trait ReceivesEvents
 
     protected function callBeforeAndAferSyncHooks($name, $value, $callback)
     {
-        // Sticking with the "beforeX", "Xed" naming convention.
-        $beforeMethod = 'before' . studly_case($name) . 'Sync';
-        $afterMethod = camel_case($name) . 'Synced';
+        $beforeMethod = 'updating' . studly_case($name);
+        $afterMethod = 'updated' . studly_case($name);
 
         if (method_exists($this->wrapped, $beforeMethod)) {
             $this->wrapped->{$beforeMethod}($value);
