@@ -6,11 +6,9 @@ use Illuminate\Support\Facades\Validator;
 
 trait ValidatesInput
 {
-    protected $validates;
-
-    public function validate($fields = null)
+    public function validate($rules)
     {
-        $fields = $fields ?: array_keys($this->validates);
+        $fields = array_keys($rules);
 
         $result = [];
 
@@ -23,7 +21,7 @@ trait ValidatesInput
             $result[$field] = $this->{$field};
         }
 
-        return Validator::make($result, array_only($this->validates, $fields))
+        return Validator::make($result, array_only($rules, $fields))
             ->validate();
     }
 }

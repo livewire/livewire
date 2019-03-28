@@ -33,8 +33,8 @@ abstract class ConnectionHandler
             return ['redirectTo' => $instance->redirectTo];
         }
 
-        $id = $instance->id;
         $dom = $wrapped->output($errors ?? null);
+        $id = $instance->id;
         $dirtyInputs = $wrapped->dirtyInputs();
         $serialized = ComponentHydrator::dehydrate($instance);
 
