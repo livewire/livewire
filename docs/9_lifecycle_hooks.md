@@ -6,9 +6,9 @@ Hooks | Description
 --- | ---
 created | Runs immediately after the Livewire component is instantiated
 updating | Runs before any update to the Livewire component
-updatingAttributeEmail | Runs before a property called `$email` is updated
+updatingEmail | Runs before a property called `$email` is updated
 updated | Runs after any update to the Livewire component
-updatedAttributeEmail | Runs after a property called `$email` is updated
+updatedEmail | Runs after a property called `$email` is updated
 
 **Example**
 ```php
@@ -31,7 +31,7 @@ class HelloWorld extends LivewireComponent
         Validator::make(['email' => $value], ['email' => 'required'])->validate();
     }
 
-    public function updatedEmail()
+    public function updatedEmail($value)
     {
         //
     }
