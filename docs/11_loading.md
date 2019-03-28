@@ -9,7 +9,7 @@ Fortunately, Livewire makes this kind of thing simple. We can use the `wire:load
 **view**
 ```php
 <div>
-    <input wire:model="cardNumber">
+    <input wire:model.lazy="cardNumber">
     <button wire:click="checkout">Checkout</button>
 
     <div class="hidden" wire:loading-class.remove="hidden">
@@ -26,7 +26,7 @@ The method outlined above works great for simple components, however, it's commo
 **view**
 ```php
 <div>
-    <input wire:model="cardNumber">
+    <input wire:model.lazy="cardNumber">
     <button wire:click="checkout">Checkout</button>
     <button wire:click="cancel">Cancel</button>
 
@@ -41,7 +41,7 @@ Notice, we've added a "Cancel" button to the checkout form. If the user clicks t
 **view**
 ```php
 <div>
-    <input wire:model="cardNumber">
+    <input wire:model.lazy="cardNumber">
     <button wire:click="checkout" wire:ref="checkout-button">Checkout</button>
     <button wire:click="cancel">Cancel</button>
 

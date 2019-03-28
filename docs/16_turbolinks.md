@@ -1,19 +1,22 @@
-# Turbolinks
+# SPA Mode
 
-While Livewire makes individual pages feal smooth, it doesn't give transitions between pages the same love. For this, we have Turbolinks.
-
-Turbolinks is a handy tool that hijacks full page reloads (like clicking a link to another page) and processes them in the background, patching the updated DOM into the current page. It very easily makes a traditional server-side application, feel like a single-page application.
+While Livewire makes individual pages feal smooth, it doesn't give transitions between pages the same love. Livewire plans to support this functionality out of the box, but for now, it is recommended to use Turbolinks.
 
 Fortunately, getting Turbolinks to play nicely with Livewire is simple. Let's walk through it.
 
 Checkout the [Turbolinks documentation](https://github.com/turbolinks/turbolinks) for installation instructions.
 
-Now, replace your `Livewire.start()` JS code with the following:
+Now, add the following JS in a script tag at the bottom of the page, or in your `app.js` file.
 
 ```js
-document.addEventListener('turbolinks:load', function () {
-    Livewire.stop()
-    Livewire.start()
+Turbolinks.start()
+
+document.addEventListener('turbolinks:load', () => {
+    if (! window.livewire) {
+        window.livewire = new Livewire()
+    } else {
+        window.livewire.restart()
+    }
 })
 ```
 

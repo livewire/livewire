@@ -72,8 +72,7 @@ resources/views/livewire/counter.blade.php
 
 To add "counting" functionality, replace the generated content of your `Counter` component and view with the following:
 
-<div title="Component">
-<div title="Component__class">
+<div title="Component"><div title="Component__class">
 
 Counter.php
 ```php
@@ -97,9 +96,7 @@ class Counter extends LivewireComponent
     }
 }
 ```
-
-</div>
-<div title="Component__view">
+</div><div title="Component__view">
 
 counter.blade.php
 ```html
@@ -109,8 +106,7 @@ counter.blade.php
     <button wire:click="decrement">-</button>
 </div>
 ```
-</div>
-</div>
+</div></div>
 
 ## Inlude in Blade view
 

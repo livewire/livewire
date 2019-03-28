@@ -2,11 +2,13 @@
 
 Livewire supports 2 styles of testing it's components:
 1. Unit testing
-2. End-to-end testing (still in development)
+2. End-to-end testing
 
 For these demonstrations, we will be using a simple Counter component like the following:
 
-**App\Http\Livewire\Counter.php**
+<div title="Component"><div title="Component__class">
+
+Counter.php
 ```php
 class Counter extends LivewireComponent
 {
@@ -28,17 +30,17 @@ class Counter extends LivewireComponent
     }
 }
 ```
+</div><div title="Component__view">
 
-With a view that looks like:
-
-**resources/views/livewire/counter.blade.php**
-```php
-<div>
-    {{ $count }}
+counter.blade.php
+```html
+<div style="text-align: center">
     <button wire:click="increment">+</button>
+    <h1>{{ $count }}</h1>
     <button wire:click="decrement">-</button>
 </div>
 ```
+</div></div>
 
 ## Unit Testing
 
@@ -65,7 +67,10 @@ class CounterTest extends TestCase
 
 ## End-to-end Testing
 
-_Note: This style of testing is currently under development and likely won't work as expected._
+<div title="Warning"><div title="Warning__content">
+
+This style of testing is currently under development and likely won't work as expected.
+</div></div>
 
 ```php
 class CounterTest extends TestCase

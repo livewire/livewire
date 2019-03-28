@@ -5,7 +5,6 @@ One of the benefits of using Livewire is utilizing familiar backend functionalit
 
 Livewire provides a basic "fade" transition out-of-the-box.
 
-**view**
 ```php
 <div>
     [...]
@@ -24,26 +23,26 @@ You can control the length of this fade by adding an additional time modifier. T
 
 `wire:transition.fade.1s`
 
-*Note: if your element isn't transitioning in and out as expected, it's possible Livewire is having a hard time keeping track of it. In those cases, add a unique `key` attribute to the element like so:
+<div title="Warning"><div title="Warning__content">
+
+If your element isn't transitioning in and out as expected, it's possible Livewire is having a hard time keeping track of it. In those cases, add a unique `key` attribute to the element like so:
 
 ```php
 <div wire:transition.fade key="unique-key">
 ```
+</div></div>
 
 ## Custom transitions
 
-For custom transitions, Livewire uses VueJs's transition syntax.
+Livewire provides a convenient system for performing more advanced transitions.
 
 Let's say we want to add a "fade in and out" transition to a confirmation modal in our component. To achieve this, we need to first declare the transition in our view using Livewire's `wire:transition` directive.
 
-**view**
 ```php
 <div>
-    [...]
-
     @if($showConfirmationModal)
         <div wire:transition="fade">
-            [...]
+            ...
         </div>
     @endif
 </div>
