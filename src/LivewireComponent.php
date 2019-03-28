@@ -36,6 +36,20 @@ abstract class LivewireComponent
         return $data;
     }
 
+    public function getAllPropertiesDefinedBySubClass()
+    {
+        $properties = (new \ReflectionClass($this))->getProperties();
+        $data = [];
+
+        foreach ($properties as $property) {
+            if ($property->getDeclaringClass()->getName() !== self::class) {
+                $data[$property->getName()] = $property->getValue($this);
+            }
+        }
+
+        return $data;
+    }
+
     public function getPropertyValue($prop) {
         // This is used by wrappers. Otherwise,
         // users would have to declare props as "public".

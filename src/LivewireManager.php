@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Support\Facades\File;
 use Livewire\Testing\TestableLivewire;
 use Livewire\Testing\TestableLivewireComponentWrapper;
+use Livewire\Connection\ComponentHydrator;
 
 class LivewireManager
 {
@@ -67,7 +68,7 @@ EOT;
         $wrapped->created(...$options);
         $dom = $wrapped->output();
         $wrapped->mounted();
-        $serialized = encrypt($instance);
+        $serialized = ComponentHydrator::dehydrate($instance);
 
         return [$dom, $instance->id, $serialized];
     }

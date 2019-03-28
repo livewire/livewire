@@ -14,7 +14,7 @@ abstract class ConnectionHandler
 
     public function handle($actionQueue, $syncQueue, $serialized)
     {
-        $instance = decrypt($serialized);
+        $instance = ComponentHydrator::hydrate($serialized);
         $wrapped = $this->wrap($instance);
 
         try {
@@ -36,7 +36,7 @@ abstract class ConnectionHandler
         $id = $instance->id;
         $dom = $wrapped->output($errors ?? null);
         $dirtyInputs = $wrapped->dirtyInputs();
-        $serialized = encrypt($instance);
+        $serialized = ComponentHydrator::dehydrate($instance);
 
         return [
             'componentId' => $id,
