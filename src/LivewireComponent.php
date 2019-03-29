@@ -2,10 +2,18 @@
 
 namespace Livewire;
 
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
+use Illuminate\View\View;
+
 abstract class LivewireComponent
 {
     use Concerns\CanBeSerialized,
-        Concerns\ValidatesInput;
+        Concerns\ValidatesInput,
+        Concerns\TracksDirtySyncedInputs,
+        Concerns\HasLifecycleHooks,
+        Concerns\RegistersListeners,
+        Concerns\ReceivesEvents;
 
     public $id;
     public $prefix;
@@ -15,6 +23,23 @@ abstract class LivewireComponent
     {
         $this->id = $id;
         $this->prefix = $prefix;
+        $this->hashCurrentObjectPropertiesForEasilyDetectingChangesLater();
+    }
+
+    public function output($errors = null)
+    {
+        $view = $this->render();
+
+        throw_unless($view instanceof View,
+            new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
+
+        return $view
+            ->with([
+                'errors' => (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
+            ])
+            // Automatically inject all public properties into the blade view.
+            ->with($this->getPublicPropertiesDefinedBySubClass())
+            ->render();
     }
 
     public function redirect($url)

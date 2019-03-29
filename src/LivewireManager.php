@@ -59,15 +59,9 @@ EOT;
     {
         $instance = $this->activate($component);
 
-        if ($this->isTesting) {
-            $wrapped = TestableLivewireComponentWrapper::wrap($instance);
-        } else {
-            $wrapped = LivewireComponentWrapper::wrap($instance);
-        }
-
-        $wrapped->created(...$options);
-        $dom = $wrapped->output();
-        $wrapped->mounted();
+        $instance->created(...$options);
+        $dom = $instance->output();
+        $instance->mounted();
         $serialized = ComponentHydrator::dehydrate($instance);
 
         return [$dom, $instance->id, $serialized];

@@ -6,7 +6,7 @@ use Livewire\Livewire;
 
 class TestConnectionHandler extends ConnectionHandler
 {
-    public static function runAction($action, $serialized)
+    public static function runAction($action, $param, $serialized)
     {
         return (new static)([[
             'type' => 'callMethod',

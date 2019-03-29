@@ -14,9 +14,9 @@ trait MountsChildren
         // This allows us to recognize when a previosuly rendered child,
         // is no longer being rendered, we can clear their "children"
         // entry so that we don't still return dummy data.
-        foreach ($this->wrapped->children as $childName => $id) {
+        foreach ($this->children as $childName => $id) {
             if (! in_array($childName, $this->mountedChildren)) {
-                unset($this->wrapped->children[$childName]);
+                unset($this->children[$childName]);
             }
         }
 
@@ -31,7 +31,7 @@ trait MountsChildren
         // If the child is new, we mount it. If not, we stub it out.
         $this->mountedChildren[] = $internalKey;
 
-        if ($id = $this->wrapped->children[$internalKey] ?? false) {
+        if ($id = $this->children[$internalKey] ?? false) {
             return [
                 // The "id" is included here as a key for morphdom.
                 // @todo - if the root element of a component is not a "div", things will break,
@@ -45,7 +45,7 @@ trait MountsChildren
 
         [$dom, $id, $serialized] = app('livewire')->mount($componentName, ...$options);
 
-        $this->wrapped->children[$internalKey] = $id;
+        $this->children[$internalKey] = $id;
 
         return [$dom, $id, $serialized];
     }

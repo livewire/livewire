@@ -20,7 +20,7 @@ trait RegistersListeners
     public function registerListeners()
     {
         if ($this->queuedListeners) {
-            $this->wrapped->listenersByInternalChildComponentId[$this->currentChild]
+            $this->listenersByInternalChildComponentId[$this->currentChild]
                 = $this->queuedListeners;
         }
 
@@ -31,7 +31,7 @@ trait RegistersListeners
     public function listeners($componentId = null)
     {
         return $componentId
-            ? $this->wrapped->listenersByInternalChildComponentId[$componentId]
-            : $this->wrapped->listenersByInternalChildComponentId;
+            ? $this->listenersByInternalChildComponentId[$componentId]
+            : $this->listenersByInternalChildComponentId;
     }
 }

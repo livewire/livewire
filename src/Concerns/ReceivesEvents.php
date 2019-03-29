@@ -9,14 +9,14 @@ trait ReceivesEvents
         $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) {
             $this->removeFromDirtyInputsList($name);
 
-            $this->wrapped->setPropertyValue($name, $value);
+            $this->setPropertyValue($name, $value);
         });
     }
 
     public function lazySyncInput($name, $value)
     {
         $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) {
-            $this->wrapped->setPropertyValue($name, $value);
+            $this->setPropertyValue($name, $value);
 
             $this->rehashProperty($name);
         });
@@ -27,14 +27,14 @@ trait ReceivesEvents
         $beforeMethod = 'updating' . studly_case($name);
         $afterMethod = 'updated' . studly_case($name);
 
-        if (method_exists($this->wrapped, $beforeMethod)) {
-            $this->wrapped->{$beforeMethod}($value);
+        if (method_exists($this, $beforeMethod)) {
+            $this->{$beforeMethod}($value);
         }
 
         $callback($name, $value);
 
-        if (method_exists($this->wrapped, $afterMethod)) {
-            $this->wrapped->{$afterMethod}($value);
+        if (method_exists($this, $afterMethod)) {
+            $this->{$afterMethod}($value);
         }
     }
 
@@ -49,7 +49,7 @@ trait ReceivesEvents
 
             case '$toggle':
                 $prop = array_shift($params);
-                $this->syncInput($prop, ! $this->wrapped->{$prop});
+                $this->syncInput($prop, ! $this->{$prop});
                 return;
                 break;
 
@@ -58,7 +58,7 @@ trait ReceivesEvents
                 break;
 
             default:
-                $this->wrapped->{$method}(...$params);
+                $this->{$method}(...$params);
                 break;
         }
     }

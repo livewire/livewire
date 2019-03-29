@@ -3,11 +3,10 @@
 namespace Livewire\Testing\Concerns;
 
 use Livewire\Testing\TestConnectionHandler;
-use Symfony\Component\DomCrawler\Crawler;
 
 trait MakesCallsToComponent
 {
-    public function callMethod($method, $parameters = [])
+    public function runAction($method, ...$parameters)
     {
         $this->sendMessage('callMethod', [
             'method' => $method,
@@ -18,7 +17,7 @@ trait MakesCallsToComponent
         return $this;
     }
 
-    public function syncInput($name, $value)
+    public function updateProperty($name, $value)
     {
         $this->sendMessage('syncInput', [
             'name' => $name,
