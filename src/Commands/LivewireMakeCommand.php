@@ -8,55 +8,54 @@ use Illuminate\Support\Facades\File;
 class LivewireMakeCommand extends Command
 {
     protected $signature = 'livewire:make {component}';
-
     protected $description = '@todo';
 
-    protected $messages = [
-        'file_exists' => '@todo - Whoops, looks like the file already exists: [{filePath}]',
-        'file_created' => '@todo - Livewire component [{component}] successfully created',
-    ];
+    protected $component;
 
     public function handle()
     {
-        $this->makeFile();
+        $this->component = $this->argument('component');
+        $this->view = kebab_case($this->component);
+        $this->filenameOfClass = "{$this->component}.php";
+        $this->filenameOfView = "{$this->view}.blade.php";
+        $this->directoryContainingClass = app_path('Http'.DIRECTORY_SEPARATOR.'Livewire');
+        $this->directoryContainingView = head(config('view.paths')).DIRECTORY_SEPARATOR.'livewire';
+        $this->pathToClass = $this->directoryContainingClass.DIRECTORY_SEPARATOR.$this->filenameOfClass;
+        $this->pathToView = $this->directoryContainingView.DIRECTORY_SEPARATOR.$this->filenameOfView;
 
-        $this->makeView();
+        $this->unlessFilesAlreadyExist(function () {
+            $this->ensureDirectoryExists($this->directoryContainingClass);
+            $this->ensureDirectoryExists($this->directoryContainingView);
+            $this->makeClass();
+            $this->makeView();
+        });
 
-        $this->info(str_replace(
-            '{component}',
-            $this->argument('component'),
-            $this->messages['file_created']
-        ));
+        $this->info("👍  Files created:");
+        $this->info("-> [{$this->pathToClass}]");
+        $this->info("-> [{$this->pathToView}]");
     }
 
-    protected function makeFile()
+    protected function unlessFilesAlreadyExist($callback) {
+        throw_if(File::exists($this->pathToClass), new \Exception('File already exists ['.$this->pathToClass.']'));
+        throw_if(File::exists($this->pathToView), new \Exception('File already exists ['.$this->pathToView.']'));
+
+        $callback();
+    }
+
+    protected function makeClass()
     {
-        $filePath = sprintf('%s/%s.php',
-            $directory = app_path('Http/Livewire'),
-            $component = rtrim($this->argument('component'), '.php')
-        );
-
-        if (File::exists($filePath)) {
-            $this->error(str_replace('{filePath}', $filePath, $this->messages['file_exists']));
-            return;
-        }
-
-        $this->ensureDirectoryExists($directory);
-
-        $viewName = kebab_case($component);
-
-        File::put($filePath, <<<EOT
+        File::put($this->pathToClass, <<<EOT
 <?php
 
 namespace App\Http\Livewire;
 
 use Livewire\LivewireComponent;
 
-class {$component} extends LivewireComponent
+class {$this->component} extends LivewireComponent
 {
     public function render()
     {
-        return view('livewire.{$viewName}');
+        return view('livewire.{$this->view}');
     }
 }
 
@@ -66,21 +65,14 @@ EOT
 
     protected function makeView()
     {
-        $filePath = sprintf('%s/%s.blade.php',
-            $directory = array_first(config('view.paths')) . '/livewire',
-            kebab_case($this->argument('component'))
-        );
+        $wisdom = require(__DIR__.DIRECTORY_SEPARATOR.'wisdom.php');
+        $nugget = $wisdom[rand(0, count($wisdom)-1)];
 
-        if (File::exists($filePath)) {
-            $this->error(str_replace('{filePath}', $filePath, $this->messages['file_exists']));
-            return;
-        }
-
-        $this->ensureDirectoryExists($directory);
-
-        File::put($filePath, <<<EOT
+        File::put($this->pathToView, <<<EOT
 <div>
-    {{-- Go effing nuts. --}}
+{{--
+    {$nugget}
+--}}
 </div>
 
 EOT
