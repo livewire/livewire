@@ -23,7 +23,7 @@ Let's assume we have a route like `Route::get('/home', 'HomeController@show')`, 
 
 ### Component Aliases
 
-For some, it might feel weird passing an expression like `App\Http\Livewire\Counter::class` into a blade diretive. If this is the case for you, you can register component aliases in a ServiceProvider and just use those in your views like so:
+For some, it might feel weird passing an expression like `App\Http\Livewire\Counter::class` into a blade directive. If this is the case for you, you can register component aliases in a ServiceProvider and just use those in your views like so:
 
 **AppServiceProvider.php**
 ```php
