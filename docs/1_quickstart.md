@@ -32,7 +32,7 @@
 Run the following command to generate a new Livewire component called `Counter` and it's corresponding Blade view.
 
 ```bash
-> php artisan livewire:make Counter
+> php artisan make:livewire Counter
 ```
 
 Running this command will generate the following two files:
@@ -108,39 +108,23 @@ counter.blade.php
 ```
 </div></div>
 
-## Inlude in Blade view
+## Add A Route
 
 You can now render this component inside any Blade view using the `@livewire` Blade directive.
 
 <div title="Component"><div title="Component__class">
 
-Any Blade View
-
-<div char="fade">
-
-```html
-@extends('layouts.app')
-
-@section('content')
-    ...
-```
-
-</div>
-
+web.php
 ```php
-    @livewire(App\Http\Livewire\Counter::class)
+Route::livewire('/counter' App\Http\Livewire\Counter::class)
 ```
+</div></div>
 
-<div char="fade">
+<div title="Warning"><div title="Warning__content">
 
-```html
-    ...
-@endsection
-```
-
-</div>
+Livewire looks for `layouts/app.blade.php` with `@yeild('content')`, and renders the component there. This file is usually added when you run `php artisan make:auth`. If you are having trouble with this, go [here](/livewire/docs/rendering_components) for more info.
 </div></div>
 
 ## View it in the browser
 
-Now load the page your component lives on in your browser. You should see the `Counter` component rendered. If you click the "+" or "-" button, the page should automatically update without a page reload. Magic.
+Now navigate to `/counter` in your browser. You should see the `Counter` component rendered. If you click the "+" or "-" button, the page should automatically update without a page reload. Magic.

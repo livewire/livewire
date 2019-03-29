@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\File;
 
 class LivewireMakeCommand extends Command
 {
-    protected $signature = 'livewire:make {component}';
-    protected $description = '@todo';
+    protected $signature = 'make:livewire {component}';
+    protected $description = 'Create a new Livewire component and it\'s corresponding blade view.';
 
     protected $component;
 

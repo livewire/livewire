@@ -7,7 +7,7 @@ There are two ways to render Livewire components:
 
 ## A) Include Inside Blade View
 
-Like you saw in [Quickstart](/livewire/docs/quickstart), you can include a Livewire component in an existing Blade view with the `@livewire` directive.
+You can include a Livewire component in an existing Blade view with the `@livewire` directive.
 
 Let's assume we have a route like `Route::get('/home', 'HomeController@show')`, and `HomeController` returns a view named `home.blade.php`. We can include a component called `Counter` like so:
 
