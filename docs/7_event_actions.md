@@ -45,27 +45,21 @@ To listen for specific keys on **keydown** events, you can pass the name of the 
 
 Here is a quick list of some common ones you may need:
 
-Key |
---- |
-enter |
-backspace |
-escape |
-super |
-shift |
-alt |
-tab |
-arrow-down |
-arrow-left |
-arrow-right |
-arrow-up |
+Browser Event | Livewire Modifier
+--- | ---
+Backspace | backspace
+Escape | escape
+Shift | shift
+Tab | tab
+ArrowRight | arrow-right
 
 ```html
-<input wire:keydown.page-down="onPageDown">
+<input wire:keydown.page-down="someAction">
 ```
 
 In the above example, the handler will only be called if `event.key` is equal to 'PageDown'.
 
-## Special actions
+## Special Actions
 In Livewire, there are some "special" actions that are usually prefixed with a "$" symbol:
 
 Function | Description
@@ -99,3 +93,12 @@ Let's take `$set()` for example. It can be used to manually set a component prop
 Notice that we are no longer calling the `increment` and `decrement` functions, we are direcly specifying, in blade, what we want data set to.
 
 This can save on lots of redundant, one-line component methods that only exist to set, or toggle the value of component property.
+
+## Polling Actions
+Livewire offers a directive called `wire:interval="someAction"` that, when added to an element, will fire `someAction` to the Livewire component every `500ms`. You can customize the frequency by passing a directive modifier like `250ms`. For example:
+
+```html
+<div wire:interval.150ms="$refresh">
+    Current time: {{ now() }}
+</div>
+```

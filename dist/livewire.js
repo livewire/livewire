@@ -444,7 +444,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) *
 /*!******************************!*\
   !*** ./src/js/util/index.js ***!
   \******************************/
-/*! exports provided: debounce, dispatch, addMixin, kebabCase */
+/*! exports provided: kebabCase, debounce, dispatch, addMixin */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
