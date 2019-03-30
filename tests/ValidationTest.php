@@ -4,7 +4,6 @@ namespace Tests;
 
 use Livewire\LivewireComponent;
 use Livewire\LivewireManager;
-use Livewire\Connection\TestConnectionHandler;
 
 class ValidationTest extends TestCase
 {
