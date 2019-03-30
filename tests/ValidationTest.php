@@ -11,12 +11,12 @@ class ValidationTest extends TestCase
     /** @test */
     function validate_component_properties()
     {
-        [$dom, $id, $serialized] = app(LivewireManager::class)->mount(ForValidation::class);
+        $component = app(LivewireManager::class)->test( ForValidation::class);
 
-        $response = TestConnectionHandler::runAction('runValidation', $serialized);
+        $component->runAction('runValidation');
 
-        $this->assertNotContains('foo', $response['dom']);
-        $this->assertContains('bar', $response['dom']);
+        $this->assertNotContains('foo', $component->dom);
+        $this->assertContains('bar', $component->dom);
     }
 }
 

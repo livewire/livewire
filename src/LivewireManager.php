@@ -61,17 +61,21 @@ EOT;
 
         $instance->created(...$options);
         $dom = $instance->output();
-        $instance->mounted();
         $serialized = ComponentHydrator::dehydrate($instance);
 
-        return [$dom, $instance->id, $serialized];
+        return new LivewireOutput([
+            'id' => $instance->id,
+            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $instance->id, $serialized),
+            'serialized' => $serialized,
+            'dirtyInputs' => [],
+        ]);
     }
 
     public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $serialized)
     {
         return preg_replace(
             '/(<[a-zA-Z0-9\-]*)/',
-            sprintf('$1 %s:id="%s" id="%s" %s:serialized="%s"', $this->prefix, $id, $id, $this->prefix, $serialized),
+            sprintf('$1 key="%s" %s:id="%s" %s:serialized="%s"', $id, $this->prefix, $id, $this->prefix, $serialized),
             $dom,
             $limit = 1
         );

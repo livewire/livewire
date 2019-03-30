@@ -4,6 +4,7 @@ namespace Livewire\Connection;
 
 use Illuminate\Validation\ValidationException;
 use Livewire\LivewireComponentWrapper;
+use Livewire\LivewireOutput;
 
 abstract class ConnectionHandler
 {
@@ -32,14 +33,14 @@ abstract class ConnectionHandler
         $dirtyInputs = $instance->dirtyInputs();
         $serialized = ComponentHydrator::dehydrate($instance);
 
-        return [
-            'componentId' => $id,
+        return new LivewireOutput([
+            'id' => $id,
             'dom' => app('livewire')->injectComponentDataAsHtmlAttributesInRootElement(
                 $dom, $id, $serialized
             ),
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
-        ];
+        ]);
     }
 
     public function processMessage($type, $data, $instance)

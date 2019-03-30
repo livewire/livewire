@@ -2,18 +2,15 @@
 
 namespace Tests;
 
-use Livewire\Connection\ComponentHydrator;
-use Livewire\Connection\TestConnectionHandler;
 use Livewire\LivewireComponent;
-use Livewire\LivewireComponentWrapper;
 use Livewire\LivewireManager;
 
 class DataBindingTest extends TestCase
 {
     /** @test */
-    function set_component_data()
+    function update_component_data()
     {
-        $component = app(LivewireManager::class)->test(FaucetStub::class);
+        $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
         $component->updateProperty('foo', 'bar');
 
@@ -21,32 +18,47 @@ class DataBindingTest extends TestCase
     }
 
     /** @test */
+    function update_nested_component_data_inside_array()
+    {
+        $component = app(LivewireManager::class)->test(DataBindingStub::class);
+
+        $component->updateProperty('foo', []);
+        $component->updateProperty('foo.0', 'bar');
+        $component->updateProperty('foo.bar', 'baz');
+
+        $this->assertEquals(['bar', 'bar' => 'baz'], $component->instance->foo);
+    }
+
+    /** @test */
     function property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action()
     {
-        $component = app(LivewireManager::class)->test(FaucetStub::class);
+        $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
         $component->updateProperty('foo', 'bar');
 
-        $this->assertequals('bar', $component->instance->foo);
+        $this->assertEquals('bar', $component->instance->foo);
+        $this->assertEmpty($component->dirtyInputs);
 
         $component->runAction('changeFoo', 'baz');
 
-        $this->assertequals('baz', $component->instance->foo);
-        $this->assertContains('foo', $component->instance->dirtyInputs());
+        $this->assertEquals('baz', $component->instance->foo);
+        $this->assertContains('foo', $component->dirtyInputs);
     }
 
     /** @test */
     function lazy_synced_data_doesnt_shows_up_as_dirty()
     {
-        $component = new FaucetStub('id', $prefix = 'wire');
+        $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
-        $instance = LivewireComponentWrapper::wrap($component);
-        $instance->lazySyncInput('modelNumber', '123abc');
-        $this->assertEmpty($instance->dirtyInputs());
+        $component
+            ->queueLazilyUpdateProperty('foo', 'bar')
+            ->runAction('$refresh');
+
+        $this->assertEmpty($component->dirtyInputs);
     }
 }
 
-class FaucetStub extends LivewireComponent {
+class DataBindingStub extends LivewireComponent {
     public $foo;
 
     public function changeFoo($value)

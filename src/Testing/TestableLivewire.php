@@ -12,6 +12,7 @@ class TestableLivewire
     public $instance;
     public $dom;
     public $serialized;
+    public $dirtyInputs;
 
     use Concerns\HasFunLittleUtilities,
         Concerns\MakesCallsToComponent;
@@ -20,17 +21,18 @@ class TestableLivewire
     {
         $this->prefix = $prefix;
 
-        [$dom, $id, $serialized] = app('livewire')->mount($component);
-
-        $this->id = $id;
-        $this->updateComponent($dom, $serialized);
+        $this->updateComponent(
+            app('livewire')->mount($component)
+        );
     }
 
-    public function updateComponent($dom, $serialized)
+    public function updateComponent($output)
     {
-        $this->dom = $dom;
-        $this->serialized = $serialized;
-        $this->instance = ComponentHydrator::hydrate($serialized);
+        $this->id = $output->id;
+        $this->dom = $output->dom;
+        $this->serialized = $output->serialized;
+        $this->dirtyInputs = $output->dirtyInputs;
+        $this->instance = ComponentHydrator::hydrate($this->serialized);
     }
 
     public function __get($property)

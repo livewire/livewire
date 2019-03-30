@@ -3,12 +3,7 @@
 namespace Tests;
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\View;
-use Illuminate\View\Factory;
-use Livewire\Livewire;
 use Livewire\LivewireComponent;
-use Livewire\LivewireComponentWrapper;
-use Livewire\LivewireManager;
 
 class CreatedMethodGetsRouteModelBindingsTest extends TestCase
 {
@@ -43,6 +38,6 @@ class HasCreatedMethodWithBindingExpectationStub extends LivewireComponent {
 
     public function render()
     {
-        return app('view')->make('public-properties-test')->with('name', $this->value);
+        return app('view')->make('show-name')->with('name', $this->value);
     }
 }

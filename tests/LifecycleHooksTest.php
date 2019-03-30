@@ -4,15 +4,13 @@ namespace Tests;
 
 use Livewire\LivewireComponent;
 use Livewire\LivewireManager;
-use Livewire\Connection\TestConnectionHandler;
-use Livewire\Connection\ComponentHydrator;
 
 class LifecycleHooksTest extends TestCase
 {
     /** @test */
     function created_hook()
     {
-        [$dom, $id, $serialized] = app(LivewireManager::class)->mount(ForLifecycleHooks::class);
+        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
 
         $this->assertEquals([
             'created' => true,
@@ -20,9 +18,9 @@ class LifecycleHooksTest extends TestCase
             'updated' => false,
             'updatingFoo' => false,
             'updatedFoo' => false,
-        ], ComponentHydrator::hydrate($serialized)->lifecycles);
+        ], $component->instance->lifecycles);
 
-        $response = TestConnectionHandler::runAction('$refresh', $serialized);
+        $component->runAction('$refresh');
 
         $this->assertEquals([
             'created' => true,
@@ -30,9 +28,9 @@ class LifecycleHooksTest extends TestCase
             'updated' => true,
             'updatingFoo' => false,
             'updatedFoo' => false,
-        ], ComponentHydrator::hydrate($response['serialized'])->lifecycles);
+        ], $component->instance->lifecycles);
 
-        $response = TestConnectionHandler::updateProperty('foo', 'bar', $serialized);
+        $component->updateProperty('foo', 'bar');
 
         $this->assertEquals([
             'created' => true,
@@ -40,7 +38,7 @@ class LifecycleHooksTest extends TestCase
             'updated' => true,
             'updatingFoo' => true,
             'updatedFoo' => true,
-        ], ComponentHydrator::hydrate($response['serialized'])->lifecycles);
+        ], $component->instance->lifecycles);
     }
 }
 
@@ -61,8 +59,6 @@ class ForLifecycleHooks extends LivewireComponent {
 
     public function updating()
     {
-        assert($this->lifecycles['updated'] === false);
-
         $this->lifecycles['updating'] = true;
     }
 
