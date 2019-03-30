@@ -2,7 +2,7 @@
 
 namespace Livewire\Concerns;
 
-trait ReceivesEvents
+trait HandlesActions
 {
     public function syncInput($name, $value)
     {

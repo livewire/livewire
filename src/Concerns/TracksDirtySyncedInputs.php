@@ -14,7 +14,7 @@ trait TracksDirtySyncedInputs
         $this->exemptFromHashing[] = $name;
     }
 
-    public function hashCurrentObjectPropertiesForEasilyDetectingChangesLater()
+    public function hashComponentPropertiesForDetectingFutureChanges()
     {
         $this->hashes = collect($this->getPublicPropertiesDefinedBySubClass())
             ->filter(function ($value, $prop) {

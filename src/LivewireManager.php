@@ -4,14 +4,12 @@ namespace Livewire;
 
 use Illuminate\Support\Facades\File;
 use Livewire\Testing\TestableLivewire;
-use Livewire\Testing\TestableLivewireComponentWrapper;
 use Livewire\Connection\ComponentHydrator;
 
 class LivewireManager
 {
     protected $prefix = 'wire';
     protected $componentAliases = [];
-    protected $isTesting = false;
 
     public function prefix($prefix = null)
     {
@@ -33,7 +31,7 @@ class LivewireManager
     {
         $componentClass = $this->getComponentClass($componentAliasOrClass);
 
-        return new $componentClass(str_random(20), $this->prefix);
+        return new $componentClass(str_random(20));
     }
 
     public function scripts($options = null)
@@ -83,8 +81,6 @@ EOT;
 
     public function test($name)
     {
-        $this->isTesting = true;
-
         return new TestableLivewire($name, $this->prefix);
     }
 }

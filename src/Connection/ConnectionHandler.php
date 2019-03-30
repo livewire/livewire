@@ -48,8 +48,6 @@ abstract class ConnectionHandler
         $instance->updating();
 
         switch ($type) {
-            case 'refresh':
-                break;
             case 'syncInput':
                 $instance->syncInput($data['name'], $data['value']);
                 break;
