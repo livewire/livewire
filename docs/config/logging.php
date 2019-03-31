@@ -5,7 +5,7 @@ return [
     'channels' => [
         'single' => [
             'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => base_path('cache/laravel.log'),
             'level' => 'debug',
         ],
     ],

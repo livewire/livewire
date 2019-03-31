@@ -2,7 +2,7 @@
 
 class ForSomeReasonGitDownNeedsThisToWorkServiceProvider extends Illuminate\Support\ServiceProvider
 {
-    public function boot() { app('view'); }
+    public function register() { app('view'); }
 }
 
 return [
@@ -10,7 +10,6 @@ return [
     'env' => env('APP_ENV', 'production'),
     'debug' => env('APP_DEBUG', false),
     'url' => env('APP_URL', 'http://localhost'),
-    'key' => env('APP_KEY'),
     'providers' => [
         Illuminate\Cache\CacheServiceProvider::class,
         Illuminate\Translation\TranslationServiceProvider::class,
