@@ -3,11 +3,12 @@
 namespace Livewire\Testing\Concerns;
 
 use Livewire\Testing\TestConnectionHandler;
-use Symfony\Component\DomCrawler\Crawler;
 
 trait MakesCallsToComponent
 {
-    public function callMethod($method, $parameters = [])
+    public $syncQueue = [];
+
+    public function runAction($method, ...$parameters)
     {
         $this->sendMessage('callMethod', [
             'method' => $method,
@@ -18,7 +19,7 @@ trait MakesCallsToComponent
         return $this;
     }
 
-    public function syncInput($name, $value)
+    public function updateProperty($name, $value)
     {
         $this->sendMessage('syncInput', [
             'name' => $name,
@@ -28,11 +29,20 @@ trait MakesCallsToComponent
         return $this;
     }
 
+    public function queueLazilyUpdateProperty($name, $value)
+    {
+        $this->syncQueue[$name] = $value;
+
+        return $this;
+    }
+
     public function sendMessage($message, $payload)
     {
         $result = (new TestConnectionHandler)
-            ->handle([['type' => $message, 'payload' => $payload]], [], $this->serialized);
+            ->handle([['type' => $message, 'payload' => $payload]], $this->syncQueue, $this->serialized);
 
-        $this->updateComponent($result['dom'], $result['serialized']);
+        $this->syncQueue = [];
+
+        $this->updateComponent($result);
     }
 }

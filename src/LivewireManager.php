@@ -4,14 +4,12 @@ namespace Livewire;
 
 use Illuminate\Support\Facades\File;
 use Livewire\Testing\TestableLivewire;
-use Livewire\Testing\TestableLivewireComponentWrapper;
 use Livewire\Connection\ComponentHydrator;
 
 class LivewireManager
 {
     protected $prefix = 'wire';
     protected $componentAliases = [];
-    protected $isTesting = false;
 
     public function prefix($prefix = null)
     {
@@ -33,7 +31,7 @@ class LivewireManager
     {
         $componentClass = $this->getComponentClass($componentAliasOrClass);
 
-        return new $componentClass(str_random(20), $this->prefix);
+        return new $componentClass(str_random(20));
     }
 
     public function scripts($options = null)
@@ -59,25 +57,23 @@ EOT;
     {
         $instance = $this->activate($component);
 
-        if ($this->isTesting) {
-            $wrapped = TestableLivewireComponentWrapper::wrap($instance);
-        } else {
-            $wrapped = LivewireComponentWrapper::wrap($instance);
-        }
-
-        $wrapped->created(...$options);
-        $dom = $wrapped->output();
-        $wrapped->mounted();
+        $instance->created(...$options);
+        $dom = $instance->output();
         $serialized = ComponentHydrator::dehydrate($instance);
 
-        return [$dom, $instance->id, $serialized];
+        return new LivewireOutput([
+            'id' => $instance->id,
+            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $instance->id, $serialized),
+            'serialized' => $serialized,
+            'dirtyInputs' => [],
+        ]);
     }
 
     public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $serialized)
     {
         return preg_replace(
             '/(<[a-zA-Z0-9\-]*)/',
-            sprintf('$1 %s:id="%s" id="%s" %s:serialized="%s"', $this->prefix, $id, $id, $this->prefix, $serialized),
+            sprintf('$1 key="%s" %s:id="%s" %s:serialized="%s"', $id, $this->prefix, $id, $this->prefix, $serialized),
             $dom,
             $limit = 1
         );
@@ -85,8 +81,6 @@ EOT;
 
     public function test($name)
     {
-        $this->isTesting = true;
-
         return new TestableLivewire($name, $this->prefix);
     }
 }

@@ -14,9 +14,9 @@ trait TracksDirtySyncedInputs
         $this->exemptFromHashing[] = $name;
     }
 
-    public function hashCurrentObjectPropertiesForEasilyDetectingChangesLater()
+    public function hashComponentPropertiesForDetectingFutureChanges()
     {
-        $this->hashes = collect($this->wrapped->getPublicPropertiesDefinedBySubClass())
+        $this->hashes = collect($this->getPublicPropertiesDefinedBySubClass())
             ->filter(function ($value, $prop) {
                 // For now, I only care about strings & numbers. We can add more things to
                 // dirty check later, but I want to keep things light and fast.
@@ -33,7 +33,7 @@ trait TracksDirtySyncedInputs
 
     public function rehashProperty($property)
     {
-        $this->hashes[$property] = crc32($this->wrapped->getPropertyValue($property));
+        $this->hashes[$property] = crc32($this->getPropertyValue($property));
     }
 
     public function dirtyInputs()
@@ -43,11 +43,11 @@ trait TracksDirtySyncedInputs
                 return in_array($prop, $this->exemptFromHashing);
             })
             ->filter(function ($hash, $prop) {
-                return is_string($this->wrapped->getPropertyValue($prop)) || is_numeric($this->wrapped->getPropertyValue($prop)) || is_null($this->wrapped->getPropertyValue($prop));
+                return is_string($this->getPropertyValue($prop)) || is_numeric($this->getPropertyValue($prop)) || is_null($this->getPropertyValue($prop));
             })
             ->filter(function ($hash, $prop) {
                 // Only return the hashes/props that have changed.
-                return crc32($this->wrapped->getPropertyValue($prop)) !== $hash;
+                return crc32($this->getPropertyValue($prop)) !== $hash;
             })
             ->keys()
             ->toArray();

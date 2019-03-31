@@ -6,15 +6,16 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Livewire Docs</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+
     @gitdown
-    <style>{!! $css !!}</style>
+    <link href="/template.css" rel="stylesheet">
 </head>
 <body class="font-source-sans font-normal text-black leading-normal">
     {{-- Navbar --}}
     <div class="bg-teal-dark flex items-center justify-between">
         <div style="min-width: 300px;" class="relative mr-20">
             <div style="width: 300px;position: absolute;left: 25px;margin-top: -25px;">
-                {!! file_get_contents($svgPath) !!}
+                {!! file_get_contents(public_path('logo.svg')) !!}
             </div>
         </div>
         <div class="w-full flex items-center justify-end">
@@ -41,7 +42,7 @@
 
         {{-- Content --}}
         <div class="markdown-body main-body p-8 pt-4 pl-16">
-            {!! $content !!}
+            {!! GitDown\Facades\GitDown::parseAndCache($content) !!}
         </div>
     </div>
 </body>

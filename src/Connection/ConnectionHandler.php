@@ -4,26 +4,21 @@ namespace Livewire\Connection;
 
 use Illuminate\Validation\ValidationException;
 use Livewire\LivewireComponentWrapper;
+use Livewire\LivewireOutput;
 
 abstract class ConnectionHandler
 {
-    public function wrap($instance)
-    {
-        return LivewireComponentWrapper::wrap($instance);
-    }
-
     public function handle($actionQueue, $syncQueue, $serialized)
     {
         $instance = ComponentHydrator::hydrate($serialized);
-        $wrapped = $this->wrap($instance);
 
         try {
             foreach ($syncQueue ?? [] as $model => $value) {
-                $wrapped->lazySyncInput($model, $value);
+                $instance->lazySyncInput($model, $value);
             }
 
             foreach ($actionQueue as $action) {
-                $this->processMessage($action['type'], $action['payload'], $wrapped);
+                $this->processMessage($action['type'], $action['payload'], $instance);
             }
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
@@ -33,39 +28,37 @@ abstract class ConnectionHandler
             return ['redirectTo' => $instance->redirectTo];
         }
 
-        $dom = $wrapped->output($errors ?? null);
+        $dom = $instance->output($errors ?? null);
         $id = $instance->id;
-        $dirtyInputs = $wrapped->dirtyInputs();
+        $dirtyInputs = $instance->dirtyInputs();
         $serialized = ComponentHydrator::dehydrate($instance);
 
-        return [
-            'componentId' => $id,
+        return new LivewireOutput([
+            'id' => $id,
             'dom' => app('livewire')->injectComponentDataAsHtmlAttributesInRootElement(
                 $dom, $id, $serialized
             ),
             'dirtyInputs' => $dirtyInputs,
             'serialized' => $serialized,
-        ];
+        ]);
     }
 
-    public function processMessage($type, $data, $wrapped)
+    public function processMessage($type, $data, $instance)
     {
-        $wrapped->updating();
+        $instance->updating();
 
         switch ($type) {
-            case 'refresh':
-                break;
             case 'syncInput':
-                $wrapped->syncInput($data['name'], $data['value']);
+                $instance->syncInput($data['name'], $data['value']);
                 break;
             case 'callMethod':
-                $wrapped->callMethod($data['method'], $data['params']);
+                $instance->callMethod($data['method'], $data['params']);
                 break;
             default:
                 throw new \Exception('Unrecongnized message type: ' . $type);
                 break;
         }
 
-        $wrapped->updated();
+        $instance->updated();
     }
 }

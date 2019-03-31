@@ -6,7 +6,7 @@ trait HasFunLittleUtilities
 {
     public function dump()
     {
-        echo $this->rawHtml;
+        echo $this->dom;
 
         return $this;
     }
@@ -14,13 +14,6 @@ trait HasFunLittleUtilities
     public function tap($callback)
     {
         $callback($this);
-
-        return $this;
-    }
-
-    public function fromView($nameOfViewVariable, $callback)
-    {
-        $callback($this->component->view()->{$nameOfViewVariable});
 
         return $this;
     }
