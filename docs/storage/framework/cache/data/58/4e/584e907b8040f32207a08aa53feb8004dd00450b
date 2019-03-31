@@ -1,0 +1,98 @@
+9999999999s:7827:"<h1>
+<a id="user-content-quickstart" class="anchor" href="#quickstart" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quickstart</h1>
+<h2>
+<a id="user-content-install-livewire" class="anchor" href="#install-livewire" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install Livewire</h2>
+<p><em>Include the PHP</em></p>
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;</span> composer require calebporzio/livewire</pre></div>
+<p><em>Include the JavaScript</em></p>
+<blockquote>
+<p>Note: This will typically be added to a global layout file like <code>layouts/app.blade.php</code></p>
+</blockquote>
+<div title="Component"><div title="Component__class">
+<div char="fade">
+<div class="highlight highlight-text-html-basic"><pre>    ...</pre></div>
+</div>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1">    {<span class="pl-k">!!</span> <span class="pl-c1">Livewire</span><span class="pl-k">::</span>scripts() <span class="pl-k">!!</span>}</span></pre></div>
+<div char="fade">
+<div class="highlight highlight-text-html-basic"><pre>&lt;/<span class="pl-ent">body</span>&gt;
+&lt;/<span class="pl-ent">html</span>&gt;</pre></div>
+</div>
+</div></div>
+<h2>
+<a id="user-content-create-a-component" class="anchor" href="#create-a-component" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Create a component</h2>
+<p>Run the following command to generate a new Livewire component called <code>Counter</code> and it's corresponding Blade view.</p>
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;</span> php artisan make:livewire Counter</pre></div>
+<p>Running this command will generate the following two files:</p>
+<div title="Component">
+<div title="Component__class">
+<p>app/Http/Livewire/Counter.php</p>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-pse">&lt;?php</span><span class="pl-s1"></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-k">namespace</span> <span class="pl-en">App\Http\Livewire</span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Livewire\LivewireComponent</span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">Counter</span> <span class="pl-k">extends</span> <span class="pl-e">LivewireComponent</span></span>
+<span class="pl-s1">{</span>
+<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">render</span>()</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-k">return</span> view(<span class="pl-s"><span class="pl-pds">'</span>livewire.counter<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1">}</span></pre></div>
+</div>
+<div title="Component__view">
+<p>resources/views/livewire/counter.blade.php</p>
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span>&gt;
+    {{-- Go effing nuts. --}}
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+</div>
+</div>
+<h2>
+<a id="user-content-add-functionality" class="anchor" href="#add-functionality" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Add functionality</h2>
+<p>To add "counting" functionality, replace the generated content of your <code>Counter</code> component and view with the following:</p>
+<div title="Component">
+<div title="Component__class">
+<p>Counter.php</p>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">Counter</span> <span class="pl-k">extends</span> <span class="pl-e">LivewireComponent</span></span>
+<span class="pl-s1">{</span>
+<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-smi">$count</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">increment</span>()</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">count</span><span class="pl-k">++</span>;</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">decrement</span>()</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">count</span><span class="pl-k">--</span>;</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">render</span>()</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-k">return</span> view(<span class="pl-s"><span class="pl-pds">'</span>livewire.counter<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1">}</span></pre></div>
+</div>
+<div title="Component__view">
+<p>counter.blade.php</p>
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">style</span>=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s1"><span class="pl-c1"><span class="pl-c1">text-align</span></span>: <span class="pl-c1">center</span></span><span class="pl-pds">"</span></span>&gt;
+    &lt;<span class="pl-ent">button</span> <span class="pl-e">wire:click</span>=<span class="pl-s"><span class="pl-pds">"</span>increment<span class="pl-pds">"</span></span>&gt;+&lt;/<span class="pl-ent">button</span>&gt;
+    &lt;<span class="pl-ent">h1</span>&gt;{{ $count }}&lt;/<span class="pl-ent">h1</span>&gt;
+    &lt;<span class="pl-ent">button</span> <span class="pl-e">wire:click</span>=<span class="pl-s"><span class="pl-pds">"</span>decrement<span class="pl-pds">"</span></span>&gt;-&lt;/<span class="pl-ent">button</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+</div>
+</div>
+<h2>
+<a id="user-content-add-a-route" class="anchor" href="#add-a-route" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Add A Route</h2>
+<p>You can now render this component inside any Blade view using the <code>@livewire</code> Blade directive.</p>
+<div title="Component"><div title="Component__class">
+<p>web.php</p>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-c1">Route</span><span class="pl-k">::</span>livewire(<span class="pl-s"><span class="pl-pds">'</span>/counter<span class="pl-pds">'</span></span> <span class="pl-c1">App\Http\Livewire\</span><span class="pl-c1">Counter</span><span class="pl-k">::</span><span class="pl-c1">class</span>)</span></pre></div>
+</div></div>
+<div title="Warning"><div title="Warning__content">
+<p>Livewire looks for <code>layouts/app.blade.php</code> with <code>@yeild('content')</code>, and renders the component there. This file is usually added when you run <code>php artisan make:auth</code>. If you are having trouble with this, go <a href="/livewire/docs/rendering_components">here</a> for more info.</p>
+</div></div>
+<h2>
+<a id="user-content-view-it-in-the-browser" class="anchor" href="#view-it-in-the-browser" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>View it in the browser</h2>
+<p>Now navigate to <code>/counter</code> in your browser. You should see the <code>Counter</code> component rendered. If you click the "+" or "-" button, the page should automatically update without a page reload. Magic.</p>
+";

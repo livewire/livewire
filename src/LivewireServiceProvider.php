@@ -40,39 +40,6 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerDocsRoutes()
     {
-        collect(scandir(__DIR__ . '/../docs'))
-            ->filter(function ($file) { return preg_match('/\.md$/', $file); })
-            ->map(function ($file) {
-                preg_match('/([0-9]*)_(.*).md/', $file, $matches);
-
-                return [
-                    'file' => $file,
-                    'order' => $matches[1],
-                    'path' => sprintf('/livewire/docs/%s', $matches[2]),
-                    'contents' => $contents = file_get_contents(__DIR__ . '/../docs/' . $file),
-                    'title' => trim(str_after(strtok($contents, "\n"), '#')),
-                ];
-            })
-            ->sortBy('order')
-            ->tap(function ($tapped) use (&$collection) { $collection = $tapped; })
-            ->each(function ($file) use ($collection) {
-                RouteFacade::get($file['path'], function () use ($file, $collection) {
-                    $template = __DIR__ . '/../docs/template.blade.php';
-                    $css = file_get_contents(__DIR__ . '/../docs/template.css');
-
-                    $parsed = (new \GitDown\GitDown(
-                        '8e97a88f6778e690af1501f608f3856ba0a439a4'
-                    ))->parseAndCache($file['contents']);
-
-                    return View::file($template, [
-                        'svgPath' => __DIR__ . '/../docs/logo.svg',
-                        'css' => $css,
-                        'title' => $file['title'],
-                        'content' => $parsed,
-                        'links' => $collection->pluck('title', 'path'),
-                    ]);
-                });
-            });
     }
 
     public function registerCommands()

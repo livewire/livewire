@@ -1,0 +1,11 @@
+9999999999s:1006:"<h1>
+<a id="user-content-custom-javascript" class="anchor" href="#custom-javascript" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Custom JavaScript</h1>
+<div title="Warning"><div title="Warning__content">
+<p>This is an experimental feature. Something more robust is in development.</p>
+</div></div>
+<p>Livewire's goal is to remove as much JS pain as possible. However, there are some cases where JS is the right tool for the job.</p>
+<p>To package JavaScript up with a component, just add a <code>&lt;script&gt;</code> tag inside the component's root div. For example:</p>
+<div class="highlight highlight-text-html-basic"><pre>&lt;<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">script</span>&gt;<span class="pl-s1"><span class="pl-en">alert</span>(<span class="pl-s"><span class="pl-pds">'</span>Hello World<span class="pl-pds">'</span></span>);</span>&lt;/<span class="pl-ent">script</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+";

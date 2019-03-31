@@ -1,0 +1,27 @@
+9999999999s:2728:"<h1>
+<a id="user-content-installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h1>
+<p>Livewire has both a PHP component AND a Javascript component. You need to make sure both are available in your project before you can use it.</p>
+<h2>
+<a id="user-content-include-php-via-composer" class="anchor" href="#include-php-via-composer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Include PHP (via composer)</h2>
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;</span> composer require calebporzio/livewire</pre></div>
+<h2>
+<a id="user-content-include-javascript-via-snippet" class="anchor" href="#include-javascript-via-snippet" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Include JavaScript (via snippet)</h2>
+<p>To get started quickly, you can include the following snippet at the end of the <code>&lt;body&gt;</code> in your html page. It is recommended that you put this in a layout file such as <code>resources/views/layouts/app.blade.php</code>. You can create this layout file in a new laravel project by executing <code>artisan make:auth</code>.</p>
+<div title="Component"><div title="Component__class">
+<div char="fade">
+<div class="highlight highlight-text-html-basic"><pre>    ...</pre></div>
+</div>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1">    {<span class="pl-k">!!</span> <span class="pl-c1">Livewire</span><span class="pl-k">::</span>scripts() <span class="pl-k">!!</span>}</span></pre></div>
+<div char="fade">
+<div class="highlight highlight-text-html-basic"><pre>&lt;/<span class="pl-ent">body</span>&gt;
+&lt;/<span class="pl-ent">html</span>&gt;</pre></div>
+</div>
+</div></div>
+<h2>
+<a id="user-content-include-javascript-via-npm" class="anchor" href="#include-javascript-via-npm" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Include JavaScript (via NPM)</h2>
+<p>If you have a more sophistocated javascript build setup, you can alternatively install and import Livewire via NPM.</p>
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;</span> npm install laravel-livewire --save-dev</pre></div>
+<div class="highlight highlight-source-js"><pre><span class="pl-k">import</span> <span class="pl-smi">Livewire</span> <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">'</span>laravel-livewire<span class="pl-pds">'</span></span>
+
+<span class="pl-c1">window</span>.<span class="pl-smi">livewire</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Livewire</span></pre></div>
+";

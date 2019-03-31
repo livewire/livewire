@@ -1,0 +1,17 @@
+9999999999s:1691:"<h1>
+<a id="user-content-spa-mode" class="anchor" href="#spa-mode" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>SPA Mode</h1>
+<p>While Livewire makes individual pages feal smooth, it doesn't give transitions between pages the same love. Livewire plans to support this functionality out of the box, but for now, it is recommended to use Turbolinks.</p>
+<p>Fortunately, getting Turbolinks to play nicely with Livewire is simple. Let's walk through it.</p>
+<p>Checkout the <a href="https://github.com/turbolinks/turbolinks">Turbolinks documentation</a> for installation instructions.</p>
+<p>Now, add the following JS in a script tag at the bottom of the page, or in your <code>app.js</code> file.</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Turbolinks</span>.<span class="pl-c1">start</span>()
+
+<span class="pl-c1">document</span>.<span class="pl-c1">addEventListener</span>(<span class="pl-s"><span class="pl-pds">'</span>turbolinks:load<span class="pl-pds">'</span></span>, () <span class="pl-k">=&gt;</span> {
+    <span class="pl-k">if</span> (<span class="pl-k">!</span> <span class="pl-c1">window</span>.<span class="pl-smi">livewire</span>) {
+        <span class="pl-c1">window</span>.<span class="pl-smi">livewire</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Livewire</span>()
+    } <span class="pl-k">else</span> {
+        <span class="pl-c1">window</span>.<span class="pl-smi">livewire</span>.<span class="pl-en">restart</span>()
+    }
+})</pre></div>
+<p>And that's it! This little snippet tells Turbolinks to reload Livewire everytime a new page is visited or returned to.</p>
+";
