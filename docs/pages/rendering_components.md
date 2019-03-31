@@ -164,7 +164,7 @@ Like you would expect, Livewire components implement all functionality you're us
 
 **web.php**
 ```php
-Route::livewire('/contact/{user}', App\Http\Livewire\ShowContact::classs);
+Route::livewire('/contact/{user}', App\Http\Livewire\ShowContact::class);
 ```
 
 **App\Http\Livewire\ShowContact.php**
