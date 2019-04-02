@@ -15,7 +15,7 @@
     <div class="bg-teal-dark flex items-center justify-between">
         <div style="min-width: 300px;" class="relative mr-20">
             <div style="width: 300px;position: absolute;left: 25px;margin-top: -25px;">
-                {!! file_get_contents(public_path('logo.svg')) !!}
+                {!! file_get_contents(public_path('assets/logo.svg')) !!}
             </div>
         </div>
         <div class="w-full flex items-center justify-end">
