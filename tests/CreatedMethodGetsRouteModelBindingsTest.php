@@ -16,7 +16,7 @@ class CreatedMethodGetsRouteModelBindingsTest extends TestCase
 
         Route::livewire('/test/{foo}', HasCreatedMethodWithBindingExpectationStub::class);
 
-        $response = $this->withoutExceptionHandling()->get('/test/render-in-view');
+        $response = $this->get('/test/render-in-view');
 
         $this->assertContains('render-in-view', $response->original->render());
     }

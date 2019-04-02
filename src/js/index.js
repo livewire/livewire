@@ -4,8 +4,12 @@ import ComponentManager from './component_manager'
 
 class Livewire {
     constructor({ driver } = { driver: 'http' }) {
+        if (typeof driver !== 'object') {
+            driver = drivers[driver]
+        }
+
         this.componentManager = new ComponentManager(
-            new Connection(drivers[driver])
+            new Connection(driver)
         )
 
         this.start()

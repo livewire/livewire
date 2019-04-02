@@ -21,7 +21,7 @@ When `$showConfirmationModal` is `true`, it's contents are shown. When `$showCon
 
 You can control the length of this fade by adding an additional time modifier. The following directive will cause the element to fade in and out for a duration of one second.
 
-`wire:transition.fade.1s`
+`wire:transition.fade.1s` or `wire:transition.fade.1000ms`
 
 <div title="Warning"><div title="Warning__content">
 
