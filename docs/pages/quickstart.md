@@ -108,9 +108,7 @@ counter.blade.php
 ```
 </div></div>
 
-## Add A Route
-
-You can now render this component inside any Blade view using the `@livewire` Blade directive.
+## Register A Route
 
 <div title="Component"><div title="Component__class">
 

@@ -10,6 +10,14 @@ This folder is an entire Laravel app unto itself. I made my own Laravel folder s
 * `composer install`
 * `cp .env.example .env`
 * `valet link` (or whatever you use to serve sites locally)
+* Go to `/docs/quickstart`
+
+## Building static site
+(within this directory)
+
+* `./generate-static-site`
+
+Running this command will generate static files inside the `docs/dist` folder. This get's auto-deployed to netlify on push.
 
 ## Adding/Modifying Pages
 
