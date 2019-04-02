@@ -1,0 +1,52 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . '/vendor/autoload.php';
+
+$_ENV['APP_CONFIG_CACHE'] = __DIR__ . '/cache/config.php';
+$_ENV['APP_SERVICES_CACHE'] = __DIR__ . '/cache/services.php';
+$_ENV['APP_PACKAGES_CACHE'] = __DIR__ . '/cache/packages.php';
+$_ENV['APP_ROUTES_CACHE'] = __DIR__ . '/cache/routes.php';
+
+$app = new Illuminate\Foundation\Application(
+    __DIR__
+);
+
+$app->singleton(
+    Illuminate\Contracts\Http\Kernel::class,
+    Illuminate\Foundation\Http\Kernel::class
+);
+
+$app->singleton(
+    Illuminate\Contracts\Debug\ExceptionHandler::class,
+    Illuminate\Foundation\Exceptions\Handler::class
+);
+
+$app->singleton(
+    Illuminate\Contracts\Console\Kernel::class,
+    Illuminate\Foundation\Console\Kernel::class
+);
+
+require_once(__DIR__.'/routes.php');
+
+$kernel = $app->make(\Illuminate\Contracts\Http\Kernel::class);
+
+foreach ($app->make('router')->getRoutes() as $route) {
+    $symfonyRequest = \Symfony\Component\HttpFoundation\Request::create(
+        $route->uri(), 'GET', [], [], [], [], null
+    );
+
+    $response = $kernel->handle(
+        $request = \Illuminate\Http\Request::createFromBase($symfonyRequest)
+    );
+
+    $kernel->terminate($request, $response);
+
+    $file = 'dist/'.$route->uri().'/index.html';
+
+    $app->make('filesystem')->put($file, $response->getContent());
+
+    echo 'Route processed: ['.$route->uri()."]\n";
+}
+
+exit(0);
