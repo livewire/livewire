@@ -15,7 +15,7 @@ This folder is an entire Laravel app unto itself. I made my own Laravel folder s
 ## Building static site
 (within this directory)
 
-* `./generate-static-site`
+* `./generate`
 
 Running this command will generate static files inside the `docs/dist` folder. This get's auto-deployed to netlify on push.
 
