@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
 
     @gitdown
-    <link href="assets/template.css" rel="stylesheet">
+    <link href="/assets/template.css" rel="stylesheet">
 </head>
 <body class="font-source-sans font-normal text-black leading-normal">
     {{-- Navbar --}}
