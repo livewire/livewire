@@ -19,6 +19,5 @@ return [
         // Non-Laravel Service Providers.
         ForSomeReasonGitDownNeedsThisToWorkServiceProvider::class,
         GitDown\GitDownServiceProvider::class,
-        Spatie\Export\ExportServiceProvider::class,
     ],
 ];

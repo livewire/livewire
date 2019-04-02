@@ -1,0 +1,266 @@
+
+.bg-yellow {
+    background-color: #FFE771;
+}
+
+.bg-teal-dark {
+    background-color: #65cfe0;
+}
+
+body {
+    margin: 0;
+}
+
+/* I have to use the "title" attribute, because GitHub strips classes from markdown. */
+[title="Component"] {
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+
+[title="Component"] div {
+    margin-bottom: 0 !important;
+}
+
+[title="Component"] pre {
+    padding: 0 !important;
+    background-color: transparent !important;
+    margin-bottom: 0 !important;
+}
+
+[title="Component"] p {
+    z-index: 1;
+    font-weight: bold;
+    margin-bottom: 0 !important;
+    position: absolute;
+    right: 0;
+    padding: 2px 10px;
+    font-size: 14px;
+    top: 0
+}
+
+[title="Component__class"] p {
+    color: #005e71;
+}
+
+[title="Component__view"] p {
+    color: #d0e4e7;
+}
+
+[title="Component__class"] {
+    position: relative;
+    background: #f1f7f8;
+    padding: 16px;
+}
+
+[title="Component__view"] {
+    position: relative;
+    background: #004857;
+    padding: 16px;
+}
+
+[title="Component__view"] pre {
+    color: #d9ebee;
+}
+
+/* Fade */
+
+[char="fade"] {
+    position: relative;
+}
+
+[char="fade"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #F1F7F8;
+    opacity: .5;
+}
+
+[title="Component__view"] [char="fade"]::before {
+    background: #064856;
+}
+
+/* Warning */
+
+[title="Warning"] {
+    margin-bottom: 16px;
+    margin-top: 24px;
+    display: flex;
+    background-color: #ff707e;
+    border-radius: 6px;
+    padding: 16px;
+    font-size: 14px;
+}
+
+[title="Warning__content"] {
+    flex: 1;
+    margin-bottom: 0 !important;
+}
+
+[title="Warning__content"] p {
+    color: white;
+}
+
+[title="Warning"] code {
+    color: #222;
+}
+
+[title="Warning"]::before {
+    content: url(https://s3.us-east-2.amazonaws.com/calebporzio.com/svgs/alarm.svg);
+    width: 35px;
+    display: block;
+    margin-right: 16px;
+    color: white;
+}
+
+.markdown-body .highlight pre, .markdown-body pre {
+    background-color: #f1f7f8;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+.markdown-body code, .markdown-body tt {
+    background-color: #f1f7f8;
+}
+
+.markdown-body {
+    box-sizing: border-box;
+    min-width: 200px;
+    max-width: 750px;
+}
+
+/*!
+ * GitHub Dark v0.5.0
+ * Copyright (c) 2012 - 2017 GitHub, Inc.
+ * Licensed under MIT (https://github.com/primer/github-syntax-theme-generator/blob/master/LICENSE)
+ */
+
+[title="Component__view"] .pl-c /* comment, punctuation.definition.comment, string.comment */ {
+  color: #959da5;
+}
+
+[title="Component__view"] .pl-c1 /* constant, entity.name.constant, variable.other.constant, variable.language, support, meta.property-name, support.constant, support.variable, meta.module-reference, markup.quote, markup.raw, meta.diff.header */,
+[title="Component__view"] .pl-s .pl-v /* string variable */ {
+  color: #c8e1ff;
+}
+
+[title="Component__view"] .pl-e /* entity */,
+[title="Component__view"] .pl-en /* entity.name */ {
+  color: #b392f0;
+}
+
+[title="Component__view"] .pl-smi /* variable.parameter.function, storage.modifier.package, storage.modifier.import, storage.type.java, variable.other */,
+[title="Component__view"] .pl-s .pl-s1 /* string source */ {
+  color: #f6f8fa;
+}
+
+[title="Component__view"] .pl-ent /* entity.name.tag */ {
+  color: #7bcc72;
+}
+
+[title="Component__view"] .pl-k /* keyword, storage, storage.type */ {
+  color: #ea4a5a;
+}
+
+[title="Component__view"] .pl-s /* string */,
+[title="Component__view"] .pl-pds /* punctuation.definition.string, source.regexp, string.regexp.character-class */,
+[title="Component__view"] .pl-s .pl-pse .pl-s1 /* string punctuation.section.embedded source */,
+[title="Component__view"] .pl-sr /* string.regexp */,
+[title="Component__view"] .pl-sr .pl-cce /* string.regexp constant.character.escape */,
+[title="Component__view"] .pl-sr .pl-sre /* string.regexp source.ruby.embedded */,
+[title="Component__view"] .pl-sr .pl-sra /* string.regexp string.regexp.arbitrary-repitition */ {
+  color: #79b8ff;
+}
+
+[title="Component__view"] .pl-v /* variable */,
+[title="Component__view"] .pl-ml /* markup.list, sublimelinter.mark.warning */ {
+  color: #fb8532;
+}
+
+[title="Component__view"] .pl-bu /* invalid.broken, invalid.deprecated, invalid.unimplemented, message.error, brackethighlighter.unmatched, sublimelinter.mark.error */ {
+  color: #d73a49;
+}
+
+[title="Component__view"] .pl-ii /* invalid.illegal */ {
+  color: #fafbfc;
+  background-color: #d73a49;
+}
+
+[title="Component__view"] .pl-c2 /* carriage-return */ {
+  color: #fafbfc;
+  background-color: #d73a49;
+}
+
+[title="Component__view"] .pl-c2::before /* carriage-return */ {
+  content: "^M";
+}
+
+[title="Component__view"] .pl-sr .pl-cce /* string.regexp constant.character.escape */ {
+  font-weight: bold;
+  color: #7bcc72;
+}
+
+[title="Component__view"] .pl-mh /* markup.heading */,
+[title="Component__view"] .pl-mh .pl-en /* markup.heading entity.name */,
+[title="Component__view"] .pl-ms /* meta.separator */ {
+  font-weight: bold;
+  color: #0366d6;
+}
+
+[title="Component__view"] .pl-mi /* markup.italic */ {
+  font-style: italic;
+  color: #f6f8fa;
+}
+
+[title="Component__view"] .pl-mb /* markup.bold */ {
+  font-weight: bold;
+  color: #f6f8fa;
+}
+
+[title="Component__view"] .pl-md /* markup.deleted, meta.diff.header.from-file, punctuation.definition.deleted */ {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+
+[title="Component__view"] .pl-mi1 /* markup.inserted, meta.diff.header.to-file, punctuation.definition.inserted */ {
+  color: #176f2c;
+  background-color: #f0fff4;
+}
+
+[title="Component__view"] .pl-mc /* markup.changed, punctuation.definition.changed */ {
+  color: #b08800;
+  background-color: #fffdef;
+}
+
+[title="Component__view"] .pl-mi2 /* markup.ignored, markup.untracked */ {
+  color: #2f363d;
+  background-color: #959da5;
+}
+
+[title="Component__view"] .pl-mdr /* meta.diff.range */ {
+  font-weight: bold;
+  color: #b392f0;
+}
+
+[title="Component__view"] .pl-mo /* meta.output */ {
+  color: #0366d6;
+}
+
+[title="Component__view"] .pl-ba /* brackethighlighter.tag, brackethighlighter.curly, brackethighlighter.round, brackethighlighter.square, brackethighlighter.angle, brackethighlighter.quote */ {
+  color: #ffeef0;
+}
+
+[title="Component__view"] .pl-sg /* sublimelinter.gutter-mark */ {
+  color: #6a737d;
+}
+
+[title="Component__view"] .pl-corl /* constant.other.reference.link, string.other.link */ {
+  text-decoration: underline;
+  color: #79b8ff;
+}

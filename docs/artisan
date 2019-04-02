@@ -31,6 +31,11 @@ require_once(__DIR__.'/routes.php');
 
 $kernel = $app->make(\Illuminate\Contracts\Http\Kernel::class);
 
+$kernel->bootstrap();
+
+$app->make('files')->copyDirectory('public/assets', 'dist/assets');
+echo "Copied assets from [public/assets] to [dist/assets]\n";
+
 foreach ($app->make('router')->getRoutes() as $route) {
     $symfonyRequest = \Symfony\Component\HttpFoundation\Request::create(
         $route->uri(), 'GET', [], [], [], [], null
@@ -44,7 +49,7 @@ foreach ($app->make('router')->getRoutes() as $route) {
 
     $file = 'dist/'.$route->uri().'/index.html';
 
-    $app->make('filesystem')->put($file, $response->getContent());
+    $app->make('files')->put($file, $response->getContent());
 
     echo 'Route processed: ['.$route->uri()."]\n";
 }
