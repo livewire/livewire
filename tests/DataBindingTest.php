@@ -46,6 +46,17 @@ class DataBindingTest extends TestCase
     }
 
     /** @test */
+    function property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action_even_if_the_action_is_data_binding_for_that_specific_property()
+    {
+        $component = app(LivewireManager::class)->test(DataBindingStub::class);
+
+        $component->updateProperty('propertyWithHook', 'something');
+
+        $this->assertEquals('something else', $component->instance->propertyWithHook);
+        $this->assertContains('propertyWithHook', $component->dirtyInputs);
+    }
+
+    /** @test */
     function lazy_synced_data_doesnt_shows_up_as_dirty()
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
@@ -60,6 +71,12 @@ class DataBindingTest extends TestCase
 
 class DataBindingStub extends LivewireComponent {
     public $foo;
+    public $propertyWithHook;
+
+    public function updatedPropertyWithHook($value)
+    {
+        $this->propertyWithHook = 'something else';
+    }
 
     public function changeFoo($value)
     {

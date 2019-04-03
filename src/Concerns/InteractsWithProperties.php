@@ -3,6 +3,7 @@
 namespace Livewire\Concerns;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 trait InteractsWithProperties
 {
@@ -34,28 +35,50 @@ trait InteractsWithProperties
         return $data;
     }
 
-    public function getPropertyValue($prop)
-    {
-        // This is used by wrappers. Otherwise,
-        // users would have to declare props as "public".
-        return $this->{$prop};
-    }
-
     public function hasProperty($prop)
     {
-        return property_exists($this, $prop);
+        return property_exists(
+            $this,
+            $this->beforeFirstDot($prop)
+        );
+    }
+
+    public function getPropertyValue($name)
+    {
+        $value = $this->{$this->beforeFirstDot($name)};
+
+        if ($this->containsDots($name)) {
+            return data_get($value, $this->afterFirstDot($name));
+        }
+
+        return $value;
     }
 
     public function setPropertyValue($name, $value)
     {
-        $hasArrayKey = count(explode('.', $name)) > 1;
-
-        if ($hasArrayKey) {
-            $keys = explode('.', $name);
-            $firstKey = array_shift($keys);
-            Arr::set($this->{$firstKey}, implode('.', $keys), $value);
-        } else {
-            return $this->{$name} = $value;
+        if ($this->containsDots($name)) {
+            return data_set(
+                $this->{$this->beforeFirstDot($name)},
+                $this->afterFirstDot($name),
+                $value
+            );
         }
+
+        return $this->{$name} = $value;
+    }
+
+    public function containsDots($subject)
+    {
+        return strpos($subject, '.') !== false;
+    }
+
+    public function beforeFirstDot($subject)
+    {
+        return head(explode('.', $subject));
+    }
+
+    public function afterFirstDot($subject)
+    {
+        return Str::after($subject, '.');
     }
 }

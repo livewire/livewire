@@ -11,7 +11,7 @@ use Illuminate\View\View;
 abstract class LivewireComponent
 {
     use Concerns\ValidatesInput,
-        Concerns\TracksDirtySyncedInputs,
+        Concerns\DetectsDirtyProperties,
         Concerns\HandlesActions,
         Concerns\InteractsWithProperties;
 
@@ -25,8 +25,6 @@ abstract class LivewireComponent
     public function __construct($id)
     {
         $this->id = $id;
-
-        $this->hashComponentPropertiesForDetectingFutureChanges();
     }
 
     public function redirect($url)

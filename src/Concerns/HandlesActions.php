@@ -7,15 +7,6 @@ trait HandlesActions
     public function syncInput($name, $value)
     {
         $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) {
-            $this->removeFromDirtyInputsList($name);
-
-            $this->setPropertyValue($name, $value);
-        });
-    }
-
-    public function lazySyncInput($name, $value)
-    {
-        $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) {
             $this->setPropertyValue($name, $value);
 
             $this->rehashProperty($name);
