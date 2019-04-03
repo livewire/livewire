@@ -1,5 +1,5 @@
-import { fireEvent, wait } from 'dom-testing-library'
-import { mount } from './utils'
+import { fireEvent, wait, waitForDomChange } from 'dom-testing-library'
+import { mount, mountAndReturn } from './utils'
 
 test('properties sync on input change', async () => {
     var payload
@@ -26,5 +26,31 @@ test('properties are lazy synced when action is fired', async () => {
         expect(payload.actionQueue[0].type).toEqual('callMethod')
         expect(payload.actionQueue[0].payload.method).toEqual('onClick')
         expect(payload.actionQueue[0].payload.params).toEqual([])
+    })
+})
+
+test('input element value doesnt change unless property is marked as dirty', async () => {
+    mountAndReturn(
+        '<input wire:model="foo" value="">',
+        '<input wire:model="foo" value="bar"><button>Im here to trigger dom change</button>',
+        []
+    )
+
+    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
+
+    await waitForDomChange(document.body, () => {
+        expect(document.querySelector('input').value).toEqual('baz')
+    })
+
+    mountAndReturn(
+        '<input wire:model="foo" value="">',
+        '<input wire:model="foo" value="bar"><button>Im here to trigger dom change</button>',
+        ['foo']
+    )
+
+    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
+
+    await waitForDomChange(document.body, () => {
+        expect(document.querySelector('input').value).toEqual('bar')
     })
 })

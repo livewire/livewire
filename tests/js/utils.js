@@ -14,7 +14,7 @@ export function mount(dom, requestInterceptor = () => {}) {
     return document.body.firstElementChild
 };
 
-export function mountAndReturn(dom, returnedDom) {
+export function mountAndReturn(dom, returnedDom, dirtyInputs = []) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
 
@@ -27,7 +27,7 @@ export function mountAndReturn(dom, returnedDom) {
             this.onMessage({
                 id: '123',
                 serialized: 'noop',
-                dirtyInputs: [],
+                dirtyInputs: dirtyInputs,
                 dom: '<div wire:id="123" wire:serialized="noop">' + returnedDom + '</div>',
             })
         },
