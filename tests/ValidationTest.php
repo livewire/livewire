@@ -19,6 +19,16 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    function validate_component_properties_with_custom_message()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component->runAction('runValidationWithCustomMessage');
+
+        $this->assertContains('Custom Message', $component->dom);
+    }
+
+    /** @test */
     function validate_nested_component_properties()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
@@ -40,6 +50,13 @@ class ForValidation extends LivewireComponent {
             'foo' => 'required',
             'bar' => 'required',
         ]);
+    }
+
+    public function runValidationWithCustomMessage()
+    {
+        $this->validate([
+            'bar' => 'required',
+        ], ['required' => 'Custom Message']);
     }
 
     public function runNestedValidation()

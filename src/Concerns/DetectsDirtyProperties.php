@@ -2,6 +2,8 @@
 
 namespace Livewire\Concerns;
 
+use Illuminate\Support\Arr;
+
 trait DetectsDirtyProperties
 {
     protected $propertyHashes = [];
@@ -9,7 +11,13 @@ trait DetectsDirtyProperties
     public function hashPropertiesForDirtyDetection()
     {
         foreach ($this->getPublicPropertiesDefinedBySubClass() as $property => $value) {
-            $this->propertyHashes[$property] = $this->hashProperty($property);
+            if (is_array($value)) {
+                foreach (Arr::dot($value, $property.'.') as $key => $value) {
+                    $this->propertyHashes[$key] = $this->hashProperty($key);
+                }
+            } else {
+                $this->propertyHashes[$property] = $this->hashProperty($property);
+            }
         }
     }
 

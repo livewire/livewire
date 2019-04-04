@@ -69,6 +69,11 @@ export default class LivewireElement {
         if (! this.directives.has('transition')) return
         const directive = this.directives.get('transition')
 
+        // If ".out" modifier is passed, don't fade in.
+        if (directive.modifiers.includes('out') && ! directive.modifiers.includes('in')) {
+            return true
+        }
+
         if (directive.modifiers.includes('fade')) {
             this.el.style.opacity = 0
             this.el.style.transition = `opacity ${directive.durationOr(300) / 1000}s ease`
@@ -99,6 +104,11 @@ export default class LivewireElement {
     transitionElementOut(onDiscarded) {
         if (!this.directives.has('transition')) return true
         const directive = this.directives.get('transition')
+
+        // If ".in" modifier is passed, don't fade out.
+        if (directive.modifiers.includes('in') && ! directive.modifiers.includes('out')) {
+            return true
+        }
 
         if (directive.modifiers.includes('fade')) {
             this.nextFrame(() => {
@@ -153,21 +163,25 @@ export default class LivewireElement {
         return this.el.setAttribute(`${prefix}:${attribute}`, value)
     }
 
-    shouldUpdateInputElementGivenItHasBeenUpdatedViaSync(dirtyInputs) {
+    preserveValueAttributeIfNotDirty(fromEl, dirtyInputs) {
         // This will need work. But is essentially "input persistance"
-        const isInput = (this.el.tagName === 'INPUT' || this.el.tagName === 'TEXTAREA')
+        const isInput = this.isInput() && (new LivewireElement(fromEl)).isInput()
 
         if (isInput) {
             if (this.el.type === 'submit') {
-                return true
+                return
             }
 
             if (this.directives.has('model')) {
-                return Array.from(dirtyInputs).includes(this.directives.get('model').value)
+                if (! Array.from(dirtyInputs).includes(this.directives.get('model').value)) {
+                    this.el.value = fromEl.value
+                }
             }
-
-            return false
         }
+    }
+
+    isInput() {
+        return this.el.tagName === 'INPUT' || this.el.tagName === 'TEXTAREA'
     }
 
     valueFromInputOrCheckbox() {

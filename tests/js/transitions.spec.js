@@ -37,6 +37,19 @@ test('fade out transition is applied', async () => {
     })
 })
 
+test('fade out transition is not applied if "in" modifier is present', async () => {
+    mountAndReturn(
+        '<button wire:click="onClick"></button><span wire:transition.fade.in.500ms></span>',
+        '<button wire:click="onClick"></button>'
+    )
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('span')).toBeNull()
+    }, { timeout: 100 })
+})
+
 test('fade in transition class is applied', async () => {
     mountAndReturn(
         '<button wire:click="onClick"></button>',

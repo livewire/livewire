@@ -54,3 +54,18 @@ test('input element value doesnt change unless property is marked as dirty', asy
         expect(document.querySelector('input').value).toEqual('bar')
     })
 })
+
+test('input element value doesnt change, but other attributes do when not marked as dirty', async () => {
+    mountAndReturn(
+        '<input wire:model="foo" class="foo" value="">',
+        '<input wire:model="foo" class="foo bar" value="bar">',
+        []
+    )
+
+    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
+
+    await wait(() => {
+        expect(document.querySelector('input').value).toEqual('baz')
+        expect(document.querySelector('input').classList.contains('bar')).toBeTruthy()
+    })
+})
