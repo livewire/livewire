@@ -120,7 +120,7 @@ Route::livewire('/counter' App\Http\Livewire\Counter::class)
 
 <div title="Warning"><div title="Warning__content">
 
-Livewire looks for `layouts/app.blade.php` with `@yeild('content')`, and renders the component there. This file is usually added when you run `php artisan make:auth`. If you are having trouble with this, go [here](/livewire/docs/rendering_components) for more info.
+Livewire looks for `layouts/app.blade.php` with `@yield('content')`, and renders the component there. This file is usually added when you run `php artisan make:auth`. If you are having trouble with this, go [here](/livewire/docs/rendering_components) for more info.
 </div></div>
 
 ## View it in the browser
