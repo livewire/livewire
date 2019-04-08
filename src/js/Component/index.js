@@ -119,10 +119,11 @@ class Component {
                 //
             },
 
-            onBeforeElUpdated: node => {
-                const el = new LivewireElement(node)
+            onBeforeElUpdated: (from, to) => {
+                const fromEl = new LivewireElement(from)
+                const toEl = new LivewireElement(to)
 
-                return el.shouldUpdateInputElementGivenItHasBeenUpdatedViaSync(dirtyInputs)
+                toEl.preserveValueAttributeIfNotDirty(fromEl, dirtyInputs)
             },
 
             onElUpdated: (node) => {

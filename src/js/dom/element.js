@@ -163,9 +163,12 @@ export default class LivewireElement {
         return this.el.setAttribute(`${prefix}:${attribute}`, value)
     }
 
+    isFocused() {
+        return this.el === document.activeElement
+    }
+
     preserveValueAttributeIfNotDirty(fromEl, dirtyInputs) {
-        // This will need work. But is essentially "input persistance"
-        const isInput = this.isInput() && (new LivewireElement(fromEl)).isInput()
+        const isInput = this.isInput() && fromEl.isInput()
 
         if (isInput) {
             if (this.el.type === 'submit') {
@@ -173,8 +176,13 @@ export default class LivewireElement {
             }
 
             if (this.directives.has('model')) {
-                if (! Array.from(dirtyInputs).includes(this.directives.get('model').value)) {
-                    this.el.value = fromEl.value
+                // If the model is not inside "dirtyInputs" && the input element is focused.
+                if (
+                    ! Array.from(dirtyInputs).includes(this.directives.get('model').value)
+                    && fromEl.isFocused()
+                ) {
+                    // Transfer the current "fromEl" value (preserving / overriding it).
+                    this.el.value = fromEl.el.value
                 }
             }
         }

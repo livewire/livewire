@@ -62,10 +62,25 @@ test('input element value doesnt change, but other attributes do when not marked
         []
     )
 
+    document.querySelector('input').focus()
     fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
 
     await wait(() => {
         expect(document.querySelector('input').value).toEqual('baz')
         expect(document.querySelector('input').classList.contains('bar')).toBeTruthy()
+    })
+})
+
+test('input element value changes, when not marked as dirty, only when element isnt focused', async () => {
+    mountAndReturn(
+        '<input wire:model="foo" value="">',
+        '<input wire:model="foo" value="bar">',
+        []
+    )
+
+    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
+
+    await wait(() => {
+        expect(document.querySelector('input').value).toEqual('bar')
     })
 })
