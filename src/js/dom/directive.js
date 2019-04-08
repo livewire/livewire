@@ -24,11 +24,17 @@ export default class {
     }
 
     durationOr(defaultDuration) {
-        const durationAsString = this.modifiers.find(mod => mod.match(/(.*)ms/))
+        let durationInMilliSeconds
+        const durationInMilliSecondsString = this.modifiers.find(mod => mod.match(/(.*)ms/))
+        const durationInSecondsString = this.modifiers.find(mod => mod.match(/(.*)s/))
 
-        return durationAsString
-            ? Number(durationAsString.replace('ms', ''))
-            : defaultDuration
+        if (durationInMilliSecondsString) {
+            durationInMilliSeconds = Number(durationInMilliSecondsString.replace('ms', ''))
+        } else if (durationInSecondsString){
+            durationInMilliSeconds = Number(durationInSecondsString.replace('s', '')) * 1000
+        }
+
+        return durationInMilliSeconds || defaultDuration
     }
 
     parseOutMethodAndParams(rawMethod) {

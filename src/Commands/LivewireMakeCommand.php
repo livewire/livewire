@@ -70,9 +70,7 @@ EOT
 
         File::put($this->pathToView, <<<EOT
 <div>
-{{--
-    {$nugget}
---}}
+    {{-- {$nugget} --}}
 </div>
 
 EOT

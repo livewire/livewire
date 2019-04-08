@@ -12,9 +12,11 @@ abstract class ConnectionHandler
     {
         $instance = ComponentHydrator::hydrate($serialized);
 
+        $instance->hashPropertiesForDirtyDetection();
+
         try {
             foreach ($syncQueue ?? [] as $model => $value) {
-                $instance->lazySyncInput($model, $value);
+                $instance->syncInput($model, $value);
             }
 
             foreach ($actionQueue as $action) {
@@ -28,9 +30,8 @@ abstract class ConnectionHandler
             return ['redirectTo' => $instance->redirectTo];
         }
 
-        $dom = $instance->output($errors ?? null);
         $id = $instance->id;
-        $dirtyInputs = $instance->dirtyInputs();
+        $dom = $instance->output($errors ?? null);
         $serialized = ComponentHydrator::dehydrate($instance);
 
         return new LivewireOutput([
@@ -38,7 +39,7 @@ abstract class ConnectionHandler
             'dom' => app('livewire')->injectComponentDataAsHtmlAttributesInRootElement(
                 $dom, $id, $serialized
             ),
-            'dirtyInputs' => $dirtyInputs,
+            'dirtyInputs' => $instance->getDirtyProperties(),
             'serialized' => $serialized,
         ]);
     }

@@ -16,6 +16,10 @@ export default class {
         return Object.keys(this.directives).includes(type)
     }
 
+    missing(type) {
+        return ! Object.keys(this.directives).includes(type)
+    }
+
     get(type) {
         return this.directives[type]
     }
