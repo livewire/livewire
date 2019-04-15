@@ -14,8 +14,8 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidation');
 
-        $this->assertNotContains('foo', $component->dom);
-        $this->assertContains('bar', $component->dom);
+        $this->assertNotContains('The foo field is required', $component->dom);
+        $this->assertContains('The bar field is required', $component->dom);
     }
 
     /** @test */
@@ -35,7 +35,7 @@ class ValidationTest extends TestCase
 
         $component->runAction('runNestedValidation');
 
-        $this->assertContains('emails', $component->dom);
+        $this->assertContains( 'emails.1 must be a valid email address.', $component->dom);
     }
 }
 
