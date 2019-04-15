@@ -35,3 +35,25 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = []) {
 
     return document.body.firstElementChild
 };
+
+export function mountAndReturnWithData(dom, returnedDom, data) {
+    // This is a crude way of wiping any existing DOM & listeners before we mount.
+    document.body.innerHTML = '';
+
+    document.body.innerHTML = '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + dom + '</div>'
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        sendMessage(payload) {
+            this.onMessage({
+                id: '123',
+                serialized: JSON.stringify({ properties: data }),
+                dirtyInputs: {},
+                dom: '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + returnedDom + '</div>',
+            })
+        },
+    }})
+
+    return document.body.firstElementChild
+};

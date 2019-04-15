@@ -1,5 +1,5 @@
 import { fireEvent, wait, waitForDomChange } from 'dom-testing-library'
-import { mount, mountAndReturn } from './utils'
+import { mount, mountAndReturn, mountAndReturnWithData } from './utils'
 
 test('properties sync on input change', async () => {
     var payload
@@ -82,5 +82,20 @@ test('input element value changes, when not marked as dirty, only when element i
 
     await wait(() => {
         expect(document.querySelector('input').value).toEqual('bar')
+    })
+})
+
+test('input element value attribute is automatically added if not present in returned dom', async () => {
+    mountAndReturnWithData(
+        '<input wire:model="foo"><button wire:click="onClick"></button>',
+        '<input wire:model="foo"><button wire:click="onClick"></button>',
+        { foo: 'bar' }
+    )
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('input').hasAttribute('value')).toBeTruthy()
+        expect(document.querySelector('input').value).toBe('bar')
     })
 })

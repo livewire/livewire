@@ -105,8 +105,9 @@ class Component {
         LivewireElement.allModelElementsInside(tempDom).forEach(el => {
             const modelValue = el.directives.get('model').value
 
-            if (! el.hasAttribute('value') && this.serialized.properties[modelValue]) {
-                el.setAttribute('value', this.serialized.properties[modelValue])
+            // @todo - remove this el.el
+            if (! el.el.hasAttribute('value') && this.serialized.properties[modelValue]) {
+                el.el.setAttribute('value', this.serialized.properties[modelValue])
             }
         })
 
