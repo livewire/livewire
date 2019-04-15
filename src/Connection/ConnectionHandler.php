@@ -5,6 +5,7 @@ namespace Livewire\Connection;
 use Illuminate\Validation\ValidationException;
 use Livewire\LivewireComponentWrapper;
 use Livewire\LivewireOutput;
+use Livewire\TinyHtmlMinifier;
 
 abstract class ConnectionHandler
 {
@@ -34,11 +35,13 @@ abstract class ConnectionHandler
         $dom = $instance->output($errors ?? null);
         $serialized = ComponentHydrator::dehydrate($instance);
 
+        $minifier = new TinyHtmlMinifier(['collapse_whitespace' => true]);
+
         return new LivewireOutput([
             'id' => $id,
-            'dom' => app('livewire')->injectComponentDataAsHtmlAttributesInRootElement(
+            'dom' => $minifier->minify(app('livewire')->injectComponentDataAsHtmlAttributesInRootElement(
                 $dom, $id, $serialized
-            ),
+            )),
             'dirtyInputs' => $instance->getDirtyProperties(),
             'serialized' => $serialized,
         ]);

@@ -36,7 +36,7 @@ class RouterMacros
                     'section' => $this->current()->getAction('section') ?? 'content',
                     'component' => $componentClass,
                     'componentOptions' => $reflected->hasMethod('created')
-                        ? (new PretendClassMethodIsControllerMethodAndRetrieveBindings)($reflected->getMethod('created'), $this)
+                        ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('created'), $this))->retrieveBindings()
                         : [],
                 ]);
             });

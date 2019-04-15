@@ -2,25 +2,34 @@
 
 namespace Livewire\Macros;
 
-class PretendClassMethodIsControllerMethodAndRetrieveBindings
+class PretendClassMethodIsControllerMethod
 {
-    public function __invoke($method, $router)
+    protected $method;
+    protected $router;
+
+    public function __construct($method, $router)
     {
-        $route = $router->current();
+        $this->method = $method;
+        $this->router = $router;
+    }
+
+    public function retrieveBindings()
+    {
+        $route = $this->router->current();
 
         // Cache the current route action (this callback actually), just to be safe.
         $cache = $route->getAction('uses');
 
         // We'll set the route action to be the "created" method from the chosen
         // Livewire component, to get the proper implicit bindings.
-        $route->uses($method->class . '@' . $method->name);
+        $route->uses($this->method->class . '@' . $this->method->name);
 
         // This is normally handled in the "SubstituteBindings" middleware, but
         // because that middleware has already ran, we need to run them again.
-        $router->substituteBindings($route);
-        $router->substituteImplicitBindings($route);
+        $this->router->substituteBindings($route);
+        $this->router->substituteImplicitBindings($route);
 
-        $options = $route->resolveMethodDependencies($route->parameters(), $method);
+        $options = $route->resolveMethodDependencies($route->parameters(), $this->method);
 
         // Restore the original route action.
         $route->uses($cache);
