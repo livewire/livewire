@@ -8,6 +8,7 @@ export default class ComponentManager {
     constructor(connection) {
         this.connection = connection
         this.nodeInitializer = new NodeInitializer
+        this.components = store
     }
 
     mount() {

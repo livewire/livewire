@@ -1,6 +1,6 @@
 import Message from '../message'
 import { debounce } from 'lodash'
-import { addMixin } from '../util'
+import { addMixin, tap } from '../util'
 import morphdom from '../dom/morphdom'
 import TreeWalker from '../dom/tree_walker'
 import LivewireElement from '../dom/element'
@@ -8,7 +8,7 @@ import handleLoadingDirectives from './handle_loading_directives'
 
 class Component {
     constructor(el, nodeInitializer, connection, parent) {
-        this.serialized = el.getAttribute('serialized')
+        this.serialized = JSON.parse(el.getAttribute('serialized'))
         this.id = el.getAttribute('id')
         this.nodeInitializer = nodeInitializer
         this.connection = connection
@@ -76,7 +76,7 @@ class Component {
     receiveMessage(message) {
         // Note: I'm sure there is an abstraction called "MessageResponse" that makes sense.
         // Let's just keep an eye on this for now. Sorry for the LoD violation.
-        this.serialized = message.response.serialized
+        this.serialized = JSON.parse(message.response.serialized)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (message.response.redirectTo) {
@@ -92,8 +92,25 @@ class Component {
     replaceDom(rawDom, dirtyInputs) {
         // Prevent morphdom from moving an input element and it losing it's focus.
         LivewireElement.preserveActiveElement(() => {
-            this.handleMorph(rawDom.trim(), dirtyInputs)
+            this.handleMorph(this.addValueAttributesToModelNodes(rawDom.trim()), dirtyInputs)
         })
+    }
+
+    addValueAttributesToModelNodes(inputDom)
+    {
+        const tempDom = tap(document.createElement('div'), el => { el.innerHTML = inputDom })
+
+        // Go through and add any "value" attributes to "wire:model" bound input elements,
+        // if they aren't already in the dom.
+        LivewireElement.allModelElementsInside(tempDom).forEach(el => {
+            const modelValue = el.directives.get('model').value
+
+            if (! el.hasAttribute('value') && this.serialized.properties[modelValue]) {
+                el.setAttribute('value', this.serialized.properties[modelValue])
+            }
+        })
+
+        return tempDom.innerHTML
     }
 
     handleMorph(dom, dirtyInputs) {

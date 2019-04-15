@@ -41,6 +41,12 @@ export default class LivewireElement {
         })
     }
 
+    static allModelElementsInside(root) {
+        return Array.from(
+            root.querySelectorAll(`[${prefix}\\:model]`)
+        ).map(el => new LivewireElement(el))
+    }
+
     static byAttributeAndValue(attribute, value) {
         return new LivewireElement(document.querySelector(`[${prefix}\\:${attribute}="${value}"]`))
     }

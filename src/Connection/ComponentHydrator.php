@@ -15,7 +15,9 @@ class ComponentHydrator
 
     public static function hydrate($serialized)
     {
-        list($id, $class, $properties) = array_values(json_decode($serialized, true));
+        $id = $serialized['id'];
+        $class = $serialized['class'];
+        $properties = $serialized['properties'];
 
         return tap(new $class($id), function ($unHydratedInstance) use ($properties) {
             foreach ($properties as $property => $value) {
