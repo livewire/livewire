@@ -20,7 +20,7 @@ class PretendClassMethodIsControllerMethod
         // Cache the current route action (this callback actually), just to be safe.
         $cache = $route->getAction('uses');
 
-        // We'll set the route action to be the "created" method from the chosen
+        // We'll set the route action to be the "mount" method from the chosen
         // Livewire component, to get the proper implicit bindings.
         $route->uses($this->method->class . '@' . $this->method->name);
 

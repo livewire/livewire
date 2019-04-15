@@ -57,7 +57,7 @@ EOT;
     {
         $instance = $this->activate($component);
 
-        $instance->created(...$options);
+        $instance->mount(...$options);
         $dom = $instance->output();
         $serialized = ComponentHydrator::dehydrate($instance);
 

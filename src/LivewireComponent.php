@@ -19,7 +19,7 @@ abstract class LivewireComponent
     public $redirectTo;
 
     protected $lifecycleHooks = [
-        'created', 'updated', 'updating',
+        'mount', 'updating', 'updated',
     ];
 
     public function __construct($id)

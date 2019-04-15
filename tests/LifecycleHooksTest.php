@@ -8,12 +8,12 @@ use Livewire\LivewireManager;
 class LifecycleHooksTest extends TestCase
 {
     /** @test */
-    function created_hook()
+    function mount_hook()
     {
         $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
 
         $this->assertEquals([
-            'created' => true,
+            'mount' => true,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
@@ -23,7 +23,7 @@ class LifecycleHooksTest extends TestCase
         $component->runAction('$refresh');
 
         $this->assertEquals([
-            'created' => true,
+            'mount' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => false,
@@ -33,7 +33,7 @@ class LifecycleHooksTest extends TestCase
         $component->updateProperty('foo', 'bar');
 
         $this->assertEquals([
-            'created' => true,
+            'mount' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
@@ -45,16 +45,16 @@ class LifecycleHooksTest extends TestCase
 class ForLifecycleHooks extends LivewireComponent {
     public $foo;
     public $lifecycles = [
-        'created' => false,
+        'mount' => false,
         'updating' => false,
         'updated' => false,
         'updatingFoo' => false,
         'updatedFoo' => false,
     ];
 
-    public function created()
+    public function mount()
     {
-        $this->lifecycles['created'] = true;
+        $this->lifecycles['mount'] = true;
     }
 
     public function updating()
