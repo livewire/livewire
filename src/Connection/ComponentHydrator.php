@@ -9,7 +9,7 @@ class ComponentHydrator
         return json_encode([
             'id' => $instance->id,
             'class' => get_class($instance),
-            'properties' => $instance->getAllPropertiesDefinedBySubClass(),
+            'properties' => $instance->getAllPublicPropertiesDefinedBySubClass(),
         ]);
     }
 

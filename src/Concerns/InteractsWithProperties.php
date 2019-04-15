@@ -4,6 +4,7 @@ namespace Livewire\Concerns;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use ReflectionProperty;
 
 trait InteractsWithProperties
 {
@@ -21,9 +22,9 @@ trait InteractsWithProperties
         return $data;
     }
 
-    public function getAllPropertiesDefinedBySubClass()
+    public function getAllPublicPropertiesDefinedBySubClass()
     {
-        $properties = (new \ReflectionClass($this))->getProperties();
+        $properties = (new \ReflectionClass($this))->getProperties(ReflectionProperty::IS_PUBLIC);
         $data = [];
 
         foreach ($properties as $property) {
