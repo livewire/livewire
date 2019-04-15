@@ -12,7 +12,7 @@ export default class {
                     this.registerElementForLoading(el, directive, component)
                     break;
 
-                case 'interval':
+                case 'poll':
                     this.fireActionOnInterval(el, directive, component)
                     break;
 
