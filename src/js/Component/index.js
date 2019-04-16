@@ -30,6 +30,8 @@ class Component {
             const el = new LivewireElement(node)
 
             this.nodeInitializer.initialize(el, this)
+
+            this.createEchoListeners()
         })
     }
 
@@ -180,6 +182,43 @@ class Component {
                 this.nodeInitializer.initialize(new LivewireElement(node), this)
             },
         });
+    }
+
+    createEchoListeners(){
+        if(this.events.length > 0){
+            this.events.forEach(event => {
+                if(event.startsWith('echo')){
+
+                    if (typeof Echo === 'undefined') {
+                        console.warn('Laravel Echo cannot be found')
+                        return
+                    }
+
+                    let [echo, channel_event] = event.split(':')
+
+                    let [echo_name, channel_type] = echo.split('-')
+
+                    if(channel_type === undefined){
+                        channel_type = 'channel' //for public
+                    }
+
+                    let [channel, event_name] = channel_event.split(',')
+
+                    if(['channel','private'].includes(channel_type)){
+                        Echo[channel_type](channel).listen(event_name, (e) => {
+                            window.livewire.emit(event, e)
+                        })
+                    }else if(channel_type == 'presence'){
+                        //presence channel //listen //leaving //joining //here
+                        Echo.join(channel)[event_name]((e) => {
+                            window.livewire.emit(event, e)
+                        })
+                    }else{
+                        console.warn('Echo channel type not yet supported')
+                    }
+                }
+            })
+        }
     }
 }
 
