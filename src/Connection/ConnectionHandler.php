@@ -3,7 +3,6 @@
 namespace Livewire\Connection;
 
 use Illuminate\Validation\ValidationException;
-use Livewire\LivewireComponentWrapper;
 use Livewire\LivewireOutput;
 use Livewire\TinyHtmlMinifier;
 
@@ -35,6 +34,7 @@ abstract class ConnectionHandler
         $dom = $instance->output($errors ?? null);
         $serialized = ComponentHydrator::dehydrate($instance);
         $listeningFor = $instance->getEventsBeingListenedFor();
+        $eventQueue = $instance->getEventQueue();
 
         $minifier = new TinyHtmlMinifier(['collapse_whitespace' => true]);
 
@@ -44,6 +44,7 @@ abstract class ConnectionHandler
                 $dom, $id, $listeningFor, $serialized
             )),
             'dirtyInputs' => $instance->getDirtyProperties(),
+            'eventQueue' => $eventQueue,
             'listeningFor' => $listeningFor,
             'serialized' => $serialized,
         ]);

@@ -3,7 +3,7 @@ import Livewire from 'laravel-livewire'
 export function mount(dom, requestInterceptor = () => {}) {
     document.body.innerHTML = '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + dom + '</div>'
 
-    document.livewire = new Livewire({ driver: {
+    new Livewire({ driver: {
         onMessage: null,
         init() {},
         sendMessage(payload) {
@@ -17,7 +17,7 @@ export function mount(dom, requestInterceptor = () => {}) {
 export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
     document.body.innerHTML = '<div wire:id="123" wire:listening-for="[&quot;'+event+'&quot;]" wire:serialized="{&quot;properties&quot;: {}}">' + dom + '</div>'
 
-    document.livewire = new Livewire({ driver: {
+    window.livewire = new Livewire({ driver: {
         onMessage: null,
         init() {},
         sendMessage(payload) {

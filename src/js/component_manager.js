@@ -1,6 +1,5 @@
 import store from './store'
 import Component from "./component";
-import TreeWalker from './dom/tree_walker'
 import LivewireElement from "./dom/element";
 import NodeInitializer from "./node_initializer";
 import EventAction from "./action/event";

@@ -91,6 +91,15 @@ export default class {
             // a value still prevents default.
             this.preventAndStop(e, directive.modifiers)
 
+            // Check for global event emission.
+            if (directive.value.match(/\$emit\(.*\)/)) {
+                eval(directive.value.replace(/\$emit\((.*)\)/, (match, group1) => {
+                    // @todo - this is bad. We can't rely on window.livewire being available.
+                    return 'window.livewire.emit('+group1+')'
+                }))
+                return
+            }
+
             if (directive.value) {
                 component.addAction(new MethodAction(directive.method, directive.params, el))
             }

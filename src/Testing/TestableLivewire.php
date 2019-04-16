@@ -33,6 +33,7 @@ class TestableLivewire
         $this->serialized = $output->serialized;
         $this->dirtyInputs = $output->dirtyInputs;
         $this->listeningFor = $output->listeningFor;
+        $this->eventQueue = $output->eventQueue;
         $this->instance = ComponentHydrator::hydrate($this->serialized);
     }
 

@@ -68,6 +68,7 @@ EOT;
             'serialized' => $serialized,
             'dirtyInputs' => [],
             'listeningFor' => $events,
+            'eventQueue' => [],
         ]);
     }
 

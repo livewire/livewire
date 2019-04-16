@@ -4,6 +4,21 @@ namespace Livewire\Concerns;
 
 trait ReceivesEvents
 {
+    protected $eventQueue = [];
+
+    public function emit($event, ...$params)
+    {
+        $this->eventQueue[] = [
+            'event' => $event,
+            'params' => $params,
+        ];
+    }
+
+    public function getEventQueue()
+    {
+        return $this->eventQueue;
+    }
+
     public function getEventsBeingListenedFor()
     {
         return array_keys($this->listeners ?? []);

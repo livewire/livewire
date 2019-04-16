@@ -13,6 +13,7 @@ class LivewireOutput implements Arrayable, Jsonable
     public $serialized;
     public $dirtyInputs;
     public $listeningFor;
+    public $eventQueue;
 
     public function __construct($data)
     {
@@ -21,6 +22,7 @@ class LivewireOutput implements Arrayable, Jsonable
         $this->serialized = $data['serialized'];
         $this->dirtyInputs = $data['dirtyInputs'];
         $this->listeningFor = $data['listeningFor'];
+        $this->eventQueue = $data['eventQueue'];
     }
 
     public function toArray()
@@ -31,6 +33,7 @@ class LivewireOutput implements Arrayable, Jsonable
             'serialized' => $this->serialized,
             'dirtyInputs' => $this->dirtyInputs,
             'listeningFor' => $this->listeningFor,
+            'eventQueue' => $this->eventQueue,
         ];
     }
 

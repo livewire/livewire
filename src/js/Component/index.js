@@ -8,6 +8,7 @@ import handleLoadingDirectives from './handle_loading_directives'
 
 class Component {
     constructor(el, nodeInitializer, connection, parent) {
+        this.currentMessage = null
         this.serialized = JSON.parse(el.getAttribute('serialized'))
         this.events = JSON.parse(el.getAttribute('listening-for'))
         this.id = el.getAttribute('id')
@@ -52,11 +53,15 @@ class Component {
     }
 
     fireMessage() {
-        this.connection.sendMessage(new Message(
+        if (this.currentMessage) return
+
+        this.currentMessage = new Message(
             this,
             this.actionQueue,
             this.syncQueue,
-        ))
+        );
+
+        this.connection.sendMessage(this.currentMessage)
 
         this.clearSyncQueue()
         this.clearActionQueue()
@@ -74,20 +79,31 @@ class Component {
         this.actionQueue = []
     }
 
-    receiveMessage(message) {
+    receiveMessage(payload) {
+        this.currentMessage.storeResponse(payload)
+
         // Note: I'm sure there is an abstraction called "MessageResponse" that makes sense.
         // Let's just keep an eye on this for now. Sorry for the LoD violation.
-        this.serialized = message.response.serialized
+        this.serialized = this.currentMessage.response.serialized
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
-        if (message.response.redirectTo) {
-            window.location.href = message.response.redirectTo
+        if (this.currentMessage.response.redirectTo) {
+            window.location.href = this.currentMessage.response.redirectTo
             return
         }
 
-        this.replaceDom(message.response.dom, message.response.dirtyInputs)
+        this.replaceDom(this.currentMessage.response.dom, this.currentMessage.response.dirtyInputs)
 
-        this.unsetLoading(message.loadingEls)
+        this.unsetLoading(this.currentMessage.loadingEls)
+
+        this.currentMessage = null
+
+        if (payload.eventQueue.length > 0) {
+            payload.eventQueue.forEach(event => {
+                // @todo - stop depending on window.livewire
+                window.livewire.emit(event.event, ...event.params)
+            })
+        }
     }
 
     replaceDom(rawDom, dirtyInputs) {
