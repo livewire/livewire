@@ -3,6 +3,7 @@ import Component from "./component";
 import TreeWalker from './dom/tree_walker'
 import LivewireElement from "./dom/element";
 import NodeInitializer from "./node_initializer";
+import EventAction from "./action/event";
 
 export default class ComponentManager {
     constructor(connection) {
@@ -21,5 +22,13 @@ export default class ComponentManager {
 
     destroy() {
         store.wipeComponents()
+    }
+
+    emitEvent(event, params) {
+        store.componentsListeningForEvent(event).forEach(
+            component => component.addAction(new EventAction(
+                event, params
+            ))
+        )
     }
 }

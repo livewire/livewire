@@ -60,24 +60,44 @@ EOT;
         $instance->mount(...$options);
         $dom = $instance->output();
         $serialized = ComponentHydrator::dehydrate($instance);
+        $events = $instance->getEventsBeingListenedFor();
 
         return new LivewireOutput([
             'id' => $instance->id,
-            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $instance->id, $serialized),
+            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $instance->id, $events, $serialized),
             'serialized' => $serialized,
             'dirtyInputs' => [],
+            'listeningFor' => $events,
         ]);
     }
 
-    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $serialized)
+    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $events, $serialized)
     {
-        $escapedSerialized = addcslashes(htmlspecialchars(json_encode($serialized)), '\\');
+        $attributesFormattedForHtmlElement = collect([
+            'key' => $id,
+            "{$this->prefix}:id" => $id,
+            "{$this->prefix}:serialized" => $this->escapeStringForHtml($serialized),
+            "{$this->prefix}:listening-for" => $this->escapeStringForHtml($events),
+        ])->map(function ($value, $key) {
+            return sprintf('%s="%s"', $key, $value);
+        })->implode(' ');
 
         return preg_replace(
             '/(<[a-zA-Z0-9\-]*)/',
-            sprintf('$1 key="%s" %s:id="%s" %s:serialized="%s"', $id, $this->prefix, $id, $this->prefix, $escapedSerialized),
+            sprintf('$1 %s', $attributesFormattedForHtmlElement),
             $dom,
             $limit = 1
+        );
+    }
+
+    public function escapeStringForHtml($subject)
+    {
+        return
+        addcslashes(
+            htmlspecialchars(
+                json_encode($subject)
+            ),
+            '\\'
         );
     }
 

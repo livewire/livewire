@@ -12,6 +12,7 @@ class TestableLivewire
     public $dom;
     public $serialized;
     public $dirtyInputs;
+    public $listeningFor;
 
     use Concerns\HasFunLittleUtilities,
         Concerns\MakesCallsToComponent;
@@ -31,6 +32,7 @@ class TestableLivewire
         $this->dom = $output->dom;
         $this->serialized = $output->serialized;
         $this->dirtyInputs = $output->dirtyInputs;
+        $this->listeningFor = $output->listeningFor;
         $this->instance = ComponentHydrator::hydrate($this->serialized);
     }
 

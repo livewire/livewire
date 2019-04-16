@@ -34,15 +34,17 @@ abstract class ConnectionHandler
         $id = $instance->id;
         $dom = $instance->output($errors ?? null);
         $serialized = ComponentHydrator::dehydrate($instance);
+        $listeningFor = $instance->getEventsBeingListenedFor();
 
         $minifier = new TinyHtmlMinifier(['collapse_whitespace' => true]);
 
         return new LivewireOutput([
             'id' => $id,
             'dom' => $minifier->minify(app('livewire')->injectComponentDataAsHtmlAttributesInRootElement(
-                $dom, $id, $serialized
+                $dom, $id, $listeningFor, $serialized
             )),
             'dirtyInputs' => $instance->getDirtyProperties(),
+            'listeningFor' => $listeningFor,
             'serialized' => $serialized,
         ]);
     }

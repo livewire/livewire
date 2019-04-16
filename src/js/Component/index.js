@@ -9,6 +9,7 @@ import handleLoadingDirectives from './handle_loading_directives'
 class Component {
     constructor(el, nodeInitializer, connection, parent) {
         this.serialized = JSON.parse(el.getAttribute('serialized'))
+        this.events = JSON.parse(el.getAttribute('listening-for'))
         this.id = el.getAttribute('id')
         this.nodeInitializer = nodeInitializer
         this.connection = connection

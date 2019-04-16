@@ -17,11 +17,21 @@ class ComponentEventsTest extends TestCase
 
         $this->assertEquals($component->foo, 'baz');
     }
+
+    /** @test */
+    function listeners_are_provided_to_frontend()
+    {
+        $component = app(LivewireManager::class)->test(ReceivesEvents::class);
+
+        $this->assertTrue(in_array('bar', $component->listeningFor));
+        $this->assertContains('bar', $component->dom);
+    }
 }
 
 class ReceivesEvents extends LivewireComponent {
     public $foo;
-    public $listeners = ['bar' => 'onBar'];
+
+    protected $listeners = ['bar' => 'onBar'];
 
     public function onBar($value)
     {
