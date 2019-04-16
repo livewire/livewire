@@ -71,7 +71,7 @@ EOT;
 
     public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $serialized)
     {
-        $escapedSerialized = addcslashes(htmlspecialchars($serialized), '\\');
+        $escapedSerialized = addcslashes(htmlspecialchars(json_encode($serialized)), '\\');
 
         return preg_replace(
             '/(<[a-zA-Z0-9\-]*)/',

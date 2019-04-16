@@ -76,7 +76,7 @@ class Component {
     receiveMessage(message) {
         // Note: I'm sure there is an abstraction called "MessageResponse" that makes sense.
         // Let's just keep an eye on this for now. Sorry for the LoD violation.
-        this.serialized = JSON.parse(message.response.serialized)
+        this.serialized = message.response.serialized
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (message.response.redirectTo) {
@@ -100,14 +100,19 @@ class Component {
     {
         const tempDom = tap(document.createElement('div'), el => { el.innerHTML = inputDom })
 
+        // I need the "self" for the later eval().
+        const self = this
+
         // Go through and add any "value" attributes to "wire:model" bound input elements,
         // if they aren't already in the dom.
         LivewireElement.allModelElementsInside(tempDom).forEach(el => {
-            const modelValue = el.directives.get('model').value
+            const modelvalue = el.directives.get('model').value
+
+            const modelValueWithArraySyntaxForNumericKeys = modelvalue.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
 
             // @todo - remove this el.el
-            if (! el.el.hasAttribute('value') && this.serialized.properties[modelValue]) {
-                el.el.setAttribute('value', this.serialized.properties[modelValue])
+            if (! el.el.hasAttribute('value') && eval('self.serialized.properties.'+modelValueWithArraySyntaxForNumericKeys)) {
+                el.el.setAttribute('value', eval('self.serialized.properties.'+modelValueWithArraySyntaxForNumericKeys))
             }
         })
 

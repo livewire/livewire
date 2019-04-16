@@ -6,11 +6,11 @@ class ComponentHydrator
 {
     public static function dehydrate($instance)
     {
-        return json_encode([
+        return [
             'id' => $instance->id,
             'class' => get_class($instance),
             'properties' => $instance->getAllPublicPropertiesDefinedBySubClass(),
-        ]);
+        ];
     }
 
     public static function hydrate($serialized)
