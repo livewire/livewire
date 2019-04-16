@@ -8,6 +8,16 @@ trait MakesCallsToComponent
 {
     public $syncQueue = [];
 
+    public function fireEvent($event, ...$parameters)
+    {
+        $this->sendMessage('fireEvent', [
+            'event' => $event,
+            'params' => $parameters,
+        ]);
+
+        return $this;
+    }
+
     public function runAction($method, ...$parameters)
     {
         $this->sendMessage('callMethod', [

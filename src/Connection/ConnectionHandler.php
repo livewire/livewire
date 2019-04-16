@@ -58,6 +58,9 @@ abstract class ConnectionHandler
             case 'callMethod':
                 $instance->callMethod($data['method'], $data['params']);
                 break;
+            case 'fireEvent':
+                $instance->fireEvent($data['event'], $data['params']);
+                break;
             default:
                 throw new \Exception('Unrecongnized message type: ' . $type);
                 break;

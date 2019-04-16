@@ -13,6 +13,7 @@ abstract class LivewireComponent
     use Concerns\ValidatesInput,
         Concerns\DetectsDirtyProperties,
         Concerns\HandlesActions,
+        Concerns\ReceivesEvents,
         Concerns\InteractsWithProperties;
 
     public $id;

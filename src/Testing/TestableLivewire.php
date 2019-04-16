@@ -2,7 +2,6 @@
 
 namespace Livewire\Testing;
 
-use Symfony\Component\DomCrawler\Crawler;
 use Livewire\Connection\ComponentHydrator;
 
 class TestableLivewire
