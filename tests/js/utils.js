@@ -62,7 +62,7 @@ export function mountAndReturnWithData(dom, returnedDom, data) {
         sendMessage(payload) {
             this.onMessage({
                 id: '123',
-                serialized: JSON.stringify({ properties: data }),
+                serialized: { properties: data },
                 dirtyInputs: {},
                 dom: '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + returnedDom + '</div>',
             })

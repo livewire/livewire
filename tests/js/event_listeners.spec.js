@@ -5,7 +5,7 @@ test('receive event from global fire', async () => {
     var payload
     mountWithEvent('<div></div>', ['foo'], i => payload = i)
 
-    document.livewire.emit('foo', 'bar');
+    window.livewire.emit('foo', 'bar');
 
     await wait(() => {
         expect(payload.actionQueue[0].type).toEqual('fireEvent')
