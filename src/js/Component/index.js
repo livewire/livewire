@@ -100,7 +100,7 @@ class Component {
 
         this.currentMessage = null
 
-        if (payload.eventQueue.length > 0) {
+        if (payload.eventQueue && payload.eventQueue.length > 0) {
             payload.eventQueue.forEach(event => {
                 // @todo - stop depending on window.livewire
                 window.livewire.emit(event.event, ...event.params)
@@ -125,9 +125,9 @@ class Component {
         // Go through and add any "value" attributes to "wire:model" bound input elements,
         // if they aren't already in the dom.
         LivewireElement.allModelElementsInside(tempDom).forEach(el => {
-            const modelvalue = el.directives.get('model').value
+            const modelValue = el.directives.get('model').value
 
-            const modelValueWithArraySyntaxForNumericKeys = modelvalue.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
+            const modelValueWithArraySyntaxForNumericKeys = modelValue.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
 
             // @todo - remove this el.el
             if (! el.el.hasAttribute('value') && eval('self.serialized.properties.'+modelValueWithArraySyntaxForNumericKeys)) {
