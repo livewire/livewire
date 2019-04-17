@@ -203,7 +203,7 @@ class Component {
                     }
 
                     let [channel, event_name] = channel_event.split(',')
-
+                    
                     if(['channel','private'].includes(channel_type)){
                         Echo[channel_type](channel).listen(event_name, (e) => {
                             window.livewire.emit(event, e)
@@ -212,6 +212,10 @@ class Component {
                         //presence channel //listen //leaving //joining //here
                         Echo.join(channel)[event_name]((e) => {
                             window.livewire.emit(event, e)
+                        })
+                    }else if(channel_type == 'notification'){
+                        Echo.private(channel).notification((notification) => {
+                            window.livewire.emit(event, notification)
                         })
                     }else{
                         console.warn('Echo channel type not yet supported')

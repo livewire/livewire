@@ -75,4 +75,31 @@ describe('test Laravel Echo', () => {
             expect(payload.actionQueue[0].payload.params).toEqual(['baz'])
         })
     })
+
+
+    test('presence echo channel is created and reacts', async () => {
+        expect(mockEcho.presenceChannelExist('foo')).toBe(false)
+    
+        var payload
+        mountWithEvent('<div></div>', ['echo-presence:foo,here'], i => payload = i)
+    
+        expect(mockEcho.presenceChannelExist('foo')).toBe(true)
+
+        mockEcho.getPresenceChannel('foo').iJoin({id: 1, name: 'Caleb'})
+    
+        await wait(() => {
+            expect(payload.actionQueue[0].type).toEqual('fireEvent')
+            expect(payload.actionQueue[0].payload.event).toEqual('echo-presence:foo,here')
+            expect(payload.actionQueue[0].payload.params).toEqual([[{id: 1, name: 'Caleb'}]])
+        })
+    })
+
+    test('notification echo channel is created', async () => {
+        expect(mockEcho.privateChannelExist('foo')).toBe(false)
+    
+        var payload
+        mountWithEvent('<div></div>', ['echo-notification:foo'], i => payload = i)
+    
+        expect(mockEcho.privateChannelExist('foo')).toBe(true)
+    })
 })
