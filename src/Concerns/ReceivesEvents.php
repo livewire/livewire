@@ -54,4 +54,9 @@ trait ReceivesEvents
     {
         $this->registerListener('echo-presence:' . $channel . ',' . $event, $method);
     }
+    
+    public function registerEchoNotificationListener($channel, $method)
+    {
+        $this->registerListener('echo-notification:' . $channel, $method);
+    }
 }

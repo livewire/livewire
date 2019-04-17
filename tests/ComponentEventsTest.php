@@ -53,6 +53,9 @@ class ComponentEventsTest extends TestCase
 
         $this->assertTrue(in_array('echo-presence:foo,here', $component->listeningFor));
         $this->assertContains('echo-presence:foo,here', $component->dom);
+
+        $this->assertTrue(in_array('echo-notification:foo', $component->listeningFor));
+        $this->assertContains('echo-notification:foo', $component->dom);
     }
 }
 
@@ -82,9 +85,14 @@ class RegistersDynamicEvents extends LivewireComponent {
     public function mount()
     {
         $this->registerListener('foo', 'onFoo');
+        
         $this->registerEchoListener('foo','bar','onEchoFoo');
+
         $this->registerEchoPrivateListener('foo','bar','onEchoPrivateFoo');
+
         $this->registerEchoPresenceListener('foo','here','onEchoPresenceFoo');
+
+        $this->registerEchoNotificationListener('foo','onEchoNotificationFoo');
     }
 
     public function render()
