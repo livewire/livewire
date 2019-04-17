@@ -40,15 +40,18 @@ trait ReceivesEvents
         $this->listeners = $listeners;
     }
     
-    public function registerEchoListener($channel, $event, $method){
+    public function registerEchoListener($channel, $event, $method)
+    {
         $this->registerListener('echo:' . $channel . ',' . $event, $method);
     }
     
-    public function registerEchoPrivateListener($channel, $event, $method){
+    public function registerEchoPrivateListener($channel, $event, $method)
+    {
         $this->registerListener('echo-private:' . $channel . ',' . $event, $method);
     }
     
-    public function registerEchoPresenceListener($channel, $event, $method){
+    public function registerEchoPresenceListener($channel, $event, $method)
+    {
         $this->registerListener('echo-presence:' . $channel . ',' . $event, $method);
     }
 }

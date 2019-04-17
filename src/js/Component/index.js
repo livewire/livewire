@@ -115,8 +115,7 @@ class Component {
         })
     }
 
-    addValueAttributesToModelNodes(inputDom)
-    {
+    addValueAttributesToModelNodes(inputDom) {
         const tempDom = tap(document.createElement('div'), el => { el.innerHTML = inputDom })
 
         // I need the "self" for the later eval().
@@ -184,11 +183,10 @@ class Component {
         });
     }
 
-    createEchoListeners(){
+    createEchoListeners() {
         if(this.events.length > 0){
             this.events.forEach(event => {
                 if(event.startsWith('echo')){
-
                     if (typeof Echo === 'undefined') {
                         console.warn('Laravel Echo cannot be found')
                         return
@@ -199,7 +197,7 @@ class Component {
                     let [echo_name, channel_type] = echo.split('-')
 
                     if(channel_type === undefined){
-                        channel_type = 'channel' //for public
+                        channel_type = 'channel'
                     }
 
                     let [channel, event_name] = channel_event.split(',')
@@ -209,7 +207,6 @@ class Component {
                             window.livewire.emit(event, e)
                         })
                     }else if(channel_type == 'presence'){
-                        //presence channel //listen //leaving //joining //here
                         Echo.join(channel)[event_name]((e) => {
                             window.livewire.emit(event, e)
                         })
