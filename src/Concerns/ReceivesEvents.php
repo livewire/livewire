@@ -19,15 +19,23 @@ trait ReceivesEvents
         return $this->eventQueue;
     }
 
+    protected function getEventsAndHandlers()
+    {
+        if (method_exists($this, 'listeners')) {
+            return $this->listeners();
+        }
+        return $this->listeners ?? [];
+    }
+
     public function getEventsBeingListenedFor()
     {
-        return array_keys($this->listeners ?? []);
+        return array_keys($this->getEventsAndHandlers());
     }
 
     public function fireEvent($event, $params)
     {
-        $method = $this->listeners[$event];
+        $method = $this->getEventsAndHandlers()[$event];
 
-        $this->{$method}(...$params);
+        $this->callMethod($method, $params);
     }
 }

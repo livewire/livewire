@@ -8,14 +8,15 @@ import handleLoadingDirectives from './handle_loading_directives'
 
 class Component {
     constructor(el, nodeInitializer, connection, parent) {
-        this.currentMessage = null
-        this.serialized = JSON.parse(el.getAttribute('serialized'))
-        this.events = JSON.parse(el.getAttribute('listening-for'))
         this.id = el.getAttribute('id')
+        this.data = JSON.parse(el.getAttribute('initial-data'))
+        this.events = JSON.parse(el.getAttribute('listening-for'))
+        this.componentClass = el.getAttribute('class')
         this.nodeInitializer = nodeInitializer
         this.connection = connection
         this.syncQueue = {}
         this.actionQueue = []
+        this.currentMessage = null
 
         this.initialize(el)
     }
@@ -84,7 +85,7 @@ class Component {
 
         // Note: I'm sure there is an abstraction called "MessageResponse" that makes sense.
         // Let's just keep an eye on this for now. Sorry for the LoD violation.
-        this.serialized = this.currentMessage.response.serialized
+        this.data = this.currentMessage.response.data
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (this.currentMessage.response.redirectTo) {
@@ -128,8 +129,8 @@ class Component {
             const modelValueWithArraySyntaxForNumericKeys = modelValue.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
 
             // @todo - remove this el.el
-            if (! el.el.hasAttribute('value') && eval('self.serialized.properties.'+modelValueWithArraySyntaxForNumericKeys)) {
-                el.el.setAttribute('value', eval('self.serialized.properties.'+modelValueWithArraySyntaxForNumericKeys))
+            if (! el.el.hasAttribute('value') && eval('self.data.'+modelValueWithArraySyntaxForNumericKeys)) {
+                el.el.setAttribute('value', eval('self.data.'+modelValueWithArraySyntaxForNumericKeys))
             }
         })
 
@@ -138,6 +139,8 @@ class Component {
 
     handleMorph(dom, dirtyInputs) {
         morphdom(this.el.rawNode(), dom, {
+            childrenOnly: true,
+
             getNodeKey: node => {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
                 return node.hasAttribute('key')

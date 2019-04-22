@@ -4,8 +4,6 @@ export default class {
         this.component = component
         this.actionQueue = actionQueue
         this.syncQueue = syncQueue
-
-        this.id = Math.random().toString(36).substring(7)
     }
 
     prepareForSend() {
@@ -22,8 +20,9 @@ export default class {
 
     payload() {
         return {
-            serialized: this.component.serialized,
-            componentId: this.component.id,
+            id: this.component.id,
+            data: this.component.data,
+            class: this.component.componentClass,
             syncQueue: this.syncQueue,
             actionQueue: this.actionQueue,
         }
@@ -31,11 +30,13 @@ export default class {
 
     storeResponse(payload) {
         this.response = {
+            id: payload.id,
             dom: payload.dom,
             dirtyInputs: payload.dirtyInputs,
-            serialized: payload.serialized,
+            eventQueue: payload.eventQueue,
+            listeningFor: payload.listeningFor,
+            data: payload.data,
             redirectTo: payload.redirectTo,
-            forQueryString: payload.forQueryString,
         }
     }
 }

@@ -31,7 +31,7 @@ class LivewireManager
     {
         $componentClass = $this->getComponentClass($componentAliasOrClass);
 
-        return new $componentClass(str_random(20));
+        return new $componentClass;
     }
 
     public function scripts($options = null)
@@ -56,28 +56,29 @@ EOT;
     public function mount($component, ...$options)
     {
         $instance = $this->activate($component);
+        $id = str_random(20);
 
         $instance->mount(...$options);
         $dom = $instance->output();
-        $serialized = ComponentHydrator::dehydrate($instance);
+        $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
 
         return new LivewireOutput([
-            'id' => $instance->id,
-            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $instance->id, $events, $serialized),
-            'serialized' => $serialized,
+            'id' => $id,
+            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $id, get_class($instance), $events, $properties),
+            'data' => $properties,
             'dirtyInputs' => [],
             'listeningFor' => $events,
             'eventQueue' => [],
         ]);
     }
 
-    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $events, $serialized)
+    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $class, $events, $properties)
     {
         $attributesFormattedForHtmlElement = collect([
-            'key' => $id,
             "{$this->prefix}:id" => $id,
-            "{$this->prefix}:serialized" => $this->escapeStringForHtml($serialized),
+            "{$this->prefix}:class" => $class,
+            "{$this->prefix}:initial-data" => $this->escapeStringForHtml($properties),
             "{$this->prefix}:listening-for" => $this->escapeStringForHtml($events),
         ])->map(function ($value, $key) {
             return sprintf('%s="%s"', $key, $value);

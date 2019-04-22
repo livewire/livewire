@@ -10,7 +10,7 @@ class TestableLivewire
     public $prefix;
     public $instance;
     public $dom;
-    public $serialized;
+    public $data;
     public $dirtyInputs;
     public $listeningFor;
 
@@ -30,11 +30,11 @@ class TestableLivewire
     {
         $this->id = $output->id;
         $this->dom = $output->dom;
-        $this->serialized = $output->serialized;
+        $this->data = $output->data;
         $this->dirtyInputs = $output->dirtyInputs;
         $this->listeningFor = $output->listeningFor;
         $this->eventQueue = $output->eventQueue;
-        $this->instance = ComponentHydrator::hydrate($this->serialized);
+        $this->instance = ComponentHydrator::hydrate($this->data);
     }
 
     public function __get($property)

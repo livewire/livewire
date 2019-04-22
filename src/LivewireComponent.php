@@ -23,11 +23,6 @@ abstract class LivewireComponent
         'mount', 'updating', 'updated',
     ];
 
-    public function __construct($id)
-    {
-        $this->id = $id;
-    }
-
     public function redirect($url)
     {
         $this->redirectTo = $url;

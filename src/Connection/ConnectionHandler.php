@@ -8,18 +8,18 @@ use Livewire\TinyHtmlMinifier;
 
 abstract class ConnectionHandler
 {
-    public function handle($actionQueue, $syncQueue, $serialized)
+    public function handle($payload)
     {
-        $instance = ComponentHydrator::hydrate($serialized);
+        $instance = ComponentHydrator::hydrate($payload['class'], $payload['data']);
 
         $instance->hashPropertiesForDirtyDetection();
 
         try {
-            foreach ($syncQueue ?? [] as $model => $value) {
+            foreach ($payload['syncQueue'] ?? [] as $model => $value) {
                 $instance->syncInput($model, $value);
             }
 
-            foreach ($actionQueue as $action) {
+            foreach ($payload['actionQueue'] as $action) {
                 $this->processMessage($action['type'], $action['payload'], $instance);
             }
         } catch (ValidationException $e) {
@@ -30,23 +30,24 @@ abstract class ConnectionHandler
             return ['redirectTo' => $instance->redirectTo];
         }
 
-        $id = $instance->id;
         $dom = $instance->output($errors ?? null);
-        $serialized = ComponentHydrator::dehydrate($instance);
+        $data = ComponentHydrator::dehydrate($instance);
         $listeningFor = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
 
+        // This is here because VueJs strips whitespace and this prevents Vue from breaking Livewire.
         $minifier = new TinyHtmlMinifier(['collapse_whitespace' => true]);
 
         return new LivewireOutput([
-            'id' => $id,
-            'dom' => $minifier->minify(app('livewire')->injectComponentDataAsHtmlAttributesInRootElement(
-                $dom, $id, $listeningFor, $serialized
-            )),
+            // The "id" is here only as a way of relating the request to the response in js, no other reason.
+            'id' => $payload['id'],
+            // @todo - this breaks svgs (because of self-closing tags)
+            // 'dom' => $minifier->minify($dom),
+            'dom' => $dom,
             'dirtyInputs' => $instance->getDirtyProperties(),
             'eventQueue' => $eventQueue,
             'listeningFor' => $listeningFor,
-            'serialized' => $serialized,
+            'data' => $data,
         ]);
     }
 

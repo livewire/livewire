@@ -10,7 +10,7 @@ class LivewireOutput implements Arrayable, Jsonable
 {
     public $id;
     public $dom;
-    public $serialized;
+    public $data;
     public $dirtyInputs;
     public $listeningFor;
     public $eventQueue;
@@ -19,7 +19,7 @@ class LivewireOutput implements Arrayable, Jsonable
     {
         $this->id = $data['id'];
         $this->dom = $data['dom'];
-        $this->serialized = $data['serialized'];
+        $this->data = $data['data'];
         $this->dirtyInputs = $data['dirtyInputs'];
         $this->listeningFor = $data['listeningFor'];
         $this->eventQueue = $data['eventQueue'];
@@ -30,7 +30,7 @@ class LivewireOutput implements Arrayable, Jsonable
         return [
             'id' => $this->id,
             'dom' => $this->dom,
-            'serialized' => $this->serialized,
+            'data' => $this->data,
             'dirtyInputs' => $this->dirtyInputs,
             'listeningFor' => $this->listeningFor,
             'eventQueue' => $this->eventQueue,
