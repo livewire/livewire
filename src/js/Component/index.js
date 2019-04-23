@@ -5,7 +5,6 @@ import morphdom from '../dom/morphdom'
 import TreeWalker from '../dom/tree_walker'
 import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
-import store from '../store';
 
 class Component {
     constructor(el, nodeInitializer, connection, parent) {
@@ -31,6 +30,9 @@ class Component {
 
             const el = new LivewireElement(node)
 
+            // Returning "false" forces the walker to ignore all children of current element.
+            // We want to skip this node and all children if it is it's own component.
+            // Each component is initialized individually in ComponentManager.
             if (el.isComponentRootEl()) return false
 
             this.nodeInitializer.initialize(el, this)
@@ -185,9 +187,7 @@ class Component {
             onNodeAdded: (node) => {
                 const el = new LivewireElement(node)
 
-                const component = store.findComponent(el.closestRoot().getAttribute('id'))
-
-                this.nodeInitializer.initialize(component, this)
+                this.nodeInitializer.initialize(el, this)
             },
         });
     }
