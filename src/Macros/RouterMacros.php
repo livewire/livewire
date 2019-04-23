@@ -34,7 +34,7 @@ class RouterMacros
                 return app('view')->file(__DIR__ . '/livewire-view.blade.php', [
                     'layout' => $this->current()->getAction('layout') ?? 'layouts.app',
                     'section' => $this->current()->getAction('section') ?? 'content',
-                    'component' => $componentClass,
+                    'component' => $component,
                     'componentOptions' => $reflected->hasMethod('mount')
                         ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), $this))->retrieveBindings()
                         : [],

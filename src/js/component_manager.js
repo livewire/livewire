@@ -12,7 +12,7 @@ export default class ComponentManager {
     }
 
     mount() {
-        LivewireElement.rootComponentElementsWithNoParents().forEach(el => {
+        LivewireElement.rootComponentElements().forEach(el => {
             store.addComponent(
                 new Component(el, this.nodeInitializer, this.connection)
             )

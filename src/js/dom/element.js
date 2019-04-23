@@ -20,6 +20,11 @@ export default class LivewireElement {
         });
     }
 
+    static rootComponentElements() {
+        return Array.from(document.querySelectorAll(`[${prefix}\\:id]`))
+            .map(el => new LivewireElement(el))
+    }
+
     static rootComponentElementsWithNoParents() {
         // In CSS, it's simple to select all elements that DO have a certain ancestor.
         // However, it's not simple (kinda impossible) to select elements that DONT have
@@ -147,6 +152,10 @@ export default class LivewireElement {
         })
 
         return false
+    }
+
+    closestRoot() {
+        return this.closestByAttribute('id')
     }
 
     closestByAttribute(attribute) {

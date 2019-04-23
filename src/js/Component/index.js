@@ -5,6 +5,7 @@ import morphdom from '../dom/morphdom'
 import TreeWalker from '../dom/tree_walker'
 import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
+import store from '../store';
 
 class Component {
     constructor(el, nodeInitializer, connection, parent) {
@@ -29,6 +30,8 @@ class Component {
             if (node.isSameNode(this.el.rawNode())) return
 
             const el = new LivewireElement(node)
+
+            if (el.isComponentRootEl()) return false
 
             this.nodeInitializer.initialize(el, this)
         })
@@ -180,7 +183,11 @@ class Component {
             },
 
             onNodeAdded: (node) => {
-                this.nodeInitializer.initialize(new LivewireElement(node), this)
+                const el = new LivewireElement(node)
+
+                const component = store.findComponent(el.closestRoot().getAttribute('id'))
+
+                this.nodeInitializer.initialize(component, this)
             },
         });
     }

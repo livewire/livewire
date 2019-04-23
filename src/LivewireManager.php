@@ -2,9 +2,10 @@
 
 namespace Livewire;
 
+use Exception;
 use Illuminate\Support\Facades\File;
-use Livewire\Testing\TestableLivewire;
 use Livewire\Connection\ComponentHydrator;
+use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
@@ -22,14 +23,22 @@ class LivewireManager
         $this->componentAliases[$alias] = $viewClass;
     }
 
-    public function getComponentClass($aliasOrClass)
+    public function getComponentClass($alias)
     {
-        return $this->componentAliases[$aliasOrClass] ?? $aliasOrClass;
+        throw_unless(isset($this->componentAliases[$alias]), new Exception(
+            "Component not registered: [{$alias}]"
+        ));
+
+        return $this->componentAliases[$alias];
     }
 
-    public function activate($componentAliasOrClass)
+    public function activate($component)
     {
-        $componentClass = $this->getComponentClass($componentAliasOrClass);
+        $componentClass = $this->getComponentClass($component);
+
+        throw_unless(class_exists($this->componentAliases[$component]), new Exception(
+            "Component [{$component}] class not found: [{$componentClass}]"
+        ));
 
         return new $componentClass;
     }
