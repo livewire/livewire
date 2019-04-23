@@ -1,3 +1,4 @@
+import EventAction from "./action/event";
 
 const store = {
     componentsById: {},
@@ -12,6 +13,14 @@ const store = {
 
     wipeComponents() {
         this.componentsById = {}
+    },
+
+    emit(event, ...params) {
+        this.componentsListeningForEvent(event).forEach(
+            component => component.addAction(new EventAction(
+                event, params
+            ))
+        )
     },
 
     componentsListeningForEvent(event) {

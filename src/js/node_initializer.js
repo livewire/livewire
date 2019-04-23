@@ -2,8 +2,9 @@ import { debounce, kebabCase } from './util'
 import ModelAction from './action/model'
 import MethodAction from './action/method'
 import LivewireElement from './dom/element'
+import store from './store'
 
-export default class {
+export default {
     initialize(el, component) {
         // Parse out "direcives", "modifiers", and "value" from livewire attributes.
         el.directives.all().forEach(directive => {
@@ -25,7 +26,7 @@ export default class {
                     break;
             }
         })
-    }
+    },
 
     registerElementForLoading(el, directive, component) {
         const refName = el.directives.get('loading-target')
@@ -37,7 +38,7 @@ export default class {
             refName,
             directive.modifiers.includes('remove')
         )
-    }
+    },
 
     fireActionOnInterval(el, directive, component) {
         const method = directive.method || '$refresh'
@@ -45,7 +46,7 @@ export default class {
         setInterval(() => {
             component.addAction(new MethodAction(method, directive.params, el))
         }, directive.durationOr(500));
-    }
+    },
 
     attachModelListener(el, directive, component) {
         const isLive = ! directive.modifiers.includes('lazy')
@@ -62,7 +63,7 @@ export default class {
                 component.queueSyncInput(model, value)
             }
         }, 150))
-    }
+    },
 
     attachDomListener(el, directive, component) {
         switch (directive.type) {
@@ -77,7 +78,7 @@ export default class {
                 this.attachListener(el, directive, component)
                 break;
         }
-    }
+    },
 
     attachListener(el, directive, component, callback) {
         el.addEventListener(directive.type, (e => {
@@ -93,9 +94,9 @@ export default class {
 
             // Check for global event emission.
             if (directive.value.match(/\$emit\(.*\)/)) {
+                const tempStoreForEval = store
                 eval(directive.value.replace(/\$emit\((.*)\)/, (match, group1) => {
-                    // @todo - this is bad. We can't rely on window.livewire being available.
-                    return 'window.livewire.emit('+group1+')'
+                    return 'tempStoreForEval.emit('+group1+')'
                 }))
                 return
             }
@@ -104,11 +105,11 @@ export default class {
                 component.addAction(new MethodAction(directive.method, directive.params, el))
             }
         }))
-    }
+    },
 
     preventAndStop(event, modifiers) {
         modifiers.includes('prevent') && event.preventDefault()
 
         modifiers.includes('stop') && event.stopPropagation()
-    }
+    },
 }

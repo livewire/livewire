@@ -5,14 +5,15 @@ import morphdom from '../dom/morphdom'
 import TreeWalker from '../dom/tree_walker'
 import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
+import nodeInitializer from "../node_initializer";
+import store from '../store'
 
 class Component {
-    constructor(el, nodeInitializer, connection, parent) {
+    constructor(el, connection) {
         this.id = el.getAttribute('id')
         this.data = JSON.parse(el.getAttribute('initial-data'))
         this.events = JSON.parse(el.getAttribute('listening-for'))
         this.componentClass = el.getAttribute('class')
-        this.nodeInitializer = nodeInitializer
         this.connection = connection
         this.syncQueue = {}
         this.actionQueue = []
@@ -35,7 +36,7 @@ class Component {
             // Each component is initialized individually in ComponentManager.
             if (el.isComponentRootEl()) return false
 
-            this.nodeInitializer.initialize(el, this)
+            nodeInitializer.initialize(el, this)
         })
     }
 
@@ -106,8 +107,7 @@ class Component {
 
         if (payload.eventQueue && payload.eventQueue.length > 0) {
             payload.eventQueue.forEach(event => {
-                // @todo - stop depending on window.livewire
-                window.livewire.emit(event.event, ...event.params)
+                store.emit(event.event, ...event.params)
             })
         }
     }
@@ -191,7 +191,7 @@ class Component {
 
                 }
 
-                this.nodeInitializer.initialize(el, this)
+                nodeInitializer.initialize(el, this)
             },
         });
     }
