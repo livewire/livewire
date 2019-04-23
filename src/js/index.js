@@ -1,6 +1,10 @@
 import drivers from './connection/drivers'
 import Connection from './connection'
-import ComponentManager from './component_manager'
+import store from './store'
+import Component from "./component";
+import LivewireElement from "./dom/element";
+import NodeInitializer from "./node_initializer";
+import EventAction from "./action/event";
 
 class Livewire {
     constructor({ driver } = { driver: 'http' }) {
@@ -8,15 +12,19 @@ class Livewire {
             driver = drivers[driver]
         }
 
-        this.componentManager = new ComponentManager(
-            new Connection(driver)
-        )
+        this.connection = new Connection(driver)
+        this.nodeInitializer = new NodeInitializer
+        this.components = store
 
         this.start()
     }
 
     emit(event, ...params) {
-        this.componentManager.emitEvent(event, params)
+        this.components.componentsListeningForEvent(event).forEach(
+            component => component.addAction(new EventAction(
+                event, params
+            ))
+        )
     }
 
     restart() {
@@ -25,11 +33,15 @@ class Livewire {
     }
 
     stop() {
-        this.componentManager && this.componentManager.destroy()
+        this.components.wipeComponents()
     }
 
     start() {
-        this.componentManager.mount()
+        LivewireElement.rootComponentElements().forEach(el => {
+            this.components.addComponent(
+                new Component(el, this.nodeInitializer, this.connection)
+            )
+        })
     }
 }
 

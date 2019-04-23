@@ -187,6 +187,10 @@ class Component {
             onNodeAdded: (node) => {
                 const el = new LivewireElement(node)
 
+                if (el.isComponentRootEl()) {
+
+                }
+
                 this.nodeInitializer.initialize(el, this)
             },
         });

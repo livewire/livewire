@@ -28,7 +28,7 @@ export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
     return document.body.firstElementChild
 };
 
-export function mountAndReturn(dom, returnedDom, dirtyInputs = []) {
+export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterceptor = () => { }) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
 
@@ -38,6 +38,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = []) {
         onMessage: null,
         init() {},
         sendMessage(payload) {
+            requestInterceptor(payload)
             this.onMessage({
                 id: '123',
                 serialized: '{"properties": {}}',
