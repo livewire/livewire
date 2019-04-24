@@ -10,6 +10,35 @@ use Illuminate\View\View;
 
 abstract class LivewireComponent
 {
+    // @todo - move the child tracking logic into trait.
+    public $renderedChildren = [];
+    public $previouslyRenderedChildren = [];
+
+    public function getRenderedChildComponentId($id)
+    {
+        return $this->previouslyRenderedChildren[$id];
+    }
+
+    public function logRenderedChild($id, $componentId)
+    {
+        $this->renderedChildren[$id] = $componentId;
+    }
+
+    public function childHasBeenRendered($id)
+    {
+        return in_array($id, array_keys($this->previouslyRenderedChildren));
+    }
+
+    public function setPreviouslyRenderedChildren($children)
+    {
+        $this->previouslyRenderedChildren = $children;
+    }
+
+    public function getRenderedChildren()
+    {
+        return $this->renderedChildren;
+    }
+
     use Concerns\ValidatesInput,
         Concerns\DetectsDirtyProperties,
         Concerns\HandlesActions,
@@ -38,6 +67,7 @@ abstract class LivewireComponent
         return $view
             ->with([
                 'errors' => (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
+                '_instance' => $this,
             ])
             // Automatically inject all public properties into the blade view.
             ->with($this->getPublicPropertiesDefinedBySubClass())

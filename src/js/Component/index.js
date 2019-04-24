@@ -13,7 +13,8 @@ class Component {
         this.id = el.getAttribute('id')
         this.data = JSON.parse(el.getAttribute('initial-data'))
         this.events = JSON.parse(el.getAttribute('listening-for'))
-        this.componentClass = el.getAttribute('class')
+        this.children = JSON.parse(el.getAttribute('children'))
+        this.name = el.getAttribute('name')
         this.connection = connection
         this.syncQueue = {}
         this.actionQueue = []
@@ -99,6 +100,7 @@ class Component {
         // Note: I'm sure there is an abstraction called "MessageResponse" that makes sense.
         // Let's just keep an eye on this for now. Sorry for the LoD violation.
         this.data = this.currentMessage.response.data
+        this.children = this.currentMessage.response.children
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (this.currentMessage.response.redirectTo) {

@@ -51,8 +51,9 @@ trait MakesCallsToComponent
         $result = (new TestConnectionHandler)
             ->handle([
                 'id' => $this->id,
-                'component' => $this->component,
+                'name' => $this->name,
                 'data' => $this->data,
+                'children' => $this->children,
                 'actionQueue' => [['type' => $message, 'payload' => $payload]],
                 'syncQueue' => $this->syncQueue,
             ]);

@@ -22,7 +22,8 @@ export default class {
         return {
             id: this.component.id,
             data: this.component.data,
-            class: this.component.componentClass,
+            name: this.component.name,
+            children: this.component.children,
             syncQueue: this.syncQueue,
             actionQueue: this.actionQueue,
         }
@@ -32,6 +33,7 @@ export default class {
         this.response = {
             id: payload.id,
             dom: payload.dom,
+            children: payload.children,
             dirtyInputs: payload.dirtyInputs,
             eventQueue: payload.eventQueue,
             listeningFor: payload.listeningFor,

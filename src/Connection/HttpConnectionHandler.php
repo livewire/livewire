@@ -12,7 +12,8 @@ class HttpConnectionHandler extends ConnectionHandler
             request([
                 'actionQueue',
                 'syncQueue',
-                'class',
+                'name',
+                'children',
                 'data',
                 'id',
             ])

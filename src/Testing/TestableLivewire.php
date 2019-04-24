@@ -6,8 +6,9 @@ use Livewire\Connection\ComponentHydrator;
 
 class TestableLivewire
 {
-    public $component;
+    public $name;
     public $id;
+    public $children;
     public $prefix;
     public $instance;
     public $dom;
@@ -18,19 +19,19 @@ class TestableLivewire
     use Concerns\HasFunLittleUtilities,
         Concerns\MakesCallsToComponent;
 
-    public function __construct($component, $prefix)
+    public function __construct($name, $prefix)
     {
         $this->prefix = $prefix;
 
-        if (class_exists($component)) {
+        if (class_exists($name)) {
             // This allows the user to test a component by it's class name,
             // and not have to register an alias.
-            $componentClass = $component;
-            app('livewire')->component($component = str_random(20), $componentClass);
+            $componentClass = $name;
+            app('livewire')->component($name = str_random(20), $componentClass);
         }
 
         $this->updateComponent(
-            app('livewire')->mount($this->component = $component)
+            app('livewire')->mount($this->name = $name)
         );
     }
 
@@ -39,10 +40,11 @@ class TestableLivewire
         $this->id = $output->id;
         $this->dom = $output->dom;
         $this->data = $output->data;
+        $this->children = $output->children;
         $this->dirtyInputs = $output->dirtyInputs;
         $this->listeningFor = $output->listeningFor;
         $this->eventQueue = $output->eventQueue;
-        $this->instance = ComponentHydrator::hydrate($this->component, $this->data);
+        $this->instance = ComponentHydrator::hydrate($this->name, $this->data);
     }
 
     public function __get($property)

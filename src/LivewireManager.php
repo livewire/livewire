@@ -62,31 +62,39 @@ class LivewireManager
 EOT;
     }
 
-    public function mount($component, ...$options)
+    public function mount($name, ...$options)
     {
-        $instance = $this->activate($component);
+        $instance = $this->activate($name);
         $id = str_random(20);
 
         $instance->mount(...$options);
         $dom = $instance->output();
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
+        $children = $instance->getRenderedChildren();
 
         return new LivewireOutput([
             'id' => $id,
-            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $id, get_class($instance), $events, $properties),
+            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $name, $children, $events, $properties),
             'data' => $properties,
+            'children' => $children,
             'dirtyInputs' => [],
             'listeningFor' => $events,
             'eventQueue' => [],
         ]);
     }
 
-    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $class, $events, $properties)
+    public function dummyMount($id)
+    {
+        return "<div wire:id=\"{$id}\"></div>";
+    }
+
+    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $name, $children, $events, $properties)
     {
         $attributesFormattedForHtmlElement = collect([
             "{$this->prefix}:id" => $id,
-            "{$this->prefix}:class" => $class,
+            "{$this->prefix}:name" => $name,
+            "{$this->prefix}:children" => $this->escapeStringForHtml($children),
             "{$this->prefix}:initial-data" => $this->escapeStringForHtml($properties),
             "{$this->prefix}:listening-for" => $this->escapeStringForHtml($events),
         ])->map(function ($value, $key) {
