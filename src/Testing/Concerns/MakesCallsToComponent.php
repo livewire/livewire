@@ -49,7 +49,13 @@ trait MakesCallsToComponent
     public function sendMessage($message, $payload)
     {
         $result = (new TestConnectionHandler)
-            ->handle([['type' => $message, 'payload' => $payload]], $this->syncQueue, $this->serialized);
+            ->handle([
+                'id' => $this->id,
+                'component' => $this->component,
+                'data' => $this->data,
+                'actionQueue' => [['type' => $message, 'payload' => $payload]],
+                'syncQueue' => $this->syncQueue,
+            ]);
 
         $this->syncQueue = [];
 

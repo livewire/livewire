@@ -6,6 +6,7 @@ use Livewire\Connection\ComponentHydrator;
 
 class TestableLivewire
 {
+    public $component;
     public $id;
     public $prefix;
     public $instance;
@@ -21,8 +22,15 @@ class TestableLivewire
     {
         $this->prefix = $prefix;
 
+        if (class_exists($component)) {
+            // This allows the user to test a component by it's class name,
+            // and not have to register an alias.
+            $componentClass = $component;
+            app('livewire')->component($component = str_random(20), $componentClass);
+        }
+
         $this->updateComponent(
-            app('livewire')->mount($component)
+            app('livewire')->mount($this->component = $component)
         );
     }
 
@@ -34,7 +42,7 @@ class TestableLivewire
         $this->dirtyInputs = $output->dirtyInputs;
         $this->listeningFor = $output->listeningFor;
         $this->eventQueue = $output->eventQueue;
-        $this->instance = ComponentHydrator::hydrate($this->data);
+        $this->instance = ComponentHydrator::hydrate($this->component, $this->data);
     }
 
     public function __get($property)

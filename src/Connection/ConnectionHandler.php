@@ -10,7 +10,7 @@ abstract class ConnectionHandler
 {
     public function handle($payload)
     {
-        $instance = ComponentHydrator::hydrate($payload['class'], $payload['data']);
+        $instance = ComponentHydrator::hydrate($payload['component'], $payload['data']);
 
         $instance->hashPropertiesForDirtyDetection();
 

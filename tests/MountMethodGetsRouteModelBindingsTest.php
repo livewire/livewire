@@ -14,9 +14,10 @@ class MountMethodGetsRouteModelBindingsTest extends TestCase
             return new ModelToBeBoundStub($value);
         });
 
-        Route::livewire('/test/{foo}', HasMountMethodWithBindingExpectationStub::class);
+        app('livewire')->component('foo', HasMountMethodWithBindingExpectationStub::class);
+        Route::livewire('/test/{foo}', 'foo');
 
-        $response = $this->get('/test/render-in-view');
+        $response = $this->withoutExceptionHandling()->get('/test/render-in-view');
 
         $this->assertContains('render-in-view', $response->original->render());
     }

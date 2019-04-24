@@ -9,8 +9,10 @@ class ComponentHydrator
         return $instance->getAllPublicPropertiesDefinedBySubClass();
     }
 
-    public static function hydrate($class, $properties)
+    public static function hydrate($component, $properties)
     {
+        $class = app('livewire')->getComponentClass($component);
+
         return tap(new $class, function ($unHydratedInstance) use ($properties) {
             foreach ($properties as $property => $value) {
                 $unHydratedInstance->setPropertyValue($property, $value);
