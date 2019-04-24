@@ -30,7 +30,7 @@ class Livewire {
     }
 
     start() {
-        LivewireElement.rootComponentElements().forEach(el => {
+        LivewireElement.rootComponentElementsWithNoParents().forEach(el => {
             this.components.addComponent(
                 new Component(el, this.connection)
             )

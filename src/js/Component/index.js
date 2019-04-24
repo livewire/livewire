@@ -27,6 +27,7 @@ class Component {
 
         walker.walk(el.rawNode(), (node) => {
             if (typeof node.hasAttribute !== 'function') return
+            // Skip the root component element.
             if (node.isSameNode(this.el.rawNode())) return
 
             const el = new LivewireElement(node)
@@ -34,7 +35,13 @@ class Component {
             // Returning "false" forces the walker to ignore all children of current element.
             // We want to skip this node and all children if it is it's own component.
             // Each component is initialized individually in ComponentManager.
-            if (el.isComponentRootEl()) return false
+            if (el.isComponentRootEl()) {
+                store.addComponent(
+                    new Component(el, this.connection)
+                )
+
+                return false
+            }
 
             nodeInitializer.initialize(el, this)
         })
@@ -150,7 +157,8 @@ class Component {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
                 return node.hasAttribute('key')
                     ? node.getAttribute('key')
-                    : node.id
+                    // @todo - remove hard-coded "wire:"
+                    : (node.hasAttribute('wire:id') ? node.getAttribute('wire:id') : node.id)
             },
 
             onBeforeNodeAdded: node => {
@@ -164,12 +172,16 @@ class Component {
             },
 
             onBeforeElChildrenUpdated: node => {
-                //
+                const el = new LivewireElement(node)
+
+                if (el.isComponentRootEl()) return false
             },
 
             onBeforeElUpdated: (from, to) => {
                 const fromEl = new LivewireElement(from)
                 const toEl = new LivewireElement(to)
+
+                if (fromEl.isComponentRootEl()) return false
 
                 toEl.preserveValueAttributeIfNotDirty(fromEl, dirtyInputs)
             },
@@ -187,11 +199,17 @@ class Component {
             onNodeAdded: (node) => {
                 const el = new LivewireElement(node)
 
-                if (el.isComponentRootEl()) {
+                const closestComponentId = el.closestRoot().getAttribute('id')
 
+                if (Number(closestComponentId) === Number(this.id)) {
+                    nodeInitializer.initialize(el, this)
+                } else if (el.isComponentRootEl()) {
+                    store.addComponent(
+                        new Component(el, this.connection)
+                    )
                 }
 
-                nodeInitializer.initialize(el, this)
+                // Skip.
             },
         });
     }

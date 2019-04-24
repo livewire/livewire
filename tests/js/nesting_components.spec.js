@@ -38,3 +38,31 @@ test('added component gets initialized', async () => {
         expect(payload.id).toEqual('456')
     })
 })
+
+test('component placeholder gets ignored', async () => {
+    var payload
+    mountAndReturn(
+    `<div>
+        <button wire:click="foo"></button>
+        <div wire:id="456" wire:serialized="{&quot;properties&quot;: {}}">
+            <button wire:click="bar"></button>
+        </div>
+    </div>`,
+    `<div>
+        <button wire:click="foo"></button>
+        <div wire:id="456" wire:ignore></div>
+    </div>`,
+   [], i => payload = i)
+
+    document.querySelector('button[wire\:click="foo"]').click()
+
+    await wait(() => {
+        expect(payload.id).toEqual('123')
+    })
+
+    document.querySelector('button[wire\:click="bar"]').click()
+
+    await wait(() => {
+        expect(payload.id).toEqual('456')
+    })
+})

@@ -40,7 +40,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
         sendMessage(payload) {
             requestInterceptor(payload)
             this.onMessage({
-                id: '123',
+                id: payload.id,
                 serialized: '{"properties": {}}',
                 dirtyInputs: dirtyInputs,
                 dom: '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + returnedDom + '</div>',
@@ -62,7 +62,7 @@ export function mountAndReturnWithData(dom, returnedDom, data) {
         init() {},
         sendMessage(payload) {
             this.onMessage({
-                id: '123',
+                id: payload.id,
                 serialized: { properties: data },
                 dirtyInputs: {},
                 dom: '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + returnedDom + '</div>',
