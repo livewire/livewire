@@ -3,7 +3,6 @@
 namespace Tests;
 
 use Livewire\LivewireComponent;
-use Livewire\LivewireManager;
 use Livewire\Connection\ComponentHydrator;
 
 class ComponentHydratorTest extends TestCase

@@ -1,7 +1,7 @@
 import Livewire from 'laravel-livewire'
 
 export function mount(dom, requestInterceptor = () => {}) {
-    document.body.innerHTML = '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
 
     new Livewire({ driver: {
         onMessage: null,
@@ -15,7 +15,7 @@ export function mount(dom, requestInterceptor = () => {}) {
 };
 
 export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
-    document.body.innerHTML = '<div wire:id="123" wire:listening-for="[&quot;'+event+'&quot;]" wire:serialized="{&quot;properties&quot;: {}}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:listening-for="[&quot;'+event+'&quot;]" wire:initial-data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -32,7 +32,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
 
-    document.body.innerHTML = '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -41,9 +41,9 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
             requestInterceptor(payload)
             this.onMessage({
                 id: payload.id,
-                serialized: '{"properties": {}}',
+                data: {},
                 dirtyInputs: dirtyInputs,
-                dom: '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + returnedDom + '</div>',
+                dom: '<div wire:id="123" wire:initial-data="{}">' + returnedDom + '</div>',
             })
         },
     }})
@@ -55,7 +55,7 @@ export function mountAndReturnWithData(dom, returnedDom, data) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
 
-    document.body.innerHTML = '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -63,9 +63,9 @@ export function mountAndReturnWithData(dom, returnedDom, data) {
         sendMessage(payload) {
             this.onMessage({
                 id: payload.id,
-                serialized: { properties: data },
+                data,
                 dirtyInputs: {},
-                dom: '<div wire:id="123" wire:serialized="{&quot;properties&quot;: {}}">' + returnedDom + '</div>',
+                dom: '<div wire:id="123" wire:initial-data="{}">' + returnedDom + '</div>',
             })
         },
     }})

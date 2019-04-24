@@ -4,7 +4,7 @@ import { mount, mountAndReturn } from './utils'
 test('click inside nested component is assigned to nested component', async () => {
     var payload
     mount(`<div>
-        <div wire:id="456" wire:serialized="{&quot;properties&quot;: {}}">
+        <div wire:id="456" wire:initial-data="{}">
             <button wire:click="someMethod"></button>
         </div>
     </div>`, i => payload = i)
@@ -21,7 +21,7 @@ test('added component gets initialized', async () => {
     mountAndReturn(`<div><button wire:click="foo"></button></div>`,
     `<div>
         <button wire:click="foo"></button>
-        <div wire:id="456" wire:serialized="{&quot;properties&quot;: {}}">
+        <div wire:id="456" wire:initial-data="{}">
             <button wire:click="bar"></button>
         </div>
     </div>`, [], i => payload = i)
@@ -44,7 +44,7 @@ test('component placeholder gets ignored', async () => {
     mountAndReturn(
     `<div>
         <button wire:click="foo"></button>
-        <div wire:id="456" wire:serialized="{&quot;properties&quot;: {}}">
+        <div wire:id="456" wire:initial-data="{}">
             <button wire:click="bar"></button>
         </div>
     </div>`,
