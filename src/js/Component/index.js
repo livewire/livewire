@@ -214,6 +214,10 @@ class Component {
                         event_parts.splice(2,0,'channel',undefined)
                     }
 
+                    if(event_parts[2] == 'notification') {
+                        event_parts.push(undefined, undefined)
+                    }
+
                     let [s1, signature, channel_type, s2, channel, s3, event_name] = event_parts
                     
                     if(['channel','private'].includes(channel_type)){
