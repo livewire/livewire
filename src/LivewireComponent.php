@@ -64,7 +64,7 @@ abstract class LivewireComponent
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
-        return $view
+        $dom = $view
             ->with([
                 'errors' => (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
                 '_instance' => $this,
@@ -72,6 +72,9 @@ abstract class LivewireComponent
             // Automatically inject all public properties into the blade view.
             ->with($this->getPublicPropertiesDefinedBySubClass())
             ->render();
+
+        // Basic minification: strip newlines and return carraiges.
+        return str_replace(["\n", "\r"], '', $dom);
     }
 
     public function __call($method, $params)
