@@ -252,12 +252,15 @@ export default class LivewireElement {
     }
 
     addValueAttributeWithDataIfNoneExists(component) {
-        const modelValue = this.directives.get('model').value
+        const modelString = this.directives.get('model').value
+        const modelStringWithArraySyntaxForNumericKeys = modelString.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
+        const modelValue = eval('component.data.'+modelStringWithArraySyntaxForNumericKeys)
 
-        const modelValueWithArraySyntaxForNumericKeys = modelValue.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
-
-        if (! this.el.hasAttribute('value') && eval('component.data.'+modelValueWithArraySyntaxForNumericKeys)) {
-            this.el.setAttribute('value', eval('component.data.'+modelValueWithArraySyntaxForNumericKeys))
+        // <textarea>'s don't use value properties, so we have to treat them differently.
+        if (this.el.tagName === 'TEXTAREA' && this.el.value === '' && modelValue) {
+            this.el.innerHTML = modelValue
+        } else if (! this.el.hasAttribute('value') && modelValue) {
+            this.el.setAttribute('value', modelValue)
         }
     }
 }

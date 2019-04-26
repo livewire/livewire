@@ -110,3 +110,14 @@ test('input element value attribute is automatically added if not present in the
         expect(document.querySelector('input').value).toBe('bar')
     })
 })
+
+test('textarea element value attribute is automatically added if not present in the initial dom', async () => {
+    mountWithData(
+        '<textarea wire:model="foo"></textarea>',
+        { foo: 'bar' }
+    )
+
+    await wait(() => {
+        expect(document.querySelector('div').innerHTML).toBe('<textarea wire:model=\"foo\">bar</textarea>')
+    })
+})
