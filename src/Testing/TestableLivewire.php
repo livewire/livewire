@@ -23,9 +23,9 @@ class TestableLivewire
     {
         $this->prefix = $prefix;
 
+        // This allows the user to test a component by it's class name,
+        // and not have to register an alias.
         if (class_exists($name)) {
-            // This allows the user to test a component by it's class name,
-            // and not have to register an alias.
             $componentClass = $name;
             app('livewire')->component($name = str_random(20), $componentClass);
         }

@@ -1,3 +1,3 @@
 <div>
-    @livewire('child')
+    @livewire('child', $child)
 </div>

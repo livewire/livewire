@@ -24,6 +24,11 @@ abstract class LivewireComponent
         $this->renderedChildren[$id] = $componentId;
     }
 
+    public function preserveRenderedChild($id)
+    {
+        $this->renderedChildren[$id] = $this->previouslyRenderedChildren[$id];
+    }
+
     public function childHasBeenRendered($id)
     {
         return in_array($id, array_keys($this->previouslyRenderedChildren));
