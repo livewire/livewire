@@ -138,14 +138,7 @@ class Component {
         // Go through and add any "value" attributes to "wire:model" bound input elements,
         // if they aren't already in the dom.
         LivewireElement.allModelElementsInside(tempDom).forEach(el => {
-            const modelValue = el.directives.get('model').value
-
-            const modelValueWithArraySyntaxForNumericKeys = modelValue.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
-
-            // @todo - remove this el.el
-            if (! el.el.hasAttribute('value') && eval('self.data.'+modelValueWithArraySyntaxForNumericKeys)) {
-                el.el.setAttribute('value', eval('self.data.'+modelValueWithArraySyntaxForNumericKeys))
-            }
+            el.addValueAttributeWithDataIfNoneExists(this)
         })
 
         return tempDom.innerHTML

@@ -1,5 +1,5 @@
 import { fireEvent, wait, waitForDomChange } from 'dom-testing-library'
-import { mount, mountAndReturn, mountAndReturnWithData } from './utils'
+import { mount, mountWithData, mountAndReturn, mountAndReturnWithData } from './utils'
 
 test('properties sync on input change', async () => {
     var payload
@@ -96,6 +96,17 @@ test('input element value attribute is automatically added if not present in ret
 
     await wait(() => {
         expect(document.querySelector('input').hasAttribute('value')).toBeTruthy()
+        expect(document.querySelector('input').value).toBe('bar')
+    })
+})
+
+test('input element value attribute is automatically added if not present in the initial dom', async () => {
+    mountWithData(
+        '<input wire:model="foo">',
+        { foo: 'bar' }
+    )
+
+    await wait(() => {
         expect(document.querySelector('input').value).toBe('bar')
     })
 })

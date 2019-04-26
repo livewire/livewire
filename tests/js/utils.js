@@ -51,6 +51,22 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
     return document.body.firstElementChild
 };
 
+export function mountWithData(dom, data) {
+    // This is a crude way of wiping any existing DOM & listeners before we mount.
+    document.body.innerHTML = '';
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="' + JSON.stringify(data).replace(/\"/g, '&quot;')+'">' + dom + '</div>'
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        sendMessage(payload) {
+            //
+        },
+    }})
+
+    return document.body.firstElementChild
+};
+
 export function mountAndReturnWithData(dom, returnedDom, data) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';

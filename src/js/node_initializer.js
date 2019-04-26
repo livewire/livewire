@@ -18,6 +18,7 @@ export default {
                     break;
 
                 case 'model':
+                    el.addValueAttributeWithDataIfNoneExists(component)
                     this.attachModelListener(el, directive, component)
                     break;
 

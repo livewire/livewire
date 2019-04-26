@@ -250,4 +250,14 @@ export default class LivewireElement {
     querySelectorAll() {
         return this.el.querySelectorAll(...arguments)
     }
+
+    addValueAttributeWithDataIfNoneExists(component) {
+        const modelValue = this.directives.get('model').value
+
+        const modelValueWithArraySyntaxForNumericKeys = modelValue.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
+
+        if (! this.el.hasAttribute('value') && eval('component.data.'+modelValueWithArraySyntaxForNumericKeys)) {
+            this.el.setAttribute('value', eval('component.data.'+modelValueWithArraySyntaxForNumericKeys))
+        }
+    }
 }
