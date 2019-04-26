@@ -10,45 +10,12 @@ use Illuminate\View\View;
 
 abstract class LivewireComponent
 {
-    // @todo - move the child tracking logic into trait.
-    public $renderedChildren = [];
-    public $previouslyRenderedChildren = [];
-
-    public function getRenderedChildComponentId($id)
-    {
-        return $this->previouslyRenderedChildren[$id];
-    }
-
-    public function logRenderedChild($id, $componentId)
-    {
-        $this->renderedChildren[$id] = $componentId;
-    }
-
-    public function preserveRenderedChild($id)
-    {
-        $this->renderedChildren[$id] = $this->previouslyRenderedChildren[$id];
-    }
-
-    public function childHasBeenRendered($id)
-    {
-        return in_array($id, array_keys($this->previouslyRenderedChildren));
-    }
-
-    public function setPreviouslyRenderedChildren($children)
-    {
-        $this->previouslyRenderedChildren = $children;
-    }
-
-    public function getRenderedChildren()
-    {
-        return $this->renderedChildren;
-    }
-
     use Concerns\ValidatesInput,
         Concerns\DetectsDirtyProperties,
         Concerns\HandlesActions,
         Concerns\ReceivesEvents,
-        Concerns\InteractsWithProperties;
+        Concerns\InteractsWithProperties,
+        Concerns\TracksRenderedChildren;
 
     public $id;
     public $redirectTo;
