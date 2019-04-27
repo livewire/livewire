@@ -121,3 +121,58 @@ test('textarea element value attribute is automatically added if not present in 
         expect(document.querySelector('div').innerHTML).toBe('<textarea wire:model=\"foo\">bar</textarea>')
     })
 })
+
+test('checkbox element value attribute is automatically added if not present in the initial dom', async () => {
+    mountWithData(
+        '<input type="checkbox" wire:model="foo">',
+        { foo: true }
+    )
+
+    await wait(() => {
+        expect(document.querySelector('input').checked).toBeTruthy()
+    })
+})
+
+test('select element options are automatically selected', async () => {
+    mountWithData(
+        '<select wire:model="foo"><option>bar</option><option>baz</option></select>',
+        { foo: 'baz' }
+    )
+
+    await wait(() => {
+        expect(document.querySelectorAll('option')[1].selected).toBeTruthy()
+    })
+})
+
+test('select element options are automatically selected by value attribute', async () => {
+    mountWithData(
+        '<select wire:model="foo"><option value="bar">ignore</option><option value="baz">ignore</option></select>',
+        { foo: 'baz' }
+    )
+
+    await wait(() => {
+        expect(document.querySelectorAll('option')[1].selected).toBeTruthy()
+    })
+})
+
+test('multiple select element options are automatically selected', async () => {
+    mountWithData(
+        '<select wire:model="foo" multiple><option>bar</option><option>baz</option></select>',
+        { foo: 'baz' }
+    )
+
+    await wait(() => {
+        expect(document.querySelectorAll('option')[0].selected).toBeFalsy()
+        expect(document.querySelectorAll('option')[1].selected).toBeTruthy()
+    })
+
+    mountWithData(
+        '<select wire:model="foo" multiple><option>bar</option><option>baz</option></select>',
+        { foo: ['bar', 'baz'] }
+    )
+
+    await wait(() => {
+        expect(document.querySelectorAll('option')[0].selected).toBeTruthy()
+        expect(document.querySelectorAll('option')[1].selected).toBeTruthy()
+    })
+})

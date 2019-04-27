@@ -204,13 +204,19 @@ export default class LivewireElement {
     }
 
     isInput() {
-        return this.el.tagName === 'INPUT' || this.el.tagName === 'TEXTAREA'
+        return this.el.tagName === 'INPUT'
+            || this.el.tagName === 'TEXTAREA'
+            || this.el.tagName === 'SELECT'
     }
 
-    valueFromInputOrCheckbox() {
-        return this.el.type === 'checkbox'
-            ? this.el.checked
-            : this.el.value
+    valueFromInput() {
+        if (this.el.type === 'checkbox') {
+            return this.el.checked
+        } else if (this.el.tagName === 'SELECT' && this.el.multiple) {
+            return this.getSelectValues()
+        }
+
+        return this.el.value
     }
 
     get ref() {
@@ -218,8 +224,6 @@ export default class LivewireElement {
             ? this.directives.get('ref').value
             : null
     }
-
-    // Forward the following methods.
 
     isSameNode(el) {
         // We need to drop down to the raw node if we are comparing
@@ -256,11 +260,32 @@ export default class LivewireElement {
         const modelStringWithArraySyntaxForNumericKeys = modelString.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
         const modelValue = eval('component.data.'+modelStringWithArraySyntaxForNumericKeys)
 
+        if (! modelValue) return
+
         // <textarea>'s don't use value properties, so we have to treat them differently.
-        if (this.el.tagName === 'TEXTAREA' && this.el.value === '' && modelValue) {
+        if (this.el.tagName === 'TEXTAREA') {
             this.el.innerHTML = modelValue
-        } else if (! this.el.hasAttribute('value') && modelValue) {
+        } else if (this.el.type === 'checkbox') {
+            this.el.checked = modelValue
+        } else if (this.el.tagName === 'SELECT') {
+            this.updateSelect(modelValue)
+        } else if (! this.el.hasAttribute('value')) {
             this.el.setAttribute('value', modelValue)
         }
+    }
+
+    getSelectValues() {
+        return Array.from(this.el.options)
+            .filter(option => option.selected)
+            .map(option => { return option.value || option.text})
+    }
+
+    updateSelect(value) {
+        const arrayWrappedValue = [].concat(value)
+        Array.from(this.el.options).forEach(option => {
+            if (arrayWrappedValue.includes(option.value)) {
+                option.selected = true
+            }
+        })
     }
 }

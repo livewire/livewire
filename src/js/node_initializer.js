@@ -56,7 +56,7 @@ export default {
         el.addEventListener('input', debounceOrDont(e => {
             const model = directive.value
             const el = new LivewireElement(e.target)
-            const value = el.valueFromInputOrCheckbox()
+            const value = el.valueFromInput()
 
             if (isLive) {
                 component.addAction(new ModelAction(model, value, el))
