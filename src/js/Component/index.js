@@ -1,6 +1,5 @@
 import Message from '../message'
-import { debounce } from 'lodash'
-import { addMixin, tap, walk } from '../util'
+import { debounce, addMixin, tap, walk } from '../util'
 import morphdom from '../dom/morphdom'
 import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'

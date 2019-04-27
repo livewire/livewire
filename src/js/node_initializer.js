@@ -1,4 +1,4 @@
-import { debounce, kebabCase } from './util'
+import { debounceWithFiringOnBothEnds, kebabCase } from './util'
 import ModelAction from './action/model'
 import MethodAction from './action/method'
 import LivewireElement from './dom/element'
@@ -51,7 +51,7 @@ export default {
 
     attachModelListener(el, directive, component) {
         const isLive = ! directive.modifiers.includes('lazy')
-        const debounceOrDont = isLive ? debounce : fn => fn
+        const debounceOrDont = isLive ? debounceWithFiringOnBothEnds : fn => fn
 
         el.addEventListener('input', debounceOrDont(e => {
             const model = directive.value
