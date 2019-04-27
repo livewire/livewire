@@ -1,5 +1,6 @@
 
 export * from './debounce'
+export * from './walk'
 export * from './dispatch'
 export * from './add_mixin'
 

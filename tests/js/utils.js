@@ -67,9 +67,10 @@ export function mountWithData(dom, data) {
     return document.body.firstElementChild
 };
 
-export function mountAndReturnWithData(dom, returnedDom, data) {
+export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = []) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
+    window.livewire && window.livewire.restart()
 
     document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
 
@@ -80,7 +81,7 @@ export function mountAndReturnWithData(dom, returnedDom, data) {
             this.onMessage({
                 id: payload.id,
                 data,
-                dirtyInputs: {},
+                dirtyInputs,
                 dom: '<div wire:id="123" wire:initial-data="{}">' + returnedDom + '</div>',
             })
         },

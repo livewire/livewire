@@ -1,8 +1,7 @@
 import Message from '../message'
 import { debounce } from 'lodash'
-import { addMixin, tap } from '../util'
+import { addMixin, tap, walk } from '../util'
 import morphdom from '../dom/morphdom'
-import TreeWalker from '../dom/tree_walker'
 import LivewireElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
 import nodeInitializer from "../node_initializer";
@@ -36,9 +35,7 @@ class Component {
     }
 
     walk(callback, callbackWhenNewComponentIsEncountered = el => {}) {
-        const walker = new TreeWalker
-
-        walker.walk(this.el.rawNode(), (node) => {
+        walk(this.el.rawNode(), (node) => {
             if (typeof node.hasAttribute !== 'function') return
             // Skip the root component element.
             if (node.isSameNode(this.el.rawNode())) return
