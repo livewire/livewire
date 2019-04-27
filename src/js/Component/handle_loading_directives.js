@@ -1,4 +1,4 @@
-import LivewireElement from "../dom/element";
+import DomElement from "../dom/element";
 
 export default {
     loadingEls: [],
@@ -17,7 +17,7 @@ export default {
     },
 
     removeLoadingEl(node) {
-        const el = new LivewireElement(node)
+        const el = new DomElement(node)
 
         this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
 

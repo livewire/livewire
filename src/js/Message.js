@@ -30,7 +30,7 @@ export default class {
     }
 
     storeResponse(payload) {
-        this.response = {
+        return this.response = {
             id: payload.id,
             dom: payload.dom,
             children: payload.children,

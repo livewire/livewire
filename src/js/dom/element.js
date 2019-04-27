@@ -8,7 +8,7 @@ const prefix = require('./prefix.js')()
  * Consider this a decorator for the ElementNode JavaScript object. (Hence the
  * method forwarding I have to do at the bottom)
  */
-export default class LivewireElement {
+export default class DomElement {
     constructor(el) {
         this.el = el
         this.directives = new ElementDirectives(el)
@@ -20,16 +20,20 @@ export default class LivewireElement {
         });
     }
 
+    static get prefix() {
+        return prefix
+    }
+
     static rootComponentElements() {
         return Array.from(document.querySelectorAll(`[${prefix}\\:id]`))
-            .map(el => new LivewireElement(el))
+            .map(el => new DomElement(el))
     }
 
     static rootComponentElementsWithNoParents() {
         // In CSS, it's simple to select all elements that DO have a certain ancestor.
         // However, it's not simple (kinda impossible) to select elements that DONT have
-        // a certain ancestor. Therefore, we will flip the logic (select all roots that have
-        // have a root ancestor), then select all roots, then diff the two.
+        // a certain ancestor. Therefore, we will flip the logic: select all roots that DO have
+        // have a root ancestor, then select all roots that DONT, then diff the two.
 
         // Convert NodeLists to Arrays so we can use ".includes()". Ew.
         const allEls = Array.prototype.slice.call(
@@ -39,29 +43,19 @@ export default class LivewireElement {
             document.querySelectorAll(`[${prefix}\\:id] [${prefix}\\:id]`)
         )
 
-        return allEls.filter(el => {
-            return ! onlyChildEls.includes(el)
-        }).map(el => {
-            return new LivewireElement(el)
-        })
+        return allEls
+            .filter(el => ! onlyChildEls.includes(el))
+            .map(el => new DomElement(el))
     }
 
     static allModelElementsInside(root) {
         return Array.from(
             root.querySelectorAll(`[${prefix}\\:model]`)
-        ).map(el => new LivewireElement(el))
+        ).map(el => new DomElement(el))
     }
 
-    static byAttributeAndValue(attribute, value) {
-        return new LivewireElement(document.querySelector(`[${prefix}\\:${attribute}="${value}"]`))
-    }
-
-    static elsByAttributeAndValue(attribute, value, scope) {
-        return Array.prototype.slice.call(
-            (scope || document).querySelectorAll(`[${prefix}\\:${attribute}="${value}"]`)
-        ).map(el => {
-            return new LivewireElement(el)
-        })
+    static getByAttributeAndValue(attribute, value) {
+        return new DomElement(document.querySelector(`[${prefix}\\:${attribute}="${value}"]`))
     }
 
     static preserveActiveElement(callback) {
@@ -159,7 +153,7 @@ export default class LivewireElement {
     }
 
     closestByAttribute(attribute) {
-        return new LivewireElement(this.el.closest(`[${prefix}\\:${attribute}]`))
+        return new DomElement(this.el.closest(`[${prefix}\\:${attribute}]`))
     }
 
     isComponentRootEl() {
@@ -183,23 +177,16 @@ export default class LivewireElement {
     }
 
     preserveValueAttributeIfNotDirty(fromEl, dirtyInputs) {
-        const isInput = this.isInput() && fromEl.isInput()
+        if (this.directives.missing('model')) return
 
-        if (isInput) {
-            if (this.el.type === 'submit') {
-                return
-            }
-
-            if (this.directives.has('model')) {
-                // If the model is not inside "dirtyInputs" && the input element is focused.
-                if (
-                    ! Array.from(dirtyInputs).includes(this.directives.get('model').value)
-                    && fromEl.isFocused()
-                ) {
-                    // Transfer the current "fromEl" value (preserving / overriding it).
-                    this.el.value = fromEl.el.value
-                }
-            }
+        // If the input is not dirty && the input element is focused, keep the
+        // value the same, but change other attributes.
+        if (
+            ! Array.from(dirtyInputs).includes(this.directives.get('model').value)
+            && fromEl.isFocused()
+        ) {
+            // Transfer the current "fromEl" value (preserving / overriding it).
+            this.el.value = fromEl.el.value
         }
     }
 
@@ -227,7 +214,7 @@ export default class LivewireElement {
 
     isSameNode(el) {
         // We need to drop down to the raw node if we are comparing
-        // to another "LivewireElement" Instance.
+        // to another "DomElement" Instance.
         if (typeof el.rawNode === 'function') {
             return this.el.isSameNode(el.rawNode())
         }
@@ -262,15 +249,19 @@ export default class LivewireElement {
 
         if (! modelValue) return
 
-        // <textarea>'s don't use value properties, so we have to treat them differently.
+        this.setInputValue(modelValue)
+    }
+
+    setInputValue(value) {
         if (this.el.tagName === 'TEXTAREA') {
-            this.el.innerHTML = modelValue
+            // <textarea>'s don't use value properties, so we have to treat them differently.
+            this.el.innerHTML = value
         } else if (this.el.type === 'checkbox') {
-            this.el.checked = modelValue
+            this.el.checked = value
         } else if (this.el.tagName === 'SELECT') {
-            this.updateSelect(modelValue)
+            this.updateSelect(value)
         } else if (! this.el.hasAttribute('value')) {
-            this.el.setAttribute('value', modelValue)
+            this.el.setAttribute('value', value)
         }
     }
 

@@ -1,7 +1,7 @@
 import Message from '../message'
 import { debounce, addMixin, tap, walk } from '../util'
 import morphdom from '../dom/morphdom'
-import LivewireElement from '../dom/element'
+import DomElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
 import nodeInitializer from "../node_initializer";
 import store from '../store'
@@ -16,9 +16,13 @@ class Component {
         this.connection = connection
         this.syncQueue = {}
         this.actionQueue = []
-        this.currentMessage = null
+        this.messageInTransit = null
 
         this.initialize()
+    }
+
+    get el() {
+        return DomElement.getByAttributeAndValue('id', this.id)
     }
 
     initialize() {
@@ -31,33 +35,6 @@ class Component {
                 new Component(el, this.connection)
             )
         })
-    }
-
-    walk(callback, callbackWhenNewComponentIsEncountered = el => {}) {
-        walk(this.el.rawNode(), (node) => {
-            if (typeof node.hasAttribute !== 'function') return
-            // Skip the root component element.
-            if (node.isSameNode(this.el.rawNode())) return
-
-            const el = new LivewireElement(node)
-
-            // Returning "false" forces the walker to ignore all children of current element.
-            // We want to skip this node and all children if it is it's own component.
-            // Each component is initialized individually in ComponentManager.
-            if (el.isComponentRootEl()) {
-                callbackWhenNewComponentIsEncountered(el)
-
-                return false
-            }
-
-            callback(el)
-        })
-    }
-
-    get el() {
-        // I made this a getter, so that we aren't ever getting a stale DOM element.
-        // If it's too slow, we can re-evaluate it.
-        return LivewireElement.byAttributeAndValue('id', this.id)
     }
 
     addAction(action) {
@@ -74,15 +51,15 @@ class Component {
     }
 
     fireMessage() {
-        if (this.currentMessage) return
+        if (this.messageInTransit) return
 
-        this.currentMessage = new Message(
+        this.messageInTransit = new Message(
             this,
             this.actionQueue,
             this.syncQueue,
         );
 
-        this.connection.sendMessage(this.currentMessage)
+        this.connection.sendMessage(this.messageInTransit)
 
         this.clearSyncQueue()
         this.clearActionQueue()
@@ -101,29 +78,27 @@ class Component {
     }
 
     receiveMessage(payload) {
-        this.currentMessage.storeResponse(payload)
+        const response = this.messageInTransit.storeResponse(payload)
 
-        // Note: I'm sure there is an abstraction called "MessageResponse" that makes sense.
-        // Let's just keep an eye on this for now. Sorry for the LoD violation.
-        this.data = this.currentMessage.response.data
-        this.children = this.currentMessage.response.children
+        this.data = response.data
+        this.children = response.children
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
-        if (this.currentMessage.response.redirectTo) {
-            window.location.href = this.currentMessage.response.redirectTo
+        if (response.redirectTo) {
+            window.location.href = response.redirectTo
             return
         }
 
-        this.replaceDom(this.currentMessage.response.dom, this.currentMessage.response.dirtyInputs)
+        this.replaceDom(response.dom, response.dirtyInputs)
 
-        this.handleDirtyInputs(this.currentMessage.response.dirtyInputs)
+        this.handleDirtyInputs(response.dirtyInputs)
 
-        this.unsetLoading(this.currentMessage.loadingEls)
+        this.unsetLoading(this.messageInTransit.loadingEls)
 
-        this.currentMessage = null
+        this.messageInTransit = null
 
-        if (payload.eventQueue && payload.eventQueue.length > 0) {
-            payload.eventQueue.forEach(event => {
+        if (response.eventQueue && response.eventQueue.length > 0) {
+            response.eventQueue.forEach(event => {
                 store.emit(event.event, ...event.params)
             })
         }
@@ -144,7 +119,7 @@ class Component {
 
     replaceDom(rawDom, dirtyInputs) {
         // Prevent morphdom from moving an input element and it losing it's focus.
-        LivewireElement.preserveActiveElement(() => {
+        DomElement.preserveActiveElement(() => {
             this.handleMorph(this.addValueAttributesToModelNodes(rawDom.trim()), dirtyInputs)
         })
     }
@@ -158,7 +133,7 @@ class Component {
 
         // Go through and add any "value" attributes to "wire:model" bound input elements,
         // if they aren't already in the dom.
-        LivewireElement.allModelElementsInside(tempDom).forEach(el => {
+        DomElement.allModelElementsInside(tempDom).forEach(el => {
             el.setInputValueFromModel(this)
         })
 
@@ -173,30 +148,35 @@ class Component {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
                 return node.hasAttribute('key')
                     ? node.getAttribute('key')
-                    // @todo - remove hard-coded "wire:"
-                    : (node.hasAttribute('wire:id') ? node.getAttribute('wire:id') : node.id)
+                    // If no "key", then first check for "wire:id", then "id"
+                    : (node.hasAttribute(`${DomElement.prefix}:id`)
+                        ? node.getAttribute(`${DomElement.prefix}:id`)
+                        : node.id)
             },
 
             onBeforeNodeAdded: node => {
-                return (new LivewireElement(node)).transitionElementIn()
+                return (new DomElement(node)).transitionElementIn()
             },
 
             onBeforeNodeDiscarded: node => {
-                return (new LivewireElement(node)).transitionElementOut(nodeDiscarded => {
+                return (new DomElement(node)).transitionElementOut(nodeDiscarded => {
+                    // Cleanup after removed element.
                     this.removeLoadingEl(nodeDiscarded)
                 })
             },
 
             onBeforeElChildrenUpdated: node => {
-                const el = new LivewireElement(node)
+                const el = new DomElement(node)
 
+                // Children will update themselves.
                 if (el.isComponentRootEl()) return false
             },
 
             onBeforeElUpdated: (from, to) => {
-                const fromEl = new LivewireElement(from)
-                const toEl = new LivewireElement(to)
+                const fromEl = new DomElement(from)
+                const toEl = new DomElement(to)
 
+                // Children will update themselves.
                 if (fromEl.isComponentRootEl()) return false
 
                 toEl.preserveValueAttributeIfNotDirty(fromEl, dirtyInputs)
@@ -213,7 +193,7 @@ class Component {
             },
 
             onNodeAdded: (node) => {
-                const el = new LivewireElement(node)
+                const el = new DomElement(node)
 
                 const closestComponentId = el.closestRoot().getAttribute('id')
 
@@ -228,6 +208,24 @@ class Component {
                 // Skip.
             },
         });
+    }
+
+    walk(callback, callbackWhenNewComponentIsEncountered = el => {}) {
+        walk(this.el.rawNode(), (node) => {
+            const el = new DomElement(node)
+
+            // Skip the root component element.
+            if (el.isSameNode(this.el)) return
+
+            // If we encounter a nested component, skip walking that tree.
+            if (el.isComponentRootEl()) {
+                callbackWhenNewComponentIsEncountered(el)
+
+                return false
+            }
+
+            callback(el)
+        })
     }
 }
 

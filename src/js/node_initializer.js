@@ -1,7 +1,7 @@
 import { debounceWithFiringOnBothEnds, kebabCase } from './util'
 import ModelAction from './action/model'
 import MethodAction from './action/method'
-import LivewireElement from './dom/element'
+import DomElement from './dom/element'
 import store from './store'
 
 export default {
@@ -55,7 +55,7 @@ export default {
 
         el.addEventListener('input', debounceOrDont(e => {
             const model = directive.value
-            const el = new LivewireElement(e.target)
+            const el = new DomElement(e.target)
             const value = el.valueFromInput()
 
             if (isLive) {
@@ -87,7 +87,7 @@ export default {
                 return
             }
 
-            const el = new LivewireElement(e.target)
+            const el = new DomElement(e.target)
 
             // This is outside the conditional below so "wire:click.prevent" without
             // a value still prevents default.
