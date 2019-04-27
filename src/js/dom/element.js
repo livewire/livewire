@@ -255,7 +255,7 @@ export default class LivewireElement {
         return this.el.querySelectorAll(...arguments)
     }
 
-    addValueAttributeWithDataIfNoneExists(component) {
+    setInputValueFromModel(component) {
         const modelString = this.directives.get('model').value
         const modelStringWithArraySyntaxForNumericKeys = modelString.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
         const modelValue = eval('component.data.'+modelStringWithArraySyntaxForNumericKeys)
@@ -283,9 +283,7 @@ export default class LivewireElement {
     updateSelect(value) {
         const arrayWrappedValue = [].concat(value)
         Array.from(this.el.options).forEach(option => {
-            if (arrayWrappedValue.includes(option.value)) {
-                option.selected = true
-            }
+            option.selected = arrayWrappedValue.includes(option.value)
         })
     }
 }

@@ -20,13 +20,25 @@ class Component {
         this.actionQueue = []
         this.currentMessage = null
 
-        this.initialize(el)
+        this.initialize()
     }
 
-    initialize(el) {
+    initialize() {
+        this.walk(el => {
+            // Will run for every node in the component tree (not child nodes)
+            nodeInitializer.initialize(el, this)
+        }, el => {
+            // When new component is encountered in the tree
+            store.addComponent(
+                new Component(el, this.connection)
+            )
+        })
+    }
+
+    walk(callback, callbackWhenNewComponentIsEncountered = el => {}) {
         const walker = new TreeWalker
 
-        walker.walk(el.rawNode(), (node) => {
+        walker.walk(this.el.rawNode(), (node) => {
             if (typeof node.hasAttribute !== 'function') return
             // Skip the root component element.
             if (node.isSameNode(this.el.rawNode())) return
@@ -37,14 +49,12 @@ class Component {
             // We want to skip this node and all children if it is it's own component.
             // Each component is initialized individually in ComponentManager.
             if (el.isComponentRootEl()) {
-                store.addComponent(
-                    new Component(el, this.connection)
-                )
+                callbackWhenNewComponentIsEncountered(el)
 
                 return false
             }
 
-            nodeInitializer.initialize(el, this)
+            callback(el)
         })
     }
 
@@ -110,6 +120,8 @@ class Component {
 
         this.replaceDom(this.currentMessage.response.dom, this.currentMessage.response.dirtyInputs)
 
+        this.handleDirtyInputs(this.currentMessage.response.dirtyInputs)
+
         this.unsetLoading(this.currentMessage.loadingEls)
 
         this.currentMessage = null
@@ -119,6 +131,19 @@ class Component {
                 store.emit(event.event, ...event.params)
             })
         }
+    }
+
+    handleDirtyInputs(dirtyInputs) {
+        // This is manual dirty input hijacking. We just brute-force through
+        // the component nodes, look for the dirty wire:model's and force
+        // a state refresh.
+        this.walk(el => {
+            if (el.directives.missing('model')) return
+            const modelValue = el.directives.get('model').value
+            if (! [].concat(dirtyInputs).includes(modelValue)) return
+
+            el.setInputValueFromModel(this)
+        })
     }
 
     replaceDom(rawDom, dirtyInputs) {
@@ -138,7 +163,7 @@ class Component {
         // Go through and add any "value" attributes to "wire:model" bound input elements,
         // if they aren't already in the dom.
         LivewireElement.allModelElementsInside(tempDom).forEach(el => {
-            el.addValueAttributeWithDataIfNoneExists(this)
+            el.setInputValueFromModel(this)
         })
 
         return tempDom.innerHTML
