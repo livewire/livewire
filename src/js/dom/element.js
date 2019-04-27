@@ -186,7 +186,7 @@ export default class DomElement {
             && fromEl.isFocused()
         ) {
             // Transfer the current "fromEl" value (preserving / overriding it).
-            this.el.value = fromEl.el.value
+            this.setInputValue(fromEl.valueFromInput())
         }
     }
 
@@ -206,8 +206,40 @@ export default class DomElement {
         return this.el.value
     }
 
+    setInputValueFromModel(component) {
+        const modelString = this.directives.get('model').value
+        const modelStringWithArraySyntaxForNumericKeys = modelString.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
+        const modelValue = eval('component.data.'+modelStringWithArraySyntaxForNumericKeys)
+        if (! modelValue) return
+
+        this.setInputValue(modelValue)
+    }
+
+    setInputValue(value) {
+        if (this.el.type === 'checkbox') {
+            this.el.checked = !! value
+        } else if (this.el.tagName === 'SELECT') {
+            this.updateSelect(value)
+        } else {
+            this.el.value = value
+        }
+    }
+
+    getSelectValues() {
+        return Array.from(this.el.options)
+            .filter(option => option.selected)
+            .map(option => { return option.value || option.text})
+    }
+
+    updateSelect(value) {
+        const arrayWrappedValue = [].concat(value)
+        Array.from(this.el.options).forEach(option => {
+            option.selected = arrayWrappedValue.includes(option.value)
+        })
+    }
+
     get ref() {
-        return this.directives.get('ref')
+        return this.directives.has('ref')
             ? this.directives.get('ref').value
             : null
     }
@@ -240,41 +272,5 @@ export default class DomElement {
 
     querySelectorAll() {
         return this.el.querySelectorAll(...arguments)
-    }
-
-    setInputValueFromModel(component) {
-        const modelString = this.directives.get('model').value
-        const modelStringWithArraySyntaxForNumericKeys = modelString.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
-        const modelValue = eval('component.data.'+modelStringWithArraySyntaxForNumericKeys)
-
-        if (! modelValue) return
-
-        this.setInputValue(modelValue)
-    }
-
-    setInputValue(value) {
-        if (this.el.tagName === 'TEXTAREA') {
-            // <textarea>'s don't use value properties, so we have to treat them differently.
-            this.el.innerHTML = value
-        } else if (this.el.type === 'checkbox') {
-            this.el.checked = value
-        } else if (this.el.tagName === 'SELECT') {
-            this.updateSelect(value)
-        } else if (! this.el.hasAttribute('value')) {
-            this.el.setAttribute('value', value)
-        }
-    }
-
-    getSelectValues() {
-        return Array.from(this.el.options)
-            .filter(option => option.selected)
-            .map(option => { return option.value || option.text})
-    }
-
-    updateSelect(value) {
-        const arrayWrappedValue = [].concat(value)
-        Array.from(this.el.options).forEach(option => {
-            option.selected = arrayWrappedValue.includes(option.value)
-        })
     }
 }

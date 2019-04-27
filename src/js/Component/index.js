@@ -1,5 +1,5 @@
 import Message from '../message'
-import { debounce, addMixin, tap, walk } from '../util'
+import { debounce, addMixin, walk } from '../util'
 import morphdom from '../dom/morphdom'
 import DomElement from '../dom/element'
 import handleLoadingDirectives from './handle_loading_directives'
@@ -120,24 +120,8 @@ class Component {
     replaceDom(rawDom, dirtyInputs) {
         // Prevent morphdom from moving an input element and it losing it's focus.
         DomElement.preserveActiveElement(() => {
-            this.handleMorph(this.addValueAttributesToModelNodes(rawDom.trim()), dirtyInputs)
+            this.handleMorph(rawDom.trim(), dirtyInputs)
         })
-    }
-
-    addValueAttributesToModelNodes(inputDom)
-    {
-        const tempDom = tap(document.createElement('div'), el => { el.innerHTML = inputDom })
-
-        // I need the "self" for the later eval().
-        const self = this
-
-        // Go through and add any "value" attributes to "wire:model" bound input elements,
-        // if they aren't already in the dom.
-        DomElement.allModelElementsInside(tempDom).forEach(el => {
-            el.setInputValueFromModel(this)
-        })
-
-        return tempDom.innerHTML
     }
 
     handleMorph(dom, dirtyInputs) {

@@ -85,22 +85,21 @@ test('input element value changes, when not marked as dirty, only when element i
     })
 })
 
-test('input element value attribute is automatically added if not present in returned dom', async () => {
+test('input element value attribute is automatically updated if present in returned dom', async () => {
     mountAndReturnWithData(
         '<input wire:model="foo"><button wire:click="onClick"></button>',
         '<input wire:model="foo"><button wire:click="onClick"></button>',
-        { foo: 'bar' }
+        { foo: 'bar' }, ['foo']
     )
 
     document.querySelector('button').click()
 
     await wait(() => {
-        expect(document.querySelector('input').hasAttribute('value')).toBeTruthy()
         expect(document.querySelector('input').value).toBe('bar')
     })
 })
 
-test('input element value attribute is automatically added if not present in the initial dom', async () => {
+test('input element value is automatically updated', async () => {
     mountWithData(
         '<input wire:model="foo">',
         { foo: 'bar' }
@@ -111,14 +110,14 @@ test('input element value attribute is automatically added if not present in the
     })
 })
 
-test('textarea element value attribute is automatically added if not present in the initial dom', async () => {
+test('textarea element value is automatically updated', async () => {
     mountWithData(
         '<textarea wire:model="foo"></textarea>',
         { foo: 'bar' }
     )
 
     await wait(() => {
-        expect(document.querySelector('div').innerHTML).toBe('<textarea wire:model=\"foo\">bar</textarea>')
+        expect(document.querySelector('textarea').value).toBe('bar')
     })
 })
 
