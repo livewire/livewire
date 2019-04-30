@@ -56,17 +56,18 @@ export default {
                 ? debounce(callback, time)
                 : callback
         }
+        const hasDebounceModifier = directive.modifiers.includes('debounce')
 
         // If it's a Vue component, listen for Vue input event emission.
         if (el.isVueComponent()) {
-            el.asVueComponent().$on('input', debounceIf(directive.modifiers.includes('debounce'), e => {
+            el.asVueComponent().$on('input', debounceIf(hasDebounceModifier, e => {
                 const model = directive.value
                 const value = e
 
                 component.addAction(new ModelAction(model, value, el))
             }, directive.durationOr(150)))
         } else {
-            el.addEventListener(isLazy ? 'change' : 'input', debounceIf(directive.modifiers.includes('debounce') || ! isLazy, e => {
+            el.addEventListener(isLazy ? 'change' : 'input', debounceIf(hasDebounceModifier || ! isLazy, e => {
                 const model = directive.value
                 const el = new DOMElement(e.target)
                 const value = el.valueFromInput()

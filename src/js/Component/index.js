@@ -97,7 +97,7 @@ class Component {
             if (el.directives.missing('model')) return
             const modelValue = el.directives.get('model').value
 
-            // if (el.isFocused() && ! dirtyInputs.includes(modelValue)) return
+            if (el.isFocused() && ! dirtyInputs.includes(modelValue)) return
 
             el.setInputValueFromModel(this)
         })
