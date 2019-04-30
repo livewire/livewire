@@ -23,6 +23,11 @@ function defaultGetNodeKey(node) {
 }
 
 function callHook(hook, ...params) {
+    if (hook.name !== 'getNodeKey' && hook.name !== 'onBeforeElUpdated') {
+        // debugger
+        console.log(hook.name, ...params)
+    }
+
     // Don't call hook on non-"DOMElement" elements.
     if (typeof params[0].hasAttribute !== 'function') return
 
@@ -193,7 +198,7 @@ export default function morphdomFactory(morphAttrs) {
                 delete fromNodesLookup[toElKey];
             }
 
-            if (toNode.isEqualNode && toNode.isEqualNode(fromNode)) {
+            if (toEl.isEqualNode && toEl.isEqualNode(fromEl)) {
                 return;
             }
 

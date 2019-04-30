@@ -16,10 +16,6 @@ abstract class ConnectionHandler
         $instance->hashPropertiesForDirtyDetection();
 
         try {
-            foreach ($payload['syncQueue'] ?? [] as $model => $value) {
-                $instance->syncInput($model, $value);
-            }
-
             foreach ($payload['actionQueue'] as $action) {
                 $this->processMessage($action['type'], $action['payload'], $instance);
             }

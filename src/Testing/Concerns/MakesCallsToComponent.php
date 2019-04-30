@@ -6,8 +6,6 @@ use Livewire\Testing\TestConnectionHandler;
 
 trait MakesCallsToComponent
 {
-    public $syncQueue = [];
-
     public function fireEvent($event, ...$parameters)
     {
         $this->sendMessage('fireEvent', [
@@ -39,13 +37,6 @@ trait MakesCallsToComponent
         return $this;
     }
 
-    public function queueLazilyUpdateProperty($name, $value)
-    {
-        $this->syncQueue[$name] = $value;
-
-        return $this;
-    }
-
     public function sendMessage($message, $payload)
     {
         $result = (new TestConnectionHandler)
@@ -55,10 +46,7 @@ trait MakesCallsToComponent
                 'data' => $this->data,
                 'children' => $this->children,
                 'actionQueue' => [['type' => $message, 'payload' => $payload]],
-                'syncQueue' => $this->syncQueue,
             ]);
-
-        $this->syncQueue = [];
 
         $this->updateComponent($result);
     }

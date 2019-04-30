@@ -5,6 +5,11 @@ export default class {
         this.modifiers = modifiers
         this.rawName = rawName
         this.el = el
+        this.eventContext
+    }
+
+    setEventContext(context) {
+        this.eventContext = context
     }
 
     get value() {
@@ -43,6 +48,8 @@ export default class {
         const methodAndParamString = method.match(/(.*)\((.*)\)/)
 
         if (methodAndParamString) {
+            // This "$event" is for use inside the livewire event handler.
+            const $event = this.eventContext
             method = methodAndParamString[1]
             params = methodAndParamString[2].split(', ').map(param => eval(param))
         }

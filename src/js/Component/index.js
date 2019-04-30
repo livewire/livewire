@@ -1,7 +1,8 @@
 import Message from '../message'
 import { debounce, addMixin, walk } from '../util'
 import morphdom from '../dom/morphdom'
-import DomElement from '../dom/element'
+import DOM from '../dom/dom'
+import DOMElement from '../dom/dom_element'
 import handleLoadingDirectives from './handle_loading_directives'
 import nodeInitializer from "../node_initializer";
 import store from '../store'
@@ -14,7 +15,6 @@ class Component {
         this.children = JSON.parse(el.getAttribute('children'))
         this.name = el.getAttribute('name')
         this.connection = connection
-        this.syncQueue = {}
         this.actionQueue = []
         this.messageInTransit = null
 
@@ -24,15 +24,15 @@ class Component {
     }
 
     get el() {
-        return DomElement.getByAttributeAndValue('id', this.id)
+        return DOM.getByAttributeAndValue('id', this.id)
     }
 
     initialize() {
         this.walk(el => {
-            // Will run for every node in the component tree (not child nodes)
+            // Will run for every node in the component tree (not child component nodes).
             nodeInitializer.initialize(el, this)
         }, el => {
-            // When new component is encountered in the tree
+            // When new component is encountered in the tree, add it.
             store.addComponent(
                 new Component(el, this.connection)
             )
@@ -57,25 +57,11 @@ class Component {
 
         this.messageInTransit = new Message(
             this,
-            this.actionQueue,
-            this.syncQueue,
+            this.actionQueue
         )
 
         this.connection.sendMessage(this.messageInTransit)
 
-        this.clearSyncQueue()
-        this.clearActionQueue()
-    }
-
-    queueSyncInput(model, value) {
-        this.syncQueue[model] = value
-    }
-
-    clearSyncQueue() {
-        this.syncQueue = {}
-    }
-
-    clearActionQueue() {
         this.actionQueue = []
     }
 
@@ -93,7 +79,7 @@ class Component {
 
         this.replaceDom(response.dom, response.dirtyInputs)
 
-        this.handleDirtyInputs(response.dirtyInputs)
+        this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
 
         this.unsetLoading(this.messageInTransit.loadingEls)
 
@@ -106,66 +92,76 @@ class Component {
         }
     }
 
-    handleDirtyInputs(dirtyInputs) {
-        // This is manual dirty input hijacking. We just brute-force through
-        // the component nodes, look for the dirty wire:model's and force
-        // a state refresh.
+    forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
         this.walk(el => {
             if (el.directives.missing('model')) return
             const modelValue = el.directives.get('model').value
-            if (! [].concat(dirtyInputs).includes(modelValue)) return
+
+            // if (el.isFocused() && ! dirtyInputs.includes(modelValue)) return
 
             el.setInputValueFromModel(this)
         })
     }
 
-    replaceDom(rawDom, dirtyInputs) {
-        // Prevent morphdom from moving an input element and it losing it's focus.
-        DomElement.preserveActiveElement(() => {
-            this.handleMorph(rawDom.trim(), dirtyInputs)
-        })
+    replaceDom(rawDom) {
+        this.handleMorph(
+            this.formatDomBeforeDiffToAvoidConflictsWithVue(rawDom.trim()),
+        )
     }
 
-    handleMorph(dom, dirtyInputs) {
+    formatDomBeforeDiffToAvoidConflictsWithVue(inputDom) {
+        if (! window.Vue) return inputDom
+
+        const div = document.createElement('div')
+        div.innerHTML =  inputDom
+
+        new window.Vue().$mount(div.firstElementChild)
+
+        return div.firstElementChild.outerHTML
+    }
+
+    handleMorph(dom) {
         morphdom(this.el.rawNode(), dom, {
             childrenOnly: true,
 
             getNodeKey: node => {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
-                return node.hasAttribute('key')
-                    ? node.getAttribute('key')
-                    // If no "key", then first check for "wire:id", then "id"
-                    : (node.hasAttribute(`${DomElement.prefix}:id`)
-                        ? node.getAttribute(`${DomElement.prefix}:id`)
-                        : node.id)
+                return node.hasAttribute(`${DOM.prefix}:key`)
+                    ? node.getAttribute(`${DOM.prefix}:key`)
+                    // If no "key", then first check for "wire:id", then "wire:model", then "id"
+                    : (node.hasAttribute(`${DOM.prefix}:id`)
+                        ? node.getAttribute(`${DOM.prefix}:id`)
+                        : (node.hasAttribute(`${DOM.prefix}:model`)
+                            ? node.getAttribute(`${DOM.prefix}:model`)
+                            : node.id))
             },
 
             onBeforeNodeAdded: node => {
-                return (new DomElement(node)).transitionElementIn()
+                return (new DOMElement(node)).transitionElementIn()
             },
 
             onBeforeNodeDiscarded: node => {
-                return (new DomElement(node)).transitionElementOut(nodeDiscarded => {
+                return (new DOMElement(node)).transitionElementOut(nodeDiscarded => {
                     // Cleanup after removed element.
                     this.removeLoadingEl(nodeDiscarded)
                 })
             },
 
             onBeforeElChildrenUpdated: node => {
-                const el = new DomElement(node)
-
-                // Children will update themselves.
-                if (el.isComponentRootEl()) return false
+                //
             },
 
             onBeforeElUpdated: (from, to) => {
-                const fromEl = new DomElement(from)
-                const toEl = new DomElement(to)
+                const fromEl = new DOMElement(from)
+
+                // Honor the "wire:ignore" attribute.
+                if (fromEl.hasAttribute('ignore')) return false
 
                 // Children will update themselves.
-                if (fromEl.isComponentRootEl()) return false
+                if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== this.id) return false
 
-                toEl.preserveValueAttributeIfNotDirty(fromEl, dirtyInputs)
+                // Don't touch Vue components
+                if (fromEl.isVueComponent()) return false
             },
 
             onElUpdated: (node) => {
@@ -179,11 +175,11 @@ class Component {
             },
 
             onNodeAdded: (node) => {
-                const el = new DomElement(node)
+                const el = new DOMElement(node)
 
                 const closestComponentId = el.closestRoot().getAttribute('id')
 
-                if (Number(closestComponentId) === Number(this.id)) {
+                if (closestComponentId === this.id) {
                     nodeInitializer.initialize(el, this)
                 } else if (el.isComponentRootEl()) {
                     store.addComponent(
@@ -193,12 +189,12 @@ class Component {
 
                 // Skip.
             },
-        });
+        })
     }
 
     walk(callback, callbackWhenNewComponentIsEncountered = el => {}) {
         walk(this.el.rawNode(), (node) => {
-            const el = new DomElement(node)
+            const el = new DOMElement(node)
 
             // Skip the root component element.
             if (el.isSameNode(this.el)) return

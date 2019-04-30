@@ -1,7 +1,7 @@
-import { debounceWithFiringOnBothEnds, kebabCase } from './util'
+import { debounce, kebabCase } from './util'
 import ModelAction from './action/model'
 import MethodAction from './action/method'
-import DomElement from './dom/element'
+import DOMElement from './dom/dom_element'
 import store from './store'
 
 export default {
@@ -50,20 +50,30 @@ export default {
     },
 
     attachModelListener(el, directive, component) {
-        const isLive = ! directive.modifiers.includes('lazy')
-        const debounceOrDont = isLive ? debounceWithFiringOnBothEnds : fn => fn
+        const isLazy = directive.modifiers.includes('lazy')
+        const debounceIf = (condition, callback, time) => {
+            return condition
+                ? debounce(callback, time)
+                : callback
+        }
 
-        el.addEventListener('input', debounceOrDont(e => {
-            const model = directive.value
-            const el = new DomElement(e.target)
-            const value = el.valueFromInput()
+        // If it's a Vue component, listen for Vue input event emission.
+        if (el.isVueComponent()) {
+            el.asVueComponent().$on('input', debounceIf(directive.modifiers.includes('debounce'), e => {
+                const model = directive.value
+                const value = e
 
-            if (isLive) {
                 component.addAction(new ModelAction(model, value, el))
-            } else {
-                component.queueSyncInput(model, value)
-            }
-        }, 150))
+            }, directive.durationOr(150)))
+        } else {
+            el.addEventListener(isLazy ? 'change' : 'input', debounceIf(directive.modifiers.includes('debounce') || ! isLazy, e => {
+                const model = directive.value
+                const el = new DOMElement(e.target)
+                const value = el.valueFromInput()
+
+                component.addAction(new ModelAction(model, value, el))
+            }, directive.durationOr(150)))
+        }
     },
 
     attachDomListener(el, directive, component) {
@@ -87,7 +97,7 @@ export default {
                 return
             }
 
-            const el = new DomElement(e.target)
+            const el = new DOMElement(e.target)
 
             // This is outside the conditional below so "wire:click.prevent" without
             // a value still prevents default.
@@ -103,6 +113,7 @@ export default {
             }
 
             if (directive.value) {
+                directive.setEventContext(e)
                 component.addAction(new MethodAction(directive.method, directive.params, el))
             }
         }))

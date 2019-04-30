@@ -2,13 +2,10 @@ import ElementDirectives from "./directive_manager";
 const prefix = require('./prefix.js')()
 
 /**
- * This is intended to isolate all native DOM operations. The operations that happen
- * one specific element will be instance methods, the operations you would normally
- * perform on the "document" (like "document.querySelector") will be static methods.
  * Consider this a decorator for the ElementNode JavaScript object. (Hence the
  * method forwarding I have to do at the bottom)
  */
-export default class DomElement {
+export default class DOMElement {
     constructor(el) {
         this.el = el
         this.directives = new ElementDirectives(el)
@@ -18,52 +15,6 @@ export default class DomElement {
         requestAnimationFrame(() => {
             requestAnimationFrame(fn.bind(this));
         });
-    }
-
-    static get prefix() {
-        return prefix
-    }
-
-    static rootComponentElements() {
-        return Array.from(document.querySelectorAll(`[${prefix}\\:id]`))
-            .map(el => new DomElement(el))
-    }
-
-    static rootComponentElementsWithNoParents() {
-        // In CSS, it's simple to select all elements that DO have a certain ancestor.
-        // However, it's not simple (kinda impossible) to select elements that DONT have
-        // a certain ancestor. Therefore, we will flip the logic: select all roots that DO have
-        // have a root ancestor, then select all roots that DONT, then diff the two.
-
-        // Convert NodeLists to Arrays so we can use ".includes()". Ew.
-        const allEls = Array.prototype.slice.call(
-            document.querySelectorAll(`[${prefix}\\:id]`)
-        )
-        const onlyChildEls = Array.prototype.slice.call(
-            document.querySelectorAll(`[${prefix}\\:id] [${prefix}\\:id]`)
-        )
-
-        return allEls
-            .filter(el => ! onlyChildEls.includes(el))
-            .map(el => new DomElement(el))
-    }
-
-    static allModelElementsInside(root) {
-        return Array.from(
-            root.querySelectorAll(`[${prefix}\\:model]`)
-        ).map(el => new DomElement(el))
-    }
-
-    static getByAttributeAndValue(attribute, value) {
-        return new DomElement(document.querySelector(`[${prefix}\\:${attribute}="${value}"]`))
-    }
-
-    static preserveActiveElement(callback) {
-        const cached = document.activeElement
-
-        callback()
-
-        cached.focus()
     }
 
     rawNode() {
@@ -153,11 +104,19 @@ export default class DomElement {
     }
 
     closestByAttribute(attribute) {
-        return new DomElement(this.el.closest(`[${prefix}\\:${attribute}]`))
+        return new DOMElement(this.el.closest(`[${prefix}\\:${attribute}]`))
     }
 
     isComponentRootEl() {
         return this.hasAttribute('id')
+    }
+
+    isVueComponent() {
+        return !! this.asVueComponent()
+    }
+
+    asVueComponent() {
+        return this.rawNode().__vue__
     }
 
     hasAttribute(attribute) {
@@ -173,6 +132,10 @@ export default class DomElement {
     }
 
     isFocused() {
+        return this.el === document.activeElement
+    }
+
+    hasFocus() {
         return this.el === document.activeElement
     }
 
@@ -210,13 +173,23 @@ export default class DomElement {
         const modelString = this.directives.get('model').value
         const modelStringWithArraySyntaxForNumericKeys = modelString.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
         const modelValue = eval('component.data.'+modelStringWithArraySyntaxForNumericKeys)
-        if (! modelValue) return
+        if (modelValue === undefined) return
 
         this.setInputValue(modelValue)
     }
 
     setInputValue(value) {
-        if (this.el.type === 'checkbox') {
+        if (this.rawNode().__vue__) {
+            // If it's a vue component pass down the value prop.
+            // Also, Vue will throw a warning because we are programmaticallly
+            // setting a prop, we need to silence that.
+            const originalSilent = window.Vue.config.silent
+            window.Vue.config.silent = true
+            this.rawNode().__vue__.$props.value = value
+            window.Vue.config.silent = originalSilent
+        } else if (this.el.type === 'radio') {
+            this.el.checked = this.el.value == value
+        } else if (this.el.type === 'checkbox') {
             this.el.checked = !! value
         } else if (this.el.tagName === 'SELECT') {
             this.updateSelect(value)
@@ -246,7 +219,7 @@ export default class DomElement {
 
     isSameNode(el) {
         // We need to drop down to the raw node if we are comparing
-        // to another "DomElement" Instance.
+        // to another "DOMElement" Instance.
         if (typeof el.rawNode === 'function') {
             return this.el.isSameNode(el.rawNode())
         }

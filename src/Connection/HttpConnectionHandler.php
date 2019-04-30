@@ -11,7 +11,6 @@ class HttpConnectionHandler extends ConnectionHandler
         return $this->handle(
             request([
                 'actionQueue',
-                'syncQueue',
                 'name',
                 'children',
                 'data',

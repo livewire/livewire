@@ -1,5 +1,11 @@
 import { hasAttributeNS } from './util';
 
+/**
+ * I don't want to look at "value" attributes when diffing.
+ * I commented out all the lines that compare "value"
+ *
+ */
+
 export default function morphAttrs(fromNode, toNode) {
     var attrs = toNode.attributes;
     var i;

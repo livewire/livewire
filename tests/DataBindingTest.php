@@ -82,18 +82,6 @@ class DataBindingTest extends TestCase
         $this->assertEquals('something else', $component->instance->propertyWithHook);
         $this->assertContains('propertyWithHook', $component->dirtyInputs);
     }
-
-    /** @test */
-    function lazy_synced_data_doesnt_shows_up_as_dirty()
-    {
-        $component = app(LivewireManager::class)->test(DataBindingStub::class);
-
-        $component
-            ->queueLazilyUpdateProperty('foo', 'bar')
-            ->runAction('$refresh');
-
-        $this->assertEmpty($component->dirtyInputs);
-    }
 }
 
 class DataBindingStub extends LivewireComponent {

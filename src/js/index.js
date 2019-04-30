@@ -1,8 +1,8 @@
-import drivers from './connection/drivers'
-import Connection from './connection'
-import store from './store'
+import componentStore from './store'
+import DOM from "./dom/dom";
 import Component from "./component";
-import DomElement from "./dom/element";
+import Connection from './connection'
+import drivers from './connection/drivers'
 
 class Livewire {
     constructor({ driver } = { driver: 'http' }) {
@@ -11,7 +11,7 @@ class Livewire {
         }
 
         this.connection = new Connection(driver)
-        this.components = store
+        this.components = componentStore
 
         this.start()
     }
@@ -30,7 +30,7 @@ class Livewire {
     }
 
     start() {
-        DomElement.rootComponentElementsWithNoParents().forEach(el => {
+        DOM.rootComponentElementsWithNoParents().forEach(el => {
             this.components.addComponent(
                 new Component(el, this.connection)
             )

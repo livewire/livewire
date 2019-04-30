@@ -1,9 +1,8 @@
 
 export default class {
-    constructor(component, actionQueue, syncQueue) {
+    constructor(component, actionQueue) {
         this.component = component
         this.actionQueue = actionQueue
-        this.syncQueue = syncQueue
     }
 
     prepareForSend() {
@@ -24,8 +23,13 @@ export default class {
             data: this.component.data,
             name: this.component.name,
             children: this.component.children,
-            syncQueue: this.syncQueue,
-            actionQueue: this.actionQueue,
+            actionQueue: this.actionQueue.map(action => {
+                // This ensures only the type & payload properties only get sent over.
+                return {
+                    type: action.type,
+                    payload: action.payload,
+                }
+            }),
         }
     }
 

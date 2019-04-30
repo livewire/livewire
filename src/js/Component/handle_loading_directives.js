@@ -1,4 +1,4 @@
-import DomElement from "../dom/element";
+import DOMElement from "../dom/dom_element";
 
 export default {
     loadingEls: [],
@@ -17,7 +17,7 @@ export default {
     },
 
     removeLoadingEl(node) {
-        const el = new DomElement(node)
+        const el = new DOMElement(node)
 
         this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
 

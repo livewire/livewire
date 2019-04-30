@@ -1,5 +1,5 @@
 import { dispatch } from '../util'
-import store from '../store';
+import componentStore from '../store';
 
 export default class Connection {
     constructor(driver) {
@@ -9,15 +9,11 @@ export default class Connection {
             this.onMessage(payload)
         }
 
-        this.driver.refresh = (payload) => {
-            this.refresh()
-        }
-
         this.driver.init()
     }
 
     onMessage(payload) {
-        store.findComponent(payload.id).receiveMessage(payload)
+        componentStore.findComponent(payload.id).receiveMessage(payload)
 
         dispatch('livewire:update')
     }
