@@ -25,7 +25,7 @@ function defaultGetNodeKey(node) {
 function callHook(hook, ...params) {
     if (hook.name !== 'getNodeKey' && hook.name !== 'onBeforeElUpdated') {
         // debugger
-        console.log(hook.name, ...params)
+        // console.log(hook.name, ...params)
     }
 
     // Don't call hook on non-"DOMElement" elements.

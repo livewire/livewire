@@ -69,20 +69,6 @@ test('input element value doesnt change, but other attributes do when not marked
     })
 })
 
-test('input element value changes, when not marked as dirty, only when element isnt focused', async () => {
-    mountAndReturn(
-        '<input wire:model="foo" value="">',
-        '<input wire:model="foo" value="bar">',
-        []
-    )
-
-    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
-
-    await wait(() => {
-        expect(document.querySelector('input').value).toEqual('bar')
-    })
-})
-
 test('input element value attribute is automatically updated if present in returned dom', async () => {
     mountAndReturnWithData(
         '<input wire:model="foo"><button wire:click="onClick"></button>',
