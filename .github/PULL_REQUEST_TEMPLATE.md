@@ -7,5 +7,5 @@
 
 4️⃣ Please include a thorough description of the feature/fix and reasons why it's useful.
 
-5️⃣ Thanks for contributing!
+5️⃣ Thanks for contributing! 🙌
 -->
