@@ -9,6 +9,10 @@ export default class Connection {
             this.onMessage(payload)
         }
 
+        this.driver.onError = (payload) => {
+            this.onError(payload)
+        }
+
         this.driver.init()
     }
 
@@ -16,6 +20,10 @@ export default class Connection {
         componentStore.findComponent(payload.id).receiveMessage(payload)
 
         dispatch('livewire:update')
+    }
+
+    onError(payloadThatFailedSending) {
+        componentStore.findComponent(payloadThatFailedSending.id).messageSendFailed()
     }
 
     sendMessage(message) {

@@ -67,7 +67,8 @@ export default {
                 component.addAction(new ModelAction(model, value, el))
             }, directive.durationOr(150)))
         } else {
-            el.addEventListener(isLazy ? 'change' : 'input', debounceIf(hasDebounceModifier || ! isLazy, e => {
+            // If it's a text input and not .lazy, debounce, otherwise fire immediately.
+            el.addEventListener(isLazy ? 'change' : 'input', debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
                 const model = directive.value
                 const el = new DOMElement(e.target)
                 const value = el.valueFromInput()

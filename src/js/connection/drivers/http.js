@@ -1,4 +1,5 @@
 export default {
+    onError: null,
     onMessage: null,
 
     init() {
@@ -25,9 +26,12 @@ export default {
                 })
             } else {
                 response.text().then(response => {
+                    this.onError(payload)
                     this.showHtmlModal(response)
                 })
             }
+        }).catch(() => {
+            this.onError(payload)
         })
     },
 
