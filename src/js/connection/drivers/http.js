@@ -30,6 +30,8 @@ export default {
                     this.showHtmlModal(response)
                 })
             }
+        }).catch(() => {
+            this.onError(payload)
         })
     },
 
