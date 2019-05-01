@@ -65,6 +65,10 @@ class Component {
         this.actionQueue = []
     }
 
+    messageSendFailed() {
+        this.messageInTransit = null
+    }
+
     receiveMessage(payload) {
         const response = this.messageInTransit.storeResponse(payload)
 
