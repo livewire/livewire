@@ -13,6 +13,14 @@ export default class Connection {
             this.onError(payload)
         }
 
+        // This prevents those annoying CSRF 419's by keeping the cookie fresh.
+        // Yum! No one likes stale cookies...
+        if (typeof this.driver.keepAlive !== 'undefined') {
+            setInterval(() => {
+                this.driver.keepAlive()
+            }, 600000); // Every ten minutes.
+        }
+
         this.driver.init()
     }
 

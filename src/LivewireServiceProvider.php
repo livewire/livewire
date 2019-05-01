@@ -32,6 +32,11 @@ class LivewireServiceProvider extends ServiceProvider
         // I'm guessing it's not cool to rely on the users "web" middleware stack.
         // @todo - figure out what to do here re: middleware.
         RouteFacade::post('/livewire/message', HttpConnectionHandler::class)->middleware('web');
+
+        // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
+        RouteFacade::get('/livewire/keep-alive', function () {
+            return response(200);
+        })->middleware('web');
     }
 
     public function registerCommands()

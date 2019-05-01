@@ -6,16 +6,21 @@ export default {
         //
     },
 
-    sendMessage(payload) {
-         const token = this.getCSRFToken()
+    keepAlive() {
+        fetch('/livewire/keep-alive', {
+            credentials: "same-origin",
+            headers: { 'X-CSRF-TOKEN': this.getCSRFToken() },
+        })
+    },
 
+    sendMessage(payload) {
         fetch('/livewire/message', {
             method: 'POST',
             body: JSON.stringify(payload),
             // This enables "cookies".
             credentials: "same-origin",
             headers: {
-                'X-CSRF-TOKEN': token,
+                'X-CSRF-TOKEN': this.getCSRFToken(),
                 'Content-Type': 'application/json',
                 'Accept': 'text/html, application/xhtml+xml',
             },
