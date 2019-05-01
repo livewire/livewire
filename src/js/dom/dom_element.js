@@ -154,9 +154,12 @@ export default class DOMElement {
     }
 
     isInput() {
-        return this.el.tagName === 'INPUT'
-            || this.el.tagName === 'TEXTAREA'
-            || this.el.tagName === 'SELECT'
+        return ['INPUT', 'TEXTAREA', 'SELECT'].includes(this.el.tagName.toUpperCase())
+    }
+
+    isTextInput() {
+        return ['INPUT', 'TEXTAREA'].includes(this.el.tagName.toUpperCase())
+            && ! ['checkbox', 'radio'].includes(this.el.type)
     }
 
     valueFromInput() {
