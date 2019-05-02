@@ -63,6 +63,8 @@ use Livewire\LivewireComponent;
 
 class {$this->className()} extends LivewireComponent
 {
+    public static \$alias = '{$this->componentAlias()}';
+
     public function render()
     {
         return view('{$this->viewName()}');
@@ -149,6 +151,13 @@ EOT
                 return Str::kebab($part);
             }))
             ->implode('.');
+    }
+
+    protected function componentAlias()
+    {
+        return $this->nameSplitByDirectories->map(function ($part) {
+            return Str::kebab($part);
+        })->implode('.');
     }
 
     protected function randomNugget()
