@@ -23,6 +23,14 @@ class LivewireMakeCommand extends Command
     {
         $this->splittedName = collect(preg_split('/[\/\\\]+/', $this->argument('name')))->filter();
 
+        if ($this->splittedName->count() < 1) {
+            $this->error(
+                sprintf('A specified name [%s] is invalid.', $this->argument('name'))
+            );
+
+            return;
+        }
+
         $force = $this->option('force');
 
         $this->createClass($force);
