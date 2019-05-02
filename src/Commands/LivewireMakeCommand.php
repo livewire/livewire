@@ -3,84 +3,155 @@
 namespace Livewire\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Console\DetectsApplicationNamespace;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class LivewireMakeCommand extends Command
 {
-    protected $signature = 'make:livewire {component}';
+    use DetectsApplicationNamespace;
+
+    protected $signature = 'make:livewire {name} {--force}';
     protected $description = 'Create a new Livewire component and it\'s corresponding blade view.';
 
-    protected $component;
+    /** @var Collection */
+    protected $splittedName;
 
     public function handle()
     {
-        $this->component = $this->argument('component');
-        $this->view = kebab_case($this->component);
-        $this->filenameOfClass = "{$this->component}.php";
-        $this->filenameOfView = "{$this->view}.blade.php";
-        $this->directoryContainingClass = app_path('Http'.DIRECTORY_SEPARATOR.'Livewire');
-        $this->directoryContainingView = head(config('view.paths')).DIRECTORY_SEPARATOR.'livewire';
-        $this->pathToClass = $this->directoryContainingClass.DIRECTORY_SEPARATOR.$this->filenameOfClass;
-        $this->pathToView = $this->directoryContainingView.DIRECTORY_SEPARATOR.$this->filenameOfView;
+        $this->splittedName = collect(preg_split('/[\/\\\]+/', $this->argument('name')))->filter();
 
-        $this->unlessFilesAlreadyExist(function () {
-            $this->ensureDirectoryExists($this->directoryContainingClass);
-            $this->ensureDirectoryExists($this->directoryContainingView);
-            $this->makeClass();
-            $this->makeView();
-        });
+        $force = $this->option('force');
 
-        $this->info("👍  Files created:");
-        $this->info("-> [{$this->pathToClass}]");
-        $this->info("-> [{$this->pathToView}]");
+        $this->createClass($force);
+        $this->createView($force);
     }
 
-    protected function unlessFilesAlreadyExist($callback) {
-        throw_if(File::exists($this->pathToClass), new \Exception('File already exists ['.$this->pathToClass.']'));
-        throw_if(File::exists($this->pathToView), new \Exception('File already exists ['.$this->pathToView.']'));
-
-        $callback();
-    }
-
-    protected function makeClass()
+    protected function getClassName()
     {
-        File::put($this->pathToClass, <<<EOT
+        return Str::title($this->splittedName->last());
+    }
+
+    protected function getClassFileName()
+    {
+        return app_path(
+            collect(['Http', 'Livewire'])
+                ->merge($this->splittedName->map(function ($part) {
+                    return Str::title($part);
+                }))
+                ->implode(DIRECTORY_SEPARATOR) . '.php'
+        );
+    }
+
+    protected function getClassNamespace()
+    {
+        return collect([trim($this->getAppNamespace(), '\\'), 'Http', 'Livewire'])
+            ->merge($this->splittedName->slice(0, -1)->map(function ($part) {
+                return Str::title($part);
+            }))
+            ->implode('\\');
+    }
+
+    protected function getViewFileName()
+    {
+        return head(config('view.paths'))
+            . DIRECTORY_SEPARATOR
+            . 'livewire'
+            . DIRECTORY_SEPARATOR
+            . $this->splittedName->map(function ($part) {
+                return Str::kebab($part);
+            })->implode(DIRECTORY_SEPARATOR)
+            . '.blade.php';
+    }
+
+    protected function getViewName()
+    {
+        return collect(['livewire'])
+            ->merge($this->splittedName->map(function ($part) {
+                return Str::kebab($part);
+            }))
+            ->implode('.');
+    }
+
+    protected function getRandomNugget()
+    {
+        $wisdom = require(__DIR__ . DIRECTORY_SEPARATOR . 'wisdom.php');
+
+        return Arr::random($wisdom);
+    }
+
+    protected function createClass($force = false)
+    {
+        $classFileName = $this->getClassFileName();
+
+        if (File::exists($classFileName) && !$force) {
+            $this->error(
+                sprintf('Component class already exists [%s].', $classFileName)
+            );
+
+            return;
+        }
+
+        $this->makeDirectory($classFileName);
+
+        File::put($this->getClassFileName(), <<<EOT
 <?php
 
-namespace App\Http\Livewire;
+namespace {$this->getClassNamespace()};
 
 use Livewire\LivewireComponent;
 
-class {$this->component} extends LivewireComponent
+class {$this->getClassName()} extends LivewireComponent
 {
     public function render()
     {
-        return view('livewire.{$this->view}');
+        return view('{$this->getViewName()}');
     }
 }
 
 EOT
-);
+        );
+
+        $this->info(
+            sprintf('Component class has been created successfully [%s].', $classFileName)
+        );
     }
 
-    protected function makeView()
+    protected function createView($force = false)
     {
-        $wisdom = require(__DIR__.DIRECTORY_SEPARATOR.'wisdom.php');
-        $nugget = $wisdom[rand(0, count($wisdom)-1)];
+        $viewFileName = $this->getViewFileName();
 
-        File::put($this->pathToView, <<<EOT
+        if (File::exists($viewFileName) && !$force) {
+            $this->error(
+                sprintf('Component view already exists [%s].', $viewFileName)
+            );
+
+            return;
+        }
+
+        $this->makeDirectory($viewFileName);
+
+        File::put($viewFileName, <<<EOT
 <div>
-    {{-- {$nugget} --}}
+    {{-- {$this->getRandomNugget()} --}}
 </div>
 
 EOT
-);
+        );
+
+        $this->info(
+            sprintf('Component view has been created successfully [%s].', $viewFileName)
+        );
     }
 
-    protected function ensureDirectoryExists($directory)
+    protected function makeDirectory($path)
     {
-        if (! File::exists($directory)) {
-            File::makeDirectory($directory);
+        if (!File::isDirectory(dirname($path))) {
+            File::makeDirectory(dirname($path), 0777, true, true);
         }
+
+        return $path;
     }
 }
