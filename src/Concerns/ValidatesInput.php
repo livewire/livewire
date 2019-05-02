@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Validator;
 
 trait ValidatesInput
 {
-    public function validate($rules, $messages = [])
+    public function validate($rules, $messages = [], $attributes = [])
     {
         $fields = array_keys($rules);
 
@@ -21,7 +21,7 @@ trait ValidatesInput
             $result[$this->beforeFirstDot($field)] = $this->getPropertyValue($field);
         }
 
-        return Validator::make($result, array_only($rules, $fields), $messages)
+        return Validator::make($result, array_only($rules, $fields), $messages, $attributes)
             ->validate();
     }
 }
