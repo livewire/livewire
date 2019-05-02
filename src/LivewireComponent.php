@@ -20,6 +20,8 @@ abstract class LivewireComponent
     public $id;
     public $redirectTo;
 
+    public static $alias;
+
     protected $lifecycleHooks = [
         'mount', 'updating', 'updated',
     ];

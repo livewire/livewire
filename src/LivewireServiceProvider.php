@@ -17,6 +17,15 @@ class LivewireServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('livewire', LivewireManager::class);
+
+        $this->app->resolving(LivewireManager::class, function (LivewireManager $manager) {
+            /** @var LivewireComponentsFinder $finder */
+            $finder = $this->app->make(LivewireComponentsFinder::class);
+
+            foreach ($finder->getDeclaredAliases() as $alias => $class) {
+                $manager->component($alias, $class);
+            }
+        });
     }
 
     public function boot()

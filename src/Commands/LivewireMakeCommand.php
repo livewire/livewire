@@ -83,6 +83,13 @@ class LivewireMakeCommand extends Command
             ->implode('.');
     }
 
+    protected function getComponentAlias()
+    {
+        return $this->splittedName->map(function ($part) {
+            return Str::kebab($part);
+        })->implode('.');
+    }
+
     protected function getRandomNugget()
     {
         $wisdom = require(__DIR__ . DIRECTORY_SEPARATOR . 'wisdom.php');
@@ -113,6 +120,8 @@ use Livewire\LivewireComponent;
 
 class {$this->getClassName()} extends LivewireComponent
 {
+    public static \$alias = '{$this->getComponentAlias()}';
+
     public function render()
     {
         return view('{$this->getViewName()}');
