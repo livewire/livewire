@@ -9,7 +9,10 @@ export default {
     keepAlive() {
         fetch('/livewire/keep-alive', {
             credentials: "same-origin",
-            headers: { 'X-CSRF-TOKEN': this.getCSRFToken() },
+            headers: {
+                'X-CSRF-TOKEN': this.getCSRFToken(),
+                'X-Livewire-Keep-Alive': true,
+            },
         })
     },
 
@@ -20,9 +23,10 @@ export default {
             // This enables "cookies".
             credentials: "same-origin",
             headers: {
-                'X-CSRF-TOKEN': this.getCSRFToken(),
                 'Content-Type': 'application/json',
                 'Accept': 'text/html, application/xhtml+xml',
+                'X-CSRF-TOKEN': this.getCSRFToken(),
+                'X-Livewire': true,
             },
         }).then(response => {
             if (response.ok) {

@@ -13,6 +13,7 @@ class Component {
         this.data = JSON.parse(el.getAttribute('initial-data'))
         this.events = JSON.parse(el.getAttribute('listening-for'))
         this.children = JSON.parse(el.getAttribute('children'))
+        this.middleware = el.getAttribute('middleware')
         this.name = el.getAttribute('name')
         this.connection = connection
         this.actionQueue = []

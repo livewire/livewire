@@ -29,14 +29,22 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerRoutes()
     {
-        // I'm guessing it's not cool to rely on the users "web" middleware stack.
-        // @todo - figure out what to do here re: middleware.
-        RouteFacade::post('/livewire/message', HttpConnectionHandler::class)->middleware('web');
+        // Don't register route for non-Livewire calls.
+        if (request()->headers->get('X-Livewire') == true) {
+            // This should be the middleware stack of the original request.
+            $middleware = decrypt(request('middleware'), $unserialize = true);
 
-        // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
-        RouteFacade::get('/livewire/keep-alive', function () {
-            return response(200);
-        })->middleware('web');
+            RouteFacade::post('/livewire/message', HttpConnectionHandler::class)
+                ->middleware($middleware);
+        }
+
+        if (request()->headers->get('X-Livewire-Keep-Alive') == true) {
+            // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
+            RouteFacade::get('/livewire/keep-alive', function () {
+                return response(200);
+            });
+        }
+
     }
 
     public function registerCommands()

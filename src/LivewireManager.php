@@ -75,7 +75,14 @@ EOT;
 
         return new LivewireOutput([
             'id' => $id,
-            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $name, $children, $events, $properties),
+            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, [
+                'id' => $id,
+                'name' => $name,
+                'children' => $children,
+                'initial-data' => $properties,
+                'listening-for' => $events,
+                'middleware' => encrypt($this->currentMiddlewareStack(), $serialize = true),
+            ]),
             'data' => $properties,
             'children' => $children,
             'dirtyInputs' => [],
@@ -84,22 +91,29 @@ EOT;
         ]);
     }
 
+    public function currentMiddlewareStack()
+    {
+        if (app()->runningUnitTests()) {
+            // There is no "request->route()" to access in unit tests.
+            return [];
+        }
+
+        return request()->route()->gatherMiddleware();
+    }
+
     public function dummyMount($id)
     {
         return "<div wire:id=\"{$id}\"></div>";
     }
 
-    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $name, $children, $events, $properties)
+    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $data)
     {
-        $attributesFormattedForHtmlElement = collect([
-            "{$this->prefix}:id" => $id,
-            "{$this->prefix}:name" => $name,
-            "{$this->prefix}:children" => $this->escapeStringForHtml($children),
-            "{$this->prefix}:initial-data" => $this->escapeStringForHtml($properties),
-            "{$this->prefix}:listening-for" => $this->escapeStringForHtml($events),
-        ])->map(function ($value, $key) {
-            return sprintf('%s="%s"', $key, $value);
-        })->implode(' ');
+        $attributesFormattedForHtmlElement = collect($data)
+            ->mapWithKeys(function ($value, $key) {
+                return ["{$this->prefix}:{$key}" => $this->escapeStringForHtml($value)];
+            })->map(function ($value, $key) {
+                return sprintf('%s="%s"', $key, $value);
+            })->implode(' ');
 
         return preg_replace(
             '/(<[a-zA-Z0-9\-]*)/',
@@ -111,6 +125,10 @@ EOT;
 
     public function escapeStringForHtml($subject)
     {
+        if (is_string($subject) || is_numeric($subject)) {
+            return $subject;
+        }
+
         return
         addcslashes(
             htmlspecialchars(
