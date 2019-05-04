@@ -42,7 +42,7 @@ class LivewireServiceProvider extends ServiceProvider
             // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
             RouteFacade::get('/livewire/keep-alive', function () {
                 return response(200);
-            });
+            })->middleware('web');
         }
 
     }
