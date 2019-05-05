@@ -4,6 +4,7 @@ namespace Livewire;
 
 use Exception;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Testing\TestableLivewire;
 
@@ -72,6 +73,7 @@ EOT;
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
+        $checksum = Hash::make($name);
 
         return new LivewireOutput([
             'id' => $id,
@@ -80,9 +82,11 @@ EOT;
                 'name' => $name,
                 'children' => $children,
                 'initial-data' => $properties,
+                'checksum' => $checksum,
                 'listening-for' => $events,
                 'middleware' => encrypt($this->currentMiddlewareStack(), $serialize = true),
             ]),
+            'checksum' => $checksum,
             'data' => $properties,
             'children' => $children,
             'dirtyInputs' => [],
@@ -115,11 +119,14 @@ EOT;
                 return sprintf('%s="%s"', $key, $value);
             })->implode(' ');
 
-        return preg_replace(
-            '/(<[a-zA-Z0-9\-]*)/',
-            sprintf('$1 %s', $attributesFormattedForHtmlElement),
+        preg_match('/<[a-zA-Z0-9\-]*([\s>])/', $dom, $matches, PREG_OFFSET_CAPTURE);
+        $positionOfFirstSpaceCharacterAfterTagName = $matches[1][1];
+
+        return substr_replace(
             $dom,
-            $limit = 1
+            $attributesFormattedForHtmlElement . ' ',
+            $positionOfFirstSpaceCharacterAfterTagName + 1,
+            0
         );
     }
 

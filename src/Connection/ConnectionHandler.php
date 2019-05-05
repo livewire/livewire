@@ -10,7 +10,7 @@ abstract class ConnectionHandler
 {
     public function handle($payload)
     {
-        $instance = ComponentHydrator::hydrate($payload['name'], $payload['data']);
+        $instance = ComponentHydrator::hydrate($payload['name'], $payload['data'], $payload['checksum']);
 
         $instance->setPreviouslyRenderedChildren($payload['children']);
         $instance->hashPropertiesForDirtyDetection();
@@ -45,6 +45,7 @@ abstract class ConnectionHandler
             'children' => $instance->getRenderedChildren(),
             'eventQueue' => $eventQueue,
             'listeningFor' => $listeningFor,
+            'checksum' => $payload['checksum'],
             'data' => $data,
         ]);
     }

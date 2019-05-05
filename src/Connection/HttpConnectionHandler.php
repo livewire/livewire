@@ -15,6 +15,7 @@ class HttpConnectionHandler extends ConnectionHandler
                 'children',
                 'data',
                 'id',
+                'checksum',
             ])
         );
     }

@@ -14,6 +14,7 @@ class Component {
         this.events = JSON.parse(el.getAttribute('listening-for'))
         this.children = JSON.parse(el.getAttribute('children'))
         this.middleware = el.getAttribute('middleware')
+        this.checksum = el.getAttribute('checksum')
         this.name = el.getAttribute('name')
         this.connection = connection
         this.actionQueue = []

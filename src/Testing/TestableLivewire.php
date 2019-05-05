@@ -30,9 +30,11 @@ class TestableLivewire
             app('livewire')->component($name = str_random(20), $componentClass);
         }
 
-        $this->updateComponent(
-            app('livewire')->mount($this->name = $name)
-        );
+        $result = app('livewire')->mount($this->name = $name);
+
+        $this->checksum = $result->checksum;
+
+        $this->updateComponent($result);
     }
 
     public function updateComponent($output)
@@ -44,7 +46,7 @@ class TestableLivewire
         $this->dirtyInputs = $output->dirtyInputs;
         $this->listeningFor = $output->listeningFor;
         $this->eventQueue = $output->eventQueue;
-        $this->instance = ComponentHydrator::hydrate($this->name, $this->data);
+        $this->instance = ComponentHydrator::hydrate($this->name, $this->data, $this->checksum);
     }
 
     public function __get($property)

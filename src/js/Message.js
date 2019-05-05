@@ -24,6 +24,7 @@ export default class {
             name: this.component.name,
             children: this.component.children,
             middleware: this.component.middleware,
+            checksum: this.component.checksum,
             actionQueue: this.actionQueue.map(action => {
                 // This ensures only the type & payload properties only get sent over.
                 return {
