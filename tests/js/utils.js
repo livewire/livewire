@@ -1,7 +1,7 @@
 import Livewire from 'laravel-livewire'
 
 export function mount(dom, requestInterceptor = () => {}) {
-    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
 
     new Livewire({ driver: {
         onMessage: null,
@@ -15,7 +15,7 @@ export function mount(dom, requestInterceptor = () => {}) {
 };
 
 export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
-    document.body.innerHTML = '<div wire:id="123" wire:listening-for="[&quot;'+event+'&quot;]" wire:initial-data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:listening-for="[&quot;'+event+'&quot;]" wire:data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -32,7 +32,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
 
-    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -43,7 +43,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
                 id: payload.id,
                 data: {},
                 dirtyInputs: dirtyInputs,
-                dom: '<div wire:id="123" wire:initial-data="{}">' + returnedDom + '</div>',
+                dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
             })
         },
     }})
@@ -54,7 +54,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
 export function mountWithData(dom, data) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
-    document.body.innerHTML = '<div wire:id="123" wire:initial-data="' + JSON.stringify(data).replace(/\"/g, '&quot;')+'">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:data="' + JSON.stringify(data).replace(/\"/g, '&quot;')+'">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -72,7 +72,7 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
     document.body.innerHTML = '';
     window.livewire && window.livewire.restart()
 
-    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -82,7 +82,7 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
                 id: payload.id,
                 data,
                 dirtyInputs,
-                dom: '<div wire:id="123" wire:initial-data="{}">' + returnedDom + '</div>',
+                dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
             })
         },
     }})

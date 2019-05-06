@@ -66,32 +66,24 @@ EOT;
     public function mount($name, ...$options)
     {
         $instance = $this->activate($name);
-        $id = str_random(20);
-
         $instance->mount(...$options);
         $dom = $instance->output();
+        $id = str_random(20);
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
         $checksum = Hash::make($name);
+        $middleware = encrypt($this->currentMiddlewareStack(), $serialize = true);
 
-        return new LivewireOutput([
+        return new InitialResponsePayload([
             'id' => $id,
-            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, [
-                'id' => $id,
-                'name' => $name,
-                'children' => $children,
-                'initial-data' => $properties,
-                'checksum' => $checksum,
-                'listening-for' => $events,
-                'middleware' => encrypt($this->currentMiddlewareStack(), $serialize = true),
-            ]),
-            'checksum' => $checksum,
+            'dom' => $dom,
             'data' => $properties,
+            'name' => $name,
+            'checksum' => $checksum,
             'children' => $children,
-            'dirtyInputs' => [],
             'listeningFor' => $events,
-            'eventQueue' => [],
+            'middleware' => $middleware,
         ]);
     }
 
@@ -108,41 +100,6 @@ EOT;
     public function dummyMount($id)
     {
         return "<div wire:id=\"{$id}\"></div>";
-    }
-
-    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $data)
-    {
-        $attributesFormattedForHtmlElement = collect($data)
-            ->mapWithKeys(function ($value, $key) {
-                return ["{$this->prefix}:{$key}" => $this->escapeStringForHtml($value)];
-            })->map(function ($value, $key) {
-                return sprintf('%s="%s"', $key, $value);
-            })->implode(' ');
-
-        preg_match('/<[a-zA-Z0-9\-]*([\s>])/', $dom, $matches, PREG_OFFSET_CAPTURE);
-        $positionOfFirstSpaceCharacterAfterTagName = $matches[1][1];
-
-        return substr_replace(
-            $dom,
-            $attributesFormattedForHtmlElement . ' ',
-            $positionOfFirstSpaceCharacterAfterTagName + 1,
-            0
-        );
-    }
-
-    public function escapeStringForHtml($subject)
-    {
-        if (is_string($subject) || is_numeric($subject)) {
-            return $subject;
-        }
-
-        return
-        addcslashes(
-            htmlspecialchars(
-                json_encode($subject)
-            ),
-            '\\'
-        );
     }
 
     public function test($name)

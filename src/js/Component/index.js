@@ -10,7 +10,7 @@ import store from '../store'
 class Component {
     constructor(el, connection) {
         this.id = el.getAttribute('id')
-        this.data = JSON.parse(el.getAttribute('initial-data'))
+        this.data = JSON.parse(el.getAttribute('data'))
         this.events = JSON.parse(el.getAttribute('listening-for'))
         this.children = JSON.parse(el.getAttribute('children'))
         this.middleware = el.getAttribute('middleware')
@@ -102,6 +102,7 @@ class Component {
         this.walk(el => {
             if (el.directives.missing('model')) return
             const modelValue = el.directives.get('model').value
+
 
             if (el.isFocused() && ! dirtyInputs.includes(modelValue)) return
 
