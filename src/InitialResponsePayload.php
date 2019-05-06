@@ -69,13 +69,15 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
                 return sprintf('%s="%s"', $key, $value);
             })->implode(' ');
 
-        preg_match('/<[a-zA-Z0-9\-]*([\s>])/', $dom, $matches, PREG_OFFSET_CAPTURE);
-        $positionOfFirstSpaceCharacterAfterTagName = $matches[1][1];
+        preg_match('/<([a-zA-Z0-9\-]*)/', $dom, $matches, PREG_OFFSET_CAPTURE);
+        $tagName = $matches[1][0];
+        $lengthOfTagName = strlen($tagName);
+        $positionOfFirstCharacterInTagName = $matches[1][1];
 
         return substr_replace(
             $dom,
-            $attributesFormattedForHtmlElement . ' ',
-            $positionOfFirstSpaceCharacterAfterTagName + 1,
+            ' ' . $attributesFormattedForHtmlElement,
+            $positionOfFirstCharacterInTagName + $lengthOfTagName,
             0
         );
     }
