@@ -5,6 +5,7 @@ namespace Livewire\Concerns;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use ReflectionProperty;
+use Livewire\Exceptions\ProtectedPropertyBindingException;
 
 trait InteractsWithProperties
 {
@@ -57,9 +58,13 @@ trait InteractsWithProperties
 
     public function setPropertyValue($name, $value)
     {
+        $propertyName = $this->beforeFirstDot($name);
+
+        throw_unless($this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName), ProtectedPropertyBindingException::class);
+
         if ($this->containsDots($name)) {
             return data_set(
-                $this->{$this->beforeFirstDot($name)},
+                $this->{$propertyName},
                 $this->afterFirstDot($name),
                 $value
             );
@@ -81,5 +86,15 @@ trait InteractsWithProperties
     public function afterFirstDot($subject)
     {
         return Str::after($subject, '.');
+    }
+
+    public function propertyIsPublicAndNotDefinedOnBaseClass($propertyName)
+    {
+        return collect((new \ReflectionClass($this))->getProperties(\ReflectionMethod::IS_PUBLIC))
+            ->reject(function ($property) {
+                return $property->class === self::class;
+            })
+            ->pluck('name')
+            ->search($propertyName) !== false;
     }
 }
