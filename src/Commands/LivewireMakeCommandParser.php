@@ -10,6 +10,7 @@ class LivewireMakeCommandParser
     protected $appPath;
     protected $viewPath;
     protected $component;
+    protected $componentClass;
     protected $directories;
 
     public function __construct($appPath, $viewPath, $rawCommand)
@@ -17,11 +18,12 @@ class LivewireMakeCommandParser
         $this->appPath = rtrim($appPath, DIRECTORY_SEPARATOR) . '/';
         $this->viewPath = rtrim($viewPath, DIRECTORY_SEPARATOR) . '/';
 
-        $directories = preg_split('/[\/\\\]+/', $rawCommand);
+        $directories = preg_split('/[.]+/', $rawCommand);
 
         $this->component = array_pop($directories);
+        $this->componentClass = Str::studly($this->component);
 
-        $this->directories = $directories;
+        $this->directories = array_map([Str::class, 'studly'], $directories);
     }
 
     public function component()
@@ -40,7 +42,7 @@ class LivewireMakeCommandParser
 
     public function classFile()
     {
-        return $this->component() . '.php';
+        return $this->componentClass . '.php';
     }
 
     public function classNamespace()
@@ -53,7 +55,7 @@ class LivewireMakeCommandParser
 
     public function className()
     {
-        return $this->component();
+        return $this->componentClass;
     }
 
     public function classContents()
@@ -79,7 +81,7 @@ class LivewireMakeCommandParser
 
     public function viewFile()
     {
-        return Str::kebab($this->component()) . '.blade.php';
+        return $this->component . '.blade.php';
     }
 
     public function viewName()
@@ -87,8 +89,8 @@ class LivewireMakeCommandParser
         return collect()
             ->push('livewire')
             ->concat($this->directories)
-            ->push($this->component())
             ->map([Str::class, 'kebab'])
+            ->push($this->component)
             ->implode('.');
     }
 
