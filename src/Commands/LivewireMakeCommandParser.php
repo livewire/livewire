@@ -58,7 +58,7 @@ class LivewireMakeCommandParser
 
     public function classContents()
     {
-        $template = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'LivewireComponent.stub');
+        $template = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'Component.stub');
 
         return preg_replace_array(
             ['/\[namespace\]/', '/\[class\]/', '/\[view\]/'],

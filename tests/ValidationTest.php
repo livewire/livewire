@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Livewire\LivewireComponent;
+use Livewire\Component;
 use Livewire\LivewireManager;
 
 class ValidationTest extends TestCase
@@ -49,7 +49,7 @@ class ValidationTest extends TestCase
     }
 }
 
-class ForValidation extends LivewireComponent
+class ForValidation extends Component
 {
     public $foo = 'foo';
     public $bar = '';

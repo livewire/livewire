@@ -4,7 +4,7 @@ namespace Tests;
 
 use Illuminate\Support\Facades\Hash;
 use Livewire\Connection\ComponentHydrator;
-use Livewire\LivewireComponent;
+use Livewire\Component;
 
 class ComponentHydratorTest extends TestCase
 {
@@ -61,7 +61,7 @@ class ComponentHydratorTest extends TestCase
     }
 }
 
-class ForHydration extends LivewireComponent {
+class ForHydration extends Component {
     public $foo = 'bar';
     protected $goo = 'car';
 

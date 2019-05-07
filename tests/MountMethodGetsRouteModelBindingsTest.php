@@ -3,7 +3,7 @@
 namespace Tests;
 
 use Illuminate\Support\Facades\Route;
-use Livewire\LivewireComponent;
+use Livewire\Component;
 
 class MountMethodGetsRouteModelBindingsTest extends TestCase
 {
@@ -31,7 +31,7 @@ class ModelToBeBoundStub
     }
 }
 
-class HasMountMethodWithBindingExpectationStub extends LivewireComponent {
+class HasMountMethodWithBindingExpectationStub extends Component {
     public function mount(ModelToBeBoundStub $stub)
     {
         $this->value = $stub->value;

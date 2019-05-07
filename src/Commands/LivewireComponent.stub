@@ -2,9 +2,9 @@
 
 namespace [namespace];
 
-use Livewire\LivewireComponent;
+use Livewire\Component;
 
-class [class] extends LivewireComponent
+class [class] extends Component
 {
     public function render()
     {

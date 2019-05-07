@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\View\View;
 
-abstract class LivewireComponent
+abstract class Component
 {
     use Concerns\ValidatesInput,
         Concerns\DetectsDirtyProperties,

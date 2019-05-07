@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Livewire\LivewireComponent;
+use Livewire\Component;
 use Livewire\LivewireManager;
 
 class ComponentRootHasIdAndComponentDataTest extends TestCase
@@ -19,7 +19,7 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
     }
 }
 
-class ComponentRootHasIdAndDataStub extends LivewireComponent {
+class ComponentRootHasIdAndDataStub extends Component {
     public function render()
     {
         return app('view')->make('null-view');

@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Livewire\LivewireComponent;
+use Livewire\Component;
 use Livewire\LivewireManager;
 
 class PublicPropertiesAreAvailableInTheViewTest extends TestCase
@@ -19,7 +19,7 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
     }
 }
 
-class PublicPropertiesInViewStub extends LivewireComponent {
+class PublicPropertiesInViewStub extends Component {
     public $name = 'Caleb';
 
     public function render()
