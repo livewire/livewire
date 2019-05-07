@@ -72,7 +72,7 @@ EOT;
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
-        $checksum = md5($name.config('app.key'));
+        $checksum = md5($name.$id);
 
         $middleware = encrypt($this->currentMiddlewareStack(), $serialize = true);
 

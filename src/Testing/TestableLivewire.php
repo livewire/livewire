@@ -44,7 +44,7 @@ class TestableLivewire
         $this->data = $output->data;
         $this->children = $output->children;
         $this->listeningFor = $output->listeningFor;
-        $this->instance = ComponentHydrator::hydrate($this->name, $this->data, $this->checksum);
+        $this->instance = ComponentHydrator::hydrate($this->name, $this->id, $this->data, $this->checksum);
     }
 
     public function updateComponent($output)
@@ -56,7 +56,7 @@ class TestableLivewire
         $this->dirtyInputs = $output->dirtyInputs;
         $this->listeningFor = $output->listeningFor;
         $this->eventQueue = $output->eventQueue;
-        $this->instance = ComponentHydrator::hydrate($this->name, $this->data, $this->checksum);
+        $this->instance = ComponentHydrator::hydrate($this->name, $this->id, $this->data, $this->checksum);
     }
 
     public function __get($property)

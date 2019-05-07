@@ -12,9 +12,9 @@ class ComponentHydrator
         return $instance->getAllPublicPropertiesDefinedBySubClass();
     }
 
-    public static function hydrate($component, $properties, $checksum)
+    public static function hydrate($component, $id, $properties, $checksum)
     {
-        throw_unless(md5($component.config('app.key')) === $checksum, ComponentMismatchException::class);
+        throw_unless(md5($component.$id) === $checksum, ComponentMismatchException::class);
 
         $class = app('livewire')->getComponentClass($component);
 
