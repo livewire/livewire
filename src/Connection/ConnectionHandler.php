@@ -32,9 +32,6 @@ abstract class ConnectionHandler
         $listeningFor = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
 
-        // This is here because VueJs strips whitespace and this prevents Vue from breaking Livewire.
-        $minifier = new TinyHtmlMinifier(['collapse_whitespace' => true]);
-
         return new ResponsePayload([
             // The "id" is here only as a way of relating the request to the response in js, no other reason.
             'id' => $payload['id'],

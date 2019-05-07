@@ -17,7 +17,7 @@ class ComponentHydratorTest extends TestCase
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
             ComponentHydrator::dehydrate($original),
-            Hash::make('for-hydration')
+            md5('for-hydration'.config('app.key'))
         );
 
         $this->assertNotSame($original, $reHydrated);
@@ -35,7 +35,7 @@ class ComponentHydratorTest extends TestCase
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
             ComponentHydrator::dehydrate($original),
-            Hash::make('for-hydration')
+            md5('for-hydration'.config('app.key'))
         );
 
         $this->assertEquals($reHydrated->foo, 'baz');
@@ -51,7 +51,7 @@ class ComponentHydratorTest extends TestCase
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
             ComponentHydrator::dehydrate($original),
-            Hash::make('for-hydration')
+            md5('for-hydration'.config('app.key'))
         );
 
         $this->assertEquals($reHydrated->getGoo(), 'car');

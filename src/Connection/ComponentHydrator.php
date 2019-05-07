@@ -14,7 +14,7 @@ class ComponentHydrator
 
     public static function hydrate($component, $properties, $checksum)
     {
-        throw_unless(Hash::check($component, $checksum), ComponentMismatchException::class);
+        throw_unless(md5($component.config('app.key')) === $checksum, ComponentMismatchException::class);
 
         $class = app('livewire')->getComponentClass($component);
 
