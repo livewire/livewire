@@ -4,6 +4,7 @@ namespace Livewire;
 
 use Exception;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Testing\TestableLivewire;
 
@@ -83,59 +84,41 @@ EOT;
     public function mount($name, ...$options)
     {
         $instance = $this->activate($name);
-        $id = str_random(20);
-
         $instance->mount(...$options);
         $dom = $instance->output();
+        $id = str_random(20);
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
+        $checksum = md5($name.$id);
 
-        return new LivewireOutput([
+        $middleware = encrypt($this->currentMiddlewareStack(), $serialize = true);
+
+        return new InitialResponsePayload([
             'id' => $id,
-            'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $name, $children, $events, $properties),
+            'dom' => $dom,
             'data' => $properties,
+            'name' => $name,
+            'checksum' => $checksum,
             'children' => $children,
-            'dirtyInputs' => [],
             'listeningFor' => $events,
-            'eventQueue' => [],
+            'middleware' => $middleware,
         ]);
+    }
+
+    public function currentMiddlewareStack()
+    {
+        if (app()->runningUnitTests()) {
+            // There is no "request->route()" to access in unit tests.
+            return [];
+        }
+
+        return request()->route()->gatherMiddleware();
     }
 
     public function dummyMount($id)
     {
         return "<div wire:id=\"{$id}\"></div>";
-    }
-
-    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $id, $name, $children, $events, $properties)
-    {
-        $attributesFormattedForHtmlElement = collect([
-            "{$this->prefix}:id" => $id,
-            "{$this->prefix}:name" => $name,
-            "{$this->prefix}:children" => $this->escapeStringForHtml($children),
-            "{$this->prefix}:initial-data" => $this->escapeStringForHtml($properties),
-            "{$this->prefix}:listening-for" => $this->escapeStringForHtml($events),
-        ])->map(function ($value, $key) {
-            return sprintf('%s="%s"', $key, $value);
-        })->implode(' ');
-
-        return preg_replace(
-            '/(<[a-zA-Z0-9\-]*)/',
-            sprintf('$1 %s', $attributesFormattedForHtmlElement),
-            $dom,
-            $limit = 1
-        );
-    }
-
-    public function escapeStringForHtml($subject)
-    {
-        return
-        addcslashes(
-            htmlspecialchars(
-                json_encode($subject)
-            ),
-            '\\'
-        );
     }
 
     public function test($name)

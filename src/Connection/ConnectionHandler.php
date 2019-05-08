@@ -3,14 +3,14 @@
 namespace Livewire\Connection;
 
 use Illuminate\Validation\ValidationException;
-use Livewire\LivewireOutput;
 use Livewire\TinyHtmlMinifier;
+use Livewire\ResponsePayload;
 
 abstract class ConnectionHandler
 {
     public function handle($payload)
     {
-        $instance = ComponentHydrator::hydrate($payload['name'], $payload['data']);
+        $instance = ComponentHydrator::hydrate($payload['name'], $payload['id'], $payload['data'], $payload['checksum']);
 
         $instance->setPreviouslyRenderedChildren($payload['children']);
         $instance->hashPropertiesForDirtyDetection();
@@ -32,10 +32,7 @@ abstract class ConnectionHandler
         $listeningFor = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
 
-        // This is here because VueJs strips whitespace and this prevents Vue from breaking Livewire.
-        $minifier = new TinyHtmlMinifier(['collapse_whitespace' => true]);
-
-        return new LivewireOutput([
+        return new ResponsePayload([
             // The "id" is here only as a way of relating the request to the response in js, no other reason.
             'id' => $payload['id'],
             // @todo - this breaks svgs (because of self-closing tags)

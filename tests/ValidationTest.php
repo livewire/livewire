@@ -14,8 +14,8 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidation');
 
-        $this->assertNotContains('The foo field is required', $component->dom);
-        $this->assertContains('The bar field is required', $component->dom);
+        $this->assertStringNotContainsString('The foo field is required', $component->dom);
+        $this->assertStringContainsString('The bar field is required', $component->dom);
     }
 
     /** @test */
@@ -25,7 +25,17 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidationWithCustomMessage');
 
-        $this->assertContains('Custom Message', $component->dom);
+        $this->assertStringContainsString('Custom Message', $component->dom);
+    }
+
+    /** @test */
+    function validate_component_properties_with_custom_attribute()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component->runAction('runValidationWithCustomAttribute');
+
+        $this->assertStringContainsString('The foobar field is required.', $component->dom);
     }
 
     /** @test */
@@ -35,11 +45,12 @@ class ValidationTest extends TestCase
 
         $component->runAction('runNestedValidation');
 
-        $this->assertContains( 'emails.1 must be a valid email address.', $component->dom);
+        $this->assertStringContainsString('emails.1 must be a valid email address.', $component->dom);
     }
 }
 
-class ForValidation extends LivewireComponent {
+class ForValidation extends LivewireComponent
+{
     public $foo = 'foo';
     public $bar = '';
     public $emails = ['foo@bar.com', 'invalid-email'];
@@ -57,6 +68,13 @@ class ForValidation extends LivewireComponent {
         $this->validate([
             'bar' => 'required',
         ], ['required' => 'Custom Message']);
+    }
+
+    public function runValidationWithCustomAttribute()
+    {
+        $this->validate([
+            'bar' => 'required',
+        ], [], ['bar' => 'foobar']);
     }
 
     public function runNestedValidation()

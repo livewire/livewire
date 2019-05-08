@@ -388,7 +388,7 @@ export default function morphdomFactory(morphAttrs) {
             }
 
             var specialElHandler = specialElHandlers[fromEl.nodeName];
-            if (specialElHandler) {
+            if (specialElHandler && ! fromEl.hasAttribute('wire:model')) {
                 specialElHandler(fromEl, toEl);
             }
         } // END: morphEl(...)

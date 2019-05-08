@@ -2,8 +2,9 @@
 
 namespace Tests;
 
-use Livewire\LivewireComponent;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Connection\ComponentHydrator;
+use Livewire\LivewireComponent;
 
 class ComponentHydratorTest extends TestCase
 {
@@ -15,7 +16,9 @@ class ComponentHydratorTest extends TestCase
 
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
-            ComponentHydrator::dehydrate($original)
+            $original->id,
+            ComponentHydrator::dehydrate($original),
+            md5('for-hydration'.$original->id)
         );
 
         $this->assertNotSame($original, $reHydrated);
@@ -32,7 +35,9 @@ class ComponentHydratorTest extends TestCase
 
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
-            ComponentHydrator::dehydrate($original)
+            $original->id,
+            ComponentHydrator::dehydrate($original),
+            md5('for-hydration'.$original->id)
         );
 
         $this->assertEquals($reHydrated->foo, 'baz');
@@ -47,7 +52,9 @@ class ComponentHydratorTest extends TestCase
 
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
-            ComponentHydrator::dehydrate($original)
+            $original->id,
+            ComponentHydrator::dehydrate($original),
+            md5('for-hydration'.$original->id)
         );
 
         $this->assertEquals($reHydrated->getGoo(), 'car');

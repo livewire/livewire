@@ -2,6 +2,8 @@
 
 namespace Livewire\Concerns;
 
+use Livewire\Exceptions\NonPublicComponentMethodCall;
+
 trait HandlesActions
 {
     public function syncInput($name, $value)
@@ -49,8 +51,20 @@ trait HandlesActions
                 break;
 
             default:
+                throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), NonPublicComponentMethodCall::class);
+
                 $this->{$method}(...$params);
                 break;
         }
+    }
+
+    protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)
+    {
+        return collect((new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC))
+            ->reject(function ($method) {
+                return $method->class === self::class;
+            })
+            ->pluck('name')
+            ->search($methodName) !== false;
     }
 }

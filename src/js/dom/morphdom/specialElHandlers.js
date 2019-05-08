@@ -29,9 +29,9 @@ export default {
         syncBooleanAttrProp(fromEl, toEl, 'checked');
         syncBooleanAttrProp(fromEl, toEl, 'disabled');
 
-        // if (fromEl.value !== toEl.value) {
-        //     fromEl.value = toEl.value;
-        // }
+        if (fromEl.value !== toEl.value) {
+            fromEl.value = toEl.value;
+        }
 
         if (!hasAttributeNS(toEl, null, 'value')) {
             fromEl.removeAttribute('value');
@@ -40,9 +40,9 @@ export default {
 
     TEXTAREA: function(fromEl, toEl) {
         var newValue = toEl.value;
-        // if (fromEl.value !== newValue) {
-        //     fromEl.value = newValue;
-        // }
+        if (fromEl.value !== newValue) {
+            fromEl.value = newValue;
+        }
 
         var firstChild = fromEl.firstChild;
         if (firstChild) {
