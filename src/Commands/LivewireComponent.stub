@@ -6,8 +6,6 @@ use Livewire\LivewireComponent;
 
 class [class] extends LivewireComponent
 {
-    public static $alias = '[alias]';
-
     public function render()
     {
         return view('[view]');

@@ -12,7 +12,6 @@ class LivewireManager
 {
     protected $prefix = 'wire';
     protected $componentAliases = [];
-    protected $aliasesAutoDiscoveryPerformed = false;
 
     public function prefix($prefix = null)
     {
@@ -27,28 +26,14 @@ class LivewireManager
 
     public function getComponentClass($alias)
     {
-        if (! isset($this->componentAliases[$alias]) && ! $this->aliasesAutoDiscoveryPerformed) {
-            $this->performAliasesAutoDiscovery();
-        }
+        $class = $this->componentAliases[$alias]
+            ?? app()->make(LivewireComponentsFinder::class)->find($alias);
 
-        throw_unless(isset($this->componentAliases[$alias]), new Exception(
-            "Component not registered: [{$alias}]"
+        throw_unless($class, new Exception(
+            "Unable to find component: [{$alias}]"
         ));
 
-        return $this->componentAliases[$alias];
-    }
-
-    protected function performAliasesAutoDiscovery()
-    {
-        if ($this->aliasesAutoDiscoveryPerformed) {
-            return;
-        }
-
-        foreach ((new LivewireComponentsFinder)->getDeclaredAliases() as $alias => $class) {
-            $this->component($alias, $class);
-        }
-
-        $this->aliasesAutoDiscoveryPerformed = true;
+        return $class;
     }
 
     public function activate($component)

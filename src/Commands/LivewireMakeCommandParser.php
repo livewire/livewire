@@ -61,8 +61,8 @@ class LivewireMakeCommandParser
         $template = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'LivewireComponent.stub');
 
         return preg_replace_array(
-            ['/\[namespace\]/', '/\[class\]/', '/\[view\]/', '/\[alias\]/'],
-            [$this->classNamespace(), $this->className(), $this->viewName(), $this->componentAlias()],
+            ['/\[namespace\]/', '/\[class\]/', '/\[view\]/'],
+            [$this->classNamespace(), $this->className(), $this->viewName()],
             $template
         );
     }
@@ -101,16 +101,6 @@ class LivewireMakeCommandParser
             $this->wisdomOfTheTao(),
             $template
         );
-    }
-
-    public function componentAlias()
-    {
-        return collect()
-            ->push('livewire')
-            ->concat($this->directories)
-            ->push($this->component)
-            ->map([Str::class, 'kebab'])
-            ->implode('.');
     }
 
     public function wisdomOfTheTao()
