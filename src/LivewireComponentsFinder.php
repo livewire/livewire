@@ -2,10 +2,10 @@
 
 namespace Livewire;
 
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Str;
-use Livewire\LivewireComponent;
+use Exception;
 use ReflectionClass;
+use Illuminate\Support\Str;
+use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Finder\SplFileInfo;
 
 class LivewireComponentsFinder
@@ -42,7 +42,23 @@ class LivewireComponentsFinder
 
     public function build()
     {
-        return dd($this->getClassNames());
+        $this->manifest = $this->getClassNames()
+            ->mapWithKeys(function ($class) {
+                return [(new $class)->name() => $class];
+            })->toArray();
+
+        $this->write($this->manifest);
+    }
+
+    protected function write(array $manifest)
+    {
+        if (! is_writable(dirname($this->manifestPath))) {
+            throw new Exception('The '.dirname($this->manifestPath).' directory must be present and writable.');
+        }
+
+        $this->files->replace(
+            $this->manifestPath, '<?php return '.var_export($manifest, true).';'
+        );
     }
 
     public function getClassNames()
@@ -56,9 +72,8 @@ class LivewireComponentsFinder
                     );
             })
             ->filter(function (string $class) {
-                return is_subclass_of($class, LivewireComponent::class) &&
+                return is_subclass_of($class, Component::class) &&
                     ! (new ReflectionClass($class))->isAbstract();
-            })
-            ->toArray();
+            });
     }
 }

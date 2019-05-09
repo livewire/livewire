@@ -4,9 +4,8 @@ namespace Livewire;
 
 use Exception;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Hash;
-use Livewire\Connection\ComponentHydrator;
 use Livewire\Testing\TestableLivewire;
+use Livewire\Connection\ComponentHydrator;
 
 class LivewireManager
 {
@@ -40,7 +39,7 @@ class LivewireManager
     {
         $componentClass = $this->getComponentClass($component);
 
-        throw_unless(class_exists($this->componentAliases[$component]), new Exception(
+        throw_unless(class_exists($componentClass), new Exception(
             "Component [{$component}] class not found: [{$componentClass}]"
         ));
 
