@@ -5,7 +5,7 @@ namespace Tests;
 use Livewire\Exceptions\ComponentMismatchException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
-use Livewire\LivewireComponent;
+use Livewire\Component;
 use Mockery\Exception\BadMethodCallException;
 
 class ComponentsAreSecureTest extends TestCase
@@ -45,7 +45,7 @@ class ComponentsAreSecureTest extends TestCase
     }
 }
 
-class SecurityTargetStub extends LivewireComponent {
+class SecurityTargetStub extends Component {
     protected $protectedProperty = 'foo';
 
     protected function protectedMethod()

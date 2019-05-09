@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Livewire\LivewireComponent;
+use Livewire\Component;
 
 class NestingComponentsTest extends TestCase
 {
@@ -58,7 +58,7 @@ class NestingComponentsTest extends TestCase
     }
 }
 
-class ParentComponentForNestingChildStub extends LivewireComponent {
+class ParentComponentForNestingChildStub extends Component {
     public $child = 'foo';
 
     public function render()
@@ -67,7 +67,7 @@ class ParentComponentForNestingChildStub extends LivewireComponent {
     }
 }
 
-class ParentComponentForNestingChildrenStub extends LivewireComponent {
+class ParentComponentForNestingChildrenStub extends Component {
     public $children = ['foo'];
 
     public function setChildren($children)
@@ -81,7 +81,7 @@ class ParentComponentForNestingChildrenStub extends LivewireComponent {
     }
 }
 
-class ChildComponentForNestingStub extends LivewireComponent {
+class ChildComponentForNestingStub extends Component {
     public $name;
 
     public function mount($name)

@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Livewire\LivewireComponent;
+use Livewire\Component;
 use Livewire\LivewireManager;
 use Livewire\Connection\ComponentHydrator;
 
@@ -38,7 +38,7 @@ class ComponentEventsTest extends TestCase
     }
 }
 
-class ReceivesEvents extends LivewireComponent {
+class ReceivesEvents extends Component {
     public $foo;
 
     protected $listeners = ['bar' => 'onBar'];

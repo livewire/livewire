@@ -3,7 +3,7 @@
 namespace Tests;
 
 use Livewire\Exceptions\ComponentMismatchException;
-use Livewire\LivewireComponent;
+use Livewire\Component;
 
 class SubsequentComponentRequestsMustMatchOriginalComponentTest extends TestCase
 {
@@ -24,7 +24,7 @@ class SubsequentComponentRequestsMustMatchOriginalComponentTest extends TestCase
     }
 }
 
-class SafeComponentStub extends LivewireComponent {
+class SafeComponentStub extends Component {
     public function someMethod()
     {
         return;
@@ -36,7 +36,7 @@ class SafeComponentStub extends LivewireComponent {
     }
 }
 
-class UnsafeComponentStub extends LivewireComponent {
+class UnsafeComponentStub extends Component {
     public function someMethod()
     {
         throw new \Exception('Should not be able to acess me!');

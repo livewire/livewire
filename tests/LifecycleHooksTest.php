@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Livewire\LivewireComponent;
+use Livewire\Component;
 use Livewire\LivewireManager;
 
 class LifecycleHooksTest extends TestCase
@@ -42,7 +42,7 @@ class LifecycleHooksTest extends TestCase
     }
 }
 
-class ForLifecycleHooks extends LivewireComponent {
+class ForLifecycleHooks extends Component {
     public $foo;
     public $lifecycles = [
         'mount' => false,

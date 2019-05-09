@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Livewire\LivewireComponent;
+use Livewire\Component;
 use Livewire\LivewireManager;
 
 class DataBindingTest extends TestCase
@@ -84,7 +84,7 @@ class DataBindingTest extends TestCase
     }
 }
 
-class DataBindingStub extends LivewireComponent {
+class DataBindingStub extends Component {
     public $foo;
     public $propertyWithHook;
     public $arrayProperty = ['foo', 'bar'];
