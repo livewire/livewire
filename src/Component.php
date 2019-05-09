@@ -20,9 +20,19 @@ abstract class Component
     public $id;
     public $redirectTo;
 
+    protected $name;
+
     protected $lifecycleHooks = [
         'mount', 'updating', 'updated',
     ];
+
+    public function name()
+    {
+        return $this->name ?: collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
+            ->diff(['App', 'Http', 'Livewire'])
+            ->map([Str::class, 'kebab'])
+            ->implode('.');
+    }
 
     public function redirect($url)
     {

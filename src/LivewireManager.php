@@ -4,9 +4,8 @@ namespace Livewire;
 
 use Exception;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Hash;
-use Livewire\Connection\ComponentHydrator;
 use Livewire\Testing\TestableLivewire;
+use Livewire\Connection\ComponentHydrator;
 
 class LivewireManager
 {
@@ -26,18 +25,21 @@ class LivewireManager
 
     public function getComponentClass($alias)
     {
-        throw_unless(isset($this->componentAliases[$alias]), new Exception(
-            "Component not registered: [{$alias}]"
+        $class = $this->componentAliases[$alias]
+            ?? app()->make(LivewireComponentsFinder::class)->find($alias);
+
+        throw_unless($class, new Exception(
+            "Unable to find component: [{$alias}]"
         ));
 
-        return $this->componentAliases[$alias];
+        return $class;
     }
 
     public function activate($component)
     {
         $componentClass = $this->getComponentClass($component);
 
-        throw_unless(class_exists($this->componentAliases[$component]), new Exception(
+        throw_unless(class_exists($componentClass), new Exception(
             "Component [{$component}] class not found: [{$componentClass}]"
         ));
 
