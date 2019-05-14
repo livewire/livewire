@@ -32,10 +32,23 @@ export default {
         const allEls = this.loadingEls.concat(refEls)
 
         allEls.forEach(el => {
-            if (el.remove) {
-                el.el.classList.remove(el.value)
+            const directive = el.el.directives.get('loading')
+            el = el.el.el // I'm so sorry @todo
+
+            if (directive.modifiers.includes('class')) {
+                if (directive.modifiers.includes('remove')) {
+                    el.classList.remove(directive.value)
+                } else {
+                    el.classList.add(directive.value)
+                }
+            } else if (directive.modifiers.includes('attr')) {
+                if (directive.modifiers.includes('remove')) {
+                    el.removeAttribute(directive.value)
+                } else {
+                    el.setAttribute(directive.value, true)
+                }
             } else {
-                el.el.classList.add(el.value)
+                el.style.display = 'inline-block'
             }
         })
 
@@ -43,12 +56,6 @@ export default {
     },
 
     unsetLoading(loadingEls) {
-        loadingEls.forEach(el => {
-            if (el.remove) {
-                el.el.classList.add(el.value)
-            } else {
-                el.el.classList.remove(el.value)
-            }
-        })
+        // No need to "unset" loading because the dom-diffing will automatically reverse any changes.
     },
 }

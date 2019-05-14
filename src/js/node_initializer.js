@@ -9,7 +9,7 @@ export default {
         // Parse out "direcives", "modifiers", and "value" from livewire attributes.
         el.directives.all().forEach(directive => {
             switch (directive.type) {
-                case 'loading-class':
+                case 'loading':
                     this.registerElementForLoading(el, directive, component)
                     break;
 
@@ -30,8 +30,8 @@ export default {
     },
 
     registerElementForLoading(el, directive, component) {
-        const refName = el.directives.get('loading-target')
-            && el.directives.get('loading-target').value
+        const refName = el.directives.get('target')
+            && el.directives.get('target').value
 
         component.addLoadingEl(
             el,

@@ -5,6 +5,7 @@ namespace Livewire\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Console\DetectsApplicationNamespace;
 use Illuminate\Support\Facades\File;
+use Livewire\LivewireComponentsFinder;
 
 class LivewireMakeCommand extends Command
 {
@@ -29,6 +30,8 @@ class LivewireMakeCommand extends Command
 
         $class = $this->createClass($force);
         $view = $this->createView($force);
+
+        $this->refreshComponentAutodiscovery();
 
         ($class && $view) && $this->info("👍  Files created:");
         $class && $this->info("-> [{$class}]");
@@ -72,5 +75,10 @@ class LivewireMakeCommand extends Command
         if ( ! File::isDirectory(dirname($path))) {
             File::makeDirectory(dirname($path), 0777, $recursive = true, $force = true);
         }
+    }
+
+    public function refreshComponentAutodiscovery()
+    {
+        app(LivewireComponentsFinder::class)->build();
     }
 }
