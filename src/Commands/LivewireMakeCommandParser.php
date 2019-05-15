@@ -96,7 +96,7 @@ class LivewireMakeCommandParser
 
     public function viewContents()
     {
-        $template = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'livewire-view.stub');
+        $template = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'view.stub');
 
         return preg_replace(
             '/\[quote\]/',
