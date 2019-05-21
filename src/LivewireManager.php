@@ -46,16 +46,18 @@ class LivewireManager
         return new $componentClass;
     }
 
-    public function scripts($options = null)
+    public function assets($options = null)
     {
         $options = $options ? json_encode($options) : '';
-        $jsInclude = File::get(__DIR__ . '/../dist/livewire.js');
+        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
+        $versionedFileName = $manifest['/livewire.js'];
+
         $csrf = csrf_token();
 
         return <<<EOT
-<script>
-    {$jsInclude}
-</script>
+<!-- Livewire Assets-->
+<style>[wire\:loading] { display: none; }</style>
+<script src="/livewire{$versionedFileName}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         window.livewire = new Livewire({$options});
