@@ -19,9 +19,7 @@ abstract class Component
 
     public $id;
     public $redirectTo;
-
     protected $name;
-
     protected $lifecycleHooks = [
         'mount', 'updating', 'updated',
     ];
@@ -65,6 +63,7 @@ abstract class Component
             in_array($method, $this->lifecycleHooks)
             || Str::startsWith($method, ['updating', 'updated'])
         ) {
+            // Eat calls to the lifecycle hooks if the dev didn't define them.
             return;
         }
 

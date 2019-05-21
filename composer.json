@@ -9,14 +9,8 @@
         }
     ],
     "require": {
-        "cboden/ratchet": "^0.4.1",
-        "symfony/dom-crawler": "^4.2",
         "illuminate/support": "^5.7",
-        "illuminate/validation": "^5.7",
-        "yosymfony/resource-watcher": "^2.0",
-        "symfony/process": "^4.2",
-        "erusev/parsedown": "^1.7",
-        "calebporzio/gitdown": "^1.3"
+        "illuminate/validation": "^5.7"
     },
     "extra": {
         "laravel": {
