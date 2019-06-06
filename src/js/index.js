@@ -20,6 +20,10 @@ class Livewire {
         this.components.emit(event, ...params)
     }
 
+    on(event, callback) {
+        this.components.on(event, callback)
+    }
+
     restart() {
         this.stop()
         this.start()
