@@ -24,6 +24,22 @@ abstract class Component
         'mount', 'updating', 'updated',
     ];
 
+    public function __construct()
+    {
+        $this->initializeTraits();
+    }
+
+    protected function initializeTraits()
+    {
+        $class = static::class;
+
+        foreach (class_uses_recursive($class) as $trait) {
+            if (method_exists($class, $method = 'initialize' . class_basename($trait))) {
+                $this->{$method}();
+            }
+        }
+    }
+
     public function name()
     {
         return $this->name ?: collect(explode('.', str_replace(['/', '\\'], '.', static::class)))

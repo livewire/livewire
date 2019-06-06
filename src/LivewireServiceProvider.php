@@ -28,6 +28,7 @@ class LivewireServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerRoutes();
+        $this->registerViews();
         $this->registerCommands();
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
@@ -64,7 +65,11 @@ class LivewireServiceProvider extends ServiceProvider
                 return response(200);
             })->middleware('web');
         }
+    }
 
+    public function registerViews()
+    {
+        $this->loadViewsFrom(__DIR__.DIRECTORY_SEPARATOR.'views', 'livewire');
     }
 
     public function registerCommands()
