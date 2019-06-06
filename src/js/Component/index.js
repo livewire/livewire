@@ -11,7 +11,7 @@ class Component {
     constructor(el, connection) {
         this.id = el.getAttribute('id')
         this.data = JSON.parse(el.getAttribute('data'))
-        this.events = JSON.parse(el.getAttribute('listening-for'))
+        this.events = JSON.parse(el.getAttribute('listeningfor'))
         this.children = JSON.parse(el.getAttribute('children'))
         this.middleware = el.getAttribute('middleware')
         this.checksum = el.getAttribute('checksum')
