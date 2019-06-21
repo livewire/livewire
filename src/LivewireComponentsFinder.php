@@ -24,7 +24,7 @@ class LivewireComponentsFinder
 
     public function find($alias)
     {
-        return $this->getManifest()[$alias] ?? null;
+        return $this->getManifest()[Str::kebab($alias)] ?? null;
     }
 
     public function getManifest()
