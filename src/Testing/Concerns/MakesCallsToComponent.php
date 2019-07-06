@@ -16,6 +16,11 @@ trait MakesCallsToComponent
         return $this;
     }
 
+    public function call($method, ...$parameters)
+    {
+        return $this->runAction($method, ...$parameters);
+    }
+
     public function runAction($method, ...$parameters)
     {
         $this->sendMessage('callMethod', [
