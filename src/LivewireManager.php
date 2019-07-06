@@ -87,7 +87,7 @@ EOT;
             'name' => $name,
             'checksum' => $checksum,
             'children' => $children,
-            'listeningFor' => $events,
+            'events' => $events,
             'middleware' => $middleware,
         ]);
     }

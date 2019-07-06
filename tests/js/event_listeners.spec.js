@@ -42,33 +42,33 @@ describe('test Laravel Echo', () => {
 
     test('public echo channel is created and reacts', async () => {
         expect(mockEcho.channelExist('foo')).toBe(false)
-    
+
         var payload
         mountWithEvent('<div></div>', ['echo:foo,bar'], i => payload = i)
-    
+
         expect(mockEcho.channelExist('foo')).toBe(true)
         expect(mockEcho.getChannel('foo').eventExist('bar')).toBe(true)
-    
+
         mockEcho.getChannel('foo').broadcast('bar', 'baz')
-    
+
         await wait(() => {
             expect(payload.actionQueue[0].type).toEqual('fireEvent')
             expect(payload.actionQueue[0].payload.event).toEqual('echo:foo,bar')
             expect(payload.actionQueue[0].payload.params).toEqual(['baz'])
         })
     })
-    
+
     test('private echo channel is created and reacts', async () => {
         expect(mockEcho.privateChannelExist('foo')).toBe(false)
-    
+
         var payload
         mountWithEvent('<div></div>', ['echo-private:foo,bar'], i => payload = i)
-    
+
         expect(mockEcho.privateChannelExist('foo')).toBe(true)
         expect(mockEcho.getPrivateChannel('foo').eventExist('bar')).toBe(true)
-    
+
         mockEcho.getPrivateChannel('foo').broadcast('bar', 'baz')
-    
+
         await wait(() => {
             expect(payload.actionQueue[0].type).toEqual('fireEvent')
             expect(payload.actionQueue[0].payload.event).toEqual('echo-private:foo,bar')
@@ -79,14 +79,14 @@ describe('test Laravel Echo', () => {
 
     test('presence echo channel is created and reacts', async () => {
         expect(mockEcho.presenceChannelExist('foo')).toBe(false)
-    
+
         var payload
         mountWithEvent('<div></div>', ['echo-presence:foo,here'], i => payload = i)
-    
+
         expect(mockEcho.presenceChannelExist('foo')).toBe(true)
 
         mockEcho.getPresenceChannel('foo').iJoin({id: 1, name: 'Caleb'})
-    
+
         await wait(() => {
             expect(payload.actionQueue[0].type).toEqual('fireEvent')
             expect(payload.actionQueue[0].payload.event).toEqual('echo-presence:foo,here')
@@ -96,10 +96,10 @@ describe('test Laravel Echo', () => {
 
     test('notification echo channel is created', async () => {
         expect(mockEcho.privateChannelExist('foo')).toBe(false)
-    
+
         var payload
         mountWithEvent('<div></div>', ['echo-notification:foo'], i => payload = i)
-    
+
         expect(mockEcho.privateChannelExist('foo')).toBe(true)
     })
 })

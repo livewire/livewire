@@ -15,7 +15,7 @@ export function mount(dom, requestInterceptor = () => {}) {
 };
 
 export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
-    document.body.innerHTML = '<div wire:id="123" wire:listening-for="[&quot;'+event+'&quot;]" wire:data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:events="[&quot;'+event+'&quot;]" wire:data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,

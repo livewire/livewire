@@ -27,6 +27,11 @@ trait MakesCallsToComponent
         return $this;
     }
 
+    public function set($name, $value)
+    {
+        return $this->updateProperty($name, $value);
+    }
+
     public function updateProperty($name, $value)
     {
         $this->sendMessage('syncInput', [

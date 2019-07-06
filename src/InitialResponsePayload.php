@@ -15,7 +15,7 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
     public $checksum;
     public $children;
     public $middleware;
-    public $listeningFor;
+    public $events;
 
     public function __construct($data)
     {
@@ -26,7 +26,7 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
         $this->checksum = $data['checksum'];
         $this->children = $data['children'];
         $this->middleware = $data['middleware'];
-        $this->listeningFor = $data['listeningFor'];
+        $this->events = $data['events'];
     }
 
     public function toHtml()
@@ -49,7 +49,7 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
             'checksum' => $this->checksum,
             'children' => $this->children,
             'middleware' => $this->middleware,
-            'listeningFor' => $this->listeningFor,
+            'events' => $this->events,
         ];
     }
 

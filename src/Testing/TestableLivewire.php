@@ -14,10 +14,11 @@ class TestableLivewire
     public $dom;
     public $data;
     public $dirtyInputs;
-    public $listeningFor;
+    public $events;
 
     use Concerns\HasFunLittleUtilities,
-        Concerns\MakesCallsToComponent;
+        Concerns\MakesCallsToComponent,
+        Concerns\MakesAssertions;
 
     public function __construct($name, $prefix)
     {
@@ -43,7 +44,7 @@ class TestableLivewire
         $this->dom = $output->toHtml();
         $this->data = $output->data;
         $this->children = $output->children;
-        $this->listeningFor = $output->listeningFor;
+        $this->events = $output->events;
         $this->instance = ComponentHydrator::hydrate($this->name, $this->id, $this->data, $this->checksum);
     }
 
@@ -54,7 +55,8 @@ class TestableLivewire
         $this->data = $output->data;
         $this->children = $output->children;
         $this->dirtyInputs = $output->dirtyInputs;
-        $this->listeningFor = $output->listeningFor;
+        $this->events = $output->events;
+        $this->redirectTo = $output->redirectTo;
         $this->eventQueue = $output->eventQueue;
         $this->instance = ComponentHydrator::hydrate($this->name, $this->id, $this->data, $this->checksum);
     }

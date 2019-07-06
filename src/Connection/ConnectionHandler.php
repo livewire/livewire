@@ -3,7 +3,6 @@
 namespace Livewire\Connection;
 
 use Illuminate\Validation\ValidationException;
-use Livewire\TinyHtmlMinifier;
 use Livewire\ResponsePayload;
 
 abstract class ConnectionHandler
@@ -23,26 +22,20 @@ abstract class ConnectionHandler
             $errors = $e->validator->errors();
         }
 
-        if ($instance->redirectTo) {
-            return ['redirectTo' => $instance->redirectTo];
-        }
-
         $dom = $instance->output($errors ?? null);
         $data = ComponentHydrator::dehydrate($instance);
-        $listeningFor = $instance->getEventsBeingListenedFor();
+        $events = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
 
         return new ResponsePayload([
-            // The "id" is here only as a way of relating the request to the response in js, no other reason.
             'id' => $payload['id'],
-            // @todo - this breaks svgs (because of self-closing tags)
-            // 'dom' => $minifier->minify($dom),
             'dom' => $dom,
             'dirtyInputs' => $instance->getDirtyProperties(),
             'children' => $instance->getRenderedChildren(),
             'eventQueue' => $eventQueue,
-            'listeningFor' => $listeningFor,
+            'events' => $events,
             'data' => $data,
+            'redirectTo' => $instance->redirectTo ?? false,
         ]);
     }
 

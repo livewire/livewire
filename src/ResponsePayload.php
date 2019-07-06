@@ -12,8 +12,9 @@ class ResponsePayload implements Arrayable, Jsonable
     public $data;
     public $children;
     public $eventQueue;
+    public $redirectTo;
     public $dirtyInputs;
-    public $listeningFor;
+    public $events;
 
     public function __construct($data)
     {
@@ -22,8 +23,9 @@ class ResponsePayload implements Arrayable, Jsonable
         $this->data = $data['data'];
         $this->children = $data['children'];
         $this->eventQueue = $data['eventQueue'];
+        $this->redirectTo = $data['redirectTo'];
         $this->dirtyInputs = $data['dirtyInputs'];
-        $this->listeningFor = $data['listeningFor'];
+        $this->events = $data['events'];
     }
 
     public function toArray()
@@ -34,8 +36,9 @@ class ResponsePayload implements Arrayable, Jsonable
             'data' => $this->data,
             'children' => $this->children,
             'eventQueue' => $this->eventQueue,
+            'redirectTo' => $this->redirectTo,
             'dirtyInputs' => $this->dirtyInputs,
-            'listeningFor' => $this->listeningFor,
+            'events' => $this->events,
         ];
     }
 

@@ -42,7 +42,7 @@ export default class {
             children: payload.children,
             dirtyInputs: payload.dirtyInputs,
             eventQueue: payload.eventQueue,
-            listeningFor: payload.listeningFor,
+            events: payload.events,
             data: payload.data,
             redirectTo: payload.redirectTo,
         }
