@@ -25,12 +25,13 @@ if (! isset(\$_instance)) {
     \$dom = \Livewire\Livewire::mount({$expression})->toHtml();
 } elseif (\$_instance->childHasBeenRendered($cachedKey)) {
     \$componentId = \$_instance->getRenderedChildComponentId($cachedKey);
-    \$dom = \Livewire\Livewire::dummyMount(\$componentId);
+    \$componentTag = \$_instance->getRenderedChildComponentTagName($cachedKey);
+    \$dom = \Livewire\Livewire::dummyMount(\$componentId, \$componentTag);
     \$_instance->preserveRenderedChild($cachedKey);
 } else {
     \$response = \Livewire\Livewire::mount({$expression});
     \$dom = \$response->toHtml();
-    \$_instance->logRenderedChild($cachedKey, \$response->id);
+    \$_instance->logRenderedChild($cachedKey, \$response->id, \$response->getRootElementTagName());
 }
 echo \$dom;
 ?>

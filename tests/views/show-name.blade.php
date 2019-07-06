@@ -1,1 +1,1 @@
-<div>{{ $name }}</div>
+<span>{{ $name }}</span>

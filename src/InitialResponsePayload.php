@@ -31,7 +31,10 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
 
     public function toHtml()
     {
-        return $this->injectComponentDataAsHtmlAttributesInRootElement($this->dom, $this->toArray());
+        return $this->injectComponentDataAsHtmlAttributesInRootElement(
+            $this->dom,
+            $this->toArray()
+        );
     }
 
     public function __toString()
@@ -95,5 +98,12 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
             ),
             '\\'
         );
+    }
+
+    public function getRootElementTagName()
+    {
+        preg_match('/<([a-zA-Z0-9\-]*)/', $this->dom, $matches, PREG_OFFSET_CAPTURE);
+
+        return $matches[1][0];
     }
 }

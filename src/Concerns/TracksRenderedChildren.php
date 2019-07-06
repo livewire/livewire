@@ -9,12 +9,17 @@ trait TracksRenderedChildren
 
     public function getRenderedChildComponentId($id)
     {
-        return $this->previouslyRenderedChildren[$id];
+        return $this->previouslyRenderedChildren[$id]['id'];
     }
 
-    public function logRenderedChild($id, $componentId)
+    public function getRenderedChildComponentTagName($id)
     {
-        $this->renderedChildren[$id] = $componentId;
+        return $this->previouslyRenderedChildren[$id]['tag'];
+    }
+
+    public function logRenderedChild($id, $componentId, $tagName)
+    {
+        $this->renderedChildren[$id] = ['id' => $componentId, 'tag' => $tagName];
     }
 
     public function preserveRenderedChild($id)

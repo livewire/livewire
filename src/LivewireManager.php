@@ -102,9 +102,9 @@ EOT;
         return request()->route()->gatherMiddleware();
     }
 
-    public function dummyMount($id)
+    public function dummyMount($id, $tagName)
     {
-        return "<div wire:id=\"{$id}\"></div>";
+        return "<{$tagName} wire:id=\"{$id}\"></{$tagName}>";
     }
 
     public function test($name)

@@ -40,6 +40,26 @@ class NestingComponentsTest extends TestCase
     }
 
     /** @test */
+    function stub_element_root_element_matches_original_child_component_root_element()
+    {
+        app('livewire')->component('parent', ParentComponentForNestingChildStub::class);
+        app('livewire')->component('child', ChildComponentForNestingStub::class);
+        $component = app('livewire')->test('parent');
+
+        $this->assertTrue(str_contains(
+            $component->dom,
+            'span'
+        ));
+
+        $component->runAction('$refresh');
+
+        $this->assertTrue(str_contains(
+            $component->dom,
+            'span'
+        ));
+    }
+
+    /** @test */
     function parent_tracks_subsequent_renders_of_children_inside_a_loop()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildrenStub::class);

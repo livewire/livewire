@@ -2,13 +2,28 @@
 
 namespace Tests;
 
-use Orchestra\Testbench\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Artisan;
 use Livewire\LivewireServiceProvider;
-use Illuminate\View\ViewServiceProvider;
-use Livewire\Facade;
+use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
 {
+    public static $viewCacheCleared = false;
+
+    public function setUp(): void
+    {
+        $this->afterApplicationCreated(function () {
+            // Clear TestBench's Blade view cache before any test suite run.
+            if (! static::$viewCacheCleared) {
+                Artisan::call('view:clear');
+
+                static::$viewCacheCleared = true;
+            }
+        });
+
+        parent::setUp();
+    }
+
     protected function getPackageProviders($app)
     {
         return [
