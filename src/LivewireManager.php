@@ -3,8 +3,9 @@
 namespace Livewire;
 
 use Exception;
-use Livewire\Testing\TestableLivewire;
 use Livewire\Connection\ComponentHydrator;
+use Livewire\Exceptions\ComponentNotFoundException;
+use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
@@ -24,10 +25,12 @@ class LivewireManager
 
     public function getComponentClass($alias)
     {
-        $class = $this->componentAliases[$alias]
-            ?? app()->make(LivewireComponentsFinder::class)->find($alias);
+        $finder = app()->make(LivewireComponentsFinder::class);
 
-        throw_unless($class, new Exception(
+        $class = $this->componentAliases[$alias]
+            ?? $finder->find($alias);
+
+        throw_unless($class, new ComponentNotFoundException(
             "Unable to find component: [{$alias}]"
         ));
 

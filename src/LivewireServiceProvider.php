@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\ServiceProvider;
@@ -51,7 +52,7 @@ class LivewireServiceProvider extends ServiceProvider
         });
 
         // Don't register route for non-Livewire calls.
-        if (request()->headers->get('X-Livewire') == true) {
+        if ($this->isLivewireRequest()) {
             // This should be the middleware stack of the original request.
             $middleware = decrypt(request('middleware'), $unserialize = true);
 
@@ -78,6 +79,12 @@ class LivewireServiceProvider extends ServiceProvider
             $this->commands([
                 LivewireMakeCommand::class,
             ]);
+
+            Artisan::command('livewire:discover', function () {
+                app(LivewireComponentsFinder::class)->build();
+
+                $this->info('Livewire auto-discovery manifest rebuilt!');
+            });
         }
     }
 
@@ -94,5 +101,10 @@ class LivewireServiceProvider extends ServiceProvider
         });
 
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
+    }
+
+    public function isLivewireRequest()
+    {
+        return request()->headers->get('X-Livewire') == true;
     }
 }

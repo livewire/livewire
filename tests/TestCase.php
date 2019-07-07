@@ -9,16 +9,14 @@ use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
 {
-    public static $hasRunLivewireTestingSetup = false;
-
     public function setUp(): void
     {
         $this->afterApplicationCreated(function () {
-            if (! static::$hasRunLivewireTestingSetup) {
-                $this->makeACleanSlate();
+            $this->makeACleanSlate();
+        });
 
-                static::$hasRunLivewireTestingSetup = true;
-            }
+        $this->beforeApplicationDestroyed(function () {
+            $this->makeACleanSlate();
         });
 
         parent::setUp();
@@ -30,6 +28,7 @@ class TestCase extends BaseTestCase
 
         File::deleteDirectory($this->livewireViewsPath());
         File::deleteDirectory($this->livewireClassesPath());
+        File::delete(app()->bootstrapPath('cache/livewire-components.php'));
     }
 
     protected function getPackageProviders($app)
