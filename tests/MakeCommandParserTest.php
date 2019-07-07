@@ -4,7 +4,7 @@ namespace Tests;
 
 use Livewire\Commands\LivewireMakeCommandParser;
 
-class LivewireMakeCommandParserTest extends TestCase
+class MakeCommandParserTest extends TestCase
 {
     /**
      * @test

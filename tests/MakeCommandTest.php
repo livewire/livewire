@@ -5,7 +5,7 @@ namespace Tests;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 
-class CreateLivewireComponentTest extends TestCase
+class MakeCommandTest extends TestCase
 {
     /** @test */
     function component_is_created_by_make_command()
