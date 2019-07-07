@@ -3,25 +3,33 @@
 namespace Tests;
 
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
 {
-    public static $viewCacheCleared = false;
+    public static $hasRunLivewireTestingSetup = false;
 
     public function setUp(): void
     {
         $this->afterApplicationCreated(function () {
-            // Clear TestBench's Blade view cache before any test suite run.
-            if (! static::$viewCacheCleared) {
-                Artisan::call('view:clear');
+            if (! static::$hasRunLivewireTestingSetup) {
+                $this->makeACleanSlate();
 
-                static::$viewCacheCleared = true;
+                static::$hasRunLivewireTestingSetup = true;
             }
         });
 
         parent::setUp();
+    }
+
+    public function makeACleanSlate()
+    {
+        Artisan::call('view:clear');
+
+        File::deleteDirectory($this->livewireViewsPath());
+        File::deleteDirectory($this->livewireClassesPath());
     }
 
     protected function getPackageProviders($app)
@@ -35,5 +43,15 @@ class TestCase extends BaseTestCase
     {
         $app['config']->set('view.paths', [__DIR__.'/views']);
         $app['config']->set('app.key', 'base64:Hupx3yAySikrM2/edkZQNQHslgDWYfiBfCuSThJ5SK8=');
+    }
+
+    protected function livewireClassesPath($path = '')
+    {
+        return app_path('Http/Livewire' . ($path ? '/'.$path : ''));
+    }
+
+    protected function livewireViewsPath($path = '')
+    {
+        return config('view.paths')[0].'/livewire' . ($path ? '/'.$path : '');
     }
 }
