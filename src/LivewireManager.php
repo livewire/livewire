@@ -3,7 +3,6 @@
 namespace Livewire;
 
 use Exception;
-use Illuminate\Support\Facades\File;
 use Livewire\Testing\TestableLivewire;
 use Livewire\Connection\ComponentHydrator;
 

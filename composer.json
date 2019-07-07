@@ -29,12 +29,14 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "tests/",
+            "App\\": "vendor/orchestra/testbench-core/laravel/app"
         }
     },
     "require-dev": {
         "phpunit/phpunit": "^7.5",
         "laravel/framework": "^5.7",
-        "orchestra/testbench": "~3.0"
+        "orchestra/testbench": "~3.0",
+        "psy/psysh": "@stable"
     }
 }
