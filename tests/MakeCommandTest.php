@@ -33,4 +33,13 @@ class MakeCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireClassesPath('FooBar.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo-bar.blade.php')));
     }
+
+    /** @test */
+    function pascal_case_component_is_automatically_converted_by_make_command()
+    {
+        Artisan::call('make:livewire FooBar.FooBar');
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('FooBar/FooBar.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('foo-bar/foo-bar.blade.php')));
+    }
 }

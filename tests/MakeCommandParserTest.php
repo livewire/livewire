@@ -76,6 +76,14 @@ class MakeCommandParserTest extends TestCase
                 'livewire.foo-bar.foo-bar',
                 '/livewire/foo-bar/foo-bar.blade.php',
             ],
+            [
+                'FooBar',
+                'foo-bar',
+                'App\Http\Livewire',
+                '/Http/Livewire/FooBar.php',
+                'livewire.foo-bar',
+                '/livewire/foo-bar.blade.php',
+            ],
         ];
     }
 

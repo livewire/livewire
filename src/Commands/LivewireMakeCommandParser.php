@@ -20,7 +20,7 @@ class LivewireMakeCommandParser
 
         $directories = preg_split('/[.]+/', $rawCommand);
 
-        $this->component = array_pop($directories);
+        $this->component = Str::kebab(array_pop($directories));
         $this->componentClass = Str::studly($this->component);
 
         $this->directories = array_map([Str::class, 'studly'], $directories);
