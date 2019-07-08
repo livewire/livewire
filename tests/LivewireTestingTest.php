@@ -15,6 +15,14 @@ class LivewireTestingTest extends TestCase
 
         $this->assertContains('foo', $component->dom);
     }
+
+    /** @test */
+    function test_assert_set()
+    {
+        app(LivewireManager::class)
+            ->test(HasMountArguments::class, 'foo')
+            ->assertSet('name', 'foo');
+    }
 }
 
 class HasMountArguments extends Component
