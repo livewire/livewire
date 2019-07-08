@@ -36,10 +36,14 @@ export default {
             el = el.el.el // I'm so sorry @todo
 
             if (directive.modifiers.includes('class')) {
+                // This is because wire:loading.class="border border-red"
+                // wouldn't work with classList.add.
+                const classes = directive.value.split(' ')
+
                 if (directive.modifiers.includes('remove')) {
-                    el.classList.remove(directive.value)
+                    el.classList.remove(...classes)
                 } else {
-                    el.classList.add(directive.value)
+                    el.classList.add(...classes)
                 }
             } else if (directive.modifiers.includes('attr')) {
                 if (directive.modifiers.includes('remove')) {

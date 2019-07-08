@@ -38,6 +38,17 @@ test('add element class while loading', async () => {
     })
 })
 
+test('add element class with spaces while loading', async () => {
+    mount('<button wire:click="onClick"></button><span wire:loading.class="foo bar"></span>')
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('span').classList.contains('foo')).toBeTruthy()
+        expect(document.querySelector('span').classList.contains('bar')).toBeTruthy()
+    })
+})
+
 test('remove element class while loading', async () => {
     mount('<button wire:click="onClick"></button><span class="hidden" wire:loading.class.remove="hidden"></span>')
 
