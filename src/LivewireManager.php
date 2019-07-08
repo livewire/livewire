@@ -109,8 +109,8 @@ EOT;
         return "<{$tagName} wire:id=\"{$id}\"></{$tagName}>";
     }
 
-    public function test($name)
+    public function test($name, ...$params)
     {
-        return new TestableLivewire($name, $this->prefix);
+        return new TestableLivewire($name, $this->prefix, $params);
     }
 }

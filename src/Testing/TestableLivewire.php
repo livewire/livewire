@@ -20,7 +20,7 @@ class TestableLivewire
         Concerns\MakesCallsToComponent,
         Concerns\MakesAssertions;
 
-    public function __construct($name, $prefix)
+    public function __construct($name, $prefix, $params = [])
     {
         $this->prefix = $prefix;
 
@@ -31,7 +31,7 @@ class TestableLivewire
             app('livewire')->component($name = str_random(20), $componentClass);
         }
 
-        $result = app('livewire')->mount($this->name = $name);
+        $result = app('livewire')->mount($this->name = $name, ...$params);
 
         $this->checksum = $result->checksum;
 
