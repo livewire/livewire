@@ -9,34 +9,30 @@ export default class {
     }
 
     all() {
-        return Object.values(this.directives)
+        return this.directives
     }
 
     has(type) {
-        return Object.keys(this.directives).includes(type)
+        return this.directives.map(directive => directive.type).includes(type)
     }
 
     missing(type) {
-        return ! Object.keys(this.directives).includes(type)
+        return ! this.directives.map(directive => directive.type).includes(type)
     }
 
     get(type) {
-        return this.directives[type]
+        return this.directives.find(directive => directive.type === type)
     }
 
     extractTypeModifiersAndValue() {
-        let directives = {}
-
-        this.el.getAttributeNames()
+        return Array.from(this.el.getAttributeNames()
             // Filter only the livewire directives.
             .filter(name => name.match(new RegExp(prefix + ':')))
             // Parse out the type, modifiers, and value from it.
-            .forEach(name => {
+            .map(name => {
                 const [type, ...modifiers] = name.replace(new RegExp(prefix + ':'), '').split('.')
 
-                directives[type] = new ElementDirective(type, modifiers, name, this.el)
-            })
-
-        return directives
+                return new ElementDirective(type, modifiers, name, this.el)
+            }))
     }
 }

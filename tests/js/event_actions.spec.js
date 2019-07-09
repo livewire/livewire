@@ -1,4 +1,4 @@
-import { wait } from 'dom-testing-library'
+import { fireEvent, wait } from 'dom-testing-library'
 import { mount } from './utils'
 
 test('basic click', async () => {
@@ -40,5 +40,21 @@ test('if a click and blur happen at the same time, the actions are queued and se
         expect(payload.actionQueue[0].payload.method).toEqual('onClick')
         expect(payload.actionQueue[1].type).toEqual('callMethod')
         expect(payload.actionQueue[1].payload.method).toEqual('onBlur')
+    })
+})
+
+test('two keydown events', async () => {
+    var payload
+    mount('<button wire:keydown="someMethod" wire:keydown.enter="otherMethod"></button>', i => payload = i)
+
+    fireEvent.keyDown(document.querySelector('button'), { key: 'Enter' })
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('someMethod')
+        expect(payload.actionQueue[0].payload.params).toEqual([])
+        expect(payload.actionQueue[1].type).toEqual('callMethod')
+        expect(payload.actionQueue[1].payload.method).toEqual('otherMethod')
+        expect(payload.actionQueue[1].payload.params).toEqual([])
     })
 })
