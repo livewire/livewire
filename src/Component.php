@@ -24,8 +24,9 @@ abstract class Component
         'mount', 'updating', 'updated',
     ];
 
-    public function __construct()
+    public function __construct($id)
     {
+        $this->id = $id;
         $this->initializeTraits();
     }
 
@@ -51,6 +52,15 @@ abstract class Component
     public function redirect($url)
     {
         $this->redirectTo = $url;
+    }
+
+    public function session($key, $value = null)
+    {
+        if (is_null($value)) {
+            return session()->get($this->id.$key);
+        }
+
+        return session()->put($this->id.$key, $value);
     }
 
     public function output($errors = null)

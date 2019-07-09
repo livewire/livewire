@@ -13,3 +13,7 @@ Note: I'm assuming you have a folder for all your projects and are serving that 
 ## Thank You's
 
 - Thanks to @davidpiesse for helping a ton with the event emission idea and implementation.
+
+## TODOs
+- Add livewire:destroy {component}
+- look into preventing data manipulation

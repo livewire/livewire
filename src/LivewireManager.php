@@ -37,7 +37,7 @@ class LivewireManager
         return $class;
     }
 
-    public function activate($component)
+    public function activate($component, $id)
     {
         $componentClass = $this->getComponentClass($component);
 
@@ -45,7 +45,7 @@ class LivewireManager
             "Component [{$component}] class not found: [{$componentClass}]"
         ));
 
-        return new $componentClass;
+        return new $componentClass($id);
     }
 
     public function assets($options = null)
@@ -71,10 +71,10 @@ EOT;
 
     public function mount($name, ...$options)
     {
-        $instance = $this->activate($name);
+        $id = str_random(20);
+        $instance = $this->activate($name, $id);
         $instance->mount(...$options);
         $dom = $instance->output();
-        $id = str_random(20);
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
