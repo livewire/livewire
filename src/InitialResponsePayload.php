@@ -88,16 +88,10 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
     public function escapeStringForHtml($subject)
     {
         if (is_string($subject) || is_numeric($subject)) {
-            return $subject;
+            return htmlspecialchars($subject);
         }
 
-        return
-        addcslashes(
-            htmlspecialchars(
-                json_encode($subject)
-            ),
-            '\\'
-        );
+        return htmlspecialchars(json_encode($subject));
     }
 
     public function getRootElementTagName()

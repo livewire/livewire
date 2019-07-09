@@ -17,9 +17,29 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
             [$component->id, $component->data]
         ));
     }
+
+    /** @test */
+    function component_data_stored_in_html_is_escaped()
+    {
+        $component = app(LivewireManager::class)->test(ComponentRootHasIdAndDataStub::class);
+
+        $this->assertStringContainsString(
+            <<<EOT
+wire:data="{&quot;string&quot;:&quot;foo&quot;,&quot;array&quot;:[&quot;foo&quot;],&quot;object&quot;:{&quot;foo&quot;:&quot;bar&quot;},&quot;number&quot;:1,&quot;quote&quot;:&quot;\&quot;&quot;,&quot;singleQuote&quot;:&quot;'&quot;}"
+EOT
+            , $component->dom
+        );
+    }
 }
 
 class ComponentRootHasIdAndDataStub extends Component {
+    public $string = 'foo';
+    public $array = ['foo'];
+    public $object = ['foo' => 'bar'];
+    public $number = 1;
+    public $quote = '"';
+    public $singleQuote = "'";
+
     public function render()
     {
         return app('view')->make('null-view');
