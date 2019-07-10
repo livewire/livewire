@@ -38,6 +38,12 @@ test('add element class while loading', async () => {
     })
 })
 
+test('add element class while loading only after minimum time', async () => {
+    mount('<button wire:click="onClick"></button><span wire:loading.class.min.100ms="foo-class"></span>')
+
+    // @todo - find a good way to test this.
+})
+
 test('add element class with spaces while loading', async () => {
     mount('<button wire:click="onClick"></button><span wire:loading.class="foo bar"></span>')
 
