@@ -15,5 +15,14 @@ Note: I'm assuming you have a folder for all your projects and are serving that 
 - Thanks to @davidpiesse for helping a ton with the event emission idea and implementation.
 
 ## TODOs
+- loading minimum indicator (hard because the "unset" is handled by the dom diffing)
 - Add livewire:destroy {component}
 - look into preventing data manipulation
+- finish the session protected prop storage garbage collection
+- throw error if someone tries to attach a non string / array as a public property
+- re-generate the manifest file if it can't find a component
+- the last keytype thing for todos
+- disabling form buttons when clicked
+- launch and check it in production
+- don't show loading indicator if below 30ms or something
+- allow an option for a min. loading inicator time
