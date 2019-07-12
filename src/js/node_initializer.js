@@ -106,15 +106,17 @@ export default {
             // This is outside the conditional below so "wire:click.prevent" without
             // a value still prevents default.
             this.preventAndStop(e, directive.modifiers)
+            const method = directive.method
+            const params = directive.params
 
             // Check for global event emission.
-            if (directive.method === '$emit') {
-                store.emit(...directive.params)
+            if (method === '$emit') {
+                store.emit(...params)
                 return
             }
 
             if (directive.value) {
-                component.addAction(new MethodAction(directive.method, directive.params, el))
+                component.addAction(new MethodAction(method, params, el))
             }
         }))
     },
