@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Livewire\Exceptions\ActionMethodNotFound;
+use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
 use Livewire\Component;
@@ -12,7 +12,7 @@ class ComponentsAreSecureTest extends TestCase
     /** @test */
     function throws_method_not_found_exception_when_action_missing()
     {
-        $this->expectException(ActionMethodNotFound::class);
+        $this->expectException(MissingComponentMethodReferencedByAction::class);
 
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');

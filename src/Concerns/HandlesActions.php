@@ -2,7 +2,7 @@
 
 namespace Livewire\Concerns;
 
-use Livewire\Exceptions\ActionMethodNotFound;
+use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 
 trait HandlesActions
@@ -43,7 +43,7 @@ trait HandlesActions
 
             case '$toggle':
                 $prop = array_shift($params);
-                $this->syncInput($prop, !$this->{$prop});
+                $this->syncInput($prop, ! $this->{$prop});
                 return;
                 break;
 
@@ -52,7 +52,7 @@ trait HandlesActions
                 break;
 
             default:
-                throw_if(!method_exists($this, $method), ActionMethodNotFound::class);
+                throw_unless(method_exists($this, $method), MissingComponentMethodReferencedByAction::class);
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), NonPublicComponentMethodCall::class);
 
                 $this->{$method}(...$params);
