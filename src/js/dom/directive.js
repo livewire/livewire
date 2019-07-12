@@ -45,7 +45,7 @@ export default class {
     parseOutMethodAndParams(rawMethod) {
         let method = rawMethod
         let params = []
-        const methodAndParamString = method.match(/(.*)\((.*)\)/)
+        const methodAndParamString = method.match(/(.*?)\((.*)\)/)
 
         if (methodAndParamString) {
             // This "$event" is for use inside the livewire event handler.

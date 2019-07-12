@@ -101,22 +101,22 @@ export default {
 
             const el = new DOMElement(e.target)
 
+            directive.setEventContext(e)
+
             // This is outside the conditional below so "wire:click.prevent" without
             // a value still prevents default.
             this.preventAndStop(e, directive.modifiers)
+            const method = directive.method
+            const params = directive.params
 
             // Check for global event emission.
-            if (directive.value.match(/\$emit\(.*\)/)) {
-                const tempStoreForEval = store
-                eval(directive.value.replace(/\$emit\((.*)\)/, (match, group1) => {
-                    return 'tempStoreForEval.emit('+group1+')'
-                }))
+            if (method === '$emit') {
+                store.emit(...params)
                 return
             }
 
             if (directive.value) {
-                directive.setEventContext(e)
-                component.addAction(new MethodAction(directive.method, directive.params, el))
+                component.addAction(new MethodAction(method, params, el))
             }
         }))
     },

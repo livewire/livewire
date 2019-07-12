@@ -2,14 +2,24 @@
 
 namespace Tests;
 
-use Livewire\Exceptions\ComponentMismatchException;
+use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
 use Livewire\Component;
-use Mockery\Exception\BadMethodCallException;
 
 class ComponentsAreSecureTest extends TestCase
 {
+    /** @test */
+    function throws_method_not_found_exception_when_action_missing()
+    {
+        $this->expectException(MissingComponentMethodReferencedByAction::class);
+
+        app('livewire')->component('security-target', SecurityTargetStub::class);
+        $component = app('livewire')->test('security-target');
+
+        $component->runAction('missingMethod');
+    }
+
     /** @test */
     function can_only_call_public_methods()
     {
@@ -45,7 +55,8 @@ class ComponentsAreSecureTest extends TestCase
     }
 }
 
-class SecurityTargetStub extends Component {
+class SecurityTargetStub extends Component
+{
     protected $protectedProperty = 'foo';
 
     protected function protectedMethod()
