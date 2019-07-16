@@ -43,6 +43,31 @@ const store = {
             return component.events.includes(event)
         })
     },
+
+    getBrowserId() {
+        // window.name is persisted across page loads. It's a good way to identify a tab or window.
+        if (! window.name) {
+            window.name = this.makeid(5)
+        }
+
+        // window.pageId is not persisted across page loads.
+        if (! window.pageId) {
+            window.pageId = this.makeid(5)
+        }
+
+        return window.name + '.' + window.pageId
+    },
+
+    // From https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
+    makeid(length) {
+        var result           = '';
+        var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var charactersLength = characters.length;
+        for ( var i = 0; i < length; i++ ) {
+           result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+     }
 }
 
 export default store

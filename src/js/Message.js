@@ -1,3 +1,4 @@
+import componentStore from './store'
 
 export default class {
     constructor(component, actionQueue) {
@@ -25,6 +26,7 @@ export default class {
             children: this.component.children,
             middleware: this.component.middleware,
             checksum: this.component.checksum,
+            browserId: componentStore.getBrowserId(),
             actionQueue: this.actionQueue.map(action => {
                 // This ensures only the type & payload properties only get sent over.
                 return {

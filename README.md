@@ -26,3 +26,4 @@ Note: I'm assuming you have a folder for all your projects and are serving that 
 - launch and check it in production
 - don't show loading indicator if below 30ms or something
 - allow an option for a min. loading inicator time
+- document livewire.emit
