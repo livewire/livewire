@@ -2,7 +2,6 @@
 
 namespace Livewire\Connection;
 
-use Illuminate\Support\Facades\Hash;
 use Livewire\Exceptions\ComponentMismatchException;
 
 class ComponentHydrator
