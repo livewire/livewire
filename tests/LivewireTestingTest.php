@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Support\Facades\Artisan;
 use Livewire\Component;
 use Livewire\LivewireManager;
 
@@ -22,6 +23,23 @@ class LivewireTestingTest extends TestCase
         app(LivewireManager::class)
             ->test(HasMountArguments::class, 'foo')
             ->assertSet('name', 'foo');
+    }
+
+    /** @test */
+    public function test_filter_middlewares()
+    {
+        Artisan::call('make:livewire foo');
+        $manager = \Mockery::mock(LivewireManager::class)->makePartial();
+        $manager->shouldReceive('currentMiddlewareStack')->andReturn(['MiddlewareA', 'MiddlewareB', 'MiddlewareC']);
+        
+        $manager->filterMiddleware(function($middleware) {
+            return $middleware != 'MiddlewareB';
+        });
+        
+        $this->assertEquals([
+            0 => 'MiddlewareA',
+            2 => 'MiddlewareC',
+        ], decrypt($manager->mount('foo')->middleware));
     }
 }
 
