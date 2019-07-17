@@ -11,6 +11,7 @@ class LivewireManager
 {
     protected $prefix = 'wire';
     protected $componentAliases = [];
+    protected $middlewaresFilter;
 
     public function prefix($prefix = null)
     {
@@ -80,7 +81,11 @@ EOT;
         $children = $instance->getRenderedChildren();
         $checksum = md5($name.$id);
 
-        $middleware = encrypt($this->currentMiddlewareStack(), $serialize = true);
+        $middlewareStack = $this->currentMiddlewareStack();
+        if ($this->middlewaresFilter) {
+            $middlewareStack = array_filter($middlewareStack, $this->middlewaresFilter);
+        }
+        $middleware = encrypt($middlewareStack, $serialize = true);
 
         return new InitialResponsePayload([
             'id' => $id,
@@ -102,6 +107,11 @@ EOT;
         }
 
         return request()->route()->gatherMiddleware();
+    }
+
+    public function filterMiddleware($filter)
+    {
+        return $this->middlewaresFilter = $filter;
     }
 
     public function dummyMount($id, $tagName)
