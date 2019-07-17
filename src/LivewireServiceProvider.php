@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Commands\LivewireDestroyCommand;
 use Livewire\Commands\LivewireMakeCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Livewire\LivewireComponentsFinder;
@@ -78,6 +79,7 @@ class LivewireServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 LivewireMakeCommand::class,
+                LivewireDestroyCommand::class,
             ]);
 
             Artisan::command('livewire:discover', function () {
