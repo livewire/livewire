@@ -1,3 +1,5 @@
+![Livewire: If Vue and Blade had a baby, it would be a jellyfish.](github_banner.png)
+
 # Laravel Livewire
 
 ## Get set up for local development and contribution
