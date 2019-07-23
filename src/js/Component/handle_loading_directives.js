@@ -21,6 +21,7 @@ export default {
     },
 
     removeLoadingEl(node) {
+        this.setLoadingProperties();
         const el = new DOMElement(node)
 
         this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
@@ -31,6 +32,8 @@ export default {
     },
 
     setLoading(refs) {
+        this.setLoadingProperties();
+
         const refEls = refs.map(ref => this.loadingElsByRef[ref]).filter(el => el).flat()
 
         const allEls = this.loadingEls.concat(refEls)
