@@ -1,10 +1,14 @@
 import DOMElement from "../dom/dom_element";
 
 export default {
-    loadingEls: [],
-    loadingElsByRef: {},
+    setLoadingProperties() {
+        this.loadingEls = this.loadingEls ? this.loadingEls : [];
+        this.loadingElsByRef = this.loadingElsByRef ? this.loadingElsByRef : {};
+    },
 
     addLoadingEl(el, value, targetRef, remove) {
+        this.setLoadingProperties();
+        
         if (targetRef) {
             if (this.loadingElsByRef[targetRef]) {
                 this.loadingElsByRef[targetRef].push({el, value, remove})
