@@ -15,6 +15,7 @@ use Livewire\Connection\HttpConnectionHandler;
 use Livewire\LivewireComponentsFinder;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
+use Livewire\Http\Controllers\AssetsController;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -38,19 +39,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerRoutes()
     {
-        RouteFacade::get('/livewire/livewire.js', function () {
-            $file = __DIR__ . '/../dist/livewire.js';
-            $lastModified = filemtime($file);
-            $contents = file_get_contents($file);
-
-            // These headers will enable browsers to cache this asset.
-            return response($contents)
-                ->withHeaders([
-                    'Content-Type' => 'application/javascript; charset=utf-8',
-                    'Cache-Control' => 'public, max-age=3600',
-                    'Last-Modified' => gmdate("D, d M Y H:i:s", $lastModified)." GMT",
-                ]);
-        });
+        RouteFacade::get('/livewire/livewire.js', AssetsController::class);
 
         // Don't register route for non-Livewire calls.
         if ($this->isLivewireRequest()) {
