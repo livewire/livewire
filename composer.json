@@ -39,5 +39,9 @@
         "orchestra/testbench": "~3.0",
         "psy/psysh": "@stable",
         "friendsofphp/php-cs-fixer": "^2.15"
+    },
+    "scripts": {
+        "cs_ci": "./vendor/bin/php-cs-fixer fix --config=.php_cs.php -v --dry-run --using-cache=no",
+        "cs_fix": "/vendor/bin/php-cs-fixer fix --config=.php_cs.php"
     }
 }

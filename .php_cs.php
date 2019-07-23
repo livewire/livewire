@@ -3,6 +3,13 @@
 use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
 
+/**
+ * For more information about this configuration you can go to
+ * the following website to see more about this config when
+ * you click on the "folder" icon on the website.
+ *
+ * https://mlocati.github.io/php-cs-fixer-configurator/#configurator
+ */
 $rules = [
     'phpdoc_indent' => true,
     'binary_operator_spaces' => [
