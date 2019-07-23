@@ -15,7 +15,7 @@ use Livewire\Connection\HttpConnectionHandler;
 use Livewire\LivewireComponentsFinder;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
-use Livewire\Http\Controllers\AssetsController;
+use Livewire\Http\Controllers\AssetController;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -39,7 +39,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerRoutes()
     {
-        RouteFacade::get('/livewire/livewire.js', AssetsController::class);
+        RouteFacade::get('/livewire/livewire.js', AssetController::class);
 
         // Don't register route for non-Livewire calls.
         if ($this->isLivewireRequest()) {
