@@ -37,6 +37,7 @@
         "phpunit/phpunit": "^7.5",
         "laravel/framework": "^5.7",
         "orchestra/testbench": "~3.0",
-        "psy/psysh": "@stable"
+        "psy/psysh": "@stable",
+        "friendsofphp/php-cs-fixer": "^2.15"
     }
 }
