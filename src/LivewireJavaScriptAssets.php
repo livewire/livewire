@@ -2,7 +2,7 @@
 
 namespace Livewire\Http\Controllers;
 
-class AssetController
+class LivewireJavaScriptAssets
 {
     public function __invoke()
     {
