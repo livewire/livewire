@@ -1,12 +1,12 @@
 <?php
 
-namespace Livewire\Http\Controllers;
+namespace Livewire;
 
 class LivewireJavaScriptAssets
 {
     public function __invoke()
     {
-        $file = __DIR__ . '/../../../dist/livewire.js';
+        $file = __DIR__ . '/../dist/livewire.js';
         $lastModified = filemtime($file);
         $contents = file_get_contents($file);
 
