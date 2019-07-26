@@ -1,4 +1,4 @@
-import DOMElement from './dom_element'
+import DOMElement from '@dom/dom_element'
 const prefix = require('./prefix.js')()
 
 /**

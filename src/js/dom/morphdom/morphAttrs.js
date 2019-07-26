@@ -1,4 +1,4 @@
-import { hasAttributeNS } from './util';
+import { hasAttributeNS } from '@morphdom/util';
 
 /**
  * I don't want to look at "value" attributes when diffing.

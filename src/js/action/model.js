@@ -1,4 +1,4 @@
-import Action from '.'
+import Action from '@action'
 
 export default class extends Action {
     constructor(name, value, el) {

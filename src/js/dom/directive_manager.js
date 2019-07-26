@@ -1,4 +1,4 @@
-import ElementDirective from './directive';
+import ElementDirective from '@dom/directive';
 
 const prefix = require('./prefix.js')()
 

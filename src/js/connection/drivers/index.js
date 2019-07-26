@@ -1,3 +1,3 @@
-import http from './http'
+import http from '@drivers/http'
 
 export default { http }

@@ -1,8 +1,8 @@
-import { debounce, kebabCase } from './util'
-import ModelAction from './action/model'
-import MethodAction from './action/method'
-import DOMElement from './dom/dom_element'
-import store from './Store'
+import { debounce, kebabCase } from '@util'
+import ModelAction from '@action/model'
+import MethodAction from '@action/method'
+import DOMElement from '@dom/dom_element'
+import store from '@store'
 
 export default {
     initialize(el, component) {

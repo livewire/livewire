@@ -1,4 +1,4 @@
-import { hasAttributeNS } from './util';
+import { hasAttributeNS } from '@morphdom/util';
 
 function syncBooleanAttrProp(fromEl, toEl, name) {
     if (fromEl[name] !== toEl[name]) {

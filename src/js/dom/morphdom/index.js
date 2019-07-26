@@ -1,5 +1,5 @@
-import morphAttrs from './morphAttrs';
-import morphdomFactory from './morphdom';
+import morphAttrs from '@morphdom/morphAttrs';
+import morphdomFactory from '@morphdom/morphdom';
 
 var morphdom = morphdomFactory(morphAttrs);
 

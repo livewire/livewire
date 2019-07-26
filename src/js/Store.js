@@ -1,4 +1,4 @@
-import EventAction from "./action/event";
+import EventAction from "@action/event";
 
 const store = {
     componentsById: {},
