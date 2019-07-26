@@ -23,7 +23,7 @@ trait MakesAssertions
 
     public function assertDontSee($value)
     {
-        PHPUnit::assertStringNotContainsString((string) $value, $this->dom);
+        PHPUnit::assertStringNotContainsString((string) $value, preg_replace('(wire:data=\".+}")', '', $this->dom));
 
         return $this;
     }
