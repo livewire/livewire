@@ -1,10 +1,10 @@
-import Message from '../message'
+import Message from '../Message'
 import { debounce, walk } from '../util'
 import morphdom from '../dom/morphdom'
 import DOM from '../dom/dom'
 import DOMElement from '../dom/dom_element'
 import nodeInitializer from "../node_initializer";
-import store from '../store'
+import store from '../Store'
 
 class Component {
     constructor(el, connection) {

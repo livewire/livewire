@@ -1,5 +1,5 @@
 import { dispatch } from '../util'
-import componentStore from '../store';
+import componentStore from '../Store';
 
 export default class Connection {
     constructor(driver) {
