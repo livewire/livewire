@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 class DestroyCommandTest extends TestCase
 {
     /** @test */
-    function component_is_removed_by_destory_command()
+    function component_is_removed_by_destroy_command()
     {
         Artisan::call('make:livewire foo');
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
