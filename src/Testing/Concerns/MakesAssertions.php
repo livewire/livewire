@@ -2,6 +2,7 @@
 
 namespace Livewire\Testing\Concerns;
 
+use DOMDocument;
 use Illuminate\Foundation\Testing\Assert as PHPUnit;
 
 trait MakesAssertions
@@ -15,7 +16,7 @@ trait MakesAssertions
 
     public function assertSee($value)
     {
-        PHPUnit::assertStringContainsString((string) $value, $this->dom);
+        PHPUnit::assertStringContainsString((string) $value, preg_replace('(wire:data=\".+}")', '', $this->dom));
 
         return $this;
     }
