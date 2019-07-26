@@ -9,3 +9,5 @@ See the docs for everything: https://livewire-framework.com/docs/quickstart/
 All contributions are welcomed! (but please submit an issue to make sure the PR is warranted first)
 
 Open GitHub issues for all questions, ideas, and bugs. We will use GitHub issues to host discussion until it gets too busy, then we can move to something like Slack or Discord.
+
+Contribute to the docs here: https://github.com/calebporzio/livewire-docs
