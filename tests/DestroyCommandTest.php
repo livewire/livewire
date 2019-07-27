@@ -15,7 +15,7 @@ class DestroyCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
 
         $this->artisan('livewire:destroy foo')->expectsQuestion(
-            "Are you sure you want to delete the following files?\n\n/Users/calebporzio/Documents/Code/sites/livewire/vendor/orchestra/testbench-core/src/Concerns/../../laravel/app/Http/Livewire/Foo.php\n/Users/calebporzio/Documents/Code/sites/livewire/tests/views/livewire/foo.blade.php\n",
+            "Are you sure you want to delete the following files?",
             true
         );
 
@@ -31,7 +31,7 @@ class DestroyCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
 
         $this->artisan('livewire:destroy foo')->expectsQuestion(
-            "Are you sure you want to delete the following files?\n\n/Users/calebporzio/Documents/Code/sites/livewire/vendor/orchestra/testbench-core/src/Concerns/../../laravel/app/Http/Livewire/Foo.php\n/Users/calebporzio/Documents/Code/sites/livewire/tests/views/livewire/foo.blade.php\n",
+            "Are you sure you want to delete the following files?",
             false
         );
 
@@ -46,7 +46,7 @@ class DestroyCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
 
-        Artisan::call('livewire:destroy foo --force');
+        Artisan::call('livewire:destroy', ['name' => 'foo', '--force' => true]);
 
         $this->assertFalse(File::exists($this->livewireClassesPath('Foo.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('foo.blade.php')));

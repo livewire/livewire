@@ -27,7 +27,7 @@ class LivewireDestroyCommand extends Command
 
         if (! $force = $this->option('force')) {
             $shouldContinue = $this->confirm(
-                "Are you sure you want to delete the following files?\n\n{$this->parser->classPath()}\n{$this->parser->viewPath()}\n"
+                "Are you sure you want to delete the following files?"
             );
 
             if (! $shouldContinue) {
