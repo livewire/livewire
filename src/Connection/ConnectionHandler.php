@@ -4,13 +4,14 @@ namespace Livewire\Connection;
 
 use Illuminate\Validation\ValidationException;
 use Livewire\ResponsePayload;
+use Livewire\Watchers\DumpWatcher;
 
 abstract class ConnectionHandler
 {
     public function handle($payload)
     {
         $instance = ComponentHydrator::hydrate($payload['name'], $payload['id'], $payload['data'], $payload['checksum']);
-
+        $dumper = app()->make(DumpWatcher::class);
         $instance->setPreviouslyRenderedChildren($payload['children']);
         $instance->hashPropertiesForDirtyDetection();
 
@@ -30,6 +31,7 @@ abstract class ConnectionHandler
         return new ResponsePayload([
             'id' => $payload['id'],
             'dom' => $dom,
+            'dumps' => $dumper->dumps,
             'dirtyInputs' => $instance->getDirtyProperties(),
             'children' => $instance->getRenderedChildren(),
             'eventQueue' => $eventQueue,
