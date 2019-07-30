@@ -20,6 +20,7 @@ class ResponsePayload implements Arrayable, Jsonable
     {
         $this->id = $data['id'];
         $this->dom = $data['dom'];
+        $this->dumps = $data['dumps'];
         $this->data = $data['data'];
         $this->children = $data['children'];
         $this->eventQueue = $data['eventQueue'];
@@ -33,6 +34,7 @@ class ResponsePayload implements Arrayable, Jsonable
         return [
             'id' => $this->id,
             'dom' => $this->dom,
+            'dumps' => $this->dumps,
             'data' => $this->data,
             'children' => $this->children,
             'eventQueue' => $this->eventQueue,
