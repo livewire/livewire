@@ -87,7 +87,10 @@ class LivewireServiceProvider extends ServiceProvider
     public function registerBladeDirectives()
     {
         Blade::directive('livewireAssets', function ($expression) {
-            return '{!! Livewire::assets('.$expression.') !!}';
+            $url = config('app.url');
+            $assetUrl = config('app.asset_url');
+
+            return "{!! Livewire::assets('{$url}', '{$assetUrl}', '{$expression}') !!}";
         });
 
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
