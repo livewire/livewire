@@ -60,7 +60,7 @@ class LivewireManager
         return <<<EOT
 <!-- Livewire Assets-->
 <style>[wire\:loading] { display: none; }</style>
-<script src="/livewire{$versionedFileName}"></script>
+<script src="livewire{$versionedFileName}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         window.livewire = new Livewire({$options});
