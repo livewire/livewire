@@ -49,14 +49,15 @@ class LivewireManager
         return new $componentClass;
     }
 
-    public function assets($url = '/', $assetUrl = '/', $options = null)
+    public function assets($url, $assetUrl, $options = null)
     {
         $options = $options ? json_encode($options) : '';
+
         $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         $csrf = csrf_token();
-        $fullPath = "{$assetUrl}livewire{$versionedFileName}";
+        $fullPath = "{$assetUrl}/livewire{$versionedFileName}";
 
         return <<<EOT
 <!-- Livewire Assets-->
