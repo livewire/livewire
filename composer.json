@@ -10,7 +10,8 @@
     ],
     "require": {
         "illuminate/support": "^5.7",
-        "illuminate/validation": "^5.7"
+        "illuminate/validation": "^5.7",
+        "symfony/var-dumper": "^4.1"
     },
     "extra": {
         "laravel": {
