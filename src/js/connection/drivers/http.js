@@ -38,7 +38,7 @@ export default {
                     //if there are dumps in the array then
                     //show the modal with all the dumped data
                     if(parsed.dumps.length > 0){
-                        this.showHtmlModal(parsed.dumps.join(''))
+                        this.appendToModal(parsed.dumps.join(''))
                     }
                 })
             } else {
@@ -109,5 +109,15 @@ export default {
     hideHtmlModal(modal) {
         modal.outerHTML = ''
         document.body.style.overflow = 'visible'
+    },
+
+    appendToModal(html){
+        const modal = document.querySelector('#burst-error')
+        if(modal){
+            let doc = modal.querySelector('iframe').contentDocument.body
+            doc.innerHTML = doc.innerHTML + html
+        } else {
+            this.showHtmlModal(html)
+        }
     },
 }
