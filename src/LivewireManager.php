@@ -51,6 +51,7 @@ class LivewireManager
 
     public function assets($options = null)
     {
+        $appUrl = $this->appUrlOrRoot();
         $assetUrl = config('app.asset_url', '');
         $options = $options ? json_encode($options) : '';
 
@@ -58,15 +59,16 @@ class LivewireManager
         $versionedFileName = $manifest['/livewire.js'];
 
         $csrf = csrf_token();
-        $fullPath = "{$assetUrl}/livewire{$versionedFileName}";
+        $fullAssetPath = "{$assetUrl}/livewire{$versionedFileName}";
 
         return <<<EOT
 <!-- Livewire Assets-->
 <style>[wire\:loading] { display: none; }</style>
-<script src="{$fullPath}"></script>
+<script src="{$fullAssetPath}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         window.livewire = new Livewire({$options});
+        window.livewire_app_url = "{$appUrl}";
         window.livewire_token = "{$csrf}";
     });
 </script>
@@ -125,5 +127,14 @@ EOT;
     public function test($name, ...$params)
     {
         return new TestableLivewire($name, $this->prefix, $params);
+    }
+
+    public function appUrlOrRoot()
+    {
+        $defaultAppUrlInDotEnv = 'http://localhost';
+
+        return config('app.url') !== $defaultAppUrlInDotEnv
+            ? config('app.url')
+            : '';
     }
 }
