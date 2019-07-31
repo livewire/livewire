@@ -35,7 +35,6 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
-        $this->registerWatchers();
     }
 
     public function registerRoutes()
@@ -100,10 +99,4 @@ class LivewireServiceProvider extends ServiceProvider
         return request()->headers->get('X-Livewire') == true;
     }
 
-    public function registerWatchers()
-    {
-        $this->app->singleton(DumpWatcher::class, function ($app) {
-            return new DumpWatcher();
-        });     
-    }
 }
