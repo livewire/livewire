@@ -51,19 +51,24 @@ class LivewireManager
 
     public function assets($options = null)
     {
+        $appUrl = $this->appUrlOrRoot();
+        $assetUrl = rtrim(config('app.asset_url', ''), '/');
         $options = $options ? json_encode($options) : '';
-        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
+
+        $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         $csrf = csrf_token();
+        $fullAssetPath = "{$assetUrl}/livewire{$versionedFileName}";
 
         return <<<EOT
 <!-- Livewire Assets-->
 <style>[wire\:loading] { display: none; }</style>
-<script src="/livewire{$versionedFileName}"></script>
+<script src="{$fullAssetPath}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         window.livewire = new Livewire({$options});
+        window.livewire_app_url = "{$appUrl}";
         window.livewire_token = "{$csrf}";
     });
 </script>
@@ -122,5 +127,14 @@ EOT;
     public function test($name, ...$params)
     {
         return new TestableLivewire($name, $this->prefix, $params);
+    }
+
+    public function appUrlOrRoot()
+    {
+        $defaultAppUrlInDotEnv = 'http://localhost';
+
+        return config('app.url') !== $defaultAppUrlInDotEnv
+            ? rtrim(config('app.url'), '/')
+            : '';
     }
 }
