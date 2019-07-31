@@ -32,7 +32,14 @@ export default {
         }).then(response => {
             if (response.ok) {
                 response.text().then(response => {
-                    this.onMessage.call(this, JSON.parse(response))
+                    const parsed = JSON.parse(response);
+
+                    this.onMessage.call(this, parsed)
+                    //if there are dumps in the array then
+                    //show the modal with all the dumped data
+                    if(parsed.dumps.length > 0){
+                        this.appendToModal(parsed.dumps.join(''))
+                    }
                 })
             } else {
                 response.text().then(response => {
@@ -102,5 +109,15 @@ export default {
     hideHtmlModal(modal) {
         modal.outerHTML = ''
         document.body.style.overflow = 'visible'
+    },
+
+    appendToModal(html){
+        const modal = document.querySelector('#burst-error')
+        if(modal){
+            let doc = modal.querySelector('iframe').contentDocument.body
+            doc.innerHTML = doc.innerHTML + html
+        } else {
+            this.showHtmlModal(html)
+        }
     },
 }
