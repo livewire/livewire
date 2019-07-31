@@ -60,6 +60,17 @@ trait HandlesActions
         }
     }
 
+    protected function resolveActionParameters($method, $params)
+    {
+        return collect((new \ReflectionMethod($this, $method))->getParameters())->map(function ($parameter) use ($params) {
+            return rescue(function () use ($parameter) {
+                return app($parameter->getClass()->name);
+            }, function () use ($params) {
+                return array_shift($params);
+            }, false);
+        });
+    }
+
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)
     {
         return collect((new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC))
