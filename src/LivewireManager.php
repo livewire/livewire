@@ -49,8 +49,9 @@ class LivewireManager
         return new $componentClass;
     }
 
-    public function assets($url, $assetUrl, $options = null)
+    public function assets($options = null)
     {
+        $assetUrl = config('app.asset_url', '');
         $options = $options ? json_encode($options) : '';
 
         $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
@@ -66,7 +67,6 @@ class LivewireManager
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         window.livewire = new Livewire({$options});
-        window.livewire_url = "{$url}";
         window.livewire_token = "{$csrf}";
     });
 </script>
