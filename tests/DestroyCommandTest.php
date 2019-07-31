@@ -11,44 +11,56 @@ class DestroyCommandTest extends TestCase
     function component_is_removed_by_destroy_command()
     {
         Artisan::call('make:livewire foo');
-        $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
-        $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+
+        $classPath = $this->livewireClassesPath('Foo.php');
+        $viewPath = $this->livewireViewsPath('foo.blade.php');
+
+        $this->assertTrue(File::exists($classPath));
+        $this->assertTrue(File::exists($viewPath));
 
         $this->artisan('livewire:destroy foo')->expectsQuestion(
-            "Are you sure you want to delete the following files?",
+            "Are you sure you want to delete the following files?\n\n{$classPath}\n{$viewPath}\n",
             true
         );
 
-        $this->assertFalse(File::exists($this->livewireClassesPath('Foo.php')));
-        $this->assertFalse(File::exists($this->livewireViewsPath('foo.blade.php')));
+        $this->assertFalse(File::exists($classPath));
+        $this->assertFalse(File::exists($viewPath));
     }
 
     /** @test */
     function component_is_not_removed_when_confirm_answer_is_no()
     {
         Artisan::call('make:livewire foo');
-        $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
-        $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+
+        $classPath = $this->livewireClassesPath('Foo.php');
+        $viewPath = $this->livewireViewsPath('foo.blade.php');
+
+        $this->assertTrue(File::exists($classPath));
+        $this->assertTrue(File::exists($viewPath));
 
         $this->artisan('livewire:destroy foo')->expectsQuestion(
-            "Are you sure you want to delete the following files?",
+            "Are you sure you want to delete the following files?\n\n{$classPath}\n{$viewPath}\n",
             false
         );
 
-        $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
-        $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+        $this->assertTrue(File::exists($classPath));
+        $this->assertTrue(File::exists($viewPath));
     }
 
     /** @test */
     function component_is_removed_without_confirmation_if_forced()
     {
         Artisan::call('make:livewire foo');
-        $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
-        $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+
+        $classPath = $this->livewireClassesPath('Foo.php');
+        $viewPath = $this->livewireViewsPath('foo.blade.php');
+
+        $this->assertTrue(File::exists($classPath));
+        $this->assertTrue(File::exists($viewPath));
 
         Artisan::call('livewire:destroy', ['name' => 'foo', '--force' => true]);
 
-        $this->assertFalse(File::exists($this->livewireClassesPath('Foo.php')));
-        $this->assertFalse(File::exists($this->livewireViewsPath('foo.blade.php')));
+        $this->assertFalse(File::exists($classPath));
+        $this->assertFalse(File::exists($viewPath));
     }
 }
