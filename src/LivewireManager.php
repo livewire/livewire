@@ -52,14 +52,13 @@ class LivewireManager
     public function assets($options = null)
     {
         $appUrl = $this->appUrlOrRoot();
-        $assetUrl = rtrim(config('app.asset_url', ''), '/');
         $options = $options ? json_encode($options) : '';
 
         $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         $csrf = csrf_token();
-        $fullAssetPath = "{$assetUrl}/livewire{$versionedFileName}";
+        $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
 
         return <<<EOT
 <!-- Livewire Assets-->

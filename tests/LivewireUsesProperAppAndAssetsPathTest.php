@@ -7,14 +7,14 @@ use Livewire\Livewire;
 class LivewireUsesProperAppAndAssetsPathTest extends TestCase
 {
     /** @test */
-    function livewire_dot_js_references_configured_assets_url()
+    function livewire_dot_js_references_configured_app_url()
     {
         $this->assertContains(
             '<script src="/livewire/livewire.js?',
             Livewire::assets()
         );
 
-        config()->set('app.asset_url', 'https://foo.com/assets');
+        config()->set('app.url', 'https://foo.com/assets');
 
         $this->assertContains(
             '<script src="https://foo.com/assets/livewire/livewire.js?',
@@ -25,7 +25,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     /** @test */
     function assets_url_trims_trailing_slash()
     {
-        config()->set('app.asset_url', 'https://foo.com/assets/');
+        config()->set('app.url', 'https://foo.com/assets/');
 
         $this->assertContains(
             '<script src="https://foo.com/assets/livewire/livewire.js?',
