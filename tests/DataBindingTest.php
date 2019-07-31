@@ -4,6 +4,7 @@ namespace Tests;
 
 use Livewire\Component;
 use Livewire\LivewireManager;
+use Illuminate\Routing\UrlGenerator;
 
 class DataBindingTest extends TestCase
 {
@@ -82,10 +83,22 @@ class DataBindingTest extends TestCase
         $this->assertEquals('something else', $component->instance->propertyWithHook);
         $this->assertContains('propertyWithHook', $component->dirtyInputs);
     }
+
+    /** @test */
+    function container_bindings()
+    {
+        $component = app(LivewireManager::class)->test(DataBindingStub::class);
+
+        $component->runAction('containerBindings', 'something');
+
+        $this->assertEquals(url('/'), $component->instance->foo);
+        $this->assertEquals('something', $component->instance->bar);
+    }
 }
 
 class DataBindingStub extends Component {
     public $foo;
+    public $bar;
     public $propertyWithHook;
     public $arrayProperty = ['foo', 'bar'];
 
@@ -107,6 +120,12 @@ class DataBindingStub extends Component {
     public function removeArrayPropertyOne()
     {
         unset($this->arrayProperty[1]);
+    }
+
+    public function containerBindings(UrlGenerator $generator, $bar)
+    {
+        $this->foo = $generator->to('/');
+        $this->bar = $bar;
     }
 
     public function render()
