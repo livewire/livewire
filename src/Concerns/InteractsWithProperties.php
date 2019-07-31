@@ -60,7 +60,7 @@ trait InteractsWithProperties
     {
         $propertyName = $this->beforeFirstDot($name);
 
-        // @todo: this is fired even if a property isn't present at all which is confusing.
+        // @todo: this i fired even if a property isn't present at all which is confusing.
         throw_unless($this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName), ProtectedPropertyBindingException::class);
 
         if ($this->containsDots($name)) {
