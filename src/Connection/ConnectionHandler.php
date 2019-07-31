@@ -11,7 +11,7 @@ abstract class ConnectionHandler
     public function handle($payload)
     {
         $instance = ComponentHydrator::hydrate($payload['name'], $payload['id'], $payload['data'], $payload['checksum']);
-        $dumper = app()->make(DumpWatcher::class);
+        $dumper = new DumpWatcher;
         $instance->setPreviouslyRenderedChildren($payload['children']);
         $instance->hashPropertiesForDirtyDetection();
 
