@@ -52,7 +52,7 @@ class LivewireManager
     public function assets($options = null)
     {
         $appUrl = $this->appUrlOrRoot();
-        $assetUrl = config('app.asset_url', '');
+        $assetUrl = rtrim(config('app.asset_url', ''), '/');
         $options = $options ? json_encode($options) : '';
 
         $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
@@ -134,7 +134,7 @@ EOT;
         $defaultAppUrlInDotEnv = 'http://localhost';
 
         return config('app.url') !== $defaultAppUrlInDotEnv
-            ? config('app.url')
+            ? rtrim(config('app.url'), '/')
             : '';
     }
 }
