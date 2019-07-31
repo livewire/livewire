@@ -2,7 +2,6 @@
 
 namespace Livewire\Testing\Concerns;
 
-use DOMDocument;
 use Illuminate\Foundation\Testing\Assert as PHPUnit;
 
 trait MakesAssertions
