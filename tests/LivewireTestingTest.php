@@ -18,6 +18,15 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    function test_set_multiple_with_array()
+    {
+        app(LivewireManager::class)
+            ->test(HasMountArguments::class, 'foo')
+            ->set(['name' => 'bar'])
+            ->assertSet('name', 'bar');
+    }
+
+    /** @test */
     function test_assert_set()
     {
         app(LivewireManager::class)
