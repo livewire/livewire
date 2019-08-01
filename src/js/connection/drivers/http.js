@@ -38,7 +38,7 @@ export default {
 
                     // If there are dumps in the array then
                     // show the modal with all the dumped data.
-                    if (parsed.dumps.length > 0) {
+                    if(parsed.dumps.length > 0) {
                         this.appendToModal(parsed.dumps.join(''))
                     }
                 })
