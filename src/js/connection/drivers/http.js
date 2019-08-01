@@ -32,7 +32,12 @@ export default {
         }).then(response => {
             if (response.ok) {
                 response.text().then(response => {
-                    this.onMessage.call(this, JSON.parse(response))
+                    if (this.isOutputFromDump(response)) {
+                        this.onError(payload)
+                        this.showHtmlModal(response)
+                    } else {
+                        this.onMessage.call(this, JSON.parse(response))
+                    }
                 })
             } else {
                 response.text().then(response => {
@@ -43,6 +48,10 @@ export default {
         }).catch(() => {
             this.onError(payload)
         })
+    },
+
+    isOutputFromDump(output) {
+        return !! output.match(/<script>Sfdump\(".+"\)<\/script>/)
     },
 
     getCSRFToken() {
@@ -78,7 +87,7 @@ export default {
         modal.style.zIndex = 200000
 
         let iframe = document.createElement('iframe')
-        iframe.style.backgroundColor = 'white'
+        iframe.style.backgroundColor = '#17161A'
         iframe.style.borderRadius = '5px'
         iframe.style.width = '100%'
         iframe.style.height = '100%'
