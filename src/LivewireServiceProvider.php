@@ -32,6 +32,10 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function interceptRedirect()
     {
+        if (!$this->isLivewireRequest()) {
+            return;
+        }
+
         $this->app->extend('redirect', function ($redirector) {
             $component = collect(debug_backtrace())->pluck('object')->first(function ($object) {
                 return $object instanceof Component;
