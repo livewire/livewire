@@ -716,7 +716,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
           if (parsed.dumps.length > 0) {
-            _this.appendToModal(parsed.dumps.join(''));
+            _this.showHtmlModal(parsed.dumps.join(''));
           }
         });
       } else {
@@ -788,16 +788,6 @@ __webpack_require__.r(__webpack_exports__);
   hideHtmlModal: function hideHtmlModal(modal) {
     modal.outerHTML = '';
     document.body.style.overflow = 'visible';
-  },
-  appendToModal: function appendToModal(html) {
-    var modal = document.querySelector('#burst-error');
-
-    if (modal) {
-      var doc = modal.querySelector('iframe').contentDocument.body;
-      doc.innerHTML = doc.innerHTML + html;
-    } else {
-      this.showHtmlModal(html);
-    }
   }
 });
 
