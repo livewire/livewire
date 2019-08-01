@@ -13,7 +13,6 @@ use Livewire\Commands\LivewireDestroyCommand;
 use Livewire\Commands\LivewireMakeCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Livewire\LivewireComponentsFinder;
-use Livewire\Watchers\DumpWatcher;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
 
@@ -35,7 +34,6 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
-        $this->registerWatchers();
     }
 
     public function registerRoutes()
@@ -87,12 +85,5 @@ class LivewireServiceProvider extends ServiceProvider
     public function isLivewireRequest()
     {
         return request()->headers->get('X-Livewire') == true;
-    }
-
-    public function registerWatchers()
-    {
-        $this->app->singleton(DumpWatcher::class, function ($app) {
-            return new DumpWatcher();
-        });     
     }
 }
