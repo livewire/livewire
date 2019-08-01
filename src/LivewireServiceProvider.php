@@ -13,7 +13,6 @@ use Livewire\Commands\LivewireDestroyCommand;
 use Livewire\Commands\LivewireMakeCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Livewire\LivewireComponentsFinder;
-use Livewire\Watchers\DumpWatcher;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
 
@@ -87,5 +86,4 @@ class LivewireServiceProvider extends ServiceProvider
     {
         return request()->headers->get('X-Livewire') == true;
     }
-
 }

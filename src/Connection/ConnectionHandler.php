@@ -4,7 +4,7 @@ namespace Livewire\Connection;
 
 use Illuminate\Validation\ValidationException;
 use Livewire\ResponsePayload;
-use Livewire\Watchers\DumpWatcher;
+use Livewire\DumpWatcher;
 
 abstract class ConnectionHandler
 {
