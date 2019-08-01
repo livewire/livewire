@@ -11,7 +11,7 @@ class DumpWatcherTest extends TestCase
     {
         $dumpString = 'Livewire is awesome!';
 
-        $watcher = app()->make(DumpWatcher::class);
+        $watcher = new DumpWatcher;
         $this->assertEquals(0, count($watcher->dumps));
         
         dump($dumpString);
