@@ -47,11 +47,6 @@ abstract class Component
             ->map([Str::class, 'kebab'])
             ->implode('.');
     }
-    
-    public function render()
-    {
-        return view("livewire.{$this->name()}");
-    }
 
     public function redirect($url)
     {
