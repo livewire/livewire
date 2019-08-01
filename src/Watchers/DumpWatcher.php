@@ -1,5 +1,5 @@
 <?php
-namespace Livewire;
+namespace Livewire\Watchers;
 
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
@@ -7,6 +7,7 @@ use Symfony\Component\VarDumper\VarDumper;
 
 class DumpWatcher
 {
+
     public $dumps = [];
 
     public function __construct()
@@ -21,7 +22,6 @@ class DumpWatcher
     public function recordDump($dump)
     {
         $this->dumps[] = $dump;
-
         return $this;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Livewire\DumpWatcher;
+use Livewire\Watchers\DumpWatcher;
 
 class DumpWatcherTest extends TestCase
 {
@@ -13,10 +13,12 @@ class DumpWatcherTest extends TestCase
 
         $watcher = app()->make(DumpWatcher::class);
         $this->assertEquals(0, count($watcher->dumps));
-
+        
         dump($dumpString);
-
+        
         $this->assertEquals(1, count($watcher->dumps));
         $this->assertContains($dumpString, $watcher->dumps[0]);
     }
+
 }
+

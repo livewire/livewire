@@ -35,10 +35,9 @@ export default {
                     const parsed = JSON.parse(response);
 
                     this.onMessage.call(this, parsed)
-
-                    // If there are dumps in the array then
-                    // show the modal with all the dumped data.
-                    if(parsed.dumps.length > 0) {
+                    //if there are dumps in the array then
+                    //show the modal with all the dumped data
+                    if(parsed.dumps.length > 0){
                         this.appendToModal(parsed.dumps.join(''))
                     }
                 })
@@ -112,11 +111,10 @@ export default {
         document.body.style.overflow = 'visible'
     },
 
-    appendToModal(html) {
+    appendToModal(html){
         const modal = document.querySelector('#burst-error')
-
-        if (modal) {
-            const doc = modal.querySelector('iframe').contentDocument.body
+        if(modal){
+            let doc = modal.querySelector('iframe').contentDocument.body
             doc.innerHTML = doc.innerHTML + html
         } else {
             this.showHtmlModal(html)
