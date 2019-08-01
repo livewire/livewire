@@ -85,14 +85,14 @@ class DataBindingTest extends TestCase
     }
 
     /** @test */
-    function container_bindings()
+    function component_actions_get_automatic_dependancy_injection()
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
-        $component->runAction('containerBindings', 'something');
+        $component->runAction('hasInjections', 'foobar');
 
-        $this->assertEquals(url('/'), $component->instance->foo);
-        $this->assertEquals('something', $component->instance->bar);
+        $this->assertEquals('http://localhost', $component->foo);
+        $this->assertEquals('foobar', $component->bar);
     }
 }
 
@@ -122,7 +122,7 @@ class DataBindingStub extends Component {
         unset($this->arrayProperty[1]);
     }
 
-    public function containerBindings(UrlGenerator $generator, $bar)
+    public function hasInjections(UrlGenerator $generator, $bar)
     {
         $this->foo = $generator->to('/');
         $this->bar = $bar;
