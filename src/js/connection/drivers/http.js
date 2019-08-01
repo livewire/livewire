@@ -32,14 +32,7 @@ export default {
         }).then(response => {
             if (response.ok) {
                 response.text().then(response => {
-                    const parsed = JSON.parse(response);
-
-                    this.onMessage.call(this, parsed)
-                    //if there are dumps in the array then
-                    //show the modal with all the dumped data
-                    if(parsed.dumps.length > 0){
-                        this.showHtmlModal(parsed.dumps.join(''))
-                    }
+                    this.onMessage.call(this, JSON.parse(response))
                 })
             } else {
                 response.text().then(response => {
