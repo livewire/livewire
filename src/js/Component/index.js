@@ -5,6 +5,7 @@ import DOM from '../dom/dom'
 import DOMElement from '../dom/dom_element'
 import nodeInitializer from "../node_initializer";
 import store from '../store'
+import { isNull, isUndefined } from 'util';
 
 class Component {
     constructor(el, connection) {
@@ -21,8 +22,8 @@ class Component {
         this.loadingEls = []
         this.loadingElsByRef = {}
         this.modelTimeout = null
+        this.loadingDelayTimeout = null
         this.loadingMinimumTimeout = null
-        this.loadingMinimumTimerRunning = false
 
         this.initialize()
 
@@ -91,12 +92,8 @@ class Component {
 
         this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
 
-        if(this.loadingMinimumTimerRunning) {
-            this.setLoading([])
-
-            this.loadingMinimumTimerRunning = false
-        }else{
-            clearTimeout(this.loadingMinimumTimeout)
+        if(! isNull(this.loadingMinimumTimeout)) {
+            this.startLoading(this.loadingEls)
         }
 
         this.messageInTransit = null
@@ -290,31 +287,11 @@ class Component {
         }
     }
 
-    setLoading(refs) {
-        const refEls = refs.map(ref => this.loadingElsByRef[ref]).filter(el => el).flat()
+    startLoading(els) {
+        els.forEach(el => {
 
-        const allEls = this.loadingEls.concat(refEls)
-
-        allEls.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
-
-            if (directive.modifiers.includes('min')) {
-                if(! this.loadingMinimumTimerRunning) {
-                    this.loadingMinimumTimerRunning = true;
-
-                    this.loadingMinimumTimeout = setTimeout(() => { 
-
-                        if(! this.loadingMinimumTimerRunning) {
-                            this.unsetLoading(this.loadingEls)
-                        }
-
-                        clearTimeout(this.loadingMinimumTimeout)
-
-                        this.loadingMinimumTimerRunning = false;
-                    }, directive.durationOr(500))
-                }
-            }
 
             if (directive.modifiers.includes('class')) {
                 // This is because wire:loading.class="border border-red"
@@ -336,13 +313,10 @@ class Component {
                 el.style.display = 'inline-block'
             }
         })
-
-        return allEls
     }
 
-
-    unsetLoading(loadingEls) {
-        loadingEls.forEach(el => {
+    stopLoading(els) {
+        els.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
 
@@ -364,10 +338,63 @@ class Component {
                 el.style.display = 'none'
             }
         })
-
-        return loadingEls
     }
 
+    setLoading(refs) {
+        const refEls = refs.map(ref => this.loadingElsByRef[ref]).filter(el => el).flat()
+
+        const allEls = this.loadingEls.concat(refEls)
+
+        allEls.forEach(el => {
+
+            const directive = el.el.directives.get('loading')
+            el = el.el.el // I'm so sorry @todo
+
+            if (directive.modifiers.includes('after')) {
+                if(isNull(this.loadingDelayTimeout)) {
+                    this.stopLoading(allEls)
+
+                    this.loadingDelayTimeout = setTimeout(() => {
+                        if(! isNull(this.messageInTransit)) {
+                            this.startLoading(allEls)
+                        }
+
+                        clearTimeout(this.loadingDelayTimeout)
+
+                        this.loadingDelayTimeout = null
+                    }, directive.durationOr(500))
+
+                    return
+                } else {
+                    clearTimeout(this.loadingDelayTimeout)
+
+                    this.loadingDelayTimeout = null
+                }  
+            }
+
+            if (directive.modifiers.includes('min')) {
+                this.loadingMinimumTimeout = setTimeout(() => {
+                    if(isNull(this.messageInTransit)) {
+                        this.stopLoading(allEls)
+                    }
+
+                    clearTimeout(this.loadingMinimumTimeout)
+
+                    this.loadingMinimumTimeout = null
+
+                }, directive.durationOr(500))
+
+            }
+
+            this.startLoading(allEls)
+        })
+
+        return allEls
+    }
+
+    unsetLoading(loadingEls) {
+        // No need to "unset" loading because the dom-diffing will automatically reverse any changes.
+    }
 
     modelSyncDebounce(callback, time) {
         return (e) => {
