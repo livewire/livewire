@@ -21,6 +21,8 @@ class Component {
         this.loadingEls = []
         this.loadingElsByRef = {}
         this.modelTimeout = null
+        this.loadingMinimumTimeout = null
+        this.loadingMinimumTimerRunning = false
 
         this.initialize()
 
@@ -89,7 +91,13 @@ class Component {
 
         this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
 
-        this.unsetLoading(this.messageInTransit.loadingEls)
+        if(this.loadingMinimumTimerRunning) {
+            this.setLoading([])
+
+            this.loadingMinimumTimerRunning = false
+        }else{
+            clearTimeout(this.loadingMinimumTimeout)
+        }
 
         this.messageInTransit = null
 
@@ -291,6 +299,23 @@ class Component {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
 
+            if (directive.modifiers.includes('min')) {
+                if(! this.loadingMinimumTimerRunning) {
+                    this.loadingMinimumTimerRunning = true;
+
+                    this.loadingMinimumTimeout = setTimeout(() => { 
+
+                        if(! this.loadingMinimumTimerRunning) {
+                            this.unsetLoading(this.loadingEls)
+                        }
+
+                        clearTimeout(this.loadingMinimumTimeout)
+
+                        this.loadingMinimumTimerRunning = false;
+                    }, directive.durationOr(500))
+                }
+            }
+
             if (directive.modifiers.includes('class')) {
                 // This is because wire:loading.class="border border-red"
                 // wouldn't work with classList.add.
@@ -315,9 +340,34 @@ class Component {
         return allEls
     }
 
+
     unsetLoading(loadingEls) {
-        // No need to "unset" loading because the dom-diffing will automatically reverse any changes.
+        loadingEls.forEach(el => {
+            const directive = el.el.directives.get('loading')
+            el = el.el.el // I'm so sorry @todo
+
+            if (directive.modifiers.includes('class')) {
+                const classes = directive.value.split(' ')
+
+                if (directive.modifiers.includes('remove')) {
+                    el.classList.add(...classes)
+                } else {
+                    el.classList.remove(...classes)
+                }
+            } else if (directive.modifiers.includes('attr')) {
+                if (directive.modifiers.includes('remove')) {
+                    el.setAttribute(directive.value)
+                } else {
+                    el.removeAttribute(directive.value, true)
+                }
+            } else {
+                el.style.display = 'none'
+            }
+        })
+
+        return loadingEls
     }
+
 
     modelSyncDebounce(callback, time) {
         return (e) => {

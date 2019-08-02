@@ -84,3 +84,13 @@ test('remove element attribute while loading', async () => {
         expect(document.querySelector('span').hasAttribute('disabled')).toBeFalsy()
     })
 })
+
+//todo
+test('long running request with minimum loading only stops loading state at end of request', async () => {
+    // fire long action > min delay
+})
+
+//todo
+test('short running request with minimum loading only stops loading state at end of minimum delay', async () => {
+    //fire short action < min delay 
+})
