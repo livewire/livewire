@@ -1,5 +1,5 @@
 import { wait } from 'dom-testing-library'
-import { mount, mountAndReturn } from './utils'
+import { mount } from './utils'
 
 test('show element while loading', async () => {
     mount('<button wire:click="onClick"></button><span style="display: none" wire:loading></span>')
