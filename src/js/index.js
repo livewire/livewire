@@ -1,6 +1,6 @@
-import componentStore from './store'
+import componentStore from './Store'
 import DOM from "./dom/dom";
-import Component from "./component";
+import Component from "./Component";
 import Connection from './connection'
 import drivers from './connection/drivers'
 
