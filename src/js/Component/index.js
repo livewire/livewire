@@ -70,6 +70,9 @@ class Component {
     }
 
     messageSendFailed() {
+        //Reset all loading elements back to their original state
+        this.unsetLoading(this.messageInTransit.loadingEls)
+
         this.messageInTransit = null
     }
 
@@ -88,8 +91,6 @@ class Component {
         this.replaceDom(response.dom, response.dirtyInputs)
 
         this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
-
-        this.unsetLoading(this.messageInTransit.loadingEls)
 
         this.messageInTransit = null
 
@@ -316,7 +317,30 @@ class Component {
     }
 
     unsetLoading(loadingEls) {
-        // No need to "unset" loading because the dom-diffing will automatically reverse any changes.
+        loadingEls.forEach(el => {
+            const directive = el.el.directives.get('loading')
+            el = el.el.el // I'm so sorry @todo
+
+            if (directive.modifiers.includes('class')) {
+                const classes = directive.value.split(' ')
+
+                if (directive.modifiers.includes('remove')) {
+                    el.classList.add(...classes)
+                } else {
+                    el.classList.remove(...classes)
+                }
+            } else if (directive.modifiers.includes('attr')) {
+                if (directive.modifiers.includes('remove')) {
+                    el.setAttribute(directive.value)
+                } else {
+                    el.removeAttribute(directive.value, true)
+                }
+            } else {
+                el.style.display = 'none'
+            }
+        })
+
+        return loadingEls
     }
 
     modelSyncDebounce(callback, time) {

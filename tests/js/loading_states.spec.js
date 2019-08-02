@@ -1,5 +1,5 @@
 import { wait } from 'dom-testing-library'
-import { mount } from './utils'
+import { mount, mountAndReturn } from './utils'
 
 test('show element while loading', async () => {
     mount('<button wire:click="onClick"></button><span style="display: none" wire:loading></span>')
@@ -84,3 +84,32 @@ test('remove element attribute while loading', async () => {
         expect(document.querySelector('span').hasAttribute('disabled')).toBeFalsy()
     })
 })
+
+// //TODO - need to know how to throw a 500 error return from Livewire in a test - maybe a new method in util instead of mount?
+// test('loading state is reset when an error is thrown', async () => {
+
+//     //TODO Implement in utils.js
+//     //Return a 500 error back
+//     mountAndReturnError(
+//         '<button wire:click="onClick"></button><span wire:loading.class="foo"></span>',
+//         500 
+//     )
+
+//     //Fire button click
+//     // document.querySelector('button').click()
+
+//     //check that the loading state is showing during wait
+//     await wait(() => {
+//         expect(document.querySelector('span').classList.contains('foo')).toBeTruthy()
+//     })
+
+//     // throw error on onClick action
+
+//     //check 500 error is returned
+
+//     //check state of loading is reset to original
+
+//     await wait(() => {
+//         expect(document.querySelector('span').classList.contains('foo')).toBeFalsy()
+//     })
+// })
