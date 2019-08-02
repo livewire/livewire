@@ -264,7 +264,8 @@ export default class DOMElement {
     }
 
     updateSelect(value) {
-        const arrayWrappedValue = [].concat(value)
+        const arrayWrappedValue = [].concat(value).map(value => { return value +'' })
+
         Array.from(this.el.options).forEach(option => {
             option.selected = arrayWrappedValue.includes(option.value)
         })

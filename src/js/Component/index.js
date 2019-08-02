@@ -20,7 +20,7 @@ class Component {
         this.messageInTransit = null
         this.loadingEls = []
         this.loadingElsByRef = {}
-
+        this.modelTimeout = null
 
         this.initialize()
 
@@ -317,6 +317,35 @@ class Component {
 
     unsetLoading(loadingEls) {
         // No need to "unset" loading because the dom-diffing will automatically reverse any changes.
+    }
+
+    modelSyncDebounce(callback, time) {
+        return (e) => {
+            clearTimeout(this.modelTimeout)
+
+            this.modelTimeoutCallback = () => { callback(e) }
+            this.modelTimeout = setTimeout(() => {
+                callback(e)
+                this.modelTimeout = null
+                this.modelTimeoutCallback = null
+            }, time)
+        }
+    }
+
+    callAfterModelDebounce(callback) {
+        // This is to protect against the following scenario:
+        // A user is typing into a debounced input, and hits the enter key.
+        // If the enter key submits a form or something, the submission
+        // will happen BEFORE the model input finishes syncing because
+        // of the debounce. This makes sure to clear anything in the debounce queue.
+        if (this.modelTimeout) {
+            clearTimeout(this.modelTimeout)
+            this.modelTimeoutCallback()
+            this.modelTimeout = null
+            this.modelTimeoutCallback = null
+        }
+
+        callback()
     }
 }
 

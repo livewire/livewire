@@ -9,12 +9,15 @@ class TestableLivewire
     public $name;
     public $id;
     public $children;
+    public $checksum;
     public $prefix;
     public $instance;
     public $dom;
     public $data;
     public $dirtyInputs;
     public $events;
+    public $eventQueue;
+    public $redirectTo;
 
     use Concerns\HasFunLittleUtilities,
         Concerns\MakesCallsToComponent,
@@ -69,5 +72,10 @@ class TestableLivewire
     public function __call($method, $params)
     {
         return $this->runAction($method, $params);
+    }
+
+    public function __set($name, $value)
+    {
+        return $this->set($name, $value);
     }
 }

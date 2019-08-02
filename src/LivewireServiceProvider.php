@@ -40,21 +40,10 @@ class LivewireServiceProvider extends ServiceProvider
     {
         RouteFacade::get('/livewire/livewire.js', LivewireJavaScriptAssets::class);
 
-        // Don't register route for non-Livewire calls.
-        if ($this->isLivewireRequest()) {
-            // This should be the middleware stack of the original request.
-            $middleware = decrypt(request('middleware'), $unserialize = true);
+        RouteFacade::post('/livewire/message', HttpConnectionHandler::class);
 
-            RouteFacade::post('/livewire/message', HttpConnectionHandler::class)
-                ->middleware($middleware);
-        }
-
-        if (request()->headers->get('X-Livewire-Keep-Alive') == true) {
-            // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
-            RouteFacade::get('/livewire/keep-alive', function () {
-                return response(200);
-            })->middleware('web');
-        }
+        // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
+        RouteFacade::get('/livewire/keep-alive', LivewireKeepAlive::class);
     }
 
     public function registerViews()

@@ -1,4 +1,4 @@
-import { debounce, kebabCase } from './util'
+import { kebabCase } from './util'
 import ModelAction from './action/model'
 import MethodAction from './action/method'
 import DOMElement from './dom/dom_element'
@@ -53,7 +53,7 @@ export default {
         const isLazy = directive.modifiers.includes('lazy')
         const debounceIf = (condition, callback, time) => {
             return condition
-                ? debounce(callback, time)
+                ? component.modelSyncDebounce(callback, time)
                 : callback
         }
         const hasDebounceModifier = directive.modifiers.includes('debounce')
@@ -101,25 +101,27 @@ export default {
                 return
             }
 
-            const el = new DOMElement(e.target)
+            component.callAfterModelDebounce(() => {
+                const el = new DOMElement(e.target)
 
-            directive.setEventContext(e)
+                directive.setEventContext(e)
 
-            // This is outside the conditional below so "wire:click.prevent" without
-            // a value still prevents default.
-            this.preventAndStop(e, directive.modifiers)
-            const method = directive.method
-            const params = directive.params
+                // This is outside the conditional below so "wire:click.prevent" without
+                // a value still prevents default.
+                this.preventAndStop(e, directive.modifiers)
+                const method = directive.method
+                const params = directive.params
 
-            // Check for global event emission.
-            if (method === '$emit') {
-                store.emit(...params)
-                return
-            }
+                // Check for global event emission.
+                if (method === '$emit') {
+                    store.emit(...params)
+                    return
+                }
 
-            if (directive.value) {
-                component.addAction(new MethodAction(method, params, el))
-            }
+                if (directive.value) {
+                    component.addAction(new MethodAction(method, params, el))
+                }
+            })
         }))
     },
 
