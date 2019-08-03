@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Redirect;
 class RedirectTest extends TestCase
 {
     /** @test */
-    function validate_component_properties_from_local_redirect()
+    function standard_redirect()
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
 
@@ -20,27 +20,27 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
-    function validate_component_properties_from_laravel_redirect_helper()
+    function redirect_helper()
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectHelper');
 
-        $this->assertEquals(url('illuminate'), $component->redirectTo);
+        $this->assertEquals(url('foo'), $component->redirectTo);
     }
 
     /** @test */
-    function validate_component_properties_from_laravel_redirect_facade_using_to()
+    function redirect_facade_with_to_method()
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectFacadeUsingTo');
 
-        $this->assertEquals(url('illuminate'), $component->redirectTo);
+        $this->assertEquals(url('foo'), $component->redirectTo);
     }
 
     /** @test */
-    function validate_component_properties_from_laravel_redirect_facade_using_route()
+    function redirect_facade_with_route_method()
     {
         $this->registerNamedRoute();
 
@@ -48,11 +48,11 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectFacadeUsingRoute');
 
-        $this->assertEquals(route('illuminate'), $component->redirectTo);
+        $this->assertEquals(route('foo'), $component->redirectTo);
     }
 
     /** @test */
-    function validate_component_properties_from_laravel_redirect_helper_using_route()
+    function redirect_helper_with_route_method()
     {
         $this->registerNamedRoute();
 
@@ -60,14 +60,14 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectHelperUsingRoute');
 
-        $this->assertEquals(route('illuminate'), $component->redirectTo);
+        $this->assertEquals(route('foo'), $component->redirectTo);
     }
 
     protected function registerNamedRoute()
     {
-        Route::get('illuminate', function () {
+        Route::get('foo', function () {
             return true;
-        })->name('illuminate');
+        })->name('foo');
     }
 }
 
@@ -80,22 +80,22 @@ class TriggersRedirectStub extends Component
 
     public function triggerRedirectHelper()
     {
-        return redirect('illuminate');
+        return redirect('foo');
     }
 
     public function triggerRedirectFacadeUsingTo()
     {
-        return Redirect::to('illuminate');
+        return Redirect::to('foo');
     }
 
     public function triggerRedirectFacadeUsingRoute()
     {
-        return Redirect::route('illuminate');
+        return Redirect::route('foo');
     }
 
     public function triggerRedirectHelperUsingRoute()
     {
-        return redirect()->route('illuminate');
+        return redirect()->route('foo');
     }
 
     public function render()
