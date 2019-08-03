@@ -19,6 +19,16 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
+    function receive_event_with_multiple_parameters()
+    {
+        $component = app(LivewireManager::class)->test(ReceivesEvents::class);
+
+        $component->fireEvent('bar', 'baz', 'blab');
+
+        $this->assertEquals($component->foo, 'bazblab');
+    }
+
+    /** @test */
     function listeners_are_provided_to_frontend()
     {
         $component = app(LivewireManager::class)->test(ReceivesEvents::class);
@@ -43,9 +53,9 @@ class ReceivesEvents extends Component {
 
     protected $listeners = ['bar' => 'onBar'];
 
-    public function onBar($value)
+    public function onBar($value, $otherValue = '')
     {
-        $this->foo = $value;
+        $this->foo = $value . $otherValue;
     }
 
     public function emitGoo()
