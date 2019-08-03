@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Commands\LivewireDestroyCommand;
 use Livewire\Commands\LivewireMakeCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Livewire\LivewireComponentsFinder;
@@ -37,35 +38,12 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerRoutes()
     {
-        RouteFacade::get('/livewire/livewire.js', function () {
-            $file = __DIR__ . '/../dist/livewire.js';
-            $lastModified = filemtime($file);
-            $contents = file_get_contents($file);
+        RouteFacade::get('/livewire/livewire.js', LivewireJavaScriptAssets::class);
 
-            // These headers will enable browsers to cache this asset.
-            return response($contents)
-                ->withHeaders([
-                    'Content-Type' => 'application/javascript; charset=utf-8',
-                    'Cache-Control' => 'public, max-age=3600',
-                    'Last-Modified' => gmdate("D, d M Y H:i:s", $lastModified)." GMT",
-                ]);
-        });
+        RouteFacade::post('/livewire/message', HttpConnectionHandler::class);
 
-        // Don't register route for non-Livewire calls.
-        if ($this->isLivewireRequest()) {
-            // This should be the middleware stack of the original request.
-            $middleware = decrypt(request('middleware'), $unserialize = true);
-
-            RouteFacade::post('/livewire/message', HttpConnectionHandler::class)
-                ->middleware($middleware);
-        }
-
-        if (request()->headers->get('X-Livewire-Keep-Alive') == true) {
-            // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
-            RouteFacade::get('/livewire/keep-alive', function () {
-                return response(200);
-            })->middleware('web');
-        }
+        // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
+        RouteFacade::get('/livewire/keep-alive', LivewireKeepAlive::class);
     }
 
     public function registerViews()
@@ -78,6 +56,7 @@ class LivewireServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 LivewireMakeCommand::class,
+                LivewireDestroyCommand::class,
             ]);
 
             Artisan::command('livewire:discover', function () {

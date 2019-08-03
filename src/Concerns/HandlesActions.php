@@ -55,9 +55,23 @@ trait HandlesActions
                 throw_unless(method_exists($this, $method), MissingComponentMethodReferencedByAction::class);
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), NonPublicComponentMethodCall::class);
 
-                $this->{$method}(...$params);
+                $this->{$method}(
+                    ...$this->resolveActionParameters($method, $params)
+                );
+
                 break;
         }
+    }
+
+    protected function resolveActionParameters($method, $params)
+    {
+        return collect((new \ReflectionMethod($this, $method))->getParameters())->map(function ($parameter) use (&$params) {
+            return rescue(function () use ($parameter) {
+                return app($parameter->getClass()->name);
+            }, function () use (&$params) {
+                return array_shift($params);
+            }, false);
+        });
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)

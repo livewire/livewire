@@ -15,14 +15,14 @@ trait MakesAssertions
 
     public function assertSee($value)
     {
-        PHPUnit::assertStringContainsString((string) $value, $this->dom);
+        PHPUnit::assertStringContainsString((string) $value, preg_replace('(wire:data=\".+}")', '', $this->dom));
 
         return $this;
     }
 
     public function assertDontSee($value)
     {
-        PHPUnit::assertStringNotContainsString((string) $value, $this->dom);
+        PHPUnit::assertStringNotContainsString((string) $value, preg_replace('(wire:data=\".+}")', '', $this->dom));
 
         return $this;
     }

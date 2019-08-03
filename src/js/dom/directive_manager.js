@@ -17,7 +17,7 @@ export default class {
     }
 
     missing(type) {
-        return ! this.directives.map(directive => directive.type).includes(type)
+        return ! this.has(type)
     }
 
     get(type) {

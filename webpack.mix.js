@@ -8,5 +8,10 @@ mix
 mix.webpackConfig({
     output: {
         libraryTarget: 'umd',
+    },
+    resolve: {
+        alias: {
+            '@': __dirname + '/src/js'
+        }
     }
-})
+});

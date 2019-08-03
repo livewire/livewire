@@ -138,6 +138,17 @@ test('select element options are automatically selected by value attribute', asy
     })
 })
 
+test('select element options with numeric values work', async () => {
+    mountWithData(
+        '<select wire:model="foo"><option value="1">ignore</option><option value="2">ignore</option></select>',
+        { foo: 2 }
+    )
+
+    await wait(() => {
+        expect(document.querySelectorAll('option')[1].selected).toBeTruthy()
+    })
+})
+
 test('multiple select element options are automatically selected', async () => {
     mountWithData(
         '<select wire:model="foo" multiple><option>bar</option><option>baz</option></select>',

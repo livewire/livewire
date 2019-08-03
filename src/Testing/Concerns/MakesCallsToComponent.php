@@ -32,13 +32,24 @@ trait MakesCallsToComponent
         return $this;
     }
 
-    public function set($name, $value)
+    public function set($name, $value = null)
     {
         return $this->updateProperty($name, $value);
     }
 
-    public function updateProperty($name, $value)
+    public function updateProperty($name, $value = null)
     {
+        if (is_array($name)) {
+            foreach ($name as $key => $value) {
+                $this->sendMessage('syncInput', [
+                    'name' => $key,
+                    'value' => $value,
+                ]);
+            }
+
+            return $this;
+        }
+
         $this->sendMessage('syncInput', [
             'name' => $name,
             'value' => $value,

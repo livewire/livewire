@@ -1,4 +1,4 @@
-import EventAction from "./action/event";
+import EventAction from "@/action/event";
 
 const store = {
     componentsById: {},
@@ -25,9 +25,9 @@ const store = {
     },
 
     emit(event, ...params) {
-        Object.keys(this.listeners).forEach(event => {
+        if (this.listeners[event] !== undefined) {
             this.listeners[event].forEach(callback => callback(...params))
-        })
+        }
 
         this.componentsListeningForEvent(event).forEach(
             component => component.addAction(new EventAction(

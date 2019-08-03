@@ -4,6 +4,7 @@ namespace Livewire\Connection;
 
 use Illuminate\Validation\ValidationException;
 use Livewire\ResponsePayload;
+use Livewire\Routing\Redirector;
 
 abstract class ConnectionHandler
 {
@@ -15,9 +16,11 @@ abstract class ConnectionHandler
         $instance->hashPropertiesForDirtyDetection();
 
         try {
-            foreach ($payload['actionQueue'] as $action) {
-                $this->processMessage($action['type'], $action['payload'], $instance);
-            }
+            $this->interceptRedirects($instance, function() use ($payload, $instance) {
+                foreach ($payload['actionQueue'] as $action) {
+                    $this->processMessage($action['type'], $action['payload'], $instance);
+                }
+            });
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
         }
@@ -59,5 +62,18 @@ abstract class ConnectionHandler
         }
 
         $instance->updated();
+    }
+
+    protected function interceptRedirects($instance, $callback)
+    {
+        $redirector = app('redirect');
+
+        app()->bind('redirect', function () use ($instance) {
+            return app(Redirector::class)->component($instance);
+        });
+
+        $callback();
+
+        app()->instance('redirect', $redirector);
     }
 }

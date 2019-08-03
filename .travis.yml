@@ -1,0 +1,16 @@
+matrix:
+  include:
+    - language: php
+      php:
+        - 7.1
+      before_install:
+        - travis_retry composer self-update
+      install:
+        - travis_retry composer update --prefer-dist --no-interaction --prefer-stable --no-suggest
+      script:
+        - vendor/bin/phpunit
+    - language: node_js
+      node_js:
+      - 12.4
+      script:
+        - jest

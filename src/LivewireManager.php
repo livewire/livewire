@@ -11,6 +11,7 @@ class LivewireManager
 {
     protected $prefix = 'wire';
     protected $componentAliases = [];
+    protected $middlewaresFilter;
 
     public function prefix($prefix = null)
     {
@@ -50,19 +51,23 @@ class LivewireManager
 
     public function assets($options = null)
     {
+        $appUrl = $this->appUrlOrRoot();
         $options = $options ? json_encode($options) : '';
-        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
+
+        $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         $csrf = csrf_token();
+        $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
 
         return <<<EOT
 <!-- Livewire Assets-->
 <style>[wire\:loading] { display: none; }</style>
-<script src="/livewire{$versionedFileName}"></script>
+<script src="{$fullAssetPath}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         window.livewire = new Livewire({$options});
+        window.livewire_app_url = "{$appUrl}";
         window.livewire_token = "{$csrf}";
     });
 </script>
@@ -80,7 +85,11 @@ EOT;
         $children = $instance->getRenderedChildren();
         $checksum = md5($name.$id);
 
-        $middleware = encrypt($this->currentMiddlewareStack(), $serialize = true);
+        $middlewareStack = $this->currentMiddlewareStack();
+        if ($this->middlewaresFilter) {
+            $middlewareStack = array_filter($middlewareStack, $this->middlewaresFilter);
+        }
+        $middleware = encrypt($middlewareStack, $serialize = true);
 
         return new InitialResponsePayload([
             'id' => $id,
@@ -104,6 +113,11 @@ EOT;
         return request()->route()->gatherMiddleware();
     }
 
+    public function filterMiddleware($filter)
+    {
+        return $this->middlewaresFilter = $filter;
+    }
+
     public function dummyMount($id, $tagName)
     {
         return "<{$tagName} wire:id=\"{$id}\"></{$tagName}>";
@@ -112,5 +126,14 @@ EOT;
     public function test($name, ...$params)
     {
         return new TestableLivewire($name, $this->prefix, $params);
+    }
+
+    public function appUrlOrRoot()
+    {
+        $defaultAppUrlInDotEnv = 'http://localhost';
+
+        return config('app.url') !== $defaultAppUrlInDotEnv
+            ? rtrim(config('app.url'), '/')
+            : '';
     }
 }

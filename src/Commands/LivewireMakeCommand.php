@@ -28,6 +28,8 @@ class LivewireMakeCommand extends Command
 
         $force = $this->option('force');
 
+        $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
+
         $class = $this->createClass($force);
         $view = $this->createView($force);
 
@@ -36,6 +38,13 @@ class LivewireMakeCommand extends Command
         ($class && $view) && $this->info("👍  Files created:");
         $class && $this->info("-> [{$class}]");
         $view && $this->info("-> [{$view}]");
+
+        if ($showWelcomeMessage) {
+            $this->info("\n⚡️⚡️ Thanks for using livewire!");
+            $this->info("\nIf you dig it, here are two ways you can say thanks:");
+            $this->info("- Star the repo on Github");
+            $this->info("- Shout out the project on Twitter and tag me (@calebporzio)");
+        }
     }
 
     protected function createClass($force = false)
@@ -80,5 +89,12 @@ class LivewireMakeCommand extends Command
     public function refreshComponentAutodiscovery()
     {
         app(LivewireComponentsFinder::class)->build();
+    }
+
+    public function isFirstTimeMakingAComponent()
+    {
+        $livewireFolder = app_path(collect(['Http', 'Livewire'])->implode(DIRECTORY_SEPARATOR));
+
+        return ! File::isDirectory($livewireFolder);
     }
 }

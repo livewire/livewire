@@ -1,8 +1,8 @@
-import { debounce, kebabCase } from './util'
-import ModelAction from './action/model'
-import MethodAction from './action/method'
-import DOMElement from './dom/dom_element'
-import store from './store'
+import { kebabCase } from '@/util'
+import ModelAction from '@/action/model'
+import MethodAction from '@/action/method'
+import DOMElement from '@/dom/dom_element'
+import store from '@/Store'
 
 export default {
     initialize(el, component) {
@@ -53,7 +53,7 @@ export default {
         const isLazy = directive.modifiers.includes('lazy')
         const debounceIf = (condition, callback, time) => {
             return condition
-                ? debounce(callback, time)
+                ? component.modelSyncDebounce(callback, time)
                 : callback
         }
         const hasDebounceModifier = directive.modifiers.includes('debounce')
@@ -67,8 +67,10 @@ export default {
                 component.addAction(new ModelAction(model, value, el))
             }, directive.durationOr(150)))
         } else {
+            const defaultEventType = el.isTextInput() ? 'input' : 'change'
+
             // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-            el.addEventListener(isLazy ? 'change' : 'input', debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
+            el.addEventListener(isLazy ? 'change' : defaultEventType, debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
                 const model = directive.value
                 const el = new DOMElement(e.target)
                 const value = el.valueFromInput()
@@ -99,25 +101,27 @@ export default {
                 return
             }
 
-            const el = new DOMElement(e.target)
+            component.callAfterModelDebounce(() => {
+                const el = new DOMElement(e.target)
 
-            directive.setEventContext(e)
+                directive.setEventContext(e)
 
-            // This is outside the conditional below so "wire:click.prevent" without
-            // a value still prevents default.
-            this.preventAndStop(e, directive.modifiers)
-            const method = directive.method
-            const params = directive.params
+                // This is outside the conditional below so "wire:click.prevent" without
+                // a value still prevents default.
+                this.preventAndStop(e, directive.modifiers)
+                const method = directive.method
+                const params = directive.params
 
-            // Check for global event emission.
-            if (method === '$emit') {
-                store.emit(...params)
-                return
-            }
+                // Check for global event emission.
+                if (method === '$emit') {
+                    store.emit(...params)
+                    return
+                }
 
-            if (directive.value) {
-                component.addAction(new MethodAction(method, params, el))
-            }
+                if (directive.value) {
+                    component.addAction(new MethodAction(method, params, el))
+                }
+            })
         }))
     },
 

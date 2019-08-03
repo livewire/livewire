@@ -31,13 +31,12 @@ export default class DOMElement {
         }
 
         if (directive.modifiers.includes('fade')) {
-            this.el.style.opacity = 0
-            this.el.style.transition = `opacity ${directive.durationOr(300) / 1000}s ease`
+            this.fadeIn(directive)
+            return
+        }
 
-            this.nextFrame(() => {
-                this.el.style.opacity = 1
-            })
-
+        if (directive.modifiers.includes('slide')) {
+            this.slideIn(directive)
             return
         }
 
@@ -67,15 +66,13 @@ export default class DOMElement {
         }
 
         if (directive.modifiers.includes('fade')) {
-            this.nextFrame(() => {
-                this.el.style.opacity = 0
+            this.fadeOut(directive, onDiscarded)
 
-                setTimeout(() => {
-                    onDiscarded(this.el)
+            return false
+        }
 
-                    this.el.remove()
-                }, directive.durationOr(300));
-            })
+        if (directive.modifiers.includes('slide')) {
+            this.slideOut(directive, onDiscarded)
 
             return false
         }
@@ -97,6 +94,65 @@ export default class DOMElement {
         })
 
         return false
+    }
+
+    fadeIn(directive) {
+        this.el.style.opacity = 0
+        this.el.style.transition = `opacity ${directive.durationOr(300) / 1000}s ease`
+
+        this.nextFrame(() => {
+            this.el.style.opacity = 1
+        })
+    }
+
+    slideIn(directive) {
+        const directions = {
+            up: 'translateY(10px)',
+            down: 'translateY(-10px)',
+            left: 'translateX(-10px)',
+            right: 'translateX(10px)',
+        }
+
+        this.el.style.opacity = 0
+        this.el.style.transform = directions[directive.cardinalDirectionOr('right')]
+        this.el.style.transition = `opacity ${directive.durationOr(300) / 1000}s ease, transform ${directive.durationOr(300) / 1000}s ease`
+
+        this.nextFrame(() => {
+            this.el.style.opacity = 1
+            this.el.style.transform = ``
+        })
+    }
+
+    fadeOut(directive, onDiscarded) {
+        this.nextFrame(() => {
+            this.el.style.opacity = 0
+
+            setTimeout(() => {
+                onDiscarded(this.el)
+
+                this.el.remove()
+            }, directive.durationOr(300));
+        })
+    }
+
+    slideOut(directive, onDiscarded) {
+        const directions = {
+            up: 'translateY(10px)',
+            down: 'translateY(-10px)',
+            left: 'translateX(-10px)',
+            right: 'translateX(10px)',
+        }
+
+        this.nextFrame(() => {
+            this.el.style.opacity = 0
+            this.el.style.transform = directions[directive.cardinalDirectionOr('right')]
+
+            setTimeout(() => {
+                onDiscarded(this.el)
+
+                this.el.remove()
+            }, directive.durationOr(300));
+        })
     }
 
     closestRoot() {
@@ -208,7 +264,8 @@ export default class DOMElement {
     }
 
     updateSelect(value) {
-        const arrayWrappedValue = [].concat(value)
+        const arrayWrappedValue = [].concat(value).map(value => { return value +'' })
+
         Array.from(this.el.options).forEach(option => {
             option.selected = arrayWrappedValue.includes(option.value)
         })

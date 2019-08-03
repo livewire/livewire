@@ -17,7 +17,7 @@
   "author": "Caleb Porzio",
   "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.3.3",
+    "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.3.1",
     "babel-jest": "^24.1.0",
     "cross-env": "^5.2.0",

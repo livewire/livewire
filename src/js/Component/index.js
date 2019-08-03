@@ -1,11 +1,10 @@
-import Message from '../message'
-import { debounce, addMixin, walk } from '../util'
-import morphdom from '../dom/morphdom'
-import DOM from '../dom/dom'
-import DOMElement from '../dom/dom_element'
-import handleLoadingDirectives from './handle_loading_directives'
-import nodeInitializer from "../node_initializer";
-import store from '../store'
+import Message from '@/Message'
+import { debounce, walk } from '@/util'
+import morphdom from '@/dom/morphdom'
+import DOM from '@/dom/dom'
+import DOMElement from '@/dom/dom_element'
+import nodeInitializer from "@/node_initializer";
+import store from '@/Store'
 
 class Component {
     constructor(el, connection) {
@@ -19,6 +18,9 @@ class Component {
         this.connection = connection
         this.actionQueue = []
         this.messageInTransit = null
+        this.loadingEls = []
+        this.loadingElsByRef = {}
+        this.modelTimeout = null
 
         this.initialize()
 
@@ -257,8 +259,94 @@ class Component {
             })
         }
     }
-}
 
-addMixin(Component, handleLoadingDirectives)
+    addLoadingEl(el, value, targetRef, remove) {
+        if (targetRef) {
+            if (this.loadingElsByRef[targetRef]) {
+                this.loadingElsByRef[targetRef].push({el, value, remove})
+            } else {
+                this.loadingElsByRef[targetRef] = [{el, value, remove}]
+            }
+        } else {
+            this.loadingEls.push({el, value, remove})
+        }
+    }
+
+    removeLoadingEl(node) {
+        const el = new DOMElement(node)
+
+        this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
+
+        if (el.ref in this.loadingElsByRef) {
+            delete this.loadingElsByRef[el.ref]
+        }
+    }
+
+    setLoading(refs) {
+        const refEls = refs.map(ref => this.loadingElsByRef[ref]).filter(el => el).flat()
+
+        const allEls = this.loadingEls.concat(refEls)
+
+        allEls.forEach(el => {
+            const directive = el.el.directives.get('loading')
+            el = el.el.el // I'm so sorry @todo
+
+            if (directive.modifiers.includes('class')) {
+                // This is because wire:loading.class="border border-red"
+                // wouldn't work with classList.add.
+                const classes = directive.value.split(' ')
+
+                if (directive.modifiers.includes('remove')) {
+                    el.classList.remove(...classes)
+                } else {
+                    el.classList.add(...classes)
+                }
+            } else if (directive.modifiers.includes('attr')) {
+                if (directive.modifiers.includes('remove')) {
+                    el.removeAttribute(directive.value)
+                } else {
+                    el.setAttribute(directive.value, true)
+                }
+            } else {
+                el.style.display = 'inline-block'
+            }
+        })
+
+        return allEls
+    }
+
+    unsetLoading(loadingEls) {
+        // No need to "unset" loading because the dom-diffing will automatically reverse any changes.
+    }
+
+    modelSyncDebounce(callback, time) {
+        return (e) => {
+            clearTimeout(this.modelTimeout)
+
+            this.modelTimeoutCallback = () => { callback(e) }
+            this.modelTimeout = setTimeout(() => {
+                callback(e)
+                this.modelTimeout = null
+                this.modelTimeoutCallback = null
+            }, time)
+        }
+    }
+
+    callAfterModelDebounce(callback) {
+        // This is to protect against the following scenario:
+        // A user is typing into a debounced input, and hits the enter key.
+        // If the enter key submits a form or something, the submission
+        // will happen BEFORE the model input finishes syncing because
+        // of the debounce. This makes sure to clear anything in the debounce queue.
+        if (this.modelTimeout) {
+            clearTimeout(this.modelTimeout)
+            this.modelTimeoutCallback()
+            this.modelTimeout = null
+            this.modelTimeoutCallback = null
+        }
+
+        callback()
+    }
+}
 
 export default Component
