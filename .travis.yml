@@ -12,5 +12,7 @@ matrix:
       script:
         - vendor/bin/phpunit
     - language: node_js
+      node_js:
+      - 12.4
       script:
         - jest
