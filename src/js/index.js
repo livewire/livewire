@@ -40,6 +40,17 @@ class Livewire {
             )
         })
     }
+
+    rescan() {
+        DOM.rootComponentElementsWithNoParents().forEach(el => {
+            const componentId = el.getAttribute('id')
+            if (this.components.hasComponent(componentId)) return
+
+            this.components.addComponent(
+                new Component(el, this.connection)
+            )
+        })
+    }
 }
 
 if (!window.Livewire) {

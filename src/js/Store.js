@@ -18,6 +18,10 @@ const store = {
         return this.componentsById[id]
     },
 
+    hasComponent(id) {
+        return !! this.componentsById[id]
+    },
+
     tearDownComponents() {
         this.components().forEach(component => {
             component.tearDown()
