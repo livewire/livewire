@@ -1,8 +1,8 @@
-import componentStore from './Store'
-import DOM from "./dom/dom";
-import Component from "./Component";
-import Connection from './connection'
-import drivers from './connection/drivers'
+import componentStore from '@/Store'
+import DOM from "@/dom/dom";
+import Component from "@/Component";
+import Connection from '@/connection'
+import drivers from '@/connection/drivers'
 
 class Livewire {
     constructor({ driver } = { driver: 'http' }) {

@@ -8,15 +8,10 @@ mix
 mix.webpackConfig({
     output: {
         libraryTarget: 'umd',
+    },
+    resolve: {
+        alias: {
+            '@': __dirname + '/src/js'
+        }
     }
 });
-
-mix.extend('aliasConfig', new class {
-    webpackConfig(webpackConfig) {
-        webpackConfig.resolve.extensions.push('.js', '.json', '.vue');
-        webpackConfig.resolve.alias = {
-            '@': __dirname + '/src/js',
-        };
-    }
-});
-mix.aliasConfig();
