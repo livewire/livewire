@@ -70,13 +70,20 @@ export default {
             const defaultEventType = el.isTextInput() ? 'input' : 'change'
 
             // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-            el.addEventListener(isLazy ? 'change' : defaultEventType, debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
+            const event = isLazy ? 'change' : defaultEventType
+            const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
                 const model = directive.value
                 const el = new DOMElement(e.target)
                 const value = el.valueFromInput()
 
                 component.addAction(new ModelAction(model, value, el))
-            }, directive.durationOr(150)))
+            }, directive.durationOr(150))
+
+            el.addEventListener(event, handler)
+
+            component.addListenerForTeardown(() => {
+                el.removeEventListener(event, handler)
+            })
         }
     },
 
@@ -96,7 +103,8 @@ export default {
     },
 
     attachListener(el, directive, component, callback) {
-        el.addEventListener(directive.type, (e => {
+        const event = directive.type
+        const handler = e => {
             if (callback && callback(e) !== false) {
                 return
             }
@@ -122,7 +130,13 @@ export default {
                     component.addAction(new MethodAction(method, params, el))
                 }
             })
-        }))
+        }
+
+        el.addEventListener(event, handler)
+
+        component.addListenerForTeardown(() => {
+            el.removeEventListener(event, handler)
+        })
     },
 
     preventAndStop(event, modifiers) {

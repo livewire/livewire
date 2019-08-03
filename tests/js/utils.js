@@ -3,7 +3,7 @@ import Livewire from 'laravel-livewire'
 export function mount(dom, requestInterceptor = () => {}) {
     document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
 
-    new Livewire({ driver: {
+    window.livewire = new Livewire({ driver: {
         onMessage: null,
         init() {},
         sendMessage(payload) {

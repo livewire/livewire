@@ -295,6 +295,10 @@ export default class DOMElement {
         return this.el.addEventListener(...arguments)
     }
 
+    removeEventListener() {
+        return this.el.removeEventListener(...arguments)
+    }
+
     get classList() {
         return this.el.classList
     }

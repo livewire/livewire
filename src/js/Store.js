@@ -4,6 +4,12 @@ const store = {
     componentsById: {},
     listeners: {},
 
+    components() {
+        return Object.keys(this.componentsById).map(key => {
+            return this.componentsById[key]
+        })
+    },
+
     addComponent(component) {
         return this.componentsById[component.id] = component
     },
@@ -12,8 +18,11 @@ const store = {
         return this.componentsById[id]
     },
 
-    wipeComponents() {
-        this.componentsById = {}
+    tearDownComponents() {
+        this.components().forEach(component => {
+            component.tearDown()
+            delete this.componentsById[component.id]
+        })
     },
 
     on(event, callback) {
@@ -37,9 +46,7 @@ const store = {
     },
 
     componentsListeningForEvent(event) {
-        return Object.keys(this.componentsById).map(key => {
-            return this.componentsById[key]
-        }).filter(component => {
+        return this.components().filter(component => {
             return component.events.includes(event)
         })
     },

@@ -21,6 +21,7 @@ class Component {
         this.loadingEls = []
         this.loadingElsByRef = {}
         this.modelTimeout = null
+        this.tearDownCallbacks = []
 
         this.initialize()
 
@@ -346,6 +347,14 @@ class Component {
         }
 
         callback()
+    }
+
+    addListenerForTeardown(teardownCallback) {
+        this.tearDownCallbacks.push(teardownCallback)
+    }
+
+    tearDown() {
+        this.tearDownCallbacks.forEach(callback => callback())
     }
 }
 

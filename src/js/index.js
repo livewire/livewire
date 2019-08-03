@@ -30,7 +30,7 @@ class Livewire {
     }
 
     stop() {
-        this.components.wipeComponents()
+        this.components.tearDownComponents()
     }
 
     start() {
