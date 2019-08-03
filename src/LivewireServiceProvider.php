@@ -15,16 +15,34 @@ use Livewire\Connection\HttpConnectionHandler;
 use Livewire\LivewireComponentsFinder;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
+use Livewire\Routing\Redirector;
 
 class LivewireServiceProvider extends ServiceProvider
 {
     public function register()
     {
+        $this->interceptRedirect();
+
         $this->app->singleton('livewire', LivewireManager::class);
 
         $this->app->instance(LivewireComponentsFinder::class, new LivewireComponentsFinder(
             new Filesystem, app()->bootstrapPath('cache/livewire-components.php'), app_path('Http/Livewire')
         ));
+    }
+
+    protected function interceptRedirect()
+    {
+        if (!$this->isLivewireRequest()) {
+            return;
+        }
+
+        $this->app->extend('redirect', function ($redirector) {
+            $component = collect(debug_backtrace())->pluck('object')->first(function ($object) {
+                return $object instanceof Component;
+            });
+
+            return $component ? resolve(Redirector::class)->component($component) : $redirector;
+        });
     }
 
     public function boot()
