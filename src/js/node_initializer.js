@@ -2,7 +2,7 @@ import { kebabCase } from './util'
 import ModelAction from './action/model'
 import MethodAction from './action/method'
 import DOMElement from './dom/dom_element'
-import store from './store'
+import store from './Store'
 
 export default {
     initialize(el, component) {
