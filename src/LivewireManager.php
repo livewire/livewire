@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Exception;
+use Illuminate\Support\Str;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Testing\TestableLivewire;
@@ -79,7 +80,7 @@ EOT;
         $instance = $this->activate($name);
         $instance->mount(...$options);
         $dom = $instance->output();
-        $id = str_random(20);
+        $id = Str::random(20);
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();

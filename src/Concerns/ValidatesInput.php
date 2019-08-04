@@ -2,6 +2,7 @@
 
 namespace Livewire\Concerns;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 
 trait ValidatesInput
@@ -21,7 +22,7 @@ trait ValidatesInput
             $result[$this->beforeFirstDot($field)] = $this->getPropertyValue($field);
         }
 
-        return Validator::make($result, array_only($rules, $fields), $messages, $attributes)
+        return Validator::make($result, Arr::only($rules, $fields), $messages, $attributes)
             ->validate();
     }
 }
