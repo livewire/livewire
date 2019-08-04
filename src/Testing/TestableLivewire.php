@@ -2,6 +2,7 @@
 
 namespace Livewire\Testing;
 
+use Illuminate\Support\Str;
 use Livewire\Connection\ComponentHydrator;
 
 class TestableLivewire
@@ -31,7 +32,7 @@ class TestableLivewire
         // and not have to register an alias.
         if (class_exists($name)) {
             $componentClass = $name;
-            app('livewire')->component($name = str_random(20), $componentClass);
+            app('livewire')->component($name = Str::random(20), $componentClass);
         }
 
         $result = app('livewire')->mount($this->name = $name, ...$params);
