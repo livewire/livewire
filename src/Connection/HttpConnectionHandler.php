@@ -28,7 +28,6 @@ class HttpConnectionHandler extends ConnectionHandler
 
     public function __invoke()
     {
-        dd('hey');
         return $this->handle(
             request([
                 'actionQueue',
