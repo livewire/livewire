@@ -2,9 +2,9 @@
 
 namespace Livewire;
 
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Contracts\Support\Arrayable;
 
 class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
 {
@@ -79,7 +79,7 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
 
         return substr_replace(
             $dom,
-            ' ' . $attributesFormattedForHtmlElement,
+            ' '.$attributesFormattedForHtmlElement,
             $positionOfFirstCharacterInTagName + $lengthOfTagName,
             0
         );

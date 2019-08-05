@@ -4,12 +4,11 @@ namespace Tests;
 
 use Livewire\Component;
 use Livewire\LivewireManager;
-use Livewire\Connection\ComponentHydrator;
 
 class ComponentEventsTest extends TestCase
 {
     /** @test */
-    function receive_event()
+    public function receive_event()
     {
         $component = app(LivewireManager::class)->test(ReceivesEvents::class);
 
@@ -19,7 +18,7 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
-    function receive_event_with_multiple_parameters()
+    public function receive_event_with_multiple_parameters()
     {
         $component = app(LivewireManager::class)->test(ReceivesEvents::class);
 
@@ -29,7 +28,7 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
-    function listeners_are_provided_to_frontend()
+    public function listeners_are_provided_to_frontend()
     {
         $component = app(LivewireManager::class)->test(ReceivesEvents::class);
 
@@ -38,7 +37,7 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
-    function server_emitted_events_are_provided_to_frontend()
+    public function server_emitted_events_are_provided_to_frontend()
     {
         $component = app(LivewireManager::class)->test(ReceivesEvents::class);
 
@@ -48,14 +47,15 @@ class ComponentEventsTest extends TestCase
     }
 }
 
-class ReceivesEvents extends Component {
+class ReceivesEvents extends Component
+{
     public $foo;
 
     protected $listeners = ['bar' => 'onBar'];
 
     public function onBar($value, $otherValue = '')
     {
-        $this->foo = $value . $otherValue;
+        $this->foo = $value.$otherValue;
     }
 
     public function emitGoo()

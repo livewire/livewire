@@ -2,14 +2,13 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Hash;
-use Livewire\Connection\ComponentHydrator;
 use Livewire\Component;
+use Livewire\Connection\ComponentHydrator;
 
 class ComponentHydratorTest extends TestCase
 {
     /** @test */
-    function re_hydrate_component()
+    public function re_hydrate_component()
     {
         app('livewire')->component('for-hydration', ForHydration::class);
         $original = app('livewire')->activate('for-hydration');
@@ -27,7 +26,7 @@ class ComponentHydratorTest extends TestCase
     }
 
     /** @test */
-    function changes_to_public_properties_are_preserved()
+    public function changes_to_public_properties_are_preserved()
     {
         app('livewire')->component('for-hydration', ForHydration::class);
         $original = app('livewire')->activate('for-hydration');
@@ -44,7 +43,7 @@ class ComponentHydratorTest extends TestCase
     }
 
     /** @test */
-    function changes_to_protected_properties_are_not_preserved()
+    public function changes_to_protected_properties_are_not_preserved()
     {
         app('livewire')->component('for-hydration', ForHydration::class);
         $original = app('livewire')->activate('for-hydration');
@@ -61,7 +60,8 @@ class ComponentHydratorTest extends TestCase
     }
 }
 
-class ForHydration extends Component {
+class ForHydration extends Component
+{
     public $foo = 'bar';
     protected $goo = 'car';
 

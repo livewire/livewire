@@ -2,9 +2,9 @@
 
 namespace Livewire\Connection;
 
-use Illuminate\Validation\ValidationException;
 use Livewire\ResponsePayload;
 use Livewire\Routing\Redirector;
+use Illuminate\Validation\ValidationException;
 
 abstract class ConnectionHandler
 {
@@ -16,7 +16,7 @@ abstract class ConnectionHandler
         $instance->hashPropertiesForDirtyDetection();
 
         try {
-            $this->interceptRedirects($instance, function() use ($payload, $instance) {
+            $this->interceptRedirects($instance, function () use ($payload, $instance) {
                 foreach ($payload['actionQueue'] as $action) {
                     $this->processMessage($action['type'], $action['payload'], $instance);
                 }
@@ -57,7 +57,7 @@ abstract class ConnectionHandler
                 $instance->fireEvent($data['event'], $data['params']);
                 break;
             default:
-                throw new \Exception('Unrecongnized message type: ' . $type);
+                throw new \Exception('Unrecongnized message type: '.$type);
                 break;
         }
 

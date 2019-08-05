@@ -4,9 +4,9 @@ namespace Livewire;
 
 use Exception;
 use Illuminate\Support\Str;
+use Livewire\Testing\TestableLivewire;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
-use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
@@ -55,7 +55,7 @@ class LivewireManager
         $appUrl = $this->appUrlOrRoot();
         $options = $options ? json_encode($options) : '';
 
-        $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
+        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         $csrf = csrf_token();

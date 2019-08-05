@@ -2,9 +2,8 @@
 
 namespace Livewire\Concerns;
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use ReflectionProperty;
+use Illuminate\Support\Str;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
 
 trait InteractsWithProperties

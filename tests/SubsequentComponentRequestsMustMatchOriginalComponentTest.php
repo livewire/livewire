@@ -2,12 +2,12 @@
 
 namespace Tests;
 
-use Livewire\Exceptions\ComponentMismatchException;
 use Livewire\Component;
+use Livewire\Exceptions\ComponentMismatchException;
 
 class SubsequentComponentRequestsMustMatchOriginalComponentTest extends TestCase
 {
-    function test()
+    public function test()
     {
         $this->expectException(ComponentMismatchException::class);
 
@@ -24,10 +24,10 @@ class SubsequentComponentRequestsMustMatchOriginalComponentTest extends TestCase
     }
 }
 
-class SafeComponentStub extends Component {
+class SafeComponentStub extends Component
+{
     public function someMethod()
     {
-        return;
     }
 
     public function render()
@@ -36,7 +36,8 @@ class SafeComponentStub extends Component {
     }
 }
 
-class UnsafeComponentStub extends Component {
+class UnsafeComponentStub extends Component
+{
     public function someMethod()
     {
         throw new \Exception('Should not be able to acess me!');
