@@ -2,13 +2,13 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Artisan;
 
 class DestroyCommandTest extends TestCase
 {
     /** @test */
-    function component_is_removed_by_destroy_command()
+    public function component_is_removed_by_destroy_command()
     {
         Artisan::call('make:livewire foo');
 
@@ -28,7 +28,7 @@ class DestroyCommandTest extends TestCase
     }
 
     /** @test */
-    function component_is_not_removed_when_confirm_answer_is_no()
+    public function component_is_not_removed_when_confirm_answer_is_no()
     {
         Artisan::call('make:livewire foo');
 
@@ -48,7 +48,7 @@ class DestroyCommandTest extends TestCase
     }
 
     /** @test */
-    function component_is_removed_without_confirmation_if_forced()
+    public function component_is_removed_without_confirmation_if_forced()
     {
         Artisan::call('make:livewire foo');
 

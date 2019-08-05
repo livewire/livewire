@@ -3,9 +3,9 @@
 namespace Livewire\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Console\DetectsApplicationNamespace;
 use Illuminate\Support\Facades\File;
 use Livewire\LivewireComponentsFinder;
+use Illuminate\Console\DetectsApplicationNamespace;
 
 class LivewireDestroyCommand extends Command
 {
@@ -40,7 +40,7 @@ class LivewireDestroyCommand extends Command
 
         $this->refreshComponentAutodiscovery();
 
-        ($class && $view) && $this->info("👍  Files removed:");
+        ($class && $view) && $this->info('👍  Files removed:');
         $class && $this->info("-> [{$class}]");
         $view && $this->info("-> [{$view}]");
     }
@@ -51,6 +51,7 @@ class LivewireDestroyCommand extends Command
 
         if (! File::exists($classPath) && ! $force) {
             $this->error("Component class doesn't exist [{$classPath}]");
+
             return false;
         }
 
@@ -65,6 +66,7 @@ class LivewireDestroyCommand extends Command
 
         if (! File::exists($viewPath) && ! $force) {
             $this->error("Component view doesn't exist [{$viewPath}]");
+
             return false;
         }
 

@@ -10,7 +10,7 @@ class MakeCommandParserTest extends TestCase
      * @test
      * @dataProvider classPathProvider
      */
-    function something($input, $component, $namespace, $classPath, $viewName, $viewPath)
+    public function something($input, $component, $namespace, $classPath, $viewName, $viewPath)
     {
         $parser = new LivewireMakeCommandParser(
             '', // App directory path.
@@ -25,7 +25,7 @@ class MakeCommandParserTest extends TestCase
         $this->assertEquals($viewPath, $parser->viewPath());
     }
 
-    function classPathProvider()
+    public function classPathProvider()
     {
         return [
             [
@@ -86,6 +86,4 @@ class MakeCommandParserTest extends TestCase
             ],
         ];
     }
-
-
 }

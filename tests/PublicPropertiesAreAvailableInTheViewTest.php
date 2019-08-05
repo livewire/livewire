@@ -8,7 +8,7 @@ use Livewire\LivewireManager;
 class PublicPropertiesAreAvailableInTheViewTest extends TestCase
 {
     /** @test */
-    function public_property_is_accessible_in_view()
+    public function public_property_is_accessible_in_view()
     {
         $component = app(LivewireManager::class)->test(PublicPropertiesInViewStub::class);
 
@@ -19,7 +19,8 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
     }
 }
 
-class PublicPropertiesInViewStub extends Component {
+class PublicPropertiesInViewStub extends Component
+{
     public $name = 'Caleb';
 
     public function render()

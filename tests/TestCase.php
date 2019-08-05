@@ -2,9 +2,9 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Livewire\LivewireServiceProvider;
+use Illuminate\Support\Facades\Artisan;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
@@ -51,11 +51,11 @@ class TestCase extends BaseTestCase
 
     protected function livewireClassesPath($path = '')
     {
-        return app_path('Http/Livewire' . ($path ? '/'.$path : ''));
+        return app_path('Http/Livewire'.($path ? '/'.$path : ''));
     }
 
     protected function livewireViewsPath($path = '')
     {
-        return config('view.paths')[0].'/livewire' . ($path ? '/'.$path : '');
+        return config('view.paths')[0].'/livewire'.($path ? '/'.$path : '');
     }
 }

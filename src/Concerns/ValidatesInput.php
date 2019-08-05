@@ -16,7 +16,7 @@ trait ValidatesInput
         foreach ((array) $fields as $field) {
             throw_unless(
                 $this->hasProperty($field),
-                new \Exception('No property found for validation: [' . $field . ']')
+                new \Exception('No property found for validation: ['.$field.']')
             );
 
             $result[$this->beforeFirstDot($field)] = $this->getPropertyValue($field);

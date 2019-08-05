@@ -2,15 +2,15 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Route;
+use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\LivewireManager;
-use Livewire\Livewire;
+use Illuminate\Support\Facades\Route;
 
 class LifecycleHooksTest extends TestCase
 {
     /** @test */
-    function mount_hook()
+    public function mount_hook()
     {
         $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
 
@@ -44,7 +44,7 @@ class LifecycleHooksTest extends TestCase
     }
 
     /** @test */
-    function mount_hook_receives_route_model_bindings()
+    public function mount_hook_receives_route_model_bindings()
     {
         Livewire::component('foo', HasRouteModelBindingForMountHook::class);
 
@@ -54,7 +54,7 @@ class LifecycleHooksTest extends TestCase
     }
 
     /** @test */
-    function mount_hook_method_receives_method_bindings()
+    public function mount_hook_method_receives_method_bindings()
     {
         Livewire::component('foo', HasRouteModelBindingForMountHook::class);
 
@@ -71,7 +71,7 @@ class LifecycleHooksTest extends TestCase
     }
 
     /** @test */
-    function mount_hook_method_receives_custom_bindings()
+    public function mount_hook_method_receives_custom_bindings()
     {
         Livewire::component('foo', HasRouteModelBindingForMountHook::class);
 
@@ -88,7 +88,8 @@ class LifecycleHooksTest extends TestCase
     }
 }
 
-class ForLifecycleHooks extends Component {
+class ForLifecycleHooks extends Component
+{
     public $foo;
     public $lifecycles = [
         'mount' => false,

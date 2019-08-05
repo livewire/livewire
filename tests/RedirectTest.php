@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Redirect;
 class RedirectTest extends TestCase
 {
     /** @test */
-    function standard_redirect()
+    public function standard_redirect()
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
 
@@ -20,7 +20,7 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
-    function redirect_helper()
+    public function redirect_helper()
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
 
@@ -30,7 +30,7 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
-    function redirect_facade_with_to_method()
+    public function redirect_facade_with_to_method()
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
 
@@ -40,7 +40,7 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
-    function redirect_facade_with_route_method()
+    public function redirect_facade_with_route_method()
     {
         $this->registerNamedRoute();
 
@@ -52,7 +52,7 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
-    function redirect_helper_with_route_method()
+    public function redirect_helper_with_route_method()
     {
         $this->registerNamedRoute();
 

@@ -2,11 +2,11 @@
 
 namespace Livewire;
 
-use BadMethodCallException;
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\Str;
-use Illuminate\Support\ViewErrorBag;
 use Illuminate\View\View;
+use BadMethodCallException;
+use Illuminate\Support\Str;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
 
 abstract class Component
 {
@@ -34,7 +34,7 @@ abstract class Component
         $class = static::class;
 
         foreach (class_uses_recursive($class) as $trait) {
-            if (method_exists($class, $method = 'initialize' . class_basename($trait))) {
+            if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
                 $this->{$method}();
             }
         }
@@ -87,7 +87,6 @@ abstract class Component
             // Eat calls to the lifecycle hooks if the dev didn't define them.
             return;
         }
-
 
         throw new BadMethodCallException(sprintf(
             'Method %s::%s does not exist.', static::class, $method

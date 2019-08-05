@@ -2,13 +2,13 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Artisan;
 
 class DiscoverCommandTest extends TestCase
 {
     /** @test */
-    function components_that_are_created_manually_can_be_added_to_the_manifest()
+    public function components_that_are_created_manually_can_be_added_to_the_manifest()
     {
         // Make the class & view directories, because otherwise, the manifest file cannot be created.
         File::makeDirectory($this->livewireClassesPath());
@@ -35,7 +35,7 @@ EOT
 
         File::put(
             $this->livewireViewsPath('to-be-discovered.blade.php'),
-<<<EOT
+<<<'EOT'
 <div>I've been discovered!</div>
 EOT
         );
@@ -59,7 +59,7 @@ EOT
     }
 
     /** @test */
-    function the_manifest_file_is_automatically_created_if_none_exists()
+    public function the_manifest_file_is_automatically_created_if_none_exists()
     {
         $manifestPath = app()->bootstrapPath('cache/livewire-components.php');
 
