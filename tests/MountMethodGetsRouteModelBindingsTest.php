@@ -2,13 +2,13 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Route;
 use Livewire\Component;
+use Illuminate\Support\Facades\Route;
 
 class MountMethodGetsRouteModelBindingsTest extends TestCase
 {
     /** @test */
-    function mount_method_in_livewire_component_receives_route_model_bindings()
+    public function mount_method_in_livewire_component_receives_route_model_bindings()
     {
         Route::bind('foo', function ($value) {
             return new ModelToBeBoundStub($value);
@@ -31,7 +31,8 @@ class ModelToBeBoundStub
     }
 }
 
-class HasMountMethodWithBindingExpectationStub extends Component {
+class HasMountMethodWithBindingExpectationStub extends Component
+{
     public function mount(ModelToBeBoundStub $stub)
     {
         $this->value = $stub->value;

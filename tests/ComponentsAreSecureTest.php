@@ -2,15 +2,15 @@
 
 namespace Tests;
 
-use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
+use Livewire\Component;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
-use Livewire\Component;
+use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 
 class ComponentsAreSecureTest extends TestCase
 {
     /** @test */
-    function throws_method_not_found_exception_when_action_missing()
+    public function throws_method_not_found_exception_when_action_missing()
     {
         $this->expectException(MissingComponentMethodReferencedByAction::class);
 
@@ -21,7 +21,7 @@ class ComponentsAreSecureTest extends TestCase
     }
 
     /** @test */
-    function can_only_call_public_methods()
+    public function can_only_call_public_methods()
     {
         $this->expectException(NonPublicComponentMethodCall::class);
 
@@ -32,7 +32,7 @@ class ComponentsAreSecureTest extends TestCase
     }
 
     /** @test */
-    function can_only_call_methods_defined_by_user()
+    public function can_only_call_methods_defined_by_user()
     {
         $this->expectException(NonPublicComponentMethodCall::class);
 
@@ -44,7 +44,7 @@ class ComponentsAreSecureTest extends TestCase
     }
 
     /** @test */
-    function can_only_set_public_properties()
+    public function can_only_set_public_properties()
     {
         $this->expectException(ProtectedPropertyBindingException::class);
 
@@ -61,7 +61,6 @@ class SecurityTargetStub extends Component
 
     protected function protectedMethod()
     {
-        return;
     }
 
     public function render()

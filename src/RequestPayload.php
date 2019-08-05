@@ -2,8 +2,8 @@
 
 namespace Livewire;
 
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Contracts\Support\Arrayable;
 
 class RequestPayload implements Arrayable, Jsonable
 {

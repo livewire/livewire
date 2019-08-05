@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 class LivewireDirectiveTest extends TestCase
 {
     /** @test */
-    function component_is_loaded_with_blade_directive()
+    public function component_is_loaded_with_blade_directive()
     {
         Artisan::call('make:livewire foo');
 

@@ -8,7 +8,7 @@ use Livewire\LivewireManager;
 class ValidationTest extends TestCase
 {
     /** @test */
-    function validate_component_properties()
+    public function validate_component_properties()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
 
@@ -19,7 +19,7 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    function validate_component_properties_with_custom_message()
+    public function validate_component_properties_with_custom_message()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
 
@@ -29,7 +29,7 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    function validate_component_properties_with_custom_attribute()
+    public function validate_component_properties_with_custom_attribute()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
 
@@ -39,7 +39,7 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    function validate_nested_component_properties()
+    public function validate_nested_component_properties()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
 

@@ -8,7 +8,7 @@ use Livewire\LivewireManager;
 class ComponentRootHasIdAndComponentDataTest extends TestCase
 {
     /** @test */
-    function root_element_has_id_and_component_data()
+    public function root_element_has_id_and_component_data()
     {
         $component = app(LivewireManager::class)->test(ComponentRootHasIdAndDataStub::class);
 
@@ -19,7 +19,7 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
     }
 
     /** @test */
-    function component_data_stored_in_html_is_escaped()
+    public function component_data_stored_in_html_is_escaped()
     {
         $component = app(LivewireManager::class)->test(ComponentRootHasIdAndDataStub::class);
 
@@ -32,7 +32,8 @@ EOT
     }
 }
 
-class ComponentRootHasIdAndDataStub extends Component {
+class ComponentRootHasIdAndDataStub extends Component
+{
     public $string = 'foo';
     public $array = ['foo'];
     public $object = ['foo' => 'bar'];

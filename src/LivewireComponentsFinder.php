@@ -37,7 +37,7 @@ class LivewireComponentsFinder
             $this->build();
         }
 
-        return $this->manifest =  $this->files->getRequire($this->manifestPath);
+        return $this->manifest = $this->files->getRequire($this->manifestPath);
     }
 
     public function build()

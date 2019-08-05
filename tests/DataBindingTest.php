@@ -9,7 +9,7 @@ use Illuminate\Routing\UrlGenerator;
 class DataBindingTest extends TestCase
 {
     /** @test */
-    function update_component_data()
+    public function update_component_data()
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
@@ -19,7 +19,7 @@ class DataBindingTest extends TestCase
     }
 
     /** @test */
-    function update_nested_component_data_inside_array()
+    public function update_nested_component_data_inside_array()
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
@@ -31,7 +31,7 @@ class DataBindingTest extends TestCase
     }
 
     /** @test */
-    function property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action()
+    public function property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action()
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
@@ -47,7 +47,7 @@ class DataBindingTest extends TestCase
     }
 
     /** @test */
-    function nested_property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action()
+    public function nested_property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action()
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
@@ -63,7 +63,7 @@ class DataBindingTest extends TestCase
     }
 
     /** @test */
-    function nested_property_is_marked_as_dirty_if_removed_as_side_effect_of_an_action()
+    public function nested_property_is_marked_as_dirty_if_removed_as_side_effect_of_an_action()
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
@@ -74,7 +74,7 @@ class DataBindingTest extends TestCase
     }
 
     /** @test */
-    function property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action_even_if_the_action_is_data_binding_for_that_specific_property()
+    public function property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action_even_if_the_action_is_data_binding_for_that_specific_property()
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
@@ -85,7 +85,7 @@ class DataBindingTest extends TestCase
     }
 
     /** @test */
-    function component_actions_get_automatic_dependancy_injection()
+    public function component_actions_get_automatic_dependancy_injection()
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
@@ -96,7 +96,8 @@ class DataBindingTest extends TestCase
     }
 }
 
-class DataBindingStub extends Component {
+class DataBindingStub extends Component
+{
     public $foo;
     public $bar;
     public $propertyWithHook;

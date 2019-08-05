@@ -7,7 +7,7 @@ use Livewire\Livewire;
 class LivewireUsesProperAppAndAssetsPathTest extends TestCase
 {
     /** @test */
-    function livewire_dot_js_references_configured_app_url()
+    public function livewire_dot_js_references_configured_app_url()
     {
         $this->assertContains(
             '<script src="/livewire/livewire.js?',
@@ -23,7 +23,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     }
 
     /** @test */
-    function assets_url_trims_trailing_slash()
+    public function assets_url_trims_trailing_slash()
     {
         config()->set('app.url', 'https://foo.com/assets/');
 
@@ -34,7 +34,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     }
 
     /** @test */
-    function livewire_message_endpoint_uses_configured_app_url()
+    public function livewire_message_endpoint_uses_configured_app_url()
     {
         config()->set('app.url', 'https://foo.com/app');
 
@@ -45,7 +45,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     }
 
     /** @test */
-    function livewire_message_endpoint_trims_trailing_slash()
+    public function livewire_message_endpoint_trims_trailing_slash()
     {
         config()->set('app.url', 'https://foo.com/app/');
 
@@ -56,7 +56,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     }
 
     /** @test */
-    function livewire_message_domain_is_ambiguous_if_app_uses_dot_env_default_for_app_url()
+    public function livewire_message_domain_is_ambiguous_if_app_uses_dot_env_default_for_app_url()
     {
         // The scenario for this behavior:
         // An app is created using `laravel new`, but the is served with valet,
@@ -72,9 +72,9 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     }
 
     /** @test */
-    function livewires_app_url_default_is_current_with_latest_laravel_version()
+    public function livewires_app_url_default_is_current_with_latest_laravel_version()
     {
-        $laravelAppConfigFileContents = file_get_contents(__DIR__ . '/../vendor/orchestra/testbench-core/laravel/config/app.php');
+        $laravelAppConfigFileContents = file_get_contents(__DIR__.'/../vendor/orchestra/testbench-core/laravel/config/app.php');
 
         $this->assertContains(
             "'url' => env('APP_URL', 'http://localhost'),",

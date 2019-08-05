@@ -2,19 +2,18 @@
 
 namespace Livewire;
 
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Route as RouteFacade;
-use Illuminate\Support\ServiceProvider;
-use Livewire\Commands\LivewireDestroyCommand;
-use Livewire\Commands\LivewireMakeCommand;
-use Livewire\Connection\HttpConnectionHandler;
-use Livewire\LivewireComponentsFinder;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\ServiceProvider;
+use Livewire\Commands\LivewireMakeCommand;
+use Livewire\Commands\LivewireDestroyCommand;
+use Livewire\Connection\HttpConnectionHandler;
+use Illuminate\Support\Facades\Route as RouteFacade;
 
 class LivewireServiceProvider extends ServiceProvider
 {
