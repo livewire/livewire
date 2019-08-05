@@ -7,9 +7,12 @@ use Illuminate\Support\Str;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Testing\TestableLivewire;
+use Livewire\Concerns\DependencyResolverTrait;
 
 class LivewireManager
 {
+    use DependencyResolverTrait;
+
     protected $prefix = 'wire';
     protected $componentAliases = [];
     protected $middlewaresFilter;
@@ -77,29 +80,41 @@ EOT;
 
     protected function resolveInstanceMountMethodParameters($instance, $params)
     {
+        // if(method_exists($instance, 'mount')) {
+        //     return collect((new \ReflectionMethod($instance, 'mount'))->getParameters())->map(
+        //         function ($parameter) use (&$params) {
+        //             return rescue(function () use (&$params) {
+        //                 return array_shift($params);
+        //             },
+        //             function () use ($parameter) {
+        //                 return app($parameter->getClass()->name);
+        //             },false);
+        //         }
+        //   );
+        // } else {
+        //     return collect();
+        // } 
+        dd($params);
         if(method_exists($instance, 'mount')) {
-            return collect((new \ReflectionMethod($instance, 'mount'))->getParameters())->map(
-                function ($parameter) use (&$params) {
-                    return rescue(function () use (&$params) {
-                        return array_shift($params);
-                    },
-                    function () use ($parameter) {
-                        return app($parameter->getClass()->name);
-                    },false);
-                }
-          );
+            return collect((new \ReflectionMethod($instance, 'mount'))->getParameters())->map(function ($parameter) use (&$params) {
+                return rescue(function () use ($parameter) {
+                    return app($parameter->getClass()->name);
+                }, function () use (&$params) {
+                    return array_shift($params);
+                }, false);
+            });
         } else {
             return collect();
-        }   
+        }     
     }
 
     public function mount($name, ...$options)
     {
-        $class =  $this->getComponentClass($name);
         $instance = $this->activate($name);
-        $instance->mount(
-            ...$this->resolveInstanceMountMethodParameters($class, $options)
+        $parameters = $this->resolveClassMethodDependencies(
+            $options, $instance, 'mount'
         );
+        $instance->mount(...array_values($parameters));
         $dom = $instance->output();
         $id = Str::random(20);
         $properties = ComponentHydrator::dehydrate($instance);
