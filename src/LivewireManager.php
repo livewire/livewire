@@ -4,10 +4,10 @@ namespace Livewire;
 
 use Exception;
 use Illuminate\Support\Str;
+use Livewire\Concerns\DependencyResolver;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Testing\TestableLivewire;
-use Livewire\Concerns\DependencyResolver;
 
 class LivewireManager
 {
@@ -82,7 +82,9 @@ EOT;
     {
         $instance = $this->activate($name);
         $parameters = $this->resolveClassMethodDependencies(
-            $options, $instance, 'mount'
+            $options,
+            $instance,
+            'mount'
         );
         $instance->mount(...array_values($parameters));
         $dom = $instance->output();
@@ -90,7 +92,7 @@ EOT;
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
-        $checksum = md5($name.$id);
+        $checksum = md5($name . $id);
 
         $middlewareStack = $this->currentMiddlewareStack();
         if ($this->middlewaresFilter) {
