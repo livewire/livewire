@@ -78,36 +78,6 @@ class LivewireManager
 EOT;
     }
 
-    protected function resolveInstanceMountMethodParameters($instance, $params)
-    {
-        // if(method_exists($instance, 'mount')) {
-        //     return collect((new \ReflectionMethod($instance, 'mount'))->getParameters())->map(
-        //         function ($parameter) use (&$params) {
-        //             return rescue(function () use (&$params) {
-        //                 return array_shift($params);
-        //             },
-        //             function () use ($parameter) {
-        //                 return app($parameter->getClass()->name);
-        //             },false);
-        //         }
-        //   );
-        // } else {
-        //     return collect();
-        // } 
-        dd($params);
-        if(method_exists($instance, 'mount')) {
-            return collect((new \ReflectionMethod($instance, 'mount'))->getParameters())->map(function ($parameter) use (&$params) {
-                return rescue(function () use ($parameter) {
-                    return app($parameter->getClass()->name);
-                }, function () use (&$params) {
-                    return array_shift($params);
-                }, false);
-            });
-        } else {
-            return collect();
-        }     
-    }
-
     public function mount($name, ...$options)
     {
         $instance = $this->activate($name);
