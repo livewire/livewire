@@ -54,7 +54,7 @@ class LifecycleHooksTest extends TestCase
     }
 
     /** @test */
-    function foo()
+    function mount_hook_method_receives_custom_bindings()
     {
         Livewire::component('foo', HasRouteModelBindingForMountHook::class);
 
