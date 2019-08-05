@@ -26,7 +26,6 @@ class PretendClassMethodIsControllerMethod
 
         // This is normally handled in the "SubstituteBindings" middleware, but
         // because that middleware has already ran, we need to run them again.
-        $this->router->substituteBindings($route);
         $this->router->substituteImplicitBindings($route);
 
         $options = $route->resolveMethodDependencies($route->parameters(), $this->method);

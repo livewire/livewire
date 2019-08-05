@@ -44,6 +44,11 @@ class TestCase extends BaseTestCase
         $app['config']->set('app.key', 'base64:Hupx3yAySikrM2/edkZQNQHslgDWYfiBfCuSThJ5SK8=');
     }
 
+    protected function resolveApplicationHttpKernel($app)
+    {
+        $app->singleton('Illuminate\Contracts\Http\Kernel', 'Tests\HttpKernel');
+    }
+
     protected function livewireClassesPath($path = '')
     {
         return app_path('Http/Livewire' . ($path ? '/'.$path : ''));

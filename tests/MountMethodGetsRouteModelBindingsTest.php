@@ -15,7 +15,7 @@ class MountMethodGetsRouteModelBindingsTest extends TestCase
         });
 
         app('livewire')->component('foo', HasMountMethodWithBindingExpectationStub::class);
-        Route::livewire('/test/{foo}', 'foo');
+        Route::livewire('/test/{foo}', 'foo')->middleware('web');
 
         $response = $this->withoutExceptionHandling()->get('/test/render-in-view');
 
