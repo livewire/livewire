@@ -48,6 +48,11 @@ abstract class Component
             ->implode('.');
     }
 
+    public function render()
+    {
+        return view("livewire.{$this->name()}");
+    }
+
     public function redirect($url)
     {
         $this->redirectTo = $url;
