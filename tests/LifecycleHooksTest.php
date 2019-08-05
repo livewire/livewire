@@ -62,11 +62,10 @@ class LifecycleHooksTest extends TestCase
             'component' => 'foo',
         ])->render();
         
-        Route::get('/test', function() use ($output){
+        Route::get('/test', function() use ($output) {
             return $output;
         })->middleware('web');
 
-        // $this->assertContains('div', $output);
         $this->get('/test')->assertSee('output-from-method-binding');
     }
 

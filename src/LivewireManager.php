@@ -4,10 +4,10 @@ namespace Livewire;
 
 use Exception;
 use Illuminate\Support\Str;
+use Livewire\Testing\TestableLivewire;
 use Livewire\Concerns\DependencyResolver;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
-use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
