@@ -7,11 +7,11 @@ use Illuminate\Support\Str;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Testing\TestableLivewire;
-use Livewire\Concerns\DependencyResolverTrait;
+use Livewire\Concerns\DependencyResolver;
 
 class LivewireManager
 {
-    use DependencyResolverTrait;
+    use DependencyResolver;
 
     protected $prefix = 'wire';
     protected $componentAliases = [];

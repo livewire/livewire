@@ -6,7 +6,7 @@ use ReflectionParameter;
 use Illuminate\Support\Arr;
 use ReflectionFunctionAbstract;
 
-trait DependencyResolverTrait
+trait DependencyResolver
 {
     /**
      * Resolve the object method's type-hinted dependencies.
