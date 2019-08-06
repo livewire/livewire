@@ -19,7 +19,6 @@ abstract class Component
 
     public $id;
     public $redirectTo;
-    protected $name;
     protected $lifecycleHooks = [
         'mount', 'updating', 'updated',
     ];
@@ -42,7 +41,9 @@ abstract class Component
 
     public function name()
     {
-        return $this->name ?: collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
+        $name = method_exists($this, 'getName') ? $this->getName() : static::class;
+
+        return collect(explode('.', str_replace(['/', '\\'], '.', $name)))
             ->diff(['App', 'Http', 'Livewire'])
             ->map([Str::class, 'kebab'])
             ->implode('.');
