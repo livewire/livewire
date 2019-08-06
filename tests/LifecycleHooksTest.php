@@ -54,6 +54,22 @@ class LifecycleHooksTest extends TestCase
     }
 
     /** @test */
+    public function mount_hook_method_receives_method_bindings()
+    {
+        Livewire::component('foo', HasRouteModelBindingForMountHook::class);
+
+        $output = view('render-component', [
+            'component' => 'foo',
+        ])->render();
+        
+        Route::get('/test', function() use ($output) {
+            return $output;
+        })->middleware('web');
+
+        $this->get('/test')->assertSee('output-from-method-binding');
+    }
+
+    /** @test */
     public function mount_hook_method_receives_custom_bindings()
     {
         Livewire::component('foo', HasRouteModelBindingForMountHook::class);

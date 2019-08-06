@@ -5,11 +5,14 @@ namespace Livewire;
 use Exception;
 use Illuminate\Support\Str;
 use Livewire\Testing\TestableLivewire;
+use Livewire\Concerns\DependencyResolver;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
 
 class LivewireManager
 {
+    use DependencyResolver;
+
     protected $prefix = 'wire';
     protected $componentAliases = [];
     protected $middlewaresFilter;
@@ -78,13 +81,18 @@ EOT;
     public function mount($name, ...$options)
     {
         $instance = $this->activate($name);
-        $instance->mount(...$options);
+        $parameters = $this->resolveClassMethodDependencies(
+            $options,
+            $instance,
+            'mount'
+        );
+        $instance->mount(...array_values($parameters));
         $dom = $instance->output();
         $id = Str::random(20);
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
-        $checksum = md5($name.$id);
+        $checksum = md5($name . $id);
 
         $middlewareStack = $this->currentMiddlewareStack();
         if ($this->middlewaresFilter) {
