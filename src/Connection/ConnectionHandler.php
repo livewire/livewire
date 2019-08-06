@@ -44,11 +44,11 @@ abstract class ConnectionHandler
 
     public function processMessage($type, $data, $instance)
     {
-        $instance->updating();
-
         switch ($type) {
             case 'syncInput':
+                $instance->updating($data['name'], $data['value']);
                 $instance->syncInput($data['name'], $data['value']);
+                $instance->updated($data['name'], $data['value']);
                 break;
             case 'callMethod':
                 $instance->callMethod($data['method'], $data['params']);
@@ -60,8 +60,6 @@ abstract class ConnectionHandler
                 throw new \Exception('Unrecongnized message type: '.$type);
                 break;
         }
-
-        $instance->updated();
     }
 
     protected function interceptRedirects($instance, $callback)

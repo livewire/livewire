@@ -24,6 +24,16 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'updating' => false,
+            'updated' => false,
+            'updatingFoo' => false,
+            'updatedFoo' => false,
+        ], $component->instance->lifecycles);
+
+        $component->updateProperty('baz', 'bing');
+
+        $this->assertEquals([
+            'mount' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => false,
@@ -45,6 +55,7 @@ class LifecycleHooksTest extends TestCase
 class ForLifecycleHooks extends Component
 {
     public $foo;
+    public $baz;
     public $lifecycles = [
         'mount' => false,
         'updating' => false,
@@ -58,13 +69,19 @@ class ForLifecycleHooks extends Component
         $this->lifecycles['mount'] = true;
     }
 
-    public function updating()
+    public function updating($name, $value)
     {
+        assert($name === 'foo' || $name === 'baz');
+        assert($value === 'bar' || $value === 'bing');
+
         $this->lifecycles['updating'] = true;
     }
 
-    public function updated()
+    public function updated($name, $value)
     {
+        assert($name === 'foo' || $name === 'baz');
+        assert($value === 'bar' || $value === 'bing');
+
         $this->lifecycles['updated'] = true;
     }
 
@@ -76,9 +93,10 @@ class ForLifecycleHooks extends Component
         $this->lifecycles['updatingFoo'] = true;
     }
 
-    public function updatedFoo()
+    public function updatedFoo($value)
     {
         assert($this->foo === 'bar');
+        assert($value === 'bar');
 
         $this->lifecycles['updatedFoo'] = true;
     }
