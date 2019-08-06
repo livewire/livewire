@@ -58,13 +58,23 @@ class ForLifecycleHooks extends Component
         $this->lifecycles['mount'] = true;
     }
 
-    public function updating()
+    public function updating($data)
     {
+        assert(
+            isset($data['method']) && $data['method'] === '$refresh'
+            || ($data['name'] === 'foo' && $data['value'] === 'bar')
+        );
+
         $this->lifecycles['updating'] = true;
     }
 
-    public function updated()
+    public function updated($data)
     {
+        assert(
+            isset($data['method']) && $data['method'] === '$refresh'
+            || ($data['name'] === 'foo' && $data['value'] === 'bar')
+        );
+
         $this->lifecycles['updated'] = true;
     }
 
