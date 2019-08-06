@@ -47,6 +47,17 @@ class ValidationTest extends TestCase
 
         $this->assertStringContainsString('emails.1 must be a valid email address.', $component->dom);
     }
+
+    /** @test */
+    public function validate_deeply_nested_component_properties()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component->runAction('runDeeplyNestedValidation');
+
+        $this->assertStringContainsString('items.1.baz field is required', $component->dom);
+        $this->assertStringNotContainsString('items.0.baz field is required', $component->dom);
+    }
 }
 
 class ForValidation extends Component
@@ -54,6 +65,10 @@ class ForValidation extends Component
     public $foo = 'foo';
     public $bar = '';
     public $emails = ['foo@bar.com', 'invalid-email'];
+    public $items = [
+        ['foo' => 'bar', 'baz' => 'blab'],
+        ['foo' => 'bar', 'baz' => ''],
+    ];
 
     public function runValidation()
     {
@@ -81,6 +96,16 @@ class ForValidation extends Component
     {
         $this->validate([
             'emails.*' => 'email',
+        ]);
+    }
+
+    public function runDeeplyNestedValidation()
+    {
+        $this->validate([
+            'items' => ['required', 'array'],
+            'items.*' => 'array',
+            'items.*.foo' => ['required', 'string'],
+            'items.*.baz' => ['required', 'string'],
         ]);
     }
 

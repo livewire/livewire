@@ -19,7 +19,10 @@ trait ValidatesInput
                 new \Exception('No property found for validation: ['.$field.']')
             );
 
-            $result[$this->beforeFirstDot($field)] = $this->getPropertyValue($field);
+            $propertyNameFromValidationField = $this->beforeFirstDot($field);
+
+            $result[$propertyNameFromValidationField]
+                = $this->getPropertyValue($propertyNameFromValidationField);
         }
 
         return Validator::make($result, Arr::only($rules, $fields), $messages, $attributes)
