@@ -28,6 +28,13 @@ class ComponentMethodBindingsTest extends TestCase
         Livewire::test(ComponentWithBindings::class)
             ->assertSee('from-injection');
     }
+
+    /** @test */
+    public function mount_method_receives_bindings_with_subsequent_param()
+    {
+        Livewire::test(ComponentWithBindings::class, 'foo')
+            ->assertSee('from-injectionfoo');
+    }
 }
 
 class ModelToBeBoundStub
@@ -40,9 +47,9 @@ class ModelToBeBoundStub
 
 class ComponentWithBindings extends Component
 {
-    public function mount(ModelToBeBoundStub $stub)
+    public function mount(ModelToBeBoundStub $stub, $param = '')
     {
-        $this->value = $stub->value;
+        $this->value = $stub->value . $param;
     }
 
     public function render()
