@@ -5,17 +5,24 @@ namespace Livewire;
 use Exception;
 use Illuminate\Support\Str;
 use Livewire\Testing\TestableLivewire;
-use Livewire\Concerns\DependencyResolver;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
+use Illuminate\Routing\RouteDependencyResolverTrait;
 
 class LivewireManager
 {
-    use DependencyResolver;
+    use RouteDependencyResolverTrait;
 
     protected $prefix = 'wire';
     protected $componentAliases = [];
     protected $middlewaresFilter;
+    protected $container;
+
+    public function __construct()
+    {
+        // This property only exists to make the "RouteDependancyResolverTrait" work.
+        $this->container = app();
+    }
 
     public function prefix($prefix = null)
     {
@@ -69,7 +76,7 @@ class LivewireManager
 <style>[wire\:loading] { display: none; }</style>
 <script src="{$fullAssetPath}"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEvenmListener("DOMContentLoaded", function() {
         window.livewire = new Livewire({$options});
         window.livewire_app_url = "{$appUrl}";
         window.livewire_token = "{$csrf}";
@@ -81,12 +88,13 @@ EOT;
     public function mount($name, ...$options)
     {
         $instance = $this->activate($name);
+
         $parameters = $this->resolveClassMethodDependencies(
-            $options,
-            $instance,
-            'mount'
+            $options, $instance, 'mount'
         );
+
         $instance->mount(...array_values($parameters));
+
         $dom = $instance->output();
         $id = Str::random(20);
         $properties = ComponentHydrator::dehydrate($instance);
