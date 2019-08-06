@@ -76,7 +76,7 @@ class LivewireManager
 <style>[wire\:loading] { display: none; }</style>
 <script src="{$fullAssetPath}"></script>
 <script>
-    document.addEvenmListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function() {
         window.livewire = new Livewire({$options});
         window.livewire_app_url = "{$appUrl}";
         window.livewire_token = "{$csrf}";
