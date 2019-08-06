@@ -44,7 +44,7 @@ abstract class ConnectionHandler
 
     public function processMessage($type, $data, $instance)
     {
-        $instance->updating();
+        $instance->updating($data);
 
         switch ($type) {
             case 'syncInput':
@@ -61,7 +61,7 @@ abstract class ConnectionHandler
                 break;
         }
 
-        $instance->updated();
+        $instance->updated($data);
     }
 
     protected function interceptRedirects($instance, $callback)
