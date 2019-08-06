@@ -100,7 +100,7 @@ EOT;
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
-        $checksum = md5($name . $id);
+        $checksum = md5($name.$id);
 
         $middlewareStack = $this->currentMiddlewareStack();
         if ($this->middlewaresFilter) {
