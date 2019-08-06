@@ -2,9 +2,9 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Route;
-use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Component;
+use Illuminate\Support\Facades\Route;
 
 class ComponentMethodBindingsTest extends TestCase
 {
@@ -49,7 +49,7 @@ class ComponentWithBindings extends Component
 {
     public function mount(ModelToBeBoundStub $stub, $param = '')
     {
-        $this->value = $stub->value . $param;
+        $this->value = $stub->value.$param;
     }
 
     public function render()
