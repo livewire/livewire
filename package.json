@@ -18,23 +18,21 @@
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.3.1",
-    "babel-jest": "^24.1.0",
+    "@babel/preset-env": "^7.5.5",
+    "babel-jest": "^24.8.0",
     "cross-env": "^5.2.0",
     "cross-spawn": "^6.0.5",
-    "dom-testing-library": "^3.18.2",
+    "dom-testing-library": "^3.19.4",
     "false": "^0.0.4",
-    "jest": "^24.1.0",
-    "jest-dom": "^3.1.3",
+    "jest": "^24.8.0",
+    "jest-dom": "^3.5.0",
     "jsdom-simulant": "^1.1.2",
-    "laravel-mix": "^4.0.15",
+    "laravel-mix": "^4.1.2",
     "mock-echo": "^1.1.0",
+    "promise-polyfill": "^8.1.3",
     "query-string": "^5.1.1",
     "turbolinks": "^5.2.0",
-    "vue-template-compiler": "^2.5.22"
-  },
-  "dependencies": {
-    "promise-polyfill": "^8.1.3",
+    "vue-template-compiler": "^2.6.10",
     "whatwg-fetch": "^3.0.0"
   }
 }

@@ -3,7 +3,7 @@ import DOM from "@/dom/dom";
 import Component from "@/Component";
 import Connection from '@/connection'
 import drivers from '@/connection/drivers'
-import {ArrayFlat, ArrayFrom, ArrayIncludes, ElementGetAttributeNames} from '@/dom/polyfills';
+import { ArrayFlat, ArrayFrom, ArrayIncludes, ElementGetAttributeNames } from '@/dom/polyfills';
 import 'whatwg-fetch'
 import 'promise-polyfill/src/polyfill';
 
@@ -16,12 +16,16 @@ class Livewire {
         this.connection = new Connection(driver)
         this.components = componentStore
 
+        this.activatePolyfills()
+
+        this.start()
+    }
+
+    activatePolyfills() {
         ArrayFlat();
         ArrayFrom();
         ArrayIncludes();
         ElementGetAttributeNames();
-
-        this.start()
     }
 
     emit(event, ...params) {
