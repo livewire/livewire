@@ -13,7 +13,6 @@ class ComponentUsesCustomName extends TestCase
         $component = app(LivewireManager::class)->test(PreservesNameProperty::class);
 
         $this->assertEquals('Hello World', $component->instance->name);
-        $this->assertEquals('uses-custom-name', $component->instance->name());
         $this->assertEquals('uses-custom-name', $component->instance->getName());
     }
 }

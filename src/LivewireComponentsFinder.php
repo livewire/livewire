@@ -44,7 +44,7 @@ class LivewireComponentsFinder
     {
         $this->manifest = $this->getClassNames()
             ->mapWithKeys(function ($class) {
-                return [(new $class)->name() => $class];
+                return [(new $class)->getName() => $class];
             })->toArray();
 
         $this->write($this->manifest);
