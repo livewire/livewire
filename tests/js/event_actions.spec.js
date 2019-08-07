@@ -85,3 +85,12 @@ test('polling on root div', async () => {
 
     expect(pollHappened).toBeTruthy()
 })
+
+test('init', async () => {
+    var initHappened = false
+    mountAsRoot('<div wire:id="123" wire:data="{}" wire:init="someMethod"></div>', () => { initHappened = true })
+
+    await timeout(10)
+
+    expect(initHappened).toBeTruthy()
+})

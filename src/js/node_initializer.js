@@ -17,6 +17,10 @@ export default {
                     this.fireActionOnInterval(el, directive, component)
                     break;
 
+                case 'init':
+                    this.fireActionRightAway(el, directive, component)
+                    break;
+
                 case 'model':
                     el.setInputValueFromModel(component)
                     this.attachModelListener(el, directive, component)
@@ -47,6 +51,12 @@ export default {
         setInterval(() => {
             component.addAction(new MethodAction(method, directive.params, el))
         }, directive.durationOr(500));
+    },
+
+    fireActionRightAway(el, directive, component) {
+        const method = directive.method || '$refresh'
+
+        component.addAction(new MethodAction(method, directive.params, el))
     },
 
     attachModelListener(el, directive, component) {
