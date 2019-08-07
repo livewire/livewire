@@ -13,12 +13,12 @@ abstract class Component
     use Concerns\ValidatesInput,
         Concerns\DetectsDirtyProperties,
         Concerns\HandlesActions,
+        Concerns\PerformsRedirects,
         Concerns\ReceivesEvents,
         Concerns\InteractsWithProperties,
         Concerns\TracksRenderedChildren;
 
     public $id;
-    public $redirectTo;
     protected $lifecycleHooks = [
         'mount', 'updating', 'updated',
     ];
@@ -50,11 +50,6 @@ abstract class Component
     public function render()
     {
         return view("livewire.{$this->getName()}");
-    }
-
-    public function redirect($url)
-    {
-        $this->redirectTo = $url;
     }
 
     public function output($errors = null)
