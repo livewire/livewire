@@ -6,10 +6,13 @@ use Exception;
 use Illuminate\Support\Str;
 use Livewire\Testing\TestableLivewire;
 use Livewire\Connection\ComponentHydrator;
+use Illuminate\Foundation\Exceptions\Handler;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Illuminate\Routing\RouteDependencyResolverTrait;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class LivewireManager
+class LivewireManager extends Handler
 {
     use RouteDependencyResolverTrait;
 
@@ -93,7 +96,11 @@ EOT;
             $options, $instance, 'mount'
         );
 
-        $instance->mount(...array_values($parameters));
+        try {
+            $instance->mount(...array_values($parameters));
+        } catch (ModelNotFoundException | NotFoundHttpException $e) {
+            return $this->prepareResponse(request(), $e)->send();
+        }
 
         $dom = $instance->output();
         $id = Str::random(20);
