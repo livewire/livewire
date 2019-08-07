@@ -1,4 +1,3 @@
-import { wait } from 'dom-testing-library'
 import { mount } from './utils'
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 

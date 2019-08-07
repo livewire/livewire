@@ -14,6 +14,20 @@ export function mount(dom, requestInterceptor = () => {}) {
     return document.body.firstElementChild
 };
 
+export function mountAsRoot(dom, requestInterceptor = () => {}) {
+    document.body.innerHTML = dom
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        sendMessage(payload) {
+            requestInterceptor(payload)
+        },
+    }})
+
+    return document.body.firstElementChild
+};
+
 export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
     document.body.innerHTML = '<div wire:id="123" wire:events="[&quot;'+event+'&quot;]" wire:data="{}">' + dom + '</div>'
 

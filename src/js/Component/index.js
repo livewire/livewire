@@ -207,7 +207,7 @@ class Component {
             const el = new DOMElement(node)
 
             // Skip the root component element.
-            if (el.isSameNode(this.el)) return
+            if (el.isSameNode(this.el)) { callback(el); return; }
 
             // If we encounter a nested component, skip walking that tree.
             if (el.isComponentRootEl()) {
