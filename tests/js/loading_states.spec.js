@@ -28,6 +28,20 @@ test('show element while targeted element is loading', async () => {
     })
 })
 
+test('loading element can have multiple targets', async () => {
+    mount(
+`<button wire:ref="foo" wire:click="onClick"></button>
+<a wire:ref="bar" wire:click="onClick"></a>
+<span style="display: none" wire:loading wire:target="foo, bar"></span>`
+    )
+
+    document.querySelector('a').click()
+
+    await wait( () => {
+        expect(document.querySelector('span').style.display).toEqual('inline-block')
+    })
+})
+
 test('add element class while loading', async () => {
     mount('<button wire:click="onClick"></button><span wire:loading.class="foo-class"></span>')
 

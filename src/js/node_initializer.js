@@ -34,13 +34,13 @@ export default {
     },
 
     registerElementForLoading(el, directive, component) {
-        const refName = el.directives.get('target')
-            && el.directives.get('target').value
+        const refNames = el.directives.get('target')
+            && el.directives.get('target').value.split(',').map(s => s.trim())
 
         component.addLoadingEl(
             el,
             directive.value,
-            refName,
+            refNames,
             directive.modifiers.includes('remove')
         )
     },

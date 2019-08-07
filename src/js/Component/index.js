@@ -261,13 +261,15 @@ class Component {
         }
     }
 
-    addLoadingEl(el, value, targetRef, remove) {
-        if (targetRef) {
-            if (this.loadingElsByRef[targetRef]) {
-                this.loadingElsByRef[targetRef].push({el, value, remove})
-            } else {
-                this.loadingElsByRef[targetRef] = [{el, value, remove}]
-            }
+    addLoadingEl(el, value, targetRefs, remove) {
+        if (targetRefs) {
+            targetRefs.forEach(targetRef => {
+                if (this.loadingElsByRef[targetRef]) {
+                    this.loadingElsByRef[targetRef].push({el, value, remove})
+                } else {
+                    this.loadingElsByRef[targetRef] = [{el, value, remove}]
+                }
+            })
         } else {
             this.loadingEls.push({el, value, remove})
         }

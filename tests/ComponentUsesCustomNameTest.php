@@ -5,7 +5,7 @@ namespace Tests;
 use Livewire\Component;
 use Livewire\LivewireManager;
 
-class ComponentUsesCustomName extends TestCase
+class ComponentUsesCustomNameTest extends TestCase
 {
     /** @test */
     public function uses_default_component_name()
