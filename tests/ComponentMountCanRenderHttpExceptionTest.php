@@ -31,4 +31,3 @@ class ComponentCanAbort extends Component
         return app('view')->make('null-view');
     }
 }
-
