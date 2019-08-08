@@ -20,7 +20,7 @@ abstract class Component
 
     public $id;
     protected $lifecycleHooks = [
-        'mount', 'updating', 'updated',
+        'mount', 'hydrate', 'updating', 'updated',
     ];
 
     public function __construct()

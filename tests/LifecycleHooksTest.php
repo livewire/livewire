@@ -14,6 +14,7 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => false,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
@@ -24,6 +25,7 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => true,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
@@ -34,6 +36,7 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => false,
@@ -44,6 +47,7 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
@@ -58,6 +62,7 @@ class ForLifecycleHooks extends Component
     public $baz;
     public $lifecycles = [
         'mount' => false,
+        'hydrate' => false,
         'updating' => false,
         'updated' => false,
         'updatingFoo' => false,
@@ -67,6 +72,11 @@ class ForLifecycleHooks extends Component
     public function mount()
     {
         $this->lifecycles['mount'] = true;
+    }
+
+    public function hydrate()
+    {
+        $this->lifecycles['hydrate'] = true;
     }
 
     public function updating($name, $value)
