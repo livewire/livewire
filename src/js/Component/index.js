@@ -71,7 +71,6 @@ class Component {
     }
 
     messageSendFailed() {
-        //Reset all loading elements back to their original state
         this.unsetLoading(this.messageInTransit.loadingEls)
 
         this.messageInTransit = null
@@ -88,6 +87,8 @@ class Component {
             window.location.href = response.redirectTo
             return
         }
+
+        this.unsetLoading(this.messageInTransit.loadingEls)
 
         this.replaceDom(response.dom, response.dirtyInputs)
 

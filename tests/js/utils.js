@@ -42,7 +42,7 @@ export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
     return document.body.firstElementChild
 };
 
-export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterceptor = () => { }) {
+export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterceptor = async () => { }) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
 
@@ -51,13 +51,33 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
     window.livewire = new Livewire({ driver: {
         onMessage: null,
         init() {},
-        sendMessage(payload) {
-            requestInterceptor(payload)
+        async sendMessage(payload) {
+            await requestInterceptor(payload)
             this.onMessage({
                 id: payload.id,
                 data: {},
                 dirtyInputs: dirtyInputs,
                 dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
+            })
+        },
+    }})
+
+    return document.body.firstElementChild
+};
+
+export function mountAndError(dom, requestInterceptor = async () => { }) {
+    // This is a crude way of wiping any existing DOM & listeners before we mount.
+    document.body.innerHTML = '';
+
+    document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            await requestInterceptor(payload)
+            this.onError({
+                id: payload.id,
             })
         },
     }})
