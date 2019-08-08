@@ -15,6 +15,8 @@ abstract class ConnectionHandler
         $instance->setPreviouslyRenderedChildren($payload['children']);
         $instance->hashPropertiesForDirtyDetection();
 
+        $instance->hydrate();
+
         try {
             $this->interceptRedirects($instance, function () use ($payload, $instance) {
                 foreach ($payload['actionQueue'] as $action) {
