@@ -98,3 +98,8 @@ test('remove element attribute while loading', async () => {
         expect(document.querySelector('span').hasAttribute('disabled')).toBeFalsy()
     })
 })
+
+// //TODO - throw a 500 error return from Livewire in a test - maybe a new method in util instead of mount?
+test('loading state is reset when an error is thrown', async () => {
+
+})
