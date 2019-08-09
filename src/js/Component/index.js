@@ -22,6 +22,7 @@ class Component {
         this.loadingElsByRef = {}
         this.modelTimeout = null
         this.loadingMinimumTimeout = null
+        this.loadingDelayTimeout = null
         this.tearDownCallbacks = []
 
         this.initialize()
@@ -303,6 +304,30 @@ class Component {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
 
+            if (directive.modifiers.includes('after')) {
+                if(this.loadingDelayTimeout == null) {
+
+                    this.unsetLoading(allEls) //todo
+
+                    this.loadingDelayTimeout = setTimeout(() => {
+                        if(this.messageInTransit != null) {
+                            console.log('starting load now')
+                            this.startLoading(allEls) //todo
+                        }
+
+                        clearTimeout(this.loadingDelayTimeout)
+
+                        this.loadingDelayTimeout = null
+                    }, directive.durationOr(500))
+
+                    return
+                } else {
+                    console.log('already stopped?')
+                    clearTimeout(this.loadingDelayTimeout)
+                    this.loadingDelayTimeout = null
+                }  
+            }
+
             if (directive.modifiers.includes('min')) {
                 this.loadingMinimumTimeout = setTimeout(() => {
                     if(this.messageInTransit == null) {
@@ -323,6 +348,7 @@ class Component {
     }
 
     startLoading(els) {
+        console.log('setting')
         els.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
@@ -352,6 +378,7 @@ class Component {
     }
 
     unsetLoading(els) {
+        console.log('unsetting')
         els.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
