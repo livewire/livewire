@@ -177,8 +177,57 @@ test('add element class while loading with a minimum time', async () => {
 })
 
 
-// test('does not element class while loading completes before minimum time', async () => {
-//     mount('<button wire:click="onClick"></button><span wire:loading.class.min.1000ms="foo-class"></span>')
-//     // loading < min
-//     // @todo - find a good way to test this.
-// })
+test('only shows loading after delay is reached', async () => {
+
+    //test loading shows on a long running request
+    mountAndReturn(
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading.after.100ms></span>`,
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading.after.100ms></span>`,
+        [], async () => {
+            // Make the loading last for 200ms.
+            await timeout(200)
+        }
+    )
+
+    expect(document.querySelector('span').style.display).toEqual('none')
+
+    document.querySelector('button').click()
+
+    await wait(async () => {
+        //before the after timer has run 0ms
+        expect(document.querySelector('span').style.display).toEqual('none')
+
+        //test for 100ms
+        // ...
+
+        await wait(async () => {
+            //after 200ms
+            expect(document.querySelector('span').style.display).toEqual('inline-block')
+        })
+    })
+
+    //test loading never shows with a short request
+        //test loading shows on a long running request
+        mountAndReturn(
+            `<button wire:click="onClick"></button><span style="display: none" wire:loading.after.100ms></span>`,
+            `<button wire:click="onClick"></button><span style="display: none" wire:loading.after.100ms></span>`,
+            [], async () => {
+                // Make the loading last for 200ms.
+                await timeout(50)
+            }
+        )
+    
+        expect(document.querySelector('span').style.display).toEqual('none')
+    
+        document.querySelector('button').click()
+    
+        await wait(async () => {
+            //before the after timer has run 0ms
+            expect(document.querySelector('span').style.display).toEqual('none')
+
+            await wait(async () => {
+                //after 50ms
+                expect(document.querySelector('span').style.display).toEqual('none')
+            })
+        })
+})
