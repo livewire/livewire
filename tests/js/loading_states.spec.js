@@ -86,12 +86,6 @@ test('add element class while loading', async () => {
     })
 })
 
-test('add element class while loading only after minimum time', async () => {
-    mount('<button wire:click="onClick"></button><span wire:loading.class.min.100ms="foo-class"></span>')
-
-    // @todo - find a good way to test this.
-})
-
 test('add element class with spaces while loading', async () => {
     mount('<button wire:click="onClick"></button><span wire:loading.class="foo bar"></span>')
 
@@ -132,3 +126,59 @@ test('remove element attribute while loading', async () => {
         expect(document.querySelector('span').hasAttribute('disabled')).toBeFalsy()
     })
 })
+
+
+test('add element class while loading with a minimum time', async () => {
+
+    mountAndReturn(
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading.min.100ms></span>`,
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading.min.100ms></span>`,
+        [], async () => {
+            // Make the loading last for 50ms.
+            await timeout(50)
+        }
+    )
+
+    expect(document.querySelector('span').style.display).toEqual('none')
+
+    document.querySelector('button').click()
+
+    await wait(async () => {
+        expect(document.querySelector('span').style.display).toEqual('inline-block')
+
+        await wait(async () => {
+            //request returned quickly - still show loading state //diff from original whre it was none
+            expect(document.querySelector('span').style.display).toEqual('inline-block')
+        })
+    })
+
+    //now try where response is after min
+    //does not fail by default but should fail if .min does not reset at end
+    mountAndReturn(
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading.min.100ms></span>`,
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading.min.100ms></span>`,
+        [], async () => {
+            // Make the loading last for 200ms.
+            await timeout(200)
+        }
+    )
+
+    expect(document.querySelector('span').style.display).toEqual('none')
+
+    document.querySelector('button').click()
+
+    await wait(async () => {
+        expect(document.querySelector('span').style.display).toEqual('inline-block')
+
+        await wait(async () => {
+            //request returned slowly - so should return as normal
+            expect(document.querySelector('span').style.display).toEqual('none')
+        })
+    })
+})
+
+// test('does not element class while loading completes before minimum time', async () => {
+//     mount('<button wire:click="onClick"></button><span wire:loading.class.min.1000ms="foo-class"></span>')
+//     // loading < min
+//     // @todo - find a good way to test this.
+// })
