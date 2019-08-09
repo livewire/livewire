@@ -89,11 +89,16 @@ class Component {
             return
         }
 
-        this.unsetLoading(this.messageInTransit.loadingEls)
-
         this.replaceDom(response.dom, response.dirtyInputs)
 
         this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
+
+        if(this.loadingMinimumTimeout) {
+            //restart loading state
+            this.startLoading(this.messageInTransit.loadingEls)
+        }else {
+            this.unsetLoading(this.messageInTransit.loadingEls)
+        }
 
         this.messageInTransit = null
 
@@ -298,6 +303,18 @@ class Component {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
 
+            if (directive.modifiers.includes('min')) {
+                this.loadingMinimumTimeout = setTimeout(() => {
+                    if(this.messageInTransit == null) {
+                        this.unsetLoading(allEls)
+                    }
+
+                    clearTimeout(this.loadingMinimumTimeout)
+
+                    this.loadingMinimumTimeout = null
+
+                }, directive.durationOr(500))
+            }
         })
 
         this.startLoading(this.loadingEls.concat(refEls))
@@ -306,10 +323,6 @@ class Component {
     }
 
     startLoading(els) {
-        //starts the loading setup
-
-        // do this then set loading
-
         els.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
@@ -339,7 +352,6 @@ class Component {
     }
 
     unsetLoading(els) {
-        //end the loading state 
         els.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
