@@ -21,6 +21,7 @@ class Component {
         this.loadingEls = []
         this.loadingElsByRef = {}
         this.modelTimeout = null
+        this.loadingMinimumTimeout = null
         this.tearDownCallbacks = []
 
         this.initialize()
@@ -287,12 +288,29 @@ class Component {
         }
     }
 
-    setLoading(refs) {
+    setLoading(refs = []) {
         const refEls = refs.map(ref => this.loadingElsByRef[ref]).filter(el => el).flat()
 
         const allEls = this.loadingEls.concat(refEls)
 
         allEls.forEach(el => {
+
+            const directive = el.el.directives.get('loading')
+            el = el.el.el // I'm so sorry @todo
+
+        })
+
+        this.startLoading(this.loadingEls.concat(refEls))
+
+        return  allEls
+    }
+
+    startLoading(els) {
+        //starts the loading setup
+
+        // do this then set loading
+
+        els.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
 
@@ -317,11 +335,12 @@ class Component {
             }
         })
 
-        return allEls
+        return els
     }
 
-    unsetLoading(loadingEls) {
-        loadingEls.forEach(el => {
+    unsetLoading(els) {
+        //end the loading state 
+        els.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
 
@@ -344,7 +363,7 @@ class Component {
             }
         })
 
-        return loadingEls
+        return els
     }
 
     modelSyncDebounce(callback, time) {
