@@ -94,6 +94,24 @@ export default {
             component.addListenerForTeardown(() => {
                 el.removeEventListener(event, handler)
             })
+
+            if(directive.modifiers.includes('dirty')) {
+                const dirtyHander = (e) => {
+                    const target = e.target.closest('.dirty-target') || e.target
+
+                    if(e.target.value !== component.data[directive.value]) {
+                        target.classList.add('dirty')
+                    } else {
+                        target.classList.remove('dirty')
+                    }
+                }
+
+                el.addEventListener('input', dirtyHander)
+
+                component.addListenerForTeardown(() => {
+                    el.removeEventListener('input', dirtyHandler)
+                })
+            }
         }
     },
 
