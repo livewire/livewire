@@ -6,6 +6,7 @@ import drivers from '@/connection/drivers'
 import { ArrayFlat, ArrayFrom, ArrayIncludes, ElementGetAttributeNames } from '@/dom/polyfills';
 import 'whatwg-fetch'
 import 'promise-polyfill/src/polyfill';
+import { dispatch } from './util';
 
 class Livewire {
     constructor({ driver } = { driver: 'http' }) {
@@ -15,10 +16,13 @@ class Livewire {
 
         this.connection = new Connection(driver)
         this.components = componentStore
+        this.onLoadCallback = () => {};
 
         this.activatePolyfills()
+    }
 
-        this.start()
+    onLoad(callback) {
+        this.onLoadCallback = callback
     }
 
     activatePolyfills() {
@@ -51,6 +55,9 @@ class Livewire {
                 new Component(el, this.connection)
             )
         })
+
+        this.onLoadCallback()
+        dispatch('livewire:load')
     }
 
     rescan() {

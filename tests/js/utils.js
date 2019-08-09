@@ -10,6 +10,7 @@ export function mount(dom, requestInterceptor = () => {}) {
             requestInterceptor(payload)
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
@@ -24,6 +25,7 @@ export function mountAsRoot(dom, requestInterceptor = () => {}) {
             requestInterceptor(payload)
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
@@ -38,6 +40,7 @@ export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
             requestInterceptor(payload)
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
@@ -61,6 +64,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
             })
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
@@ -81,6 +85,7 @@ export function mountAndError(dom, requestInterceptor = async () => { }) {
             })
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
@@ -97,6 +102,7 @@ export function mountWithData(dom, data) {
             //
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
@@ -120,6 +126,7 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
             })
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
