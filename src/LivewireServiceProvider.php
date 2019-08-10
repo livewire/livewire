@@ -77,6 +77,10 @@ class LivewireServiceProvider extends ServiceProvider
         Blade::directive('livewireAssets', function ($expression) {
             return '{!! Livewire::assets('.$expression.') !!}';
         });
+        
+        Blade::directive('livewireassets', function ($expression) {
+            return '{!! Livewire::assets('.$expression.') !!}';
+        });
 
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
     }
