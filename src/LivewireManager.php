@@ -6,13 +6,13 @@ use Exception;
 use Illuminate\Support\Str;
 use Livewire\Testing\TestableLivewire;
 use Livewire\Connection\ComponentHydrator;
-use Illuminate\Foundation\Exceptions\Handler;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Illuminate\Routing\RouteDependencyResolverTrait;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class LivewireManager extends Handler
+class LivewireManager
 {
     use RouteDependencyResolverTrait;
 
@@ -40,7 +40,7 @@ class LivewireManager extends Handler
 
     public function getComponentClass($alias)
     {
-        $finder = app()->make(LivewireComponentsFinder::class);
+        $finder = $this->container->make(LivewireComponentsFinder::class);
 
         $class = $this->componentAliases[$alias]
             ?? $finder->find($alias);
@@ -68,7 +68,7 @@ class LivewireManager extends Handler
         $appUrl = $this->appUrlOrRoot();
         $options = $options ? json_encode($options) : '';
 
-        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
+        $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         $csrf = csrf_token();
@@ -79,8 +79,9 @@ class LivewireManager extends Handler
 <style>[wire\:loading] { display: none; }</style>
 <script src="{$fullAssetPath}"></script>
 <script>
+    window.livewire = new Livewire({$options});
     document.addEventListener("DOMContentLoaded", function() {
-        window.livewire = new Livewire({$options});
+        window.livewire.start()
         window.livewire_app_url = "{$appUrl}";
         window.livewire_token = "{$csrf}";
     });
@@ -88,26 +89,33 @@ class LivewireManager extends Handler
 EOT;
     }
 
+    public function getExceptionHandler()
+    {
+        return $this->container->make(ExceptionHandler::class);
+    }
+
     public function mount($name, ...$options)
     {
         $instance = $this->activate($name);
 
         $parameters = $this->resolveClassMethodDependencies(
-            $options, $instance, 'mount'
+            $options,
+            $instance,
+            'mount'
         );
 
         try {
             $instance->mount(...array_values($parameters));
+            $dom = $instance->output();
         } catch (ModelNotFoundException | NotFoundHttpException $e) {
-            return $this->prepareResponse(request(), $e)->send();
+            $dom = $this->getExceptionHandler()->render(request(), $e);
         }
 
-        $dom = $instance->output();
         $id = Str::random(20);
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
-        $checksum = md5($name.$id);
+        $checksum = md5($name . $id);
 
         $middlewareStack = $this->currentMiddlewareStack();
         if ($this->middlewaresFilter) {

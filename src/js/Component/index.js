@@ -71,6 +71,8 @@ class Component {
     }
 
     messageSendFailed() {
+        this.unsetLoading(this.messageInTransit.loadingEls)
+
         this.messageInTransit = null
     }
 
@@ -86,11 +88,11 @@ class Component {
             return
         }
 
+        this.unsetLoading(this.messageInTransit.loadingEls)
+
         this.replaceDom(response.dom, response.dirtyInputs)
 
         this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
-
-        this.unsetLoading(this.messageInTransit.loadingEls)
 
         this.messageInTransit = null
 
@@ -207,7 +209,7 @@ class Component {
             const el = new DOMElement(node)
 
             // Skip the root component element.
-            if (el.isSameNode(this.el)) return
+            if (el.isSameNode(this.el)) { callback(el); return; }
 
             // If we encounter a nested component, skip walking that tree.
             if (el.isComponentRootEl()) {
@@ -261,13 +263,15 @@ class Component {
         }
     }
 
-    addLoadingEl(el, value, targetRef, remove) {
-        if (targetRef) {
-            if (this.loadingElsByRef[targetRef]) {
-                this.loadingElsByRef[targetRef].push({el, value, remove})
-            } else {
-                this.loadingElsByRef[targetRef] = [{el, value, remove}]
-            }
+    addLoadingEl(el, value, targetRefs, remove) {
+        if (targetRefs) {
+            targetRefs.forEach(targetRef => {
+                if (this.loadingElsByRef[targetRef]) {
+                    this.loadingElsByRef[targetRef].push({el, value, remove})
+                } else {
+                    this.loadingElsByRef[targetRef] = [{el, value, remove}]
+                }
+            })
         } else {
             this.loadingEls.push({el, value, remove})
         }
@@ -317,7 +321,30 @@ class Component {
     }
 
     unsetLoading(loadingEls) {
-        // No need to "unset" loading because the dom-diffing will automatically reverse any changes.
+        loadingEls.forEach(el => {
+            const directive = el.el.directives.get('loading')
+            el = el.el.el // I'm so sorry @todo
+
+            if (directive.modifiers.includes('class')) {
+                const classes = directive.value.split(' ')
+
+                if (directive.modifiers.includes('remove')) {
+                    el.classList.add(...classes)
+                } else {
+                    el.classList.remove(...classes)
+                }
+            } else if (directive.modifiers.includes('attr')) {
+                if (directive.modifiers.includes('remove')) {
+                    el.setAttribute(directive.value)
+                } else {
+                    el.removeAttribute(directive.value, true)
+                }
+            } else {
+                el.style.display = 'none'
+            }
+        })
+
+        return loadingEls
     }
 
     modelSyncDebounce(callback, time) {

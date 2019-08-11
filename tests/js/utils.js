@@ -10,6 +10,22 @@ export function mount(dom, requestInterceptor = () => {}) {
             requestInterceptor(payload)
         },
     }})
+    window.livewire.start()
+
+    return document.body.firstElementChild
+};
+
+export function mountAsRoot(dom, requestInterceptor = () => {}) {
+    document.body.innerHTML = dom
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        sendMessage(payload) {
+            requestInterceptor(payload)
+        },
+    }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
@@ -24,11 +40,12 @@ export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
             requestInterceptor(payload)
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
 
-export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterceptor = () => { }) {
+export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterceptor = async () => { }) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
 
@@ -37,8 +54,8 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
     window.livewire = new Livewire({ driver: {
         onMessage: null,
         init() {},
-        sendMessage(payload) {
-            requestInterceptor(payload)
+        async sendMessage(payload) {
+            await requestInterceptor(payload)
             this.onMessage({
                 id: payload.id,
                 data: {},
@@ -47,6 +64,28 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
             })
         },
     }})
+    window.livewire.start()
+
+    return document.body.firstElementChild
+};
+
+export function mountAndError(dom, requestInterceptor = async () => { }) {
+    // This is a crude way of wiping any existing DOM & listeners before we mount.
+    document.body.innerHTML = '';
+
+    document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            await requestInterceptor(payload)
+            this.onError({
+                id: payload.id,
+            })
+        },
+    }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
@@ -63,6 +102,7 @@ export function mountWithData(dom, data) {
             //
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
@@ -86,6 +126,7 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
             })
         },
     }})
+    window.livewire.start()
 
     return document.body.firstElementChild
 };
