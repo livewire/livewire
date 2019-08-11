@@ -68,8 +68,7 @@ abstract class Component
             ->with($this->getPublicPropertiesDefinedBySubClass())
             ->render();
 
-        // Basic minification: strip newlines and return carraiges.
-        return str_replace(["\n", "\r"], '', $dom);
+        return $dom;
     }
 
     public function __call($method, $params)
