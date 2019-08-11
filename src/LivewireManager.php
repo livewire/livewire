@@ -40,7 +40,7 @@ class LivewireManager
 
     public function getComponentClass($alias)
     {
-        $finder = $this->container->make(LivewireComponentsFinder::class);
+        $finder = app()->make(LivewireComponentsFinder::class);
 
         $class = $this->componentAliases[$alias]
             ?? $finder->find($alias);
