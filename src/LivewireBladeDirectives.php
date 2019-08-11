@@ -22,8 +22,7 @@ class LivewireBladeDirectives
         return <<<EOT
 <?php
 if (! isset(\$_instance)) {
-    \$response = \Livewire\Livewire::mount({$expression});
-    \$dom = \$response instanceof \Livewire\InitialResponsePayload ? \$response->toHtml() : \$response;
+    \$dom = \Livewire\Livewire::mount({$expression})->toHtml();
 } elseif (\$_instance->childHasBeenRendered($cachedKey)) {
     \$componentId = \$_instance->getRenderedChildComponentId($cachedKey);
     \$componentTag = \$_instance->getRenderedChildComponentTagName($cachedKey);
