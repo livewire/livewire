@@ -1,42 +1,6 @@
 import { fireEvent, wait, waitForDomChange } from 'dom-testing-library'
 import { mount, mountWithData, mountAndReturn, mountAndReturnWithData } from './utils'
 
-test('input element with dirty modifier attaches dirty class to input', async () => {
-    mountWithData(
-        '<input wire:model.dirty="foo" class="foo" value="bar">',
-        { foo: 'bar' }
-    )
-
-    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
-
-    expect(document.querySelector('input').value).toEqual('baz')
-    expect(document.querySelector('input').classList.contains('dirty')).toBeTruthy()
-
-    fireEvent.input(document.querySelector('input'), { target: { value: 'bar' }})
-
-    expect(document.querySelector('input').value).toEqual('bar')
-    expect(document.querySelector('input').classList.contains('dirty')).toBeFalsy()
-})
-
-test('input element with dirty modifier attaches dirty class to wrapper if specified', async () => {
-    mountWithData(
-        '<span class="dirty-target"><input wire:model.dirty="foo" class="foo" value="bar"></span>',
-        { foo: 'bar' }
-    )
-
-    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
-
-    expect(document.querySelector('input').value).toEqual('baz')
-    expect(document.querySelector('input').classList.contains('dirty')).toBeFalsy()
-    expect(document.querySelector('span').classList.contains('dirty')).toBeTruthy()
-
-    fireEvent.input(document.querySelector('input'), { target: { value: 'bar' }})
-
-    expect(document.querySelector('input').value).toEqual('bar')
-    expect(document.querySelector('input').classList.contains('dirty')).toBeFalsy()
-    expect(document.querySelector('span').classList.contains('dirty')).toBeFalsy()
-})
-
 test('properties sync on input change', async () => {
     var payload
     mount('<input wire:model="foo">', i => payload = i)

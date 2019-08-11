@@ -260,7 +260,7 @@ export default class DOMElement {
     getSelectValues() {
         return Array.from(this.el.options)
             .filter(option => option.selected)
-            .map(option => { return option.value || option.text})
+            .map(option => { return option.value || option.text })
     }
 
     updateSelect(value) {

@@ -73,7 +73,7 @@ class LivewireManager
 
         return <<<EOT
 <!-- Livewire Assets-->
-<style>[wire\:loading] { display: none; }</style>
+<style>[wire\:loading] { display: none; } [wire\:dirty]:not(textarea):not(input):not(select) { display: none; }</style>
 <script src="{$fullAssetPath}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -90,7 +90,9 @@ EOT;
         $instance = $this->activate($name);
 
         $parameters = $this->resolveClassMethodDependencies(
-            $options, $instance, 'mount'
+            $options,
+            $instance,
+            'mount'
         );
 
         $instance->mount(...array_values($parameters));

@@ -20,6 +20,7 @@ class Component {
         this.messageInTransit = null
         this.loadingEls = []
         this.loadingElsByRef = {}
+        this.dirtyElsByRef = {}
         this.modelTimeout = null
         this.tearDownCallbacks = []
 
@@ -345,6 +346,16 @@ class Component {
         })
 
         return loadingEls
+    }
+
+    addDirtyElsByRef(el, value, targetRefs, remove) {
+        targetRefs.forEach(targetRef => {
+            if (this.dirtyElsByRef[targetRef]) {
+                this.dirtyElsByRef[targetRef].push({el, value, remove})
+            } else {
+                this.dirtyElsByRef[targetRef] = [{el, value, remove}]
+            }
+        })
     }
 
     modelSyncDebounce(callback, time) {
