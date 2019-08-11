@@ -68,7 +68,7 @@ class LivewireManager
         $appUrl = $this->appUrlOrRoot();
         $options = $options ? json_encode($options) : '';
 
-        $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
+        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         $csrf = csrf_token();
@@ -115,7 +115,7 @@ EOT;
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
-        $checksum = md5($name . $id);
+        $checksum = md5($name.$id);
 
         $middlewareStack = $this->currentMiddlewareStack();
         if ($this->middlewaresFilter) {
