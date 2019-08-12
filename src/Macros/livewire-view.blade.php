@@ -1,5 +1,7 @@
 @extends($layout)
 
 @section($section)
-    @livewire($component, ...$componentOptions)
+    @foreach($components as $component => $componentOptions)
+        @livewire($component, ...$componentOptions)
+    @endforeach
 @endsection

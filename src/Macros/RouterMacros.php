@@ -2,6 +2,8 @@
 
 namespace Livewire\Macros;
 
+use Illuminate\Support\Arr;
+
 class RouterMacros
 {
     public function layout()
@@ -24,18 +26,21 @@ class RouterMacros
 
     public function livewire()
     {
-        return function ($uri, $component) {
-            return $this->get($uri, function () use ($component) {
-                $componentClass = app('livewire')->getComponentClass($component);
-                $reflected = new \ReflectionClass($componentClass);
-
+        return function ($uri, $components) {
+            return $this->get($uri, function () use ($components) {
                 return app('view')->file(__DIR__.'/livewire-view.blade.php', [
                     'layout' => $this->current()->getAction('layout') ?? 'layouts.app',
                     'section' => $this->current()->getAction('section') ?? 'content',
-                    'component' => $component,
-                    'componentOptions' => $reflected->hasMethod('mount')
-                        ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), $this))->retrieveBindings()
-                        : [],
+                    'components' => collect(Arr::wrap($components))->mapWithKeys(function ($component) {
+                        $componentClass = app('livewire')->getComponentClass($component);
+                        $reflected = new \ReflectionClass($componentClass);
+
+                        return [
+                            $component => $reflected->hasMethod('mount')
+                                ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), $this))->retrieveBindings()
+                                : [],
+                        ];
+                    }),
                 ]);
             });
         };
