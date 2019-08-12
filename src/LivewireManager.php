@@ -15,6 +15,7 @@ class LivewireManager
 
     protected $prefix = 'wire';
     protected $componentAliases = [];
+    protected $customComponentResolver;
     protected $middlewaresFilter;
     protected $container;
 
@@ -35,12 +36,24 @@ class LivewireManager
         $this->componentAliases[$alias] = $viewClass;
     }
 
+    public function componentResolver($callback)
+    {
+        $this->customComponentResolver = $callback;
+    }
+
     public function getComponentClass($alias)
     {
         $finder = app()->make(LivewireComponentsFinder::class);
 
-        $class = $this->componentAliases[$alias]
-            ?? $finder->find($alias);
+        $class = false;
+
+        if ($this->customComponentResolver) {
+            $class = call_user_func($this->customComponentResolver, $alias);
+        }
+
+        $class = $class ?: (
+            $this->componentAliases[$alias] ?? $finder->find($alias)
+        );
 
         throw_unless($class, new ComponentNotFoundException(
             "Unable to find component: [{$alias}]"
