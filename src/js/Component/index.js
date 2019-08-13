@@ -406,22 +406,6 @@ class Component {
         }
     }
 
-    findElByRef(refName) {
-        var matchedEl
-
-        this.walk((el) => {
-            if (el.directives.has('ref') && el.directives.get('ref').value === refName) {
-                matchedEl = el
-            }
-        })
-
-        if (! matchedEl) {
-            throw `Cannot find element referenced by wire:ref="${refName}"`
-        }
-
-        return matchedEl
-    }
-
     modelSyncDebounce(callback, time) {
         return (e) => {
             clearTimeout(this.modelTimeout)
