@@ -23,8 +23,9 @@ abstract class Component
         'mount', 'hydrate', 'updating', 'updated',
     ];
 
-    public function __construct()
+    public function __construct($id)
     {
+        $this->id = $id;
         $this->initializeTraits();
     }
 
