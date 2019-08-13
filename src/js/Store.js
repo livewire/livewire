@@ -3,6 +3,8 @@ import EventAction from "@/action/event";
 const store = {
     componentsById: {},
     listeners: {},
+    beforeDomUpdateCallback: () => {},
+    afterDomUpdateCallback: () => {},
 
     components() {
         return Object.keys(this.componentsById).map(key => {
@@ -53,6 +55,14 @@ const store = {
         return this.components().filter(component => {
             return component.events.includes(event)
         })
+    },
+
+    beforeDomUpdate(callback) {
+        this.beforeDomUpdateCallback = callback
+    },
+
+    afterDomUpdate(callback) {
+        this.afterDomUpdateCallback = callback
     },
 }
 

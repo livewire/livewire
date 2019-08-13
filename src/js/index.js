@@ -70,6 +70,14 @@ class Livewire {
             )
         })
     }
+
+    beforeDomUpdate(callback) {
+        componentStore.beforeDomUpdate(callback)
+    }
+
+    afterDomUpdate(callback) {
+        componentStore.afterDomUpdate(callback)
+    }
 }
 
 if (!window.Livewire) {
