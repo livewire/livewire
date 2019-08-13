@@ -21,11 +21,13 @@ class Component {
         this.loadingEls = []
         this.loadingElsByRef = {}
         this.dirtyElsByRef = {}
+        this.dirtyEls = []
         this.modelTimeout = null
         this.tearDownCallbacks = []
 
         this.initialize()
 
+        this.registerDirtyListener()
         this.registerEchoListeners()
     }
 
@@ -223,6 +225,48 @@ class Component {
         })
     }
 
+    registerDirtyListener() {
+        this.el.addEventListener('input', (e) => {
+
+            const el = new DOMElement(e.target)
+
+            let targetEls = []
+
+            if (el.directives.has('ref') && this.dirtyElsByRef[el.directives.get('ref').value]) {
+                targetEls.push(...this.dirtyElsByRef[el.directives.get('ref').value])
+            }
+
+            if (el.directives.has('dirty')) {
+                targetEls.push(...this.dirtyEls.filter(dirtyEl => dirtyEl.directives.get('model').value === el.directives.get('model').value))
+            }
+
+            if (targetEls.length < 1) return
+
+            const dirty = el.valueFromInput() !== this.data[el.directives.get('model').value].toString()
+
+            targetEls.forEach(targetEl => {
+                const directive = targetEl.directives.get('dirty')
+
+                if (directive.modifiers.includes('class')) {
+                    const classes = directive.value.split(' ')
+                    if (directive.modifiers.includes('remove') !== dirty) {
+                        targetEl.classList.add(...classes)
+                    } else {
+                        targetEl.classList.remove(...classes)
+                    }
+                } else if (directive.modifiers.includes('attr')) {
+                    if (directive.modifiers.includes('remove') !== dirty) {
+                        targetEl.setAttribute(directive.value, true)
+                    } else {
+                        targetEl.removeAttrsibute(directive.value)
+                    }
+                } else if (! targetEl.directives.get('model')) {
+                    targetEl.el.style.display = dirty ? 'inline-block' : 'none'
+                }
+            });
+        })
+    }
+
     registerEchoListeners() {
         if(Array.isArray(this.events)){
             this.events.forEach(event => {
@@ -348,14 +392,34 @@ class Component {
         return loadingEls
     }
 
-    addDirtyElsByRef(el, value, targetRefs, remove) {
-        targetRefs.forEach(targetRef => {
-            if (this.dirtyElsByRef[targetRef]) {
-                this.dirtyElsByRef[targetRef].push({el, value, remove})
-            } else {
-                this.dirtyElsByRef[targetRef] = [{el, value, remove}]
+    addDirtyEls(el, targetRefs) {
+        if (targetRefs) {
+            targetRefs.forEach(targetRef => {
+                if (this.dirtyElsByRef[targetRef]) {
+                    this.dirtyElsByRef[targetRef].push(el)
+                } else {
+                    this.dirtyElsByRef[targetRef] = [el]
+                }
+            })
+        } else {
+            this.dirtyEls.push(el)
+        }
+    }
+
+    findElByRef(refName) {
+        var matchedEl
+
+        this.walk((el) => {
+            if (el.directives.has('ref') && el.directives.get('ref').value === refName) {
+                matchedEl = el
             }
         })
+
+        if (! matchedEl) {
+            throw `Cannot find element referenced by wire:ref="${refName}"`
+        }
+
+        return matchedEl
     }
 
     modelSyncDebounce(callback, time) {

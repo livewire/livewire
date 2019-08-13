@@ -50,57 +50,13 @@ export default {
     },
 
     registerElementForDirty(el, directive, component) {
-        const refNames = el.directives.get('target')
+        const refNames = el.directives.has('target')
             && el.directives.get('target').value.split(',').map(s => s.trim())
 
-        if (refNames) {
-            component.addDirtyElsByRef(
+            component.addDirtyEls(
                 el,
-                directive.value,
                 refNames,
-                directive.modifiers.includes('remove')
             )
-        }
-
-        const dirtyHander = (e) => {
-            const el = new DOMElement(e.target)
-
-            const refEls = component.dirtyElsByRef[el.ref] ? component.dirtyElsByRef[el.ref].map(el => el.el).flat() : []
-            const allEls = [el].concat(refEls)
-
-            const dirty = el.valueFromInput() !== component.data[el.directives.get('model').value].toString()
-
-            allEls.forEach(el => {
-                const directive = el.directives.get('dirty')
-
-                if (directive.modifiers.includes('class')) {
-                    const classes = directive.value.split(' ')
-                    if (directive.modifiers.includes('remove') !== dirty) {
-                        el.classList.add(...classes)
-                    } else {
-                        el.classList.remove(...classes)
-                    }
-                } else if (directive.modifiers.includes('attr')) {
-                    if (directive.modifiers.includes('remove') !== dirty) {
-                        el.setAttribute(directive.value, true)
-                    } else {
-                        el.removeAttrsibute(directive.value)
-                    }
-                } else if (!el.directives.get('model') && !el.directives.get('ref')) {
-                    el.el.style.display = dirty ? 'inline-block' : 'none'
-                }
-            })
-        }
-
-        // An element can only be detected as dirty if it is wire:modelled.
-        if (el.directives.get('model')) {
-            el.addEventListener('input', dirtyHander)
-
-            component.addListenerForTeardown(() => {
-                el.removeEventListener('input', dirtyHandler)
-            })
-        }
-
     },
 
     fireActionOnInterval(el, directive, component) {

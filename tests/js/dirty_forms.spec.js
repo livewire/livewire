@@ -39,9 +39,9 @@ test('input element with dirty directive and class.remove modifier removes class
     expect(document.querySelector('input').classList.contains('clean')).toBeTruthy()
 })
 
-test('input element with dirty directive and class modifier attaches class by reference', async () => {
+test('input element with dirty directive and class modifier attaches class by reference foobar', async () => {
     mountWithData(
-        '<span wire:dirty.class="dirty" wire:target="bar"><input wire:model="foo" class="foo" wire:dirty wire:ref="bar"></span>',
+        '<span wire:dirty.class="dirty" wire:target="bar"><input wire:model="foo" class="foo" wire:ref="bar"></span>',
         { foo: 'bar' }
     )
 
@@ -63,7 +63,7 @@ test('input element with dirty directive and class modifier attaches class by re
 
 test('input element with dirty directive and class.remove modifier attaches class by reference', async () => {
     mountWithData(
-        '<span class="clean" wire:dirty.class.remove="clean" wire:target="bar"><input wire:model="foo" class="foo" wire:dirty wire:ref="bar"></span>',
+        '<span class="clean" wire:dirty.class.remove="clean" wire:target="bar"><input wire:model="foo" class="foo" wire:ref="bar"></span>',
         { foo: 'bar' }
     )
 
