@@ -6,7 +6,7 @@ use Livewire\Livewire;
 
 class HttpConnectionHandler extends ConnectionHandler
 {
-    // This simulates extending Illuminate/Routeing/Controller
+    // This simulates extending Illuminate/Routing/Controller
     public function getMiddleware()
     {
         // Because the "middlware" is dynamically generated,
