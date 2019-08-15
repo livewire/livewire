@@ -128,3 +128,101 @@ export function ArrayFlat() {
         });
     }
 }
+
+// https://tc39.github.io/ecma262/#sec-array.prototype.find
+if (!Array.prototype.find) {
+  Object.defineProperty(Array.prototype, 'find', {
+    value: function(predicate) {
+     // 1. Let O be ? ToObject(this value).
+      if (this == null) {
+        throw new TypeError('"this" is null or not defined');
+      }
+
+      var o = Object(this);
+
+      // 2. Let len be ? ToLength(? Get(O, "length")).
+      var len = o.length >>> 0;
+
+      // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+      if (typeof predicate !== 'function') {
+        throw new TypeError('predicate must be a function');
+      }
+
+      // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+      var thisArg = arguments[1];
+
+      // 5. Let k be 0.
+      var k = 0;
+
+      // 6. Repeat, while k < len
+      while (k < len) {
+        // a. Let Pk be ! ToString(k).
+        // b. Let kValue be ? Get(O, Pk).
+        // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+        // d. If testResult is true, return kValue.
+        var kValue = o[k];
+        if (predicate.call(thisArg, kValue, k, o)) {
+          return kValue;
+        }
+        // e. Increase k by 1.
+        k++;
+      }
+
+      // 7. Return undefined.
+      return undefined;
+    },
+    configurable: true,
+    writable: true
+  });
+}
+
+/**
+ * @see https://dom.spec.whatwg.org/#interface-element
+ * @see https://developer.mozilla.org/docs/Web/API/Element/matches#Polyfill
+ * @see https://gist.github.com/jonathantneal/3062955
+ * @see https://github.com/jonathantneal/closest
+ */
+(function(global){
+var Element;
+var ElementPrototype;
+var matches;
+if (Element = global.Element) {
+    ElementPrototype = Element.prototype;
+/**
+     * @see https://dom.spec.whatwg.org/#dom-element-matches
+     */
+if (!(matches = ElementPrototype.matches)) {
+if ((
+        matches = ElementPrototype.matchesSelector ||
+ElementPrototype.mozMatchesSelector ||
+ElementPrototype.msMatchesSelector ||
+ElementPrototype.oMatchesSelector ||
+ElementPrototype.webkitMatchesSelector ||
+          (ElementPrototype.querySelectorAll && function matches(selectors) {
+var element = this;
+var nodeList = (element.parentNode || element.document || element.ownerDocument).querySelectorAll(selectors);
+var index = nodeList.length;
+while (--index >= 0 && nodeList.item(index) !== element) {}
+return index > -1;
+          })
+      )) {
+ElementPrototype.matches = matches;
+      }
+    }
+/**
+     * @see https://dom.spec.whatwg.org/#dom-element-closest
+     */
+if (!ElementPrototype.closest && matches) {
+ElementPrototype.closest = function closest(selectors) {
+var element = this;
+while (element) {
+if (element.nodeType === 1 && element.matches(selectors)) {
+return element;
+          }
+          element = element.parentNode;
+        }
+return null;
+      };
+    }
+  }
+}(Function('return this')()));
