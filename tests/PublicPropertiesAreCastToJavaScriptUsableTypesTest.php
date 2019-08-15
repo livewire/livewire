@@ -2,12 +2,12 @@
 
 namespace Tests;
 
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\View;
-use Livewire\Component;
-use Livewire\Exceptions\CannotAddEloquentModelsAsPublicPropertyException;
 use Livewire\Livewire;
+use Livewire\Component;
+use Illuminate\Support\Facades\View;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
+use Livewire\Exceptions\CannotAddEloquentModelsAsPublicPropertyException;
 
 class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
 {
