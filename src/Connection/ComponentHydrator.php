@@ -17,7 +17,7 @@ class ComponentHydrator
 
         $class = app('livewire')->getComponentClass($component);
 
-        return tap(new $class, function ($unHydratedInstance) use ($properties) {
+        return tap(new $class($id), function ($unHydratedInstance) use ($properties) {
             foreach ($properties as $property => $value) {
                 $unHydratedInstance->setPropertyValue($property, $value);
             }

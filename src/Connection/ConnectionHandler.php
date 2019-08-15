@@ -32,7 +32,7 @@ abstract class ConnectionHandler
         $events = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
 
-        return new ResponsePayload([
+        $response = new ResponsePayload([
             'id' => $payload['id'],
             'dom' => $dom,
             'dirtyInputs' => $instance->getDirtyProperties(),
@@ -42,6 +42,12 @@ abstract class ConnectionHandler
             'data' => $data,
             'redirectTo' => $instance->redirectTo ?? false,
         ]);
+
+        if (empty($instance->redirectTo)) {
+            session()->forget(session()->get('_flash.new'));
+        }
+
+        return $response;
     }
 
     public function processMessage($type, $data, $instance)

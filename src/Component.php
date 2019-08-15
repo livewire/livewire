@@ -23,8 +23,9 @@ abstract class Component
         'mount', 'hydrate', 'updating', 'updated',
     ];
 
-    public function __construct()
+    public function __construct($id)
     {
+        $this->id = $id;
         $this->initializeTraits();
     }
 
@@ -68,8 +69,7 @@ abstract class Component
             ->with($this->getPublicPropertiesDefinedBySubClass())
             ->render();
 
-        // Basic minification: strip newlines and return carraiges.
-        return str_replace(["\n", "\r"], '', $dom);
+        return $dom;
     }
 
     public function __call($method, $params)

@@ -4,7 +4,7 @@ namespace Livewire;
 
 class LivewireKeepAlive
 {
-    // This simulates extending Illuminate/Routeing/Controller
+    // This simulates extending Illuminate/Routing/Controller
     public function getMiddleware()
     {
         return [[

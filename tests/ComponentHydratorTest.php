@@ -11,7 +11,7 @@ class ComponentHydratorTest extends TestCase
     public function re_hydrate_component()
     {
         app('livewire')->component('for-hydration', ForHydration::class);
-        $original = app('livewire')->activate('for-hydration');
+        $original = app('livewire')->activate('for-hydration', 'component-id');
 
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
@@ -29,7 +29,7 @@ class ComponentHydratorTest extends TestCase
     public function changes_to_public_properties_are_preserved()
     {
         app('livewire')->component('for-hydration', ForHydration::class);
-        $original = app('livewire')->activate('for-hydration');
+        $original = app('livewire')->activate('for-hydration', 'component-id');
         $original->foo = 'baz';
 
         $reHydrated = ComponentHydrator::hydrate(
@@ -46,7 +46,7 @@ class ComponentHydratorTest extends TestCase
     public function changes_to_protected_properties_are_not_preserved()
     {
         app('livewire')->component('for-hydration', ForHydration::class);
-        $original = app('livewire')->activate('for-hydration');
+        $original = app('livewire')->activate('for-hydration', 'component-id');
         $original->setGoo('caz');
 
         $reHydrated = ComponentHydrator::hydrate(
