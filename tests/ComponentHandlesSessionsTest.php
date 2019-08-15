@@ -5,7 +5,7 @@ namespace Tests;
 use Livewire\Component;
 use Livewire\LivewireManager;
 
-class ComponentHandlesSessions extends TestCase
+class ComponentHandlesSessionsTest extends TestCase
 {
     /** @test */
     public function removes_flashed_message_without_redirect()
@@ -14,7 +14,7 @@ class ComponentHandlesSessions extends TestCase
 
         $component->call('flashMessage');
         $component->assertSee('Task was successfull!');
-        $component->set('foo', 'bar'); // Modify some property to force a refresh
+        $component->set('foo', 'bar'); // Modify some property to force a refresh.
         $component->assertDontSee('Task was successfull!');
     }
 
@@ -25,7 +25,7 @@ class ComponentHandlesSessions extends TestCase
 
         $component->call('flashMessage');
         $component->assertSee('Task was successfull!');
-        $component->set('foo', 'bar'); // Modify some property to force a refresh
+        $component->set('foo', 'bar'); // Modify some property to force a refresh.
         $component->assertSee('Task was successfull!');
     }
 }
