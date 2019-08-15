@@ -2,4 +2,6 @@
 
 namespace Livewire\Exceptions;
 
-trait BypassViewHandler {}
+trait BypassViewHandler
+{
+}

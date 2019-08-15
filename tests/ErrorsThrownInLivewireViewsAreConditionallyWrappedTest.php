@@ -2,12 +2,12 @@
 
 namespace Tests;
 
-use ErrorException;
 use Exception;
-use Illuminate\Support\Facades\View;
-use Livewire\Component;
-use Livewire\Exceptions\BypassViewHandler;
+use ErrorException;
 use Livewire\Livewire;
+use Livewire\Component;
+use Illuminate\Support\Facades\View;
+use Livewire\Exceptions\BypassViewHandler;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -56,7 +56,8 @@ class ErrorsThrownInLivewireViewsAreConditionallyWrappedTest extends TestCase
     }
 }
 
-class SomeCustomLivewireException extends \Exception {
+class SomeCustomLivewireException extends \Exception
+{
     use BypassViewHandler;
 }
 
@@ -67,7 +68,7 @@ class NormalExceptionIsThrownInViewStub extends Component
         return app('view')->make('execute-callback', [
             'callback' => function () {
                 throw new Exception;
-            }
+            },
         ]);
     }
 }
@@ -79,7 +80,7 @@ class LivewireExceptionIsThrownInViewStub extends Component
         return app('view')->make('execute-callback', [
             'callback' => function () {
                 throw new SomeCustomLivewireException;
-            }
+            },
         ]);
     }
 }
