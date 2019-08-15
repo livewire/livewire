@@ -245,7 +245,7 @@ class Component {
 
             if (targetEls.length < 1) return
 
-            const dirty = el.valueFromInput() !== this.data[el.directives.get('model').value].toString()
+            const dirty = el.valueFromInput() != this.data[el.directives.get('model').value]
 
             targetEls.forEach(targetEl => {
                 const directive = targetEl.directives.get('dirty')
