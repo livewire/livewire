@@ -63,7 +63,7 @@ abstract class Component
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
-        $dom = $view
+        return $view
             ->with([
                 'errors' => (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
                 '_instance' => $this,
@@ -71,8 +71,6 @@ abstract class Component
             // Automatically inject all public properties into the blade view.
             ->with($this->getPublicDataFromComponent())
             ->render();
-
-        return $dom;
     }
 
     protected function getPublicDataFromComponent()

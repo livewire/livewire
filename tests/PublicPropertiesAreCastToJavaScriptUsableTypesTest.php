@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\View;
 use Livewire\Component;
 use Livewire\Exceptions\CannotAddEloquentModelsAsPublicPropertyException;
 use Livewire\Livewire;
@@ -35,6 +36,15 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
 
         $collection = new Collection([new ModelStub]);
         Livewire::test(ComponentWithPropertiesStub::class, $collection);
+    }
+
+    /** @test */
+    public function exception_is_thrown_and_not_caught_by()
+    {
+        $this->expectException(CannotAddEloquentModelsAsPublicPropertyException::class);
+        Livewire::component('foo', ComponentWithPropertiesStub::class);
+
+        View::make('render-component', ['component' => 'foo', 'params' => [new ModelStub]])->render();
     }
 }
 
