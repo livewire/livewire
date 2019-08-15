@@ -2,11 +2,14 @@
 
 namespace Livewire;
 
-use Illuminate\View\View;
 use BadMethodCallException;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\MessageBag;
+use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\View\View;
+use Livewire\Exceptions\CannotAddEloquentModelsAsPublicPropertyException;
 
 abstract class Component
 {
@@ -66,10 +69,32 @@ abstract class Component
                 '_instance' => $this,
             ])
             // Automatically inject all public properties into the blade view.
-            ->with($this->getPublicPropertiesDefinedBySubClass())
+            ->with($this->getPublicDataFromComponent())
             ->render();
 
         return $dom;
+    }
+
+    protected function getPublicDataFromComponent()
+    {
+        $data = $this->getPublicPropertiesDefinedBySubClass();
+
+        $this->makeSureThereAreNoEloquentModels($data);
+
+        return $this->castDataToJavaScriptSafeTypes($data);
+    }
+
+    public function makeSureThereAreNoEloquentModels($data)
+    {
+        array_walk($data, function ($value) {
+            throw_if($value instanceof Model || $value instanceof Collection,
+                new CannotAddEloquentModelsAsPublicPropertyException);
+        });
+    }
+
+    public function castDataToJavaScriptSafeTypes($data)
+    {
+        return json_decode(json_encode($data), true);
     }
 
     public function __call($method, $params)

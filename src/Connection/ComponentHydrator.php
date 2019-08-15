@@ -8,7 +8,7 @@ class ComponentHydrator
 {
     public static function dehydrate($instance)
     {
-        return $instance->getAllPublicPropertiesDefinedBySubClass();
+        return $instance->getPublicPropertiesDefinedBySubClass();
     }
 
     public static function hydrate($component, $id, $properties, $checksum)

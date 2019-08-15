@@ -22,20 +22,6 @@ trait InteractsWithProperties
         return $data;
     }
 
-    public function getAllPublicPropertiesDefinedBySubClass()
-    {
-        $properties = (new \ReflectionClass($this))->getProperties(ReflectionProperty::IS_PUBLIC);
-        $data = [];
-
-        foreach ($properties as $property) {
-            if ($property->getDeclaringClass()->getName() !== self::class) {
-                $data[$property->getName()] = $property->getValue($this);
-            }
-        }
-
-        return $data;
-    }
-
     public function hasProperty($prop)
     {
         return property_exists(

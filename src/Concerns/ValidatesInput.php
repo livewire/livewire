@@ -11,7 +11,7 @@ trait ValidatesInput
     {
         $fields = array_keys($rules);
 
-        $result = $this->getAllPublicPropertiesDefinedBySubClass();
+        $result = $this->getPublicPropertiesDefinedBySubClass();
 
         foreach ((array) $fields as $field) {
             throw_unless(
