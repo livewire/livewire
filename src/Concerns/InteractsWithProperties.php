@@ -2,7 +2,6 @@
 
 namespace Livewire\Concerns;
 
-use ReflectionProperty;
 use Illuminate\Support\Str;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
 
