@@ -73,19 +73,9 @@ class LivewireManager
         return new $componentClass($id);
     }
 
-    public function assets($options = null)
+    public function assets($options = [])
     {
-        if (! is_null($options) && array_key_exists('base_url', $options)) {
-            $appUrl = $options['base_url'];
-            // I'm not sure what you're doing with this options variable, so if base_url is passed in...
-            // I set $appUrl to the passed in value, then remove it from $options so it doesn't get passed through on line 101
-            unset($options['base_url']);
-            if (empty($options)) {
-                $options = null;
-            }
-        } else {
-            $appUrl = $this->appUrlOrRoot();
-        }
+        $appUrl = rtrim($options['base_url'] ?? '', '/');
 
         $options = $options ? json_encode($options) : '';
 
@@ -169,14 +159,5 @@ EOT;
     public function test($name, ...$params)
     {
         return new TestableLivewire($name, $this->prefix, $params);
-    }
-
-    public function appUrlOrRoot()
-    {
-        $defaultAppUrlInDotEnv = 'http://localhost';
-
-        return config('app.url') !== $defaultAppUrlInDotEnv
-            ? rtrim(config('app.url'), '/')
-            : '';
     }
 }
