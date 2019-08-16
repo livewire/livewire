@@ -3,15 +3,16 @@ class LoadingManager {
     constructor() {
         this.loadingElsByRef = {}
         this.loadingEls = []
+        this.currentlyActiveLoadingEls = []
     }
 
-    addLoadingEl(el, value, targetRefs, remove) {
-        if (targetRefs) {
-            targetRefs.forEach(targetRef => {
-                if (this.loadingElsByRef[targetRef]) {
-                    this.loadingElsByRef[targetRef].push({el, value, remove})
+    addLoadingEl(el, value, targetNames, remove) {
+        if (targetNames) {
+            targetNames.forEach(targetNames => {
+                if (this.loadingElsByRef[targetNames]) {
+                    this.loadingElsByRef[targetNames].push({el, value, remove})
                 } else {
-                    this.loadingElsByRef[targetRef] = [{el, value, remove}]
+                    this.loadingElsByRef[targetNames] = [{el, value, remove}]
                 }
             })
         } else {
@@ -59,11 +60,11 @@ class LoadingManager {
             }
         })
 
-        return allEls
+        this.currentlyActiveLoadingEls = allEls
     }
 
-    unsetLoading(loadingEls) {
-        loadingEls.forEach(el => {
+    unsetLoading() {
+        this.currentlyActiveLoadingEls.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
 
@@ -86,7 +87,7 @@ class LoadingManager {
             }
         })
 
-        return loadingEls
+        this.currentlyActiveLoadingEls = []
     }
 }
 
