@@ -53,7 +53,7 @@ export default {
         const refNames = el.directives.has('target')
             && el.directives.get('target').value.split(',').map(s => s.trim())
 
-            component.addDirtyEls(
+            component.dirtyManager.addDirtyEls(
                 el,
                 refNames,
             )
