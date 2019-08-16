@@ -2,8 +2,8 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\View;
 use Livewire\Livewire;
+use Illuminate\Support\Facades\View;
 
 class LivewireUsesProperAppAndAssetsPathTest extends TestCase
 {
