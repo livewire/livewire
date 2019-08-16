@@ -81,4 +81,18 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
             $laravelAppConfigFileContents
         );
     }
+
+    /** @test */
+    public function livewires_base_app_url_can_be_passed_into_blade_component()
+    {
+        // I couldn't get your tests running on my machine, but this ***should*** work
+        config()->set('app.url', 'https://foo.com/app/');
+
+        $this->assertContains(
+            'window.livewire_app_url = "https://passedin.domain.com";',
+            Livewire::assets(['base_url' => 'https://passedin.domain.com'])
+        );
+
+        // It would be good to send the base_url through the @livewireAssets component as well, but I'm not sure how to test that
+    }
 }

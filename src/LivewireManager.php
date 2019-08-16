@@ -75,7 +75,16 @@ class LivewireManager
 
     public function assets($options = null)
     {
-        $appUrl = $this->appUrlOrRoot();
+        if(!is_null($options) && array_key_exists('base_url', $options)) {
+            $appUrl = $options['base_url'];
+            // I'm not sure what you're doing with this options variable, so if base_url is passed in...
+            // I set $appUrl to the passed in value, then remove it from $options so it doesn't get passed through on line 101
+            unset($options['base_url']);
+            if(empty($options)) $options = null;
+        } else {
+            $appUrl = $this->appUrlOrRoot();
+        }
+
         $options = $options ? json_encode($options) : '';
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
