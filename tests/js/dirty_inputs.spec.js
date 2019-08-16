@@ -1,5 +1,5 @@
-import { fireEvent, wait, waitForDomChange } from 'dom-testing-library'
-import { mount, mountWithData, mountAndReturn, mountAndReturnWithData } from './utils'
+import { fireEvent, waitForDomChange } from 'dom-testing-library'
+import { mountWithData, mountAndReturnWithData } from './utils'
 
 test('input element with dirty directive and class modifier attaches class to input', async () => {
     mountWithData(
@@ -117,5 +117,4 @@ test('element with dirty directive and no modifier will be hidden by default and
     expect(document.querySelector('input').value).toEqual('baz')
 
     expect(document.querySelector('span').style.display).toEqual('inline-block')
-
 })
