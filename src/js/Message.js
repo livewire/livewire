@@ -6,7 +6,7 @@ export default class {
     }
 
     prepareForSend() {
-        this.loadingEls = this.component.setLoading(this.refs)
+        this.loadingEls = this.component.loadingManager.setLoading(this.refs)
     }
 
     get refs() {

@@ -37,7 +37,7 @@ export default {
         const refNames = el.directives.get('target')
             && el.directives.get('target').value.split(',').map(s => s.trim())
 
-        component.addLoadingEl(
+        component.loadingManager.addLoadingEl(
             el,
             directive.value,
             refNames,

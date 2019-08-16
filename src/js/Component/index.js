@@ -3,8 +3,9 @@ import { debounce, walk } from '@/util'
 import morphdom from '@/dom/morphdom'
 import DOM from '@/dom/dom'
 import DOMElement from '@/dom/dom_element'
-import nodeInitializer from "@/node_initializer";
+import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
+import LoadingManager from './LoadingManager'
 
 class Component {
     constructor(el, connection) {
@@ -22,6 +23,7 @@ class Component {
         this.loadingElsByRef = {}
         this.modelTimeout = null
         this.tearDownCallbacks = []
+        this.loadingManager = new LoadingManager
 
         this.initialize()
 
@@ -71,7 +73,7 @@ class Component {
     }
 
     messageSendFailed() {
-        this.unsetLoading(this.messageInTransit.loadingEls)
+        this.loadingManager.unsetLoading(this.messageInTransit.loadingEls)
 
         this.messageInTransit = null
     }
@@ -88,7 +90,7 @@ class Component {
             return
         }
 
-        this.unsetLoading(this.messageInTransit.loadingEls)
+        this.loadingManager.unsetLoading(this.messageInTransit.loadingEls)
 
         this.replaceDom(response.dom, response.dirtyInputs)
 
@@ -158,7 +160,7 @@ class Component {
             onBeforeNodeDiscarded: node => {
                 return (new DOMElement(node)).transitionElementOut(nodeDiscarded => {
                     // Cleanup after removed element.
-                    this.removeLoadingEl(nodeDiscarded)
+                    this.loadingManager.removeLoadingEl(nodeDiscarded)
                 })
             },
 
@@ -186,7 +188,7 @@ class Component {
             onNodeDiscarded: node => {
                 // Elements with loading directives are stored, release this
                 // element from storage because it no longer exists on the DOM.
-                this.removeLoadingEl(node)
+                this.loadingManager.removeLoadingEl(node)
             },
 
             onNodeAdded: (node) => {
@@ -264,90 +266,6 @@ class Component {
                 }
             })
         }
-    }
-
-    addLoadingEl(el, value, targetRefs, remove) {
-        if (targetRefs) {
-            targetRefs.forEach(targetRef => {
-                if (this.loadingElsByRef[targetRef]) {
-                    this.loadingElsByRef[targetRef].push({el, value, remove})
-                } else {
-                    this.loadingElsByRef[targetRef] = [{el, value, remove}]
-                }
-            })
-        } else {
-            this.loadingEls.push({el, value, remove})
-        }
-    }
-
-    removeLoadingEl(node) {
-        const el = new DOMElement(node)
-
-        this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
-
-        if (el.ref in this.loadingElsByRef) {
-            delete this.loadingElsByRef[el.ref]
-        }
-    }
-
-    setLoading(refs) {
-        const refEls = refs.map(ref => this.loadingElsByRef[ref]).filter(el => el).flat()
-
-        const allEls = this.loadingEls.concat(refEls)
-
-        allEls.forEach(el => {
-            const directive = el.el.directives.get('loading')
-            el = el.el.el // I'm so sorry @todo
-
-            if (directive.modifiers.includes('class')) {
-                // This is because wire:loading.class="border border-red"
-                // wouldn't work with classList.add.
-                const classes = directive.value.split(' ')
-
-                if (directive.modifiers.includes('remove')) {
-                    el.classList.remove(...classes)
-                } else {
-                    el.classList.add(...classes)
-                }
-            } else if (directive.modifiers.includes('attr')) {
-                if (directive.modifiers.includes('remove')) {
-                    el.removeAttribute(directive.value)
-                } else {
-                    el.setAttribute(directive.value, true)
-                }
-            } else {
-                el.style.display = 'inline-block'
-            }
-        })
-
-        return allEls
-    }
-
-    unsetLoading(loadingEls) {
-        loadingEls.forEach(el => {
-            const directive = el.el.directives.get('loading')
-            el = el.el.el // I'm so sorry @todo
-
-            if (directive.modifiers.includes('class')) {
-                const classes = directive.value.split(' ')
-
-                if (directive.modifiers.includes('remove')) {
-                    el.classList.add(...classes)
-                } else {
-                    el.classList.remove(...classes)
-                }
-            } else if (directive.modifiers.includes('attr')) {
-                if (directive.modifiers.includes('remove')) {
-                    el.setAttribute(directive.value)
-                } else {
-                    el.removeAttribute(directive.value, true)
-                }
-            } else {
-                el.style.display = 'none'
-            }
-        })
-
-        return loadingEls
     }
 
     modelSyncDebounce(callback, time) {
