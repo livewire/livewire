@@ -1,0 +1,3 @@
+<div>
+    <?php $callback(); ?>
+</div>

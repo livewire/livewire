@@ -35,8 +35,6 @@ export default class Connection {
     }
 
     sendMessage(message) {
-        message.prepareForSend()
-
         this.driver.sendMessage(message.payload());
     }
 }
