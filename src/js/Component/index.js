@@ -304,15 +304,17 @@ class Component {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
 
+            if (!directive.modifiers.includes('after') && !directive.modifiers.includes('min')) {
+                this.startLoading(this.loadingEls.concat(refEls))
+            }
+
             if (directive.modifiers.includes('after')) {
                 if(this.loadingDelayTimeout == null) {
-
-                    this.unsetLoading(allEls) //todo
+                    this.unsetLoading(allEls)
 
                     this.loadingDelayTimeout = setTimeout(() => {
                         if(this.messageInTransit != null) {
-                            console.log('starting load now')
-                            this.startLoading(allEls) //todo
+                            this.startLoading(allEls)
                         }
 
                         clearTimeout(this.loadingDelayTimeout)
@@ -320,11 +322,13 @@ class Component {
                         this.loadingDelayTimeout = null
                     }, directive.durationOr(500))
 
-                    return
+                    return;
                 } else {
-                    console.log('already stopped?')
                     clearTimeout(this.loadingDelayTimeout)
+
                     this.loadingDelayTimeout = null
+
+                    this.startLoading(this.loadingEls.concat(refEls))
                 }  
             }
 
@@ -339,16 +343,15 @@ class Component {
                     this.loadingMinimumTimeout = null
 
                 }, directive.durationOr(500))
+
+                this.startLoading(this.loadingEls.concat(refEls))
             }
         })
-
-        this.startLoading(this.loadingEls.concat(refEls))
 
         return  allEls
     }
 
     startLoading(els) {
-        console.log('setting')
         els.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
@@ -378,7 +381,6 @@ class Component {
     }
 
     unsetLoading(els) {
-        console.log('unsetting')
         els.forEach(el => {
             const directive = el.el.directives.get('loading')
             el = el.el.el // I'm so sorry @todo
