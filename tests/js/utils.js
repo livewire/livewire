@@ -56,12 +56,14 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
         init() {},
         async sendMessage(payload) {
             await requestInterceptor(payload)
-            this.onMessage({
-                id: payload.id,
-                data: {},
-                dirtyInputs: dirtyInputs,
-                dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
-            })
+            setTimeout(() => {
+                this.onMessage({
+                    id: payload.id,
+                    data: {},
+                    dirtyInputs: dirtyInputs,
+                    dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
+                })
+            }, 1)
         },
     }})
     window.livewire.start()
@@ -80,9 +82,11 @@ export function mountAndError(dom, requestInterceptor = async () => { }) {
         init() {},
         async sendMessage(payload) {
             await requestInterceptor(payload)
-            this.onError({
-                id: payload.id,
-            })
+            setTimeout(() => {
+                this.onError({
+                    id: payload.id,
+                })
+            }, 1)
         },
     }})
     window.livewire.start()
@@ -118,12 +122,14 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
         onMessage: null,
         init() {},
         sendMessage(payload) {
-            this.onMessage({
-                id: payload.id,
-                data,
-                dirtyInputs,
-                dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
-            })
+            setTimeout(() => {
+                this.onMessage({
+                    id: payload.id,
+                    data,
+                    dirtyInputs,
+                    dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
+                })
+            }, 1)
         },
     }})
     window.livewire.start()

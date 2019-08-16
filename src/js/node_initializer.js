@@ -13,6 +13,10 @@ export default {
                     this.registerElementForLoading(el, directive, component)
                     break;
 
+                case 'dirty':
+                    this.registerElementForDirty(el, directive, component)
+                    break;
+
                 case 'poll':
                     this.fireActionOnInterval(el, directive, component)
                     break;
@@ -43,6 +47,16 @@ export default {
             refNames,
             directive.modifiers.includes('remove')
         )
+    },
+
+    registerElementForDirty(el, directive, component) {
+        const refNames = el.directives.has('target')
+            && el.directives.get('target').value.split(',').map(s => s.trim())
+
+            component.dirtyManager.addDirtyEls(
+                el,
+                refNames,
+            )
     },
 
     fireActionOnInterval(el, directive, component) {

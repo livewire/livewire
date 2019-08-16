@@ -6,6 +6,7 @@ import DOMElement from '@/dom/dom_element'
 import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
 import LoadingManager from './LoadingManager'
+import DirtyManager from './DirtyManager'
 
 class Component {
     constructor(el, connection) {
@@ -21,11 +22,16 @@ class Component {
         this.messageInTransit = null
         this.loadingEls = []
         this.loadingElsByRef = {}
+        this.dirtyElsByRef = {}
+        this.dirtyEls = []
         this.modelTimeout = null
         this.tearDownCallbacks = []
         this.loadingManager = new LoadingManager
+        this.dirtyManager = new DirtyManager(this)
 
         this.initialize()
+
+        this.dirtyManager.registerListener()
 
         this.registerEchoListeners()
     }
