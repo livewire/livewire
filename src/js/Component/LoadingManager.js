@@ -1,3 +1,4 @@
+import DOMElement from '@/dom/dom_element'
 
 class LoadingManager {
     constructor() {

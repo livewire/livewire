@@ -24,7 +24,7 @@ test('dirty classes are removed when livewire updates', async () => {
     mountAndReturnWithData(
         '<input wire:dirty.class="dirty" wire:model.lazy="foo" value="bar">',
         '<input wire:dirty.class="dirty" wire:model.lazy="foo" value="bar"><button>Im here to trigger dom change</button>',
-        { foo: 'bar' }
+        { foo: 'bar' }, ['foo']
     )
 
     fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
