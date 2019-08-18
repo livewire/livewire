@@ -1,4 +1,5 @@
 import Message from '@/Message'
+import PrefetchMessage from '@/PrefetchMessage'
 import { debounce, walk } from '@/util'
 import morphdom from '@/dom/morphdom'
 import DOM from '@/dom/dom'
@@ -7,6 +8,7 @@ import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
 import LoadingManager from './LoadingManager'
 import DirtyManager from './DirtyManager'
+import PrefetchManager from './PrefetchManager'
 
 class Component {
     constructor(el, connection) {
@@ -28,6 +30,7 @@ class Component {
         this.tearDownCallbacks = []
         this.loadingManager = new LoadingManager
         this.dirtyManager = new DirtyManager(this)
+        this.prefetchManager = new PrefetchManager(this)
 
         this.initialize()
 
@@ -52,7 +55,36 @@ class Component {
         })
     }
 
+    addPrefetchAction(action) {
+        if (this.prefetchManager.actionHasPrefetch(action)) {
+            return
+        }
+
+        const message = new PrefetchMessage(
+            this,
+            action,
+        )
+
+        this.prefetchManager.addMessage(message)
+
+        this.connection.sendMessage(message)
+    }
+
+    receivePrefetchMessage(payload) {
+        this.prefetchManager.storeResponseInMessageForPayload(payload)
+    }
+
     addAction(action) {
+        if (this.prefetchManager.actionHasPrefetch(action) && this.prefetchManager.actionPrefetchResponseHasBeenReceived(action)) {
+            const message = this.prefetchManager.getPrefetchMessageByAction(action)
+
+            this.handleResponse(message.response)
+
+            this.prefetchManager.clearPrefetches()
+
+            return
+        }
+
         this.actionQueue.push(action)
 
         // This debounce is here in-case two events fire at the "same" time:
@@ -63,6 +95,9 @@ class Component {
         // them off at the same time.
         // Note: currently, it's set to 5ms, that might not be the right amount, we'll see.
         debounce(this.fireMessage, 5).apply(this)
+
+        // Clear prefetches.
+        this.prefetchManager.clearPrefetches()
     }
 
     fireMessage() {
@@ -87,8 +122,12 @@ class Component {
     }
 
     receiveMessage(payload) {
-        const response = this.messageInTransit.storeResponse(payload)
+        var response = this.messageInTransit.storeResponse(payload)
 
+        this.handleResponse(response)
+    }
+
+    handleResponse(response) {
         this.data = response.data
         this.children = response.children
 

@@ -41,6 +41,7 @@ abstract class ConnectionHandler
             'events' => $events,
             'data' => $data,
             'redirectTo' => $instance->redirectTo ?? false,
+            'fromPrefetch' => $payload['fromPrefetch'] ?? false,
         ]);
 
         if (empty($instance->redirectTo)) {

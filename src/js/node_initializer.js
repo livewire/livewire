@@ -127,6 +127,12 @@ export default {
     },
 
     attachListener(el, directive, component, callback) {
+        if (directive.modifiers.includes('prefetch')) {
+            el.addEventListener('mouseenter', () => {
+                component.addPrefetchAction(new MethodAction(directive.method, directive.params, el))
+            })
+        }
+
         const event = directive.type
         const handler = e => {
             if (callback && callback(e) !== false) {
