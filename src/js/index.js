@@ -9,10 +9,16 @@ import 'promise-polyfill/src/polyfill';
 import { dispatch } from './util';
 
 class Livewire {
-    constructor({ driver } = { driver: 'http' }) {
-        if (typeof driver !== 'object') {
-            driver = drivers[driver]
+    constructor(options = {}) {
+        const defaults = {
+            driver: 'http'
         }
+
+        options = Object.assign({}, defaults, options);
+
+        const driver = typeof options.driver === 'object'
+            ? options.driver
+            : drivers[options.driver]
 
         this.connection = new Connection(driver)
         this.components = componentStore
