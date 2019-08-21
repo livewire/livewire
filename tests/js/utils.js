@@ -58,6 +58,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
             await requestInterceptor(payload)
             setTimeout(() => {
                 this.onMessage({
+                    fromPrefetch: payload.fromPrefetch,
                     id: payload.id,
                     data: {},
                     dirtyInputs: dirtyInputs,
@@ -124,6 +125,7 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
         sendMessage(payload) {
             setTimeout(() => {
                 this.onMessage({
+                    fromPrefetch: payload.fromPrefetch,
                     id: payload.id,
                     data,
                     dirtyInputs,
