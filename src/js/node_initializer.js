@@ -74,6 +74,9 @@ export default {
     },
 
     attachModelListener(el, directive, component) {
+        // This is used by morphdom: morphdom.js:391
+        el.el.isLivewireModel = true
+
         const isLazy = directive.modifiers.includes('lazy')
         const debounceIf = (condition, callback, time) => {
             return condition
