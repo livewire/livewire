@@ -25,9 +25,13 @@ export default class Connection {
     }
 
     onMessage(payload) {
-        componentStore.findComponent(payload.id).receiveMessage(payload)
+        if (payload.fromPrefetch) {
+            componentStore.findComponent(payload.id).receivePrefetchMessage(payload)
+        } else {
+            componentStore.findComponent(payload.id).receiveMessage(payload)
 
-        dispatch('livewire:update')
+            dispatch('livewire:update')
+        }
     }
 
     onError(payloadThatFailedSending) {
