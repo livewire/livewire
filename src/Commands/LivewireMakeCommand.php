@@ -105,8 +105,8 @@ class LivewireMakeCommand extends Command
 <fg=magenta> <fg=cyan>|</>`<fg=cyan>|</>`<fg=cyan>|</> </>  <fg=cyan> || ||  \/  \\\_  \^/  || ||  \\\_   </>
 EOT;
 //     _._
-//   / /o\ \   || ()                ()  __
-//   |_\ /_|   || || \\\// /_\ \\\ // || |~~ /_\
+        //   / /o\ \   || ()                ()  __
+        //   |_\ /_|   || || \\\// /_\ \\\ // || |~~ /_\
 //    |`|`|    || ||  \/  \\\_  \^/  || ||  \\\_
         $this->line("\n".$asciiLogo."\n");
         $this->line("\nCongratulations! 🎉🎉🎉\n");
