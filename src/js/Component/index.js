@@ -10,7 +10,7 @@ import LoadingManager from './LoadingManager'
 import DirtyManager from './DirtyManager'
 import PrefetchManager from './PrefetchManager'
 
-class Component {
+export default class Component {
     constructor(el, connection) {
         this.id = el.getAttribute('id')
         this.data = JSON.parse(el.getAttribute('data'))
@@ -352,5 +352,3 @@ class Component {
         this.tearDownCallbacks.forEach(callback => callback())
     }
 }
-
-export default Component

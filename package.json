@@ -24,6 +24,7 @@
     "cross-spawn": "^6.0.5",
     "dom-testing-library": "^3.19.4",
     "false": "^0.0.4",
+    "get-value": "^3.0.1",
     "jest": "^24.8.0",
     "jest-dom": "^3.5.0",
     "jsdom-simulant": "^1.1.2",
@@ -34,5 +35,6 @@
     "turbolinks": "^5.2.0",
     "vue-template-compiler": "^2.6.10",
     "whatwg-fetch": "^3.0.0"
-  }
+  },
+  "dependencies": {}
 }
