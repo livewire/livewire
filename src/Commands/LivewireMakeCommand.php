@@ -34,9 +34,9 @@ class LivewireMakeCommand extends Command
 
         $this->refreshComponentAutodiscovery();
 
-        ($class && $view) && $this->info('👍  Files created:');
-        $class && $this->info("-> [{$class}]");
-        $view && $this->info("-> [{$view}]");
+        ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
+        $class && $this->line("<options=bold;fg=green>CLASS:</> {$class}");
+        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$view}");
 
         if ($showWelcomeMessage) {
             $this->writeWelcomeMessage();
@@ -48,7 +48,8 @@ class LivewireMakeCommand extends Command
         $classPath = $this->parser->classPath();
 
         if (File::exists($classPath) && ! $force) {
-            $this->error("Component class already exists [{$classPath}]");
+            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
+            $this->line("<fg=red;options=bold>Class already exists:</> {$classPath}");
 
             return false;
         }
@@ -65,7 +66,7 @@ class LivewireMakeCommand extends Command
         $viewPath = $this->parser->viewPath();
 
         if (File::exists($viewPath) && ! $force) {
-            $this->error("Component view already exists [{$viewPath}]");
+            $this->line("<fg=red;options=bold>View already exists:</> {$viewPath}");
 
             return false;
         }
@@ -109,7 +110,7 @@ EOT;
 //   |_\ /_|   || || \\\// /_\ \\\ // || |~~ /_\
 //    |`|`|    || ||  \/  \\\_  \^/  || ||  \\\_
         $this->line("\n".$asciiLogo."\n");
-        $this->line("\nCongratulations! 🎉🎉🎉\n");
+        $this->line("\n<options=bold>Congratulations!</> 🎉🎉🎉\n");
         $this->line("You've created your first Livewire component.");
         $this->line("I've poured a ton into the Livewire experience, and I hope it shows.");
         $this->line("\nIf you dig it, here are two ways you can say thanks:");
