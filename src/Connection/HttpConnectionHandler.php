@@ -9,7 +9,7 @@ class HttpConnectionHandler extends ConnectionHandler
     // This simulates extending Illuminate/Routing/Controller
     public function getMiddleware()
     {
-        // Because the "middlware" is dynamically generated,
+        // Because the "middleware" is dynamically generated,
         // `php artisan route:list` will throw an error.
         // Therefore, we'll skip this for the console.
         if (app()->runningInConsole()) {
