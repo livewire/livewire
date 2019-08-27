@@ -7,20 +7,19 @@ export default class {
 
     get refs() {
         return this.actionQueue
-            .map(action => {
-                return action.ref
-            })
+            .map(({ ref }) => ref)
             .filter(ref => ref)
     }
 
     payload() {
+        const { id, data, name, children, middleware, checksum } = this.component
         return {
-            id: this.component.id,
-            data: this.component.data,
-            name: this.component.name,
-            children: this.component.children,
-            middleware: this.component.middleware,
-            checksum: this.component.checksum,
+            id,
+            data,
+            name,
+            children,
+            middleware,
+            checksum,
             actionQueue: this.actionQueue.map(action => {
                 // This ensures only the type & payload properties only get sent over.
                 return {
@@ -31,16 +30,16 @@ export default class {
         }
     }
 
-    storeResponse(payload) {
+    storeResponse({ id, dom, children, dirtyInputs, eventQueue, events, data, redirectTo }) {
         return this.response = {
-            id: payload.id,
-            dom: payload.dom,
-            children: payload.children,
-            dirtyInputs: payload.dirtyInputs,
-            eventQueue: payload.eventQueue,
-            events: payload.events,
-            data: payload.data,
-            redirectTo: payload.redirectTo,
+            id,
+            dom,
+            children,
+            dirtyInputs,
+            eventQueue,
+            events,
+            data,
+            redirectTo,
         }
     }
 }

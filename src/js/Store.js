@@ -7,9 +7,7 @@ const store = {
     afterDomUpdateCallback: () => {},
 
     components() {
-        return Object.keys(this.componentsById).map(key => {
-            return this.componentsById[key]
-        })
+        return Object.keys(this.componentsById).map(key => this.componentsById[key])
     },
 
     addComponent(component) {
@@ -52,9 +50,7 @@ const store = {
     },
 
     componentsListeningForEvent(event) {
-        return this.components().filter(component => {
-            return component.events.includes(event)
-        })
+        return this.components().filter(({ events }) => events.includes(event))
     },
 
     beforeDomUpdate(callback) {

@@ -25,20 +25,21 @@ export default class Connection {
     }
 
     onMessage(payload) {
-        if (payload.fromPrefetch) {
-            componentStore.findComponent(payload.id).receivePrefetchMessage(payload)
+        const { id, fromPrefetch } = payload
+        if (fromPrefetch) {
+            componentStore.findComponent(id).receivePrefetchMessage(payload)
         } else {
-            componentStore.findComponent(payload.id).receiveMessage(payload)
+            componentStore.findComponent(id).receiveMessage(payload)
 
             dispatch('livewire:update')
         }
     }
 
-    onError(payloadThatFailedSending) {
-        componentStore.findComponent(payloadThatFailedSending.id).messageSendFailed()
+    onError({ id }) {
+        componentStore.findComponent(id).messageSendFailed()
     }
 
-    sendMessage(message) {
-        this.driver.sendMessage(message.payload());
+    sendMessage({ payload }) {
+        this.driver.sendMessage(payload());
     }
 }

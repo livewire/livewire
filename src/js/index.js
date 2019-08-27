@@ -14,7 +14,7 @@ class Livewire {
             driver: 'http'
         }
 
-        options = Object.assign({}, defaults, options);
+        options = { ...defaults, ...options }
 
         const driver = typeof options.driver === 'object'
             ? options.driver
@@ -32,10 +32,10 @@ class Livewire {
     }
 
     activatePolyfills() {
-        ArrayFlat();
-        ArrayFrom();
-        ArrayIncludes();
-        ElementGetAttributeNames();
+        ArrayFlat()
+        ArrayFrom()
+        ArrayIncludes()
+        ElementGetAttributeNames()
     }
 
     emit(event, ...params) {

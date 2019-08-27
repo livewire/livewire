@@ -15,16 +15,16 @@ class PrefetchManager {
         if (message) message.storeResponse(payload)
     }
 
-    actionHasPrefetch(action) {
-        return Object.keys(this.prefetchMessagesByActionId).includes(action.toId())
+    actionHasPrefetch({ toId }) {
+        return Object.keys(this.prefetchMessagesByActionId).includes(toId())
     }
 
     actionPrefetchResponseHasBeenReceived(action) {
         return !! this.getPrefetchMessageByAction(action).response
     }
 
-    getPrefetchMessageByAction(action) {
-        return this.prefetchMessagesByActionId[action.toId()]
+    getPrefetchMessageByAction({ toId }) {
+        return this.prefetchMessagesByActionId[toId()]
     }
 
     clearPrefetches() {
