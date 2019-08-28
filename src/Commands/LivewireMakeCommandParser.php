@@ -72,7 +72,7 @@ class LivewireMakeCommandParser
     public function viewPath()
     {
         return $this->viewPath.collect()
-            ->push('livewire')
+            ->push(config('livewire.view-path'))
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->viewFile())
@@ -87,7 +87,7 @@ class LivewireMakeCommandParser
     public function viewName()
     {
         return collect()
-            ->push('livewire')
+            ->push(config('livewire.view-path'))
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->component)
