@@ -9,6 +9,7 @@ import store from '@/Store'
 import LoadingManager from './LoadingManager'
 import DirtyManager from './DirtyManager'
 import PrefetchManager from './PrefetchManager'
+import EchoManager from './EchoManager';
 
 export default class Component {
     constructor(el, connection) {
@@ -31,12 +32,13 @@ export default class Component {
         this.loadingManager = new LoadingManager
         this.dirtyManager = new DirtyManager(this)
         this.prefetchManager = new PrefetchManager(this)
+        this.echoManager = new EchoManager(this)
 
         this.initialize()
 
         this.dirtyManager.registerListener()
 
-        this.registerEchoListeners()
+        this.echoManager.registerListeners()
     }
 
     get el() {
