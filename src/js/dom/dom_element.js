@@ -196,20 +196,6 @@ export default class DOMElement {
         return this.el === document.activeElement
     }
 
-    preserveValueAttributeIfNotDirty(fromEl, dirtyInputs) {
-        if (this.directives.missing('model')) return
-
-        // If the input is not dirty && the input element is focused, keep the
-        // value the same, but change other attributes.
-        if (
-            ! Array.from(dirtyInputs).includes(this.directives.get('model').value)
-            && fromEl.isFocused()
-        ) {
-            // Transfer the current "fromEl" value (preserving / overriding it).
-            this.setInputValue(fromEl.valueFromInput())
-        }
-    }
-
     isInput() {
         return ['INPUT', 'TEXTAREA', 'SELECT'].includes(this.el.tagName.toUpperCase())
     }
@@ -219,8 +205,21 @@ export default class DOMElement {
             && ! ['checkbox', 'radio'].includes(this.el.type)
     }
 
-    valueFromInput() {
+    valueFromInput(component) {
         if (this.el.type === 'checkbox') {
+            const modelName =  this.directives.get('model').value
+            var modelValue = get(component.data, modelName)
+
+            if (Array.isArray(modelValue)) {
+                if (this.el.checked) {
+                    modelValue = modelValue.includes(this.el.value) ? modelValue : modelValue.concat(this.el.value)
+                } else {
+                    modelValue = modelValue.filter(item => item !== this.el.value)
+                }
+
+                return modelValue
+            }
+
             return this.el.checked
         } else if (this.el.tagName === 'SELECT' && this.el.multiple) {
             return this.getSelectValues()
@@ -249,7 +248,13 @@ export default class DOMElement {
         } else if (this.el.type === 'radio') {
             this.el.checked = this.el.value == value
         } else if (this.el.type === 'checkbox') {
-            this.el.checked = !! value
+            if (Array.isArray(value)) {
+                if (value.includes(this.el.value)) {
+                    this.el.checked = true
+                }
+            } else {
+                this.el.checked = !! value
+            }
         } else if (this.el.tagName === 'SELECT') {
             this.updateSelect(value)
         } else {

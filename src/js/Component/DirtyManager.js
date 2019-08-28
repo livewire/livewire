@@ -41,7 +41,7 @@ class DirtyManager {
                 console.warn('`wire:model` must be present on any element that uses `wire:dirty` or is a `wire:dirty` target.')
             }
 
-            const isDirty = el.valueFromInput() != this.component.data[el.directives.get('model').value]
+            const isDirty = el.valueFromInput(this.component) != this.component.data[el.directives.get('model').value]
 
             allEls.forEach(el => {
                 this.setDirtyState(el, isDirty)

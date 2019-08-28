@@ -101,7 +101,7 @@ export default {
             const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
                 const model = directive.value
                 const el = new DOMElement(e.target)
-                const value = el.valueFromInput()
+                const value = el.valueFromInput(component)
 
                 component.addAction(new ModelAction(model, value, el))
             }, directive.durationOr(150))
