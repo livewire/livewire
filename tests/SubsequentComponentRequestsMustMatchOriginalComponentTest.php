@@ -19,7 +19,7 @@ class SubsequentComponentRequestsMustMatchOriginalComponentTest extends TestCase
         $component->name = 'unsafe';
 
         // If the hijack was stopped, the expected exception will be thrown.
-        // If it worked the, an execption will be thrown that will fail the test.
+        // If it worked, an exception will be thrown that will fail the test.
         $component->runAction('someMethod');
     }
 }
@@ -40,7 +40,7 @@ class UnsafeComponentStub extends Component
 {
     public function someMethod()
     {
-        throw new \Exception('Should not be able to acess me!');
+        throw new \Exception('Should not be able to access me!');
     }
 
     public function render()

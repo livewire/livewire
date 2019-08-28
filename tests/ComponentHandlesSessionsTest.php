@@ -13,9 +13,9 @@ class ComponentHandlesSessionsTest extends TestCase
         $component = app(LivewireManager::class)->test(RemovesFlashedMessageWithoutRedirect::class);
 
         $component->call('flashMessage');
-        $component->assertSee('Task was successfull!');
+        $component->assertSee('Task was successful!');
         $component->set('foo', 'bar'); // Modify some property to force a refresh.
-        $component->assertDontSee('Task was successfull!');
+        $component->assertDontSee('Task was successful!');
     }
 
     /** @test */
@@ -24,9 +24,9 @@ class ComponentHandlesSessionsTest extends TestCase
         $component = app(LivewireManager::class)->test(KeepsFlashedMessageWithRedirect::class);
 
         $component->call('flashMessage');
-        $component->assertSee('Task was successfull!');
+        $component->assertSee('Task was successful!');
         $component->set('foo', 'bar'); // Modify some property to force a refresh.
-        $component->assertSee('Task was successfull!');
+        $component->assertSee('Task was successful!');
     }
 }
 
@@ -41,7 +41,7 @@ class RemovesFlashedMessageWithoutRedirect extends Component
 
     public function flashMessage()
     {
-        session()->flash('status', 'Task was successfull!');
+        session()->flash('status', 'Task was successful!');
     }
 }
 
@@ -56,7 +56,7 @@ class KeepsFlashedMessageWithRedirect extends Component
 
     public function flashMessage()
     {
-        session()->flash('status', 'Task was successfull!');
+        session()->flash('status', 'Task was successful!');
 
         $this->redirect('/foo');
     }

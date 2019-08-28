@@ -68,7 +68,7 @@ EOT
 
         File::delete($manifestPath);
 
-        // We need to refresh the appliction because otherwise, the manifest
+        // We need to refresh the application because otherwise, the manifest
         // will still be stored in the object memory.
         $this->refreshApplication();
 
