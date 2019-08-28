@@ -48,7 +48,7 @@ class LivewireMakeCommandParser
     public function classNamespace()
     {
         return collect()
-            ->concat(['App', 'Http', 'Livewire'])
+            ->concat([config('livewire.namespace'), 'Http', 'Livewire'])
             ->concat($this->directories)
             ->implode('\\');
     }
