@@ -40,6 +40,11 @@ class LivewireMakeCommandParser
             ->implode(DIRECTORY_SEPARATOR);
     }
 
+    public function relativeClassPath()
+    {
+        return Str::replaceFirst(base_path().'/', '', $this->classPath());
+    }
+
     public function classFile()
     {
         return $this->componentClass.'.php';
@@ -77,6 +82,11 @@ class LivewireMakeCommandParser
             ->map([Str::class, 'kebab'])
             ->push($this->viewFile())
             ->implode(DIRECTORY_SEPARATOR);
+    }
+
+    public function relativeViewPath()
+    {
+        return Str::replaceFirst(base_path().'/', '', $this->viewPath());
     }
 
     public function viewFile()

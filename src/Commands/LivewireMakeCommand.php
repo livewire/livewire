@@ -35,8 +35,8 @@ class LivewireMakeCommand extends Command
         $this->refreshComponentAutodiscovery();
 
         ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
-        $class && $this->line("<options=bold;fg=green>CLASS:</> {$class}");
-        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$view}");
+        $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");
+        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
 
         if ($showWelcomeMessage) {
             $this->writeWelcomeMessage();
@@ -49,7 +49,7 @@ class LivewireMakeCommand extends Command
 
         if (File::exists($classPath) && ! $force) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class already exists:</> {$classPath}");
+            $this->line("<fg=red;options=bold>Class already exists:</> {$this->parser->relativeClassPath()}");
 
             return false;
         }
@@ -66,7 +66,7 @@ class LivewireMakeCommand extends Command
         $viewPath = $this->parser->viewPath();
 
         if (File::exists($viewPath) && ! $force) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$viewPath}");
+            $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->relativeViewPath()}");
 
             return false;
         }
