@@ -19,7 +19,7 @@ class DestroyCommandTest extends TestCase
         $this->assertTrue(File::exists($viewPath));
 
         $this->artisan('livewire:destroy foo')->expectsQuestion(
-            "Are you sure you want to delete the following files?\n\n{$classPath}\n{$viewPath}\n",
+            "<fg=yellow>Are you sure you want to delete the following files?</>\n\n{$classPath}\n{$viewPath}\n",
             true
         );
 
@@ -39,7 +39,7 @@ class DestroyCommandTest extends TestCase
         $this->assertTrue(File::exists($viewPath));
 
         $this->artisan('livewire:destroy foo')->expectsQuestion(
-            "Are you sure you want to delete the following files?\n\n{$classPath}\n{$viewPath}\n",
+            "<fg=yellow>Are you sure you want to delete the following files?</>\n\n{$classPath}\n{$viewPath}\n",
             false
         );
 
