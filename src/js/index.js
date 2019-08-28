@@ -1,6 +1,6 @@
 import componentStore from '@/Store'
 import DOM from "@/dom/dom";
-import Component from "@/Component";
+import Component from "@/Component/index";
 import Connection from '@/connection'
 import drivers from '@/connection/drivers'
 import { ArrayFlat, ArrayFrom, ArrayIncludes, ElementGetAttributeNames } from '@/dom/polyfills';

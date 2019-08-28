@@ -14,6 +14,23 @@ test('properties sync on input change', async () => {
     })
 })
 
+test('nested properties sync on input change', async () => {
+    var payload
+    mountWithData(
+        '<input wire:model="foo.one.two">',
+        { foo: [] },
+        i => payload = i
+    )
+
+    fireEvent.input(document.querySelector('input'), { target: { value: 'bar' }})
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[0].payload.name).toEqual('foo.one.two')
+        expect(payload.actionQueue[0].payload.value).toEqual('bar')
+    })
+})
+
 test('properties are lazy synced when action is fired', async () => {
     var payload
     mount('<input wire:model.lazy="foo"><button wire:click="onClick"></button>', i => payload = i)

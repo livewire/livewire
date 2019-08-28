@@ -34,15 +34,12 @@ class LivewireMakeCommand extends Command
 
         $this->refreshComponentAutodiscovery();
 
-        ($class && $view) && $this->info('👍  Files created:');
-        $class && $this->info("-> [{$class}]");
-        $view && $this->info("-> [{$view}]");
+        ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
+        $class && $this->line("<options=bold;fg=green>CLASS:</> {$class}");
+        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$view}");
 
         if ($showWelcomeMessage) {
-            $this->info("\n⚡️⚡️ Thanks for using livewire!");
-            $this->info("\nIf you dig it, here are two ways you can say thanks:");
-            $this->info('- Star the repo on Github');
-            $this->info('- Shout out the project on Twitter and tag me (@calebporzio)');
+            $this->writeWelcomeMessage();
         }
     }
 
@@ -51,7 +48,8 @@ class LivewireMakeCommand extends Command
         $classPath = $this->parser->classPath();
 
         if (File::exists($classPath) && ! $force) {
-            $this->error("Component class already exists [{$classPath}]");
+            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
+            $this->line("<fg=red;options=bold>Class already exists:</> {$classPath}");
 
             return false;
         }
@@ -68,7 +66,7 @@ class LivewireMakeCommand extends Command
         $viewPath = $this->parser->viewPath();
 
         if (File::exists($viewPath) && ! $force) {
-            $this->error("Component view already exists [{$viewPath}]");
+            $this->line("<fg=red;options=bold>View already exists:</> {$viewPath}");
 
             return false;
         }
@@ -97,5 +95,26 @@ class LivewireMakeCommand extends Command
         $livewireFolder = app_path(collect(['Http', 'Livewire'])->implode(DIRECTORY_SEPARATOR));
 
         return ! File::isDirectory($livewireFolder);
+    }
+
+    public function writeWelcomeMessage()
+    {
+        $asciiLogo = <<<EOT
+<fg=magenta>  _._</>
+<fg=magenta>/ /<fg=white>o</>\ \ </> <fg=cyan> || ()                ()  __         </>
+<fg=magenta>|_\ /_|</>  <fg=cyan> || || \\\// /_\ \\\ // || |~~ /_\   </>
+<fg=magenta> <fg=cyan>|</>`<fg=cyan>|</>`<fg=cyan>|</> </>  <fg=cyan> || ||  \/  \\\_  \^/  || ||  \\\_   </>
+EOT;
+//     _._
+//   / /o\ \   || ()                ()  __
+//   |_\ /_|   || || \\\// /_\ \\\ // || |~~ /_\
+//    |`|`|    || ||  \/  \\\_  \^/  || ||  \\\_
+        $this->line("\n".$asciiLogo."\n");
+        $this->line("\n<options=bold>Congratulations!</> 🎉🎉🎉\n");
+        $this->line("You've created your first Livewire component.");
+        $this->line("I've poured a ton into the Livewire experience, and I hope it shows.");
+        $this->line("\nIf you dig it, here are two ways you can say thanks:");
+        $this->line('⭐️  Star the repo on Github');
+        $this->line('📣  Shout out the project on Twitter and tag me (@calebporzio)');
     }
 }

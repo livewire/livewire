@@ -1,4 +1,5 @@
-import ElementDirectives from "./directive_manager";
+import ElementDirectives from "./directive_manager"
+import get from 'get-value'
 const prefix = require('./prefix.js')()
 
 /**
@@ -230,8 +231,7 @@ export default class DOMElement {
 
     setInputValueFromModel(component) {
         const modelString = this.directives.get('model').value
-        const modelStringWithArraySyntaxForNumericKeys = modelString.replace(/\.([0-9]+)/, (match, num) => { return `[${num}]` })
-        const modelValue = eval('component.data.'+modelStringWithArraySyntaxForNumericKeys)
+        const modelValue = get(component.data, modelString)
         if (modelValue === undefined) return
 
         this.setInputValue(modelValue)

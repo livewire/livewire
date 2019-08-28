@@ -95,7 +95,7 @@ export function mountAndError(dom, requestInterceptor = async () => { }) {
     return document.body.firstElementChild
 };
 
-export function mountWithData(dom, data) {
+export function mountWithData(dom, data, requestInterceptor = () => {}) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
     document.body.innerHTML = '<div wire:id="123" wire:data="' + JSON.stringify(data).replace(/\"/g, '&quot;')+'">' + dom + '</div>'
@@ -104,7 +104,7 @@ export function mountWithData(dom, data) {
         onMessage: null,
         init() {},
         sendMessage(payload) {
-            //
+            requestInterceptor(payload)
         },
     }})
     window.livewire.start()

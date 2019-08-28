@@ -117,6 +117,7 @@ export default {
     attachDomListener(el, directive, component) {
         switch (directive.type) {
             case 'keydown':
+            case 'keyup':
                 this.attachListener(el, directive, component, (e) => {
                     // Only handle listener if no, or matching key modifiers are passed.
                     return ! (directive.modifiers.length === 0

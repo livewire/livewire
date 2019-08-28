@@ -60,6 +60,28 @@ test('two keydown events', async () => {
     })
 })
 
+test('keydown.enter doesnt fire when other keys are pressed', async () => {
+    var payload
+    mount('<button wire:keydown.enter="otherMethod"></button>', i => payload = i)
+
+    fireEvent.keyDown(document.querySelector('button'), { key: 'Escape' })
+
+    await timeout(10)
+
+    expect(payload).toBeUndefined()
+})
+
+test('keyup.enter doesnt fire when other keys are pressed', async () => {
+    var payload
+    mount('<button wire:keyup.enter="otherMethod"></button>', i => payload = i)
+
+    fireEvent.keyUp(document.querySelector('button'), { key: 'Escape' })
+
+    await timeout(10)
+
+    expect(payload).toBeUndefined()
+})
+
 test('polling', async () => {
     var pollHappened = false
     mount('<div wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
