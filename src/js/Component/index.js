@@ -1,15 +1,15 @@
-import Message from '@/Message'
-import PrefetchMessage from '@/PrefetchMessage'
-import { debounce, walk } from '@/util'
-import morphdom from '@/dom/morphdom'
 import DOM from '@/dom/dom'
-import DOMElement from '@/dom/dom_element'
-import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
-import LoadingManager from './LoadingManager'
-import DirtyManager from './DirtyManager'
-import PrefetchManager from './PrefetchManager'
+import Message from '@/Message'
+import morphdom from '@/dom/morphdom'
+import { debounce, walk } from '@/util'
+import DOMElement from '@/dom/dom_element'
+import PrefetchMessage from '@/PrefetchMessage'
+import nodeInitializer from '@/node_initializer'
 import EchoManager from './EchoManager';
+import DirtyManager from './DirtyManager'
+import LoadingManager from './LoadingManager'
+import PrefetchManager from './PrefetchManager'
 
 export default class Component {
     constructor(el, connection) {
