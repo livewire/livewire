@@ -13,6 +13,6 @@ export default class extends Action {
 
     // Overriding toId() because some EventActions don't have an "el"
     toId() {
-        return btoa(unescape(encodeURIComponent(this.type, this.payload.event, JSON.stringify(this.payload.params))))
+        return btoa(encodeURIComponent(this.type, this.payload.event, JSON.stringify(this.payload.params)))
     }
 }
