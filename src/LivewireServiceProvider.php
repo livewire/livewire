@@ -76,7 +76,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerBladeDirectives();
 
         $this->publishes([
-            __DIR__.'/../config/livewire.php' => base_path('config/lifewire.php')
+            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php')
         ], 'config');
     }
 
