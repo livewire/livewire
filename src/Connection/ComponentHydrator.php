@@ -2,8 +2,6 @@
 
 namespace Livewire\Connection;
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Livewire\Exceptions\ComponentMismatchException;
 
 class ComponentHydrator

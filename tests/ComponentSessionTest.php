@@ -8,7 +8,7 @@ use Livewire\LivewireManager;
 class ComponentSessionTest extends TestCase
 {
     /** @test */
-    function component_can_store_things_in_session()
+    public function component_can_store_things_in_session()
     {
         $component = app(LivewireManager::class)->test(ComponentWithSession::class);
 
@@ -19,7 +19,7 @@ class ComponentSessionTest extends TestCase
     }
 
     /** @test */
-    function protected_properties_are_dehydrated_into_the_session_and_not_in_the_payload()
+    public function protected_properties_are_dehydrated_into_the_session_and_not_in_the_payload()
     {
         $component = app(LivewireManager::class)->test(ComponentWithSession::class);
 
@@ -27,7 +27,7 @@ class ComponentSessionTest extends TestCase
     }
 
     /** @test */
-    function old_component_data_stored_in_session_is_destroyed_when_a_new_page_is_loaded_within_the_same_window()
+    public function old_component_data_stored_in_session_is_destroyed_when_a_new_page_is_loaded_within_the_same_window()
     {
         $this->markTestSkipped();
         // $component = app(LivewireManager::class)->test(ComponentWithSession::class);
@@ -38,7 +38,8 @@ class ComponentSessionTest extends TestCase
     }
 }
 
-class ComponentWithSession extends Component {
+class ComponentWithSession extends Component
+{
     public $foo;
     protected $fiz;
 
