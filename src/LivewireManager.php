@@ -79,8 +79,12 @@ class LivewireManager
 
         $options = $options ? json_encode($options) : '';
 
+        $jsFileName = config('app.debug')
+            ? '/livewire.js'
+            : '/livewire.min.js';
+
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
-        $versionedFileName = $manifest['/livewire.js'];
+        $versionedFileName = $manifest[$jsFileName];
 
         $csrf = csrf_token();
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";

@@ -4,10 +4,18 @@ namespace Livewire;
 
 class LivewireJavaScriptAssets
 {
-    public function __invoke()
+    public function unminified()
     {
-        $file = __DIR__.'/../dist/livewire.js';
+        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.js');
+    }
 
+    public function minified()
+    {
+        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.min.js');
+    }
+
+    public function pretendResponseIsFile($file)
+    {
         // These headers will enable browsers to cache this asset.
         return response()
             ->file($file, [
