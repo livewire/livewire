@@ -36,11 +36,7 @@ class HttpConnectionHandler extends ConnectionHandler
                 'data',
                 'id',
                 'checksum',
-<<<<<<< HEAD
-                'browserId'
-=======
                 'fromPrefetch',
->>>>>>> master
             ])
         );
     }

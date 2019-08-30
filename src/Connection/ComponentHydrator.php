@@ -10,7 +10,7 @@ class ComponentHydrator
 {
     public static function dehydrate($instance)
     {
-        if ($protectedOrPrivateProperties = $instance->getAllProtectedOrPrivatePropertiesDefinedBySubClass()) {
+        if ($protectedOrPrivateProperties = $instance->getProtectedOrPrivatePropertiesDefinedBySubClass()) {
             session()->put($instance->id.'protected_properties', $protectedOrPrivateProperties);
         }
 
