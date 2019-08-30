@@ -4,8 +4,8 @@ namespace Livewire\Connection;
 
 use Livewire\ResponsePayload;
 use Livewire\Routing\Redirector;
-use Illuminate\Validation\ValidationException;
 use Livewire\ComponentChecksumManager;
+use Illuminate\Validation\ValidationException;
 
 abstract class ConnectionHandler
 {
