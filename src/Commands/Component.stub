@@ -3,10 +3,26 @@
 namespace [namespace];
 
 use Livewire\Component;
+use Illuminate\View\View;
 
 class [class] extends Component
 {
-    public function render()
+    /**
+     * Bootstrap data into the livewire component
+     *
+     * @return void
+     */
+    public function mount() : void
+    {
+        //
+    }
+
+    /**
+     * Render the livewire component
+     *
+     * @return Illuminate\View\View
+     */
+    public function render() : View
     {
         return view('[view]');
     }
