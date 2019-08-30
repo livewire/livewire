@@ -2,13 +2,14 @@
 
 namespace Livewire;
 
-use Illuminate\View\View;
 use BadMethodCallException;
-use Illuminate\Support\Str;
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\ViewErrorBag;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\Str;
+use Illuminate\Support\ViewErrorBag;
+use Illuminate\View\View;
+use Livewire\ComponentSessionManager;
 use Livewire\Exceptions\CannotAddEloquentModelsAsPublicPropertyException;
 
 abstract class Component
@@ -58,11 +59,13 @@ abstract class Component
 
     public function session($key, $value = null)
     {
+        $sessionManager = new ComponentSessionManager($this);
+
         if (is_null($value)) {
-            return session()->get($this->id.$key);
+            return $sessionManager->get($key);
         }
 
-        return session()->put($this->id.$key, $value);
+        return $sessionManager->put($key, $value);
     }
 
     public function output($errors = null)
