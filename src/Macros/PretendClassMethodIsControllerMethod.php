@@ -22,11 +22,10 @@ class PretendClassMethodIsControllerMethod
 
         // We'll set the route action to be the "mount" method from the chosen
         // Livewire component, to get the proper implicit bindings.
-        $route->uses($this->method->class . '@' . $this->method->name);
+        $route->uses($this->method->class.'@'.$this->method->name);
 
         // This is normally handled in the "SubstituteBindings" middleware, but
         // because that middleware has already ran, we need to run them again.
-        $this->router->substituteBindings($route);
         $this->router->substituteImplicitBindings($route);
 
         $options = $route->resolveMethodDependencies($route->parameters(), $this->method);

@@ -2,9 +2,7 @@
 
 namespace Livewire\Concerns;
 
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use ReflectionProperty;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
 
 trait InteractsWithProperties
@@ -23,21 +21,7 @@ trait InteractsWithProperties
         return $data;
     }
 
-    public function getAllPublicPropertiesDefinedBySubClass()
-    {
-        $properties = (new \ReflectionClass($this))->getProperties(ReflectionProperty::IS_PUBLIC);
-        $data = [];
-
-        foreach ($properties as $property) {
-            if ($property->getDeclaringClass()->getName() !== self::class) {
-                $data[$property->getName()] = $property->getValue($this);
-            }
-        }
-
-        return $data;
-    }
-
-    public function getAllProtectedOrPrivatePropertiesDefinedBySubClass()
+    public function getProtectedOrPrivatePropertiesDefinedBySubClass()
     {
         $properties = (new \ReflectionClass($this))->getProperties(ReflectionProperty::IS_PROTECTED | ReflectionProperty::IS_PRIVATE);
         $data = [];

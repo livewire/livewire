@@ -3,67 +3,17 @@
 namespace Tests;
 
 use Livewire\Livewire;
+use Illuminate\Support\Facades\View;
 
 class LivewireUsesProperAppAndAssetsPathTest extends TestCase
 {
     /** @test */
-    function livewire_dot_js_references_configured_app_url()
+    public function livewire_js_calls_reference_relative_root()
     {
         $this->assertContains(
             '<script src="/livewire/livewire.js?',
             Livewire::assets()
         );
-
-        config()->set('app.url', 'https://foo.com/assets');
-
-        $this->assertContains(
-            '<script src="https://foo.com/assets/livewire/livewire.js?',
-            Livewire::assets()
-        );
-    }
-
-    /** @test */
-    function assets_url_trims_trailing_slash()
-    {
-        config()->set('app.url', 'https://foo.com/assets/');
-
-        $this->assertContains(
-            '<script src="https://foo.com/assets/livewire/livewire.js?',
-            Livewire::assets()
-        );
-    }
-
-    /** @test */
-    function livewire_message_endpoint_uses_configured_app_url()
-    {
-        config()->set('app.url', 'https://foo.com/app');
-
-        $this->assertContains(
-            'window.livewire_app_url = "https://foo.com/app";',
-            Livewire::assets()
-        );
-    }
-
-    /** @test */
-    function livewire_message_endpoint_trims_trailing_slash()
-    {
-        config()->set('app.url', 'https://foo.com/app/');
-
-        $this->assertContains(
-            'window.livewire_app_url = "https://foo.com/app";',
-            Livewire::assets()
-        );
-    }
-
-    /** @test */
-    function livewire_message_domain_is_ambiguous_if_app_uses_dot_env_default_for_app_url()
-    {
-        // The scenario for this behavior:
-        // An app is created using `laravel new`, but the is served with valet,
-        // Livewire would look for: http://localhost/livewire/message and would
-        // throw an error.
-
-        config()->set('app.url', 'http://localhost');
 
         $this->assertContains(
             'window.livewire_app_url = "";',
@@ -72,13 +22,48 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     }
 
     /** @test */
-    function livewires_app_url_default_is_current_with_latest_laravel_version()
+    public function livewire_js_calls_reference_congigured_base_url()
     {
-        $laravelAppConfigFileContents = file_get_contents(__DIR__ . '/../vendor/orchestra/testbench-core/laravel/config/app.php');
+        $this->assertContains(
+            '<script src="https://foo.com/assets/livewire/livewire.js?',
+            Livewire::assets(['base_url' => 'https://foo.com/assets'])
+        );
 
         $this->assertContains(
-            "'url' => env('APP_URL', 'http://localhost'),",
-            $laravelAppConfigFileContents
+            'window.livewire_app_url = "https://foo.com/assets";',
+            Livewire::assets(['base_url' => 'https://foo.com/assets'])
+        );
+    }
+
+    /** @test */
+    public function base_url_trailing_slashes_are_trimmed()
+    {
+        $this->assertContains(
+            '<script src="https://foo.com/assets/livewire/livewire.js?',
+            Livewire::assets(['base_url' => 'https://foo.com/assets/'])
+        );
+
+        $this->assertContains(
+            'window.livewire_app_url = "https://foo.com/assets";',
+            Livewire::assets(['base_url' => 'https://foo.com/assets/'])
+        );
+    }
+
+    /** @test */
+    public function base_url_passed_into_blade_assets_directive()
+    {
+        $output = View::make('assets-directive', [
+            'options' => ['base_url' => 'https://foo.com/assets/'],
+        ])->render();
+
+        $this->assertContains(
+            '<script src="https://foo.com/assets/livewire/livewire.js?',
+            $output
+        );
+
+        $this->assertContains(
+            'window.livewire_app_url = "https://foo.com/assets";',
+            $output
         );
     }
 }

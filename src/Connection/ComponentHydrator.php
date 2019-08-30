@@ -14,7 +14,7 @@ class ComponentHydrator
             session()->put($instance->id.'protected_properties', $protectedOrPrivateProperties);
         }
 
-        return $instance->getAllPublicPropertiesDefinedBySubClass();
+        return $instance->getPublicPropertiesDefinedBySubClass();
     }
 
     public static function hydrate($component, $id, $publicProperties, $checksum, $browserId = null)

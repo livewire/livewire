@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Redirect;
 class RedirectTest extends TestCase
 {
     /** @test */
-    function standard_redirect()
+    public function standard_redirect()
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
 
@@ -20,7 +20,31 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
-    function redirect_helper()
+    public function route_redirect()
+    {
+        $this->registerNamedRoute();
+
+        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectRoute');
+
+        $this->assertEquals('http://localhost/foo', $component->redirectTo);
+    }
+
+    /** @test */
+    public function action_redirect()
+    {
+        $this->registerAction();
+
+        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectAction');
+
+        $this->assertEquals('http://localhost/foo', $component->redirectTo);
+    }
+
+    /** @test */
+    public function redirect_helper()
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
 
@@ -30,7 +54,7 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
-    function redirect_facade_with_to_method()
+    public function redirect_facade_with_to_method()
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
 
@@ -40,7 +64,7 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
-    function redirect_facade_with_route_method()
+    public function redirect_facade_with_route_method()
     {
         $this->registerNamedRoute();
 
@@ -52,7 +76,7 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
-    function redirect_helper_with_route_method()
+    public function redirect_helper_with_route_method()
     {
         $this->registerNamedRoute();
 
@@ -69,6 +93,11 @@ class RedirectTest extends TestCase
             return true;
         })->name('foo');
     }
+
+    protected function registerAction()
+    {
+        Route::get('foo', 'HomeController@index')->name('foo');
+    }
 }
 
 class TriggersRedirectStub extends Component
@@ -76,6 +105,16 @@ class TriggersRedirectStub extends Component
     public function triggerRedirect()
     {
         return $this->redirect('/local');
+    }
+
+    public function triggerRedirectRoute()
+    {
+        return $this->redirectRoute('foo');
+    }
+
+    public function triggerRedirectAction()
+    {
+        return $this->redirectAction('HomeController@index');
     }
 
     public function triggerRedirectHelper()

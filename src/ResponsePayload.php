@@ -2,8 +2,8 @@
 
 namespace Livewire;
 
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Contracts\Support\Arrayable;
 
 class ResponsePayload implements Arrayable, Jsonable
 {
@@ -15,6 +15,7 @@ class ResponsePayload implements Arrayable, Jsonable
     public $redirectTo;
     public $dirtyInputs;
     public $events;
+    public $fromPrefetch;
 
     public function __construct($data)
     {
@@ -26,6 +27,7 @@ class ResponsePayload implements Arrayable, Jsonable
         $this->redirectTo = $data['redirectTo'];
         $this->dirtyInputs = $data['dirtyInputs'];
         $this->events = $data['events'];
+        $this->fromPrefetch = $data['fromPrefetch'];
     }
 
     public function toArray()
@@ -39,6 +41,7 @@ class ResponsePayload implements Arrayable, Jsonable
             'redirectTo' => $this->redirectTo,
             'dirtyInputs' => $this->dirtyInputs,
             'events' => $this->events,
+            'fromPrefetch' => $this->fromPrefetch,
         ];
     }
 

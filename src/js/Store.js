@@ -3,6 +3,14 @@ import EventAction from "@/action/event";
 const store = {
     componentsById: {},
     listeners: {},
+    beforeDomUpdateCallback: () => {},
+    afterDomUpdateCallback: () => {},
+
+    components() {
+        return Object.keys(this.componentsById).map(key => {
+            return this.componentsById[key]
+        })
+    },
 
     addComponent(component) {
         return this.componentsById[component.id] = component
@@ -12,8 +20,15 @@ const store = {
         return this.componentsById[id]
     },
 
-    wipeComponents() {
-        this.componentsById = {}
+    hasComponent(id) {
+        return !! this.componentsById[id]
+    },
+
+    tearDownComponents() {
+        this.components().forEach(component => {
+            component.tearDown()
+            delete this.componentsById[component.id]
+        })
     },
 
     on(event, callback) {
@@ -37,13 +52,12 @@ const store = {
     },
 
     componentsListeningForEvent(event) {
-        return Object.keys(this.componentsById).map(key => {
-            return this.componentsById[key]
-        }).filter(component => {
+        return this.components().filter(component => {
             return component.events.includes(event)
         })
     },
 
+<<<<<<< HEAD
     getBrowserId() {
         // window.name is persisted across page loads. It's a good way to identify a tab or window.
         if (! window.name) {
@@ -68,6 +82,15 @@ const store = {
         }
         return result;
      }
+=======
+    beforeDomUpdate(callback) {
+        this.beforeDomUpdateCallback = callback
+    },
+
+    afterDomUpdate(callback) {
+        this.afterDomUpdateCallback = callback
+    },
+>>>>>>> master
 }
 
 export default store

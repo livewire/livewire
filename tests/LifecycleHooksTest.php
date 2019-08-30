@@ -8,12 +8,13 @@ use Livewire\LivewireManager;
 class LifecycleHooksTest extends TestCase
 {
     /** @test */
-    function mount_hook()
+    public function mount_hook()
     {
         $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => false,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
@@ -24,6 +25,18 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => true,
+            'updating' => false,
+            'updated' => false,
+            'updatingFoo' => false,
+            'updatedFoo' => false,
+        ], $component->instance->lifecycles);
+
+        $component->updateProperty('baz', 'bing');
+
+        $this->assertEquals([
+            'mount' => true,
+            'hydrate' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => false,
@@ -34,6 +47,7 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
@@ -42,10 +56,13 @@ class LifecycleHooksTest extends TestCase
     }
 }
 
-class ForLifecycleHooks extends Component {
+class ForLifecycleHooks extends Component
+{
     public $foo;
+    public $baz;
     public $lifecycles = [
         'mount' => false,
+        'hydrate' => false,
         'updating' => false,
         'updated' => false,
         'updatingFoo' => false,
@@ -57,13 +74,24 @@ class ForLifecycleHooks extends Component {
         $this->lifecycles['mount'] = true;
     }
 
-    public function updating()
+    public function hydrate()
     {
+        $this->lifecycles['hydrate'] = true;
+    }
+
+    public function updating($name, $value)
+    {
+        assert($name === 'foo' || $name === 'baz');
+        assert($value === 'bar' || $value === 'bing');
+
         $this->lifecycles['updating'] = true;
     }
 
-    public function updated()
+    public function updated($name, $value)
     {
+        assert($name === 'foo' || $name === 'baz');
+        assert($value === 'bar' || $value === 'bing');
+
         $this->lifecycles['updated'] = true;
     }
 
@@ -75,9 +103,10 @@ class ForLifecycleHooks extends Component {
         $this->lifecycles['updatingFoo'] = true;
     }
 
-    public function updatedFoo()
+    public function updatedFoo($value)
     {
         assert($this->foo === 'bar');
+        assert($value === 'bar');
 
         $this->lifecycles['updatedFoo'] = true;
     }

@@ -2,14 +2,12 @@
 
 namespace Livewire\Macros;
 
-use Illuminate\Routing\RouteRegistrar;
-
 class RouterMacros
 {
     public function layout()
     {
         return function ($layout) {
-           return (new RouteRegistrarWithAllowedAttributes($this))
+            return (new RouteRegistrarWithAllowedAttributes($this))
                 ->allowAttributes('layout', 'section')
                 ->layout($layout);
         };
@@ -18,7 +16,7 @@ class RouterMacros
     public function section()
     {
         return function ($section) {
-           return (new RouteRegistrarWithAllowedAttributes($this))
+            return (new RouteRegistrarWithAllowedAttributes($this))
                 ->allowAttributes('layout', 'section')
                 ->section($section);
         };
@@ -31,7 +29,7 @@ class RouterMacros
                 $componentClass = app('livewire')->getComponentClass($component);
                 $reflected = new \ReflectionClass($componentClass);
 
-                return app('view')->file(__DIR__ . '/livewire-view.blade.php', [
+                return app('view')->file(__DIR__.'/livewire-view.blade.php', [
                     'layout' => $this->current()->getAction('layout') ?? 'layouts.app',
                     'section' => $this->current()->getAction('section') ?? 'content',
                     'component' => $component,

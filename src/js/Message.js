@@ -6,10 +6,6 @@ export default class {
         this.actionQueue = actionQueue
     }
 
-    prepareForSend() {
-        this.loadingEls = this.component.setLoading(this.refs)
-    }
-
     get refs() {
         return this.actionQueue
             .map(action => {

@@ -13,8 +13,16 @@ export default {
                     this.registerElementForLoading(el, directive, component)
                     break;
 
+                case 'dirty':
+                    this.registerElementForDirty(el, directive, component)
+                    break;
+
                 case 'poll':
                     this.fireActionOnInterval(el, directive, component)
+                    break;
+
+                case 'init':
+                    this.fireActionRightAway(el, directive, component)
                     break;
 
                 case 'model':
@@ -30,15 +38,25 @@ export default {
     },
 
     registerElementForLoading(el, directive, component) {
-        const refName = el.directives.get('target')
-            && el.directives.get('target').value
+        const refNames = el.directives.get('target')
+            && el.directives.get('target').value.split(',').map(s => s.trim())
 
-        component.addLoadingEl(
+        component.loadingManager.addLoadingEl(
             el,
             directive.value,
-            refName,
+            refNames,
             directive.modifiers.includes('remove')
         )
+    },
+
+    registerElementForDirty(el, directive, component) {
+        const refNames = el.directives.has('target')
+            && el.directives.get('target').value.split(',').map(s => s.trim())
+
+            component.dirtyManager.addDirtyEls(
+                el,
+                refNames,
+            )
     },
 
     fireActionOnInterval(el, directive, component) {
@@ -49,7 +67,16 @@ export default {
         }, directive.durationOr(500));
     },
 
+    fireActionRightAway(el, directive, component) {
+        const method = directive.method || '$refresh'
+
+        component.addAction(new MethodAction(method, directive.params, el))
+    },
+
     attachModelListener(el, directive, component) {
+        // This is used by morphdom: morphdom.js:391
+        el.el.isLivewireModel = true
+
         const isLazy = directive.modifiers.includes('lazy')
         const debounceIf = (condition, callback, time) => {
             return condition
@@ -70,19 +97,27 @@ export default {
             const defaultEventType = el.isTextInput() ? 'input' : 'change'
 
             // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-            el.addEventListener(isLazy ? 'change' : defaultEventType, debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
+            const event = isLazy ? 'change' : defaultEventType
+            const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
                 const model = directive.value
                 const el = new DOMElement(e.target)
-                const value = el.valueFromInput()
+                const value = el.valueFromInput(component)
 
                 component.addAction(new ModelAction(model, value, el))
-            }, directive.durationOr(150)))
+            }, directive.durationOr(150))
+
+            el.addEventListener(event, handler)
+
+            component.addListenerForTeardown(() => {
+                el.removeEventListener(event, handler)
+            })
         }
     },
 
     attachDomListener(el, directive, component) {
         switch (directive.type) {
             case 'keydown':
+            case 'keyup':
                 this.attachListener(el, directive, component, (e) => {
                     // Only handle listener if no, or matching key modifiers are passed.
                     return ! (directive.modifiers.length === 0
@@ -96,7 +131,14 @@ export default {
     },
 
     attachListener(el, directive, component, callback) {
-        el.addEventListener(directive.type, (e => {
+        if (directive.modifiers.includes('prefetch')) {
+            el.addEventListener('mouseenter', () => {
+                component.addPrefetchAction(new MethodAction(directive.method, directive.params, el))
+            })
+        }
+
+        const event = directive.type
+        const handler = e => {
             if (callback && callback(e) !== false) {
                 return
             }
@@ -122,7 +164,13 @@ export default {
                     component.addAction(new MethodAction(method, params, el))
                 }
             })
-        }))
+        }
+
+        el.addEventListener(event, handler)
+
+        component.addListenerForTeardown(() => {
+            el.removeEventListener(event, handler)
+        })
     },
 
     preventAndStop(event, modifiers) {

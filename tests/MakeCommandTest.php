@@ -2,13 +2,13 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Artisan;
 
 class MakeCommandTest extends TestCase
 {
     /** @test */
-    function component_is_created_by_make_command()
+    public function component_is_created_by_make_command()
     {
         Artisan::call('make:livewire foo');
 
@@ -17,7 +17,7 @@ class MakeCommandTest extends TestCase
     }
 
     /** @test */
-    function nested_component_is_created_by_make_command()
+    public function nested_component_is_created_by_make_command()
     {
         Artisan::call('make:livewire foo.bar');
 
@@ -26,7 +26,7 @@ class MakeCommandTest extends TestCase
     }
 
     /** @test */
-    function multiword_component_is_created_by_make_command()
+    public function multiword_component_is_created_by_make_command()
     {
         Artisan::call('make:livewire foo-bar');
 
@@ -35,7 +35,7 @@ class MakeCommandTest extends TestCase
     }
 
     /** @test */
-    function pascal_case_component_is_automatically_converted_by_make_command()
+    public function pascal_case_component_is_automatically_converted_by_make_command()
     {
         Artisan::call('make:livewire FooBar.FooBar');
 

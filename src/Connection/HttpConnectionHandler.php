@@ -6,9 +6,16 @@ use Livewire\Livewire;
 
 class HttpConnectionHandler extends ConnectionHandler
 {
-    // This simulates extending Illuminate/Routeing/Controller
+    // This simulates extending Illuminate/Routing/Controller
     public function getMiddleware()
     {
+        // Because the "middleware" is dynamically generated,
+        // `php artisan route:list` will throw an error.
+        // Therefore, we'll skip this for the console.
+        if (app()->runningInConsole()) {
+            return;
+        }
+
         $middleware = decrypt(request('middleware'), $unserialize = true);
 
         return array_map(function ($m) {
@@ -29,7 +36,11 @@ class HttpConnectionHandler extends ConnectionHandler
                 'data',
                 'id',
                 'checksum',
+<<<<<<< HEAD
                 'browserId'
+=======
+                'fromPrefetch',
+>>>>>>> master
             ])
         );
     }

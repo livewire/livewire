@@ -2,8 +2,9 @@
 
 namespace Livewire\Concerns;
 
-use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
+use Illuminate\Support\Str;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
+use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 
 trait HandlesActions
 {
@@ -18,8 +19,8 @@ trait HandlesActions
 
     protected function callBeforeAndAferSyncHooks($name, $value, $callback)
     {
-        $beforeMethod = 'updating' . studly_case($name);
-        $afterMethod = 'updated' . studly_case($name);
+        $beforeMethod = 'updating'.Str::studly($name);
+        $afterMethod = 'updated'.Str::studly($name);
 
         if (method_exists($this, $beforeMethod)) {
             $this->{$beforeMethod}($value);
@@ -38,12 +39,14 @@ trait HandlesActions
             case '$set':
                 $prop = array_shift($params);
                 $this->syncInput($prop, head($params));
+
                 return;
                 break;
 
             case '$toggle':
                 $prop = array_shift($params);
                 $this->syncInput($prop, ! $this->{$prop});
+
                 return;
                 break;
 

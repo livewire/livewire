@@ -16,7 +16,7 @@ class LivewireBladeDirectives
             array_pop($args);
             $expression = implode(',', $args);
         } else {
-            $cachedKey = "'".str_random(7)."'";
+            $cachedKey = "'".Str::random(7)."'";
         }
 
         return <<<EOT

@@ -2,6 +2,7 @@
 
 namespace Livewire\Concerns;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 
 trait ValidatesInput
@@ -10,18 +11,21 @@ trait ValidatesInput
     {
         $fields = array_keys($rules);
 
-        $result = $this->getAllPublicPropertiesDefinedBySubClass();
+        $result = $this->getPublicPropertiesDefinedBySubClass();
 
         foreach ((array) $fields as $field) {
             throw_unless(
                 $this->hasProperty($field),
-                new \Exception('No property found for validation: [' . $field . ']')
+                new \Exception('No property found for validation: ['.$field.']')
             );
 
-            $result[$this->beforeFirstDot($field)] = $this->getPropertyValue($field);
+            $propertyNameFromValidationField = $this->beforeFirstDot($field);
+
+            $result[$propertyNameFromValidationField]
+                = $this->getPropertyValue($propertyNameFromValidationField);
         }
 
-        return Validator::make($result, array_only($rules, $fields), $messages, $attributes)
+        return Validator::make($result, Arr::only($rules, $fields), $messages, $attributes)
             ->validate();
     }
 }

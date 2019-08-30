@@ -1,12 +1,16 @@
 import Message from '@/Message'
+import PrefetchMessage from '@/PrefetchMessage'
 import { debounce, walk } from '@/util'
 import morphdom from '@/dom/morphdom'
 import DOM from '@/dom/dom'
 import DOMElement from '@/dom/dom_element'
-import nodeInitializer from "@/node_initializer";
+import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
+import LoadingManager from './LoadingManager'
+import DirtyManager from './DirtyManager'
+import PrefetchManager from './PrefetchManager'
 
-class Component {
+export default class Component {
     constructor(el, connection) {
         this.id = el.getAttribute('id')
         this.data = JSON.parse(el.getAttribute('data'))
@@ -20,9 +24,17 @@ class Component {
         this.messageInTransit = null
         this.loadingEls = []
         this.loadingElsByRef = {}
+        this.dirtyElsByRef = {}
+        this.dirtyEls = []
         this.modelTimeout = null
+        this.tearDownCallbacks = []
+        this.loadingManager = new LoadingManager
+        this.dirtyManager = new DirtyManager(this)
+        this.prefetchManager = new PrefetchManager(this)
 
         this.initialize()
+
+        this.dirtyManager.registerListener()
 
         this.registerEchoListeners()
     }
@@ -43,7 +55,36 @@ class Component {
         })
     }
 
+    addPrefetchAction(action) {
+        if (this.prefetchManager.actionHasPrefetch(action)) {
+            return
+        }
+
+        const message = new PrefetchMessage(
+            this,
+            action,
+        )
+
+        this.prefetchManager.addMessage(message)
+
+        this.connection.sendMessage(message)
+    }
+
+    receivePrefetchMessage(payload) {
+        this.prefetchManager.storeResponseInMessageForPayload(payload)
+    }
+
     addAction(action) {
+        if (this.prefetchManager.actionHasPrefetch(action) && this.prefetchManager.actionPrefetchResponseHasBeenReceived(action)) {
+            const message = this.prefetchManager.getPrefetchMessageByAction(action)
+
+            this.handleResponse(message.response)
+
+            this.prefetchManager.clearPrefetches()
+
+            return
+        }
+
         this.actionQueue.push(action)
 
         // This debounce is here in-case two events fire at the "same" time:
@@ -54,6 +95,9 @@ class Component {
         // them off at the same time.
         // Note: currently, it's set to 5ms, that might not be the right amount, we'll see.
         debounce(this.fireMessage, 5).apply(this)
+
+        // Clear prefetches.
+        this.prefetchManager.clearPrefetches()
     }
 
     fireMessage() {
@@ -66,16 +110,24 @@ class Component {
 
         this.connection.sendMessage(this.messageInTransit)
 
+        this.loadingManager.setLoading(this.messageInTransit.refs)
+
         this.actionQueue = []
     }
 
     messageSendFailed() {
+        this.loadingManager.unsetLoading()
+
         this.messageInTransit = null
     }
 
     receiveMessage(payload) {
-        const response = this.messageInTransit.storeResponse(payload)
+        var response = this.messageInTransit.storeResponse(payload)
 
+        this.handleResponse(response)
+    }
+
+    handleResponse(response) {
         this.data = response.data
         this.children = response.children
 
@@ -85,11 +137,11 @@ class Component {
             return
         }
 
+        this.loadingManager.unsetLoading()
+
         this.replaceDom(response.dom, response.dirtyInputs)
 
         this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
-
-        this.unsetLoading(this.messageInTransit.loadingEls)
 
         this.messageInTransit = null
 
@@ -105,7 +157,6 @@ class Component {
             if (el.directives.missing('model')) return
             const modelValue = el.directives.get('model').value
 
-
             if (el.isFocused() && ! dirtyInputs.includes(modelValue)) return
 
             el.setInputValueFromModel(this)
@@ -113,9 +164,13 @@ class Component {
     }
 
     replaceDom(rawDom) {
+        store.beforeDomUpdateCallback()
+
         this.handleMorph(
             this.formatDomBeforeDiffToAvoidConflictsWithVue(rawDom.trim()),
         )
+
+        store.afterDomUpdateCallback()
     }
 
     formatDomBeforeDiffToAvoidConflictsWithVue(inputDom) {
@@ -152,8 +207,14 @@ class Component {
             onBeforeNodeDiscarded: node => {
                 return (new DOMElement(node)).transitionElementOut(nodeDiscarded => {
                     // Cleanup after removed element.
-                    this.removeLoadingEl(nodeDiscarded)
+                    this.loadingManager.removeLoadingEl(nodeDiscarded)
                 })
+            },
+
+            onNodeDiscarded: node => {
+                // Elements with loading directives are stored, release this
+                // element from storage because it no longer exists on the DOM.
+                this.loadingManager.removeLoadingEl(node)
             },
 
             onBeforeElChildrenUpdated: node => {
@@ -175,12 +236,6 @@ class Component {
 
             onElUpdated: (node) => {
                 //
-            },
-
-            onNodeDiscarded: node => {
-                // Elements with loading directives are stored, release this
-                // element from storage because it no longer exists on the DOM.
-                this.removeLoadingEl(node)
             },
 
             onNodeAdded: (node) => {
@@ -206,7 +261,7 @@ class Component {
             const el = new DOMElement(node)
 
             // Skip the root component element.
-            if (el.isSameNode(this.el)) return
+            if (el.isSameNode(this.el)) { callback(el); return; }
 
             // If we encounter a nested component, skip walking that tree.
             if (el.isComponentRootEl()) {
@@ -220,9 +275,9 @@ class Component {
     }
 
     registerEchoListeners() {
-        if(Array.isArray(this.events)){
+        if (Array.isArray(this.events)) {
             this.events.forEach(event => {
-                if(event.startsWith('echo')){
+                if (event.startsWith('echo')) {
                     if (typeof Echo === 'undefined') {
                         console.warn('Laravel Echo cannot be found')
                         return
@@ -230,93 +285,34 @@ class Component {
 
                     let event_parts = event.split(/(echo:|echo-)|:|,/)
 
-                    if(event_parts[1] == 'echo:') {
+                    if (event_parts[1] == 'echo:') {
                         event_parts.splice(2,0,'channel',undefined)
                     }
 
-                    if(event_parts[2] == 'notification') {
+                    if (event_parts[2] == 'notification') {
                         event_parts.push(undefined, undefined)
                     }
 
                     let [s1, signature, channel_type, s2, channel, s3, event_name] = event_parts
 
-                    if(['channel','private'].includes(channel_type)){
+                    if (['channel','private'].includes(channel_type)) {
                         Echo[channel_type](channel).listen(event_name, (e) => {
                             store.emit(event, e)
                         })
-                    }else if(channel_type == 'presence'){
+                    } else if (channel_type == 'presence') {
                         Echo.join(channel)[event_name]((e) => {
                             store.emit(event, e)
                         })
-                    }else if(channel_type == 'notification'){
+                    } else if (channel_type == 'notification') {
                         Echo.private(channel).notification((notification) => {
                             store.emit(event, notification)
                         })
-                    }else{
+                    } else{
                         console.warn('Echo channel type not yet supported')
                     }
                 }
             })
         }
-    }
-
-    addLoadingEl(el, value, targetRef, remove) {
-        if (targetRef) {
-            if (this.loadingElsByRef[targetRef]) {
-                this.loadingElsByRef[targetRef].push({el, value, remove})
-            } else {
-                this.loadingElsByRef[targetRef] = [{el, value, remove}]
-            }
-        } else {
-            this.loadingEls.push({el, value, remove})
-        }
-    }
-
-    removeLoadingEl(node) {
-        const el = new DOMElement(node)
-
-        this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
-
-        if (el.ref in this.loadingElsByRef) {
-            delete this.loadingElsByRef[el.ref]
-        }
-    }
-
-    setLoading(refs) {
-        const refEls = refs.map(ref => this.loadingElsByRef[ref]).filter(el => el).flat()
-
-        const allEls = this.loadingEls.concat(refEls)
-
-        allEls.forEach(el => {
-            const directive = el.el.directives.get('loading')
-            el = el.el.el // I'm so sorry @todo
-
-            if (directive.modifiers.includes('class')) {
-                // This is because wire:loading.class="border border-red"
-                // wouldn't work with classList.add.
-                const classes = directive.value.split(' ')
-
-                if (directive.modifiers.includes('remove')) {
-                    el.classList.remove(...classes)
-                } else {
-                    el.classList.add(...classes)
-                }
-            } else if (directive.modifiers.includes('attr')) {
-                if (directive.modifiers.includes('remove')) {
-                    el.removeAttribute(directive.value)
-                } else {
-                    el.setAttribute(directive.value, true)
-                }
-            } else {
-                el.style.display = 'inline-block'
-            }
-        })
-
-        return allEls
-    }
-
-    unsetLoading(loadingEls) {
-        // No need to "unset" loading because the dom-diffing will automatically reverse any changes.
     }
 
     modelSyncDebounce(callback, time) {
@@ -347,6 +343,12 @@ class Component {
 
         callback()
     }
-}
 
-export default Component
+    addListenerForTeardown(teardownCallback) {
+        this.tearDownCallbacks.push(teardownCallback)
+    }
+
+    tearDown() {
+        this.tearDownCallbacks.forEach(callback => callback())
+    }
+}

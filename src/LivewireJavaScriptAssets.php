@@ -6,7 +6,7 @@ class LivewireJavaScriptAssets
 {
     public function __invoke()
     {
-        $file = __DIR__ . '/../dist/livewire.js';
+        $file = __DIR__.'/../dist/livewire.js';
 
         // These headers will enable browsers to cache this asset.
         return response()

@@ -3,15 +3,27 @@
 namespace Livewire;
 
 use Exception;
+use Illuminate\Support\Str;
+use Livewire\Testing\TestableLivewire;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
-use Livewire\Testing\TestableLivewire;
+use Illuminate\Routing\RouteDependencyResolverTrait;
 
 class LivewireManager
 {
+    use RouteDependencyResolverTrait;
+
     protected $prefix = 'wire';
     protected $componentAliases = [];
+    protected $customComponentResolver;
     protected $middlewaresFilter;
+    protected $container;
+
+    public function __construct()
+    {
+        // This property only exists to make the "RouteDependancyResolverTrait" work.
+        $this->container = app();
+    }
 
     public function prefix($prefix = null)
     {
@@ -24,12 +36,24 @@ class LivewireManager
         $this->componentAliases[$alias] = $viewClass;
     }
 
+    public function componentResolver($callback)
+    {
+        $this->customComponentResolver = $callback;
+    }
+
     public function getComponentClass($alias)
     {
         $finder = app()->make(LivewireComponentsFinder::class);
 
-        $class = $this->componentAliases[$alias]
-            ?? $finder->find($alias);
+        $class = false;
+
+        if ($this->customComponentResolver) {
+            $class = call_user_func($this->customComponentResolver, $alias);
+        }
+
+        $class = $class ?: (
+            $this->componentAliases[$alias] ?? $finder->find($alias)
+        );
 
         throw_unless($class, new ComponentNotFoundException(
             "Unable to find component: [{$alias}]"
@@ -49,12 +73,13 @@ class LivewireManager
         return new $componentClass($id);
     }
 
-    public function assets($options = null)
+    public function assets($options = [])
     {
-        $appUrl = $this->appUrlOrRoot();
+        $appUrl = rtrim($options['base_url'] ?? '', '/');
+
         $options = $options ? json_encode($options) : '';
 
-        $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/mix-manifest.json'), true);
+        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         $csrf = csrf_token();
@@ -62,11 +87,12 @@ class LivewireManager
 
         return <<<EOT
 <!-- Livewire Assets-->
-<style>[wire\:loading] { display: none; }</style>
+<style>[wire\:loading] { display: none; } [wire\:dirty]:not(textarea):not(input):not(select) { display: none; }</style>
 <script src="{$fullAssetPath}"></script>
 <script>
+    window.livewire = new Livewire({$options});
     document.addEventListener("DOMContentLoaded", function() {
-        window.livewire = new Livewire({$options});
+        window.livewire.start()
         window.livewire_app_url = "{$appUrl}";
         window.livewire_token = "{$csrf}";
     });
@@ -76,9 +102,18 @@ EOT;
 
     public function mount($name, ...$options)
     {
-        $id = str_random(20);
+        $id = Str::random(20);
+
         $instance = $this->activate($name, $id);
-        $instance->mount(...$options);
+
+        $parameters = $this->resolveClassMethodDependencies(
+            $options,
+            $instance,
+            'mount'
+        );
+
+        $instance->mount(...array_values($parameters));
+
         $dom = $instance->output();
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
@@ -126,14 +161,5 @@ EOT;
     public function test($name, ...$params)
     {
         return new TestableLivewire($name, $this->prefix, $params);
-    }
-
-    public function appUrlOrRoot()
-    {
-        $defaultAppUrlInDotEnv = 'http://localhost';
-
-        return config('app.url') !== $defaultAppUrlInDotEnv
-            ? rtrim(config('app.url'), '/')
-            : '';
     }
 }

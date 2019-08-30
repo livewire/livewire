@@ -2,26 +2,28 @@
 
 namespace Livewire;
 
-use BadMethodCallException;
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\Str;
-use Illuminate\Support\ViewErrorBag;
 use Illuminate\View\View;
+use BadMethodCallException;
+use Illuminate\Support\Str;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
+use Livewire\Exceptions\CannotAddEloquentModelsAsPublicPropertyException;
 
 abstract class Component
 {
     use Concerns\ValidatesInput,
         Concerns\DetectsDirtyProperties,
         Concerns\HandlesActions,
+        Concerns\PerformsRedirects,
         Concerns\ReceivesEvents,
         Concerns\InteractsWithProperties,
         Concerns\TracksRenderedChildren;
 
     public $id;
-    public $redirectTo;
-    protected $name;
     protected $lifecycleHooks = [
-        'mount', 'updating', 'updated',
+        'mount', 'hydrate', 'updating', 'updated',
     ];
 
     public function __construct($id)
@@ -35,23 +37,23 @@ abstract class Component
         $class = static::class;
 
         foreach (class_uses_recursive($class) as $trait) {
-            if (method_exists($class, $method = 'initialize' . class_basename($trait))) {
+            if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
                 $this->{$method}();
             }
         }
     }
 
-    public function name()
+    public function getName()
     {
-        return $this->name ?: collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
+        return collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
             ->diff(['App', 'Http', 'Livewire'])
             ->map([Str::class, 'kebab'])
             ->implode('.');
     }
 
-    public function redirect($url)
+    public function render()
     {
-        $this->redirectTo = $url;
+        return view("livewire.{$this->getName()}");
     }
 
     public function session($key, $value = null)
@@ -70,17 +72,36 @@ abstract class Component
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
-        $dom = $view
+        return $view
             ->with([
                 'errors' => (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
                 '_instance' => $this,
             ])
             // Automatically inject all public properties into the blade view.
-            ->with($this->getPublicPropertiesDefinedBySubClass())
+            ->with($this->getPublicDataFromComponent())
             ->render();
+    }
 
-        // Basic minification: strip newlines and return carraiges.
-        return str_replace(["\n", "\r"], '', $dom);
+    protected function getPublicDataFromComponent()
+    {
+        $data = $this->getPublicPropertiesDefinedBySubClass();
+
+        $this->makeSureThereAreNoEloquentModels($data);
+
+        return $this->castDataToJavaScriptSafeTypes($data);
+    }
+
+    public function makeSureThereAreNoEloquentModels($data)
+    {
+        array_walk($data, function ($value) {
+            throw_if($value instanceof Model || $value instanceof Collection,
+                new CannotAddEloquentModelsAsPublicPropertyException);
+        });
+    }
+
+    public function castDataToJavaScriptSafeTypes($data)
+    {
+        return json_decode(json_encode($data), true);
     }
 
     public function __call($method, $params)
@@ -92,7 +113,6 @@ abstract class Component
             // Eat calls to the lifecycle hooks if the dev didn't define them.
             return;
         }
-
 
         throw new BadMethodCallException(sprintf(
             'Method %s::%s does not exist.', static::class, $method

@@ -2,14 +2,14 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\Artisan;
 use Livewire\Component;
 use Livewire\LivewireManager;
+use Illuminate\Support\Facades\Artisan;
 
 class LivewireTestingTest extends TestCase
 {
     /** @test */
-    function test_method_accepts_arguments_to_pass_to_mount()
+    public function test_method_accepts_arguments_to_pass_to_mount()
     {
         $component = app(LivewireManager::class)
             ->test(HasMountArguments::class, 'foo');
@@ -18,7 +18,7 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
-    function test_set_multiple_with_array()
+    public function test_set_multiple_with_array()
     {
         app(LivewireManager::class)
             ->test(HasMountArguments::class, 'foo')
@@ -27,7 +27,7 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
-    function test_assert_set()
+    public function test_assert_set()
     {
         app(LivewireManager::class)
             ->test(HasMountArguments::class, 'foo')
@@ -35,7 +35,7 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
-    function test_assert_see()
+    public function test_assert_see()
     {
         app(LivewireManager::class)
             ->test(HasMountArguments::class, 'should see me')
@@ -43,7 +43,7 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
-    function test_assert_see_doesnt_include_json_encoded_data_put_in_wire_data_attribute()
+    public function test_assert_see_doesnt_include_json_encoded_data_put_in_wire_data_attribute()
     {
         // See for more info: https://github.com/calebporzio/livewire/issues/62
         app(LivewireManager::class)
@@ -58,7 +58,7 @@ class LivewireTestingTest extends TestCase
         $manager = \Mockery::mock(LivewireManager::class)->makePartial();
         $manager->shouldReceive('currentMiddlewareStack')->andReturn(['MiddlewareA', 'MiddlewareB', 'MiddlewareC']);
 
-        $manager->filterMiddleware(function($middleware) {
+        $manager->filterMiddleware(function ($middleware) {
             return $middleware != 'MiddlewareB';
         });
 

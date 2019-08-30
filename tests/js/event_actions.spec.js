@@ -1,5 +1,6 @@
 import { fireEvent, wait } from 'dom-testing-library'
-import { mount } from './utils'
+import { mount, mountAsRoot } from './utils'
+const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 test('basic click', async () => {
     var payload
@@ -57,4 +58,61 @@ test('two keydown events', async () => {
         expect(payload.actionQueue[1].payload.method).toEqual('otherMethod')
         expect(payload.actionQueue[1].payload.params).toEqual([])
     })
+})
+
+test('keydown.enter doesnt fire when other keys are pressed', async () => {
+    var payload
+    mount('<button wire:keydown.enter="otherMethod"></button>', i => payload = i)
+
+    fireEvent.keyDown(document.querySelector('button'), { key: 'Escape' })
+
+    await timeout(10)
+
+    expect(payload).toBeUndefined()
+})
+
+test('keyup.enter doesnt fire when other keys are pressed', async () => {
+    var payload
+    mount('<button wire:keyup.enter="otherMethod"></button>', i => payload = i)
+
+    fireEvent.keyUp(document.querySelector('button'), { key: 'Escape' })
+
+    await timeout(10)
+
+    expect(payload).toBeUndefined()
+})
+
+test('polling', async () => {
+    var pollHappened = false
+    mount('<div wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
+
+    await timeout(49)
+
+    expect(pollHappened).toBeFalsy()
+
+    await timeout(10)
+
+    expect(pollHappened).toBeTruthy()
+})
+
+test('polling on root div', async () => {
+    var pollHappened = false
+    mountAsRoot('<div wire:id="123" wire:data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
+
+    await timeout(49)
+
+    expect(pollHappened).toBeFalsy()
+
+    await timeout(10)
+
+    expect(pollHappened).toBeTruthy()
+})
+
+test('init', async () => {
+    var initHappened = false
+    mountAsRoot('<div wire:id="123" wire:data="{}" wire:init="someMethod"></div>', () => { initHappened = true })
+
+    await timeout(10)
+
+    expect(initHappened).toBeTruthy()
 })

@@ -37,14 +37,14 @@ class LivewireComponentsFinder
             $this->build();
         }
 
-        return $this->manifest =  $this->files->getRequire($this->manifestPath);
+        return $this->manifest = $this->files->getRequire($this->manifestPath);
     }
 
     public function build()
     {
         $this->manifest = $this->getClassNames()
             ->mapWithKeys(function ($class) {
-                return [(new $class(123))->name() => $class];
+                return [(new $class('dummy-id'))->getName() => $class];
             })->toArray();
 
         $this->write($this->manifest);
