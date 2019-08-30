@@ -37,8 +37,6 @@ class TestableLivewire
 
         $result = app('livewire')->mount($this->name = $name, ...$params);
 
-        $this->checksum = $result->checksum;
-
         $this->initialUpdateComponent($result);
     }
 
@@ -49,6 +47,7 @@ class TestableLivewire
         $this->data = $output->data;
         $this->children = $output->children;
         $this->events = $output->events;
+        $this->checksum = $output->checksum;
         $this->instance = ComponentHydrator::hydrate($this->name, $this->id, $this->data, $this->checksum);
     }
 
@@ -57,6 +56,7 @@ class TestableLivewire
         $this->id = $output->id;
         $this->dom = $output->dom;
         $this->data = $output->data;
+        $this->checksum = $output->checksum;
         $this->children = $output->children;
         $this->dirtyInputs = $output->dirtyInputs;
         $this->events = $output->events;

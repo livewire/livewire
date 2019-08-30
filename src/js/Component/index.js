@@ -129,6 +129,7 @@ export default class Component {
 
     handleResponse(response) {
         this.data = response.data
+        this.checksum = response.checksum
         this.children = response.children
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.

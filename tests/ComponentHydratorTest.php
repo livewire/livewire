@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Livewire\Component;
+use Livewire\ComponentChecksumManager;
 use Livewire\Connection\ComponentHydrator;
 
 class ComponentHydratorTest extends TestCase
@@ -16,8 +17,8 @@ class ComponentHydratorTest extends TestCase
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
             $original->id,
-            ComponentHydrator::dehydrate($original),
-            md5('for-hydration'.$original->id)
+            $data = ComponentHydrator::dehydrate($original),
+            (new ComponentChecksumManager)->generate('for-hydration', $original->id, $data)
         );
 
         $this->assertNotSame($original, $reHydrated);
@@ -35,8 +36,8 @@ class ComponentHydratorTest extends TestCase
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
             $original->id,
-            ComponentHydrator::dehydrate($original),
-            md5('for-hydration'.$original->id)
+            $data = ComponentHydrator::dehydrate($original),
+            (new ComponentChecksumManager)->generate('for-hydration', $original->id, $data)
         );
 
         $this->assertEquals($reHydrated->foo, 'baz');
@@ -52,8 +53,8 @@ class ComponentHydratorTest extends TestCase
         $reHydrated = ComponentHydrator::hydrate(
             'for-hydration',
             $original->id,
-            ComponentHydrator::dehydrate($original),
-            md5('for-hydration'.$original->id)
+            $data = ComponentHydrator::dehydrate($original),
+            (new ComponentChecksumManager)->generate('for-hydration', $original->id, $data)
         );
 
         $this->assertEquals($reHydrated->getGoo(), 'car');

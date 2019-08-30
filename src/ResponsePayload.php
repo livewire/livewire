@@ -10,6 +10,7 @@ class ResponsePayload implements Arrayable, Jsonable
     public $id;
     public $dom;
     public $data;
+    public $checksum;
     public $children;
     public $eventQueue;
     public $redirectTo;
@@ -22,6 +23,7 @@ class ResponsePayload implements Arrayable, Jsonable
         $this->id = $data['id'];
         $this->dom = $data['dom'];
         $this->data = $data['data'];
+        $this->checksum = $data['checksum'];
         $this->children = $data['children'];
         $this->eventQueue = $data['eventQueue'];
         $this->redirectTo = $data['redirectTo'];
@@ -36,6 +38,7 @@ class ResponsePayload implements Arrayable, Jsonable
             'id' => $this->id,
             'dom' => $this->dom,
             'data' => $this->data,
+            'checksum' => $this->checksum,
             'children' => $this->children,
             'eventQueue' => $this->eventQueue,
             'redirectTo' => $this->redirectTo,
