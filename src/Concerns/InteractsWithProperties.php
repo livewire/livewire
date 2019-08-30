@@ -23,7 +23,7 @@ trait InteractsWithProperties
 
     public function getProtectedOrPrivatePropertiesDefinedBySubClass()
     {
-        $properties = (new \ReflectionClass($this))->getProperties(ReflectionProperty::IS_PROTECTED | ReflectionProperty::IS_PRIVATE);
+        $properties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PROTECTED | \ReflectionProperty::IS_PRIVATE);
         $data = [];
 
         foreach ($properties as $property) {
