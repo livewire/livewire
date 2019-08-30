@@ -13,6 +13,13 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertSessionHas($key)
+    {
+        PHPUnit::assertTrue($this->instance->session()->has($key));
+
+        return $this;
+    }
+
     public function assertSee($value)
     {
         PHPUnit::assertStringContainsString((string) $value, preg_replace('(wire:data=\".+}")', '', $this->dom));

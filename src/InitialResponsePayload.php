@@ -8,6 +8,7 @@ use Illuminate\Contracts\Support\Arrayable;
 
 class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
 {
+    public $instance;
     public $id;
     public $dom;
     public $data;
@@ -19,6 +20,7 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
 
     public function __construct($data)
     {
+        $this->instance = $data['instance'];
         $this->id = $data['id'];
         $this->dom = $data['dom'];
         $this->data = $data['data'];

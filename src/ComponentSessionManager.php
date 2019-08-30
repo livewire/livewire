@@ -11,9 +11,18 @@ class ComponentSessionManager
         $this->component = $component;
     }
 
-    public function get($key)
+    public function has($key)
     {
-        return session()->get("{$this->component->id}:{$key}");
+        $keys = is_array($key) ? $key : func_get_args();
+
+        return ! collect($keys)->contains(function ($key) {
+            return is_null(session()->get("{$this->component->id}:{$key}"));
+        });
+    }
+
+    public function get($key, $default = null)
+    {
+        return session()->get("{$this->component->id}:{$key}", $default);
     }
 
     public function put($key, $value)

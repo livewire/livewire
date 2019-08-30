@@ -23,18 +23,24 @@ class ComponentSessionTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ComponentWithSession::class);
 
-        $component->assertSet('fiz', 'buz');
+        $component->call('setValueOfFiz', 'bluth');
+
+        $this->assertNotContains('fiz', $component->data);
+        $this->assertEquals('bluth', session()->get("{$component->id}:protected_properties")['fiz']);
     }
 
     /** @test */
-    public function old_component_data_stored_in_session_is_destroyed_when_a_new_page_is_loaded_within_the_same_window()
+    public function protected_properties_are_rehydrated_from_the_session()
     {
-        $this->markTestSkipped();
-        // $component = app(LivewireManager::class)->test(ComponentWithSession::class);
+        $component = app(LivewireManager::class)->test(ComponentWithSession::class);
 
-        // $sessionKey = $component->id.'protected_properties';
+        $this->assertNotEquals('bluth', $component->fiz);
 
-        // $this->assertEquals('hey', session()->all());
+        session()->put("{$component->id}:protected_properties", ['fiz' => 'bluth']);
+
+        $component->call('$refresh');
+
+        $this->assertEquals('bluth', $component->fiz);
     }
 }
 
@@ -46,7 +52,13 @@ class ComponentWithSession extends Component
     public function mount()
     {
         $this->session('foo', 'bar');
+
         $this->fiz = 'buz';
+    }
+
+    public function setValueOfFiz($value)
+    {
+        $this->fiz = $value;
     }
 
     public function setValueFromSession()

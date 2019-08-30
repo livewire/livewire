@@ -57,9 +57,13 @@ abstract class Component
         return view("livewire.{$this->getName()}");
     }
 
-    public function session($key, $value = null)
+    public function session($key = null, $value = null)
     {
         $sessionManager = new ComponentSessionManager($this);
+
+        if (is_null($key)) {
+            return $sessionManager;
+        }
 
         if (is_null($value)) {
             return $sessionManager->get($key);

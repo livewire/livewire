@@ -49,7 +49,7 @@ class TestableLivewire
         $this->data = $output->data;
         $this->children = $output->children;
         $this->events = $output->events;
-        $this->instance = ComponentHydrator::hydrate($this->name, $this->id, $this->data, $this->checksum);
+        $this->instance = $output->instance;
     }
 
     public function updateComponent($output)
@@ -67,12 +67,12 @@ class TestableLivewire
 
     public function __get($property)
     {
-        return $this->instance->{$property};
+        return $this->instance->getPropertyValue($property);
     }
 
     public function __call($method, $params)
     {
-        return $this->runAction($method, $params);
+        return $this->call($method, $params);
     }
 
     public function __set($name, $value)
