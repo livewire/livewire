@@ -8,7 +8,7 @@ use Illuminate\View\View;
 class [class] extends Component
 {
     /**
-     * Bootstrap data into the livewire component
+     * Bootstrap data into the Livewire component.
      *
      * @return void
      */
@@ -18,7 +18,7 @@ class [class] extends Component
     }
 
     /**
-     * Render the livewire component
+     * Render the Livewire component.
      *
      * @return Illuminate\View\View
      */
