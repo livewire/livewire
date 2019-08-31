@@ -26,7 +26,7 @@ class ComponentSessionTest extends TestCase
         $component->call('setValueOfFiz', 'bluth');
 
         $this->assertNotContains('fiz', $component->data);
-        $this->assertEquals('bluth', session()->get("{$component->id}:protected_properties")['fiz']);
+        $this->assertEquals('bluth', session()->get("{$component->id}.protected_properties")['fiz']);
     }
 
     /** @test */
@@ -36,11 +36,26 @@ class ComponentSessionTest extends TestCase
 
         $this->assertNotEquals('bluth', $component->fiz);
 
-        session()->put("{$component->id}:protected_properties", ['fiz' => 'bluth']);
+        session()->put("{$component->id}.protected_properties", ['fiz' => 'bluth']);
 
         $component->call('$refresh');
 
         $this->assertEquals('bluth', $component->fiz);
+    }
+
+    /** @test */
+    public function components_session_data_is_garbage_collected()
+    {
+        $oldComponent = app(LivewireManager::class)->test(ComponentWithSession::class);
+        $component = app(LivewireManager::class)->test(ComponentWithSession::class);
+
+        $this->assertCount(2, session()->all());
+
+        $component->gc = [$oldComponent->id];
+
+        $component->call('$refresh');
+
+        $this->assertCount(1, session()->all());
     }
 }
 

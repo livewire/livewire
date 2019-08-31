@@ -19,6 +19,7 @@ class TestableLivewire
     public $events;
     public $eventQueue;
     public $redirectTo;
+    public $gc;
 
     use Concerns\HasFunLittleUtilities,
         Concerns\MakesCallsToComponent,

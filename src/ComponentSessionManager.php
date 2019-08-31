@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Arr;
+
 class ComponentSessionManager
 {
     protected $component;
@@ -16,17 +18,22 @@ class ComponentSessionManager
         $keys = is_array($key) ? $key : func_get_args();
 
         return ! collect($keys)->contains(function ($key) {
-            return is_null(session()->get("{$this->component->id}:{$key}"));
+            return is_null($this->get($key));
         });
     }
 
     public function get($key, $default = null)
     {
-        return session()->get("{$this->component->id}:{$key}", $default);
+        return session()->get("{$this->component->id}.{$key}", $default);
     }
 
     public function put($key, $value)
     {
-        return session()->put("{$this->component->id}:{$key}", $value);
+        return session()->put("{$this->component->id}.{$key}", $value);
+    }
+
+    public static function garbageCollect($componentId)
+    {
+        session()->forget((array) $componentId);
     }
 }

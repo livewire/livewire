@@ -1,5 +1,3 @@
-import componentStore from './store'
-
 export default class {
     constructor(component, actionQueue) {
         this.component = component

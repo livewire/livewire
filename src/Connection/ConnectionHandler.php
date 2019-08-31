@@ -2,15 +2,18 @@
 
 namespace Livewire\Connection;
 
-use Livewire\ResponsePayload;
-use Livewire\Routing\Redirector;
 use Illuminate\Validation\ValidationException;
 use Livewire\ComponentChecksumManager;
+use Livewire\ComponentSessionManager;
+use Livewire\ResponsePayload;
+use Livewire\Routing\Redirector;
 
 abstract class ConnectionHandler
 {
     public function handle($payload)
     {
+        ComponentSessionManager::garbageCollect($payload['gc']);
+
         $instance = ComponentHydrator::hydrate($payload['name'], $payload['id'], $payload['data'], $payload['checksum']);
 
         $instance->setPreviouslyRenderedChildren($payload['children']);
