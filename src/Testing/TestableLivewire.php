@@ -37,8 +37,6 @@ class TestableLivewire
 
         $result = app('livewire')->mount($this->name = $name, ...$params);
 
-        $this->checksum = $result->checksum;
-
         $this->initialUpdateComponent($result);
     }
 
@@ -50,6 +48,7 @@ class TestableLivewire
         $this->children = $output->children;
         $this->events = $output->events;
         $this->instance = $output->instance;
+        $this->checksum = $output->checksum;
     }
 
     public function updateComponent($output)
@@ -57,6 +56,7 @@ class TestableLivewire
         $this->id = $output->id;
         $this->dom = $output->dom;
         $this->data = $output->data;
+        $this->checksum = $output->checksum;
         $this->children = $output->children;
         $this->dirtyInputs = $output->dirtyInputs;
         $this->events = $output->events;

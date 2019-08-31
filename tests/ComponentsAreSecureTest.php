@@ -3,9 +3,10 @@
 namespace Tests;
 
 use Livewire\Component;
+use Livewire\Exceptions\ComponentMismatchException;
+use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
-use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 
 class ComponentsAreSecureTest extends TestCase
 {
@@ -51,16 +52,73 @@ class ComponentsAreSecureTest extends TestCase
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
 
-        $component->updateProperty('protectedProperty', 'bar');
+        $component->updateProperty('protectedProperty', 'baz');
+    }
+
+    /** @test */
+    public function data_cannot_be_tampered_with_on_frontend()
+    {
+        $this->expectException(ComponentMismatchException::class);
+
+        app('livewire')->component('security-target', SecurityTargetStub::class);
+        $component = app('livewire')->test('security-target');
+
+        $component->data['publicProperty'] = 'different-property';
+
+        $component->call('$refresh');
+    }
+
+    /** @test */
+    public function id_cannot_be_tampered_with_on_frontend()
+    {
+        $this->expectException(ComponentMismatchException::class);
+
+        app('livewire')->component('security-target', SecurityTargetStub::class);
+        $component = app('livewire')->test('security-target');
+
+        $component->id = 'different-id';
+
+        $component->call('$refresh');
+    }
+
+    /** @test */
+    public function component_name_cannot_be_tampered_with_on_frontend()
+    {
+        $this->expectException(ComponentMismatchException::class);
+
+        app('livewire')->component('safe', SecurityTargetStub::class);
+        app('livewire')->component('unsafe', UnsafeComponentStub::class);
+        $component = app('livewire')->test('safe');
+
+        // Hijack the "safe" component, with "unsafe"
+        $component->name = 'unsafe';
+
+        // If the hijack was stopped, the expected exception will be thrown.
+        // If it worked the, an execption will be thrown that will fail the test.
+        $component->runAction('someMethod');
     }
 }
 
 class SecurityTargetStub extends Component
 {
-    protected $protectedProperty = 'foo';
+    public $publicProperty = 'foo';
+    protected $protectedProperty = 'bar';
 
-    protected function protectedMethod()
+    public function publicMethod() {}
+
+    protected function protectedMethod() {}
+
+    public function render()
     {
+        return app('view')->make('null-view');
+    }
+}
+
+class UnsafeComponentStub extends Component
+{
+    public function someMethod()
+    {
+        throw new \Exception('Should not be able to acess me!');
     }
 
     public function render()

@@ -3,6 +3,7 @@
 namespace Livewire\Connection;
 
 use Livewire\ComponentSessionManager;
+use Livewire\ComponentChecksumManager;
 use Livewire\Exceptions\ComponentMismatchException;
 
 class ComponentHydrator
@@ -21,7 +22,9 @@ class ComponentHydrator
 
     public static function hydrate($component, $id, $publicProperties, $checksum)
     {
-        throw_unless(md5($component.$id) === $checksum, ComponentMismatchException::class);
+        $checksumManager = new ComponentChecksumManager;
+
+        throw_unless($checksumManager->check($checksum, $component, $id, $publicProperties), ComponentMismatchException::class);
 
         $class = app('livewire')->getComponentClass($component);
 

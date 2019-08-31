@@ -19,10 +19,9 @@ export default class {
             id: this.component.id,
             data: this.component.data,
             name: this.component.name,
+            checksum: this.component.checksum,
             children: this.component.children,
             middleware: this.component.middleware,
-            checksum: this.component.checksum,
-            browserId: componentStore.getBrowserId(),
             actionQueue: this.actionQueue.map(action => {
                 // This ensures only the type & payload properties only get sent over.
                 return {
@@ -37,6 +36,7 @@ export default class {
         return this.response = {
             id: payload.id,
             dom: payload.dom,
+            checksum: payload.checksum,
             children: payload.children,
             dirtyInputs: payload.dirtyInputs,
             eventQueue: payload.eventQueue,
