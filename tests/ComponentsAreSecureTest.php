@@ -4,9 +4,9 @@ namespace Tests;
 
 use Livewire\Component;
 use Livewire\Exceptions\ComponentMismatchException;
-use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
+use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 
 class ComponentsAreSecureTest extends TestCase
 {
@@ -104,9 +104,13 @@ class SecurityTargetStub extends Component
     public $publicProperty = 'foo';
     protected $protectedProperty = 'bar';
 
-    public function publicMethod() {}
+    public function publicMethod()
+    {
+    }
 
-    protected function protectedMethod() {}
+    protected function protectedMethod()
+    {
+    }
 
     public function render()
     {
