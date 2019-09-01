@@ -20,6 +20,8 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
 
     public function __construct($data)
     {
+        // "instance" is here because we need it for testing,
+        // notice it's not included in the "toArray" method.
         $this->instance = $data['instance'];
         $this->id = $data['id'];
         $this->dom = $data['dom'];
