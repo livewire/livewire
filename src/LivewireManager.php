@@ -96,7 +96,7 @@ class LivewireManager
 <script>
     window.livewire = new Livewire({$options});
     document.addEventListener("DOMContentLoaded", function() {
-        window.livewire.start()
+        window.livewire.start();
         window.livewire_app_url = "{$appUrl}";
         window.livewire_token = "{$csrf}";
     });
