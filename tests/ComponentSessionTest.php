@@ -56,6 +56,7 @@ class ComponentSessionTest extends TestCase
         $component->call('$refresh');
 
         $this->assertCount(1, session()->all());
+        $this->assertCount(0, $component->gc);
     }
 }
 

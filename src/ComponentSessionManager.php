@@ -32,8 +32,10 @@ class ComponentSessionManager
         return session()->put("{$this->component->id}.{$key}", $value);
     }
 
-    public static function garbageCollect($componentId)
+    public static function garbageCollect(array $componentIds)
     {
-        session()->forget((array) $componentId);
+        session()->forget($componentIds);
+
+        return $componentIds;
     }
 }

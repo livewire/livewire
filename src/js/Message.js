@@ -1,3 +1,5 @@
+import store from '@/Store'
+
 export default class {
     constructor(component, actionQueue) {
         this.component = component
@@ -27,7 +29,12 @@ export default class {
                     payload: action.payload,
                 }
             }),
+            gc: this.garbageCollectionIds(),
         }
+    }
+
+    garbageCollectionIds() {
+        return store.getComponentsForCollection()
     }
 
     storeResponse(payload) {
@@ -41,6 +48,7 @@ export default class {
             events: payload.events,
             data: payload.data,
             redirectTo: payload.redirectTo,
+            gc: payload.gc,
         }
     }
 }

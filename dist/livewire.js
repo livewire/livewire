@@ -1740,6 +1740,49 @@ function () {
 
 /***/ }),
 
+/***/ "./src/js/Component/GarbageCollector.js":
+/*!**********************************************!*\
+  !*** ./src/js/Component/GarbageCollector.js ***!
+  \**********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GarbageCollector; });
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var GarbageCollector =
+/*#__PURE__*/
+function () {
+  function GarbageCollector(component) {
+    _classCallCheck(this, GarbageCollector);
+
+    this.component = component;
+    this.destroyedComponentIds = [];
+  }
+
+  _createClass(GarbageCollector, [{
+    key: "add",
+    value: function add(id) {
+      // If for some reason this component has already
+      // been garbage collected, leave it be.
+      if (this.destroyedComponentIds.includes(id)) return;
+      this.destroyedComponentIds.push(id);
+    }
+  }]);
+
+  return GarbageCollector;
+}();
+
+
+
+/***/ }),
+
 /***/ "./src/js/Component/LoadingManager.js":
 /*!********************************************!*\
   !*** ./src/js/Component/LoadingManager.js ***!
@@ -1986,6 +2029,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _LoadingManager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./LoadingManager */ "./src/js/Component/LoadingManager.js");
 /* harmony import */ var _DirtyManager__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./DirtyManager */ "./src/js/Component/DirtyManager.js");
 /* harmony import */ var _PrefetchManager__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./PrefetchManager */ "./src/js/Component/PrefetchManager.js");
+/* harmony import */ var _GarbageCollector__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./GarbageCollector */ "./src/js/Component/GarbageCollector.js");
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
@@ -2020,12 +2064,14 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
+
 var Component =
 /*#__PURE__*/
 function () {
   function Component(el, connection) {
     _classCallCheck(this, Component);
 
+    el.rawNode().__livewire = this;
     this.id = el.getAttribute('id');
     this.data = JSON.parse(el.getAttribute('data'));
     this.events = JSON.parse(el.getAttribute('events'));
@@ -2045,6 +2091,7 @@ function () {
     this.loadingManager = new _LoadingManager__WEBPACK_IMPORTED_MODULE_8__["default"]();
     this.dirtyManager = new _DirtyManager__WEBPACK_IMPORTED_MODULE_9__["default"](this);
     this.prefetchManager = new _PrefetchManager__WEBPACK_IMPORTED_MODULE_10__["default"](this);
+    this.garbageCollector = new _GarbageCollector__WEBPACK_IMPORTED_MODULE_11__["default"](this);
     this.initialize();
     this.dirtyManager.registerListener();
     this.registerEchoListeners();
@@ -2127,7 +2174,8 @@ function () {
     value: function handleResponse(response) {
       this.data = response.data;
       this.checksum = response.checksum;
-      this.children = response.children; // This means "$this->redirect()" was called in the component. let's just bail and redirect.
+      this.children = response.children;
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].setComponentsAsCollected(response.gc); // This means "$this->redirect()" was called in the component. let's just bail and redirect.
 
       if (response.redirectTo) {
         window.location.href = response.redirectTo;
@@ -2189,7 +2237,8 @@ function () {
           return new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node).transitionElementIn();
         },
         onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
-          return new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node).transitionElementOut(function (nodeDiscarded) {
+          var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
+          return el.transitionElementOut(function (nodeDiscarded) {
             // Cleanup after removed element.
             _this3.loadingManager.removeLoadingEl(nodeDiscarded);
           });
@@ -2198,6 +2247,10 @@ function () {
           // Elements with loading directives are stored, release this
           // element from storage because it no longer exists on the DOM.
           _this3.loadingManager.removeLoadingEl(node);
+
+          if (node.__livewire) {
+            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
+          }
         },
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(node) {//
         },
@@ -2370,11 +2423,14 @@ function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return _default; });
+/* harmony import */ var _Store__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Store */ "./src/js/Store.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+
 
 var _default =
 /*#__PURE__*/
@@ -2402,8 +2458,14 @@ function () {
             type: action.type,
             payload: action.payload
           };
-        })
+        }),
+        gc: this.garbageCollectionIds()
       };
+    }
+  }, {
+    key: "garbageCollectionIds",
+    value: function garbageCollectionIds() {
+      return _Store__WEBPACK_IMPORTED_MODULE_0__["default"].getComponentsForCollection();
     }
   }, {
     key: "storeResponse",
@@ -2417,7 +2479,8 @@ function () {
         eventQueue: payload.eventQueue,
         events: payload.events,
         data: payload.data,
-        redirectTo: payload.redirectTo
+        redirectTo: payload.redirectTo,
+        gc: payload.gc
       };
     }
   }, {
@@ -2498,6 +2561,15 @@ function (_Message) {
       }, _get(_getPrototypeOf(_default.prototype), "payload", this).call(this));
     }
   }, {
+    key: "garbageCollectionIds",
+    value: function garbageCollectionIds() {
+      // Bypass garbage collecting on prefetches,
+      // because they haven't "happened" yet,
+      // and we don't want to clear other
+      // component's sessions prematurely.
+      return [];
+    }
+  }, {
     key: "storeResponse",
     value: function storeResponse(payload) {
       _get(_getPrototypeOf(_default.prototype), "storeResponse", this).call(this, payload);
@@ -2555,8 +2627,7 @@ var store = {
     var _this2 = this;
 
     this.components().forEach(function (component) {
-      component.tearDown();
-      delete _this2.componentsById[component.id];
+      _this2.removeComponent(component.id);
     });
   },
   on: function on(event, callback) {
@@ -2591,6 +2662,39 @@ var store = {
   },
   afterDomUpdate: function afterDomUpdate(callback) {
     this.afterDomUpdateCallback = callback;
+  },
+  removeComponent: function removeComponent(component) {
+    // Remove event listeners attached to the DOM.
+    component.tearDown(); // Remove the component from the store.
+
+    delete this.componentsById[component.id]; // Add the component the queue for backend session garbage collection.
+
+    this.addComponentForCollection(component.id);
+  },
+  initializeGarbageCollection: function initializeGarbageCollection() {
+    if (!window.localStorage.hasOwnProperty(this.localStorageKey())) {
+      window.localStorage.setItem(this.localStorageKey(), '');
+    }
+
+    window.onbeforeunload = function () {
+      return 'Are you sure you want to leave?';
+    };
+  },
+  getComponentsForCollection: function getComponentsForCollection() {
+    var storedString = atob(window.localStorage.getItem(this.localStorageKey()));
+    if (storedString === '') return [];
+    return storedString.split(',');
+  },
+  addComponentForCollection: function addComponentForCollection(componentId) {
+    return window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().concat(componentId).join(',')));
+  },
+  setComponentsAsCollected: function setComponentsAsCollected(componentIds) {
+    window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().filter(function (id) {
+      return !componentIds.includes(id);
+    }).join(',')));
+  },
+  localStorageKey: function localStorageKey() {
+    return btoa(window.location.host + 'livewire');
   }
 };
 /* harmony default export */ __webpack_exports__["default"] = (store);
@@ -4827,6 +4931,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
+
 var Livewire =
 /*#__PURE__*/
 function () {
@@ -4846,6 +4951,7 @@ function () {
     this.onLoadCallback = function () {};
 
     this.activatePolyfills();
+    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].initializeGarbageCollection();
   }
 
   _createClass(Livewire, [{

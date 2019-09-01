@@ -26,8 +26,7 @@ const store = {
 
     tearDownComponents() {
         this.components().forEach(component => {
-            component.tearDown()
-            delete this.componentsById[component.id]
+            this.removeComponent(component.id)
         })
     },
 
@@ -64,6 +63,50 @@ const store = {
     afterDomUpdate(callback) {
         this.afterDomUpdateCallback = callback
     },
+
+    removeComponent(component) {
+        // Remove event listeners attached to the DOM.
+        component.tearDown()
+        // Remove the component from the store.
+        delete this.componentsById[component.id]
+        // Add the component the queue for backend session garbage collection.
+        this.addComponentForCollection(component.id)
+    },
+
+    initializeGarbageCollection()
+    {
+        if (! window.localStorage.hasOwnProperty(this.localStorageKey())) {
+            window.localStorage.setItem(this.localStorageKey(), '')
+        }
+
+        window.onbeforeunload = function(){
+            return 'Are you sure you want to leave?';
+        };
+    },
+
+    getComponentsForCollection() {
+        const storedString = atob(window.localStorage.getItem(this.localStorageKey()))
+
+        if (storedString === '') return []
+
+        return storedString.split(',')
+    },
+
+    addComponentForCollection(componentId) {
+        return window.localStorage.setItem(this.localStorageKey(),
+            btoa(this.getComponentsForCollection().concat(componentId).join(','))
+        )
+    },
+
+    setComponentsAsCollected(componentIds) {
+        window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().filter(
+            id => ! componentIds.includes(id)
+        ).join(',')))
+    },
+
+    localStorageKey() {
+        return btoa(window.location.host + 'livewire')
+    }
 }
 
 export default store

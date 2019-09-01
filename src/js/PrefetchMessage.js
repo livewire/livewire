@@ -16,6 +16,14 @@ export default class extends Message {
         }
     }
 
+    garbageCollectionIds() {
+        // Bypass garbage collecting on prefetches,
+        // because they haven't "happened" yet,
+        // and we don't want to clear other
+        // component's sessions prematurely.
+        return []
+    }
+
     storeResponse(payload) {
         super.storeResponse(payload)
 

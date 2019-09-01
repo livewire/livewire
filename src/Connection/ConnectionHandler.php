@@ -12,8 +12,6 @@ abstract class ConnectionHandler
 {
     public function handle($payload)
     {
-        ComponentSessionManager::garbageCollect($payload['gc']);
-
         $instance = ComponentHydrator::hydrate($payload['name'], $payload['id'], $payload['data'], $payload['checksum']);
 
         $instance->setPreviouslyRenderedChildren($payload['children']);
@@ -47,6 +45,7 @@ abstract class ConnectionHandler
             'data' => $data,
             'redirectTo' => $instance->redirectTo ?? false,
             'fromPrefetch' => $payload['fromPrefetch'] ?? false,
+            'gc' => ComponentSessionManager::garbageCollect($payload['gc']),
         ]);
 
         if (empty($instance->redirectTo)) {
