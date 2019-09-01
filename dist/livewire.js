@@ -2238,6 +2238,11 @@ function () {
         },
         onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
+
+          if (node.__livewire) {
+            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
+          }
+
           return el.transitionElementOut(function (nodeDiscarded) {
             // Cleanup after removed element.
             _this3.loadingManager.removeLoadingEl(nodeDiscarded);
@@ -2247,10 +2252,6 @@ function () {
           // Elements with loading directives are stored, release this
           // element from storage because it no longer exists on the DOM.
           _this3.loadingManager.removeLoadingEl(node);
-
-          if (node.__livewire) {
-            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
-          }
         },
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(node) {//
         },
@@ -2613,7 +2614,7 @@ var store = {
     var _this2 = this;
 
     this.components().forEach(function (component) {
-      _this2.removeComponent(component.id);
+      _this2.removeComponent(component);
     });
   },
   on: function on(event, callback) {

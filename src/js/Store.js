@@ -26,7 +26,7 @@ const store = {
 
     tearDownComponents() {
         this.components().forEach(component => {
-            this.removeComponent(component.id)
+            this.removeComponent(component)
         })
     },
 
