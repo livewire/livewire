@@ -2,8 +2,6 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Arr;
-
 class ComponentSessionManager
 {
     protected $component;
