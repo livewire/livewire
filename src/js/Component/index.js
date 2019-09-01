@@ -210,10 +210,6 @@ export default class Component {
             onBeforeNodeDiscarded: node => {
                 const el = new DOMElement(node)
 
-                if (node.__livewire) {
-                    store.removeComponent(node.__livewire)
-                }
-
                 return el.transitionElementOut(nodeDiscarded => {
                     // Cleanup after removed element.
                     this.loadingManager.removeLoadingEl(nodeDiscarded)
@@ -224,6 +220,10 @@ export default class Component {
                 // Elements with loading directives are stored, release this
                 // element from storage because it no longer exists on the DOM.
                 this.loadingManager.removeLoadingEl(node)
+
+                if (node.__livewire) {
+                    store.removeComponent(node.__livewire)
+                }
             },
 
             onBeforeElChildrenUpdated: node => {
