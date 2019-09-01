@@ -89,7 +89,7 @@ class LivewireManager
         $csrf = csrf_token();
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
 
-        return <<<EOT
+        return <<<HTML
 <!-- Livewire Assets-->
 <style>[wire\:loading] { display: none; } [wire\:dirty]:not(textarea):not(input):not(select) { display: none; }</style>
 <script src="{$fullAssetPath}"></script>
@@ -101,7 +101,7 @@ class LivewireManager
         window.livewire_token = "{$csrf}";
     });
 </script>
-EOT;
+HTML;
     }
 
     public function mount($name, ...$options)
