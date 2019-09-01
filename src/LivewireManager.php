@@ -79,7 +79,9 @@ class LivewireManager
 
         $options = $options ? json_encode($options) : '';
 
-        $jsFileName = config('app.debug')
+        $debug = config('app.debug');
+
+        $jsFileName = $debug
             ? '/livewire.js'
             : '/livewire.min.js';
 
@@ -113,15 +115,12 @@ HTML;
 </script>
 HTML;
 
-        $html = [];
-
-        if (config('app.debug')) {
-            $html[] = '<!-- Livewire Assets-->';
-        } else {
+        if (! $debug) {
             $styles = preg_replace('~(\v|\t|\s{2,})~m', '', $styles);
             $script = preg_replace('~(\v|\t|\s{2,})~m', '', $script);
         }
 
+        $html = $debug ? ['<!-- Livewire Assets-->'] : [];
         $html[] = $styles;
         $html[] = "<script src=\"{$fullAssetPath}\"></script>";
         $html[] = $script;
