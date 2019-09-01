@@ -9,7 +9,6 @@ import store from '@/Store'
 import LoadingManager from './LoadingManager'
 import DirtyManager from './DirtyManager'
 import PrefetchManager from './PrefetchManager'
-import GarbageCollector from './GarbageCollector'
 
 export default class Component {
     constructor(el, connection) {
@@ -33,7 +32,6 @@ export default class Component {
         this.loadingManager = new LoadingManager
         this.dirtyManager = new DirtyManager(this)
         this.prefetchManager = new PrefetchManager(this)
-        this.garbageCollector = new GarbageCollector(this)
 
         this.initialize()
 

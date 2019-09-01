@@ -1740,49 +1740,6 @@ function () {
 
 /***/ }),
 
-/***/ "./src/js/Component/GarbageCollector.js":
-/*!**********************************************!*\
-  !*** ./src/js/Component/GarbageCollector.js ***!
-  \**********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GarbageCollector; });
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-var GarbageCollector =
-/*#__PURE__*/
-function () {
-  function GarbageCollector(component) {
-    _classCallCheck(this, GarbageCollector);
-
-    this.component = component;
-    this.destroyedComponentIds = [];
-  }
-
-  _createClass(GarbageCollector, [{
-    key: "add",
-    value: function add(id) {
-      // If for some reason this component has already
-      // been garbage collected, leave it be.
-      if (this.destroyedComponentIds.includes(id)) return;
-      this.destroyedComponentIds.push(id);
-    }
-  }]);
-
-  return GarbageCollector;
-}();
-
-
-
-/***/ }),
-
 /***/ "./src/js/Component/LoadingManager.js":
 /*!********************************************!*\
   !*** ./src/js/Component/LoadingManager.js ***!
@@ -2029,7 +1986,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _LoadingManager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./LoadingManager */ "./src/js/Component/LoadingManager.js");
 /* harmony import */ var _DirtyManager__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./DirtyManager */ "./src/js/Component/DirtyManager.js");
 /* harmony import */ var _PrefetchManager__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./PrefetchManager */ "./src/js/Component/PrefetchManager.js");
-/* harmony import */ var _GarbageCollector__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./GarbageCollector */ "./src/js/Component/GarbageCollector.js");
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
@@ -2051,7 +2007,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
 
 
 
@@ -2091,7 +2046,6 @@ function () {
     this.loadingManager = new _LoadingManager__WEBPACK_IMPORTED_MODULE_8__["default"]();
     this.dirtyManager = new _DirtyManager__WEBPACK_IMPORTED_MODULE_9__["default"](this);
     this.prefetchManager = new _PrefetchManager__WEBPACK_IMPORTED_MODULE_10__["default"](this);
-    this.garbageCollector = new _GarbageCollector__WEBPACK_IMPORTED_MODULE_11__["default"](this);
     this.initialize();
     this.dirtyManager.registerListener();
     this.registerEchoListeners();
