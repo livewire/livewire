@@ -102,14 +102,4 @@ trait InteractsWithProperties
             ->pluck('name')
             ->search($propertyName) !== false;
     }
-
-    public function propertyIsNotPublicAndNotDefinedOnBaseClass($propertyName)
-    {
-        return collect((new \ReflectionClass($this))->getProperties(\ReflectionMethod::IS_PROTECTED | \ReflectionMethod::IS_PRIVATE))
-            ->reject(function ($property) {
-                return $property->class === self::class;
-            })
-            ->pluck('name')
-            ->search($propertyName) !== false;
-    }
 }
