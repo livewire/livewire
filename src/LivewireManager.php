@@ -89,19 +89,44 @@ class LivewireManager
         $csrf = csrf_token();
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
 
-        return <<<HTML
-<!-- Livewire Assets-->
-<style>[wire\:loading] { display: none; } [wire\:dirty]:not(textarea):not(input):not(select) { display: none; }</style>
-<script src="{$fullAssetPath}"></script>
+        $styles = <<<HTML
+<style>
+    [wire\:loading] {
+        display: none;
+    }
+
+    [wire\:dirty]:not(textarea):not(input):not(select) {
+        display: none;
+    }
+</style>
+HTML;
+
+        $script = <<<HTML
 <script>
     window.livewire = new Livewire({$options});
-    document.addEventListener("DOMContentLoaded", function() {
+
+    document.addEventListener('DOMContentLoaded', function() {
         window.livewire.start();
-        window.livewire_app_url = "{$appUrl}";
-        window.livewire_token = "{$csrf}";
+        window.livewire_app_url = '{$appUrl}';
+        window.livewire_token = '{$csrf}';
     });
 </script>
 HTML;
+
+        $html = [];
+
+        if (config('app.debug')) {
+            $html[] = '<!-- Livewire Assets-->';
+        } else {
+            $styles = preg_replace('~(\v|\t|\s{2,})~m', '', $styles);
+            $script = preg_replace('~(\v|\t|\s{2,})~m', '', $script);
+        }
+
+        $html[] = $styles;
+        $html[] = "<script src=\"{$fullAssetPath}\"></script>";
+        $html[] = $script;
+
+        return implode("\n", $html);
     }
 
     public function mount($name, ...$options)
