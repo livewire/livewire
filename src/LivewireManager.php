@@ -131,6 +131,7 @@ EOT;
         $middleware = encrypt($middlewareStack, $serialize = true);
 
         return new InitialResponsePayload([
+            'instance' => $instance,
             'id' => $id,
             'dom' => $dom,
             'data' => $properties,

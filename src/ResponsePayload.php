@@ -17,6 +17,7 @@ class ResponsePayload implements Arrayable, Jsonable
     public $dirtyInputs;
     public $events;
     public $fromPrefetch;
+    public $gc;
 
     public function __construct($data)
     {
@@ -30,6 +31,7 @@ class ResponsePayload implements Arrayable, Jsonable
         $this->dirtyInputs = $data['dirtyInputs'];
         $this->events = $data['events'];
         $this->fromPrefetch = $data['fromPrefetch'];
+        $this->gc = $data['gc'];
     }
 
     public function toArray()
@@ -45,6 +47,7 @@ class ResponsePayload implements Arrayable, Jsonable
             'dirtyInputs' => $this->dirtyInputs,
             'events' => $this->events,
             'fromPrefetch' => $this->fromPrefetch,
+            'gc' => $this->gc,
         ];
     }
 

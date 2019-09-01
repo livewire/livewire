@@ -8,7 +8,14 @@ trait MakesAssertions
 {
     public function assertSet($name, $value)
     {
-        PHPUnit::assertEquals((string) $value, $this->data[$name]);
+        PHPUnit::assertEquals((string) $value, $this->instance->getPropertyValue($name));
+
+        return $this;
+    }
+
+    public function assertSessionHas($key)
+    {
+        PHPUnit::assertTrue($this->instance->session()->has($key));
 
         return $this;
     }

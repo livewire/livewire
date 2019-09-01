@@ -21,6 +21,21 @@ trait InteractsWithProperties
         return $data;
     }
 
+    public function getProtectedOrPrivatePropertiesDefinedBySubClass()
+    {
+        $properties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PROTECTED | \ReflectionProperty::IS_PRIVATE);
+        $data = [];
+
+        foreach ($properties as $property) {
+            if ($property->getDeclaringClass()->getName() !== self::class) {
+                $property->setAccessible(true);
+                $data[$property->getName()] = $property->getValue($this);
+            }
+        }
+
+        return $data;
+    }
+
     public function hasProperty($prop)
     {
         return property_exists(
@@ -55,6 +70,11 @@ trait InteractsWithProperties
             );
         }
 
+        return $this->{$name} = $value;
+    }
+
+    public function setProtectedPropertyValue($name, $value)
+    {
         return $this->{$name} = $value;
     }
 

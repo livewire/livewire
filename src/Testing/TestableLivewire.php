@@ -19,6 +19,7 @@ class TestableLivewire
     public $events;
     public $eventQueue;
     public $redirectTo;
+    public $gc;
 
     use Concerns\HasFunLittleUtilities,
         Concerns\MakesCallsToComponent,
@@ -47,8 +48,9 @@ class TestableLivewire
         $this->data = $output->data;
         $this->children = $output->children;
         $this->events = $output->events;
+        $this->instance = $output->instance;
         $this->checksum = $output->checksum;
-        $this->instance = ComponentHydrator::hydrate($this->name, $this->id, $this->data, $this->checksum);
+        $this->gc = [];
     }
 
     public function updateComponent($output)
@@ -62,17 +64,22 @@ class TestableLivewire
         $this->events = $output->events;
         $this->redirectTo = $output->redirectTo;
         $this->eventQueue = $output->eventQueue;
+
+        // Imitate the front-end clearing the garbage collector
+        // of ids that have already been garbage collected.
+        $this->gc = array_diff($this->gc, $output->gc);
+
         $this->instance = ComponentHydrator::hydrate($this->name, $this->id, $this->data, $this->checksum);
     }
 
     public function __get($property)
     {
-        return $this->instance->{$property};
+        return $this->instance->getPropertyValue($property);
     }
 
     public function __call($method, $params)
     {
-        return $this->runAction($method, $params);
+        return $this->call($method, $params);
     }
 
     public function __set($name, $value)

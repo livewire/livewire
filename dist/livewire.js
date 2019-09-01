@@ -2026,6 +2026,7 @@ function () {
   function Component(el, connection) {
     _classCallCheck(this, Component);
 
+    el.rawNode().__livewire = this;
     this.id = el.getAttribute('id');
     this.data = JSON.parse(el.getAttribute('data'));
     this.events = JSON.parse(el.getAttribute('events'));
@@ -2127,7 +2128,8 @@ function () {
     value: function handleResponse(response) {
       this.data = response.data;
       this.checksum = response.checksum;
-      this.children = response.children; // This means "$this->redirect()" was called in the component. let's just bail and redirect.
+      this.children = response.children;
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].setComponentsAsCollected(response.gc); // This means "$this->redirect()" was called in the component. let's just bail and redirect.
 
       if (response.redirectTo) {
         window.location.href = response.redirectTo;
@@ -2189,7 +2191,8 @@ function () {
           return new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node).transitionElementIn();
         },
         onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
-          return new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node).transitionElementOut(function (nodeDiscarded) {
+          var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
+          return el.transitionElementOut(function (nodeDiscarded) {
             // Cleanup after removed element.
             _this3.loadingManager.removeLoadingEl(nodeDiscarded);
           });
@@ -2198,6 +2201,10 @@ function () {
           // Elements with loading directives are stored, release this
           // element from storage because it no longer exists on the DOM.
           _this3.loadingManager.removeLoadingEl(node);
+
+          if (node.__livewire) {
+            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
+          }
         },
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(node) {//
         },
@@ -2370,11 +2377,14 @@ function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return _default; });
+/* harmony import */ var _Store__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Store */ "./src/js/Store.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+
 
 var _default =
 /*#__PURE__*/
@@ -2402,7 +2412,8 @@ function () {
             type: action.type,
             payload: action.payload
           };
-        })
+        }),
+        gc: _Store__WEBPACK_IMPORTED_MODULE_0__["default"].getComponentsForCollection()
       };
     }
   }, {
@@ -2417,7 +2428,8 @@ function () {
         eventQueue: payload.eventQueue,
         events: payload.events,
         data: payload.data,
-        redirectTo: payload.redirectTo
+        redirectTo: payload.redirectTo,
+        gc: payload.gc
       };
     }
   }, {
@@ -2555,8 +2567,7 @@ var store = {
     var _this2 = this;
 
     this.components().forEach(function (component) {
-      component.tearDown();
-      delete _this2.componentsById[component.id];
+      _this2.removeComponent(component);
     });
   },
   on: function on(event, callback) {
@@ -2591,6 +2602,35 @@ var store = {
   },
   afterDomUpdate: function afterDomUpdate(callback) {
     this.afterDomUpdateCallback = callback;
+  },
+  removeComponent: function removeComponent(component) {
+    // Remove event listeners attached to the DOM.
+    component.tearDown(); // Remove the component from the store.
+
+    delete this.componentsById[component.id]; // Add the component the queue for backend session garbage collection.
+
+    this.addComponentForCollection(component.id);
+  },
+  initializeGarbageCollection: function initializeGarbageCollection() {
+    if (!window.localStorage.hasOwnProperty(this.localStorageKey())) {
+      window.localStorage.setItem(this.localStorageKey(), '');
+    }
+  },
+  getComponentsForCollection: function getComponentsForCollection() {
+    var storedString = atob(window.localStorage.getItem(this.localStorageKey()));
+    if (storedString === '') return [];
+    return storedString.split(',');
+  },
+  addComponentForCollection: function addComponentForCollection(componentId) {
+    return window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().concat(componentId).join(',')));
+  },
+  setComponentsAsCollected: function setComponentsAsCollected(componentIds) {
+    window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().filter(function (id) {
+      return !componentIds.includes(id);
+    }).join(',')));
+  },
+  localStorageKey: function localStorageKey() {
+    return btoa(window.location.host + 'livewire');
   }
 };
 /* harmony default export */ __webpack_exports__["default"] = (store);
@@ -4827,6 +4867,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
+
 var Livewire =
 /*#__PURE__*/
 function () {
@@ -4846,6 +4887,7 @@ function () {
     this.onLoadCallback = function () {};
 
     this.activatePolyfills();
+    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].initializeGarbageCollection();
   }
 
   _createClass(Livewire, [{
@@ -4897,7 +4939,12 @@ function () {
         _this.components.addComponent(new _Component_index__WEBPACK_IMPORTED_MODULE_2__["default"](el, _this.connection));
       });
       this.onLoadCallback();
-      Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:load');
+      Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:load'); // This is very important for garbage collecting components
+      // on the backend.
+
+      window.addEventListener('beforeunload', function () {
+        _Store__WEBPACK_IMPORTED_MODULE_0__["default"].tearDownComponents();
+      });
     }
   }, {
     key: "rescan",
