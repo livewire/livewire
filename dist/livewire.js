@@ -2459,13 +2459,8 @@ function () {
             payload: action.payload
           };
         }),
-        gc: this.garbageCollectionIds()
+        gc: _Store__WEBPACK_IMPORTED_MODULE_0__["default"].getComponentsForCollection()
       };
-    }
-  }, {
-    key: "garbageCollectionIds",
-    value: function garbageCollectionIds() {
-      return _Store__WEBPACK_IMPORTED_MODULE_0__["default"].getComponentsForCollection();
     }
   }, {
     key: "storeResponse",
@@ -2559,15 +2554,6 @@ function (_Message) {
       return _objectSpread({
         fromPrefetch: this.prefetchId
       }, _get(_getPrototypeOf(_default.prototype), "payload", this).call(this));
-    }
-  }, {
-    key: "garbageCollectionIds",
-    value: function garbageCollectionIds() {
-      // Bypass garbage collecting on prefetches,
-      // because they haven't "happened" yet,
-      // and we don't want to clear other
-      // component's sessions prematurely.
-      return [];
     }
   }, {
     key: "storeResponse",

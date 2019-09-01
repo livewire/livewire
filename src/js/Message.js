@@ -29,12 +29,8 @@ export default class {
                     payload: action.payload,
                 }
             }),
-            gc: this.garbageCollectionIds(),
+            gc: store.getComponentsForCollection(),
         }
-    }
-
-    garbageCollectionIds() {
-        return store.getComponentsForCollection()
     }
 
     storeResponse(payload) {
