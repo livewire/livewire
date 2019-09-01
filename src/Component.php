@@ -2,14 +2,13 @@
 
 namespace Livewire;
 
-use BadMethodCallException;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\Str;
-use Illuminate\Support\ViewErrorBag;
 use Illuminate\View\View;
-use Livewire\ComponentSessionManager;
+use BadMethodCallException;
+use Illuminate\Support\Str;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Exceptions\CannotAddEloquentModelsAsPublicPropertyException;
 
 abstract class Component
