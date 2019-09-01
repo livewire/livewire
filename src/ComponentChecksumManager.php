@@ -6,17 +6,15 @@ class ComponentChecksumManager
 {
     public function generate($name, $id, $data)
     {
+        $hashKey = app('encrypter')->getKey();
+
         $stringForHashing = $name.$id.json_encode($data);
 
-        return password_hash($stringForHashing, PASSWORD_BCRYPT, [
-            'cost' => 5,
-        ]);
+        return hash_hmac('sha256', $stringForHashing, $hashKey);
     }
 
     public function check($checksum, $name, $id, $data)
     {
-        $sourceString = $name.$id.json_encode($data);
-
-        return password_verify($sourceString, $checksum);
+        return hash_equals($this->generate($name, $id, $data), $checksum);
     }
 }
