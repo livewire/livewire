@@ -78,10 +78,6 @@ const store = {
         if (! window.localStorage.hasOwnProperty(this.localStorageKey())) {
             window.localStorage.setItem(this.localStorageKey(), '')
         }
-
-        window.onbeforeunload = function(){
-            return 'Are you sure you want to leave?';
-        };
     },
 
     getComponentsForCollection() {

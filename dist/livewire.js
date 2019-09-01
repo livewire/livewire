@@ -2615,10 +2615,6 @@ var store = {
     if (!window.localStorage.hasOwnProperty(this.localStorageKey())) {
       window.localStorage.setItem(this.localStorageKey(), '');
     }
-
-    window.onbeforeunload = function () {
-      return 'Are you sure you want to leave?';
-    };
   },
   getComponentsForCollection: function getComponentsForCollection() {
     var storedString = atob(window.localStorage.getItem(this.localStorageKey()));
@@ -4943,7 +4939,12 @@ function () {
         _this.components.addComponent(new _Component_index__WEBPACK_IMPORTED_MODULE_2__["default"](el, _this.connection));
       });
       this.onLoadCallback();
-      Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:load');
+      Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:load'); // This is very important for garbage collecting components
+      // on the backend.
+
+      window.addEventListener('beforeunload', function () {
+        _Store__WEBPACK_IMPORTED_MODULE_0__["default"].tearDownComponents();
+      });
     }
   }, {
     key: "rescan",
