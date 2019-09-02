@@ -1,7 +1,5 @@
 <?php
 
-$namespace = (Application::getNameSpace() ? Application::getNameSpace() : 'App');
-
 return [
 
     /*
@@ -15,7 +13,7 @@ return [
     |
     */
 
-    'namespace' => env('APP_NAMESPACE', $namespace),
+    'namespace' => env('APP_NAMESPACE', 'App'),
 
     /*
     |--------------------------------------------------------------------------
