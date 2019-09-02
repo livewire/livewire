@@ -5,7 +5,6 @@ namespace Livewire\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Livewire\LivewireComponentsFinder;
-use Livewire\Commands\LivewireMakeCommandParser;
 use Illuminate\Console\DetectsApplicationNamespace;
 
 class LivewireRemoveCommand extends Command

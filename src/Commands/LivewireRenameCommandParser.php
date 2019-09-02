@@ -2,7 +2,6 @@
 
 namespace Livewire\Commands;
 
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class LivewireRenameCommandParser
