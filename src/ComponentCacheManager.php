@@ -33,7 +33,8 @@ class ComponentCacheManager
 
         Arr::set($componentCache, $key, $value);
 
-        return cache()->put("{$this->component->id}", $componentCache);
+        // Ideally these caches will get garbage collected, but if not, kill them after 3 days.
+        return cache()->put("{$this->component->id}", $componentCache, $forThreeDays = 259200);
     }
 
     protected function getFullComponentCache() {
