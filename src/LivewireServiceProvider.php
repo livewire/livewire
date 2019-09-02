@@ -12,9 +12,12 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Engines\PhpEngine;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Commands\LivewireCopyCommand;
 use Livewire\Commands\LivewireMakeCommand;
 use Livewire\Exceptions\BypassViewHandler;
 use Illuminate\View\Engines\CompilerEngine;
+use Livewire\Commands\LivewireRemoveCommand;
+use Livewire\Commands\LivewireRenameCommand;
 use Livewire\Commands\LivewireDestroyCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Illuminate\Support\Facades\Route as RouteFacade;
@@ -28,7 +31,9 @@ class LivewireServiceProvider extends ServiceProvider
         $this->app->singleton('livewire', LivewireManager::class);
 
         $this->app->instance(LivewireComponentsFinder::class, new LivewireComponentsFinder(
-            new Filesystem, app()->bootstrapPath('cache/livewire-components.php'), app_path('Http/Livewire')
+            new Filesystem,
+            app()->bootstrapPath('cache/livewire-components.php'),
+            app_path('Http/Livewire')
         ));
 
         $this->allowCertainExceptionsToBypassTheBladeViewHandler();
@@ -95,6 +100,9 @@ class LivewireServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 LivewireMakeCommand::class,
+                LivewireRenameCommand::class,
+                LivewireCopyCommand::class,
+                LivewireRemoveCommand::class,
                 LivewireDestroyCommand::class,
             ]);
 
