@@ -75,7 +75,7 @@ class LivewireManager
 
     public function assets($options = [])
     {
-        $appUrl = rtrim($options['base_url'] ?? '', '/');
+        $appUrl = rtrim(config('livewire.base_url', $options['base_url'] ?? '', '/'));
 
         $options = $options ? json_encode($options) : '';
 

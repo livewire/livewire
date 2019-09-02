@@ -46,7 +46,7 @@ abstract class Component
     public function getName()
     {
         return collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
-            ->diff(['App', 'Http', 'Livewire'])
+            ->diff([config('livewire.namespace'), 'Http', 'Livewire'])
             ->map([Str::class, 'kebab'])
             ->implode('.');
     }
