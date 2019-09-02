@@ -57,7 +57,9 @@ class LivewireCopyCommand extends Command
 
             return false;
         }
+
         $this->ensureDirectoryExists($this->parser->newViewPath());
+
         return File::copy("{$this->parser->viewPath()}", $this->parser->newViewPath());
     }
 

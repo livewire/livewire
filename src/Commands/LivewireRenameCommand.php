@@ -59,7 +59,9 @@ class LivewireRenameCommand extends Command
 
             return false;
         }
+
         $this->ensureDirectoryExists($this->parser->newViewPath());
+
         return File::move($this->parser->viewPath(), $this->parser->newViewPath());
     }
 

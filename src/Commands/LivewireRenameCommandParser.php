@@ -109,7 +109,7 @@ class LivewireRenameCommandParser
 
         return preg_replace_array(
             ["/namespace {$escapedClassNamespace}/", "/class {$this->className()}/", "/{$this->viewName()}/"],
-            ["namespace {$this->newClassNamespace()}", "class {$this->newClassName()}", $this->newViewName() ],
+            ["namespace {$this->newClassNamespace()}", "class {$this->newClassName()}", $this->newViewName()],
             $originalFile
         );
     }

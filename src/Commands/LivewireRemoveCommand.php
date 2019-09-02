@@ -38,7 +38,7 @@ class LivewireRemoveCommand extends Command
 
     protected function removeClass()
     {
-        if (!File::exists($this->parser->classPath())) {
+        if (! File::exists($this->parser->classPath())) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
             $this->line("<fg=red;options=bold>Class does not exist:</> {$this->parser->relativeClassPath()}");
 
@@ -50,11 +50,12 @@ class LivewireRemoveCommand extends Command
 
     protected function removeView()
     {
-        if (!File::exists($this->parser->viewPath())) {
+        if (! File::exists($this->parser->viewPath())) {
             $this->line("<fg=red;options=bold>View does not exist:</> {$this->parser->relativeViewPath()}");
 
             return false;
         }
+
         return File::delete($this->parser->viewPath());
     }
 
