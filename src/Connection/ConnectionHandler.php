@@ -4,7 +4,7 @@ namespace Livewire\Connection;
 
 use Livewire\ResponsePayload;
 use Livewire\Routing\Redirector;
-use Livewire\ComponentSessionManager;
+use Livewire\ComponentCacheManager;
 use Livewire\ComponentChecksumManager;
 use Illuminate\Validation\ValidationException;
 
@@ -45,7 +45,7 @@ abstract class ConnectionHandler
             'data' => $data,
             'redirectTo' => $instance->redirectTo ?? false,
             'fromPrefetch' => $payload['fromPrefetch'] ?? false,
-            'gc' => ComponentSessionManager::garbageCollect($payload['gc']),
+            'gc' => ComponentCacheManager::garbageCollect($payload['gc']),
         ]);
 
         if (empty($instance->redirectTo)) {

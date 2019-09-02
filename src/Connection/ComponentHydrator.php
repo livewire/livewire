@@ -2,7 +2,7 @@
 
 namespace Livewire\Connection;
 
-use Livewire\ComponentSessionManager;
+use Livewire\ComponentCacheManager;
 use Livewire\ComponentChecksumManager;
 use Livewire\Exceptions\ComponentMismatchException;
 
@@ -12,8 +12,8 @@ class ComponentHydrator
     {
         // Store the protected properties in the session.
         if ($protectedOrPrivateProperties = $instance->getProtectedOrPrivatePropertiesDefinedBySubClass()) {
-            (new ComponentSessionManager($instance))->put(
-                'protected_properties',
+            (new ComponentCacheManager($instance))->put(
+                '__protected_properties',
                 $protectedOrPrivateProperties
             );
         }
@@ -35,8 +35,8 @@ class ComponentHydrator
         $unHydratedInstance = new $class($id);
 
         // Grab the protected properties out of the session.
-        $protectedOrPrivateProperties = (new ComponentSessionManager($unHydratedInstance))
-            ->get('protected_properties', []);
+        $protectedOrPrivateProperties = (new ComponentCacheManager($unHydratedInstance))
+            ->get('__protected_properties', []);
 
         return tap($unHydratedInstance, function ($unHydratedInstance) use ($publicProperties, $protectedOrPrivateProperties) {
             foreach ($publicProperties as $property => $value) {

@@ -2,7 +2,9 @@
 
 namespace Livewire;
 
-class ComponentSessionManager
+use Illuminate\Support\Arr;
+
+class ComponentCacheManager
 {
     protected $component;
 
@@ -22,17 +24,27 @@ class ComponentSessionManager
 
     public function get($key, $default = null)
     {
-        return session()->get("{$this->component->id}.{$key}", $default);
+        return Arr::get($this->getFullComponentCache(), $key, $default);
     }
 
     public function put($key, $value)
     {
-        return session()->put("{$this->component->id}.{$key}", $value);
+        $componentCache = $this->getFullComponentCache();
+
+        Arr::set($componentCache, $key, $value);
+
+        return cache()->put("{$this->component->id}", $componentCache);
+    }
+
+    protected function getFullComponentCache() {
+        return cache()->get("{$this->component->id}", []);
     }
 
     public static function garbageCollect(array $componentIds)
     {
-        session()->forget($componentIds);
+        foreach ($componentIds as $componentId) {
+            cache()->forget($componentId);
+        }
 
         return $componentIds;
     }

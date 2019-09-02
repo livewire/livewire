@@ -58,7 +58,7 @@ abstract class Component
 
     public function session($key = null, $value = null)
     {
-        $sessionManager = new ComponentSessionManager($this);
+        $sessionManager = new ComponentCacheManager($this);
 
         if (is_null($key)) {
             return $sessionManager;
