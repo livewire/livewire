@@ -101,7 +101,7 @@ const store = {
     },
 
     localStorageKey() {
-        return btoa(window.location.host + 'livewire')
+        return 'livewire'
     }
 }
 

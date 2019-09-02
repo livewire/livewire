@@ -2607,7 +2607,7 @@ var store = {
     // Remove event listeners attached to the DOM.
     component.tearDown(); // Remove the component from the store.
 
-    delete this.componentsById[component.id]; // Add the component the queue for backend session garbage collection.
+    delete this.componentsById[component.id]; // Add the component the queue for backend cache garbage collection.
 
     this.addComponentForCollection(component.id);
   },
@@ -2630,7 +2630,7 @@ var store = {
     }).join(',')));
   },
   localStorageKey: function localStorageKey() {
-    return btoa(window.location.host + 'livewire');
+    return 'livewire';
   }
 };
 /* harmony default export */ __webpack_exports__["default"] = (store);
