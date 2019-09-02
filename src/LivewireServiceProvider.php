@@ -33,7 +33,7 @@ class LivewireServiceProvider extends ServiceProvider
 
         $this->allowCertainExceptionsToBypassTheBladeViewHandler();
 
-        $this->mergeConfigFrom(__DIR__.'/../config/livewire.php','livewire');
+        $this->mergeConfigFrom(__DIR__.'/../config/livewire.php', 'livewire');
     }
 
     public function allowCertainExceptionsToBypassTheBladeViewHandler()
@@ -76,7 +76,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerBladeDirectives();
 
         $this->publishes([
-            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php')
+            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
         ], 'config');
     }
 

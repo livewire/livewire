@@ -40,6 +40,6 @@ return [
     |
     */
 
-    'base_url'  => env('LIVEWIRE_BASE_URL', '/')
+    'base_url'  => env('LIVEWIRE_BASE_URL', '/'),
 ];
 /*  */
