@@ -13,9 +13,9 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertSessionHas($key)
+    public function assertCacheHas($key)
     {
-        PHPUnit::assertTrue($this->instance->session()->has($key));
+        PHPUnit::assertTrue($this->instance->cache()->has($key));
 
         return $this;
     }

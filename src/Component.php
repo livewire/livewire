@@ -56,19 +56,19 @@ abstract class Component
         return view("livewire.{$this->getName()}");
     }
 
-    public function session($key = null, $value = null)
+    public function cache($key = null, $value = null)
     {
-        $sessionManager = new ComponentCacheManager($this);
+        $cacheManager = new ComponentCacheManager($this);
 
         if (is_null($key)) {
-            return $sessionManager;
+            return $cacheManager;
         }
 
         if (is_null($value)) {
-            return $sessionManager->get($key);
+            return $cacheManager->get($key);
         }
 
-        return $sessionManager->put($key, $value);
+        return $cacheManager->put($key, $value);
     }
 
     public function output($errors = null)

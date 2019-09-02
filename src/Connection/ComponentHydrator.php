@@ -10,7 +10,7 @@ class ComponentHydrator
 {
     public static function dehydrate($instance)
     {
-        // Store the protected properties in the session.
+        // Store the protected properties in the cache.
         if ($protectedOrPrivateProperties = $instance->getProtectedOrPrivatePropertiesDefinedBySubClass()) {
             (new ComponentCacheManager($instance))->put(
                 '__protected_properties',
@@ -34,7 +34,7 @@ class ComponentHydrator
 
         $unHydratedInstance = new $class($id);
 
-        // Grab the protected properties out of the session.
+        // Grab the protected properties out of the cache.
         $protectedOrPrivateProperties = (new ComponentCacheManager($unHydratedInstance))
             ->get('__protected_properties', []);
 

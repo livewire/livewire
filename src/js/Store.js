@@ -69,7 +69,7 @@ const store = {
         component.tearDown()
         // Remove the component from the store.
         delete this.componentsById[component.id]
-        // Add the component the queue for backend session garbage collection.
+        // Add the component the queue for backend cache garbage collection.
         this.addComponentForCollection(component.id)
     },
 

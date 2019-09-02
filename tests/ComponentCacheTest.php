@@ -5,23 +5,23 @@ namespace Tests;
 use Livewire\Component;
 use Livewire\LivewireManager;
 
-class ComponentSessionTest extends TestCase
+class ComponentCacheTest extends TestCase
 {
     /** @test */
-    public function component_can_store_things_in_session()
+    public function component_can_store_things_in_cache()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithSession::class);
+        $component = app(LivewireManager::class)->test(ComponentWithCache::class);
 
         $component
             ->assertSet('foo', null)
-            ->call('setValueFromSession')
+            ->call('setValueFromCache')
             ->assertSet('foo', 'bar');
     }
 
     /** @test */
-    public function protected_properties_are_dehydrated_into_the_session_and_not_in_the_payload()
+    public function protected_properties_are_dehydrated_into_the_cache_and_not_in_the_payload()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithSession::class);
+        $component = app(LivewireManager::class)->test(ComponentWithCache::class);
 
         $component->call('setValueOfFiz', 'bluth');
 
@@ -30,9 +30,9 @@ class ComponentSessionTest extends TestCase
     }
 
     /** @test */
-    public function protected_properties_are_rehydrated_from_the_session()
+    public function protected_properties_are_rehydrated_from_the_cache()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithSession::class);
+        $component = app(LivewireManager::class)->test(ComponentWithCache::class);
 
         $this->assertNotEquals('bluth', $component->fiz);
 
@@ -44,10 +44,10 @@ class ComponentSessionTest extends TestCase
     }
 
     /** @test */
-    public function components_session_data_is_garbage_collected()
+    public function components_cache_data_is_garbage_collected()
     {
-        $oldComponent = app(LivewireManager::class)->test(ComponentWithSession::class);
-        $component = app(LivewireManager::class)->test(ComponentWithSession::class);
+        $oldComponent = app(LivewireManager::class)->test(ComponentWithCache::class);
+        $component = app(LivewireManager::class)->test(ComponentWithCache::class);
 
         $this->assertNotNull(cache()->get($oldComponent->id));
         $this->assertNotNull(cache()->get($component->id));
@@ -62,14 +62,14 @@ class ComponentSessionTest extends TestCase
     }
 }
 
-class ComponentWithSession extends Component
+class ComponentWithCache extends Component
 {
     public $foo;
     protected $fiz;
 
     public function mount()
     {
-        $this->session('foo', 'bar');
+        $this->cache('foo', 'bar');
 
         $this->fiz = 'buz';
     }
@@ -79,9 +79,9 @@ class ComponentWithSession extends Component
         $this->fiz = $value;
     }
 
-    public function setValueFromSession()
+    public function setValueFromCache()
     {
-        $this->foo = $this->session('foo');
+        $this->foo = $this->cache('foo');
     }
 
     public function render()
