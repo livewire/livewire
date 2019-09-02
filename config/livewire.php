@@ -1,6 +1,6 @@
 <?php
 
-$namespace = (\Application::getNameSpace() ? \Application::getNameSpace() : 'App');
+$namespace = (Application::getNameSpace() ? Application::getNameSpace() : 'App');
 
 return [
 
