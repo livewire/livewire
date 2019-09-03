@@ -97,7 +97,7 @@ abstract class Component
     {
         array_walk($data, function ($value, $key) {
             throw_unless(
-                is_null($value) || is_array($value) || is_numeric($value) || is_string($value),
+                is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value),
                 new PublicPropertyTypeNotAllowedException($this->getName(), $key, $value)
             );
         });
