@@ -15,7 +15,7 @@ class RemoveCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireClassesPath('Rob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('rob.blade.php')));
 
-        Artisan::call('livewire:rm rob');
+        Artisan::call('livewire:rm rob --force');
 
         $this->assertFalse(File::exists($this->livewireClassesPath('Rob.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('rob.blade.php')));
@@ -29,7 +29,7 @@ class RemoveCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireClassesPath('Rob/Lob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('rob/lob.blade.php')));
 
-        Artisan::call('livewire:rm rob.lob');
+        Artisan::call('livewire:rm rob.lob --force');
 
         $this->assertFalse(File::exists($this->livewireClassesPath('Rob/Lob.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('rob/lob.blade.php')));
@@ -43,7 +43,7 @@ class RemoveCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireClassesPath('RobLob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('rob-lob.blade.php')));
 
-        Artisan::call('livewire:rm rob-lob');
+        Artisan::call('livewire:rm rob-lob --force');
 
         $this->assertFalse(File::exists($this->livewireClassesPath('RobLob.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('rob-lob.blade.php')));
@@ -57,7 +57,7 @@ class RemoveCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireClassesPath('RobLob/RobLob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('rob-lob/rob-lob.blade.php')));
 
-        Artisan::call('livewire:rm RobLob.RobLob');
+        Artisan::call('livewire:rm RobLob.RobLob --force');
 
         $this->assertFalse(File::exists($this->livewireClassesPath('RobLob/RobLob.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('rob-lob/rob-lob.blade.php')));

@@ -7,19 +7,15 @@ use Illuminate\Support\Facades\File;
 use Livewire\LivewireComponentsFinder;
 use Illuminate\Console\DetectsApplicationNamespace;
 
-class LivewireDestroyCommand extends Command
+class LivewireDestroyCommand extends LivewireFileManipulationCommand
 {
-    use DetectsApplicationNamespace;
-
     protected $signature = 'livewire:destroy {name} {--force}';
 
     protected $description = 'Remove a Livewire component\'s class and view.';
 
-    protected $parser;
-
     public function handle()
     {
-        $this->parser = new LivewireMakeCommandParser(
+        $this->parser = new LivewireFileManipulationCommandParser(
             app_path(),
             head(config('view.paths')),
             $this->argument('name')
@@ -74,10 +70,5 @@ class LivewireDestroyCommand extends Command
         File::delete($viewPath);
 
         return $viewPath;
-    }
-
-    public function refreshComponentAutodiscovery()
-    {
-        app(LivewireComponentsFinder::class)->build();
     }
 }

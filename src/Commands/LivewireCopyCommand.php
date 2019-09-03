@@ -2,24 +2,17 @@
 
 namespace Livewire\Commands;
 
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Livewire\LivewireComponentsFinder;
-use Illuminate\Console\DetectsApplicationNamespace;
 
-class LivewireCopyCommand extends Command
+class LivewireCopyCommand extends LivewireFileManipulationCommand
 {
-    use DetectsApplicationNamespace;
-
     protected $signature = 'livewire:cp {name} {newname}';
 
     protected $description = 'Copy a Livewire component and it\'s corresponding blade view.';
 
-    protected $parser;
-
     public function handle()
     {
-        $this->parser = new LivewireRenameCommandParser(
+        $this->parser = new LivewireFileManipulationCommandParser(
             app_path(),
             head(config('view.paths')),
             $this->argument('name'),
@@ -47,7 +40,7 @@ class LivewireCopyCommand extends Command
 
         $this->ensureDirectoryExists($this->parser->newClassPath());
 
-        return File::put($this->parser->newClassPath(), $this->parser->classContents());
+        return File::put($this->parser->newClassPath(), $this->parser->newClassContents());
     }
 
     protected function copyView()
@@ -61,17 +54,5 @@ class LivewireCopyCommand extends Command
         $this->ensureDirectoryExists($this->parser->newViewPath());
 
         return File::copy("{$this->parser->viewPath()}", $this->parser->newViewPath());
-    }
-
-    protected function ensureDirectoryExists($path)
-    {
-        if (! File::isDirectory(dirname($path))) {
-            File::makeDirectory(dirname($path), 0777, $recursive = true, $force = true);
-        }
-    }
-
-    public function refreshComponentAutodiscovery()
-    {
-        app(LivewireComponentsFinder::class)->build();
     }
 }

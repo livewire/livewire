@@ -2,29 +2,24 @@
 
 namespace Livewire\Commands;
 
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Livewire\LivewireComponentsFinder;
-use Illuminate\Console\DetectsApplicationNamespace;
 
-class LivewireRenameCommand extends Command
+class LivewireRenameCommand extends LivewireFileManipulationCommand
 {
-    use DetectsApplicationNamespace;
-
     protected $signature = 'livewire:mv {name} {newname}';
 
     protected $description = 'Create a new Livewire component and it\'s corresponding blade view.';
 
-    protected $parser;
-
     public function handle()
     {
-        $this->parser = new LivewireRenameCommandParser(
+        $this->parser = new LivewireFileManipulationCommandParser(
             app_path(),
             head(config('view.paths')),
             $this->argument('name'),
             $this->argument('newname')
         );
+
+        // dd($this->parser->newClassPath(), $this->parser->newViewPath());
 
         $class = $this->renameClass();
         $view = $this->renameView();
@@ -47,33 +42,25 @@ class LivewireRenameCommand extends Command
 
         $this->ensureDirectoryExists($this->parser->newClassPath());
 
-        File::put($this->parser->newClassPath(), $this->parser->classContents());
+        File::put($this->parser->newClassPath(), $this->parser->newClassContents());
 
         return File::delete($this->parser->classPath());
     }
 
     protected function renameView()
     {
-        if (File::exists($this->parser->newViewPath())) {
+        $newViewPath = $this->parser->newViewPath();
+
+        if (File::exists($newViewPath)) {
             $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->relativeNewViewPath()}");
 
             return false;
         }
 
-        $this->ensureDirectoryExists($this->parser->newViewPath());
+        $this->ensureDirectoryExists($newViewPath);
 
-        return File::move($this->parser->viewPath(), $this->parser->newViewPath());
-    }
+        File::move($this->parser->viewPath(), $newViewPath);
 
-    protected function ensureDirectoryExists($path)
-    {
-        if (! File::isDirectory(dirname($path))) {
-            File::makeDirectory(dirname($path), 0777, $recursive = true, $force = true);
-        }
-    }
-
-    public function refreshComponentAutodiscovery()
-    {
-        app(LivewireComponentsFinder::class)->build();
+        return $newViewPath;
     }
 }
