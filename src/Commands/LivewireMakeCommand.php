@@ -3,7 +3,6 @@
 namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
-use Livewire\Commands\LivewireFileManipulationCommand;
 
 class LivewireMakeCommand extends LivewireFileManipulationCommand
 {
