@@ -18,7 +18,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
         );
 
         $this->assertContains(
-            'window.livewire_app_url = "";',
+            "window.livewire_app_url = '';",
             Livewire::assets()
         );
     }
@@ -32,7 +32,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
         );
 
         $this->assertContains(
-            'window.livewire_app_url = "";',
+            "window.livewire_app_url = '';",
             Livewire::assets()
         );
     }
@@ -46,7 +46,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
         );
 
         $this->assertContains(
-            'window.livewire_app_url = "https://foo.com/assets";',
+            "window.livewire_app_url = 'https://foo.com/assets';",
             Livewire::assets(['base_url' => 'https://foo.com/assets'])
         );
     }
@@ -60,7 +60,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
         );
 
         $this->assertContains(
-            'window.livewire_app_url = "https://foo.com/assets";',
+            "window.livewire_app_url = 'https://foo.com/assets';",
             Livewire::assets(['base_url' => 'https://foo.com/assets/'])
         );
     }
@@ -78,7 +78,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
         );
 
         $this->assertContains(
-            'window.livewire_app_url = "https://foo.com/assets";',
+            "window.livewire_app_url = 'https://foo.com/assets';",
             $output
         );
     }
