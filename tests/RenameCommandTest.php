@@ -10,66 +10,66 @@ class RenameCommandTest extends TestCase
     /** @test */
     public function component_is_renamed_by_rename_command()
     {
-        Artisan::call('make:livewire rob');
+        Artisan::call('make:livewire bob');
 
-        $this->assertTrue(File::exists($this->livewireClassesPath('Rob.php')));
-        $this->assertTrue(File::exists($this->livewireViewsPath('rob.blade.php')));
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('bob.blade.php')));
 
-        Artisan::call('livewire:mv rob lob');
+        Artisan::call('livewire:mv bob lob');
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Lob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('lob.blade.php')));
 
-        $this->assertFalse(File::exists($this->livewireClassesPath('Rob.php')));
-        $this->assertFalse(File::exists($this->livewireViewsPath('rob.blade.php')));
+        $this->assertFalse(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bob.blade.php')));
     }
 
     /** @test */
     public function nested_component_is_renamed_by_rename_command()
     {
-        Artisan::call('make:livewire rob.lob');
+        Artisan::call('make:livewire bob.lob');
 
-        $this->assertTrue(File::exists($this->livewireClassesPath('Rob/Lob.php')));
-        $this->assertTrue(File::exists($this->livewireViewsPath('rob/lob.blade.php')));
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob/Lob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('bob/lob.blade.php')));
 
-        Artisan::call('livewire:mv rob.lob rob.lob.law');
+        Artisan::call('livewire:mv bob.lob bob.lob.law');
 
-        $this->assertTrue(File::exists($this->livewireClassesPath('Rob/Lob/Law.php')));
-        $this->assertTrue(File::exists($this->livewireViewsPath('rob/lob/law.blade.php')));
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob/Lob/Law.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('bob/lob/law.blade.php')));
 
-        $this->assertFalse(File::exists($this->livewireClassesPath('Rob/Lob.php')));
-        $this->assertFalse(File::exists($this->livewireViewsPath('rob/lob.blade.php')));
+        $this->assertFalse(File::exists($this->livewireClassesPath('Bob/Lob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bob/lob.blade.php')));
     }
 
     /** @test */
     public function multiword_component_is_renamed_by_rename_command()
     {
-        Artisan::call('make:livewire rob-lob');
+        Artisan::call('make:livewire bob-lob');
 
-        $this->assertTrue(File::exists($this->livewireClassesPath('RobLob.php')));
-        $this->assertTrue(File::exists($this->livewireViewsPath('rob-lob.blade.php')));
+        $this->assertTrue(File::exists($this->livewireClassesPath('BobLob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('bob-lob.blade.php')));
 
-        Artisan::call('livewire:mv rob-lob lob-law');
+        Artisan::call('livewire:mv bob-lob lob-law');
 
         $this->assertTrue(File::exists($this->livewireClassesPath('/LobLaw.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('lob-law.blade.php')));
 
-        $this->assertFalse(File::exists($this->livewireClassesPath('RobLob.php')));
-        $this->assertFalse(File::exists($this->livewireViewsPath('rob-lob.blade.php')));
+        $this->assertFalse(File::exists($this->livewireClassesPath('BobLob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bob-lob.blade.php')));
     }
 
     /** @test */
     public function pascal_case_component_is_automatically_converted_by_rename_command()
     {
-        Artisan::call('make:livewire RobLob.RobLob');
+        Artisan::call('make:livewire BobLob.BobLob');
 
-        $this->assertTrue(File::exists($this->livewireClassesPath('RobLob/RobLob.php')));
-        $this->assertTrue(File::exists($this->livewireViewsPath('rob-lob/rob-lob.blade.php')));
+        $this->assertTrue(File::exists($this->livewireClassesPath('BobLob/BobLob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('bob-lob/bob-lob.blade.php')));
 
-        Artisan::call('livewire:mv RobLob.RobLob LobLaw.LobLaw');
+        Artisan::call('livewire:mv BobLob.BobLob LobLaw.LobLaw');
 
-        $this->assertFalse(File::exists($this->livewireClassesPath('RobLob/RobLob.php')));
-        $this->assertFalse(File::exists($this->livewireViewsPath('rob-lob/rob-lob.blade.php')));
+        $this->assertFalse(File::exists($this->livewireClassesPath('BobLob/BobLob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bob-lob/bob-lob.blade.php')));
 
         $this->assertTrue(File::exists($this->livewireClassesPath('LobLaw/LobLaw.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('lob-law/lob-law.blade.php')));
