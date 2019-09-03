@@ -86,8 +86,10 @@ class Livewire {
     }
 }
 
-if (!window.Livewire) {
+if (! window.Livewire) {
     window.Livewire = Livewire
 }
+
+dispatch('livewire:available')
 
 export default Livewire
