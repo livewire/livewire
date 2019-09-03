@@ -4977,6 +4977,7 @@ if (!window.Livewire) {
   window.Livewire = Livewire;
 }
 
+Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:available');
 /* harmony default export */ __webpack_exports__["default"] = (Livewire);
 
 /***/ }),
