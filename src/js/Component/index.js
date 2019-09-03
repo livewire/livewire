@@ -12,6 +12,7 @@ import PrefetchManager from './PrefetchManager'
 
 export default class Component {
     constructor(el, connection) {
+        el.rawNode().__livewire = this
         this.id = el.getAttribute('id')
         this.data = JSON.parse(el.getAttribute('data'))
         this.events = JSON.parse(el.getAttribute('events'))
@@ -129,7 +130,9 @@ export default class Component {
 
     handleResponse(response) {
         this.data = response.data
+        this.checksum = response.checksum
         this.children = response.children
+        store.setComponentsAsCollected(response.gc)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.redirectTo) {
@@ -205,7 +208,9 @@ export default class Component {
             },
 
             onBeforeNodeDiscarded: node => {
-                return (new DOMElement(node)).transitionElementOut(nodeDiscarded => {
+                const el = new DOMElement(node)
+
+                return el.transitionElementOut(nodeDiscarded => {
                     // Cleanup after removed element.
                     this.loadingManager.removeLoadingEl(nodeDiscarded)
                 })
@@ -215,6 +220,10 @@ export default class Component {
                 // Elements with loading directives are stored, release this
                 // element from storage because it no longer exists on the DOM.
                 this.loadingManager.removeLoadingEl(node)
+
+                if (node.__livewire) {
+                    store.removeComponent(node.__livewire)
+                }
             },
 
             onBeforeElChildrenUpdated: node => {

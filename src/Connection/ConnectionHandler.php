@@ -4,6 +4,8 @@ namespace Livewire\Connection;
 
 use Livewire\ResponsePayload;
 use Livewire\Routing\Redirector;
+use Livewire\ComponentCacheManager;
+use Livewire\ComponentChecksumManager;
 use Illuminate\Validation\ValidationException;
 
 abstract class ConnectionHandler
@@ -35,6 +37,7 @@ abstract class ConnectionHandler
         $response = new ResponsePayload([
             'id' => $payload['id'],
             'dom' => $dom,
+            'checksum' => (new ComponentChecksumManager)->generate($payload['name'], $payload['id'], $data),
             'dirtyInputs' => $instance->getDirtyProperties(),
             'children' => $instance->getRenderedChildren(),
             'eventQueue' => $eventQueue,
@@ -42,6 +45,7 @@ abstract class ConnectionHandler
             'data' => $data,
             'redirectTo' => $instance->redirectTo ?? false,
             'fromPrefetch' => $payload['fromPrefetch'] ?? false,
+            'gc' => ComponentCacheManager::garbageCollect($payload['gc']),
         ]);
 
         if (empty($instance->redirectTo)) {

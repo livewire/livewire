@@ -79,8 +79,12 @@ class LivewireManager
 
         $options = $options ? json_encode($options) : '';
 
+        $jsFileName = config('app.debug')
+            ? '/livewire.js'
+            : '/livewire.min.js';
+
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
-        $versionedFileName = $manifest['/livewire.js'];
+        $versionedFileName = $manifest[$jsFileName];
 
         $csrf = csrf_token();
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
@@ -118,7 +122,7 @@ EOT;
         $properties = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
-        $checksum = md5($name.$id);
+        $checksum = (new ComponentChecksumManager)->generate($name, $id, $properties);
 
         $middlewareStack = $this->currentMiddlewareStack();
         if ($this->middlewaresFilter) {
@@ -127,6 +131,7 @@ EOT;
         $middleware = encrypt($middlewareStack, $serialize = true);
 
         return new InitialResponsePayload([
+            'instance' => $instance,
             'id' => $id,
             'dom' => $dom,
             'data' => $properties,

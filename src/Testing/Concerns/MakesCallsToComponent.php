@@ -67,6 +67,7 @@ trait MakesCallsToComponent
                 'data' => $this->data,
                 'children' => $this->children,
                 'checksum' => $this->checksum,
+                'gc' => $this->gc,
                 'actionQueue' => [['type' => $message, 'payload' => $payload]],
             ]);
 

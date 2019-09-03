@@ -7,9 +7,7 @@ use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
-use Livewire\Exceptions\CannotAddEloquentModelsAsPublicPropertyException;
+use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 abstract class Component
 {
@@ -56,6 +54,21 @@ abstract class Component
         return view("livewire.{$this->getName()}");
     }
 
+    public function cache($key = null, $value = null)
+    {
+        $cacheManager = new ComponentCacheManager($this);
+
+        if (is_null($key)) {
+            return $cacheManager;
+        }
+
+        if (is_null($value)) {
+            return $cacheManager->get($key);
+        }
+
+        return $cacheManager->put($key, $value);
+    }
+
     public function output($errors = null)
     {
         $view = $this->render();
@@ -77,21 +90,18 @@ abstract class Component
     {
         $data = $this->getPublicPropertiesDefinedBySubClass();
 
-        $this->makeSureThereAreNoEloquentModels($data);
-
-        return $this->castDataToJavaScriptSafeTypes($data);
+        return $this->castDataToJavaScriptReadableTypes($data);
     }
 
-    public function makeSureThereAreNoEloquentModels($data)
+    public function castDataToJavaScriptReadableTypes($data)
     {
-        array_walk($data, function ($value) {
-            throw_if($value instanceof Model || $value instanceof Collection,
-                new CannotAddEloquentModelsAsPublicPropertyException);
+        array_walk($data, function ($value, $key) {
+            throw_unless(
+                is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value),
+                new PublicPropertyTypeNotAllowedException($this->getName(), $key, $value)
+            );
         });
-    }
 
-    public function castDataToJavaScriptSafeTypes($data)
-    {
         return json_decode(json_encode($data), true);
     }
 
