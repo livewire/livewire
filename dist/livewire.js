@@ -2691,7 +2691,7 @@ function (_Action) {
   _createClass(_default, [{
     key: "toId",
     value: function toId() {
-      return btoa(this.type, this.payload.event, JSON.stringify(this.payload.params));
+      return btoa(encodeURIComponent(this.type, this.payload.event, JSON.stringify(this.payload.params)));
     }
   }]);
 
@@ -2730,7 +2730,7 @@ function () {
   _createClass(_default, [{
     key: "toId",
     value: function toId() {
-      return btoa(this.el.el.outerHTML);
+      return btoa(encodeURIComponent(this.el.el.outerHTML));
     }
   }, {
     key: "ref",
@@ -4977,6 +4977,7 @@ if (!window.Livewire) {
   window.Livewire = Livewire;
 }
 
+Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:available');
 /* harmony default export */ __webpack_exports__["default"] = (Livewire);
 
 /***/ }),
