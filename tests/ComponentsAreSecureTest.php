@@ -3,7 +3,7 @@
 namespace Tests;
 
 use Livewire\Component;
-use Livewire\Exceptions\ComponentMismatchException;
+use Livewire\Exceptions\CorruptComponentPayloadException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
 use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
@@ -58,7 +58,7 @@ class ComponentsAreSecureTest extends TestCase
     /** @test */
     public function data_cannot_be_tampered_with_on_frontend()
     {
-        $this->expectException(ComponentMismatchException::class);
+        $this->expectException(CorruptComponentPayloadException::class);
 
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
@@ -71,7 +71,7 @@ class ComponentsAreSecureTest extends TestCase
     /** @test */
     public function id_cannot_be_tampered_with_on_frontend()
     {
-        $this->expectException(ComponentMismatchException::class);
+        $this->expectException(CorruptComponentPayloadException::class);
 
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
@@ -84,7 +84,7 @@ class ComponentsAreSecureTest extends TestCase
     /** @test */
     public function component_name_cannot_be_tampered_with_on_frontend()
     {
-        $this->expectException(ComponentMismatchException::class);
+        $this->expectException(CorruptComponentPayloadException::class);
 
         app('livewire')->component('safe', SecurityTargetStub::class);
         app('livewire')->component('unsafe', UnsafeComponentStub::class);
