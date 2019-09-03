@@ -52,8 +52,10 @@ class LivewireMakeCommandParser
 
     public function classNamespace()
     {
+        $name = (config_path('livewire.php') ? config('livewire.namespace') : 'App');
+
         return collect()
-            ->concat(['App', 'Http', 'Livewire'])
+            ->concat([config('livewire.namespace'), 'Http', 'Livewire'])
             ->concat($this->directories)
             ->implode('\\');
     }
@@ -76,8 +78,10 @@ class LivewireMakeCommandParser
 
     public function viewPath()
     {
+        $path = (config_path('livewire.php') ? config('livewire.view-path') : 'livewire');
+
         return $this->viewPath.collect()
-            ->push('livewire')
+            ->push($path)
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->viewFile())
@@ -96,8 +100,10 @@ class LivewireMakeCommandParser
 
     public function viewName()
     {
+        $name = (config_path('livewire.php') ? config('livewire.view-path') : 'livewire');
+
         return collect()
-            ->push('livewire')
+            ->push($name)
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->component)

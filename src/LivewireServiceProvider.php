@@ -32,6 +32,8 @@ class LivewireServiceProvider extends ServiceProvider
         ));
 
         $this->allowCertainExceptionsToBypassTheBladeViewHandler();
+
+        $this->mergeConfigFrom(__DIR__.'/../config/livewire.php', 'livewire');
     }
 
     public function allowCertainExceptionsToBypassTheBladeViewHandler()
@@ -72,6 +74,10 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
+
+        $this->publishes([
+            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
+        ], 'config');
     }
 
     public function registerRoutes()
@@ -87,7 +93,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerViews()
     {
-        $this->loadViewsFrom(__DIR__.DIRECTORY_SEPARATOR.'views', 'livewire');
+        $this->loadViewsFrom(__DIR__.DIRECTORY_SEPARATOR.'views', config('livewire.view-path'));
     }
 
     public function registerCommands()
