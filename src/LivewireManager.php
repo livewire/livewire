@@ -79,7 +79,9 @@ class LivewireManager
 
         if (file_exists(config_path('livewire.php'))) {
             $appUrl = config('livewire.base_url');
-        } elseif (! empty($options['base_url'])) {
+        }
+
+        if (! empty($options['base_url'])) {
             $appUrl = rtrim($options['base_url'] ?? '', '/');
         }
 
