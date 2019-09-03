@@ -7,6 +7,7 @@ import { ArrayFlat, ArrayFrom, ArrayIncludes, ElementGetAttributeNames } from '@
 import 'whatwg-fetch'
 import 'promise-polyfill/src/polyfill';
 import { dispatch } from './util';
+import store from './Store';
 
 class Livewire {
     constructor(options = {}) {
@@ -25,6 +26,8 @@ class Livewire {
         this.onLoadCallback = () => {};
 
         this.activatePolyfills()
+
+        store.initializeGarbageCollection()
     }
 
     onLoad(callback) {
@@ -32,10 +35,10 @@ class Livewire {
     }
 
     activatePolyfills() {
-        ArrayFlat();
-        ArrayFrom();
-        ArrayIncludes();
-        ElementGetAttributeNames();
+        ArrayFlat()
+        ArrayFrom()
+        ArrayIncludes()
+        ElementGetAttributeNames()
     }
 
     emit(event, ...params) {
@@ -64,6 +67,12 @@ class Livewire {
 
         this.onLoadCallback()
         dispatch('livewire:load')
+
+        // This is very important for garbage collecting components
+        // on the backend.
+        window.addEventListener('beforeunload', () => {
+            componentStore.tearDownComponents()
+        })
     }
 
     rescan() {

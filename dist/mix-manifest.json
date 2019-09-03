@@ -1,4 +1,9 @@
 {
+<<<<<<< HEAD
     "/livewire.js": "/livewire.js?id=39f9fd587f6fb02b6916",
     "/livewire.min.js": "/livewire.min.js?id=d33a1ced33cdd6abd0a7"
+=======
+    "/livewire.js": "/livewire.js?id=9522a37e1528853eac40",
+    "/livewire.min.js": "/livewire.min.js?id=451a0e77490fc406b150"
+>>>>>>> master
 }

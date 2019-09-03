@@ -63,6 +63,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
                     data: {},
                     dirtyInputs: dirtyInputs,
                     dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
+                    gc: payload.gc,
                 })
             }, 1)
         },
@@ -130,6 +131,7 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
                     data,
                     dirtyInputs,
                     dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
+                    gc: payload.gc,
                 })
             }, 1)
         },

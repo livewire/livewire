@@ -1,3 +1,4 @@
+import store from '@/Store'
 
 export default class {
     constructor(component, actionQueue) {
@@ -28,6 +29,7 @@ export default class {
                     payload: action.payload,
                 }
             }),
+            gc: store.getComponentsForCollection(),
         }
     }
 
@@ -42,6 +44,7 @@ export default class {
             events: payload.events,
             data: payload.data,
             redirectTo: payload.redirectTo,
+            gc: payload.gc,
         }
     }
 }

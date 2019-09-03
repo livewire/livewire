@@ -9,6 +9,6 @@ export default class {
     }
 
     toId() {
-        return btoa(this.el.el.outerHTML)
+        return btoa(encodeURIComponent(this.el.el.outerHTML))
     }
 }
