@@ -2866,15 +2866,6 @@ __webpack_require__.r(__webpack_exports__);
   onMessage: null,
   init: function init() {//
   },
-  keepAlive: function keepAlive() {
-    fetch(window.livewire_app_url + '/livewire/keep-alive', {
-      credentials: "same-origin",
-      headers: {
-        'X-CSRF-TOKEN': this.getCSRFToken(),
-        'X-Livewire-Keep-Alive': true
-      }
-    });
-  },
   sendMessage: function sendMessage(payload) {
     var _this = this;
 
@@ -3032,15 +3023,7 @@ function () {
 
     this.driver.onError = function (payload) {
       _this.onError(payload);
-    }; // This prevents those annoying CSRF 419's by keeping the cookie fresh.
-    // Yum! No one likes stale cookies...
-
-
-    if (typeof this.driver.keepAlive !== 'undefined') {
-      setInterval(function () {
-        _this.driver.keepAlive();
-      }, 600000); // Every ten minutes.
-    }
+    };
 
     this.driver.init();
   }
