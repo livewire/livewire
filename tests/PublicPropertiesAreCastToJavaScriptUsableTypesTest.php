@@ -91,7 +91,7 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
             [
                 1 => 'foo',
                 0 => 'bar',
-            ]
+            ],
         ];
 
         Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)
