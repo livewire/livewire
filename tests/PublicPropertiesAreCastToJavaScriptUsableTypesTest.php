@@ -48,6 +48,56 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
 
         View::make('render-component', ['component' => 'foo', 'params' => [new ModelStub]])->render();
     }
+
+    /** @test */
+    public function ordered_numeric_arrays_are_reindexed_so_javascript_doesnt_do_it_for_us()
+    {
+        $orderedNumericArray = [
+            1 => 'foo',
+            0 => 'bar',
+        ];
+
+        Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)
+            ->call('$refresh')
+            ->assertSet('foo', ['foo', 'bar']);
+    }
+
+    /** @test */
+    public function numeric_keys_are_ordered_before_string_keys_so_javascript_doesnt_do_it_for_us()
+    {
+        $orderedNumericArray = [
+            0 => 'foo',
+            'baz' => 'bob',
+            'abaz' => 'bob',
+            1 => 'bar',
+        ];
+
+        $foo = Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)
+            ->call('$refresh')
+            ->foo;
+
+        $this->assertSame([
+            0 => 'foo',
+            1 => 'bar',
+            'baz' => 'bob',
+            'abaz' => 'bob',
+        ], $foo);
+    }
+
+    /** @test */
+    public function ordered_numeric_arrays_are_reindexed_deeply()
+    {
+        $orderedNumericArray = [
+            [
+                1 => 'foo',
+                0 => 'bar',
+            ]
+        ];
+
+        Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)
+            ->call('$refresh')
+            ->assertSet('foo', [['foo', 'bar']]);
+    }
 }
 
 class ComponentWithPropertiesStub extends Component
