@@ -73,37 +73,6 @@ class LivewireManager
         return new $componentClass($id);
     }
 
-    public function assets($options = [])
-    {
-        $appUrl = rtrim($options['base_url'] ?? '', '/');
-
-        $options = $options ? json_encode($options) : '';
-
-        $jsFileName = config('app.debug')
-            ? '/livewire.js'
-            : '/livewire.min.js';
-
-        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
-        $versionedFileName = $manifest[$jsFileName];
-
-        $csrf = csrf_token();
-        $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
-
-        return <<<EOT
-<!-- Livewire Assets-->
-<style>[wire\:loading] { display: none; } [wire\:dirty]:not(textarea):not(input):not(select) { display: none; }</style>
-<script src="{$fullAssetPath}"></script>
-<script>
-    window.livewire = new Livewire({$options});
-    document.addEventListener("DOMContentLoaded", function() {
-        window.livewire.start()
-        window.livewire_app_url = "{$appUrl}";
-        window.livewire_token = "{$csrf}";
-    });
-</script>
-EOT;
-    }
-
     public function mount($name, ...$options)
     {
         $id = Str::random(20);
@@ -166,5 +135,73 @@ EOT;
     public function test($name, ...$params)
     {
         return new TestableLivewire($name, $this->prefix, $params);
+    }
+
+    public function assets($options = [])
+    {
+        $debug = config('app.debug');
+
+        $jsFileName = $debug
+            ? '/livewire.js'
+            : '/livewire.min.js';
+
+        $styles = $this->cssAssets();
+        $scripts = $this->javaScriptAssets($jsFileName, $options);
+
+        // <head> label.
+        $html = $debug ? ['<!-- Livewire Assets-->'] : [];
+        // CSS assets.
+        $html[] = $debug ? $styles : $this->minify($styles);
+        // JavaScript assets.
+        $html[] = $debug ? $scripts : $this->minify($scripts);
+
+        return implode("\n", $html);
+    }
+
+    protected function cssAssets()
+    {
+        return <<<HTML
+<style>
+    [wire\:loading] {
+        display: none;
+    }
+
+    [wire\:dirty]:not(textarea):not(input):not(select) {
+        display: none;
+    }
+</style>
+HTML;
+    }
+
+    protected function javaScriptAssets($jsFileName, $options)
+    {
+        $jsonEncodedOptions = $options ? json_encode($options) : '';
+
+        $appUrl = rtrim($options['base_url'] ?? '', '/');
+
+        $csrf = csrf_token();
+
+        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
+        $versionedFileName = $manifest[$jsFileName];
+        $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
+
+        // Adding semicolons for this JavaScript is important,
+        // because it will be minified in production.
+        return <<<HTML
+<script>
+    document.addEventListener('livewire:available', function () {
+        window.livewire = new Livewire({$jsonEncodedOptions});
+        window.livewire.start();
+        window.livewire_app_url = '{$appUrl}';
+        window.livewire_token = '{$csrf}';
+    });
+</script>
+<script src="{$fullAssetPath}" defer></script>
+HTML;
+    }
+
+    protected function minify($subject)
+    {
+        return preg_replace('~(\v|\t|\s{2,})~m', '', $subject);
     }
 }

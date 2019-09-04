@@ -85,9 +85,6 @@ class LivewireServiceProvider extends ServiceProvider
         RouteFacade::get('/livewire/livewire.min.js', [LivewireJavaScriptAssets::class, 'minified']);
 
         RouteFacade::post('/livewire/message', HttpConnectionHandler::class);
-
-        // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
-        RouteFacade::get('/livewire/keep-alive', LivewireKeepAlive::class);
     }
 
     public function registerViews()
