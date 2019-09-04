@@ -58,29 +58,29 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
         ];
 
         Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)
-            ->call('$refresh')
-            ->assertSet('foo', ['foo', 'bar']);
+            ->assertSet('foo', [0 => 'foo', 1 => 'bar']);
     }
 
     /** @test */
     public function numeric_keys_are_ordered_before_string_keys_so_javascript_doesnt_do_it_for_us()
     {
         $orderedNumericArray = [
-            0 => 'foo',
-            'baz' => 'bob',
-            'abaz' => 'bob',
-            1 => 'bar',
+            1 => 'foo',
+            'bob' => 'lob',
+            0 => 'bar',
+            'abob' => 'lob',
+            2 => 'baz',
         ];
 
         $foo = Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)
-            ->call('$refresh')
             ->foo;
 
         $this->assertSame([
             0 => 'foo',
             1 => 'bar',
-            'baz' => 'bob',
-            'abaz' => 'bob',
+            2 => 'baz',
+            'bob' => 'lob',
+            'abob' => 'lob',
         ], $foo);
     }
 
@@ -95,8 +95,7 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
         ];
 
         Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)
-            ->call('$refresh')
-            ->assertSet('foo', [['foo', 'bar']]);
+            ->assertSet('foo', [[0 => 'foo', 1 => 'bar']]);
     }
 }
 

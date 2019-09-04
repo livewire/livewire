@@ -112,11 +112,11 @@ abstract class Component
         // but doesn't touch non-numeric keys, like "array_values" does.
         $normalizedData = array_merge($data);
 
-        // Make sure string keys are last. JSON.parse will do this.
+        // Make sure string keys are last (but not ordered). JSON.parse will do this.
         uksort($normalizedData, function ($a, $b) {
-            if (is_string($a)) {
-                return 1;
-            }
+            return is_string($a) && is_numeric($b)
+                ? 1
+                : 0;
         });
 
         return array_map(function ($value) {
