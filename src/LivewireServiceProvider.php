@@ -72,6 +72,10 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
+
+        $this->publishes([
+            __DIR__.'/../dist' => public_path('vendor/livewire'),
+        ], 'livewire-assets');
     }
 
     public function registerRoutes()

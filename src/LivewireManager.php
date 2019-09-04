@@ -183,7 +183,10 @@ HTML;
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest[$jsFileName];
-        $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
+
+        $fullAssetPath = file_exists(public_path('vendor/livewire'))
+            ? "{$appUrl}/vendor/livewire{$versionedFileName}"
+            : "{$appUrl}/livewire{$versionedFileName}";
 
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
