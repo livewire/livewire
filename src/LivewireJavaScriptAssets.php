@@ -16,10 +16,12 @@ class LivewireJavaScriptAssets
 
     public function pretendResponseIsFile($file)
     {
-        // These headers will enable browsers to cache this asset.
+        $lastModified = filemtime($file);
+
         return response()->file($file, [
             'Content-Type' => 'application/javascript; charset=utf-8',
             'Cache-Control' => 'public, max-age=31536000',
+            'Last-Modified' => sprintf('%s GMT', gmdate('D, d M Y H:i:s', $lastModified)),
         ]);
     }
 }
