@@ -20,7 +20,7 @@ class LivewireJavaScriptAssets
         return response()
             ->file($file, [
                 'Content-Type' => 'application/javascript; charset=utf-8',
-                'Cache-Control' => 'public, max-age=3600',
+                'Cache-Control' => 'public, max-age=31536000',
             ]);
     }
 }
