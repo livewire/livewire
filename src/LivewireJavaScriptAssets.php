@@ -19,17 +19,22 @@ class LivewireJavaScriptAssets
         $lastModified = filemtime($file);
         $expires = strtotime('+1 year');
 
-        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
-        $versionedFileName = $manifest['/' . basename($file)];
-
-        parse_str(parse_url($versionedFileName, PHP_URL_QUERY), $query);
-
         return response()->file($file, [
             'Content-Type' => 'application/javascript; charset=utf-8',
-            'ETag' => $query['id'],
+            'ETag' => $this->etag($file),
             'Cache-Control' => 'public, max-age=31536000',
             'Expires' => sprintf('%s GMT', gmdate('D, d M Y H:i:s', $expires)),
             'Last-Modified' => sprintf('%s GMT', gmdate('D, d M Y H:i:s', $lastModified)),
         ]);
+    }
+
+    protected function etag($file)
+    {
+        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
+        $versioned = $manifest['/' . basename($file)];
+
+        parse_str(parse_url($versioned, PHP_URL_QUERY), $query);
+
+        return $query['id'];
     }
 }
