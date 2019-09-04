@@ -23,8 +23,8 @@ class LivewireJavaScriptAssets
             'Content-Type' => 'application/javascript; charset=utf-8',
             'ETag' => $this->etag($file),
             'Cache-Control' => 'public, max-age=31536000',
-            'Expires' => sprintf('%s GMT', gmdate('D, d M Y H:i:s', $expires)),
-            'Last-Modified' => sprintf('%s GMT', gmdate('D, d M Y H:i:s', $lastModified)),
+            'Expires' => $this->httpDate($expires),
+            'Last-Modified' => $this->httpDate($lastModified),
         ]);
     }
 
@@ -36,5 +36,10 @@ class LivewireJavaScriptAssets
         parse_str(parse_url($versioned, PHP_URL_QUERY), $query);
 
         return $query['id'];
+    }
+
+    protected function httpDate($timestamp)
+    {
+        return sprintf('%s GMT', gmdate('D, d M Y H:i:s', $timestamp));
     }
 }
