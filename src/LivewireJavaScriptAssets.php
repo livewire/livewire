@@ -16,12 +16,20 @@ class LivewireJavaScriptAssets
 
     public function pretendResponseIsFile($file)
     {
-        $lastModified = filemtime($file);
+        $etag = $this->etag($file);
         $expires = strtotime('+1 year');
+        $lastModified = filemtime($file);
+
+        if ($this->matchesCache($etag, $lastModified)) {
+            return response()->noContent(304, [
+                'ETag' => $etag,
+                'Last-Modified' => $this->httpDate($lastModified),
+            ]);
+        }
 
         return response()->file($file, [
             'Content-Type' => 'application/javascript; charset=utf-8',
-            'ETag' => $this->etag($file),
+            'ETag' => $etag,
             'Cache-Control' => 'public, max-age=31536000',
             'Expires' => $this->httpDate($expires),
             'Last-Modified' => $this->httpDate($lastModified),
@@ -36,6 +44,15 @@ class LivewireJavaScriptAssets
         parse_str(parse_url($versioned, PHP_URL_QUERY), $query);
 
         return $query['id'];
+    }
+
+    protected function matchesCache($etag, $lastModified)
+    {
+        $ifNoneMatch = $_SERVER['HTTP_IF_NONE_MATCH'] ?? '';
+        $ifModifiedSince = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
+
+        return trim($ifNoneMatch, ' "') === $etag
+            || @strtotime($ifModifiedSince) === $lastModified;
     }
 
     protected function httpDate($timestamp)
