@@ -6,16 +6,6 @@ export default {
         //
     },
 
-    keepAlive() {
-        fetch(window.livewire_app_url+'/livewire/keep-alive', {
-            credentials: "same-origin",
-            headers: {
-                'X-CSRF-TOKEN': this.getCSRFToken(),
-                'X-Livewire-Keep-Alive': true,
-            },
-        })
-    },
-
     sendMessage(payload) {
         // Forward the query string for the ajax requests.
         fetch(window.livewire_app_url+'/livewire/message'+window.location.search, {
