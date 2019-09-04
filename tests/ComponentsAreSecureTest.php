@@ -3,8 +3,8 @@
 namespace Tests;
 
 use Livewire\Component;
-use Livewire\Exceptions\CorruptComponentPayloadException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
+use Livewire\Exceptions\CorruptComponentPayloadException;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
 use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 
