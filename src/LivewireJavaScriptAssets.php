@@ -16,43 +16,30 @@ class LivewireJavaScriptAssets
 
     public function pretendResponseIsFile($file)
     {
-        $etag = $this->etag($file);
         $expires = strtotime('+1 year');
         $lastModified = filemtime($file);
+        $cacheControl = 'public, max-age=31536000';
 
-        if ($this->matchesCache($etag, $lastModified)) {
+        if ($this->matchesCache($lastModified)) {
             return response()->noContent(304, [
-                'ETag' => $etag,
-                'Last-Modified' => $this->httpDate($lastModified),
+                'Expires' => $this->httpDate($expires),
+                'Cache-Control' => $cacheControl,
             ]);
         }
 
         return response()->file($file, [
             'Content-Type' => 'application/javascript; charset=utf-8',
-            'ETag' => $etag,
-            'Cache-Control' => 'public, max-age=31536000',
             'Expires' => $this->httpDate($expires),
+            'Cache-Control' => $cacheControl,
             'Last-Modified' => $this->httpDate($lastModified),
         ]);
     }
 
-    protected function etag($file)
+    protected function matchesCache($lastModified)
     {
-        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
-        $versioned = $manifest['/' . basename($file)];
-
-        parse_str(parse_url($versioned, PHP_URL_QUERY), $query);
-
-        return $query['id'];
-    }
-
-    protected function matchesCache($etag, $lastModified)
-    {
-        $ifNoneMatch = $_SERVER['HTTP_IF_NONE_MATCH'] ?? '';
         $ifModifiedSince = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
 
-        return trim($ifNoneMatch, ' "') === $etag
-            || @strtotime($ifModifiedSince) === $lastModified;
+        return @strtotime($ifModifiedSince) === $lastModified;
     }
 
     protected function httpDate($timestamp)
