@@ -188,7 +188,6 @@ HTML;
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
         return <<<HTML
-<script src="{$fullAssetPath}" defer></script>
 <script>
     document.addEventListener('livewire:available', function () {
         window.livewire = new Livewire({$jsonEncodedOptions});
@@ -197,6 +196,7 @@ HTML;
         window.livewire_token = '{$csrf}';
     });
 </script>
+<script src="{$fullAssetPath}" defer></script>
 HTML;
     }
 
