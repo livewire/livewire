@@ -4,11 +4,15 @@ namespace Livewire\Commands;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Console\DetectsApplicationNamespace;
 
 class LivewireMakeCommandParser
 {
+    use DetectsApplicationNamespace;
+
     protected $appPath;
     protected $viewPath;
+    protected $viewPathName;
     protected $component;
     protected $componentClass;
     protected $directories;
@@ -16,7 +20,8 @@ class LivewireMakeCommandParser
     public function __construct($appPath, $viewPath, $rawCommand)
     {
         $this->appPath = rtrim($appPath, DIRECTORY_SEPARATOR).'/';
-        $this->viewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
+        $this->viewPathName = rtrim(config('livewire.view-path', $viewPath), DIRECTORY_SEPARATOR);
+        $this->viewPath =  rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
 
         $directories = preg_split('/[.]+/', $rawCommand);
 
@@ -52,10 +57,10 @@ class LivewireMakeCommandParser
 
     public function classNamespace()
     {
-        $name = (config_path('livewire.php') ? config('livewire.namespace') : 'App');
+        $name = config('livewire.namespace', $this->getAppNamespace());
 
         return collect()
-            ->concat([config('livewire.namespace'), 'Http', 'Livewire'])
+            ->concat([$name, 'Http', 'Livewire'])
             ->concat($this->directories)
             ->implode('\\');
     }
@@ -78,10 +83,8 @@ class LivewireMakeCommandParser
 
     public function viewPath()
     {
-        $path = (config_path('livewire.php') ? config('livewire.view-path') : 'livewire');
-
         return $this->viewPath.collect()
-            ->push($path)
+            ->push($this->viewPathName)
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->viewFile())
@@ -100,10 +103,8 @@ class LivewireMakeCommandParser
 
     public function viewName()
     {
-        $name = (config_path('livewire.php') ? config('livewire.view-path') : 'livewire');
-
         return collect()
-            ->push($name)
+            ->push($this->viewPathName)
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->component)

@@ -77,7 +77,7 @@ class LivewireServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
-        ], 'config');
+        ], 'livewire-config');
     }
 
     public function registerRoutes()
