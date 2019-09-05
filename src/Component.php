@@ -73,6 +73,9 @@ abstract class Component
     {
         $view = $this->render();
 
+        // Normalize all the public properties in the component for JavaScript.
+        $this->normalizePublicPropertiesForJavaScript();
+
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
@@ -82,15 +85,43 @@ abstract class Component
                 '_instance' => $this,
             ])
             // Automatically inject all public properties into the blade view.
-            ->with($this->getPublicDataFromComponent())
+            ->with($this->getPublicPropertiesDefinedBySubClass())
             ->render();
     }
 
-    protected function getPublicDataFromComponent()
+    public function normalizePublicPropertiesForJavaScript()
     {
-        $data = $this->getPublicPropertiesDefinedBySubClass();
+        $normalizedProperties = $this->castDataToJavaScriptReadableTypes(
+            $this->reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder(
+                $this->getPublicPropertiesDefinedBySubClass()
+            )
+        );
 
-        return $this->castDataToJavaScriptReadableTypes($data);
+        foreach ($normalizedProperties as $key => $value) {
+            $this->setPropertyValue($key, $value);
+        }
+    }
+
+    protected function reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($data)
+    {
+        if (! is_array($data)) {
+            return $data;
+        }
+
+        // "array_merge", used this way, effectively performs "array_values",
+        // but doesn't touch non-numeric keys, like "array_values" does.
+        $normalizedData = array_merge($data);
+
+        // Make sure string keys are last (but not ordered). JSON.parse will do this.
+        uksort($normalizedData, function ($a, $b) {
+            return is_string($a) && is_numeric($b)
+                ? 1
+                : 0;
+        });
+
+        return array_map(function ($value) {
+            return $this->reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
+        }, $normalizedData);
     }
 
     public function castDataToJavaScriptReadableTypes($data)
