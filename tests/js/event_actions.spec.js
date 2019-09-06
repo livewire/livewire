@@ -95,6 +95,19 @@ test('polling', async () => {
     expect(pollHappened).toBeTruthy()
 })
 
+test('polling without specifying method refreshes by default', async () => {
+    var pollPayload;
+    mount('<div wire:poll.50ms></div>', (i) => { pollPayload = i })
+
+    await timeout(49)
+
+    expect(pollPayload).toBeUndefined()
+
+    await timeout(10)
+
+    expect(pollPayload.actionQueue[0].payload.method).toEqual('$refresh')
+})
+
 test('polling on root div', async () => {
     var pollHappened = false
     mountAsRoot('<div wire:id="123" wire:data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
