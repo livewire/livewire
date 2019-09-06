@@ -5049,10 +5049,10 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var method = directive.method || '$refresh';
     setInterval(function () {
       component.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_2__["default"](method, directive.params, el));
-    }, directive.durationOr(500));
+    }, directive.durationOr(2000));
   },
   fireActionRightAway: function fireActionRightAway(el, directive, component) {
-    var method = directive.method || '$refresh';
+    var method = directive.value ? directive.method : '$refresh';
     component.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_2__["default"](method, directive.params, el));
   },
   attachModelListener: function attachModelListener(el, directive, component) {
