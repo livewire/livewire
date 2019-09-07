@@ -57,7 +57,7 @@ class LivewireMakeCommandParser
 
     public function classNamespace()
     {
-        $namespace = config('livewire.namespace', $this->getAppNamespace());
+        $namespace = config('livewire.namespace', rtrim($this->getAppNamespace(), '\\'));
 
         return collect()
             ->concat([$namespace, 'Http', 'Livewire'])
