@@ -197,7 +197,7 @@ HTML;
             $fullAssetPath = "{$appUrl}/vendor/livewire{$versionedFileName}";
 
             if ($manifest !== $publishedManifest) {
-                $assetWarning = <<<HTML
+                $assetWarning = <<<'HTML'
 <!--
     WARNING: The published Livewire assets are out of date.
     See: https://livewire-framework.com/docs/installation/
