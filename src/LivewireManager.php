@@ -148,11 +148,13 @@ class LivewireManager
         $styles = $this->cssAssets();
         $scripts = $this->javaScriptAssets($jsFileName, $options);
 
-        // <head> label.
-        // CSS assets.
+        // debug comment
         $html = $debug ? ['<!-- Livewire assets -->'] : [];
+
+        // CSS assets
         $html[] = $debug ? $styles : $this->minify($styles);
-        // JavaScript assets.
+
+        // JavaScript assets
         $html[] = $debug ? $scripts : $this->minify($scripts);
 
         return implode("\n", $html);
