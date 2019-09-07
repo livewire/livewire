@@ -20,7 +20,7 @@ class LivewireMakeCommandParser
     public function __construct($appPath, $viewPath, $rawCommand)
     {
         $this->appPath = rtrim($appPath, DIRECTORY_SEPARATOR).'/';
-        $this->viewPathName = rtrim(config('livewire.view-path', $viewPath), DIRECTORY_SEPARATOR);
+        $this->viewPathName = rtrim(config('livewire.view-path', 'livewire'), DIRECTORY_SEPARATOR);
         $this->viewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
 
         $directories = preg_split('/[.]+/', $rawCommand);
