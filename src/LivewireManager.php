@@ -177,15 +177,7 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
-        $appUrl = '';
-
-        if (file_exists(config_path('livewire.php'))) {
-            $appUrl = config('livewire.base_url');
-        }
-
-        if (! empty($options['base_url'])) {
-            $appUrl = rtrim($options['base_url'] ?? '', '/');
-        }
+        $appUrl = config('livewire.base_url',  rtrim($options['base_url'], '/'));
 
         $csrf = csrf_token();
 
