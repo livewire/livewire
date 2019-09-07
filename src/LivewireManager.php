@@ -186,9 +186,25 @@ HTML;
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest[$jsFileName];
 
-        $fullAssetPath = file_exists(public_path('vendor/livewire'))
-            ? "{$appUrl}/vendor/livewire{$versionedFileName}"
-            : "{$appUrl}/livewire{$versionedFileName}";
+        // default to dynamic `livewire.js` (served by Laravel)
+        $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
+        $assetWarning = null;
+
+        // use static assets if they have been published
+        if (file_exists(public_path('vendor/livewire'))) {
+            $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/mix-manifest.json')), true);
+            $versionedFileName = $publishedManifest[$jsFileName];
+            $fullAssetPath = "{$appUrl}/vendor/livewire{$versionedFileName}";
+
+            if ($manifest !== $publishedManifest) {
+                $assetWarning = <<<HTML
+<!--
+    WARNING: The published Livewire assets are out of date.
+    See: https://livewire-framework.com/docs/installation/
+-->
+HTML;
+            }
+        }
 
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
@@ -201,6 +217,7 @@ HTML;
         window.livewire_token = '{$csrf}';
     });
 </script>
+{$assetWarning}
 <script src="{$fullAssetPath}" defer></script>
 HTML;
     }
