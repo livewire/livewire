@@ -9,6 +9,8 @@ import store from '@/Store'
 import LoadingManager from './LoadingManager'
 import DirtyManager from './DirtyManager'
 import PrefetchManager from './PrefetchManager'
+import MethodAction from '@/action/method'
+import ModelAction from '@/action/model'
 
 export default class Component {
     constructor(el, connection) {
@@ -44,6 +46,10 @@ export default class Component {
         return DOM.getByAttributeAndValue('id', this.id)
     }
 
+    get root() {
+        return this.el
+    }
+
     initialize() {
         this.walk(el => {
             // Will run for every node in the component tree (not child component nodes).
@@ -56,23 +62,16 @@ export default class Component {
         })
     }
 
-    addPrefetchAction(action) {
-        if (this.prefetchManager.actionHasPrefetch(action)) {
-            return
-        }
-
-        const message = new PrefetchMessage(
-            this,
-            action,
-        )
-
-        this.prefetchManager.addMessage(message)
-
-        this.connection.sendMessage(message)
+    get(name) {
+        return this.data[name]
     }
 
-    receivePrefetchMessage(payload) {
-        this.prefetchManager.storeResponseInMessageForPayload(payload)
+    set(name, value) {
+        this.addAction(new ModelAction(name, value, this.el))
+    }
+
+    call(method, ...params) {
+        this.addAction(new MethodAction(method, params, this.el))
     }
 
     addAction(action) {
@@ -186,6 +185,26 @@ export default class Component {
 
         return div.firstElementChild.outerHTML
     }
+
+    addPrefetchAction(action) {
+        if (this.prefetchManager.actionHasPrefetch(action)) {
+            return
+        }
+
+        const message = new PrefetchMessage(
+            this,
+            action,
+        )
+
+        this.prefetchManager.addMessage(message)
+
+        this.connection.sendMessage(message)
+    }
+
+    receivePrefetchMessage(payload) {
+        this.prefetchManager.storeResponseInMessageForPayload(payload)
+    }
+
 
     handleMorph(dom) {
         morphdom(this.el.rawNode(), dom, {

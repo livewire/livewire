@@ -79,14 +79,17 @@ abstract class Component
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
-        return $view
+        $view
             ->with([
                 'errors' => (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
                 '_instance' => $this,
             ])
             // Automatically inject all public properties into the blade view.
-            ->with($this->getPublicPropertiesDefinedBySubClass())
-            ->render();
+            ->with($this->getPublicPropertiesDefinedBySubClass());
+
+        // Render the view with a Livewire-specific Blade compiler.
+
+        return (new LivewireViewCompiler($view))();
     }
 
     public function normalizePublicPropertiesForJavaScript()
