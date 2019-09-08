@@ -2,8 +2,6 @@
 
 namespace Livewire;
 
-use Livewire\LivewireBladeDirectives;
-
 class LivewireViewCompiler
 {
     protected $view;
