@@ -8,7 +8,6 @@ import 'whatwg-fetch'
 import 'promise-polyfill/src/polyfill';
 import { dispatch } from './util';
 import store from './Store';
-import { thisExpression } from '@babel/types';
 
 class Livewire {
     constructor(options = {}) {
