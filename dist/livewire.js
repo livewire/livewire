@@ -2898,7 +2898,7 @@ __webpack_require__.r(__webpack_exports__);
     var _this = this;
 
     // Forward the query string for the ajax requests.
-    fetch(window.livewire_app_url + '/livewire/message' + window.location.search, {
+    fetch("".concat(window.livewire_app_url, "/livewire/message/").concat(payload.name).concat(window.location.search), {
       method: 'POST',
       body: JSON.stringify(payload),
       // This enables "cookies".
