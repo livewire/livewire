@@ -8,6 +8,8 @@ use Illuminate\Routing\Router;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Engines\PhpEngine;
 use Illuminate\Support\Facades\Artisan;
@@ -67,6 +69,13 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        if ($this->app['livewire']->isLivewireRequest()) {
+            $this->bypassMiddleware([
+                TrimStrings::class,
+                ConvertEmptyStringsToNull::class,
+            ]);
+        }
+
         $this->registerRoutes();
         $this->registerViews();
         $this->registerCommands();
@@ -115,8 +124,14 @@ class LivewireServiceProvider extends ServiceProvider
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
     }
 
-    public function isLivewireRequest()
+    protected function bypassMiddleware(array $middlewareToExclude)
     {
-        return request()->headers->get('X-Livewire') == true;
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+
+        $openKernel = new ObjectPrybar($kernel);
+
+        $middleware = $openKernel->getProperty('middleware');
+
+        $openKernel->setProperty('middleware', array_diff($middleware, $middlewareToExclude));
     }
 }

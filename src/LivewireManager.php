@@ -18,6 +18,7 @@ class LivewireManager
     protected $customComponentResolver;
     protected $middlewaresFilter;
     protected $container;
+    public static $isLivewireRequestTestingOverride = false;
 
     public function __construct()
     {
@@ -203,5 +204,12 @@ HTML;
     protected function minify($subject)
     {
         return preg_replace('~(\v|\t|\s{2,})~m', '', $subject);
+    }
+
+    public function isLivewireRequest()
+    {
+        if (static::$isLivewireRequestTestingOverride) return true;
+
+        return request()->hasHeader('X-Livewire');
     }
 }
