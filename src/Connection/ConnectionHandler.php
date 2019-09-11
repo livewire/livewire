@@ -2,10 +2,10 @@
 
 namespace Livewire\Connection;
 
-use Livewire\SubsequentResponsePayload;
 use Livewire\Routing\Redirector;
 use Livewire\ComponentCacheManager;
 use Livewire\ComponentChecksumManager;
+use Livewire\SubsequentResponsePayload;
 use Illuminate\Validation\ValidationException;
 
 abstract class ConnectionHandler
