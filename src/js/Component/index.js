@@ -16,12 +16,12 @@ export default class Component {
     constructor(el, connection) {
         el.rawNode().__livewire = this
         this.id = el.getAttribute('id')
-        this.data = JSON.parse(el.getAttribute('data'))
-        this.events = JSON.parse(el.getAttribute('events'))
-        this.children = JSON.parse(el.getAttribute('children'))
-        this.middleware = el.getAttribute('middleware')
-        this.checksum = el.getAttribute('checksum')
-        this.name = el.getAttribute('name')
+        this.data = JSON.parse(this.extractLivewireAttribute('data'))
+        this.events = JSON.parse(this.extractLivewireAttribute('events'))
+        this.children = JSON.parse(this.extractLivewireAttribute('children'))
+        this.middleware = this.extractLivewireAttribute('middleware')
+        this.checksum = this.extractLivewireAttribute('checksum')
+        this.name = this.extractLivewireAttribute('name')
         this.connection = connection
         this.actionQueue = []
         this.messageInTransit = null
@@ -48,6 +48,14 @@ export default class Component {
 
     get root() {
         return this.el
+    }
+
+    extractLivewireAttribute(name) {
+        const value = this.el.getAttribute(name)
+
+        this.el.removeAttribute(name)
+
+        return value
     }
 
     initialize() {
@@ -205,10 +213,9 @@ export default class Component {
         this.prefetchManager.storeResponseInMessageForPayload(payload)
     }
 
-
     handleMorph(dom) {
         morphdom(this.el.rawNode(), dom, {
-            childrenOnly: true,
+            childrenOnly: false,
 
             getNodeKey: node => {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.

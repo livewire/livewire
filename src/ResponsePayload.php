@@ -2,57 +2,45 @@
 
 namespace Livewire;
 
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Contracts\Support\Arrayable;
-
-class ResponsePayload implements Arrayable, Jsonable
+class ResponsePayload
 {
-    public $id;
-    public $dom;
-    public $data;
-    public $checksum;
-    public $children;
-    public $eventQueue;
-    public $redirectTo;
-    public $dirtyInputs;
-    public $events;
-    public $fromPrefetch;
-    public $gc;
-
-    public function __construct($data)
+    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $data)
     {
-        $this->id = $data['id'];
-        $this->dom = $data['dom'];
-        $this->data = $data['data'];
-        $this->checksum = $data['checksum'];
-        $this->children = $data['children'];
-        $this->eventQueue = $data['eventQueue'];
-        $this->redirectTo = $data['redirectTo'];
-        $this->dirtyInputs = $data['dirtyInputs'];
-        $this->events = $data['events'];
-        $this->fromPrefetch = $data['fromPrefetch'];
-        $this->gc = $data['gc'];
+        $prefix = app('livewire')->prefix();
+
+        $attributesFormattedForHtmlElement = collect($data)
+            ->mapWithKeys(function ($value, $key) use ($prefix) {
+                return ["{$prefix}:{$key}" => $this->escapeStringForHtml($value)];
+            })->map(function ($value, $key) {
+                return sprintf('%s="%s"', $key, $value);
+            })->implode(' ');
+
+        preg_match('/<([a-zA-Z0-9\-]*)/', $dom, $matches, PREG_OFFSET_CAPTURE);
+        $tagName = $matches[1][0];
+        $lengthOfTagName = strlen($tagName);
+        $positionOfFirstCharacterInTagName = $matches[1][1];
+
+        return substr_replace(
+            $dom,
+            ' '.$attributesFormattedForHtmlElement,
+            $positionOfFirstCharacterInTagName + $lengthOfTagName,
+            0
+        );
     }
 
-    public function toArray()
+    public function escapeStringForHtml($subject)
     {
-        return [
-            'id' => $this->id,
-            'dom' => $this->dom,
-            'data' => $this->data,
-            'checksum' => $this->checksum,
-            'children' => $this->children,
-            'eventQueue' => $this->eventQueue,
-            'redirectTo' => $this->redirectTo,
-            'dirtyInputs' => $this->dirtyInputs,
-            'events' => $this->events,
-            'fromPrefetch' => $this->fromPrefetch,
-            'gc' => $this->gc,
-        ];
+        if (is_string($subject) || is_numeric($subject)) {
+            return htmlspecialchars($subject);
+        }
+
+        return htmlspecialchars(json_encode($subject));
     }
 
-    public function toJson($options = 0)
+    public function getRootElementTagName()
     {
-        return json_encode($this->toArray(), $options);
+        preg_match('/<([a-zA-Z0-9\-]*)/', $this->dom, $matches, PREG_OFFSET_CAPTURE);
+
+        return $matches[1][0];
     }
 }

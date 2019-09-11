@@ -30,6 +30,34 @@ export function mountAsRoot(dom, requestInterceptor = () => {}) {
     return document.body.firstElementChild
 };
 
+export function mountAsRootAndReturn(dom, returnedDom, dirtyInputs = [], requestInterceptor = async () => { }) {
+    // This is a crude way of wiping any existing DOM & listeners before we mount.
+    document.body.innerHTML = '';
+
+    document.body.innerHTML = dom
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            await requestInterceptor(payload)
+            setTimeout(() => {
+                this.onMessage({
+                    fromPrefetch: payload.fromPrefetch,
+                    id: payload.id,
+                    data: {},
+                    dirtyInputs: dirtyInputs,
+                    dom: returnedDom,
+                    gc: payload.gc,
+                })
+            }, 1)
+        },
+    }})
+    window.livewire.start()
+
+    return document.body.firstElementChild
+};
+
 export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
     document.body.innerHTML = '<div wire:id="123" wire:events="[&quot;'+event+'&quot;]" wire:data="{}">' + dom + '</div>'
 
