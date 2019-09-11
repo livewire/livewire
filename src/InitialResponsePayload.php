@@ -2,9 +2,9 @@
 
 namespace Livewire;
 
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Contracts\Support\Arrayable;
 
 class InitialResponsePayload extends ResponsePayload implements Htmlable, Arrayable, Jsonable
 {
