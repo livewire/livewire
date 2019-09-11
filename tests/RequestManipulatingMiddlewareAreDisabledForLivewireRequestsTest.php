@@ -30,6 +30,10 @@ class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends Te
             'emptyString' => '',
             'oneSpace' => ' ',
         ]]);
+
+        LivewireManager::$isLivewireRequestTestingOverride = null;
+
+        $this->refreshApplication();
     }
 
     /** @test */

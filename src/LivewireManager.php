@@ -18,7 +18,7 @@ class LivewireManager
     protected $customComponentResolver;
     protected $middlewaresFilter;
     protected $container;
-    public static $isLivewireRequestTestingOverride = false;
+    public static $isLivewireRequestTestingOverride;
 
     public function __construct()
     {
