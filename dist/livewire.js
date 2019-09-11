@@ -2032,12 +2032,12 @@ function () {
 
     el.rawNode().__livewire = this;
     this.id = el.getAttribute('id');
-    this.data = JSON.parse(el.getAttribute('data'));
-    this.events = JSON.parse(el.getAttribute('events'));
-    this.children = JSON.parse(el.getAttribute('children'));
-    this.middleware = el.getAttribute('middleware');
-    this.checksum = el.getAttribute('checksum');
-    this.name = el.getAttribute('name');
+    this.data = JSON.parse(this.extractLivewireAttribute('data'));
+    this.events = JSON.parse(this.extractLivewireAttribute('events'));
+    this.children = JSON.parse(this.extractLivewireAttribute('children'));
+    this.middleware = this.extractLivewireAttribute('middleware');
+    this.checksum = this.extractLivewireAttribute('checksum');
+    this.name = this.extractLivewireAttribute('name');
     this.connection = connection;
     this.actionQueue = [];
     this.messageInTransit = null;
@@ -2056,6 +2056,13 @@ function () {
   }
 
   _createClass(Component, [{
+    key: "extractLivewireAttribute",
+    value: function extractLivewireAttribute(name) {
+      var value = this.el.getAttribute(name);
+      this.el.removeAttribute(name);
+      return value;
+    }
+  }, {
     key: "initialize",
     value: function initialize() {
       var _this = this;
@@ -2204,7 +2211,7 @@ function () {
       var _this3 = this;
 
       Object(_dom_morphdom__WEBPACK_IMPORTED_MODULE_3__["default"])(this.el.rawNode(), dom, {
-        childrenOnly: true,
+        childrenOnly: false,
         getNodeKey: function getNodeKey(node) {
           // This allows the tracking of elements by the "key" attribute, like in VueJs.
           return node.hasAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":key")) ? node.getAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":key")) // If no "key", then first check for "wire:id", then "wire:model", then "id"
@@ -3594,6 +3601,11 @@ function () {
     key: "getAttribute",
     value: function getAttribute(attribute) {
       return this.el.getAttribute("".concat(prefix, ":").concat(attribute));
+    }
+  }, {
+    key: "removeAttribute",
+    value: function removeAttribute(attribute) {
+      return this.el.removeAttribute("".concat(prefix, ":").concat(attribute));
     }
   }, {
     key: "setAttribute",
