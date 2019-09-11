@@ -3,12 +3,13 @@
 namespace Tests;
 
 use Livewire\Component;
+use Livewire\Exceptions\CorruptComponentPayloadException;
 use Livewire\LivewireManager;
 
 class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends TestCase
 {
     /** @test */
-    public function public_id_property_is_set()
+    public function livewire_request_data_doesnt_dont_get_manipulated()
     {
         LivewireManager::$isLivewireRequestTestingOverride = true;
 
@@ -28,6 +29,28 @@ class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends Te
         ])->assertJson(['data' => [
             'emptyString' => '',
             'oneSpace' => ' ',
+        ]]);
+    }
+
+    /** @test */
+    public function non_livewire_requests_do_get_manipulated()
+    {
+        $this->expectException(CorruptComponentPayloadException::class);
+
+        $component = app(LivewireManager::class)->test(ComponentWithStringPropertiesStub::class);
+
+        $this->post("/livewire/message/{$component->name}", [
+            'actionQueue' => [],
+            'name' => $component->name,
+            'children' => $component->children,
+            'data' => $component->data,
+            'id' => $component->id,
+            'checksum' => $component->checksum,
+            'fromPrefetch' => [],
+            'gc' => $component->gc,
+        ])->assertJson(['data' => [
+            'emptyString' => null,
+            'oneSpace' => null,
         ]]);
     }
 }
