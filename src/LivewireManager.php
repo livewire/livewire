@@ -208,7 +208,9 @@ HTML;
 
     public function isLivewireRequest()
     {
-        if (static::$isLivewireRequestTestingOverride) return true;
+        if (static::$isLivewireRequestTestingOverride) {
+            return true;
+        }
 
         return request()->hasHeader('X-Livewire');
     }

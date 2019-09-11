@@ -3,8 +3,8 @@
 namespace Tests;
 
 use Livewire\Component;
-use Livewire\Exceptions\CorruptComponentPayloadException;
 use Livewire\LivewireManager;
+use Livewire\Exceptions\CorruptComponentPayloadException;
 
 class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends TestCase
 {

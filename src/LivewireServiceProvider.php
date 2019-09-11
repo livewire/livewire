@@ -8,8 +8,6 @@ use Illuminate\Routing\Router;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Engines\PhpEngine;
 use Illuminate\Support\Facades\Artisan;
@@ -20,8 +18,10 @@ use Illuminate\View\Engines\CompilerEngine;
 use Livewire\Commands\LivewireDestroyCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Illuminate\Support\Facades\Route as RouteFacade;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 
 class LivewireServiceProvider extends ServiceProvider
 {
