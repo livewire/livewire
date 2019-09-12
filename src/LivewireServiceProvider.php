@@ -52,7 +52,7 @@ class LivewireServiceProvider extends ServiceProvider
                         $e instanceof NotFoundHttpException
                         // Don't wrap "abort(500)".
                         || $e instanceof HttpException
-                        // Dont' wrap most Livewire exceptions.
+                        // Don't wrap most Livewire exceptions.
                         || isset($uses[BypassViewHandler::class])
                     ) {
                         // This is because there is no "parent::parent::".
