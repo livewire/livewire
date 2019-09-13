@@ -70,7 +70,7 @@ trait HandlesActions
     {
         return collect((new \ReflectionMethod($this, $method))->getParameters())->map(function ($parameter) use (&$params) {
             return rescue(function () use ($parameter) {
-                if($parameter->getClass()) {  
+                if ($parameter->getClass()) {
                     return app($parameter->getClass()->name);
                 } else {
                     return app($parameter->name);
