@@ -73,6 +73,7 @@ trait HandlesActions
                 if ($class = $parameter->getClass()) {
                     return app($class->name);
                 }
+
                 return app($parameter->name);
             }, function () use (&$params) {
                 return array_shift($params);
