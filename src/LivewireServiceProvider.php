@@ -8,6 +8,8 @@ use Illuminate\Routing\Router;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Engines\PhpEngine;
 use Illuminate\Support\Facades\Artisan;
@@ -72,6 +74,13 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        if ($this->app['livewire']->isLivewireRequest()) {
+            $this->bypassMiddleware([
+                TrimStrings::class,
+                ConvertEmptyStringsToNull::class,
+            ]);
+        }
+
         $this->registerRoutes();
         $this->registerViews();
         $this->registerCommands();
@@ -84,10 +93,7 @@ class LivewireServiceProvider extends ServiceProvider
         RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'unminified']);
         RouteFacade::get('/livewire/livewire.min.js', [LivewireJavaScriptAssets::class, 'minified']);
 
-        RouteFacade::post('/livewire/message', HttpConnectionHandler::class);
-
-        // This will be hit periodically by Livewire to make sure the csrf_token doesn't expire.
-        RouteFacade::get('/livewire/keep-alive', LivewireKeepAlive::class);
+        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class);
     }
 
     public function registerViews()
@@ -122,15 +128,18 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerBladeDirectives()
     {
-        Blade::directive('livewireAssets', function ($expression) {
-            return '{!! \Livewire\Livewire::assets('.$expression.') !!}';
-        });
-
+        Blade::directive('livewireAssets', [LivewireBladeDirectives::class, 'livewireAssets']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
     }
 
-    public function isLivewireRequest()
+    protected function bypassMiddleware(array $middlewareToExclude)
     {
-        return request()->headers->get('X-Livewire') == true;
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+
+        $openKernel = new ObjectPrybar($kernel);
+
+        $middleware = $openKernel->getProperty('middleware');
+
+        $openKernel->setProperty('middleware', array_diff($middleware, $middlewareToExclude));
     }
 }

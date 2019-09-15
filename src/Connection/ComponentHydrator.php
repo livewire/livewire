@@ -4,7 +4,7 @@ namespace Livewire\Connection;
 
 use Livewire\ComponentCacheManager;
 use Livewire\ComponentChecksumManager;
-use Livewire\Exceptions\ComponentMismatchException;
+use Livewire\Exceptions\CorruptComponentPayloadException;
 
 class ComponentHydrator
 {
@@ -27,7 +27,7 @@ class ComponentHydrator
         $checksumManager = new ComponentChecksumManager;
         throw_unless(
             $checksumManager->check($checksum, $component, $id, $publicProperties),
-            ComponentMismatchException::class
+            new CorruptComponentPayloadException($component)
         );
 
         $class = app('livewire')->getComponentClass($component);
