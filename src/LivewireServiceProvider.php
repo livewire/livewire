@@ -8,23 +8,27 @@ use Illuminate\Routing\Router;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Engines\PhpEngine;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Commands\LivewireCPCommand;
+use Livewire\Commands\LivewireMVCommand;
+use Livewire\Commands\LivewireRMCommand;
 use Livewire\Commands\LivewireCopyCommand;
 use Livewire\Commands\LivewireMakeCommand;
+use Livewire\Commands\LivewireMoveCommand;
+use Livewire\Commands\MakeLivewireCommand;
 use Livewire\Exceptions\BypassViewHandler;
 use Illuminate\View\Engines\CompilerEngine;
-use Livewire\Commands\LivewireRemoveCommand;
-use Livewire\Commands\LivewireRenameCommand;
-use Livewire\Commands\LivewireDestroyCommand;
+use Livewire\Commands\LivewireTouchCommand;
+use Livewire\Commands\LivewireDeleteCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Illuminate\Support\Facades\Route as RouteFacade;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -105,11 +109,15 @@ class LivewireServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
+                MakeLivewireCommand::class,
                 LivewireMakeCommand::class,
-                LivewireRenameCommand::class,
+                LivewireTouchCommand::class,
+                LivewireMoveCommand::class,
+                LivewireMVCommand::class,
                 LivewireCopyCommand::class,
-                LivewireRemoveCommand::class,
-                LivewireDestroyCommand::class,
+                LivewireCPCommand::class,
+                LivewireDeleteCommand::class,
+                LivewireRMCommand::class,
             ]);
 
             Artisan::command('livewire:discover', function () {
