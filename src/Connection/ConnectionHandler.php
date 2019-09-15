@@ -2,10 +2,10 @@
 
 namespace Livewire\Connection;
 
-use Livewire\ResponsePayload;
 use Livewire\Routing\Redirector;
 use Livewire\ComponentCacheManager;
 use Livewire\ComponentChecksumManager;
+use Livewire\SubsequentResponsePayload;
 use Illuminate\Validation\ValidationException;
 
 abstract class ConnectionHandler
@@ -34,7 +34,7 @@ abstract class ConnectionHandler
         $events = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
 
-        $response = new ResponsePayload([
+        $response = new SubsequentResponsePayload([
             'id' => $payload['id'],
             'dom' => $dom,
             'checksum' => (new ComponentChecksumManager)->generate($payload['name'], $payload['id'], $data),

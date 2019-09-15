@@ -184,6 +184,10 @@ export default class DOMElement {
         return this.el.getAttribute(`${prefix}:${attribute}`)
     }
 
+    removeAttribute(attribute) {
+        return this.el.removeAttribute(`${prefix}:${attribute}`)
+    }
+
     setAttribute(attribute, value) {
         return this.el.setAttribute(`${prefix}:${attribute}`, value)
     }

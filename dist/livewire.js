@@ -1986,6 +1986,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _LoadingManager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./LoadingManager */ "./src/js/Component/LoadingManager.js");
 /* harmony import */ var _DirtyManager__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./DirtyManager */ "./src/js/Component/DirtyManager.js");
 /* harmony import */ var _PrefetchManager__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./PrefetchManager */ "./src/js/Component/PrefetchManager.js");
+/* harmony import */ var _action_method__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @/action/method */ "./src/js/action/method.js");
+/* harmony import */ var _action_model__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @/action/model */ "./src/js/action/model.js");
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
@@ -2020,6 +2022,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
+
+
 var Component =
 /*#__PURE__*/
 function () {
@@ -2028,12 +2032,12 @@ function () {
 
     el.rawNode().__livewire = this;
     this.id = el.getAttribute('id');
-    this.data = JSON.parse(el.getAttribute('data'));
-    this.events = JSON.parse(el.getAttribute('events'));
-    this.children = JSON.parse(el.getAttribute('children'));
-    this.middleware = el.getAttribute('middleware');
-    this.checksum = el.getAttribute('checksum');
-    this.name = el.getAttribute('name');
+    this.data = JSON.parse(this.extractLivewireAttribute('data'));
+    this.events = JSON.parse(this.extractLivewireAttribute('events'));
+    this.children = JSON.parse(this.extractLivewireAttribute('children'));
+    this.middleware = this.extractLivewireAttribute('middleware');
+    this.checksum = this.extractLivewireAttribute('checksum');
+    this.name = this.extractLivewireAttribute('name');
     this.connection = connection;
     this.actionQueue = [];
     this.messageInTransit = null;
@@ -2052,6 +2056,13 @@ function () {
   }
 
   _createClass(Component, [{
+    key: "extractLivewireAttribute",
+    value: function extractLivewireAttribute(name) {
+      var value = this.el.getAttribute(name);
+      this.el.removeAttribute(name);
+      return value;
+    }
+  }, {
     key: "initialize",
     value: function initialize() {
       var _this = this;
@@ -2065,20 +2076,23 @@ function () {
       });
     }
   }, {
-    key: "addPrefetchAction",
-    value: function addPrefetchAction(action) {
-      if (this.prefetchManager.actionHasPrefetch(action)) {
-        return;
-      }
-
-      var message = new _PrefetchMessage__WEBPACK_IMPORTED_MODULE_1__["default"](this, action);
-      this.prefetchManager.addMessage(message);
-      this.connection.sendMessage(message);
+    key: "get",
+    value: function get(name) {
+      return this.data[name];
     }
   }, {
-    key: "receivePrefetchMessage",
-    value: function receivePrefetchMessage(payload) {
-      this.prefetchManager.storeResponseInMessageForPayload(payload);
+    key: "set",
+    value: function set(name, value) {
+      this.addAction(new _action_model__WEBPACK_IMPORTED_MODULE_12__["default"](name, value, this.el));
+    }
+  }, {
+    key: "call",
+    value: function call(method) {
+      for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        params[_key - 1] = arguments[_key];
+      }
+
+      this.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_11__["default"](method, params, this.el));
     }
   }, {
     key: "addAction",
@@ -2176,12 +2190,28 @@ function () {
       return div.firstElementChild.outerHTML;
     }
   }, {
+    key: "addPrefetchAction",
+    value: function addPrefetchAction(action) {
+      if (this.prefetchManager.actionHasPrefetch(action)) {
+        return;
+      }
+
+      var message = new _PrefetchMessage__WEBPACK_IMPORTED_MODULE_1__["default"](this, action);
+      this.prefetchManager.addMessage(message);
+      this.connection.sendMessage(message);
+    }
+  }, {
+    key: "receivePrefetchMessage",
+    value: function receivePrefetchMessage(payload) {
+      this.prefetchManager.storeResponseInMessageForPayload(payload);
+    }
+  }, {
     key: "handleMorph",
     value: function handleMorph(dom) {
       var _this3 = this;
 
       Object(_dom_morphdom__WEBPACK_IMPORTED_MODULE_3__["default"])(this.el.rawNode(), dom, {
-        childrenOnly: true,
+        childrenOnly: false,
         getNodeKey: function getNodeKey(node) {
           // This allows the tracking of elements by the "key" attribute, like in VueJs.
           return node.hasAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":key")) ? node.getAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":key")) // If no "key", then first check for "wire:id", then "wire:model", then "id"
@@ -2357,6 +2387,11 @@ function () {
     key: "el",
     get: function get() {
       return _dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].getByAttributeAndValue('id', this.id);
+    }
+  }, {
+    key: "root",
+    get: function get() {
+      return this.el;
     }
   }]);
 
@@ -2691,7 +2726,7 @@ function (_Action) {
   _createClass(_default, [{
     key: "toId",
     value: function toId() {
-      return btoa(this.type, this.payload.event, JSON.stringify(this.payload.params));
+      return btoa(encodeURIComponent(this.type, this.payload.event, JSON.stringify(this.payload.params)));
     }
   }]);
 
@@ -2730,7 +2765,7 @@ function () {
   _createClass(_default, [{
     key: "toId",
     value: function toId() {
-      return btoa(this.el.el.outerHTML);
+      return btoa(encodeURIComponent(this.el.el.outerHTML));
     }
   }, {
     key: "ref",
@@ -2866,20 +2901,11 @@ __webpack_require__.r(__webpack_exports__);
   onMessage: null,
   init: function init() {//
   },
-  keepAlive: function keepAlive() {
-    fetch(window.livewire_app_url + '/livewire/keep-alive', {
-      credentials: "same-origin",
-      headers: {
-        'X-CSRF-TOKEN': this.getCSRFToken(),
-        'X-Livewire-Keep-Alive': true
-      }
-    });
-  },
   sendMessage: function sendMessage(payload) {
     var _this = this;
 
     // Forward the query string for the ajax requests.
-    fetch(window.livewire_app_url + '/livewire/message' + window.location.search, {
+    fetch("".concat(window.livewire_app_url, "/livewire/message/").concat(payload.name).concat(window.location.search), {
       method: 'POST',
       body: JSON.stringify(payload),
       // This enables "cookies".
@@ -3032,15 +3058,7 @@ function () {
 
     this.driver.onError = function (payload) {
       _this.onError(payload);
-    }; // This prevents those annoying CSRF 419's by keeping the cookie fresh.
-    // Yum! No one likes stale cookies...
-
-
-    if (typeof this.driver.keepAlive !== 'undefined') {
-      setInterval(function () {
-        _this.driver.keepAlive();
-      }, 600000); // Every ten minutes.
-    }
+    };
 
     this.driver.init();
   }
@@ -3583,6 +3601,11 @@ function () {
     key: "getAttribute",
     value: function getAttribute(attribute) {
       return this.el.getAttribute("".concat(prefix, ":").concat(attribute));
+    }
+  }, {
+    key: "removeAttribute",
+    value: function removeAttribute(attribute) {
+      return this.el.removeAttribute("".concat(prefix, ":").concat(attribute));
     }
   }, {
     key: "setAttribute",
@@ -4891,6 +4914,11 @@ function () {
   }
 
   _createClass(Livewire, [{
+    key: "find",
+    value: function find(componentId) {
+      return _Store__WEBPACK_IMPORTED_MODULE_0__["default"].componentsById[componentId];
+    }
+  }, {
     key: "onLoad",
     value: function onLoad(callback) {
       this.onLoadCallback = callback;
@@ -4977,6 +5005,7 @@ if (!window.Livewire) {
   window.Livewire = Livewire;
 }
 
+Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:available');
 /* harmony default export */ __webpack_exports__["default"] = (Livewire);
 
 /***/ }),
@@ -5065,10 +5094,10 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var method = directive.method || '$refresh';
     setInterval(function () {
       component.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_2__["default"](method, directive.params, el));
-    }, directive.durationOr(500));
+    }, directive.durationOr(2000));
   },
   fireActionRightAway: function fireActionRightAway(el, directive, component) {
-    var method = directive.method || '$refresh';
+    var method = directive.value ? directive.method : '$refresh';
     component.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_2__["default"](method, directive.params, el));
   },
   attachModelListener: function attachModelListener(el, directive, component) {

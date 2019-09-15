@@ -9,17 +9,19 @@ import store from '@/Store'
 import LoadingManager from './LoadingManager'
 import DirtyManager from './DirtyManager'
 import PrefetchManager from './PrefetchManager'
+import MethodAction from '@/action/method'
+import ModelAction from '@/action/model'
 
 export default class Component {
     constructor(el, connection) {
         el.rawNode().__livewire = this
         this.id = el.getAttribute('id')
-        this.data = JSON.parse(el.getAttribute('data'))
-        this.events = JSON.parse(el.getAttribute('events'))
-        this.children = JSON.parse(el.getAttribute('children'))
-        this.middleware = el.getAttribute('middleware')
-        this.checksum = el.getAttribute('checksum')
-        this.name = el.getAttribute('name')
+        this.data = JSON.parse(this.extractLivewireAttribute('data'))
+        this.events = JSON.parse(this.extractLivewireAttribute('events'))
+        this.children = JSON.parse(this.extractLivewireAttribute('children'))
+        this.middleware = this.extractLivewireAttribute('middleware')
+        this.checksum = this.extractLivewireAttribute('checksum')
+        this.name = this.extractLivewireAttribute('name')
         this.connection = connection
         this.actionQueue = []
         this.messageInTransit = null
@@ -44,6 +46,18 @@ export default class Component {
         return DOM.getByAttributeAndValue('id', this.id)
     }
 
+    get root() {
+        return this.el
+    }
+
+    extractLivewireAttribute(name) {
+        const value = this.el.getAttribute(name)
+
+        this.el.removeAttribute(name)
+
+        return value
+    }
+
     initialize() {
         this.walk(el => {
             // Will run for every node in the component tree (not child component nodes).
@@ -56,23 +70,16 @@ export default class Component {
         })
     }
 
-    addPrefetchAction(action) {
-        if (this.prefetchManager.actionHasPrefetch(action)) {
-            return
-        }
-
-        const message = new PrefetchMessage(
-            this,
-            action,
-        )
-
-        this.prefetchManager.addMessage(message)
-
-        this.connection.sendMessage(message)
+    get(name) {
+        return this.data[name]
     }
 
-    receivePrefetchMessage(payload) {
-        this.prefetchManager.storeResponseInMessageForPayload(payload)
+    set(name, value) {
+        this.addAction(new ModelAction(name, value, this.el))
+    }
+
+    call(method, ...params) {
+        this.addAction(new MethodAction(method, params, this.el))
     }
 
     addAction(action) {
@@ -187,9 +194,28 @@ export default class Component {
         return div.firstElementChild.outerHTML
     }
 
+    addPrefetchAction(action) {
+        if (this.prefetchManager.actionHasPrefetch(action)) {
+            return
+        }
+
+        const message = new PrefetchMessage(
+            this,
+            action,
+        )
+
+        this.prefetchManager.addMessage(message)
+
+        this.connection.sendMessage(message)
+    }
+
+    receivePrefetchMessage(payload) {
+        this.prefetchManager.storeResponseInMessageForPayload(payload)
+    }
+
     handleMorph(dom) {
         morphdom(this.el.rawNode(), dom, {
-            childrenOnly: true,
+            childrenOnly: false,
 
             getNodeKey: node => {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.

@@ -37,7 +37,8 @@ class ComponentCacheManager
         return cache()->put("{$this->component->id}", $componentCache, $forThreeDays = 259200);
     }
 
-    protected function getFullComponentCache() {
+    protected function getFullComponentCache()
+    {
         return cache()->get("{$this->component->id}", []);
     }
 

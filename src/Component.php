@@ -73,31 +73,65 @@ abstract class Component
     {
         $view = $this->render();
 
+        // Normalize all the public properties in the component for JavaScript.
+        $this->normalizePublicPropertiesForJavaScript();
+
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
-        return $view
+        $view
             ->with([
                 'errors' => (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
                 '_instance' => $this,
             ])
             // Automatically inject all public properties into the blade view.
-            ->with($this->getPublicDataFromComponent())
-            ->render();
+            ->with($this->getPublicPropertiesDefinedBySubClass());
+
+        // Render the view with a Livewire-specific Blade compiler.
+
+        return (new LivewireViewCompiler($view))();
     }
 
-    protected function getPublicDataFromComponent()
+    public function normalizePublicPropertiesForJavaScript()
     {
-        $data = $this->getPublicPropertiesDefinedBySubClass();
+        $normalizedProperties = $this->castDataToJavaScriptReadableTypes(
+            $this->reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder(
+                $this->getPublicPropertiesDefinedBySubClass()
+            )
+        );
 
-        return $this->castDataToJavaScriptReadableTypes($data);
+        foreach ($normalizedProperties as $key => $value) {
+            $this->setPropertyValue($key, $value);
+        }
+    }
+
+    protected function reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($data)
+    {
+        if (! is_array($data)) {
+            return $data;
+        }
+
+        // "array_merge", used this way, effectively performs "array_values",
+        // but doesn't touch non-numeric keys, like "array_values" does.
+        $normalizedData = array_merge($data);
+
+        // Make sure string keys are last (but not ordered). JSON.parse will do this.
+        uksort($normalizedData, function ($a, $b) {
+            return is_string($a) && is_numeric($b)
+                ? 1
+                : 0;
+        });
+
+        return array_map(function ($value) {
+            return $this->reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
+        }, $normalizedData);
     }
 
     public function castDataToJavaScriptReadableTypes($data)
     {
         array_walk($data, function ($value, $key) {
             throw_unless(
-                is_null($value) || is_array($value) || is_numeric($value) || is_string($value),
+                is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value),
                 new PublicPropertyTypeNotAllowedException($this->getName(), $key, $value)
             );
         });

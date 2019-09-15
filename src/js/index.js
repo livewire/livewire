@@ -30,6 +30,10 @@ class Livewire {
         store.initializeGarbageCollection()
     }
 
+    find(componentId) {
+        return store.componentsById[componentId]
+    }
+
     onLoad(callback) {
         this.onLoadCallback = callback
     }
@@ -95,8 +99,10 @@ class Livewire {
     }
 }
 
-if (!window.Livewire) {
+if (! window.Livewire) {
     window.Livewire = Livewire
 }
+
+dispatch('livewire:available')
 
 export default Livewire
