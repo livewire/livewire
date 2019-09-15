@@ -4,11 +4,11 @@ namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
 
-class LivewireCopyCommand extends LivewireFileManipulationCommand
+class LivewireMoveCommand extends LivewireFileManipulationCommand
 {
-    protected $signature = 'livewire:copy {name} {newName} {--force}';
+    protected $signature = 'livewire:move {name} {newName}';
 
-    protected $description = 'Copy a Livewire component. Both its class and blade view. (Alias livewire:cp)';
+    protected $description = 'Move Copy a Livewire component. Both its class and blade view. (Alias livewire:mv)';
 
     public function handle()
     {
@@ -19,21 +19,19 @@ class LivewireCopyCommand extends LivewireFileManipulationCommand
             $this->argument('newName')
         );
 
-        $force = $this->option('force');
-
-        $class = $this->copyClass($force);
-        $view = $this->copyView($force);
+        $class = $this->renameClass();
+        $view = $this->renameView();
 
         $this->refreshComponentAutodiscovery();
 
-        ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT COPIED </> 🤙\n");
+        ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT MOVED </> 🤙\n");
         $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->component->relativeClassPath()} <options=bold;fg=green>=></> {$this->parser->newComponent->relativeClassPath()}");
         $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->component->relativeViewPath()} <options=bold;fg=green>=></> {$this->parser->newComponent->relativeViewPath()}");
     }
 
-    protected function copyClass($force)
+    protected function renameClass()
     {
-        if (File::exists($this->parser->newComponent->classPath()) && ! $force) {
+        if (File::exists($this->parser->newComponent->classPath())) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
             $this->line("<fg=red;options=bold>Class already exists:</> {$this->parser->newComponent->relativeClassPath()}");
 
@@ -42,19 +40,25 @@ class LivewireCopyCommand extends LivewireFileManipulationCommand
 
         $this->ensureDirectoryExists($this->parser->newComponent->classPath());
 
-        return File::put($this->parser->newComponent->classPath(), $this->parser->newClassContents());
+        File::put($this->parser->newComponent->classPath(), $this->parser->newClassContents());
+
+        return File::delete($this->parser->component->classPath());
     }
 
-    protected function copyView($force)
+    protected function renameView()
     {
-        if (File::exists($this->parser->newComponent->viewPath()) && ! $force) {
+        $newViewPath = $this->parser->newComponent->viewPath();
+
+        if (File::exists($newViewPath)) {
             $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->newComponent->relativeViewPath()}");
 
             return false;
         }
 
-        $this->ensureDirectoryExists($this->parser->newComponent->viewPath());
+        $this->ensureDirectoryExists($newViewPath);
 
-        return File::copy("{$this->parser->component->viewPath()}", $this->parser->newComponent->viewPath());
+        File::move($this->parser->component->viewPath(), $newViewPath);
+
+        return $newViewPath;
     }
 }

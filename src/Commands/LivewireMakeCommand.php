@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\File;
 
 class LivewireMakeCommand extends LivewireFileManipulationCommand
 {
-    protected $signature = 'make:livewire {name} {--force}';
+    protected $signature = 'livewire:make {name} {--force}';
 
-    protected $description = 'Create a new Livewire component and it\'s corresponding blade view.';
+    protected $description = 'Create a new Livewire component and it\'s corresponding blade view. (Alias livewire:touch)';
 
     public function handle()
     {
@@ -28,8 +28,8 @@ class LivewireMakeCommand extends LivewireFileManipulationCommand
         $this->refreshComponentAutodiscovery();
 
         ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
-        $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");
-        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
+        $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->component->relativeClassPath()}");
+        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->component->relativeViewPath()}");
 
         if ($showWelcomeMessage) {
             $this->writeWelcomeMessage();
@@ -38,11 +38,11 @@ class LivewireMakeCommand extends LivewireFileManipulationCommand
 
     protected function createClass($force = false)
     {
-        $classPath = $this->parser->classPath();
+        $classPath = $this->parser->component->classPath();
 
         if (File::exists($classPath) && ! $force) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class already exists:</> {$this->parser->relativeClassPath()}");
+            $this->line("<fg=red;options=bold>Class already exists:</> {$this->parser->component->relativeClassPath()}");
 
             return false;
         }
@@ -56,17 +56,17 @@ class LivewireMakeCommand extends LivewireFileManipulationCommand
 
     protected function createView($force = false)
     {
-        $viewPath = $this->parser->viewPath();
+        $viewPath = $this->parser->component->viewPath();
 
         if (File::exists($viewPath) && ! $force) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->relativeViewPath()}");
+            $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->component->relativeViewPath()}");
 
             return false;
         }
 
         $this->ensureDirectoryExists($viewPath);
 
-        File::put($viewPath, $this->parser->viewContents());
+        File::put($viewPath, $this->parser->component->viewContents());
 
         return $viewPath;
     }

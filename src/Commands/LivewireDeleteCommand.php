@@ -4,11 +4,11 @@ namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
 
-class LivewireDestroyCommand extends LivewireFileManipulationCommand
+class LivewireDeleteCommand extends LivewireFileManipulationCommand
 {
-    protected $signature = 'livewire:destroy {name} {--force}';
+    protected $signature = 'livewire:delete {name} {--force}';
 
-    protected $description = 'Remove a Livewire component\'s class and view.';
+    protected $description = 'Delete a Livewire component\'s class and view. (Alias livewire:rm)';
 
     public function handle()
     {
@@ -34,17 +34,17 @@ class LivewireDestroyCommand extends LivewireFileManipulationCommand
         $this->refreshComponentAutodiscovery();
 
         ($class && $view) && $this->line("<options=bold,reverse;fg=yellow> COMPONENT DESTROYED </> 🦖💫\n");
-        $class && $this->line("<options=bold;fg=yellow>CLASS:</> {$this->parser->relativeClassPath()}");
-        $view && $this->line("<options=bold;fg=yellow>VIEW:</>  {$this->parser->relativeViewPath()}");
+        $class && $this->line("<options=bold;fg=yellow>CLASS:</> {$this->parser->component->relativeClassPath()}");
+        $view && $this->line("<options=bold;fg=yellow>VIEW:</>  {$this->parser->component->relativeViewPath()}");
     }
 
     protected function removeClass($force = false)
     {
-        $classPath = $this->parser->classPath();
+        $classPath = $this->parser->component->classPath();
 
         if (! File::exists($classPath) && ! $force) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class doesn't exist:</> {$this->parser->relativeClassPath()}");
+            $this->line("<fg=red;options=bold>Class doesn't exist:</> {$this->parser->component->relativeClassPath()}");
 
             return false;
         }
@@ -56,10 +56,10 @@ class LivewireDestroyCommand extends LivewireFileManipulationCommand
 
     protected function removeView($force = false)
     {
-        $viewPath = $this->parser->viewPath();
+        $viewPath = $this->parser->component->viewPath();
 
         if (! File::exists($viewPath) && ! $force) {
-            $this->line("<fg=red;options=bold>View doesn't exist:</> {$this->parser->relativeViewPath()}");
+            $this->line("<fg=red;options=bold>View doesn't exist:</> {$this->parser->component->relativeViewPath()}");
 
             return false;
         }
