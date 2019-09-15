@@ -2,8 +2,6 @@
 
 namespace Livewire\Commands;
 
-use Illuminate\Support\Facades\File;
-
 class MakeLivewireCommand extends LivewireMakeCommand
 {
     protected $signature = 'make:livewire {name} {--force}';
