@@ -75,7 +75,7 @@ class LivewireServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__.'/../dist' => public_path('vendor/livewire'),
-        ], 'livewire-assets');
+        ], ['livewire', 'livewire:assets']);
     }
 
     public function registerRoutes()

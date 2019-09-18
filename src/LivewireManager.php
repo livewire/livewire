@@ -148,13 +148,13 @@ class LivewireManager
         $styles = $this->cssAssets();
         $scripts = $this->javaScriptAssets($jsFileName, $options);
 
-        // debug comment
+        // HTML Label.
         $html = $debug ? ['<!-- Livewire assets -->'] : [];
 
-        // CSS assets
+        // CSS assets.
         $html[] = $debug ? $styles : $this->minify($styles);
 
-        // JavaScript assets
+        // JavaScript assets.
         $html[] = $debug ? $scripts : $this->minify($scripts);
 
         return implode("\n", $html);
@@ -186,11 +186,11 @@ HTML;
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest[$jsFileName];
 
-        // default to dynamic `livewire.js` (served by Laravel)
+        // Default to dynamic `livewire.js` (served by a Laravel route).
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
         $assetWarning = null;
 
-        // use static assets if they have been published
+        // Use static assets if they have been published
         if (file_exists(public_path('vendor/livewire'))) {
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/mix-manifest.json')), true);
             $versionedFileName = $publishedManifest[$jsFileName];
@@ -198,10 +198,9 @@ HTML;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
-<!--
-    WARNING: The published Livewire assets are out of date.
-    See: https://livewire-framework.com/docs/installation/
--->
+<script>
+    console.warn("Livewire: The published Livewire assets are out of date\n See: https://livewire-framework.com/docs/installation/")
+</script>
 HTML;
             }
         }
