@@ -30,6 +30,10 @@ class Livewire {
         store.initializeGarbageCollection()
     }
 
+    find(componentId) {
+        return store.componentsById[componentId]
+    }
+
     onLoad(callback) {
         this.onLoadCallback = callback
     }

@@ -18,8 +18,10 @@ use Illuminate\View\Engines\CompilerEngine;
 use Livewire\Commands\LivewireDestroyCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Illuminate\Support\Facades\Route as RouteFacade;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -50,7 +52,7 @@ class LivewireServiceProvider extends ServiceProvider
                         $e instanceof NotFoundHttpException
                         // Don't wrap "abort(500)".
                         || $e instanceof HttpException
-                        // Dont' wrap most Livewire exceptions.
+                        // Don't wrap most Livewire exceptions.
                         || isset($uses[BypassViewHandler::class])
                     ) {
                         // This is because there is no "parent::parent::".
@@ -67,6 +69,13 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        if ($this->app['livewire']->isLivewireRequest()) {
+            $this->bypassMiddleware([
+                TrimStrings::class,
+                ConvertEmptyStringsToNull::class,
+            ]);
+        }
+
         $this->registerRoutes();
         $this->registerViews();
         $this->registerCommands();
@@ -76,6 +85,10 @@ class LivewireServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
         ], 'livewire-config');
+      
+        $this->publishes([
+            __DIR__.'/../dist' => public_path('vendor/livewire'),
+        ], ['livewire', 'livewire:assets']);
     }
 
     public function registerRoutes()
@@ -83,7 +96,7 @@ class LivewireServiceProvider extends ServiceProvider
         RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'unminified']);
         RouteFacade::get('/livewire/livewire.min.js', [LivewireJavaScriptAssets::class, 'minified']);
 
-        RouteFacade::post('/livewire/message', HttpConnectionHandler::class);
+        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class);
     }
 
     public function registerViews()
@@ -115,15 +128,18 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerBladeDirectives()
     {
-        Blade::directive('livewireAssets', function ($expression) {
-            return '{!! \Livewire\Livewire::assets('.$expression.') !!}';
-        });
-
+        Blade::directive('livewireAssets', [LivewireBladeDirectives::class, 'livewireAssets']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
     }
 
-    public function isLivewireRequest()
+    protected function bypassMiddleware(array $middlewareToExclude)
     {
-        return request()->headers->get('X-Livewire') == true;
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+
+        $openKernel = new ObjectPrybar($kernel);
+
+        $middleware = $openKernel->getProperty('middleware');
+
+        $openKernel->setProperty('middleware', array_diff($middleware, $middlewareToExclude));
     }
 }

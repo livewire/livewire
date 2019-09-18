@@ -18,6 +18,7 @@ class LivewireManager
     protected $customComponentResolver;
     protected $middlewaresFilter;
     protected $container;
+    public static $isLivewireRequestTestingOverride;
 
     public function __construct()
     {
@@ -148,10 +149,12 @@ class LivewireManager
         $styles = $this->cssAssets();
         $scripts = $this->javaScriptAssets($jsFileName, $options);
 
-        // <head> label.
-        $html = $debug ? ['<!-- Livewire Assets-->'] : [];
+        // HTML Label.
+        $html = $debug ? ['<!-- Livewire assets -->'] : [];
+
         // CSS assets.
         $html[] = $debug ? $styles : $this->minify($styles);
+
         // JavaScript assets.
         $html[] = $debug ? $scripts : $this->minify($scripts);
 
@@ -183,7 +186,25 @@ HTML;
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
         $versionedFileName = $manifest[$jsFileName];
+
+        // Default to dynamic `livewire.js` (served by a Laravel route).
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
+        $assetWarning = null;
+
+        // Use static assets if they have been published
+        if (file_exists(public_path('vendor/livewire'))) {
+            $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/mix-manifest.json')), true);
+            $versionedFileName = $publishedManifest[$jsFileName];
+            $fullAssetPath = "{$appUrl}/vendor/livewire{$versionedFileName}";
+
+            if ($manifest !== $publishedManifest) {
+                $assetWarning = <<<'HTML'
+<script>
+    console.warn("Livewire: The published Livewire assets are out of date\n See: https://livewire-framework.com/docs/installation/")
+</script>
+HTML;
+            }
+        }
 
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
@@ -196,6 +217,7 @@ HTML;
         window.livewire_token = '{$csrf}';
     });
 </script>
+{$assetWarning}
 <script src="{$fullAssetPath}" defer></script>
 HTML;
     }
@@ -203,5 +225,14 @@ HTML;
     protected function minify($subject)
     {
         return preg_replace('~(\v|\t|\s{2,})~m', '', $subject);
+    }
+
+    public function isLivewireRequest()
+    {
+        if (static::$isLivewireRequestTestingOverride) {
+            return true;
+        }
+
+        return request()->hasHeader('X-Livewire');
     }
 }

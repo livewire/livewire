@@ -64,11 +64,11 @@ export default {
 
         setInterval(() => {
             component.addAction(new MethodAction(method, directive.params, el))
-        }, directive.durationOr(500));
+        }, directive.durationOr(2000));
     },
 
     fireActionRightAway(el, directive, component) {
-        const method = directive.method || '$refresh'
+        const method = directive.value ? directive.method : '$refresh'
 
         component.addAction(new MethodAction(method, directive.params, el))
     },
