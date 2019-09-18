@@ -180,7 +180,7 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
-        $appUrl = rtrim($options['base_url'] ?? '', '/');
+        $appUrl = config('livewire.base_url', rtrim($options['base_url'], '/'));
 
         $csrf = csrf_token();
 

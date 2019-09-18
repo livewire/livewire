@@ -83,6 +83,10 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerBladeDirectives();
 
         $this->publishes([
+            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
+        ], 'livewire-config');
+      
+        $this->publishes([
             __DIR__.'/../dist' => public_path('vendor/livewire'),
         ], ['livewire', 'livewire:assets']);
     }
@@ -97,7 +101,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerViews()
     {
-        $this->loadViewsFrom(__DIR__.DIRECTORY_SEPARATOR.'views', 'livewire');
+        $this->loadViewsFrom(__DIR__.DIRECTORY_SEPARATOR.'views', config('livewire.view-path', 'livewire'));
     }
 
     public function registerCommands()

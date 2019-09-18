@@ -5,12 +5,9 @@ namespace Livewire\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Livewire\LivewireComponentsFinder;
-use Illuminate\Console\DetectsApplicationNamespace;
 
 class LivewireMakeCommand extends Command
 {
-    use DetectsApplicationNamespace;
-
     protected $signature = 'make:livewire {name} {--force}';
 
     protected $description = 'Create a new Livewire component and it\'s corresponding blade view.';
