@@ -84,14 +84,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
-
-        $this->publishes([
-            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
-        ], ['livewire', 'livewire:config']);
-
-        $this->publishes([
-            __DIR__.'/../dist' => public_path('vendor/livewire'),
-        ], ['livewire', 'livewire:assets']);
+        $this->registerPublishables();
     }
 
     public function registerRoutes()
@@ -144,5 +137,16 @@ class LivewireServiceProvider extends ServiceProvider
         $middleware = $openKernel->getProperty('middleware');
 
         $openKernel->setProperty('middleware', array_diff($middleware, $middlewareToExclude));
+    }
+
+    protected function registerPublishables()
+    {
+        $this->publishes([
+            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
+        ], ['livewire', 'livewire:config']);
+
+        $this->publishes([
+            __DIR__.'/../dist' => public_path('vendor/livewire'),
+        ], ['livewire', 'livewire:assets']);
     }
 }
