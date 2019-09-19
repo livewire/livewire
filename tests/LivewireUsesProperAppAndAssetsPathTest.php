@@ -38,38 +38,38 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     }
 
     /** @test */
-    public function livewire_js_calls_reference_congigured_base_url()
+    public function livewire_js_calls_reference_congigured_asset_url()
     {
         $this->assertContains(
             '<script src="https://foo.com/assets/livewire/livewire.min.js?',
-            Livewire::assets(['base_url' => 'https://foo.com/assets'])
+            Livewire::assets(['asset_url' => 'https://foo.com/assets'])
         );
 
         $this->assertContains(
             "window.livewire_app_url = 'https://foo.com/assets';",
-            Livewire::assets(['base_url' => 'https://foo.com/assets'])
+            Livewire::assets(['asset_url' => 'https://foo.com/assets'])
         );
     }
 
     /** @test */
-    public function base_url_trailing_slashes_are_trimmed()
+    public function asset_url_trailing_slashes_are_trimmed()
     {
         $this->assertContains(
             '<script src="https://foo.com/assets/livewire/livewire.min.js?',
-            Livewire::assets(['base_url' => 'https://foo.com/assets/'])
+            Livewire::assets(['asset_url' => 'https://foo.com/assets/'])
         );
 
         $this->assertContains(
             "window.livewire_app_url = 'https://foo.com/assets';",
-            Livewire::assets(['base_url' => 'https://foo.com/assets/'])
+            Livewire::assets(['asset_url' => 'https://foo.com/assets/'])
         );
     }
 
     /** @test */
-    public function base_url_passed_into_blade_assets_directive()
+    public function asset_url_passed_into_blade_assets_directive()
     {
         $output = View::make('assets-directive', [
-            'options' => ['base_url' => 'https://foo.com/assets/'],
+            'options' => ['asset_url' => 'https://foo.com/assets/'],
         ])->render();
 
         $this->assertContains(

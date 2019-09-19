@@ -5,6 +5,7 @@ namespace Livewire\Commands;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Console\DetectsApplicationNamespace;
+use Illuminate\Console\GeneratorCommand;
 
 class LivewireMakeCommandParser
 {
@@ -12,16 +13,18 @@ class LivewireMakeCommandParser
 
     protected $appPath;
     protected $viewPath;
-    protected $viewPathName;
     protected $component;
     protected $componentClass;
     protected $directories;
 
-    public function __construct($appPath, $viewPath, $rawCommand)
+    public function __construct($classNamespace, $viewPath, $rawCommand)
     {
-        $this->appPath = rtrim($appPath, DIRECTORY_SEPARATOR).'/';
-        $this->viewPathName = rtrim(config('livewire.view-path', 'livewire'), DIRECTORY_SEPARATOR);
-        $this->viewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
+        $this->baseClassNamespace = $classNamespace;
+
+        $classPath = static::generatePathFromNamespace($classNamespace);
+
+        $this->baseClassPath = rtrim($classPath, DIRECTORY_SEPARATOR).'/';
+        $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
 
         $directories = preg_split('/[.]+/', $rawCommand);
 
@@ -38,8 +41,7 @@ class LivewireMakeCommandParser
 
     public function classPath()
     {
-        return $this->appPath.collect()
-            ->concat(['Http', 'Livewire'])
+        return $this->baseClassPath.collect()
             ->concat($this->directories)
             ->push($this->classFile())
             ->implode(DIRECTORY_SEPARATOR);
@@ -57,12 +59,12 @@ class LivewireMakeCommandParser
 
     public function classNamespace()
     {
-        $namespace = config('livewire.namespace', rtrim($this->getAppNamespace(), '\\'));
-
-        return collect()
-            ->concat([$namespace, 'Http', 'Livewire'])
-            ->concat($this->directories)
-            ->implode('\\');
+        return empty($this->directories)
+            ? $this->baseClassNamespace
+            : $this->baseClassNamespace.'\\'.collect()
+                ->concat($this->directories)
+                ->map([Str::class, 'studly'])
+                ->implode('\\');
     }
 
     public function className()
@@ -83,8 +85,7 @@ class LivewireMakeCommandParser
 
     public function viewPath()
     {
-        return $this->viewPath.collect()
-            ->push($this->viewPathName)
+        return $this->baseViewPath.collect()
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->viewFile())
@@ -104,7 +105,7 @@ class LivewireMakeCommandParser
     public function viewName()
     {
         return collect()
-            ->push($this->viewPathName)
+            ->push('livewire')
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->component)
@@ -127,5 +128,12 @@ class LivewireMakeCommandParser
         $wisdom = require __DIR__.DIRECTORY_SEPARATOR.'the-tao.php';
 
         return Arr::random($wisdom);
+    }
+
+    public static function generatePathFromNamespace($namespace)
+    {
+        $name = Str::replaceFirst(app()->getNamespace(), '', $namespace);
+
+        return app('path').'/'.str_replace('\\', '/', $name);
     }
 }

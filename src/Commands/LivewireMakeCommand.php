@@ -17,8 +17,8 @@ class LivewireMakeCommand extends Command
     public function handle()
     {
         $this->parser = new LivewireMakeCommandParser(
-            app_path(),
-            head(config('view.paths')),
+            config('livewire.class_namespace', 'App\\Http\\Livewire'),
+            config('livewire.view_path', resource_path('views/livewire')),
             $this->argument('name')
         );
 

@@ -22,6 +22,7 @@ use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Livewire\Commands\LivewireMakeCommandParser;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -30,7 +31,9 @@ class LivewireServiceProvider extends ServiceProvider
         $this->app->singleton('livewire', LivewireManager::class);
 
         $this->app->instance(LivewireComponentsFinder::class, new LivewireComponentsFinder(
-            new Filesystem, app()->bootstrapPath('cache/livewire-components.php'), app_path('Http/Livewire')
+            new Filesystem,
+            app()->bootstrapPath('cache/livewire-components.php'),
+            LivewireMakeCommandParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
         ));
 
         $this->allowCertainExceptionsToBypassTheBladeViewHandler();
@@ -84,8 +87,8 @@ class LivewireServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
-        ], 'livewire-config');
-      
+        ], 'livewire:config');
+
         $this->publishes([
             __DIR__.'/../dist' => public_path('vendor/livewire'),
         ], ['livewire', 'livewire:assets']);
