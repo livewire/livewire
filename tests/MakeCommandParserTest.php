@@ -1,4 +1,5 @@
 <?php
+
 namespace Tests;
 
 use Livewire\Commands\LivewireMakeCommandParser;

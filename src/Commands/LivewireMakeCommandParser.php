@@ -5,7 +5,6 @@ namespace Livewire\Commands;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Console\DetectsApplicationNamespace;
-use Illuminate\Console\GeneratorCommand;
 
 class LivewireMakeCommandParser
 {

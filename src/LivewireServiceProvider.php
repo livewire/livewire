@@ -17,12 +17,12 @@ use Livewire\Exceptions\BypassViewHandler;
 use Illuminate\View\Engines\CompilerEngine;
 use Livewire\Commands\LivewireDestroyCommand;
 use Livewire\Connection\HttpConnectionHandler;
+use Livewire\Commands\LivewireMakeCommandParser;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Livewire\Commands\LivewireMakeCommandParser;
 
 class LivewireServiceProvider extends ServiceProvider
 {
