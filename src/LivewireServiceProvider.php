@@ -87,7 +87,7 @@ class LivewireServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
-        ], 'livewire:config');
+        ], ['livewire', 'livewire:config']);
 
         $this->publishes([
             __DIR__.'/../dist' => public_path('vendor/livewire'),
