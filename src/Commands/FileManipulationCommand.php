@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\File;
 use Livewire\LivewireComponentsFinder;
 use Illuminate\Console\DetectsApplicationNamespace;
 
-class LivewireFileManipulationCommand extends Command
+class FileManipulationCommand extends Command
 {
     use DetectsApplicationNamespace;
 

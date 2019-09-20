@@ -4,11 +4,11 @@ namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
 
-class LivewireCopyCommand extends LivewireFileManipulationCommand
+class CopyCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:copy {name} {new-name} {--force}';
 
-    protected $description = 'Copy a Livewire component. (Alias livewire:cp)';
+    protected $description = 'Copy a Livewire component.';
 
     public function handle()
     {

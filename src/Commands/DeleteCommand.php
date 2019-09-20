@@ -4,11 +4,11 @@ namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
 
-class LivewireDeleteCommand extends LivewireFileManipulationCommand
+class DeleteCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:delete {name} {--force}';
 
-    protected $description = 'Delete a Livewire component. (Alias livewire:rm)';
+    protected $description = 'Delete a Livewire component.';
 
     public function handle()
     {

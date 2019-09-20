@@ -2,7 +2,7 @@
 
 namespace Livewire\Commands;
 
-class LivewireMvCommand extends LivewireMoveCommand
+class MvCommand extends MoveCommand
 {
     protected $signature = 'livewire:mv {name} {new-name} {--force}';
 

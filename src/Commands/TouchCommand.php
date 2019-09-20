@@ -2,7 +2,7 @@
 
 namespace Livewire\Commands;
 
-class LivewireTouchCommand extends LivewireMakeCommand
+class TouchCommand extends MakeCommand
 {
     protected $signature = 'livewire:touch {name} {--force}';
 

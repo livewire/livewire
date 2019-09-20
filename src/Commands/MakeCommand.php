@@ -4,11 +4,11 @@ namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
 
-class LivewireMakeCommand extends LivewireFileManipulationCommand
+class MakeCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:make {name} {--force}';
 
-    protected $description = 'Create a new Livewire component. (Alias livewire:touch)';
+    protected $description = 'Create a new Livewire component.';
 
     public function handle()
     {

@@ -4,11 +4,11 @@ namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
 
-class LivewireMoveCommand extends LivewireFileManipulationCommand
+class MoveCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:move {name} {new-name} {--force}';
 
-    protected $description = 'Move a Livewire component. (Alias livewire:mv)';
+    protected $description = 'Move a Livewire component.';
 
     public function handle()
     {

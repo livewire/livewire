@@ -2,7 +2,7 @@
 
 namespace Livewire\Commands;
 
-class MakeLivewireCommand extends LivewireMakeCommand
+class MakeLivewireCommand extends MakeCommand
 {
     protected $signature = 'make:livewire {name} {--force}';
 }
