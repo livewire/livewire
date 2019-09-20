@@ -8,7 +8,7 @@ class LivewireMakeCommand extends LivewireFileManipulationCommand
 {
     protected $signature = 'livewire:make {name} {--force}';
 
-    protected $description = 'Create a new Livewire component and it\'s corresponding blade view. (Alias livewire:touch)';
+    protected $description = 'Create a new Livewire component. (Alias livewire:touch)';
 
     public function handle()
     {

@@ -8,13 +8,13 @@ class LivewireMoveCommand extends LivewireFileManipulationCommand
 {
     protected $signature = 'livewire:move {name} {newName}';
 
-    protected $description = 'Move Copy a Livewire component. Both its class and blade view. (Alias livewire:mv)';
+    protected $description = 'Move a Livewire component. (Alias livewire:mv)';
 
     public function handle()
     {
         $this->parser = new LivewireFileManipulationCommandParser(
-            app_path(),
-            head(config('view.paths')),
+            config('livewire.class_namespace', 'App\\Http\\Livewire'),
+            config('livewire.view_path', resource_path('views/livewire')),
             $this->argument('name'),
             $this->argument('newName')
         );

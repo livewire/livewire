@@ -8,13 +8,13 @@ class LivewireCopyCommand extends LivewireFileManipulationCommand
 {
     protected $signature = 'livewire:copy {name} {newName} {--force}';
 
-    protected $description = 'Copy a Livewire component. Both its class and blade view. (Alias livewire:cp)';
+    protected $description = 'Copy a Livewire component. (Alias livewire:cp)';
 
     public function handle()
     {
         $this->parser = new LivewireFileManipulationCommandParser(
-            app_path(),
-            head(config('view.paths')),
+            config('livewire.class_namespace', 'App\\Http\\Livewire'),
+            config('livewire.view_path', resource_path('views/livewire')),
             $this->argument('name'),
             $this->argument('newName')
         );

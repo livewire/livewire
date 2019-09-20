@@ -8,7 +8,7 @@ class LivewireDeleteCommand extends LivewireFileManipulationCommand
 {
     protected $signature = 'livewire:delete {name} {--force}';
 
-    protected $description = 'Delete a Livewire component\'s class and view. (Alias livewire:rm)';
+    protected $description = 'Delete a Livewire component. (Alias livewire:rm)';
 
     public function handle()
     {

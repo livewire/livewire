@@ -30,6 +30,7 @@ use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Livewire\Commands\LivewireComponentParser;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -40,7 +41,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->app->instance(LivewireComponentsFinder::class, new LivewireComponentsFinder(
             new Filesystem,
             app()->bootstrapPath('cache/livewire-components.php'),
-            LivewireMakeCommandParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
+            LivewireComponentParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
         ));
 
         $this->allowCertainExceptionsToBypassTheBladeViewHandler();
