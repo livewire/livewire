@@ -95,23 +95,6 @@ test('polling', async () => {
     expect(pollHappened).toBeTruthy()
 })
 
-test('polling is disabled if page visibility is hidden', async () => {
-    var pollHappened = false
-    mount('<div wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
-    window.livewire.components.livewireIsInBackground = true
-
-    await timeout(49)
-
-    expect(pollHappened).toBeFalsy()
-
-    await timeout(10)
-
-    expect(pollHappened).toBeFalsy()
-
-    // Reset for other tests.
-    window.livewire.components.livewireIsInBackground = false
-})
-
 test('polling without specifying method refreshes by default', async () => {
     var pollPayload;
     mount('<div wire:poll.50ms></div>', (i) => { pollPayload = i })

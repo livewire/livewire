@@ -5097,7 +5097,9 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var method = directive.method || '$refresh';
     setInterval(function () {
       // Don't poll when the tab is in the background.
-      if (_Store__WEBPACK_IMPORTED_MODULE_4__["default"].livewireIsInBackground) return;
+      // The "Math.random" business effectivlly prevents 95% of requests
+      // from executing. We still want "some" requests to get through.
+      if (_Store__WEBPACK_IMPORTED_MODULE_4__["default"].livewireIsInBackground && Math.random() < .95) return;
       component.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_2__["default"](method, directive.params, el));
     }, directive.durationOr(2000));
   },
