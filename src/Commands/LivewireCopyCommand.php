@@ -12,11 +12,17 @@ class LivewireCopyCommand extends LivewireFileManipulationCommand
 
     public function handle()
     {
-        $this->parser = new LivewireFileManipulationCommandParser(
+        $this->parser = new ComponentParser(
             config('livewire.class_namespace', 'App\\Http\\Livewire'),
             config('livewire.view_path', resource_path('views/livewire')),
-            $this->argument('name'),
-            $this->argument('new-name')
+            $this->argument('name')
+        );
+
+        $this->newParser = new ComponentParserFromExistingComponent(
+            config('livewire.class_namespace', 'App\\Http\\Livewire'),
+            config('livewire.view_path', resource_path('views/livewire')),
+            $this->argument('new-name'),
+            $this->parser
         );
 
         $force = $this->option('force');
@@ -27,34 +33,34 @@ class LivewireCopyCommand extends LivewireFileManipulationCommand
         $this->refreshComponentAutodiscovery();
 
         ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT COPIED </> 🤙\n");
-        $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->component->relativeClassPath()} <options=bold;fg=green>=></> {$this->parser->newComponent->relativeClassPath()}");
-        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->component->relativeViewPath()} <options=bold;fg=green>=></> {$this->parser->newComponent->relativeViewPath()}");
+        $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()} <options=bold;fg=green>=></> {$this->newParser->relativeClassPath()}");
+        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
     }
 
     protected function copyClass($force)
     {
-        if (File::exists($this->parser->newComponent->classPath()) && ! $force) {
+        if (File::exists($this->newParser->classPath()) && ! $force) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class already exists:</> {$this->parser->newComponent->relativeClassPath()}");
+            $this->line("<fg=red;options=bold>Class already exists:</> {$this->newParser->relativeClassPath()}");
 
             return false;
         }
 
-        $this->ensureDirectoryExists($this->parser->newComponent->classPath());
+        $this->ensureDirectoryExists($this->newParser->classPath());
 
-        return File::put($this->parser->newComponent->classPath(), $this->parser->newClassContents());
+        return File::put($this->newParser->classPath(), $this->newParser->classContents());
     }
 
     protected function copyView($force)
     {
-        if (File::exists($this->parser->newComponent->viewPath()) && ! $force) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->newComponent->relativeViewPath()}");
+        if (File::exists($this->newParser->viewPath()) && ! $force) {
+            $this->line("<fg=red;options=bold>View already exists:</> {$this->newParser->relativeViewPath()}");
 
             return false;
         }
 
-        $this->ensureDirectoryExists($this->parser->newComponent->viewPath());
+        $this->ensureDirectoryExists($this->newParser->viewPath());
 
-        return File::copy("{$this->parser->component->viewPath()}", $this->parser->newComponent->viewPath());
+        return File::copy("{$this->parser->viewPath()}", $this->newParser->viewPath());
     }
 }

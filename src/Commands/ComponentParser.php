@@ -6,7 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Console\DetectsApplicationNamespace;
 
-class LivewireComponentParser
+class ComponentParser
 {
     use DetectsApplicationNamespace;
 
@@ -69,6 +69,17 @@ class LivewireComponentParser
     public function className()
     {
         return $this->componentClass;
+    }
+
+    public function classContents()
+    {
+        $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'Component.stub');
+
+        return preg_replace_array(
+            ['/\[namespace\]/', '/\[class\]/', '/\[view\]/'],
+            [$this->classNamespace(), $this->className(), $this->viewName()],
+            $template
+        );
     }
 
     public function viewPath()
