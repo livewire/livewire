@@ -43,8 +43,10 @@ abstract class Component
 
     public function getName()
     {
+        $namespace = config('livewire.class_namespace', 'App\\Http\\Livewire');
+
         return collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
-            ->diff(['App', 'Http', 'Livewire'])
+            ->diff(explode('\\', $namespace))
             ->map([Str::class, 'kebab'])
             ->implode('.');
     }
@@ -111,14 +113,19 @@ abstract class Component
             return $data;
         }
 
-        // "array_merge", used this way, effectively performs "array_values",
-        // but doesn't touch non-numeric keys, like "array_values" does.
-        $normalizedData = array_merge($data);
+        $normalizedData = $data;
 
         // Make sure string keys are last (but not ordered). JSON.parse will do this.
         uksort($normalizedData, function ($a, $b) {
             return is_string($a) && is_numeric($b)
                 ? 1
+                : 0;
+        });
+
+        // Order numeric indexes.
+        uksort($normalizedData, function ($a, $b) {
+            return is_numeric($a) && is_numeric($b)
+                ? $a > $b
                 : 0;
         });
 

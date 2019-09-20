@@ -24,6 +24,7 @@ use Illuminate\View\Engines\CompilerEngine;
 use Livewire\Commands\LivewireTouchCommand;
 use Livewire\Commands\LivewireDeleteCommand;
 use Livewire\Connection\HttpConnectionHandler;
+use Livewire\Commands\LivewireMakeCommandParser;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -39,7 +40,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->app->instance(LivewireComponentsFinder::class, new LivewireComponentsFinder(
             new Filesystem,
             app()->bootstrapPath('cache/livewire-components.php'),
-            app_path('Http/Livewire')
+            LivewireMakeCommandParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
         ));
 
         $this->allowCertainExceptionsToBypassTheBladeViewHandler();
@@ -61,7 +62,7 @@ class LivewireServiceProvider extends ServiceProvider
                         $e instanceof NotFoundHttpException
                         // Don't wrap "abort(500)".
                         || $e instanceof HttpException
-                        // Dont' wrap most Livewire exceptions.
+                        // Don't wrap most Livewire exceptions.
                         || isset($uses[BypassViewHandler::class])
                     ) {
                         // This is because there is no "parent::parent::".
@@ -90,6 +91,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
+        $this->registerPublishables();
     }
 
     public function registerRoutes()
@@ -102,7 +104,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerViews()
     {
-        $this->loadViewsFrom(__DIR__.DIRECTORY_SEPARATOR.'views', 'livewire');
+        $this->loadViewsFrom(__DIR__.DIRECTORY_SEPARATOR.'views', config('livewire.view-path', 'livewire'));
     }
 
     public function registerCommands()
@@ -149,5 +151,16 @@ class LivewireServiceProvider extends ServiceProvider
         $middleware = $openKernel->getProperty('middleware');
 
         $openKernel->setProperty('middleware', array_diff($middleware, $middlewareToExclude));
+    }
+
+    protected function registerPublishables()
+    {
+        $this->publishes([
+            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
+        ], ['livewire', 'livewire:config']);
+
+        $this->publishes([
+            __DIR__.'/../dist' => public_path('vendor/livewire'),
+        ], ['livewire', 'livewire:assets']);
     }
 }

@@ -13,8 +13,8 @@ class LivewireMakeCommand extends LivewireFileManipulationCommand
     public function handle()
     {
         $this->parser = new LivewireFileManipulationCommandParser(
-            app_path(),
-            head(config('view.paths')),
+            config('livewire.class_namespace', 'App\\Http\\Livewire'),
+            config('livewire.view_path', resource_path('views/livewire')),
             $this->argument('name')
         );
 
