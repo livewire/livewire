@@ -20,7 +20,7 @@ class LivewireDeleteCommand extends LivewireFileManipulationCommand
 
         if (! $force = $this->option('force')) {
             $shouldContinue = $this->confirm(
-                "<fg=yellow>Are you sure you want to delete the following files?</>\n\n{$this->parser->relativeClassPath()}\n{$this->parser->relativeViewPath()}\n"
+                "<fg=yellow>Are you sure you want to delete the following files?</>\n\n{$this->parser->component->relativeClassPath()}\n{$this->parser->component->relativeViewPath()}\n"
             );
 
             if (! $shouldContinue) {

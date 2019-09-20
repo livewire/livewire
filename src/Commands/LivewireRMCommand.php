@@ -2,7 +2,7 @@
 
 namespace Livewire\Commands;
 
-class LivewireRMCommand extends LivewireDeleteCommand
+class LivewireRmCommand extends LivewireDeleteCommand
 {
     protected $signature = 'livewire:rm {name} {--force}';
 
