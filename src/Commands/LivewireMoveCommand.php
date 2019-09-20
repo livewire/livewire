@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class LivewireMoveCommand extends LivewireFileManipulationCommand
 {
-    protected $signature = 'livewire:move {name} {newName} {--force}';
+    protected $signature = 'livewire:move {name} {new-name} {--force}';
 
     protected $description = 'Move a Livewire component. (Alias livewire:mv)';
 
@@ -16,7 +16,7 @@ class LivewireMoveCommand extends LivewireFileManipulationCommand
             config('livewire.class_namespace', 'App\\Http\\Livewire'),
             config('livewire.view_path', resource_path('views/livewire')),
             $this->argument('name'),
-            $this->argument('newName')
+            $this->argument('new-name')
         );
 
         $class = $this->renameClass();

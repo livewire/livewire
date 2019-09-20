@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class LivewireCopyCommand extends LivewireFileManipulationCommand
 {
-    protected $signature = 'livewire:copy {name} {newName} {--force}';
+    protected $signature = 'livewire:copy {name} {new-name} {--force}';
 
     protected $description = 'Copy a Livewire component. (Alias livewire:cp)';
 
@@ -16,7 +16,7 @@ class LivewireCopyCommand extends LivewireFileManipulationCommand
             config('livewire.class_namespace', 'App\\Http\\Livewire'),
             config('livewire.view_path', resource_path('views/livewire')),
             $this->argument('name'),
-            $this->argument('newName')
+            $this->argument('new-name')
         );
 
         $force = $this->option('force');
