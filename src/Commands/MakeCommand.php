@@ -2,21 +2,17 @@
 
 namespace Livewire\Commands;
 
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Livewire\LivewireComponentsFinder;
 
-class LivewireMakeCommand extends Command
+class MakeCommand extends FileManipulationCommand
 {
-    protected $signature = 'make:livewire {name} {--force}';
+    protected $signature = 'livewire:make {name} {--force}';
 
-    protected $description = 'Create a new Livewire component and it\'s corresponding blade view.';
-
-    protected $parser;
+    protected $description = 'Create a new Livewire component.';
 
     public function handle()
     {
-        $this->parser = new LivewireMakeCommandParser(
+        $this->parser = new ComponentParser(
             config('livewire.class_namespace', 'App\\Http\\Livewire'),
             config('livewire.view_path', resource_path('views/livewire')),
             $this->argument('name')
@@ -73,45 +69,5 @@ class LivewireMakeCommand extends Command
         File::put($viewPath, $this->parser->viewContents());
 
         return $viewPath;
-    }
-
-    protected function ensureDirectoryExists($path)
-    {
-        if (! File::isDirectory(dirname($path))) {
-            File::makeDirectory(dirname($path), 0777, $recursive = true, $force = true);
-        }
-    }
-
-    public function refreshComponentAutodiscovery()
-    {
-        app(LivewireComponentsFinder::class)->build();
-    }
-
-    public function isFirstTimeMakingAComponent()
-    {
-        $livewireFolder = app_path(collect(['Http', 'Livewire'])->implode(DIRECTORY_SEPARATOR));
-
-        return ! File::isDirectory($livewireFolder);
-    }
-
-    public function writeWelcomeMessage()
-    {
-        $asciiLogo = <<<EOT
-<fg=magenta>  _._</>
-<fg=magenta>/ /<fg=white>o</>\ \ </> <fg=cyan> || ()                ()  __         </>
-<fg=magenta>|_\ /_|</>  <fg=cyan> || || \\\// /_\ \\\ // || |~~ /_\   </>
-<fg=magenta> <fg=cyan>|</>`<fg=cyan>|</>`<fg=cyan>|</> </>  <fg=cyan> || ||  \/  \\\_  \^/  || ||  \\\_   </>
-EOT;
-//     _._
-        //   / /o\ \   || ()                ()  __
-        //   |_\ /_|   || || \\\// /_\ \\\ // || |~~ /_\
-//    |`|`|    || ||  \/  \\\_  \^/  || ||  \\\_
-        $this->line("\n".$asciiLogo."\n");
-        $this->line("\n<options=bold>Congratulations!</> 🎉🎉🎉\n");
-        $this->line("You've created your first Livewire component.");
-        $this->line("I've poured a ton into the Livewire experience, and I hope it shows.");
-        $this->line("\nIf you dig it, here are two ways you can say thanks:");
-        $this->line('⭐️  Star the repo on Github');
-        $this->line('📣  Shout out the project on Twitter and tag me (@calebporzio)');
     }
 }

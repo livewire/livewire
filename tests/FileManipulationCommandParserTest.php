@@ -2,9 +2,9 @@
 
 namespace Tests;
 
-use Livewire\Commands\LivewireMakeCommandParser;
+use Livewire\Commands\ComponentParser;
 
-class MakeCommandParserTest extends TestCase
+class FileManipulationCommandParserTest extends TestCase
 {
     /**
      * @test
@@ -12,7 +12,7 @@ class MakeCommandParserTest extends TestCase
      */
     public function something($input, $component, $namespace, $classPath, $viewName, $viewPath)
     {
-        $parser = new LivewireMakeCommandParser(
+        $parser = new ComponentParser(
             'App\Http\Livewire',
             resource_path('views/livewire'),
             $input

@@ -12,10 +12,17 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Engines\PhpEngine;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\ServiceProvider;
-use Livewire\Commands\LivewireMakeCommand;
+use Livewire\Commands\CpCommand;
+use Livewire\Commands\MvCommand;
+use Livewire\Commands\RmCommand;
+use Livewire\Commands\CopyCommand;
+use Livewire\Commands\MakeCommand;
+use Livewire\Commands\MoveCommand;
+use Livewire\Commands\MakeLivewireCommand;
 use Livewire\Exceptions\BypassViewHandler;
 use Illuminate\View\Engines\CompilerEngine;
-use Livewire\Commands\LivewireDestroyCommand;
+use Livewire\Commands\TouchCommand;
+use Livewire\Commands\DeleteCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Livewire\Commands\LivewireMakeCommandParser;
 use Illuminate\Support\Facades\Route as RouteFacade;
@@ -23,6 +30,8 @@ use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Livewire\Commands\ComponentParser;
+use Livewire\Commands\DiscoverCommand;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -33,7 +42,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->app->instance(LivewireComponentsFinder::class, new LivewireComponentsFinder(
             new Filesystem,
             app()->bootstrapPath('cache/livewire-components.php'),
-            LivewireMakeCommandParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
+            ComponentParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
         ));
 
         $this->allowCertainExceptionsToBypassTheBladeViewHandler();
@@ -104,15 +113,17 @@ class LivewireServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                LivewireMakeCommand::class,
-                LivewireDestroyCommand::class,
+                CopyCommand::class,
+                CpCommand::class,
+                DeleteCommand::class,
+                DiscoverCommand::class,
+                MakeCommand::class,
+                MakeLivewireCommand::class,
+                MoveCommand::class,
+                MvCommand::class,
+                RmCommand::class,
+                TouchCommand::class,
             ]);
-
-            Artisan::command('livewire:discover', function () {
-                app(LivewireComponentsFinder::class)->build();
-
-                $this->info('Livewire auto-discovery manifest rebuilt!');
-            });
         }
     }
 

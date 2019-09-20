@@ -6,7 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Console\DetectsApplicationNamespace;
 
-class LivewireMakeCommandParser
+class ComponentParser
 {
     use DetectsApplicationNamespace;
 
