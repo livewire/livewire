@@ -63,6 +63,9 @@ export default {
         const method = directive.method || '$refresh'
 
         setInterval(() => {
+            // Don't poll when the tab is in the background.
+            if (store.livewireIsInBackground) return
+
             component.addAction(new MethodAction(method, directive.params, el))
         }, directive.durationOr(2000));
     },

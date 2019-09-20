@@ -2582,6 +2582,7 @@ var store = {
   listeners: {},
   beforeDomUpdateCallback: function beforeDomUpdateCallback() {},
   afterDomUpdateCallback: function afterDomUpdateCallback() {},
+  livewireIsInBackground: false,
   components: function components() {
     var _this = this;
 
@@ -4890,7 +4891,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
-
 var Livewire =
 /*#__PURE__*/
 function () {
@@ -4910,13 +4910,13 @@ function () {
     this.onLoadCallback = function () {};
 
     this.activatePolyfills();
-    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].initializeGarbageCollection();
+    this.components.initializeGarbageCollection();
   }
 
   _createClass(Livewire, [{
     key: "find",
     value: function find(componentId) {
-      return _Store__WEBPACK_IMPORTED_MODULE_0__["default"].componentsById[componentId];
+      return this.components.componentsById[componentId];
     }
   }, {
     key: "onLoad",
@@ -4971,8 +4971,11 @@ function () {
       // on the backend.
 
       window.addEventListener('beforeunload', function () {
-        _Store__WEBPACK_IMPORTED_MODULE_0__["default"].tearDownComponents();
+        _this.components.tearDownComponents();
       });
+      document.addEventListener('visibilitychange', function () {
+        _this.components.livewireIsInBackground = document.hidden;
+      }, false);
     }
   }, {
     key: "rescan",
@@ -4989,12 +4992,12 @@ function () {
   }, {
     key: "beforeDomUpdate",
     value: function beforeDomUpdate(callback) {
-      _Store__WEBPACK_IMPORTED_MODULE_0__["default"].beforeDomUpdate(callback);
+      this.components.beforeDomUpdate(callback);
     }
   }, {
     key: "afterDomUpdate",
     value: function afterDomUpdate(callback) {
-      _Store__WEBPACK_IMPORTED_MODULE_0__["default"].afterDomUpdate(callback);
+      this.components.afterDomUpdate(callback);
     }
   }]);
 
@@ -5093,6 +5096,8 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   fireActionOnInterval: function fireActionOnInterval(el, directive, component) {
     var method = directive.method || '$refresh';
     setInterval(function () {
+      // Don't poll when the tab is in the background.
+      if (_Store__WEBPACK_IMPORTED_MODULE_4__["default"].livewireIsInBackground) return;
       component.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_2__["default"](method, directive.params, el));
     }, directive.durationOr(2000));
   },

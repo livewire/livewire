@@ -5,6 +5,7 @@ const store = {
     listeners: {},
     beforeDomUpdateCallback: () => {},
     afterDomUpdateCallback: () => {},
+    livewireIsInBackground: false,
 
     components() {
         return Object.keys(this.componentsById).map(key => {
