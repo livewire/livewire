@@ -2,7 +2,7 @@
 
 namespace Livewire\Commands;
 
-class LivewireCPCommand extends LivewireCopyCommand
+class LivewireCpCommand extends LivewireCopyCommand
 {
     protected $signature = 'livewire:cp {name} {newName} {--force}';
 

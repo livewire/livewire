@@ -25,6 +25,23 @@ class CopyCommandTest extends TestCase
     }
 
     /** @test */
+    public function component_is_copied_by_cp_command()
+    {
+        Artisan::call('make:livewire bob');
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('bob.blade.php')));
+
+        Artisan::call('livewire:cp bob lob');
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Lob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('lob.blade.php')));
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('bob.blade.php')));
+    }
+
+    /** @test */
     public function nested_component_is_copied_by_copy_command()
     {
         Artisan::call('make:livewire bob.lob');

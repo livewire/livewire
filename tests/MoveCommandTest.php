@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 class MoveCommandTest extends TestCase
 {
     /** @test */
-    public function component_is_renamed_by_rename_command()
+    public function component_is_renamed_by_move_command()
     {
         Artisan::call('make:livewire bob');
 
@@ -25,7 +25,24 @@ class MoveCommandTest extends TestCase
     }
 
     /** @test */
-    public function nested_component_is_renamed_by_rename_command()
+    public function component_is_renamed_by_mv_command()
+    {
+        Artisan::call('make:livewire bob');
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('bob.blade.php')));
+
+        Artisan::call('livewire:mv bob lob');
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Lob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('lob.blade.php')));
+
+        $this->assertFalse(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bob.blade.php')));
+    }
+
+    /** @test */
+    public function nested_component_is_renamed_by_move_command()
     {
         Artisan::call('make:livewire bob.lob');
 
@@ -42,7 +59,7 @@ class MoveCommandTest extends TestCase
     }
 
     /** @test */
-    public function multiword_component_is_renamed_by_rename_command()
+    public function multiword_component_is_renamed_by_move_command()
     {
         Artisan::call('make:livewire bob-lob');
 
@@ -59,7 +76,7 @@ class MoveCommandTest extends TestCase
     }
 
     /** @test */
-    public function pascal_case_component_is_automatically_converted_by_rename_command()
+    public function pascal_case_component_is_automatically_converted_by_move_command()
     {
         Artisan::call('make:livewire BobLob.BobLob');
 
