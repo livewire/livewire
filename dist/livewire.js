@@ -2239,11 +2239,11 @@ function () {
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(node) {//
         },
         onBeforeElUpdated: function onBeforeElUpdated(from, to) {
-          to = document.createElement('span');
           var fromEl = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](from); // Honor the "wire:ignore" attribute.
 
           if (fromEl.directives.has('ignore')) {
             if (fromEl.directives.get('ignore').modifiers.includes('self')) {
+              // Don't update children of "wire:ingore.self" attribute.
               from.skipElUpdatingButStillUpdateChildren = true;
             } else {
               return false;
