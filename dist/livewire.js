@@ -2239,9 +2239,17 @@ function () {
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(node) {//
         },
         onBeforeElUpdated: function onBeforeElUpdated(from, to) {
+          to = document.createElement('span');
           var fromEl = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](from); // Honor the "wire:ignore" attribute.
 
-          if (fromEl.hasAttribute('ignore')) return false; // Children will update themselves.
+          if (fromEl.directives.has('ignore')) {
+            if (fromEl.directives.get('ignore').modifiers.includes('self')) {
+              from.skipElUpdatingButStillUpdateChildren = true;
+            } else {
+              return false;
+            }
+          } // Children will update themselves.
+
 
           if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== _this3.id) return false; // Don't touch Vue components
 
@@ -4095,9 +4103,16 @@ function morphdomFactory(morphAttrs) {
       if (!childrenOnly) {
         if (callHook(onBeforeElUpdated, fromEl, toEl) === false) {
           return;
+        } // @livewireModification.
+        // I added this check to enable wire:ignore.self to not fire
+        // morphAttrs, but not skip updating children as well.
+        // A task that's currently impossible with the provided hooks.
+
+
+        if (!fromEl.skipElUpdatingButStillUpdateChildren) {
+          morphAttrs(fromEl, toEl);
         }
 
-        morphAttrs(fromEl, toEl);
         callHook(onElUpdated, fromEl);
 
         if (callHook(onBeforeElChildrenUpdated, fromEl, toEl) === false) {

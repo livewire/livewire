@@ -257,10 +257,18 @@ export default class Component {
             },
 
             onBeforeElUpdated: (from, to) => {
+                to = document.createElement('span');
+
                 const fromEl = new DOMElement(from)
 
                 // Honor the "wire:ignore" attribute.
-                if (fromEl.hasAttribute('ignore')) return false
+                if (fromEl.directives.has('ignore')) {
+                    if (fromEl.directives.get('ignore').modifiers.includes('self')) {
+                        from.skipElUpdatingButStillUpdateChildren = true
+                    } else {
+                        return false;
+                    }
+                }
 
                 // Children will update themselves.
                 if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== this.id) return false

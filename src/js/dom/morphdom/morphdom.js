@@ -207,7 +207,14 @@ export default function morphdomFactory(morphAttrs) {
                     return;
                 }
 
-                morphAttrs(fromEl, toEl);
+                // @livewireModification.
+                // I added this check to enable wire:ignore.self to not fire
+                // morphAttrs, but not skip updating children as well.
+                // A task that's currently impossible with the provided hooks.
+                if (! fromEl.skipElUpdatingButStillUpdateChildren) {
+                    morphAttrs(fromEl, toEl);
+                }
+
                 callHook(onElUpdated, fromEl);
 
                 if (callHook(onBeforeElChildrenUpdated, fromEl, toEl) === false) {
