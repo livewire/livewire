@@ -25,10 +25,6 @@ export default class Component {
         this.connection = connection
         this.actionQueue = []
         this.messageInTransit = null
-        this.loadingEls = []
-        this.loadingElsByRef = {}
-        this.dirtyElsByRef = {}
-        this.dirtyEls = []
         this.modelTimeout = null
         this.tearDownCallbacks = []
         this.loadingManager = new LoadingManager
@@ -237,15 +233,14 @@ export default class Component {
                 const el = new DOMElement(node)
 
                 return el.transitionElementOut(nodeDiscarded => {
-                    // Cleanup after removed element.
-                    this.loadingManager.removeLoadingEl(nodeDiscarded)
+                    store.callHook('elementRemoved', el)
                 })
             },
 
             onNodeDiscarded: node => {
-                // Elements with loading directives are stored, release this
-                // element from storage because it no longer exists on the DOM.
-                this.loadingManager.removeLoadingEl(node)
+                const el = new DOMElement(node)
+
+                store.callHook('elementRemoved', el)
 
                 if (node.__livewire) {
                     store.removeComponent(node.__livewire)

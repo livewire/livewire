@@ -1749,7 +1749,7 @@ function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _dom_dom_element__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/dom/dom_element */ "./src/js/dom/dom_element.js");
+/* harmony import */ var _Store__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Store */ "./src/js/Store.js");
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
@@ -1770,28 +1770,35 @@ var LoadingManager =
 /*#__PURE__*/
 function () {
   function LoadingManager() {
+    var _this = this;
+
     _classCallCheck(this, LoadingManager);
 
     this.loadingElsByRef = {};
     this.loadingEls = [];
     this.currentlyActiveLoadingEls = [];
+    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementRemoved', function (el) {
+      // Elements with loading directives are stored, release this
+      // element from storage because it no longer exists on the DOM.
+      _this.removeLoadingEl(el);
+    });
   }
 
   _createClass(LoadingManager, [{
     key: "addLoadingEl",
     value: function addLoadingEl(el, value, targetNames, remove) {
-      var _this = this;
+      var _this2 = this;
 
       if (targetNames) {
         targetNames.forEach(function (targetNames) {
-          if (_this.loadingElsByRef[targetNames]) {
-            _this.loadingElsByRef[targetNames].push({
+          if (_this2.loadingElsByRef[targetNames]) {
+            _this2.loadingElsByRef[targetNames].push({
               el: el,
               value: value,
               remove: remove
             });
           } else {
-            _this.loadingElsByRef[targetNames] = [{
+            _this2.loadingElsByRef[targetNames] = [{
               el: el,
               value: value,
               remove: remove
@@ -1808,8 +1815,7 @@ function () {
     }
   }, {
     key: "removeLoadingEl",
-    value: function removeLoadingEl(node) {
-      var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_0__["default"](node);
+    value: function removeLoadingEl(el) {
       this.loadingEls = this.loadingEls.filter(function (_ref) {
         var el = _ref.el;
         return !el.isSameNode(node);
@@ -1822,10 +1828,10 @@ function () {
   }, {
     key: "setLoading",
     value: function setLoading(refs) {
-      var _this2 = this;
+      var _this3 = this;
 
       var refEls = refs.map(function (ref) {
-        return _this2.loadingElsByRef[ref];
+        return _this3.loadingElsByRef[ref];
       }).filter(function (el) {
         return el;
       }).flat();
@@ -2041,10 +2047,6 @@ function () {
     this.connection = connection;
     this.actionQueue = [];
     this.messageInTransit = null;
-    this.loadingEls = [];
-    this.loadingElsByRef = {};
-    this.dirtyElsByRef = {};
-    this.dirtyEls = [];
     this.modelTimeout = null;
     this.tearDownCallbacks = [];
     this.loadingManager = new _LoadingManager__WEBPACK_IMPORTED_MODULE_8__["default"]();
@@ -2223,14 +2225,12 @@ function () {
         onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
           return el.transitionElementOut(function (nodeDiscarded) {
-            // Cleanup after removed element.
-            _this3.loadingManager.removeLoadingEl(nodeDiscarded);
+            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el);
           });
         },
         onNodeDiscarded: function onNodeDiscarded(node) {
-          // Elements with loading directives are stored, release this
-          // element from storage because it no longer exists on the DOM.
-          _this3.loadingManager.removeLoadingEl(node);
+          var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
+          _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el);
 
           if (node.__livewire) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
@@ -2410,6 +2410,42 @@ function () {
 
 /***/ }),
 
+/***/ "./src/js/HookManager.js":
+/*!*******************************!*\
+  !*** ./src/js/HookManager.js ***!
+  \*******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ({
+  availableHooks: ['elementRemoved'],
+  hooks: {},
+  register: function register(name, callback) {
+    if (!this.availableHooks.includes(name)) {
+      throw "Livewire: Referencing unknown hook: [".concat(name, "]");
+    }
+
+    if (!this.hooks[name]) {
+      this.hooks[name] = [];
+    }
+
+    this.hooks[name].push(callback);
+  },
+  call: function call(name) {
+    for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      params[_key - 1] = arguments[_key];
+    }
+
+    (this.hooks[name] || []).forEach(function (callback) {
+      callback.apply(void 0, params);
+    });
+  }
+});
+
+/***/ }),
+
 /***/ "./src/js/Message.js":
 /*!***************************!*\
   !*** ./src/js/Message.js ***!
@@ -2584,6 +2620,8 @@ function (_Message) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _action_event__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/action/event */ "./src/js/action/event.js");
+/* harmony import */ var _HookManager__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/HookManager */ "./src/js/HookManager.js");
+
 
 var store = {
   componentsById: {},
@@ -2591,6 +2629,7 @@ var store = {
   beforeDomUpdateCallback: function beforeDomUpdateCallback() {},
   afterDomUpdateCallback: function afterDomUpdateCallback() {},
   livewireIsInBackground: false,
+  hooks: _HookManager__WEBPACK_IMPORTED_MODULE_1__["default"],
   components: function components() {
     var _this = this;
 
@@ -2640,6 +2679,18 @@ var store = {
     return this.components().filter(function (component) {
       return component.events.includes(event);
     });
+  },
+  registerHook: function registerHook(name, callback) {
+    this.hooks.register(name, callback);
+  },
+  callHook: function callHook(name) {
+    var _this$hooks;
+
+    for (var _len2 = arguments.length, params = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+      params[_key2 - 1] = arguments[_key2];
+    }
+
+    (_this$hooks = this.hooks).call.apply(_this$hooks, [name].concat(params));
   },
   beforeDomUpdate: function beforeDomUpdate(callback) {
     this.beforeDomUpdateCallback = callback;
@@ -4932,6 +4983,11 @@ function () {
     key: "find",
     value: function find(componentId) {
       return this.components.componentsById[componentId];
+    }
+  }, {
+    key: "hook",
+    value: function hook(name, callback) {
+      this.components.registerHook(name, callback);
     }
   }, {
     key: "onLoad",

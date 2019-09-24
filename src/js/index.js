@@ -33,6 +33,10 @@ class Livewire {
         return this.components.componentsById[componentId]
     }
 
+    hook(name, callback) {
+        this.components.registerHook(name, callback)
+    }
+
     onLoad(callback) {
         this.onLoadCallback = callback
     }

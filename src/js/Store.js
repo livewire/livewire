@@ -1,4 +1,5 @@
 import EventAction from "@/action/event";
+import HookManager from "@/HookManager";
 
 const store = {
     componentsById: {},
@@ -6,6 +7,7 @@ const store = {
     beforeDomUpdateCallback: () => {},
     afterDomUpdateCallback: () => {},
     livewireIsInBackground: false,
+    hooks: HookManager,
 
     components() {
         return Object.keys(this.componentsById).map(key => {
@@ -55,6 +57,14 @@ const store = {
         return this.components().filter(component => {
             return component.events.includes(event)
         })
+    },
+
+    registerHook(name, callback) {
+        this.hooks.register(name, callback)
+    },
+
+    callHook(name, ...params) {
+        this.hooks.call(name, ...params)
     },
 
     beforeDomUpdate(callback) {

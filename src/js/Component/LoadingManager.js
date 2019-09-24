@@ -1,10 +1,16 @@
-import DOMElement from '@/dom/dom_element'
+import store from '@/Store'
 
 class LoadingManager {
     constructor() {
         this.loadingElsByRef = {}
         this.loadingEls = []
         this.currentlyActiveLoadingEls = []
+
+        store.registerHook('elementRemoved', (el) => {
+            // Elements with loading directives are stored, release this
+            // element from storage because it no longer exists on the DOM.
+            this.removeLoadingEl(el)
+        })
     }
 
     addLoadingEl(el, value, targetNames, remove) {
@@ -21,9 +27,7 @@ class LoadingManager {
         }
     }
 
-    removeLoadingEl(node) {
-        const el = new DOMElement(node)
-
+    removeLoadingEl(el) {
         this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
 
         if (el.ref in this.loadingElsByRef) {
