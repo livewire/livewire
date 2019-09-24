@@ -1618,312 +1618,6 @@ if (!self.fetch) {
 
 /***/ }),
 
-/***/ "./src/js/Component/DirtyManager.js":
-/*!******************************************!*\
-  !*** ./src/js/Component/DirtyManager.js ***!
-  \******************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _dom_dom_element__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/dom/dom_element */ "./src/js/dom/dom_element.js");
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
-
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var DirtyManager =
-/*#__PURE__*/
-function () {
-  function DirtyManager(component) {
-    _classCallCheck(this, DirtyManager);
-
-    this.component = component;
-    this.dirtyElsByRef = {};
-    this.dirtyEls = [];
-  }
-
-  _createClass(DirtyManager, [{
-    key: "addDirtyEls",
-    value: function addDirtyEls(el, targetRefs) {
-      var _this = this;
-
-      if (targetRefs) {
-        targetRefs.forEach(function (targetRef) {
-          if (_this.dirtyElsByRef[targetRef]) {
-            _this.dirtyElsByRef[targetRef].push(el);
-          } else {
-            _this.dirtyElsByRef[targetRef] = [el];
-          }
-        });
-      } else {
-        this.dirtyEls.push(el);
-      }
-    }
-  }, {
-    key: "registerListener",
-    value: function registerListener() {
-      var _this2 = this;
-
-      this.component.el.addEventListener('input', function (e) {
-        var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_0__["default"](e.target);
-        var allEls = [];
-
-        if (el.directives.has('ref') && _this2.dirtyElsByRef[el.directives.get('ref').value]) {
-          allEls.push.apply(allEls, _toConsumableArray(_this2.dirtyElsByRef[el.directives.get('ref').value]));
-        }
-
-        if (el.directives.has('dirty')) {
-          allEls.push.apply(allEls, _toConsumableArray(_this2.dirtyEls.filter(function (dirtyEl) {
-            return dirtyEl.directives.get('model').value === el.directives.get('model').value;
-          })));
-        }
-
-        if (allEls.length < 1) return;
-
-        if (el.directives.missing('model')) {
-          console.warn('`wire:model` must be present on any element that uses `wire:dirty` or is a `wire:dirty` target.');
-        }
-
-        var isDirty = el.valueFromInput(_this2.component) != _this2.component.data[el.directives.get('model').value];
-
-        allEls.forEach(function (el) {
-          _this2.setDirtyState(el, isDirty);
-        });
-      });
-    }
-  }, {
-    key: "setDirtyState",
-    value: function setDirtyState(el, isDirty) {
-      var directive = el.directives.get('dirty');
-
-      if (directive.modifiers.includes('class')) {
-        var classes = directive.value.split(' ');
-
-        if (directive.modifiers.includes('remove') !== isDirty) {
-          var _el$classList;
-
-          (_el$classList = el.classList).add.apply(_el$classList, _toConsumableArray(classes));
-        } else {
-          var _el$classList2;
-
-          (_el$classList2 = el.classList).remove.apply(_el$classList2, _toConsumableArray(classes));
-        }
-      } else if (directive.modifiers.includes('attr')) {
-        if (directive.modifiers.includes('remove') !== isDirty) {
-          el.setAttribute(directive.value, true);
-        } else {
-          el.removeAttrsibute(directive.value);
-        }
-      } else if (!el.directives.get('model')) {
-        el.el.style.display = isDirty ? 'inline-block' : 'none';
-      }
-    }
-  }]);
-
-  return DirtyManager;
-}();
-
-/* harmony default export */ __webpack_exports__["default"] = (DirtyManager);
-
-/***/ }),
-
-/***/ "./src/js/Component/LoadingManager.js":
-/*!********************************************!*\
-  !*** ./src/js/Component/LoadingManager.js ***!
-  \********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _Store__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Store */ "./src/js/Store.js");
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
-
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var LoadingManager =
-/*#__PURE__*/
-function () {
-  function LoadingManager(component) {
-    var _this = this;
-
-    _classCallCheck(this, LoadingManager);
-
-    this.loadingElsByRef = {};
-    this.loadingEls = [];
-    this.currentlyActiveLoadingEls = [];
-    this.component = component;
-    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementInitialized', function (el, component) {
-      if (component !== _this.component) return;
-      if (el.directives.missing('loading')) return;
-      var directive = el.directives.get('loading');
-      var refNames = el.directives.get('target') && el.directives.get('target').value.split(',').map(function (s) {
-        return s.trim();
-      });
-
-      _this.addLoadingEl(el, directive.value, refNames, directive.modifiers.includes('remove'));
-    });
-    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageSent', function (message) {
-      _this.setLoading(message.refs);
-    });
-    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageFailed', function () {
-      _this.unsetLoading();
-    });
-    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('responseReceived', function () {
-      _this.unsetLoading();
-    });
-    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementRemoved', function (el) {
-      _this.removeLoadingEl(el);
-    });
-  }
-
-  _createClass(LoadingManager, [{
-    key: "addLoadingEl",
-    value: function addLoadingEl(el, value, targetNames, remove) {
-      var _this2 = this;
-
-      if (targetNames) {
-        targetNames.forEach(function (targetNames) {
-          if (_this2.loadingElsByRef[targetNames]) {
-            _this2.loadingElsByRef[targetNames].push({
-              el: el,
-              value: value,
-              remove: remove
-            });
-          } else {
-            _this2.loadingElsByRef[targetNames] = [{
-              el: el,
-              value: value,
-              remove: remove
-            }];
-          }
-        });
-      } else {
-        this.loadingEls.push({
-          el: el,
-          value: value,
-          remove: remove
-        });
-      }
-    }
-  }, {
-    key: "removeLoadingEl",
-    value: function removeLoadingEl(el) {
-      this.loadingEls = this.loadingEls.filter(function (_ref) {
-        var el = _ref.el;
-        return !el.isSameNode(node);
-      });
-
-      if (el.ref in this.loadingElsByRef) {
-        delete this.loadingElsByRef[el.ref];
-      }
-    }
-  }, {
-    key: "setLoading",
-    value: function setLoading(refs) {
-      var _this3 = this;
-
-      var refEls = refs.map(function (ref) {
-        return _this3.loadingElsByRef[ref];
-      }).filter(function (el) {
-        return el;
-      }).flat();
-      var allEls = this.loadingEls.concat(refEls);
-      allEls.forEach(function (el) {
-        var directive = el.el.directives.get('loading');
-        el = el.el.el; // I'm so sorry @todo
-
-        if (directive.modifiers.includes('class')) {
-          // This is because wire:loading.class="border border-red"
-          // wouldn't work with classList.add.
-          var classes = directive.value.split(' ');
-
-          if (directive.modifiers.includes('remove')) {
-            var _el$classList;
-
-            (_el$classList = el.classList).remove.apply(_el$classList, _toConsumableArray(classes));
-          } else {
-            var _el$classList2;
-
-            (_el$classList2 = el.classList).add.apply(_el$classList2, _toConsumableArray(classes));
-          }
-        } else if (directive.modifiers.includes('attr')) {
-          if (directive.modifiers.includes('remove')) {
-            el.removeAttribute(directive.value);
-          } else {
-            el.setAttribute(directive.value, true);
-          }
-        } else {
-          el.style.display = 'inline-block';
-        }
-      });
-      this.currentlyActiveLoadingEls = allEls;
-    }
-  }, {
-    key: "unsetLoading",
-    value: function unsetLoading() {
-      this.currentlyActiveLoadingEls.forEach(function (el) {
-        var directive = el.el.directives.get('loading');
-        el = el.el.el; // I'm so sorry @todo
-
-        if (directive.modifiers.includes('class')) {
-          var classes = directive.value.split(' ');
-
-          if (directive.modifiers.includes('remove')) {
-            var _el$classList3;
-
-            (_el$classList3 = el.classList).add.apply(_el$classList3, _toConsumableArray(classes));
-          } else {
-            var _el$classList4;
-
-            (_el$classList4 = el.classList).remove.apply(_el$classList4, _toConsumableArray(classes));
-          }
-        } else if (directive.modifiers.includes('attr')) {
-          if (directive.modifiers.includes('remove')) {
-            el.setAttribute(directive.value);
-          } else {
-            el.removeAttribute(directive.value, true);
-          }
-        } else {
-          el.style.display = 'none';
-        }
-      });
-      this.currentlyActiveLoadingEls = [];
-    }
-  }]);
-
-  return LoadingManager;
-}();
-
-/* harmony default export */ __webpack_exports__["default"] = (LoadingManager);
-
-/***/ }),
-
 /***/ "./src/js/Component/PrefetchManager.js":
 /*!*********************************************!*\
   !*** ./src/js/Component/PrefetchManager.js ***!
@@ -2007,11 +1701,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @/dom/dom_element */ "./src/js/dom/dom_element.js");
 /* harmony import */ var _node_initializer__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @/node_initializer */ "./src/js/node_initializer.js");
 /* harmony import */ var _Store__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @/Store */ "./src/js/Store.js");
-/* harmony import */ var _LoadingManager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./LoadingManager */ "./src/js/Component/LoadingManager.js");
-/* harmony import */ var _DirtyManager__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./DirtyManager */ "./src/js/Component/DirtyManager.js");
-/* harmony import */ var _PrefetchManager__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./PrefetchManager */ "./src/js/Component/PrefetchManager.js");
-/* harmony import */ var _action_method__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @/action/method */ "./src/js/action/method.js");
-/* harmony import */ var _action_model__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @/action/model */ "./src/js/action/model.js");
+/* harmony import */ var _PrefetchManager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./PrefetchManager */ "./src/js/Component/PrefetchManager.js");
+/* harmony import */ var _action_method__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @/action/method */ "./src/js/action/method.js");
+/* harmony import */ var _action_model__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @/action/model */ "./src/js/action/model.js");
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
@@ -2046,8 +1738,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
-
-
 var Component =
 /*#__PURE__*/
 function () {
@@ -2067,11 +1757,9 @@ function () {
     this.messageInTransit = null;
     this.modelTimeout = null;
     this.tearDownCallbacks = [];
-    this.loadingManager = new _LoadingManager__WEBPACK_IMPORTED_MODULE_8__["default"](this);
-    this.dirtyManager = new _DirtyManager__WEBPACK_IMPORTED_MODULE_9__["default"](this);
-    this.prefetchManager = new _PrefetchManager__WEBPACK_IMPORTED_MODULE_10__["default"](this);
+    this.prefetchManager = new _PrefetchManager__WEBPACK_IMPORTED_MODULE_8__["default"](this);
+    _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('componentInitialized', this);
     this.initialize();
-    this.dirtyManager.registerListener();
     this.registerEchoListeners();
   }
 
@@ -2103,7 +1791,7 @@ function () {
   }, {
     key: "set",
     value: function set(name, value) {
-      this.addAction(new _action_model__WEBPACK_IMPORTED_MODULE_12__["default"](name, value, this.el));
+      this.addAction(new _action_model__WEBPACK_IMPORTED_MODULE_10__["default"](name, value, this.el));
     }
   }, {
     key: "call",
@@ -2112,7 +1800,7 @@ function () {
         params[_key - 1] = arguments[_key];
       }
 
-      this.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_11__["default"](method, params, this.el));
+      this.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_9__["default"](method, params, this.el));
     }
   }, {
     key: "addAction",
@@ -2142,13 +1830,13 @@ function () {
       if (this.messageInTransit) return;
       this.messageInTransit = new _Message__WEBPACK_IMPORTED_MODULE_0__["default"](this, this.actionQueue);
       this.connection.sendMessage(this.messageInTransit);
-      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('messageSent', this.messageInTransit);
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('messageSent', this, this.messageInTransit);
       this.actionQueue = [];
     }
   }, {
     key: "messageSendFailed",
     value: function messageSendFailed() {
-      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('messageFailed');
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('messageFailed', this);
       this.messageInTransit = null;
     }
   }, {
@@ -2160,7 +1848,7 @@ function () {
   }, {
     key: "handleResponse",
     value: function handleResponse(response) {
-      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', response);
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', this, response);
       this.data = response.data;
       this.checksum = response.checksum;
       this.children = response.children;
@@ -2243,12 +1931,12 @@ function () {
         onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
           return el.transitionElementOut(function (nodeDiscarded) {
-            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el);
+            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', _this3, el);
           });
         },
         onNodeDiscarded: function onNodeDiscarded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
-          _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el);
+          _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', _this3, el);
 
           if (node.__livewire) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
@@ -2438,7 +2126,7 @@ function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
-  availableHooks: ['elementInitialized', 'elementRemoved', 'messageSent', 'messageFailed', 'responseReceived'],
+  availableHooks: ['componentInitialized', 'elementInitialized', 'elementRemoved', 'messageSent', 'messageFailed', 'responseReceived'],
   hooks: {},
   register: function register(name, callback) {
     if (!this.availableHooks.includes(name)) {
@@ -2962,6 +2650,266 @@ function (_Action) {
 }(___WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 
+
+/***/ }),
+
+/***/ "./src/js/component/DirtyStates.js":
+/*!*****************************************!*\
+  !*** ./src/js/component/DirtyStates.js ***!
+  \*****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _dom_dom_element__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/dom/dom_element */ "./src/js/dom/dom_element.js");
+/* harmony import */ var _Store__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/Store */ "./src/js/Store.js");
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = (function () {
+  _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('componentInitialized', function (component) {
+    component.dirtyElsByRef = {};
+    component.dirtyEls = [];
+    registerListener(component);
+  });
+  _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('elementInitialized', function (el, component) {
+    if (el.directives.missing('dirty')) return;
+    var refNames = el.directives.has('target') && el.directives.get('target').value.split(',').map(function (s) {
+      return s.trim();
+    });
+    addDirtyEls(component, el, refNames);
+  });
+});
+
+function addDirtyEls(component, el, targetRefs) {
+  if (targetRefs) {
+    targetRefs.forEach(function (targetRef) {
+      if (component.dirtyElsByRef[targetRef]) {
+        component.dirtyElsByRef[targetRef].push(el);
+      } else {
+        component.dirtyElsByRef[targetRef] = [el];
+      }
+    });
+  } else {
+    component.dirtyEls.push(el);
+  }
+}
+
+function registerListener(component) {
+  component.el.addEventListener('input', function (e) {
+    var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_0__["default"](e.target);
+    var allEls = [];
+
+    if (el.directives.has('ref') && component.dirtyElsByRef[el.directives.get('ref').value]) {
+      allEls.push.apply(allEls, _toConsumableArray(component.dirtyElsByRef[el.directives.get('ref').value]));
+    }
+
+    if (el.directives.has('dirty')) {
+      allEls.push.apply(allEls, _toConsumableArray(component.dirtyEls.filter(function (dirtyEl) {
+        return dirtyEl.directives.get('model').value === el.directives.get('model').value;
+      })));
+    }
+
+    if (allEls.length < 1) return;
+
+    if (el.directives.missing('model')) {
+      console.warn('`wire:model` must be present on any element that uses `wire:dirty` or is a `wire:dirty` target.');
+    }
+
+    var isDirty = el.valueFromInput(component) != component.data[el.directives.get('model').value];
+    allEls.forEach(function (el) {
+      setDirtyState(el, isDirty);
+    });
+  });
+}
+
+function setDirtyState(el, isDirty) {
+  var directive = el.directives.get('dirty');
+
+  if (directive.modifiers.includes('class')) {
+    var classes = directive.value.split(' ');
+
+    if (directive.modifiers.includes('remove') !== isDirty) {
+      var _el$classList;
+
+      (_el$classList = el.classList).add.apply(_el$classList, _toConsumableArray(classes));
+    } else {
+      var _el$classList2;
+
+      (_el$classList2 = el.classList).remove.apply(_el$classList2, _toConsumableArray(classes));
+    }
+  } else if (directive.modifiers.includes('attr')) {
+    if (directive.modifiers.includes('remove') !== isDirty) {
+      el.setAttribute(directive.value, true);
+    } else {
+      el.removeAttrsibute(directive.value);
+    }
+  } else if (!el.directives.get('model')) {
+    el.el.style.display = isDirty ? 'inline-block' : 'none';
+  }
+}
+
+/***/ }),
+
+/***/ "./src/js/component/LoadingStates.js":
+/*!*******************************************!*\
+  !*** ./src/js/component/LoadingStates.js ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _Store__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Store */ "./src/js/Store.js");
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
+
+/* harmony default export */ __webpack_exports__["default"] = (function () {
+  _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('componentInitialized', function (component) {
+    component.loadingElsByRef = {};
+    component.loadingEls = [];
+    component.currentlyActiveLoadingEls = [];
+  });
+  _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementInitialized', function (el, component) {
+    if (el.directives.missing('loading')) return;
+    var directive = el.directives.get('loading');
+    var refNames = el.directives.get('target') && el.directives.get('target').value.split(',').map(function (s) {
+      return s.trim();
+    });
+    addLoadingEl(component, el, directive.value, refNames, directive.modifiers.includes('remove'));
+  });
+  _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageSent', function (component, message) {
+    setLoading(component, message.refs);
+  });
+  _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageFailed', function (component) {
+    unsetLoading(component);
+  });
+  _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('responseReceived', function (component) {
+    unsetLoading(component);
+  });
+  _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementRemoved', function (component, el) {
+    removeLoadingEl(component, el);
+  });
+});
+
+function addLoadingEl(component, el, value, targetNames, remove) {
+  if (targetNames) {
+    targetNames.forEach(function (targetNames) {
+      if (component.loadingElsByRef[targetNames]) {
+        component.loadingElsByRef[targetNames].push({
+          el: el,
+          value: value,
+          remove: remove
+        });
+      } else {
+        component.loadingElsByRef[targetNames] = [{
+          el: el,
+          value: value,
+          remove: remove
+        }];
+      }
+    });
+  } else {
+    component.loadingEls.push({
+      el: el,
+      value: value,
+      remove: remove
+    });
+  }
+}
+
+function removeLoadingEl(component, el) {
+  component.loadingEls = component.loadingEls.filter(function (_ref) {
+    var el = _ref.el;
+    return !el.isSameNode(node);
+  });
+
+  if (el.ref in component.loadingElsByRef) {
+    delete component.loadingElsByRef[el.ref];
+  }
+}
+
+function setLoading(component, refs) {
+  var refEls = refs.map(function (ref) {
+    return component.loadingElsByRef[ref];
+  }).filter(function (el) {
+    return el;
+  }).flat();
+  var allEls = component.loadingEls.concat(refEls);
+  allEls.forEach(function (el) {
+    var directive = el.el.directives.get('loading');
+    el = el.el.el; // I'm so sorry @todo
+
+    if (directive.modifiers.includes('class')) {
+      // This is because wire:loading.class="border border-red"
+      // wouldn't work with classList.add.
+      var classes = directive.value.split(' ');
+
+      if (directive.modifiers.includes('remove')) {
+        var _el$classList;
+
+        (_el$classList = el.classList).remove.apply(_el$classList, _toConsumableArray(classes));
+      } else {
+        var _el$classList2;
+
+        (_el$classList2 = el.classList).add.apply(_el$classList2, _toConsumableArray(classes));
+      }
+    } else if (directive.modifiers.includes('attr')) {
+      if (directive.modifiers.includes('remove')) {
+        el.removeAttribute(directive.value);
+      } else {
+        el.setAttribute(directive.value, true);
+      }
+    } else {
+      el.style.display = 'inline-block';
+    }
+  });
+  component.currentlyActiveLoadingEls = allEls;
+}
+
+function unsetLoading(component) {
+  component.currentlyActiveLoadingEls.forEach(function (el) {
+    var directive = el.el.directives.get('loading');
+    el = el.el.el; // I'm so sorry @todo
+
+    if (directive.modifiers.includes('class')) {
+      var classes = directive.value.split(' ');
+
+      if (directive.modifiers.includes('remove')) {
+        var _el$classList3;
+
+        (_el$classList3 = el.classList).add.apply(_el$classList3, _toConsumableArray(classes));
+      } else {
+        var _el$classList4;
+
+        (_el$classList4 = el.classList).remove.apply(_el$classList4, _toConsumableArray(classes));
+      }
+    } else if (directive.modifiers.includes('attr')) {
+      if (directive.modifiers.includes('remove')) {
+        el.setAttribute(directive.value);
+      } else {
+        el.removeAttribute(directive.value, true);
+      }
+    } else {
+      el.style.display = 'none';
+    }
+  });
+  component.currentlyActiveLoadingEls = [];
+}
 
 /***/ }),
 
@@ -4957,6 +4905,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var whatwg_fetch__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! whatwg-fetch */ "./node_modules/whatwg-fetch/fetch.js");
 /* harmony import */ var promise_polyfill_src_polyfill__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! promise-polyfill/src/polyfill */ "./node_modules/promise-polyfill/src/polyfill.js");
 /* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./util */ "./src/js/util/index.js");
+/* harmony import */ var _component_LoadingStates__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @/component/LoadingStates */ "./src/js/component/LoadingStates.js");
+/* harmony import */ var _component_DirtyStates__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @/component/DirtyStates */ "./src/js/component/DirtyStates.js");
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -4964,6 +4914,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+
 
 
 
@@ -5088,6 +5040,11 @@ function () {
     value: function afterDomUpdate(callback) {
       this.components.afterDomUpdate(callback);
     }
+  }, {
+    key: "plugin",
+    value: function plugin(callable) {
+      callable(this);
+    }
   }]);
 
   return Livewire;
@@ -5097,6 +5054,8 @@ if (!window.Livewire) {
   window.Livewire = Livewire;
 }
 
+Object(_component_LoadingStates__WEBPACK_IMPORTED_MODULE_9__["default"])();
+Object(_component_DirtyStates__WEBPACK_IMPORTED_MODULE_10__["default"])();
 Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:available');
 /* harmony default export */ __webpack_exports__["default"] = (Livewire);
 
@@ -5135,11 +5094,6 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     el.directives.all().forEach(function (directive) {
       switch (directive.type) {
-        case 'dirty':
-          _this.registerElementForDirty(el, directive, component);
-
-          break;
-
         case 'poll':
           _this.fireActionOnInterval(el, directive, component);
 
@@ -5164,12 +5118,6 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       }
     });
     _Store__WEBPACK_IMPORTED_MODULE_4__["default"].callHook('elementInitialized', el, component);
-  },
-  registerElementForDirty: function registerElementForDirty(el, directive, component) {
-    var refNames = el.directives.has('target') && el.directives.get('target').value.split(',').map(function (s) {
-      return s.trim();
-    });
-    component.dirtyManager.addDirtyEls(el, refNames);
   },
   fireActionOnInterval: function fireActionOnInterval(el, directive, component) {
     var method = directive.method || '$refresh';

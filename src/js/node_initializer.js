@@ -8,10 +8,6 @@ export default {
     initialize(el, component) {
         el.directives.all().forEach(directive => {
             switch (directive.type) {
-                case 'dirty':
-                    this.registerElementForDirty(el, directive, component)
-                    break;
-
                 case 'poll':
                     this.fireActionOnInterval(el, directive, component)
                     break;
@@ -32,16 +28,6 @@ export default {
         })
 
         store.callHook('elementInitialized', el, component)
-    },
-
-    registerElementForDirty(el, directive, component) {
-        const refNames = el.directives.has('target')
-            && el.directives.get('target').value.split(',').map(s => s.trim())
-
-            component.dirtyManager.addDirtyEls(
-                el,
-                refNames,
-            )
     },
 
     fireActionOnInterval(el, directive, component) {

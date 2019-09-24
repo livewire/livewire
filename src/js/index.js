@@ -7,6 +7,8 @@ import { ArrayFlat, ArrayFrom, ArrayIncludes, ElementGetAttributeNames } from '@
 import 'whatwg-fetch'
 import 'promise-polyfill/src/polyfill';
 import { dispatch } from './util';
+import LoadingStates from '@/component/LoadingStates'
+import DirtyStates from '@/component/DirtyStates'
 
 class Livewire {
     constructor(options = {}) {
@@ -104,11 +106,18 @@ class Livewire {
     afterDomUpdate(callback) {
         this.components.afterDomUpdate(callback)
     }
+
+    plugin(callable) {
+        callable(this)
+    }
 }
 
 if (! window.Livewire) {
     window.Livewire = Livewire
 }
+
+LoadingStates()
+DirtyStates()
 
 dispatch('livewire:available')
 

@@ -6,8 +6,6 @@ import DOM from '@/dom/dom'
 import DOMElement from '@/dom/dom_element'
 import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
-import LoadingManager from './LoadingManager'
-import DirtyManager from './DirtyManager'
 import PrefetchManager from './PrefetchManager'
 import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
@@ -27,13 +25,11 @@ export default class Component {
         this.messageInTransit = null
         this.modelTimeout = null
         this.tearDownCallbacks = []
-        this.loadingManager = new LoadingManager(this)
-        this.dirtyManager = new DirtyManager(this)
         this.prefetchManager = new PrefetchManager(this)
 
-        this.initialize()
+        store.callHook('componentInitialized', this)
 
-        this.dirtyManager.registerListener()
+        this.initialize()
 
         this.registerEchoListeners()
     }
@@ -114,13 +110,13 @@ export default class Component {
 
         this.connection.sendMessage(this.messageInTransit)
 
-        store.callHook('messageSent', this.messageInTransit)
+        store.callHook('messageSent', this, this.messageInTransit)
 
         this.actionQueue = []
     }
 
     messageSendFailed() {
-        store.callHook('messageFailed')
+        store.callHook('messageFailed', this)
 
         this.messageInTransit = null
     }
@@ -132,7 +128,7 @@ export default class Component {
     }
 
     handleResponse(response) {
-        store.callHook('responseReceived', response)
+        store.callHook('responseReceived', this, response)
 
         this.data = response.data
         this.checksum = response.checksum
@@ -233,14 +229,14 @@ export default class Component {
                 const el = new DOMElement(node)
 
                 return el.transitionElementOut(nodeDiscarded => {
-                    store.callHook('elementRemoved', el)
+                    store.callHook('elementRemoved', this, el)
                 })
             },
 
             onNodeDiscarded: node => {
                 const el = new DOMElement(node)
 
-                store.callHook('elementRemoved', el)
+                store.callHook('elementRemoved', this, el)
 
                 if (node.__livewire) {
                     store.removeComponent(node.__livewire)

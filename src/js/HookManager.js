@@ -1,6 +1,7 @@
 
 export default {
     availableHooks: [
+        'componentInitialized',
         'elementInitialized',
         'elementRemoved',
         'messageSent',
