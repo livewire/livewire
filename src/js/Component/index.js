@@ -27,7 +27,7 @@ export default class Component {
         this.messageInTransit = null
         this.modelTimeout = null
         this.tearDownCallbacks = []
-        this.loadingManager = new LoadingManager
+        this.loadingManager = new LoadingManager(this)
         this.dirtyManager = new DirtyManager(this)
         this.prefetchManager = new PrefetchManager(this)
 
@@ -114,13 +114,13 @@ export default class Component {
 
         this.connection.sendMessage(this.messageInTransit)
 
-        this.loadingManager.setLoading(this.messageInTransit.refs)
+        store.callHook('messageSent', this.messageInTransit)
 
         this.actionQueue = []
     }
 
     messageSendFailed() {
-        this.loadingManager.unsetLoading()
+        store.callHook('messageFailed')
 
         this.messageInTransit = null
     }
@@ -132,6 +132,8 @@ export default class Component {
     }
 
     handleResponse(response) {
+        store.callHook('responseReceived', response)
+
         this.data = response.data
         this.checksum = response.checksum
         this.children = response.children
@@ -142,8 +144,6 @@ export default class Component {
             window.location.href = response.redirectTo
             return
         }
-
-        this.loadingManager.unsetLoading()
 
         this.replaceDom(response.dom, response.dirtyInputs)
 

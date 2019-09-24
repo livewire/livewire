@@ -6,13 +6,8 @@ import store from '@/Store'
 
 export default {
     initialize(el, component) {
-        // Parse out "direcives", "modifiers", and "value" from livewire attributes.
         el.directives.all().forEach(directive => {
             switch (directive.type) {
-                case 'loading':
-                    this.registerElementForLoading(el, directive, component)
-                    break;
-
                 case 'dirty':
                     this.registerElementForDirty(el, directive, component)
                     break;
@@ -35,18 +30,8 @@ export default {
                     break;
             }
         })
-    },
 
-    registerElementForLoading(el, directive, component) {
-        const refNames = el.directives.get('target')
-            && el.directives.get('target').value.split(',').map(s => s.trim())
-
-        component.loadingManager.addLoadingEl(
-            el,
-            directive.value,
-            refNames,
-            directive.modifiers.includes('remove')
-        )
+        store.callHook('elementInitialized', el, component)
     },
 
     registerElementForDirty(el, directive, component) {

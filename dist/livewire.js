@@ -1769,7 +1769,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var LoadingManager =
 /*#__PURE__*/
 function () {
-  function LoadingManager() {
+  function LoadingManager(component) {
     var _this = this;
 
     _classCallCheck(this, LoadingManager);
@@ -1777,9 +1777,27 @@ function () {
     this.loadingElsByRef = {};
     this.loadingEls = [];
     this.currentlyActiveLoadingEls = [];
+    this.component = component;
+    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementInitialized', function (el, component) {
+      if (component !== _this.component) return;
+      if (el.directives.missing('loading')) return;
+      var directive = el.directives.get('loading');
+      var refNames = el.directives.get('target') && el.directives.get('target').value.split(',').map(function (s) {
+        return s.trim();
+      });
+
+      _this.addLoadingEl(el, directive.value, refNames, directive.modifiers.includes('remove'));
+    });
+    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageSent', function (message) {
+      _this.setLoading(message.refs);
+    });
+    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageFailed', function () {
+      _this.unsetLoading();
+    });
+    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('responseReceived', function () {
+      _this.unsetLoading();
+    });
     _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementRemoved', function (el) {
-      // Elements with loading directives are stored, release this
-      // element from storage because it no longer exists on the DOM.
       _this.removeLoadingEl(el);
     });
   }
@@ -2049,7 +2067,7 @@ function () {
     this.messageInTransit = null;
     this.modelTimeout = null;
     this.tearDownCallbacks = [];
-    this.loadingManager = new _LoadingManager__WEBPACK_IMPORTED_MODULE_8__["default"]();
+    this.loadingManager = new _LoadingManager__WEBPACK_IMPORTED_MODULE_8__["default"](this);
     this.dirtyManager = new _DirtyManager__WEBPACK_IMPORTED_MODULE_9__["default"](this);
     this.prefetchManager = new _PrefetchManager__WEBPACK_IMPORTED_MODULE_10__["default"](this);
     this.initialize();
@@ -2124,13 +2142,13 @@ function () {
       if (this.messageInTransit) return;
       this.messageInTransit = new _Message__WEBPACK_IMPORTED_MODULE_0__["default"](this, this.actionQueue);
       this.connection.sendMessage(this.messageInTransit);
-      this.loadingManager.setLoading(this.messageInTransit.refs);
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('messageSent', this.messageInTransit);
       this.actionQueue = [];
     }
   }, {
     key: "messageSendFailed",
     value: function messageSendFailed() {
-      this.loadingManager.unsetLoading();
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('messageFailed');
       this.messageInTransit = null;
     }
   }, {
@@ -2142,6 +2160,7 @@ function () {
   }, {
     key: "handleResponse",
     value: function handleResponse(response) {
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', response);
       this.data = response.data;
       this.checksum = response.checksum;
       this.children = response.children;
@@ -2152,7 +2171,6 @@ function () {
         return;
       }
 
-      this.loadingManager.unsetLoading();
       this.replaceDom(response.dom, response.dirtyInputs);
       this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs);
       this.messageInTransit = null;
@@ -2420,7 +2438,7 @@ function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
-  availableHooks: ['elementRemoved'],
+  availableHooks: ['elementInitialized', 'elementRemoved', 'messageSent', 'messageFailed', 'responseReceived'],
   hooks: {},
   register: function register(name, callback) {
     if (!this.availableHooks.includes(name)) {
@@ -5115,14 +5133,8 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   initialize: function initialize(el, component) {
     var _this = this;
 
-    // Parse out "direcives", "modifiers", and "value" from livewire attributes.
     el.directives.all().forEach(function (directive) {
       switch (directive.type) {
-        case 'loading':
-          _this.registerElementForLoading(el, directive, component);
-
-          break;
-
         case 'dirty':
           _this.registerElementForDirty(el, directive, component);
 
@@ -5151,12 +5163,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
           break;
       }
     });
-  },
-  registerElementForLoading: function registerElementForLoading(el, directive, component) {
-    var refNames = el.directives.get('target') && el.directives.get('target').value.split(',').map(function (s) {
-      return s.trim();
-    });
-    component.loadingManager.addLoadingEl(el, directive.value, refNames, directive.modifiers.includes('remove'));
+    _Store__WEBPACK_IMPORTED_MODULE_4__["default"].callHook('elementInitialized', el, component);
   },
   registerElementForDirty: function registerElementForDirty(el, directive, component) {
     var refNames = el.directives.has('target') && el.directives.get('target').value.split(',').map(function (s) {

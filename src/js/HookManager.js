@@ -1,6 +1,13 @@
 
 export default {
-    availableHooks: ['elementRemoved'],
+    availableHooks: [
+        'elementInitialized',
+        'elementRemoved',
+        'messageSent',
+        'messageFailed',
+        'responseReceived',
+    ],
+
     hooks: {},
 
     register(name, callback) {

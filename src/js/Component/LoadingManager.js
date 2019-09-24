@@ -1,14 +1,42 @@
 import store from '@/Store'
 
 class LoadingManager {
-    constructor() {
+    constructor(component) {
         this.loadingElsByRef = {}
         this.loadingEls = []
         this.currentlyActiveLoadingEls = []
+        this.component = component
 
-        store.registerHook('elementRemoved', (el) => {
-            // Elements with loading directives are stored, release this
-            // element from storage because it no longer exists on the DOM.
+        store.registerHook('elementInitialized', (el, component) => {
+            if (component !== this.component) return
+
+            if (el.directives.missing('loading')) return
+            const directive = el.directives.get('loading')
+
+            const refNames = el.directives.get('target')
+                && el.directives.get('target').value.split(',').map(s => s.trim())
+
+            this.addLoadingEl(
+                el,
+                directive.value,
+                refNames,
+                directive.modifiers.includes('remove')
+            )
+        })
+
+        store.registerHook('messageSent', message => {
+            this.setLoading(message.refs)
+        })
+
+        store.registerHook('messageFailed', () => {
+            this.unsetLoading()
+        })
+
+        store.registerHook('responseReceived', () => {
+            this.unsetLoading()
+        })
+
+        store.registerHook('elementRemoved', el => {
             this.removeLoadingEl(el)
         })
     }
