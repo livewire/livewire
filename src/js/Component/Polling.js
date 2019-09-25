@@ -19,6 +19,9 @@ function fireActionOnInterval(el, component) {
         // from executing. We still want "some" requests to get through.
         if (store.livewireIsInBackground && Math.random() < .95) return
 
+        // Don't poll if livewire is offline as well.
+        if (store.livewireIsOffline) return
+
         component.addAction(new MethodAction(method, directive.params, el))
     }, directive.durationOr(2000));
 }

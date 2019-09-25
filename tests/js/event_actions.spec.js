@@ -82,17 +82,17 @@ test('keyup.enter doesnt fire when other keys are pressed', async () => {
     expect(payload).toBeUndefined()
 })
 
-test('polling', async () => {
+test('polling is disabled if livewire is offline', async () => {
     var pollHappened = false
     mount('<div wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
+    window.livewire.components.livewireIsOffline = true
 
-    await timeout(49)
+    await timeout(59)
 
     expect(pollHappened).toBeFalsy()
 
-    await timeout(10)
-
-    expect(pollHappened).toBeTruthy()
+    // Reset state for other tests.
+    window.livewire.components.livewireIsOffline = false
 })
 
 test('polling without specifying method refreshes by default', async () => {
@@ -109,6 +109,19 @@ test('polling without specifying method refreshes by default', async () => {
 })
 
 test('polling on root div', async () => {
+    var pollHappened = false
+    mountAsRoot('<div wire:id="123" wire:data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
+
+    await timeout(49)
+
+    expect(pollHappened).toBeFalsy()
+
+    await timeout(10)
+
+    expect(pollHappened).toBeTruthy()
+})
+
+test('polling is disabled if ', async () => {
     var pollHappened = false
     mountAsRoot('<div wire:id="123" wire:data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
 

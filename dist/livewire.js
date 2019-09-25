@@ -2335,6 +2335,7 @@ var store = {
   beforeDomUpdateCallback: function beforeDomUpdateCallback() {},
   afterDomUpdateCallback: function afterDomUpdateCallback() {},
   livewireIsInBackground: false,
+  livewireIsOffline: false,
   hooks: _HookManager__WEBPACK_IMPORTED_MODULE_1__["default"],
   components: function components() {
     var _this = this;
@@ -2938,11 +2939,13 @@ var offlineEls = [];
     offlineEls.push(el);
   });
   window.addEventListener('offline', function () {
+    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].livewireIsOffline = true;
     offlineEls.forEach(function (el) {
       toggleOffline(el, true);
     });
   });
   window.addEventListener('online', function () {
+    _Store__WEBPACK_IMPORTED_MODULE_0__["default"].livewireIsOffline = false;
     offlineEls.forEach(function (el) {
       toggleOffline(el, false);
     });
@@ -3009,7 +3012,9 @@ function fireActionOnInterval(el, component) {
     // Don't poll when the tab is in the background.
     // The "Math.random" business effectivlly prevents 95% of requests
     // from executing. We still want "some" requests to get through.
-    if (_Store__WEBPACK_IMPORTED_MODULE_1__["default"].livewireIsInBackground && Math.random() < .95) return;
+    if (_Store__WEBPACK_IMPORTED_MODULE_1__["default"].livewireIsInBackground && Math.random() < .95) return; // Don't poll if livewire is offline as well.
+
+    if (_Store__WEBPACK_IMPORTED_MODULE_1__["default"].livewireIsOffline) return;
     component.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_0__["default"](method, directive.params, el));
   }, directive.durationOr(2000));
 }

@@ -10,12 +10,16 @@ export default function () {
     })
 
     window.addEventListener('offline', () => {
+        store.livewireIsOffline = true
+
         offlineEls.forEach(el => {
             toggleOffline(el, true)
         })
     })
 
     window.addEventListener('online', () => {
+        store.livewireIsOffline = false
+
         offlineEls.forEach(el => {
             toggleOffline(el, false)
         })

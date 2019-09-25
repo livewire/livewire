@@ -7,6 +7,7 @@ const store = {
     beforeDomUpdateCallback: () => {},
     afterDomUpdateCallback: () => {},
     livewireIsInBackground: false,
+    livewireIsOffline: false,
     hooks: HookManager,
 
     components() {
