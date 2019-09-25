@@ -2834,8 +2834,8 @@ function addLoadingEl(component, el, value, targetNames, remove) {
 }
 
 function removeLoadingEl(component, el) {
-  component.loadingEls = component.loadingEls.filter(function (el) {
-    return !el.isSameNode(el);
+  component.loadingEls = component.loadingEls.filter(function (loadingEl) {
+    return !loadingEl.el.isSameNode(el);
   });
 
   if (el.ref in component.loadingElsByRef) {
