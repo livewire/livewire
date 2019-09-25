@@ -68,7 +68,7 @@ class LivewireComponentsFinder
                 return app()->getNamespace().str_replace(
                         ['/', '.php'],
                         ['\\', ''],
-                        Str::after($file->getPathname(), app_path().DIRECTORY_SEPARATOR)
+                        Str::after($file->getPathname(), app_path().'/')
                     );
             })
             ->filter(function (string $class) {
