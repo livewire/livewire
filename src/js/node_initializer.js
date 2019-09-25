@@ -8,10 +8,6 @@ export default {
     initialize(el, component) {
         el.directives.all().forEach(directive => {
             switch (directive.type) {
-                case 'poll':
-                    this.fireActionOnInterval(el, directive, component)
-                    break;
-
                 case 'init':
                     this.fireActionRightAway(el, directive, component)
                     break;
@@ -28,19 +24,6 @@ export default {
         })
 
         store.callHook('elementInitialized', el, component)
-    },
-
-    fireActionOnInterval(el, directive, component) {
-        const method = directive.method || '$refresh'
-
-        setInterval(() => {
-            // Don't poll when the tab is in the background.
-            // The "Math.random" business effectivlly prevents 95% of requests
-            // from executing. We still want "some" requests to get through.
-            if (store.livewireIsInBackground && Math.random() < .95) return
-
-            component.addAction(new MethodAction(method, directive.params, el))
-        }, directive.durationOr(2000));
     },
 
     fireActionRightAway(el, directive, component) {

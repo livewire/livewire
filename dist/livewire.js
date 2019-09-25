@@ -2982,6 +2982,40 @@ function toggleOffline(el, isOffline) {
 
 /***/ }),
 
+/***/ "./src/js/component/Polling.js":
+/*!*************************************!*\
+  !*** ./src/js/component/Polling.js ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _action_method__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/action/method */ "./src/js/action/method.js");
+/* harmony import */ var _Store__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/Store */ "./src/js/Store.js");
+
+
+/* harmony default export */ __webpack_exports__["default"] = (function () {
+  _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('elementInitialized', function (el, component) {
+    if (el.directives.missing('poll')) return;
+    fireActionOnInterval(el, component);
+  });
+});
+
+function fireActionOnInterval(el, component) {
+  var directive = el.directives.get('poll');
+  var method = directive.method || '$refresh';
+  setInterval(function () {
+    // Don't poll when the tab is in the background.
+    // The "Math.random" business effectivlly prevents 95% of requests
+    // from executing. We still want "some" requests to get through.
+    if (_Store__WEBPACK_IMPORTED_MODULE_1__["default"].livewireIsInBackground && Math.random() < .95) return;
+    component.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_0__["default"](method, directive.params, el));
+  }, directive.durationOr(2000));
+}
+
+/***/ }),
+
 /***/ "./src/js/connection/drivers/http.js":
 /*!*******************************************!*\
   !*** ./src/js/connection/drivers/http.js ***!
@@ -4977,6 +5011,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _component_LoadingStates__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @/component/LoadingStates */ "./src/js/component/LoadingStates.js");
 /* harmony import */ var _component_DirtyStates__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @/component/DirtyStates */ "./src/js/component/DirtyStates.js");
 /* harmony import */ var _component_OfflineStates__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @/component/OfflineStates */ "./src/js/component/OfflineStates.js");
+/* harmony import */ var _component_Polling__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @/component/Polling */ "./src/js/component/Polling.js");
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -4984,6 +5019,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
 
 
 
@@ -5128,6 +5164,7 @@ if (!window.Livewire) {
 Object(_component_LoadingStates__WEBPACK_IMPORTED_MODULE_9__["default"])();
 Object(_component_DirtyStates__WEBPACK_IMPORTED_MODULE_10__["default"])();
 Object(_component_OfflineStates__WEBPACK_IMPORTED_MODULE_11__["default"])();
+Object(_component_Polling__WEBPACK_IMPORTED_MODULE_12__["default"])();
 Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:available');
 /* harmony default export */ __webpack_exports__["default"] = (Livewire);
 
@@ -5166,11 +5203,6 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     el.directives.all().forEach(function (directive) {
       switch (directive.type) {
-        case 'poll':
-          _this.fireActionOnInterval(el, directive, component);
-
-          break;
-
         case 'init':
           _this.fireActionRightAway(el, directive, component);
 
@@ -5190,16 +5222,6 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       }
     });
     _Store__WEBPACK_IMPORTED_MODULE_4__["default"].callHook('elementInitialized', el, component);
-  },
-  fireActionOnInterval: function fireActionOnInterval(el, directive, component) {
-    var method = directive.method || '$refresh';
-    setInterval(function () {
-      // Don't poll when the tab is in the background.
-      // The "Math.random" business effectivlly prevents 95% of requests
-      // from executing. We still want "some" requests to get through.
-      if (_Store__WEBPACK_IMPORTED_MODULE_4__["default"].livewireIsInBackground && Math.random() < .95) return;
-      component.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_2__["default"](method, directive.params, el));
-    }, directive.durationOr(2000));
   },
   fireActionRightAway: function fireActionRightAway(el, directive, component) {
     var method = directive.value ? directive.method : '$refresh';

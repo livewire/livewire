@@ -10,6 +10,7 @@ import { dispatch } from './util';
 import LoadingStates from '@/component/LoadingStates'
 import DirtyStates from '@/component/DirtyStates'
 import OfflineStates from '@/component/OfflineStates'
+import Polling from '@/component/Polling'
 
 class Livewire {
     constructor(options = {}) {
@@ -120,6 +121,7 @@ if (! window.Livewire) {
 LoadingStates()
 DirtyStates()
 OfflineStates()
+Polling()
 
 dispatch('livewire:available')
 
