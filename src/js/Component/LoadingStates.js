@@ -55,7 +55,7 @@ function addLoadingEl(component, el, value, targetNames, remove) {
 }
 
 function removeLoadingEl(component, el) {
-    component.loadingEls = component.loadingEls.filter(({el}) => ! el.isSameNode(node))
+    component.loadingEls = component.loadingEls.filter(el => ! el.isSameNode(el))
 
     if (el.ref in component.loadingElsByRef) {
         delete component.loadingElsByRef[el.ref]

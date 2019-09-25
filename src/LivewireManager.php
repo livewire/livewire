@@ -169,6 +169,10 @@ class LivewireManager
         display: none;
     }
 
+    [wire\:offline] {
+        display: none;
+    }
+
     [wire\:dirty]:not(textarea):not(input):not(select) {
         display: none;
     }

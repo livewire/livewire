@@ -9,6 +9,7 @@ import 'promise-polyfill/src/polyfill';
 import { dispatch } from './util';
 import LoadingStates from '@/component/LoadingStates'
 import DirtyStates from '@/component/DirtyStates'
+import OfflineStates from '@/component/OfflineStates'
 
 class Livewire {
     constructor(options = {}) {
@@ -118,6 +119,7 @@ if (! window.Livewire) {
 
 LoadingStates()
 DirtyStates()
+OfflineStates()
 
 dispatch('livewire:available')
 
