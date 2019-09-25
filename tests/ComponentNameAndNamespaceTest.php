@@ -51,7 +51,7 @@ EOT
     /** @test */
     public function can_get_name_with_custom_namespace()
     {
-        config(['livewire.class_namespace' => 'App\\Custom\\Controllers\\Http']);
+        config(['livewire.class_namespace' => 'Custom\\Controllers\\Http']);
 
         app()->instance(LivewireComponentsFinder::class, new LivewireComponentsFinder(
             new Filesystem,
@@ -67,7 +67,7 @@ EOT
 <<<EOT
 <?php
 
-namespace App\Custom\Controllers\Http;
+namespace Custom\Controllers\Http;
 
 use Livewire\Component;
 
@@ -82,7 +82,8 @@ EOT
 EOT
         );
 
-        $component = app(LivewireManager::class)->test('App\Custom\Controllers\Http\CustomNamespace');
+        require(app_path('Custom/Controllers/Http') . '/CustomNamespace.php');
+        $component = app(LivewireManager::class)->test('Custom\Controllers\Http\CustomNamespace');
 
         $this->assertEquals('custom-namespace', $component->instance->getName());
     }
