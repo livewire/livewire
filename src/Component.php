@@ -51,7 +51,11 @@ abstract class Component
             ->map([Str::class, 'kebab'])
             ->implode('.');
 
-        return Str::substr($name, strlen($namespace) + 1);
+        if (Str::startsWith($name, $namespace)) {
+            return Str::substr($name, strlen($namespace) + 1);
+        }
+
+        return $name;
     }
 
     public function render()

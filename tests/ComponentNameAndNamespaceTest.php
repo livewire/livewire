@@ -64,7 +64,7 @@ EOT
 
         File::put(
             app_path('Custom/Controllers/Http') . '/CustomNamespace.php',
-            <<<EOT
+<<<EOT
 <?php
 
 namespace App\Custom\Controllers\Http;
@@ -77,7 +77,7 @@ EOT
 
         File::put(
             $this->livewireViewsPath('custom-namespace.blade.php'),
-            <<<'EOT'
+<<<EOT
 <div>I've been namespaced!</div>
 EOT
         );
