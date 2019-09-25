@@ -43,12 +43,15 @@ abstract class Component
 
     public function getName()
     {
-        $namespace = config('livewire.class_namespace', 'App\\Http\\Livewire');
-
-        return collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
-            ->diff(explode('\\', $namespace))
+        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace', 'App\\Http\\Livewire'))))
             ->map([Str::class, 'kebab'])
             ->implode('.');
+
+        $name = collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
+            ->map([Str::class, 'kebab'])
+            ->implode('.');
+
+        return Str::substr($name, strlen($namespace) + 1);
     }
 
     public function render()
