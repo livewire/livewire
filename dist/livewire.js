@@ -1931,12 +1931,12 @@ function () {
         onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
           return el.transitionElementOut(function (nodeDiscarded) {
-            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', _this3, el);
+            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el, _this3);
           });
         },
         onNodeDiscarded: function onNodeDiscarded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
-          _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', _this3, el);
+          _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el, _this3);
 
           if (node.__livewire) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
@@ -2802,7 +2802,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('responseReceived', function (component) {
     unsetLoading(component);
   });
-  _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementRemoved', function (component, el) {
+  _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementRemoved', function (el, component) {
     removeLoadingEl(component, el);
   });
 });
@@ -3941,14 +3941,11 @@ var morphdom = Object(_morphdom__WEBPACK_IMPORTED_MODULE_1__["default"])(_morphA
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return morphAttrs; });
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util */ "./src/js/dom/morphdom/util.js");
-
 /**
  * I don't want to look at "value" attributes when diffing.
  * I commented out all the lines that compare "value"
  *
  */
-
 function morphAttrs(fromNode, toNode) {
   var attrs = toNode.attributes;
   var i;
@@ -3956,7 +3953,7 @@ function morphAttrs(fromNode, toNode) {
   var attrName;
   var attrNamespaceURI;
   var attrValue;
-  var fromValue;
+  var fromValue; // update attributes on original DOM element
 
   for (i = attrs.length - 1; i >= 0; --i) {
     attr = attrs[i];
@@ -3969,6 +3966,10 @@ function morphAttrs(fromNode, toNode) {
       fromValue = fromNode.getAttributeNS(attrNamespaceURI, attrName);
 
       if (fromValue !== attrValue) {
+        if (attr.prefix === 'xmlns') {
+          attrName = attr.name; // It's not allowed to set an attribute with the XMLNS namespace without specifying the `xmlns` prefix
+        }
+
         fromNode.setAttributeNS(attrNamespaceURI, attrName, attrValue);
       }
     } else {
@@ -3994,11 +3995,11 @@ function morphAttrs(fromNode, toNode) {
       if (attrNamespaceURI) {
         attrName = attr.localName || attrName;
 
-        if (!Object(_util__WEBPACK_IMPORTED_MODULE_0__["hasAttributeNS"])(toNode, attrNamespaceURI, attrName)) {
+        if (!toNode.hasAttributeNS(attrNamespaceURI, attrName)) {
           fromNode.removeAttributeNS(attrNamespaceURI, attrName);
         }
       } else {
-        if (!Object(_util__WEBPACK_IMPORTED_MODULE_0__["hasAttributeNS"])(toNode, null, attrName)) {
+        if (!toNode.hasAttribute(attrName)) {
           fromNode.removeAttribute(attrName);
         }
       }
@@ -4028,12 +4029,14 @@ __webpack_require__.r(__webpack_exports__);
  *
  * 1) Changed all the "isSameNode"s to "isEqualNode"s so that morhing doesn't check by reference, only by equality.
  * 2) Automatically filter out any non-"ElementNode"s from the lifecycle hooks.
+ * 3) Tagged other changes with "@livewireModification".
  */
 
 
 
 
 var ELEMENT_NODE = 1;
+var DOCUMENT_FRAGMENT_NODE = 11;
 var TEXT_NODE = 3;
 var COMMENT_NODE = 8;
 
@@ -4044,8 +4047,7 @@ function defaultGetNodeKey(node) {
 }
 
 function callHook(hook) {
-  if (hook.name !== 'getNodeKey' && hook.name !== 'onBeforeElUpdated') {} // debugger
-  // console.log(hook.name, ...params)
+  if (hook.name !== 'getNodeKey' && hook.name !== 'onBeforeElUpdated') {} // console.log(hook.name, ...params)
   // Don't call hook on non-"DOMElement" elements.
 
 
@@ -4083,15 +4085,11 @@ function morphdomFactory(morphAttrs) {
     var onBeforeElChildrenUpdated = options.onBeforeElChildrenUpdated || noop;
     var childrenOnly = options.childrenOnly === true; // This object is used as a lookup to quickly find all keyed elements in the original DOM tree.
 
-    var fromNodesLookup = {};
-    var keyedRemovalList;
+    var fromNodesLookup = Object.create(null);
+    var keyedRemovalList = [];
 
     function addKeyedRemoval(key) {
-      if (keyedRemovalList) {
-        keyedRemovalList.push(key);
-      } else {
-        keyedRemovalList = [key];
-      }
+      keyedRemovalList.push(key);
     }
 
     function walkDiscardedChildNodes(node, skipKeyedNodes) {
@@ -4170,7 +4168,7 @@ function morphdomFactory(morphAttrs) {
 
 
     function indexTree(node) {
-      if (node.nodeType === ELEMENT_NODE) {
+      if (node.nodeType === ELEMENT_NODE || node.nodeType === DOCUMENT_FRAGMENT_NODE) {
         var curChild = node.firstChild;
 
         while (curChild) {
@@ -4211,18 +4209,36 @@ function morphdomFactory(morphAttrs) {
       }
     }
 
+    function cleanupFromEl(fromEl, curFromNodeChild, curFromNodeKey) {
+      // We have processed all of the "to nodes". If curFromNodeChild is
+      // non-null then we still have some from nodes left over that need
+      // to be removed
+      while (curFromNodeChild) {
+        var fromNextSibling = curFromNodeChild.nextSibling;
+
+        if (curFromNodeKey = callHook(getNodeKey, curFromNodeChild)) {
+          // Since the node is keyed it might be matched up later so we defer
+          // the actual removal to later
+          addKeyedRemoval(curFromNodeKey);
+        } else {
+          // NOTE: we skip nested keyed nodes from being removed since there is
+          //       still a chance they will be matched up later
+          removeNode(curFromNodeChild, fromEl, true
+          /* skip keyed nodes */
+          );
+        }
+
+        curFromNodeChild = fromNextSibling;
+      }
+    }
+
     function morphEl(fromEl, toEl, childrenOnly) {
       var toElKey = callHook(getNodeKey, toEl);
-      var curFromNodeKey;
 
       if (toElKey) {
-        // If an element with an ID is being morphed then it is will be in the final
+        // If an element with an ID is being morphed then it will be in the final
         // DOM so clear it out of the saved elements collection
         delete fromNodesLookup[toElKey];
-      }
-
-      if (toEl.isEqualNode && toEl.isEqualNode(fromEl)) {
-        return;
       }
 
       if (!childrenOnly) {
@@ -4246,165 +4262,126 @@ function morphdomFactory(morphAttrs) {
       }
 
       if (fromEl.nodeName !== 'TEXTAREA') {
-        var curToNodeChild = toEl.firstChild;
-        var curFromNodeChild = fromEl.firstChild;
-        var curToNodeKey;
-        var fromNextSibling;
-        var toNextSibling;
-        var matchingFromEl;
+        morphChildren(fromEl, toEl);
+      } else {
+        _specialElHandlers__WEBPACK_IMPORTED_MODULE_1__["default"].TEXTAREA(fromEl, toEl);
+      }
+    }
 
-        outer: while (curToNodeChild) {
-          toNextSibling = curToNodeChild.nextSibling;
-          curToNodeKey = callHook(getNodeKey, curToNodeChild);
+    function morphChildren(fromEl, toEl) {
+      var curToNodeChild = toEl.firstChild;
+      var curFromNodeChild = fromEl.firstChild;
+      var curToNodeKey;
+      var curFromNodeKey;
+      var fromNextSibling;
+      var toNextSibling;
+      var matchingFromEl; // walk the children
 
-          while (curFromNodeChild) {
-            fromNextSibling = curFromNodeChild.nextSibling;
-
-            if (curToNodeChild.isEqualNode && curToNodeChild.isEqualNode(curFromNodeChild)) {
-              curToNodeChild = toNextSibling;
-              curFromNodeChild = fromNextSibling;
-              continue outer;
-            }
-
-            curFromNodeKey = callHook(getNodeKey, curFromNodeChild);
-            var curFromNodeType = curFromNodeChild.nodeType;
-            var isCompatible = undefined;
-
-            if (curFromNodeType === curToNodeChild.nodeType) {
-              if (curFromNodeType === ELEMENT_NODE) {
-                // Both nodes being compared are Element nodes
-                if (curToNodeKey) {
-                  // The target node has a key so we want to match it up with the correct element
-                  // in the original DOM tree
-                  if (curToNodeKey !== curFromNodeKey) {
-                    // The current element in the original DOM tree does not have a matching key so
-                    // let's check our lookup to see if there is a matching element in the original
-                    // DOM tree
-                    if (matchingFromEl = fromNodesLookup[curToNodeKey]) {
-                      if (curFromNodeChild.nextSibling === matchingFromEl) {
-                        // Special case for single element removals. To avoid removing the original
-                        // DOM node out of the tree (since that can break CSS transitions, etc.),
-                        // we will instead discard the current node and wait until the next
-                        // iteration to properly match up the keyed target element with its matching
-                        // element in the original tree
-                        isCompatible = false;
-                      } else {
-                        // We found a matching keyed element somewhere in the original DOM tree.
-                        // Let's moving the original DOM node into the current position and morph
-                        // it.
-                        // NOTE: We use insertBefore instead of replaceChild because we want to go through
-                        // the `removeNode()` function for the node that is being discarded so that
-                        // all lifecycle hooks are correctly invoked
-                        fromEl.insertBefore(matchingFromEl, curFromNodeChild);
-                        fromNextSibling = curFromNodeChild.nextSibling;
-
-                        if (curFromNodeKey) {
-                          // Since the node is keyed it might be matched up later so we defer
-                          // the actual removal to later
-                          addKeyedRemoval(curFromNodeKey);
-                        } else {
-                          // NOTE: we skip nested keyed nodes from being removed since there is
-                          //       still a chance they will be matched up later
-                          removeNode(curFromNodeChild, fromEl, true
-                          /* skip keyed nodes */
-                          );
-                        }
-
-                        curFromNodeChild = matchingFromEl;
-                      }
-                    } else {
-                      // The nodes are not compatible since the "to" node has a key and there
-                      // is no matching keyed node in the source tree
-                      isCompatible = false;
-                    }
-                  }
-                } else if (curFromNodeKey) {
-                  // The original has a key
-                  isCompatible = false;
-                }
-
-                isCompatible = isCompatible !== false && Object(_util__WEBPACK_IMPORTED_MODULE_0__["compareNodeNames"])(curFromNodeChild, curToNodeChild);
-
-                if (isCompatible) {
-                  // We found compatible DOM elements so transform
-                  // the current "from" node to match the current
-                  // target DOM node.
-                  morphEl(curFromNodeChild, curToNodeChild);
-                }
-              } else if (curFromNodeType === TEXT_NODE || curFromNodeType == COMMENT_NODE) {
-                // Both nodes being compared are Text or Comment nodes
-                isCompatible = true; // Simply update nodeValue on the original node to
-                // change the text value
-
-                if (curFromNodeChild.nodeValue !== curToNodeChild.nodeValue) {
-                  curFromNodeChild.nodeValue = curToNodeChild.nodeValue;
-                }
-              }
-            }
-
-            if (isCompatible) {
-              // Advance both the "to" child and the "from" child since we found a match
-              curToNodeChild = toNextSibling;
-              curFromNodeChild = fromNextSibling;
-              continue outer;
-            } // No compatible match so remove the old node from the DOM and continue trying to find a
-            // match in the original DOM. However, we only do this if the from node is not keyed
-            // since it is possible that a keyed node might match up with a node somewhere else in the
-            // target tree and we don't want to discard it just yet since it still might find a
-            // home in the final DOM tree. After everything is done we will remove any keyed nodes
-            // that didn't find a home
-
-
-            if (curFromNodeKey) {
-              // Since the node is keyed it might be matched up later so we defer
-              // the actual removal to later
-              addKeyedRemoval(curFromNodeKey);
-            } else {
-              // NOTE: we skip nested keyed nodes from being removed since there is
-              //       still a chance they will be matched up later
-              removeNode(curFromNodeChild, fromEl, true
-              /* skip keyed nodes */
-              );
-            }
-
-            curFromNodeChild = fromNextSibling;
-          } // If we got this far then we did not find a candidate match for
-          // our "to node" and we exhausted all of the children "from"
-          // nodes. Therefore, we will just append the current "to" node
-          // to the end
-
-
-          if (curToNodeKey && (matchingFromEl = fromNodesLookup[curToNodeKey]) && Object(_util__WEBPACK_IMPORTED_MODULE_0__["compareNodeNames"])(matchingFromEl, curToNodeChild)) {
-            fromEl.appendChild(matchingFromEl);
-            morphEl(matchingFromEl, curToNodeChild);
-          } else {
-            var onBeforeNodeAddedResult = callHook(onBeforeNodeAdded, curToNodeChild);
-
-            if (onBeforeNodeAddedResult !== false) {
-              if (onBeforeNodeAddedResult) {
-                curToNodeChild = onBeforeNodeAddedResult;
-              }
-
-              if (curToNodeChild.actualize) {
-                curToNodeChild = curToNodeChild.actualize(fromEl.ownerDocument || _util__WEBPACK_IMPORTED_MODULE_0__["doc"]);
-              }
-
-              fromEl.appendChild(curToNodeChild);
-              handleNodeAdded(curToNodeChild);
-            }
-          }
-
-          curToNodeChild = toNextSibling;
-          curFromNodeChild = fromNextSibling;
-        } // We have processed all of the "to nodes". If curFromNodeChild is
-        // non-null then we still have some from nodes left over that need
-        // to be removed
-
+      outer: while (curToNodeChild) {
+        toNextSibling = curToNodeChild.nextSibling;
+        curToNodeKey = callHook(getNodeKey, curToNodeChild); // walk the fromNode children all the way through
 
         while (curFromNodeChild) {
           fromNextSibling = curFromNodeChild.nextSibling;
 
-          if (curFromNodeKey = callHook(getNodeKey, curFromNodeChild)) {
+          if (curToNodeChild.isSameNode && curToNodeChild.isSameNode(curFromNodeChild)) {
+            curToNodeChild = toNextSibling;
+            curFromNodeChild = fromNextSibling;
+            continue outer;
+          }
+
+          curFromNodeKey = callHook(getNodeKey, curFromNodeChild);
+          var curFromNodeType = curFromNodeChild.nodeType; // this means if the curFromNodeChild doesnt have a match with the curToNodeChild
+
+          var isCompatible = undefined;
+
+          if (curFromNodeType === curToNodeChild.nodeType) {
+            if (curFromNodeType === ELEMENT_NODE) {
+              // Both nodes being compared are Element nodes
+              if (curToNodeKey) {
+                // The target node has a key so we want to match it up with the correct element
+                // in the original DOM tree
+                if (curToNodeKey !== curFromNodeKey) {
+                  // The current element in the original DOM tree does not have a matching key so
+                  // let's check our lookup to see if there is a matching element in the original
+                  // DOM tree
+                  if (matchingFromEl = fromNodesLookup[curToNodeKey]) {
+                    if (fromNextSibling === matchingFromEl) {
+                      // Special case for single element removals. To avoid removing the original
+                      // DOM node out of the tree (since that can break CSS transitions, etc.),
+                      // we will instead discard the current node and wait until the next
+                      // iteration to properly match up the keyed target element with its matching
+                      // element in the original tree
+                      isCompatible = false;
+                    } else {
+                      // We found a matching keyed element somewhere in the original DOM tree.
+                      // Let's move the original DOM node into the current position and morph
+                      // it.
+                      // NOTE: We use insertBefore instead of replaceChild because we want to go through
+                      // the `removeNode()` function for the node that is being discarded so that
+                      // all lifecycle hooks are correctly invoked
+                      fromEl.insertBefore(matchingFromEl, curFromNodeChild); // fromNextSibling = curFromNodeChild.nextSibling;
+
+                      if (curFromNodeKey) {
+                        // Since the node is keyed it might be matched up later so we defer
+                        // the actual removal to later
+                        addKeyedRemoval(curFromNodeKey);
+                      } else {
+                        // NOTE: we skip nested keyed nodes from being removed since there is
+                        //       still a chance they will be matched up later
+                        removeNode(curFromNodeChild, fromEl, true
+                        /* skip keyed nodes */
+                        );
+                      }
+
+                      curFromNodeChild = matchingFromEl;
+                    }
+                  } else {
+                    // The nodes are not compatible since the "to" node has a key and there
+                    // is no matching keyed node in the source tree
+                    isCompatible = false;
+                  }
+                }
+              } else if (curFromNodeKey) {
+                // The original has a key
+                isCompatible = false;
+              }
+
+              isCompatible = isCompatible !== false && Object(_util__WEBPACK_IMPORTED_MODULE_0__["compareNodeNames"])(curFromNodeChild, curToNodeChild);
+
+              if (isCompatible) {
+                // We found compatible DOM elements so transform
+                // the current "from" node to match the current
+                // target DOM node.
+                // MORPH
+                morphEl(curFromNodeChild, curToNodeChild);
+              }
+            } else if (curFromNodeType === TEXT_NODE || curFromNodeType == COMMENT_NODE) {
+              // Both nodes being compared are Text or Comment nodes
+              isCompatible = true; // Simply update nodeValue on the original node to
+              // change the text value
+
+              if (curFromNodeChild.nodeValue !== curToNodeChild.nodeValue) {
+                curFromNodeChild.nodeValue = curToNodeChild.nodeValue;
+              }
+            }
+          }
+
+          if (isCompatible) {
+            // Advance both the "to" child and the "from" child since we found a match
+            // Nothing else to do as we already recursively called morphChildren above
+            curToNodeChild = toNextSibling;
+            curFromNodeChild = fromNextSibling;
+            continue outer;
+          } // No compatible match so remove the old node from the DOM and continue trying to find a
+          // match in the original DOM. However, we only do this if the from node is not keyed
+          // since it is possible that a keyed node might match up with a node somewhere else in the
+          // target tree and we don't want to discard it just yet since it still might find a
+          // home in the final DOM tree. After everything is done we will remove any keyed nodes
+          // that didn't find a home
+
+
+          if (curFromNodeKey) {
             // Since the node is keyed it might be matched up later so we defer
             // the actual removal to later
             addKeyedRemoval(curFromNodeKey);
@@ -4417,15 +4394,45 @@ function morphdomFactory(morphAttrs) {
           }
 
           curFromNodeChild = fromNextSibling;
+        } // END: while(curFromNodeChild) {}
+        // If we got this far then we did not find a candidate match for
+        // our "to node" and we exhausted all of the children "from"
+        // nodes. Therefore, we will just append the current "to" node
+        // to the end
+
+
+        if (curToNodeKey && (matchingFromEl = fromNodesLookup[curToNodeKey]) && Object(_util__WEBPACK_IMPORTED_MODULE_0__["compareNodeNames"])(matchingFromEl, curToNodeChild)) {
+          fromEl.appendChild(matchingFromEl); // MORPH
+
+          morphEl(matchingFromEl, curToNodeChild);
+        } else {
+          var onBeforeNodeAddedResult = callHook(onBeforeNodeAdded, curToNodeChild);
+
+          if (onBeforeNodeAddedResult !== false) {
+            if (onBeforeNodeAddedResult) {
+              curToNodeChild = onBeforeNodeAddedResult;
+            }
+
+            if (curToNodeChild.actualize) {
+              curToNodeChild = curToNodeChild.actualize(fromEl.ownerDocument || _util__WEBPACK_IMPORTED_MODULE_0__["doc"]);
+            }
+
+            fromEl.appendChild(curToNodeChild);
+            handleNodeAdded(curToNodeChild);
+          }
         }
+
+        curToNodeChild = toNextSibling;
+        curFromNodeChild = fromNextSibling;
       }
 
+      cleanupFromEl(fromEl, curFromNodeChild, curFromNodeKey);
       var specialElHandler = _specialElHandlers__WEBPACK_IMPORTED_MODULE_1__["default"][fromEl.nodeName];
 
       if (specialElHandler && !fromEl.isLivewireModel) {
         specialElHandler(fromEl, toEl);
       }
-    } // END: morphEl(...)
+    } // END: morphChildren(...)
 
 
     var morphedNode = fromNode;
@@ -4465,6 +4472,10 @@ function morphdomFactory(morphAttrs) {
       // toss out the "from node" and use the "to node"
       callHook(onNodeDiscarded, fromNode);
     } else {
+      if (toNode.isSameNode && toNode.isSameNode(morphedNode)) {
+        return;
+      }
+
       morphEl(morphedNode, toNode, childrenOnly); // We now need to loop over any keyed nodes that might need to be
       // removed. We only do the removal if we know that the keyed node
       // never found a match. When a keyed node is matched up we remove
@@ -4510,15 +4521,12 @@ function morphdomFactory(morphAttrs) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util */ "./src/js/dom/morphdom/util.js");
-
-
 function syncBooleanAttrProp(fromEl, toEl, name) {
   if (fromEl[name] !== toEl[name]) {
     fromEl[name] = toEl[name];
 
     if (fromEl[name]) {
-      fromEl.setAttribute(name, '');
+      fromEl.setAttribute(name);
     } else {
       fromEl.removeAttribute(name);
     }
@@ -4526,11 +4534,33 @@ function syncBooleanAttrProp(fromEl, toEl, name) {
 }
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-  /**
-   * Needed for IE. Apparently IE doesn't think that "selected" is an
-   * attribute when reading over the attributes using selectEl.attributes
-   */
   OPTION: function OPTION(fromEl, toEl) {
+    var parentNode = fromEl.parentNode;
+
+    if (parentNode) {
+      var parentName = parentNode.nodeName.toUpperCase();
+
+      if (parentName === 'OPTGROUP') {
+        parentNode = parentNode.parentNode;
+        parentName = parentNode && parentNode.nodeName.toUpperCase();
+      }
+
+      if (parentName === 'SELECT' && !parentNode.hasAttribute('multiple')) {
+        if (fromEl.hasAttribute('selected') && !toEl.selected) {
+          // Workaround for MS Edge bug where the 'selected' attribute can only be
+          // removed if set to a non-empty value:
+          // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/12087679/
+          fromEl.setAttribute('selected', 'selected');
+          fromEl.removeAttribute('selected');
+        } // We have to reset select element's selectedIndex to -1, otherwise setting
+        // fromEl.selected using the syncBooleanAttrProp below has no effect.
+        // The correct selectedIndex will be set in the SELECT special handler below.
+
+
+        parentNode.selectedIndex = -1;
+      }
+    }
+
     syncBooleanAttrProp(fromEl, toEl, 'selected');
   },
 
@@ -4548,7 +4578,7 @@ function syncBooleanAttrProp(fromEl, toEl, name) {
       fromEl.value = toEl.value;
     }
 
-    if (!Object(_util__WEBPACK_IMPORTED_MODULE_0__["hasAttributeNS"])(toEl, null, 'value')) {
+    if (!toEl.hasAttribute('value')) {
       fromEl.removeAttribute('value');
     }
   },
@@ -4574,27 +4604,43 @@ function syncBooleanAttrProp(fromEl, toEl, name) {
     }
   },
   SELECT: function SELECT(fromEl, toEl) {
-    if (!Object(_util__WEBPACK_IMPORTED_MODULE_0__["hasAttributeNS"])(toEl, null, 'multiple')) {
+    if (!toEl.hasAttribute('multiple')) {
       var selectedIndex = -1;
-      var i = 0;
-      var curChild = toEl.firstChild;
+      var i = 0; // We have to loop through children of fromEl, not toEl since nodes can be moved
+      // from toEl to fromEl directly when morphing.
+      // At the time this special handler is invoked, all children have already been morphed
+      // and appended to / removed from fromEl, so using fromEl here is safe and correct.
+
+      var curChild = fromEl.firstChild;
+      var optgroup;
+      var nodeName;
 
       while (curChild) {
-        var nodeName = curChild.nodeName;
+        nodeName = curChild.nodeName && curChild.nodeName.toUpperCase();
 
-        if (nodeName && nodeName.toUpperCase() === 'OPTION') {
-          if (Object(_util__WEBPACK_IMPORTED_MODULE_0__["hasAttributeNS"])(curChild, null, 'selected')) {
-            selectedIndex = i;
-            break;
+        if (nodeName === 'OPTGROUP') {
+          optgroup = curChild;
+          curChild = optgroup.firstChild;
+        } else {
+          if (nodeName === 'OPTION') {
+            if (curChild.hasAttribute('selected')) {
+              selectedIndex = i;
+              break;
+            }
+
+            i++;
           }
 
-          i++;
-        }
+          curChild = curChild.nextSibling;
 
-        curChild = curChild.nextSibling;
+          if (!curChild && optgroup) {
+            curChild = optgroup.nextSibling;
+            optgroup = null;
+          }
+        }
       }
 
-      fromEl.selectedIndex = i;
+      fromEl.selectedIndex = selectedIndex;
     }
   }
 });
@@ -4605,13 +4651,12 @@ function syncBooleanAttrProp(fromEl, toEl, name) {
 /*!*************************************!*\
   !*** ./src/js/dom/morphdom/util.js ***!
   \*************************************/
-/*! exports provided: doc, hasAttributeNS, toElement, compareNodeNames, createElementNS, moveChildren */
+/*! exports provided: doc, toElement, compareNodeNames, createElementNS, moveChildren */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "doc", function() { return doc; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hasAttributeNS", function() { return hasAttributeNS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "toElement", function() { return toElement; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "compareNodeNames", function() { return compareNodeNames; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createElementNS", function() { return createElementNS; });
@@ -4620,42 +4665,53 @@ var range; // Create a range object for efficently rendering strings to elements
 
 var NS_XHTML = 'http://www.w3.org/1999/xhtml';
 var doc = typeof document === 'undefined' ? undefined : document;
-var testEl = doc ? doc.body || doc.createElement('div') : {}; // Fixes <https://github.com/patrick-steele-idem/morphdom/issues/32>
-// (IE7+ support) <=IE7 does not support el.hasAttribute(name)
+var HAS_TEMPLATE_SUPPORT = !!doc && 'content' in doc.createElement('template');
+var HAS_RANGE_SUPPORT = !!doc && doc.createRange && 'createContextualFragment' in doc.createRange();
 
-var actualHasAttributeNS;
-
-if (testEl.hasAttributeNS) {
-  actualHasAttributeNS = function actualHasAttributeNS(el, namespaceURI, name) {
-    return el.hasAttributeNS(namespaceURI, name);
-  };
-} else if (testEl.hasAttribute) {
-  actualHasAttributeNS = function actualHasAttributeNS(el, namespaceURI, name) {
-    return el.hasAttribute(name);
-  };
-} else {
-  actualHasAttributeNS = function actualHasAttributeNS(el, namespaceURI, name) {
-    return el.getAttributeNode(namespaceURI, name) != null;
-  };
+function createFragmentFromTemplate(str) {
+  var template = doc.createElement('template');
+  template.innerHTML = str;
+  return template.content.childNodes[0];
 }
 
-var hasAttributeNS = actualHasAttributeNS;
-function toElement(str) {
-  if (!range && doc.createRange) {
+function createFragmentFromRange(str) {
+  if (!range) {
     range = doc.createRange();
     range.selectNode(doc.body);
   }
 
-  var fragment;
+  var fragment = range.createContextualFragment(str);
+  return fragment.childNodes[0];
+}
 
-  if (range && range.createContextualFragment) {
-    fragment = range.createContextualFragment(str);
-  } else {
-    fragment = doc.createElement('body');
-    fragment.innerHTML = str;
+function createFragmentFromWrap(str) {
+  var fragment = doc.createElement('body');
+  fragment.innerHTML = str;
+  return fragment.childNodes[0];
+}
+/**
+ * This is about the same
+ * var html = new DOMParser().parseFromString(str, 'text/html');
+ * return html.body.firstChild;
+ *
+ * @method toElement
+ * @param {String} str
+ */
+
+
+function toElement(str) {
+  str = str.trim();
+
+  if (HAS_TEMPLATE_SUPPORT) {
+    // avoid restrictions on content for things like `<tr><th>Hi</th></tr>` which
+    // createContextualFragment doesn't support
+    // <template> support not available in IE
+    return createFragmentFromTemplate(str);
+  } else if (HAS_RANGE_SUPPORT) {
+    return createFragmentFromRange(str);
   }
 
-  return fragment.childNodes[0];
+  return createFragmentFromWrap(str);
 }
 /**
  * Returns true if two node's names are the same.
@@ -5456,7 +5512,7 @@ var preventDefaultSupported = function () {
 /*!******************************!*\
   !*** ./src/js/util/index.js ***!
   \******************************/
-/*! exports provided: kebabCase, tap, debounceWithFiringOnBothEnds, debounce, walk, dispatch */
+/*! exports provided: debounceWithFiringOnBothEnds, debounce, walk, dispatch, kebabCase, tap */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

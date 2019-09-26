@@ -229,14 +229,14 @@ export default class Component {
                 const el = new DOMElement(node)
 
                 return el.transitionElementOut(nodeDiscarded => {
-                    store.callHook('elementRemoved', this, el)
+                    store.callHook('elementRemoved', el, this)
                 })
             },
 
             onNodeDiscarded: node => {
                 const el = new DOMElement(node)
 
-                store.callHook('elementRemoved', this, el)
+                store.callHook('elementRemoved', el, this)
 
                 if (node.__livewire) {
                     store.removeComponent(node.__livewire)

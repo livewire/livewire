@@ -35,7 +35,7 @@ export default function () {
         unsetLoading(component)
     })
 
-    store.registerHook('elementRemoved', (component, el) => {
+    store.registerHook('elementRemoved', (el, component) => {
         removeLoadingEl(component, el)
     })
 }

@@ -1,5 +1,3 @@
-import { hasAttributeNS } from './util';
-
 /**
  * I don't want to look at "value" attributes when diffing.
  * I commented out all the lines that compare "value"
@@ -15,6 +13,7 @@ export default function morphAttrs(fromNode, toNode) {
     var attrValue;
     var fromValue;
 
+    // update attributes on original DOM element
     for (i = attrs.length - 1; i >= 0; --i) {
         attr = attrs[i];
         attrName = attr.name;
@@ -26,6 +25,9 @@ export default function morphAttrs(fromNode, toNode) {
             fromValue = fromNode.getAttributeNS(attrNamespaceURI, attrName);
 
             if (fromValue !== attrValue) {
+                if (attr.prefix === 'xmlns'){
+                    attrName = attr.name; // It's not allowed to set an attribute with the XMLNS namespace without specifying the `xmlns` prefix
+                }
                 fromNode.setAttributeNS(attrNamespaceURI, attrName, attrValue);
             }
         } else {
@@ -50,11 +52,11 @@ export default function morphAttrs(fromNode, toNode) {
             if (attrNamespaceURI) {
                 attrName = attr.localName || attrName;
 
-                if (!hasAttributeNS(toNode, attrNamespaceURI, attrName)) {
+                if (!toNode.hasAttributeNS(attrNamespaceURI, attrName)) {
                     fromNode.removeAttributeNS(attrNamespaceURI, attrName);
                 }
             } else {
-                if (!hasAttributeNS(toNode, null, attrName)) {
+                if (!toNode.hasAttribute(attrName)) {
                     fromNode.removeAttribute(attrName);
                 }
             }
