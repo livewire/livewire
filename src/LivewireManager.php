@@ -16,7 +16,6 @@ class LivewireManager
     protected $prefix = 'wire';
     protected $componentAliases = [];
     protected $customComponentResolver;
-    protected $middlewaresFilter;
     protected $container;
     public static $isLivewireRequestTestingOverride;
 
@@ -94,12 +93,6 @@ class LivewireManager
         $children = $instance->getRenderedChildren();
         $checksum = (new ComponentChecksumManager)->generate($name, $id, $properties);
 
-        $middlewareStack = $this->currentMiddlewareStack();
-        if ($this->middlewaresFilter) {
-            $middlewareStack = array_filter($middlewareStack, $this->middlewaresFilter);
-        }
-        $middleware = encrypt($middlewareStack, $serialize = true);
-
         return new InitialResponsePayload([
             'instance' => $instance,
             'id' => $id,
@@ -109,23 +102,7 @@ class LivewireManager
             'checksum' => $checksum,
             'children' => $children,
             'events' => $events,
-            'middleware' => $middleware,
         ]);
-    }
-
-    public function currentMiddlewareStack()
-    {
-        if (app()->runningUnitTests()) {
-            // There is no "request->route()" to access in unit tests.
-            return [];
-        }
-
-        return request()->route()->gatherMiddleware();
-    }
-
-    public function filterMiddleware($filter)
-    {
-        return $this->middlewaresFilter = $filter;
     }
 
     public function dummyMount($id, $tagName)
