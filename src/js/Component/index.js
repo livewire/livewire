@@ -248,6 +248,13 @@ export default class Component {
             },
 
             onBeforeElUpdated: (from, to) => {
+                // Because morphdom also supports vDom nodes, it uses isSameNode to detect
+                // sameness. When dealing with DOM nodes, we want isEqualNode, otherwise
+                // isSameNode will ALWAYS return false.
+                if (from.isEqualNode(to)) {
+                    return false
+                }
+
                 const fromEl = new DOMElement(from)
 
                 // Honor the "wire:ignore" attribute.

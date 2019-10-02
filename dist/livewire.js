@@ -1945,6 +1945,13 @@ function () {
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(node) {//
         },
         onBeforeElUpdated: function onBeforeElUpdated(from, to) {
+          // Because morphdom also supports vDom nodes, it uses isSameNode to detect
+          // sameness. When dealing with DOM nodes, we want isEqualNode, otherwise
+          // isSameNode will ALWAYS return false.
+          if (from.isEqualNode(to)) {
+            return false;
+          }
+
           var fromEl = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](from); // Honor the "wire:ignore" attribute.
 
           if (fromEl.directives.has('ignore')) {
@@ -4386,11 +4393,24 @@ function morphdomFactory(morphAttrs) {
             // the actual removal to later
             addKeyedRemoval(curFromNodeKey);
           } else {
-            // NOTE: we skip nested keyed nodes from being removed since there is
-            //       still a chance they will be matched up later
-            removeNode(curFromNodeChild, fromEl, true
-            /* skip keyed nodes */
-            );
+            // Before we just remove the original element, let's see if it's the very next
+            // element in the "to" list. If it is, we can assume we can insert the new
+            // element before the original one instead of removing it. This is kind of
+            // a "look-ahead".
+            // @livewireUpdate
+            if (curToNodeChild.nextElementSibling && curToNodeChild.nextElementSibling.isEqualNode(curFromNodeChild)) {
+              fromEl.insertBefore(curToNodeChild.cloneNode(true), curFromNodeChild);
+              handleNodeAdded(curToNodeChild);
+              curToNodeChild = curToNodeChild.nextElementSibling.nextSibling;
+              curFromNodeChild = fromNextSibling;
+              continue outer;
+            } else {
+              // NOTE: we skip nested keyed nodes from being removed since there is
+              //       still a chance they will be matched up later
+              removeNode(curFromNodeChild, fromEl, true
+              /* skip keyed nodes */
+              );
+            }
           }
 
           curFromNodeChild = fromNextSibling;
@@ -5512,7 +5532,7 @@ var preventDefaultSupported = function () {
 /*!******************************!*\
   !*** ./src/js/util/index.js ***!
   \******************************/
-/*! exports provided: debounceWithFiringOnBothEnds, debounce, walk, dispatch, kebabCase, tap */
+/*! exports provided: kebabCase, tap, debounceWithFiringOnBothEnds, debounce, walk, dispatch */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

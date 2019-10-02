@@ -365,9 +365,22 @@ export default function morphdomFactory(morphAttrs) {
                         // the actual removal to later
                         addKeyedRemoval(curFromNodeKey);
                     } else {
-                        // NOTE: we skip nested keyed nodes from being removed since there is
-                        //       still a chance they will be matched up later
-                        removeNode(curFromNodeChild, fromEl, true /* skip keyed nodes */);
+                        // Before we just remove the original element, let's see if it's the very next
+                        // element in the "to" list. If it is, we can assume we can insert the new
+                        // element before the original one instead of removing it. This is kind of
+                        // a "look-ahead".
+                        // @livewireUpdate
+                        if (curToNodeChild.nextElementSibling && curToNodeChild.nextElementSibling.isEqualNode(curFromNodeChild)) {
+                            fromEl.insertBefore(curToNodeChild.cloneNode(true), curFromNodeChild)
+                            handleNodeAdded(curToNodeChild)
+                            curToNodeChild = curToNodeChild.nextElementSibling.nextSibling;
+                            curFromNodeChild = fromNextSibling;
+                            continue outer;
+                        } else {
+                            // NOTE: we skip nested keyed nodes from being removed since there is
+                            //       still a chance they will be matched up later
+                            removeNode(curFromNodeChild, fromEl, true /* skip keyed nodes */);
+                        }
                     }
 
                     curFromNodeChild = fromNextSibling;

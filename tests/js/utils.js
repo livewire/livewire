@@ -90,7 +90,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
                     id: payload.id,
                     data: {},
                     dirtyInputs: dirtyInputs,
-                    dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
+                    dom: '<div wire:id="123">' + returnedDom + '</div>',
                     gc: payload.gc,
                 })
             }, 1)
@@ -158,7 +158,7 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
                     id: payload.id,
                     data,
                     dirtyInputs,
-                    dom: '<div wire:id="123" wire:data="{}">' + returnedDom + '</div>',
+                    dom: '<div wire:id="123">' + returnedDom + '</div>',
                     gc: payload.gc,
                 })
             }, 1)
