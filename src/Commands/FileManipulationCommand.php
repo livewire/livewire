@@ -45,11 +45,12 @@ EOT;
         //   |_\ /_|   || || \\\// /_\ \\\ // || |~~ /_\
 //    |`|`|    || ||  \/  \\\_  \^/  || ||  \\\_
         $this->line("\n".$asciiLogo."\n");
-        $this->line("\n<options=bold>Congratulations!</> 🎉🎉🎉\n");
-        $this->line("You've created your first Livewire component.");
-        $this->line("I've poured a ton into the Livewire experience, and I hope it shows.");
-        $this->line("\nIf you dig it, here are two ways you can say thanks:");
-        $this->line('⭐️  Star the repo on Github');
-        $this->line('📣  Shout out the project on Twitter and tag me (@calebporzio)');
+        $this->line("\n<options=bold>Congratulations, you've created your first Livewire component!</> 🎉🎉🎉\n");
+        if ($this->confirm('Would you like to show some love by starring the repo?')) {
+            exec('open https://github.com/livewire/livewire');
+            $this->line("Thanks! Means the world to me!");
+        } else {
+            $this->line("I understand, but am not going to pretend I'm not sad about it...");
+        }
     }
 }
