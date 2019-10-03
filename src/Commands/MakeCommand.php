@@ -31,7 +31,7 @@ class MakeCommand extends FileManipulationCommand
         $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");
         $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
 
-        if ($showWelcomeMessage) {
+        if ($showWelcomeMessage && ! app()->environment('testing')) {
             $this->writeWelcomeMessage();
         }
     }

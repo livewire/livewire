@@ -21,7 +21,7 @@ abstract class ConnectionHandler
 
         try {
             $this->interceptRedirects($instance, function () use ($payload, $instance) {
-                foreach ($payload['actionQueue'] as $action) {
+                foreach ($this->prioritizeInputSyncing($payload['actionQueue']) as $action) {
                     $this->processMessage($action['type'], $action['payload'], $instance);
                 }
             });
@@ -86,5 +86,16 @@ abstract class ConnectionHandler
         $callback();
 
         app()->instance('redirect', $redirector);
+    }
+
+    protected function prioritizeInputSyncing($actionQueue)
+    {
+        // Put all the "syncInput" actions first.
+        usort($actionQueue, function ($a, $b) {
+            return $a['type'] !== 'syncInput' && $b['type'] === 'syncInput'
+                ? 1 : 0;
+        });
+
+        return $actionQueue;
     }
 }
