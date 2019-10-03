@@ -328,11 +328,23 @@ export default function morphdomFactory(morphAttrs) {
 
                             isCompatible = isCompatible !== false && compareNodeNames(curFromNodeChild, curToNodeChild);
                             if (isCompatible) {
-                                // We found compatible DOM elements so transform
-                                // the current "from" node to match the current
-                                // target DOM node.
-                                // MORPH
-                                morphEl(curFromNodeChild, curToNodeChild);
+                                // If the two nodes are different, but the next element is an exact match,
+                                // we can assume that the new node is meant to be inserted, instead of
+                                // used as a morph target.
+                                // @livewireUpdate
+                                if (
+                                    ! curToNodeChild.isEqualNode(curFromNodeChild)
+                                    && curToNodeChild.nextElementSibling
+                                    && curToNodeChild.nextElementSibling.isEqualNode(curFromNodeChild)
+                                ) {
+                                    isCompatible = false
+                                } else {
+                                    // We found compatible DOM elements so transform
+                                    // the current "from" node to match the current
+                                    // target DOM node.
+                                    // MORPH
+                                    morphEl(curFromNodeChild, curToNodeChild);
+                                }
                             }
 
                         } else if (curFromNodeType === TEXT_NODE || curFromNodeType == COMMENT_NODE) {
@@ -371,8 +383,9 @@ export default function morphdomFactory(morphAttrs) {
                         // a "look-ahead".
                         // @livewireUpdate
                         if (curToNodeChild.nextElementSibling && curToNodeChild.nextElementSibling.isEqualNode(curFromNodeChild)) {
-                            fromEl.insertBefore(curToNodeChild.cloneNode(true), curFromNodeChild)
-                            handleNodeAdded(curToNodeChild)
+                            const nodeToBeAdded = curToNodeChild.cloneNode(true)
+                            fromEl.insertBefore(nodeToBeAdded, curFromNodeChild)
+                            handleNodeAdded(nodeToBeAdded)
                             curToNodeChild = curToNodeChild.nextElementSibling.nextSibling;
                             curFromNodeChild = fromNextSibling;
                             continue outer;
