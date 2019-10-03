@@ -15,7 +15,6 @@ class InitialResponsePayload extends ResponsePayload implements Htmlable, Arraya
     public $name;
     public $checksum;
     public $children;
-    public $middleware;
     public $events;
 
     public function __construct($data)
@@ -29,7 +28,6 @@ class InitialResponsePayload extends ResponsePayload implements Htmlable, Arraya
         $this->name = $data['name'];
         $this->checksum = $data['checksum'];
         $this->children = $data['children'];
-        $this->middleware = $data['middleware'];
         $this->events = $data['events'];
     }
 
@@ -55,7 +53,6 @@ class InitialResponsePayload extends ResponsePayload implements Htmlable, Arraya
             'name' => $this->name,
             'checksum' => $this->checksum,
             'children' => $this->children,
-            'middleware' => $this->middleware,
             'events' => $this->events,
         ];
     }

@@ -17,7 +17,7 @@ class ComponentMethodBindingsTest extends TestCase
             return new ModelToBeBoundStub($value);
         });
 
-        Route::livewire('/test/{foo}', 'foo')->middleware('web');
+        Route::livewire('/test/{foo}', 'foo');
 
         $this->get('/test/from-injection')->assertSee('from-injection');
     }

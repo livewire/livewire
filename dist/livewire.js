@@ -1749,7 +1749,6 @@ function () {
     this.data = JSON.parse(this.extractLivewireAttribute('data'));
     this.events = JSON.parse(this.extractLivewireAttribute('events'));
     this.children = JSON.parse(this.extractLivewireAttribute('children'));
-    this.middleware = this.extractLivewireAttribute('middleware');
     this.checksum = this.extractLivewireAttribute('checksum');
     this.name = this.extractLivewireAttribute('name');
     this.connection = connection;
@@ -2197,7 +2196,6 @@ function () {
         name: this.component.name,
         checksum: this.component.checksum,
         children: this.component.children,
-        middleware: this.component.middleware,
         actionQueue: this.actionQueue.map(function (action) {
           // This ensures only the type & payload properties only get sent over.
           return {

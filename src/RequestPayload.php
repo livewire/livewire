@@ -12,7 +12,6 @@ class RequestPayload implements Arrayable, Jsonable
     public $name;
     public $children;
     public $checksum;
-    public $middleware;
     public $actionQueue;
 
     public function __construct($data)
@@ -22,7 +21,6 @@ class RequestPayload implements Arrayable, Jsonable
         $this->name = $data['name'];
         $this->children = $data['children'];
         $this->checksum = $data['checksum'];
-        $this->middleware = $data['middleware'];
         $this->actionQueue = $data['actionQueue'];
     }
 
@@ -34,7 +32,6 @@ class RequestPayload implements Arrayable, Jsonable
             'name' => $this->name,
             'children' => $this->children,
             'checksum' => $this->checksum,
-            'middleware' => $this->middleware,
             'actionQueue' => $this->actionQueue,
         ];
     }

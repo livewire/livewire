@@ -17,7 +17,6 @@ export default class Component {
         this.data = JSON.parse(this.extractLivewireAttribute('data'))
         this.events = JSON.parse(this.extractLivewireAttribute('events'))
         this.children = JSON.parse(this.extractLivewireAttribute('children'))
-        this.middleware = this.extractLivewireAttribute('middleware')
         this.checksum = this.extractLivewireAttribute('checksum')
         this.name = this.extractLivewireAttribute('name')
         this.connection = connection

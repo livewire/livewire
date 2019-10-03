@@ -41,4 +41,18 @@ return [
     */
 
     'asset_url'  => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Livewire Endpoint Middleware Group
+    |--------------------------------------------------------------------------
+    |
+    | This value sets the middleware group that will be applied to the main
+    | Livewire "message" endpoint (the endpoint that gets hit everytime,
+    | a Livewire component updates). It is set to "web" by default.
+    |
+    */
+
+    'middleware_group'  => 'web',
+
 ];

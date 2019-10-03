@@ -50,23 +50,6 @@ class LivewireTestingTest extends TestCase
             ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, 'shouldnt see me')
             ->assertDontSee('shouldnt see me');
     }
-
-    /** @test */
-    public function test_filter_middlewares()
-    {
-        Artisan::call('make:livewire foo');
-        $manager = \Mockery::mock(LivewireManager::class)->makePartial();
-        $manager->shouldReceive('currentMiddlewareStack')->andReturn(['MiddlewareA', 'MiddlewareB', 'MiddlewareC']);
-
-        $manager->filterMiddleware(function ($middleware) {
-            return $middleware != 'MiddlewareB';
-        });
-
-        $this->assertEquals([
-            0 => 'MiddlewareA',
-            2 => 'MiddlewareC',
-        ], decrypt($manager->mount('foo')->middleware));
-    }
 }
 
 class HasMountArguments extends Component
