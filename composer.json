@@ -9,8 +9,8 @@
         }
     ],
     "require": {
-        "illuminate/support": "^5.7|^6.0",
-        "illuminate/validation": "^5.7|^6.0"
+        "illuminate/support": "^5.8|^6.0",
+        "illuminate/validation": "^5.8|^6.0"
     },
     "extra": {
         "laravel": {
