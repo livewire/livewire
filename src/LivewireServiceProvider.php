@@ -151,12 +151,25 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerPublishables()
     {
-        $this->publishes([
+        $this->publishesToGroups([
             __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
         ], ['livewire', 'livewire:config']);
 
-        $this->publishes([
+        $this->publishesToGroups([
             __DIR__.'/../dist' => public_path('vendor/livewire'),
         ], ['livewire', 'livewire:assets']);
+    }
+
+    protected function publishesToGroups(array $paths, $groups = null)
+    {
+        if (is_null($groups)) {
+            $this->publishes($paths);
+
+            return;
+        }
+
+        foreach ((array) $groups as $group) {
+            $this->publishes($paths, $group);
+        }
     }
 }
