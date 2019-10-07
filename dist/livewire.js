@@ -1704,6 +1704,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _PrefetchManager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./PrefetchManager */ "./src/js/Component/PrefetchManager.js");
 /* harmony import */ var _action_method__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @/action/method */ "./src/js/action/method.js");
 /* harmony import */ var _action_model__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @/action/model */ "./src/js/action/model.js");
+/* harmony import */ var _MessageBus__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../MessageBus */ "./src/js/MessageBus.js");
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
@@ -1738,6 +1739,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
+
 var Component =
 /*#__PURE__*/
 function () {
@@ -1751,7 +1753,7 @@ function () {
     this.children = JSON.parse(this.extractLivewireAttribute('children'));
     this.checksum = this.extractLivewireAttribute('checksum');
     this.name = this.extractLivewireAttribute('name');
-    this.connection = connection;
+    this.scopedListeners = new _MessageBus__WEBPACK_IMPORTED_MODULE_11__["default"](), this.connection = connection;
     this.actionQueue = [];
     this.messageInTransit = null;
     this.modelTimeout = null;
@@ -1802,6 +1804,11 @@ function () {
       this.addAction(new _action_method__WEBPACK_IMPORTED_MODULE_9__["default"](method, params, this.el));
     }
   }, {
+    key: "on",
+    value: function on(event, callback) {
+      this.scopedListeners.register(event, callback);
+    }
+  }, {
     key: "addAction",
     value: function addAction(action) {
       if (this.prefetchManager.actionHasPrefetch(action) && this.prefetchManager.actionPrefetchResponseHasBeenReceived(action)) {
@@ -1847,6 +1854,8 @@ function () {
   }, {
     key: "handleResponse",
     value: function handleResponse(response) {
+      var _this2 = this;
+
       _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', this, response);
       this.data = response.data;
       this.checksum = response.checksum;
@@ -1864,6 +1873,10 @@ function () {
 
       if (response.eventQueue && response.eventQueue.length > 0) {
         response.eventQueue.forEach(function (event) {
+          var _this2$scopedListener;
+
+          (_this2$scopedListener = _this2.scopedListeners).call.apply(_this2$scopedListener, [event.event].concat(_toConsumableArray(event.params)));
+
           _Store__WEBPACK_IMPORTED_MODULE_7__["default"].emit.apply(_Store__WEBPACK_IMPORTED_MODULE_7__["default"], [event.event].concat(_toConsumableArray(event.params)));
         });
       }
@@ -1871,13 +1884,13 @@ function () {
   }, {
     key: "forceRefreshDataBoundElementsMarkedAsDirty",
     value: function forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
-      var _this2 = this;
+      var _this3 = this;
 
       this.walk(function (el) {
         if (el.directives.missing('model')) return;
         var modelValue = el.directives.get('model').value;
         if (el.isFocused() && !dirtyInputs.includes(modelValue)) return;
-        el.setInputValueFromModel(_this2);
+        el.setInputValueFromModel(_this3);
       });
     }
   }, {
@@ -1915,7 +1928,7 @@ function () {
   }, {
     key: "handleMorph",
     value: function handleMorph(dom) {
-      var _this3 = this;
+      var _this4 = this;
 
       Object(_dom_morphdom__WEBPACK_IMPORTED_MODULE_3__["default"])(this.el.rawNode(), dom, {
         childrenOnly: false,
@@ -1930,12 +1943,12 @@ function () {
         onBeforeNodeDiscarded: function onBeforeNodeDiscarded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
           return el.transitionElementOut(function (nodeDiscarded) {
-            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el, _this3);
+            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el, _this4);
           });
         },
         onNodeDiscarded: function onNodeDiscarded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
-          _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el, _this3);
+          _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('elementRemoved', el, _this4);
 
           if (node.__livewire) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
@@ -1963,7 +1976,7 @@ function () {
           } // Children will update themselves.
 
 
-          if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== _this3.id) return false; // Don't touch Vue components
+          if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== _this4.id) return false; // Don't touch Vue components
 
           if (fromEl.isVueComponent()) return false;
         },
@@ -1973,10 +1986,10 @@ function () {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
           var closestComponentId = el.closestRoot().getAttribute('id');
 
-          if (closestComponentId === _this3.id) {
-            _node_initializer__WEBPACK_IMPORTED_MODULE_6__["default"].initialize(el, _this3);
+          if (closestComponentId === _this4.id) {
+            _node_initializer__WEBPACK_IMPORTED_MODULE_6__["default"].initialize(el, _this4);
           } else if (el.isComponentRootEl()) {
-            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].addComponent(new Component(el, _this3.connection));
+            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].addComponent(new Component(el, _this4.connection));
           } // Skip.
 
         }
@@ -1985,14 +1998,14 @@ function () {
   }, {
     key: "walk",
     value: function walk(callback) {
-      var _this4 = this;
+      var _this5 = this;
 
       var callbackWhenNewComponentIsEncountered = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function (el) {};
 
       Object(_util__WEBPACK_IMPORTED_MODULE_2__["walk"])(this.el.rawNode(), function (node) {
         var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node); // Skip the root component element.
 
-        if (el.isSameNode(_this4.el)) {
+        if (el.isSameNode(_this5.el)) {
           callback(el);
           return;
         } // If we encounter a nested component, skip walking that tree.
@@ -2058,19 +2071,19 @@ function () {
   }, {
     key: "modelSyncDebounce",
     value: function modelSyncDebounce(callback, time) {
-      var _this5 = this;
+      var _this6 = this;
 
       return function (e) {
-        clearTimeout(_this5.modelTimeout);
+        clearTimeout(_this6.modelTimeout);
 
-        _this5.modelTimeoutCallback = function () {
+        _this6.modelTimeoutCallback = function () {
           callback(e);
         };
 
-        _this5.modelTimeout = setTimeout(function () {
+        _this6.modelTimeout = setTimeout(function () {
           callback(e);
-          _this5.modelTimeout = null;
-          _this5.modelTimeoutCallback = null;
+          _this6.modelTimeout = null;
+          _this6.modelTimeoutCallback = null;
         }, time);
       };
     }
@@ -2131,28 +2144,26 @@ function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _MessageBus__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MessageBus */ "./src/js/MessageBus.js");
+
 /* harmony default export */ __webpack_exports__["default"] = ({
   availableHooks: ['componentInitialized', 'elementInitialized', 'elementRemoved', 'messageSent', 'messageFailed', 'responseReceived'],
-  hooks: {},
+  bus: new _MessageBus__WEBPACK_IMPORTED_MODULE_0__["default"](),
   register: function register(name, callback) {
     if (!this.availableHooks.includes(name)) {
       throw "Livewire: Referencing unknown hook: [".concat(name, "]");
     }
 
-    if (!this.hooks[name]) {
-      this.hooks[name] = [];
-    }
-
-    this.hooks[name].push(callback);
+    this.bus.register(name, callback);
   },
   call: function call(name) {
+    var _this$bus;
+
     for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
       params[_key - 1] = arguments[_key];
     }
 
-    (this.hooks[name] || []).forEach(function (callback) {
-      callback.apply(void 0, params);
-    });
+    (_this$bus = this.bus).call.apply(_this$bus, [name].concat(params));
   }
 });
 
@@ -2234,6 +2245,60 @@ function () {
   }]);
 
   return _default;
+}();
+
+
+
+/***/ }),
+
+/***/ "./src/js/MessageBus.js":
+/*!******************************!*\
+  !*** ./src/js/MessageBus.js ***!
+  \******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return MessageBus; });
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var MessageBus =
+/*#__PURE__*/
+function () {
+  function MessageBus() {
+    _classCallCheck(this, MessageBus);
+
+    this.listeners = [];
+  }
+
+  _createClass(MessageBus, [{
+    key: "register",
+    value: function register(name, callback) {
+      if (!this.listeners[name]) {
+        this.listeners[name] = [];
+      }
+
+      this.listeners[name].push(callback);
+    }
+  }, {
+    key: "call",
+    value: function call(name) {
+      for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        params[_key - 1] = arguments[_key];
+      }
+
+      (this.listeners[name] || []).forEach(function (callback) {
+        callback.apply(void 0, params);
+      });
+    }
+  }]);
+
+  return MessageBus;
 }();
 
 
@@ -2332,11 +2397,13 @@ function (_Message) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _action_event__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/action/event */ "./src/js/action/event.js");
 /* harmony import */ var _HookManager__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/HookManager */ "./src/js/HookManager.js");
+/* harmony import */ var _MessageBus__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./MessageBus */ "./src/js/MessageBus.js");
+
 
 
 var store = {
   componentsById: {},
-  listeners: {},
+  listeners: new _MessageBus__WEBPACK_IMPORTED_MODULE_2__["default"](),
   beforeDomUpdateCallback: function beforeDomUpdateCallback() {},
   afterDomUpdateCallback: function afterDomUpdateCallback() {},
   livewireIsInBackground: false,
@@ -2366,22 +2433,16 @@ var store = {
     });
   },
   on: function on(event, callback) {
-    if (this.listeners[event] !== undefined) {
-      this.listeners[event].push(callback);
-    } else {
-      this.listeners[event] = [callback];
-    }
+    this.listeners.register(event, callback);
   },
   emit: function emit(event) {
+    var _this$listeners;
+
     for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
       params[_key - 1] = arguments[_key];
     }
 
-    if (this.listeners[event] !== undefined) {
-      this.listeners[event].forEach(function (callback) {
-        return callback.apply(void 0, params);
-      });
-    }
+    (_this$listeners = this.listeners).call.apply(_this$listeners, [event].concat(params));
 
     this.componentsListeningForEvent(event).forEach(function (component) {
       return component.addAction(new _action_event__WEBPACK_IMPORTED_MODULE_0__["default"](event, params));

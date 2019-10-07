@@ -9,6 +9,7 @@ import store from '@/Store'
 import PrefetchManager from './PrefetchManager'
 import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
+import MessageBus from '../MessageBus'
 
 export default class Component {
     constructor(el, connection) {
@@ -19,6 +20,7 @@ export default class Component {
         this.children = JSON.parse(this.extractLivewireAttribute('children'))
         this.checksum = this.extractLivewireAttribute('checksum')
         this.name = this.extractLivewireAttribute('name')
+        this.scopedListeners = new MessageBus,
         this.connection = connection
         this.actionQueue = []
         this.messageInTransit = null
@@ -71,6 +73,10 @@ export default class Component {
 
     call(method, ...params) {
         this.addAction(new MethodAction(method, params, this.el))
+    }
+
+    on(event, callback) {
+        this.scopedListeners.register(event, callback)
     }
 
     addAction(action) {
@@ -148,6 +154,7 @@ export default class Component {
 
         if (response.eventQueue && response.eventQueue.length > 0) {
             response.eventQueue.forEach(event => {
+                this.scopedListeners.call(event.event, ...event.params)
                 store.emit(event.event, ...event.params)
             })
         }

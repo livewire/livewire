@@ -1,6 +1,6 @@
 import { wait } from 'dom-testing-library'
 import MockEcho from 'mock-echo'
-import { mountWithEvent } from './utils'
+import { mountWithEvent, mountAndReturnEmittedEvent } from './utils'
 
 test('receive event from global fire', async () => {
     var payload
@@ -25,6 +25,43 @@ test('receive event from action fire', async () => {
         expect(payload.actionQueue[0].type).toEqual('fireEvent')
         expect(payload.actionQueue[0].payload.event).toEqual('foo')
         expect(payload.actionQueue[0].payload.params).toEqual(['bar'])
+    })
+})
+
+test('receive event from component fire, and make sure global listener receives event too', async () => {
+    var returnedParamFromOuterListener
+    var returnedParamFromInnerListener
+    var returnedParamFromGlobalListener
+    mountAndReturnEmittedEvent(`
+            <div>
+                <button id="outer-button" wire:click="$refresh"></button>
+                <div wire:id="456" wire:data="{}" wire:events="[]"></div>
+            </div>
+        `, {
+        event: 'foo', params: ['bar'],
+    })
+
+    const outerComponent = window.livewire.components.findComponent(123)
+    const innerComponent = window.livewire.components.findComponent(456)
+
+    outerComponent.on('foo', (shouldBeBar) => {
+        returnedParamFromOuterListener = shouldBeBar
+    });
+
+    innerComponent.on('foo', (shouldNotGetCalled) => {
+        returnedParamFromInnerListener = shouldNotGetCalled
+    });
+
+    window.livewire.on('foo', (shouldBeBar) => {
+        returnedParamFromGlobalListener = shouldBeBar
+    });
+
+    document.querySelector('#outer-button').click()
+
+    await wait(() => {
+        expect(returnedParamFromOuterListener).toEqual('bar')
+        expect(returnedParamFromGlobalListener).toEqual('bar')
+        expect(returnedParamFromInnerListener).toEqual(undefined)
     })
 })
 

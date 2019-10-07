@@ -1,9 +1,10 @@
 import EventAction from "@/action/event";
 import HookManager from "@/HookManager";
+import MessageBus from "./MessageBus";
 
 const store = {
     componentsById: {},
-    listeners: {},
+    listeners: new MessageBus,
     beforeDomUpdateCallback: () => {},
     afterDomUpdateCallback: () => {},
     livewireIsInBackground: false,
@@ -35,17 +36,11 @@ const store = {
     },
 
     on(event, callback) {
-        if (this.listeners[event] !== undefined) {
-            this.listeners[event].push(callback)
-        } else {
-            this.listeners[event] = [callback]
-        }
+        this.listeners.register(event, callback)
     },
 
     emit(event, ...params) {
-        if (this.listeners[event] !== undefined) {
-            this.listeners[event].forEach(callback => callback(...params))
-        }
+        this.listeners.call(event, ...params)
 
         this.componentsListeningForEvent(event).forEach(
             component => component.addAction(new EventAction(
