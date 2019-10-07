@@ -56,9 +56,7 @@ class LivewireComponentsFinder
             throw new Exception('The '.dirname($this->manifestPath).' directory must be present and writable.');
         }
 
-        $this->files->replace(
-            $this->manifestPath, '<?php return '.var_export($manifest, true).';'
-        );
+        $this->files->put($this->manifestPath, '<?php return '.var_export($manifest, true).';', true);
     }
 
     public function getClassNames()
