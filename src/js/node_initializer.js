@@ -115,6 +115,7 @@ export default {
 
                 // Check for global event emission.
                 if (method === '$emit') {
+                    component.scopedListeners.call(...params)
                     store.emit(...params)
                     return
                 }

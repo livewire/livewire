@@ -5451,6 +5451,10 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         var params = directive.params; // Check for global event emission.
 
         if (method === '$emit') {
+          var _component$scopedList;
+
+          (_component$scopedList = component.scopedListeners).call.apply(_component$scopedList, _toConsumableArray(params));
+
           _Store__WEBPACK_IMPORTED_MODULE_4__["default"].emit.apply(_Store__WEBPACK_IMPORTED_MODULE_4__["default"], _toConsumableArray(params));
           return;
         }
