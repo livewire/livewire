@@ -12,7 +12,9 @@ abstract class ConnectionHandler
 {
     public function handle($payload)
     {
-        $instance = ComponentHydrator::hydrate($payload['name'], $payload['id'], $payload['data'], $payload['checksum']);
+        $instance = ComponentHydrator::hydrate(
+            $payload['name'], $payload['id'], $payload['data'], $payload['checksum'], data_get($payload, 'protected')
+        );
 
         $instance->setPreviouslyRenderedChildren($payload['children']);
         $instance->hashPropertiesForDirtyDetection();
@@ -33,6 +35,7 @@ abstract class ConnectionHandler
         $data = ComponentHydrator::dehydrate($instance);
         $events = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
+        $protected = $instance->getProtectedStorageEngine()->getProtectedDataForPayload($instance);
 
         $response = new SubsequentResponsePayload([
             'id' => $payload['id'],
@@ -43,6 +46,7 @@ abstract class ConnectionHandler
             'eventQueue' => $eventQueue,
             'events' => $events,
             'data' => $data,
+            'protected' => $protected,
             'redirectTo' => $instance->redirectTo ?? false,
             'fromPrefetch' => $payload['fromPrefetch'] ?? false,
             'gc' => ComponentCacheManager::garbageCollect($payload['gc']),

@@ -10,18 +10,12 @@ class ComponentHydrator
 {
     public static function dehydrate($instance)
     {
-        // Store the protected properties in the cache.
-        if ($protectedOrPrivateProperties = $instance->getProtectedOrPrivatePropertiesDefinedBySubClass()) {
-            (new ComponentCacheManager($instance))->put(
-                '__protected_properties',
-                $protectedOrPrivateProperties
-            );
-        }
+        $instance->getProtectedStorageEngine()->saveProtectedData($instance);
 
         return $instance->getPublicPropertiesDefinedBySubClass();
     }
 
-    public static function hydrate($component, $id, $publicProperties, $checksum)
+    public static function hydrate($component, $id, $publicProperties, $checksum, $protected = null)
     {
         // Make sure the data coming back to hydrate a component hasn't been tamered with.
         $checksumManager = new ComponentChecksumManager;
@@ -34,18 +28,12 @@ class ComponentHydrator
 
         $unHydratedInstance = new $class($id);
 
-        // Grab the protected properties out of the cache.
-        $protectedOrPrivateProperties = (new ComponentCacheManager($unHydratedInstance))
-            ->get('__protected_properties', []);
-
-        return tap($unHydratedInstance, function ($unHydratedInstance) use ($publicProperties, $protectedOrPrivateProperties) {
+        return tap($unHydratedInstance, function ($unHydratedInstance) use ($publicProperties, $protected) {
             foreach ($publicProperties as $property => $value) {
                 $unHydratedInstance->setPropertyValue($property, $value);
             }
 
-            foreach ($protectedOrPrivateProperties as $property => $value) {
-                $unHydratedInstance->setProtectedPropertyValue($property, $value);
-            }
+            $unHydratedInstance->getProtectedStorageEngine()->restoreProtectedData($unHydratedInstance, $protected);
         });
     }
 }

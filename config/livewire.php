@@ -55,4 +55,17 @@ return [
 
     'middleware_group'  => 'web',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Livewire Protected Storage
+    |--------------------------------------------------------------------------
+    |
+    | This value defines where to store the protected properties of the
+    | component. Valid values are: 'cache' (store in server-side cache)
+    | and 'browser' (store encrypted in AJAX requests).
+    |
+    */
+
+    'protected_storage'  => 'cache',
+
 ];

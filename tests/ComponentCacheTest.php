@@ -4,6 +4,7 @@ namespace Tests;
 
 use Livewire\Component;
 use Livewire\LivewireManager;
+use Livewire\ProtectedStorage\ProtectedStorageInCache;
 
 class ComponentCacheTest extends TestCase
 {
@@ -26,6 +27,7 @@ class ComponentCacheTest extends TestCase
         $component->call('setValueOfFiz', 'bluth');
 
         $this->assertNotContains('fiz', $component->data);
+        $this->assertInstanceOf(ProtectedStorageInCache::class, $component->instance->getProtectedStorageEngine());
         $this->assertEquals('bluth', cache()->get("{$component->id}")['__protected_properties']['fiz']);
     }
 

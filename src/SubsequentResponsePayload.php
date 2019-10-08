@@ -24,6 +24,7 @@ class SubsequentResponsePayload extends ResponsePayload implements Arrayable, Js
         $this->id = $data['id'];
         $this->dom = $data['dom'];
         $this->data = $data['data'];
+        $this->protected = data_get($data, 'protected', null);
         $this->checksum = $data['checksum'];
         $this->children = $data['children'];
         $this->eventQueue = $data['eventQueue'];
@@ -42,6 +43,7 @@ class SubsequentResponsePayload extends ResponsePayload implements Arrayable, Js
                 $this->dom, ['id' => $this->id]
             ),
             'data' => $this->data,
+            'protected' => $this->protected,
             'checksum' => $this->checksum,
             'children' => $this->children,
             'eventQueue' => $this->eventQueue,

@@ -18,6 +18,7 @@ export default class {
         return {
             id: this.component.id,
             data: this.component.data,
+            protected: this.component.protected,
             name: this.component.name,
             checksum: this.component.checksum,
             children: this.component.children,
@@ -42,6 +43,7 @@ export default class {
             eventQueue: payload.eventQueue,
             events: payload.events,
             data: payload.data,
+            protected: payload.protected,
             redirectTo: payload.redirectTo,
             gc: payload.gc,
         }

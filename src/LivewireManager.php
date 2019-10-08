@@ -92,6 +92,7 @@ class LivewireManager
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
         $checksum = (new ComponentChecksumManager)->generate($name, $id, $properties);
+        $protected = $instance->getProtectedStorageEngine()->getProtectedDataForPayload($instance);
 
         return new InitialResponsePayload([
             'instance' => $instance,
@@ -102,6 +103,7 @@ class LivewireManager
             'checksum' => $checksum,
             'children' => $children,
             'events' => $events,
+            'protected' => $protected,
         ]);
     }
 

@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
+use Livewire\ProtectedStorage\ProtectedStorageInBrowser;
+use Livewire\ProtectedStorage\ProtectedStorageInCache;
 
 abstract class Component
 {
@@ -167,4 +169,24 @@ abstract class Component
             'Method %s::%s does not exist.', static::class, $method
         ));
     }
+
+    public function getProtectedStorage()
+    {
+        return config('livewire.protected_storage', 'cache');
+    }
+
+    public function getProtectedStorageEngine()
+    {
+        if ($this->getProtectedStorage() === 'cache') {
+            return new ProtectedStorageInCache();
+        }
+
+        if ($this->getProtectedStorage() === 'browser') {
+            return new ProtectedStorageInBrowser();
+        }
+
+        throw new \RuntimeException("Protected storage config option '" . $this->getProtectedStorage() . "' is invalid");
+
+    }
+
 }
