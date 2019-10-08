@@ -16,6 +16,7 @@ export default class Component {
         el.rawNode().__livewire = this
         this.id = el.getAttribute('id')
         this.data = JSON.parse(this.extractLivewireAttribute('data'))
+        this.protected = this.extractLivewireAttribute('protected')
         this.events = JSON.parse(this.extractLivewireAttribute('events'))
         this.children = JSON.parse(this.extractLivewireAttribute('children'))
         this.checksum = this.extractLivewireAttribute('checksum')
@@ -136,6 +137,7 @@ export default class Component {
         store.callHook('responseReceived', this, response)
 
         this.data = response.data
+        this.protected = response.protected
         this.checksum = response.checksum
         this.children = response.children
         store.setComponentsAsCollected(response.gc)

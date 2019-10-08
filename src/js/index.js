@@ -7,10 +7,10 @@ import { ArrayFlat, ArrayFrom, ArrayIncludes, ElementGetAttributeNames } from '@
 import 'whatwg-fetch'
 import 'promise-polyfill/src/polyfill';
 import { dispatch } from './util';
-import LoadingStates from '@/component/LoadingStates'
-import DirtyStates from '@/component/DirtyStates'
-import OfflineStates from '@/component/OfflineStates'
-import Polling from '@/component/Polling'
+import LoadingStates from '@/Component/LoadingStates'
+import DirtyStates from '@/Component/DirtyStates'
+import OfflineStates from '@/Component/OfflineStates'
+import Polling from '@/Component/Polling'
 
 class Livewire {
     constructor(options = {}) {
