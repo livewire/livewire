@@ -14,6 +14,23 @@ test('properties sync on input change', async () => {
     })
 })
 
+test('nested properties sync on input change', async () => {
+    var payload
+    mountWithData(
+        '<input wire:model="foo.one.two">',
+        { foo: [] },
+        i => payload = i
+    )
+
+    fireEvent.input(document.querySelector('input'), { target: { value: 'bar' }})
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[0].payload.name).toEqual('foo.one.two')
+        expect(payload.actionQueue[0].payload.value).toEqual('bar')
+    })
+})
+
 test('properties are lazy synced when action is fired', async () => {
     var payload
     mount('<input wire:model.lazy="foo"><button wire:click="onClick"></button>', i => payload = i)
@@ -113,6 +130,62 @@ test('checkbox element value attribute is automatically added if not present in 
 
     await wait(() => {
         expect(document.querySelector('input').checked).toBeTruthy()
+    })
+})
+
+test('checkboxes bound to empty array arent checked', async () => {
+    mountWithData(
+        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        { foo: [] },
+    )
+    expect(document.querySelector('#a').checked).toBeFalsy()
+})
+
+test('checkboxes bound to an array containing value are checked', async () => {
+    mountWithData(
+        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        { foo: ['a'] },
+    )
+    expect(document.querySelector('#a').checked).toBeTruthy()
+})
+
+test('checkboxes bound to an array containing a different value are not', async () => {
+    mountWithData(
+        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        { foo: ['b'] },
+    )
+    expect(document.querySelector('#a').checked).toBeFalsy()
+})
+
+test('checking a checkbox bound to an array will toggle its value inside the array', async () => {
+    var payload
+    mountWithData(
+        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        { foo: [] },
+        i => payload = i
+    )
+
+    fireEvent.click(document.querySelector('#a'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[0].payload.name).toEqual('foo')
+        expect(payload.actionQueue[0].payload.value).toEqual(['a'])
+    })
+
+    var payload
+    mountWithData(
+        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        { foo: ['a'] },
+        i => payload = i
+    )
+
+    fireEvent.click(document.querySelector('#a'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[0].payload.name).toEqual('foo')
+        expect(payload.actionQueue[0].payload.value).toEqual([])
     })
 })
 

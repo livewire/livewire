@@ -6,15 +6,10 @@ import store from '@/Store'
 
 export default {
     initialize(el, component) {
-        // Parse out "direcives", "modifiers", and "value" from livewire attributes.
         el.directives.all().forEach(directive => {
             switch (directive.type) {
-                case 'loading':
-                    this.registerElementForLoading(el, directive, component)
-                    break;
-
-                case 'poll':
-                    this.fireActionOnInterval(el, directive, component)
+                case 'init':
+                    this.fireActionRightAway(el, directive, component)
                     break;
 
                 case 'model':
@@ -27,29 +22,20 @@ export default {
                     break;
             }
         })
+
+        store.callHook('elementInitialized', el, component)
     },
 
-    registerElementForLoading(el, directive, component) {
-        const refName = el.directives.get('target')
-            && el.directives.get('target').value
+    fireActionRightAway(el, directive, component) {
+        const method = directive.value ? directive.method : '$refresh'
 
-        component.addLoadingEl(
-            el,
-            directive.value,
-            refName,
-            directive.modifiers.includes('remove')
-        )
-    },
-
-    fireActionOnInterval(el, directive, component) {
-        const method = directive.method || '$refresh'
-
-        setInterval(() => {
-            component.addAction(new MethodAction(method, directive.params, el))
-        }, directive.durationOr(500));
+        component.addAction(new MethodAction(method, directive.params, el))
     },
 
     attachModelListener(el, directive, component) {
+        // This is used by morphdom: morphdom.js:391
+        el.el.isLivewireModel = true
+
         const isLazy = directive.modifiers.includes('lazy')
         const debounceIf = (condition, callback, time) => {
             return condition
@@ -74,7 +60,7 @@ export default {
             const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
                 const model = directive.value
                 const el = new DOMElement(e.target)
-                const value = el.valueFromInput()
+                const value = el.valueFromInput(component)
 
                 component.addAction(new ModelAction(model, value, el))
             }, directive.durationOr(150))
@@ -90,6 +76,7 @@ export default {
     attachDomListener(el, directive, component) {
         switch (directive.type) {
             case 'keydown':
+            case 'keyup':
                 this.attachListener(el, directive, component, (e) => {
                     // Only handle listener if no, or matching key modifiers are passed.
                     return ! (directive.modifiers.length === 0
@@ -103,6 +90,12 @@ export default {
     },
 
     attachListener(el, directive, component, callback) {
+        if (directive.modifiers.includes('prefetch')) {
+            el.addEventListener('mouseenter', () => {
+                component.addPrefetchAction(new MethodAction(directive.method, directive.params, el))
+            })
+        }
+
         const event = directive.type
         const handler = e => {
             if (callback && callback(e) !== false) {
@@ -122,6 +115,7 @@ export default {
 
                 // Check for global event emission.
                 if (method === '$emit') {
+                    component.scopedListeners.call(...params)
                     store.emit(...params)
                     return
                 }

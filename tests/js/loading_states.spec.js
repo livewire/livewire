@@ -1,15 +1,49 @@
 import { wait } from 'dom-testing-library'
-import { mount } from './utils'
+import { mount, mountAndReturn, mountAndError } from './utils'
+const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-test('show element while loading', async () => {
-    mount('<button wire:click="onClick"></button><span style="display: none" wire:loading></span>')
+test('show element while loading and hide after', async () => {
+    mountAndReturn(
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading></span>`,
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading></span>`,
+        [], async () => {
+            // Make the loading last for 50ms.
+            await timeout(50)
+        }
+    )
 
     expect(document.querySelector('span').style.display).toEqual('none')
 
     document.querySelector('button').click()
 
-    await wait(() => {
+    await wait(async () => {
         expect(document.querySelector('span').style.display).toEqual('inline-block')
+
+        await wait(async () => {
+            expect(document.querySelector('span').style.display).toEqual('none')
+        })
+    })
+})
+
+test('loading element is hidden after Livewire receives error from backend', async () => {
+    mountAndError(
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading></span>`,
+        async () => {
+            // Make the loading last for 50ms.
+            await timeout(50)
+        }
+    )
+
+    expect(document.querySelector('span').style.display).toEqual('none')
+
+    document.querySelector('button').click()
+
+    await wait(async () => {
+        expect(document.querySelector('span').style.display).toEqual('inline-block')
+
+        await wait(async () => {
+            expect(document.querySelector('span').style.display).toEqual('none')
+        })
     })
 })
 
@@ -25,6 +59,20 @@ test('show element while targeted element is loading', async () => {
     await wait(() => {
         expect(document.querySelector('span').style.display).toEqual('inline-block')
         expect(document.querySelector('h1').style.display).toEqual('none')
+    })
+})
+
+test('loading element can have multiple targets', async () => {
+    mount(
+`<button wire:ref="foo" wire:click="onClick"></button>
+<a wire:ref="bar" wire:click="onClick"></a>
+<span style="display: none" wire:loading wire:target="foo, bar"></span>`
+    )
+
+    document.querySelector('a').click()
+
+    await wait( () => {
+        expect(document.querySelector('span').style.display).toEqual('inline-block')
     })
 })
 

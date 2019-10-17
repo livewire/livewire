@@ -7,4 +7,8 @@ export default class {
     get ref() {
         return this.el ? this.el.ref : null
     }
+
+    toId() {
+        return btoa(encodeURIComponent(this.el.el.outerHTML))
+    }
 }

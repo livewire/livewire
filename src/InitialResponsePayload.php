@@ -6,26 +6,28 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Arrayable;
 
-class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
+class InitialResponsePayload extends ResponsePayload implements Htmlable, Arrayable, Jsonable
 {
+    public $instance;
     public $id;
     public $dom;
     public $data;
     public $name;
     public $checksum;
     public $children;
-    public $middleware;
     public $events;
 
     public function __construct($data)
     {
+        // "instance" is here because we need it for testing,
+        // notice it's not included in the "toArray" method.
+        $this->instance = $data['instance'];
         $this->id = $data['id'];
         $this->dom = $data['dom'];
         $this->data = $data['data'];
         $this->name = $data['name'];
         $this->checksum = $data['checksum'];
         $this->children = $data['children'];
-        $this->middleware = $data['middleware'];
         $this->events = $data['events'];
     }
 
@@ -51,7 +53,6 @@ class InitialResponsePayload implements Arrayable, Jsonable, Htmlable
             'name' => $this->name,
             'checksum' => $this->checksum,
             'children' => $this->children,
-            'middleware' => $this->middleware,
             'events' => $this->events,
         ];
     }

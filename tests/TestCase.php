@@ -40,7 +40,11 @@ class TestCase extends BaseTestCase
 
     protected function getEnvironmentSetUp($app)
     {
-        $app['config']->set('view.paths', [__DIR__.'/views']);
+        $app['config']->set('view.paths', [
+            __DIR__.'/views',
+            resource_path('views'),
+        ]);
+
         $app['config']->set('app.key', 'base64:Hupx3yAySikrM2/edkZQNQHslgDWYfiBfCuSThJ5SK8=');
     }
 
@@ -56,6 +60,6 @@ class TestCase extends BaseTestCase
 
     protected function livewireViewsPath($path = '')
     {
-        return config('view.paths')[0].'/livewire'.($path ? '/'.$path : '');
+        return resource_path('views').'/livewire'.($path ? '/'.$path : '');
     }
 }

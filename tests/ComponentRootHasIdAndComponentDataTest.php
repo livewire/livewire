@@ -14,7 +14,7 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
 
         $this->assertTrue(str_contains(
             $component->dom,
-            [$component->id, $component->data]
+            [$component->id, 'foo']
         ));
     }
 
@@ -29,6 +29,22 @@ wire:data="{&quot;string&quot;:&quot;foo&quot;,&quot;array&quot;:[&quot;foo&quot
 EOT
             , $component->dom
         );
+    }
+
+    /** @test */
+    public function on_subsequent_renders_root_element_has_id_but_not_component_id()
+    {
+        $component = app(LivewireManager::class)->test(ComponentRootHasIdAndDataStub::class);
+
+        $component->call('$refresh');
+
+        $this->assertTrue(str_contains(
+            $component->dom, $component->id
+        ));
+
+        $this->assertFalse(str_contains(
+            $component->dom, 'foo'
+        ));
     }
 }
 

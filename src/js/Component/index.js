@@ -1,27 +1,34 @@
 import Message from '@/Message'
+import PrefetchMessage from '@/PrefetchMessage'
 import { debounce, walk } from '@/util'
 import morphdom from '@/dom/morphdom'
 import DOM from '@/dom/dom'
 import DOMElement from '@/dom/dom_element'
-import nodeInitializer from "@/node_initializer";
+import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
+import PrefetchManager from './PrefetchManager'
+import MethodAction from '@/action/method'
+import ModelAction from '@/action/model'
+import MessageBus from '../MessageBus'
 
-class Component {
+export default class Component {
     constructor(el, connection) {
+        el.rawNode().__livewire = this
         this.id = el.getAttribute('id')
-        this.data = JSON.parse(el.getAttribute('data'))
-        this.events = JSON.parse(el.getAttribute('events'))
-        this.children = JSON.parse(el.getAttribute('children'))
-        this.middleware = el.getAttribute('middleware')
-        this.checksum = el.getAttribute('checksum')
-        this.name = el.getAttribute('name')
+        this.data = JSON.parse(this.extractLivewireAttribute('data'))
+        this.events = JSON.parse(this.extractLivewireAttribute('events'))
+        this.children = JSON.parse(this.extractLivewireAttribute('children'))
+        this.checksum = this.extractLivewireAttribute('checksum')
+        this.name = this.extractLivewireAttribute('name')
+        this.scopedListeners = new MessageBus,
         this.connection = connection
         this.actionQueue = []
         this.messageInTransit = null
-        this.loadingEls = []
-        this.loadingElsByRef = {}
         this.modelTimeout = null
         this.tearDownCallbacks = []
+        this.prefetchManager = new PrefetchManager(this)
+
+        store.callHook('componentInitialized', this)
 
         this.initialize()
 
@@ -30,6 +37,18 @@ class Component {
 
     get el() {
         return DOM.getByAttributeAndValue('id', this.id)
+    }
+
+    get root() {
+        return this.el
+    }
+
+    extractLivewireAttribute(name) {
+        const value = this.el.getAttribute(name)
+
+        this.el.removeAttribute(name)
+
+        return value
     }
 
     initialize() {
@@ -44,7 +63,33 @@ class Component {
         })
     }
 
+    get(name) {
+        return this.data[name]
+    }
+
+    set(name, value) {
+        this.addAction(new ModelAction(name, value, this.el))
+    }
+
+    call(method, ...params) {
+        this.addAction(new MethodAction(method, params, this.el))
+    }
+
+    on(event, callback) {
+        this.scopedListeners.register(event, callback)
+    }
+
     addAction(action) {
+        if (this.prefetchManager.actionHasPrefetch(action) && this.prefetchManager.actionPrefetchResponseHasBeenReceived(action)) {
+            const message = this.prefetchManager.getPrefetchMessageByAction(action)
+
+            this.handleResponse(message.response)
+
+            this.prefetchManager.clearPrefetches()
+
+            return
+        }
+
         this.actionQueue.push(action)
 
         // This debounce is here in-case two events fire at the "same" time:
@@ -55,6 +100,9 @@ class Component {
         // them off at the same time.
         // Note: currently, it's set to 5ms, that might not be the right amount, we'll see.
         debounce(this.fireMessage, 5).apply(this)
+
+        // Clear prefetches.
+        this.prefetchManager.clearPrefetches()
     }
 
     fireMessage() {
@@ -67,18 +115,30 @@ class Component {
 
         this.connection.sendMessage(this.messageInTransit)
 
+        store.callHook('messageSent', this, this.messageInTransit)
+
         this.actionQueue = []
     }
 
     messageSendFailed() {
+        store.callHook('messageFailed', this)
+
         this.messageInTransit = null
     }
 
     receiveMessage(payload) {
-        const response = this.messageInTransit.storeResponse(payload)
+        var response = this.messageInTransit.storeResponse(payload)
+
+        this.handleResponse(response)
+    }
+
+    handleResponse(response) {
+        store.callHook('responseReceived', this, response)
 
         this.data = response.data
+        this.checksum = response.checksum
         this.children = response.children
+        store.setComponentsAsCollected(response.gc)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.redirectTo) {
@@ -90,12 +150,11 @@ class Component {
 
         this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
 
-        this.unsetLoading(this.messageInTransit.loadingEls)
-
         this.messageInTransit = null
 
         if (response.eventQueue && response.eventQueue.length > 0) {
             response.eventQueue.forEach(event => {
+                this.scopedListeners.call(event.event, ...event.params)
                 store.emit(event.event, ...event.params)
             })
         }
@@ -106,7 +165,6 @@ class Component {
             if (el.directives.missing('model')) return
             const modelValue = el.directives.get('model').value
 
-
             if (el.isFocused() && ! dirtyInputs.includes(modelValue)) return
 
             el.setInputValueFromModel(this)
@@ -114,9 +172,13 @@ class Component {
     }
 
     replaceDom(rawDom) {
+        store.beforeDomUpdateCallback()
+
         this.handleMorph(
             this.formatDomBeforeDiffToAvoidConflictsWithVue(rawDom.trim()),
         )
+
+        store.afterDomUpdateCallback()
     }
 
     formatDomBeforeDiffToAvoidConflictsWithVue(inputDom) {
@@ -130,9 +192,28 @@ class Component {
         return div.firstElementChild.outerHTML
     }
 
+    addPrefetchAction(action) {
+        if (this.prefetchManager.actionHasPrefetch(action)) {
+            return
+        }
+
+        const message = new PrefetchMessage(
+            this,
+            action,
+        )
+
+        this.prefetchManager.addMessage(message)
+
+        this.connection.sendMessage(message)
+    }
+
+    receivePrefetchMessage(payload) {
+        this.prefetchManager.storeResponseInMessageForPayload(payload)
+    }
+
     handleMorph(dom) {
         morphdom(this.el.rawNode(), dom, {
-            childrenOnly: true,
+            childrenOnly: false,
 
             getNodeKey: node => {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
@@ -151,10 +232,21 @@ class Component {
             },
 
             onBeforeNodeDiscarded: node => {
-                return (new DOMElement(node)).transitionElementOut(nodeDiscarded => {
-                    // Cleanup after removed element.
-                    this.removeLoadingEl(nodeDiscarded)
+                const el = new DOMElement(node)
+
+                return el.transitionElementOut(nodeDiscarded => {
+                    store.callHook('elementRemoved', el, this)
                 })
+            },
+
+            onNodeDiscarded: node => {
+                const el = new DOMElement(node)
+
+                store.callHook('elementRemoved', el, this)
+
+                if (node.__livewire) {
+                    store.removeComponent(node.__livewire)
+                }
             },
 
             onBeforeElChildrenUpdated: node => {
@@ -162,10 +254,24 @@ class Component {
             },
 
             onBeforeElUpdated: (from, to) => {
+                // Because morphdom also supports vDom nodes, it uses isSameNode to detect
+                // sameness. When dealing with DOM nodes, we want isEqualNode, otherwise
+                // isSameNode will ALWAYS return false.
+                if (from.isEqualNode(to)) {
+                    return false
+                }
+
                 const fromEl = new DOMElement(from)
 
                 // Honor the "wire:ignore" attribute.
-                if (fromEl.hasAttribute('ignore')) return false
+                if (fromEl.directives.has('ignore')) {
+                    if (fromEl.directives.get('ignore').modifiers.includes('self')) {
+                        // Don't update children of "wire:ingore.self" attribute.
+                        from.skipElUpdatingButStillUpdateChildren = true
+                    } else {
+                        return false;
+                    }
+                }
 
                 // Children will update themselves.
                 if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== this.id) return false
@@ -176,12 +282,6 @@ class Component {
 
             onElUpdated: (node) => {
                 //
-            },
-
-            onNodeDiscarded: node => {
-                // Elements with loading directives are stored, release this
-                // element from storage because it no longer exists on the DOM.
-                this.removeLoadingEl(node)
             },
 
             onNodeAdded: (node) => {
@@ -207,7 +307,7 @@ class Component {
             const el = new DOMElement(node)
 
             // Skip the root component element.
-            if (el.isSameNode(this.el)) return
+            if (el.isSameNode(this.el)) { callback(el); return; }
 
             // If we encounter a nested component, skip walking that tree.
             if (el.isComponentRootEl()) {
@@ -221,9 +321,9 @@ class Component {
     }
 
     registerEchoListeners() {
-        if(Array.isArray(this.events)){
+        if (Array.isArray(this.events)) {
             this.events.forEach(event => {
-                if(event.startsWith('echo')){
+                if (event.startsWith('echo')) {
                     if (typeof Echo === 'undefined') {
                         console.warn('Laravel Echo cannot be found')
                         return
@@ -231,93 +331,34 @@ class Component {
 
                     let event_parts = event.split(/(echo:|echo-)|:|,/)
 
-                    if(event_parts[1] == 'echo:') {
+                    if (event_parts[1] == 'echo:') {
                         event_parts.splice(2,0,'channel',undefined)
                     }
 
-                    if(event_parts[2] == 'notification') {
+                    if (event_parts[2] == 'notification') {
                         event_parts.push(undefined, undefined)
                     }
 
                     let [s1, signature, channel_type, s2, channel, s3, event_name] = event_parts
 
-                    if(['channel','private'].includes(channel_type)){
+                    if (['channel','private'].includes(channel_type)) {
                         Echo[channel_type](channel).listen(event_name, (e) => {
                             store.emit(event, e)
                         })
-                    }else if(channel_type == 'presence'){
+                    } else if (channel_type == 'presence') {
                         Echo.join(channel)[event_name]((e) => {
                             store.emit(event, e)
                         })
-                    }else if(channel_type == 'notification'){
+                    } else if (channel_type == 'notification') {
                         Echo.private(channel).notification((notification) => {
                             store.emit(event, notification)
                         })
-                    }else{
+                    } else{
                         console.warn('Echo channel type not yet supported')
                     }
                 }
             })
         }
-    }
-
-    addLoadingEl(el, value, targetRef, remove) {
-        if (targetRef) {
-            if (this.loadingElsByRef[targetRef]) {
-                this.loadingElsByRef[targetRef].push({el, value, remove})
-            } else {
-                this.loadingElsByRef[targetRef] = [{el, value, remove}]
-            }
-        } else {
-            this.loadingEls.push({el, value, remove})
-        }
-    }
-
-    removeLoadingEl(node) {
-        const el = new DOMElement(node)
-
-        this.loadingEls = this.loadingEls.filter(({el}) => ! el.isSameNode(node))
-
-        if (el.ref in this.loadingElsByRef) {
-            delete this.loadingElsByRef[el.ref]
-        }
-    }
-
-    setLoading(refs) {
-        const refEls = refs.map(ref => this.loadingElsByRef[ref]).filter(el => el).flat()
-
-        const allEls = this.loadingEls.concat(refEls)
-
-        allEls.forEach(el => {
-            const directive = el.el.directives.get('loading')
-            el = el.el.el // I'm so sorry @todo
-
-            if (directive.modifiers.includes('class')) {
-                // This is because wire:loading.class="border border-red"
-                // wouldn't work with classList.add.
-                const classes = directive.value.split(' ')
-
-                if (directive.modifiers.includes('remove')) {
-                    el.classList.remove(...classes)
-                } else {
-                    el.classList.add(...classes)
-                }
-            } else if (directive.modifiers.includes('attr')) {
-                if (directive.modifiers.includes('remove')) {
-                    el.removeAttribute(directive.value)
-                } else {
-                    el.setAttribute(directive.value, true)
-                }
-            } else {
-                el.style.display = 'inline-block'
-            }
-        })
-
-        return allEls
-    }
-
-    unsetLoading(loadingEls) {
-        // No need to "unset" loading because the dom-diffing will automatically reverse any changes.
     }
 
     modelSyncDebounce(callback, time) {
@@ -357,5 +398,3 @@ class Component {
         this.tearDownCallbacks.forEach(callback => callback())
     }
 }
-
-export default Component

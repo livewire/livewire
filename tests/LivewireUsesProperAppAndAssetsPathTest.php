@@ -3,82 +3,83 @@
 namespace Tests;
 
 use Livewire\Livewire;
+use Illuminate\Support\Facades\View;
 
 class LivewireUsesProperAppAndAssetsPathTest extends TestCase
 {
     /** @test */
-    public function livewire_dot_js_references_configured_app_url()
+    public function livewire_js_is_unminified_when_app_is_in_debug_mode()
     {
+        config()->set('app.debug', true);
+
         $this->assertContains(
             '<script src="/livewire/livewire.js?',
             Livewire::assets()
         );
 
-        config()->set('app.url', 'https://foo.com/assets');
-
         $this->assertContains(
-            '<script src="https://foo.com/assets/livewire/livewire.js?',
+            "window.livewire_app_url = '';",
             Livewire::assets()
         );
     }
 
     /** @test */
-    public function assets_url_trims_trailing_slash()
+    public function livewire_js_calls_reference_relative_root()
     {
-        config()->set('app.url', 'https://foo.com/assets/');
+        $this->assertContains(
+            '<script src="/livewire/livewire.min.js?',
+            Livewire::assets()
+        );
 
         $this->assertContains(
-            '<script src="https://foo.com/assets/livewire/livewire.js?',
+            "window.livewire_app_url = '';",
             Livewire::assets()
         );
     }
 
     /** @test */
-    public function livewire_message_endpoint_uses_configured_app_url()
+    public function livewire_js_calls_reference_congigured_asset_url()
     {
-        config()->set('app.url', 'https://foo.com/app');
+        $this->assertContains(
+            '<script src="https://foo.com/assets/livewire/livewire.min.js?',
+            Livewire::assets(['asset_url' => 'https://foo.com/assets'])
+        );
 
         $this->assertContains(
-            'window.livewire_app_url = "https://foo.com/app";',
-            Livewire::assets()
+            "window.livewire_app_url = 'https://foo.com/assets';",
+            Livewire::assets(['asset_url' => 'https://foo.com/assets'])
         );
     }
 
     /** @test */
-    public function livewire_message_endpoint_trims_trailing_slash()
+    public function asset_url_trailing_slashes_are_trimmed()
     {
-        config()->set('app.url', 'https://foo.com/app/');
+        $this->assertContains(
+            '<script src="https://foo.com/assets/livewire/livewire.min.js?',
+            Livewire::assets(['asset_url' => 'https://foo.com/assets/'])
+        );
 
         $this->assertContains(
-            'window.livewire_app_url = "https://foo.com/app";',
-            Livewire::assets()
+            "window.livewire_app_url = 'https://foo.com/assets';",
+            Livewire::assets(['asset_url' => 'https://foo.com/assets/'])
         );
     }
 
     /** @test */
-    public function livewire_message_domain_is_ambiguous_if_app_uses_dot_env_default_for_app_url()
+    public function asset_url_passed_into_blade_assets_directive()
     {
-        // The scenario for this behavior:
-        // An app is created using `laravel new`, but the is served with valet,
-        // Livewire would look for: http://localhost/livewire/message and would
-        // throw an error.
-
-        config()->set('app.url', 'http://localhost');
+        $output = View::make('assets-directive', [
+            'options' => ['asset_url' => 'https://foo.com/assets/'],
+        ])->render();
 
         $this->assertContains(
-            'window.livewire_app_url = "";',
-            Livewire::assets()
+            '<script src="https://foo.com/assets/livewire/livewire.min.js?',
+            $output
         );
-    }
-
-    /** @test */
-    public function livewires_app_url_default_is_current_with_latest_laravel_version()
-    {
-        $laravelAppConfigFileContents = file_get_contents(__DIR__.'/../vendor/orchestra/testbench-core/laravel/config/app.php');
 
         $this->assertContains(
-            "'url' => env('APP_URL', 'http://localhost'),",
-            $laravelAppConfigFileContents
+            "window.livewire_app_url = 'https://foo.com/assets';",
+            $output
         );
     }
 }

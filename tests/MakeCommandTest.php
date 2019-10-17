@@ -17,6 +17,24 @@ class MakeCommandTest extends TestCase
     }
 
     /** @test */
+    public function component_is_created_by_livewire_make_command()
+    {
+        Artisan::call('livewire:make foo');
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+    }
+
+    /** @test */
+    public function component_is_created_by_touch_command()
+    {
+        Artisan::call('livewire:touch foo');
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+    }
+
+    /** @test */
     public function nested_component_is_created_by_make_command()
     {
         Artisan::call('make:livewire foo.bar');

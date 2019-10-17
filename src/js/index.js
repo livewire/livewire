@@ -1,19 +1,55 @@
 import componentStore from '@/Store'
 import DOM from "@/dom/dom";
-import Component from "@/Component";
+import Component from "@/Component/index";
 import Connection from '@/connection'
 import drivers from '@/connection/drivers'
+import { ArrayFlat, ArrayFrom, ArrayIncludes, ElementGetAttributeNames } from '@/dom/polyfills';
+import 'whatwg-fetch'
+import 'promise-polyfill/src/polyfill';
+import { dispatch } from './util';
+import LoadingStates from '@/component/LoadingStates'
+import DirtyStates from '@/component/DirtyStates'
+import OfflineStates from '@/component/OfflineStates'
+import Polling from '@/component/Polling'
 
 class Livewire {
-    constructor({ driver } = { driver: 'http' }) {
-        if (typeof driver !== 'object') {
-            driver = drivers[driver]
+    constructor(options = {}) {
+        const defaults = {
+            driver: 'http'
         }
+
+        options = Object.assign({}, defaults, options);
+
+        const driver = typeof options.driver === 'object'
+            ? options.driver
+            : drivers[options.driver]
 
         this.connection = new Connection(driver)
         this.components = componentStore
+        this.onLoadCallback = () => {};
 
-        this.start()
+        this.activatePolyfills()
+
+        this.components.initializeGarbageCollection()
+    }
+
+    find(componentId) {
+        return this.components.componentsById[componentId]
+    }
+
+    hook(name, callback) {
+        this.components.registerHook(name, callback)
+    }
+
+    onLoad(callback) {
+        this.onLoadCallback = callback
+    }
+
+    activatePolyfills() {
+        ArrayFlat()
+        ArrayFrom()
+        ArrayIncludes()
+        ElementGetAttributeNames()
     }
 
     emit(event, ...params) {
@@ -39,6 +75,19 @@ class Livewire {
                 new Component(el, this.connection)
             )
         })
+
+        this.onLoadCallback()
+        dispatch('livewire:load')
+
+        // This is very important for garbage collecting components
+        // on the backend.
+        window.addEventListener('beforeunload', () => {
+            this.components.tearDownComponents()
+        })
+
+        document.addEventListener('visibilitychange', () => {
+            this.components.livewireIsInBackground = document.hidden
+        }, false);
     }
 
     rescan() {
@@ -51,10 +100,29 @@ class Livewire {
             )
         })
     }
+
+    beforeDomUpdate(callback) {
+        this.components.beforeDomUpdate(callback)
+    }
+
+    afterDomUpdate(callback) {
+        this.components.afterDomUpdate(callback)
+    }
+
+    plugin(callable) {
+        callable(this)
+    }
 }
 
-if (!window.Livewire) {
+if (! window.Livewire) {
     window.Livewire = Livewire
 }
+
+LoadingStates()
+DirtyStates()
+OfflineStates()
+Polling()
+
+dispatch('livewire:available')
 
 export default Livewire

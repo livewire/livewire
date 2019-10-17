@@ -1,5 +1,5 @@
 {
-    "name": "calebporzio/livewire",
+    "name": "livewire/livewire",
     "description": "Build and test rich client-side functionality: with only backend code.",
     "license": "MIT",
     "authors": [
@@ -9,8 +9,8 @@
         }
     ],
     "require": {
-        "illuminate/support": "^5.7|^6.0",
-        "illuminate/validation": "^5.7|^6.0"
+        "illuminate/support": "^5.6|^6.0",
+        "illuminate/validation": "^5.6|^6.0"
     },
     "extra": {
         "laravel": {
@@ -35,7 +35,7 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^7.5",
-        "laravel/framework": "^5.7|^6.0",
+        "laravel/framework": "^5.6|^6.0",
         "orchestra/testbench": "~3.0",
         "psy/psysh": "@stable"
     }

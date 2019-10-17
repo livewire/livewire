@@ -1,12 +1,9 @@
+import store from '@/Store'
 
 export default class {
     constructor(component, actionQueue) {
         this.component = component
         this.actionQueue = actionQueue
-    }
-
-    prepareForSend() {
-        this.loadingEls = this.component.setLoading(this.refs)
     }
 
     get refs() {
@@ -22,9 +19,8 @@ export default class {
             id: this.component.id,
             data: this.component.data,
             name: this.component.name,
-            children: this.component.children,
-            middleware: this.component.middleware,
             checksum: this.component.checksum,
+            children: this.component.children,
             actionQueue: this.actionQueue.map(action => {
                 // This ensures only the type & payload properties only get sent over.
                 return {
@@ -32,6 +28,7 @@ export default class {
                     payload: action.payload,
                 }
             }),
+            gc: store.getComponentsForCollection(),
         }
     }
 
@@ -39,12 +36,14 @@ export default class {
         return this.response = {
             id: payload.id,
             dom: payload.dom,
+            checksum: payload.checksum,
             children: payload.children,
             dirtyInputs: payload.dirtyInputs,
             eventQueue: payload.eventQueue,
             events: payload.events,
             data: payload.data,
             redirectTo: payload.redirectTo,
+            gc: payload.gc,
         }
     }
 }

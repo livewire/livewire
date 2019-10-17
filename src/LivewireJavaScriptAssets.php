@@ -4,15 +4,46 @@ namespace Livewire;
 
 class LivewireJavaScriptAssets
 {
-    public function __invoke()
+    public function unminified()
     {
-        $file = __DIR__.'/../dist/livewire.js';
+        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.js');
+    }
 
-        // These headers will enable browsers to cache this asset.
-        return response()
-            ->file($file, [
-                'Content-Type' => 'application/javascript; charset=utf-8',
-                'Cache-Control' => 'public, max-age=3600',
+    public function minified()
+    {
+        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.min.js');
+    }
+
+    public function pretendResponseIsFile($file)
+    {
+        $expires = strtotime('+1 year');
+        $lastModified = filemtime($file);
+        $cacheControl = 'public, max-age=31536000';
+
+        if ($this->matchesCache($lastModified)) {
+            return response()->noContent(304, [
+                'Expires' => $this->httpDate($expires),
+                'Cache-Control' => $cacheControl,
             ]);
+        }
+
+        return response()->file($file, [
+            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Expires' => $this->httpDate($expires),
+            'Cache-Control' => $cacheControl,
+            'Last-Modified' => $this->httpDate($lastModified),
+        ]);
+    }
+
+    protected function matchesCache($lastModified)
+    {
+        $ifModifiedSince = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
+
+        return @strtotime($ifModifiedSince) === $lastModified;
+    }
+
+    protected function httpDate($timestamp)
+    {
+        return sprintf('%s GMT', gmdate('D, d M Y H:i:s', $timestamp));
     }
 }

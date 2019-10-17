@@ -2,10 +2,8 @@
 
 namespace Tests;
 
-use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\LivewireManager;
-use Illuminate\Support\Facades\Route;
 
 class LifecycleHooksTest extends TestCase
 {
@@ -16,6 +14,7 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => false,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
@@ -26,6 +25,18 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => true,
+            'updating' => false,
+            'updated' => false,
+            'updatingFoo' => false,
+            'updatedFoo' => false,
+        ], $component->instance->lifecycles);
+
+        $component->updateProperty('baz', 'bing');
+
+        $this->assertEquals([
+            'mount' => true,
+            'hydrate' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => false,
@@ -36,46 +47,22 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
+            'hydrate' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
             'updatedFoo' => true,
         ], $component->instance->lifecycles);
     }
-
-    /** @test */
-    public function mount_hook_receives_route_model_bindings()
-    {
-        Livewire::component('foo', HasRouteModelBindingForMountHook::class);
-
-        Route::livewire('/test', 'foo');
-
-        $this->get('/test')->assertSee('output-from-method-binding');
-    }
-
-    /** @test */
-    public function mount_hook_method_receives_custom_bindings()
-    {
-        Livewire::component('foo', HasRouteModelBindingForMountHook::class);
-
-        Route::livewire('/test/{foo}', 'foo')->middleware('web');
-
-        Route::bind('foo', function ($value) {
-            $something = new ToBeBound;
-            $something->input = $value;
-
-            return $something;
-        });
-
-        $this->get('/test/should-show-up')->assertSee('should-show-up');
-    }
 }
 
 class ForLifecycleHooks extends Component
 {
     public $foo;
+    public $baz;
     public $lifecycles = [
         'mount' => false,
+        'hydrate' => false,
         'updating' => false,
         'updated' => false,
         'updatingFoo' => false,
@@ -87,13 +74,24 @@ class ForLifecycleHooks extends Component
         $this->lifecycles['mount'] = true;
     }
 
-    public function updating()
+    public function hydrate()
     {
+        $this->lifecycles['hydrate'] = true;
+    }
+
+    public function updating($name, $value)
+    {
+        assert($name === 'foo' || $name === 'baz');
+        assert($value === 'bar' || $value === 'bing');
+
         $this->lifecycles['updating'] = true;
     }
 
-    public function updated()
+    public function updated($name, $value)
     {
+        assert($name === 'foo' || $name === 'baz');
+        assert($value === 'bar' || $value === 'bing');
+
         $this->lifecycles['updated'] = true;
     }
 
@@ -105,9 +103,10 @@ class ForLifecycleHooks extends Component
         $this->lifecycles['updatingFoo'] = true;
     }
 
-    public function updatedFoo()
+    public function updatedFoo($value)
     {
         assert($this->foo === 'bar');
+        assert($value === 'bar');
 
         $this->lifecycles['updatedFoo'] = true;
     }
@@ -115,30 +114,5 @@ class ForLifecycleHooks extends Component
     public function render()
     {
         return app('view')->make('null-view');
-    }
-}
-
-class ToBeBound
-{
-    public $input = 'output-from-method-binding';
-
-    public function output()
-    {
-        return $this->input;
-    }
-}
-
-class HasRouteModelBindingForMountHook extends Component
-{
-    public $output;
-
-    public function mount(ToBeBound $toBeBound)
-    {
-        $this->output = $toBeBound->output();
-    }
-
-    public function render()
-    {
-        return app('view')->make('show-name', ['name' => $this->output]);
     }
 }

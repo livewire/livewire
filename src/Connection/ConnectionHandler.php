@@ -2,8 +2,10 @@
 
 namespace Livewire\Connection;
 
-use Livewire\ResponsePayload;
 use Livewire\Routing\Redirector;
+use Livewire\ComponentCacheManager;
+use Livewire\ComponentChecksumManager;
+use Livewire\SubsequentResponsePayload;
 use Illuminate\Validation\ValidationException;
 
 abstract class ConnectionHandler
@@ -15,9 +17,11 @@ abstract class ConnectionHandler
         $instance->setPreviouslyRenderedChildren($payload['children']);
         $instance->hashPropertiesForDirtyDetection();
 
+        $instance->hydrate();
+
         try {
             $this->interceptRedirects($instance, function () use ($payload, $instance) {
-                foreach ($payload['actionQueue'] as $action) {
+                foreach ($this->prioritizeInputSyncing($payload['actionQueue']) as $action) {
                     $this->processMessage($action['type'], $action['payload'], $instance);
                 }
             });
@@ -30,25 +34,34 @@ abstract class ConnectionHandler
         $events = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
 
-        return new ResponsePayload([
+        $response = new SubsequentResponsePayload([
             'id' => $payload['id'],
             'dom' => $dom,
+            'checksum' => (new ComponentChecksumManager)->generate($payload['name'], $payload['id'], $data),
             'dirtyInputs' => $instance->getDirtyProperties(),
             'children' => $instance->getRenderedChildren(),
             'eventQueue' => $eventQueue,
             'events' => $events,
             'data' => $data,
             'redirectTo' => $instance->redirectTo ?? false,
+            'fromPrefetch' => $payload['fromPrefetch'] ?? false,
+            'gc' => ComponentCacheManager::garbageCollect($payload['gc']),
         ]);
+
+        if (empty($instance->redirectTo)) {
+            session()->forget(session()->get('_flash.new'));
+        }
+
+        return $response;
     }
 
     public function processMessage($type, $data, $instance)
     {
-        $instance->updating();
-
         switch ($type) {
             case 'syncInput':
+                $instance->updating($data['name'], $data['value']);
                 $instance->syncInput($data['name'], $data['value']);
+                $instance->updated($data['name'], $data['value']);
                 break;
             case 'callMethod':
                 $instance->callMethod($data['method'], $data['params']);
@@ -60,8 +73,6 @@ abstract class ConnectionHandler
                 throw new \Exception('Unrecongnized message type: '.$type);
                 break;
         }
-
-        $instance->updated();
     }
 
     protected function interceptRedirects($instance, $callback)
@@ -75,5 +86,16 @@ abstract class ConnectionHandler
         $callback();
 
         app()->instance('redirect', $redirector);
+    }
+
+    protected function prioritizeInputSyncing($actionQueue)
+    {
+        // Put all the "syncInput" actions first.
+        usort($actionQueue, function ($a, $b) {
+            return $a['type'] !== 'syncInput' && $b['type'] === 'syncInput'
+                ? 1 : 0;
+        });
+
+        return $actionQueue;
     }
 }

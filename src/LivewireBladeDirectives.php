@@ -6,6 +6,16 @@ use Illuminate\Support\Str;
 
 class LivewireBladeDirectives
 {
+    public static function this()
+    {
+        return "window.livewire.find('{{ \$_instance->id }}')";
+    }
+
+    public static function livewireAssets($expression)
+    {
+        return '{!! \Livewire\Livewire::assets('.$expression.') !!}';
+    }
+
     public static function livewire($expression)
     {
         $lastArg = trim(last(explode(',', $expression)));
