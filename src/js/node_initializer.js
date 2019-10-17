@@ -83,6 +83,17 @@ export default {
                         || directive.modifiers.includes(kebabCase(e.key)))
                 })
                 break;
+            case 'click':
+                this.attachListener(el, directive, component, (e) => {
+                    if (
+                        directive.modifiers.indexOf('self') > -1 &&
+                        !e.target.isEqualNode(el.el)
+                    ) {
+                        return true;
+                    }
+                    return false;
+                })
+                break;
             default:
                 this.attachListener(el, directive, component)
                 break;

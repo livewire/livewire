@@ -4614,7 +4614,7 @@ function syncBooleanAttrProp(fromEl, toEl, name) {
     fromEl[name] = toEl[name];
 
     if (fromEl[name]) {
-      fromEl.setAttribute(name);
+      fromEl.setAttribute(name, '');
     } else {
       fromEl.removeAttribute(name);
     }
@@ -5419,6 +5419,16 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         });
         break;
 
+      case 'click':
+        this.attachListener(el, directive, component, function (e) {
+          if (directive.modifiers.indexOf('self') > -1 && !e.target.isEqualNode(el.el)) {
+            return true;
+          }
+
+          return false;
+        });
+        break;
+
       default:
         this.attachListener(el, directive, component);
         break;
@@ -5604,7 +5614,7 @@ var preventDefaultSupported = function () {
 /*!******************************!*\
   !*** ./src/js/util/index.js ***!
   \******************************/
-/*! exports provided: kebabCase, tap, debounceWithFiringOnBothEnds, debounce, walk, dispatch */
+/*! exports provided: debounceWithFiringOnBothEnds, debounce, walk, dispatch, kebabCase, tap */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5666,7 +5676,7 @@ function walk(root, callback) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /Users/calebporzio/Documents/Code/sites/livewire/src/js/index.js */"./src/js/index.js");
+module.exports = __webpack_require__(/*! /Volumes/Data/Code/livewire/src/js/index.js */"./src/js/index.js");
 
 
 /***/ })
