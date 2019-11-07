@@ -1,10 +1,10 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\HydrationMiddleware;
 
 use Livewire\ComponentCacheManager;
 
-class ProtectedStorageManager
+class HydrateProtectedProperties implements HydrationMiddleware
 {
     public function hydrate($unHydratedInstance, $request)
     {

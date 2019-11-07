@@ -1,0 +1,18 @@
+<?php
+
+namespace Livewire\HydrationMiddleware;
+
+class ClearFlashMessagesIfNotRedirectingAway implements HydrationMiddleware
+{
+    public function hydrate($unHydratedInstance, $request)
+    {
+        //
+    }
+
+    public function dehydrate($instance, $response)
+    {
+        if (empty($instance->redirectTo)) {
+            session()->forget(session()->get('_flash.new'));
+        }
+    }
+}

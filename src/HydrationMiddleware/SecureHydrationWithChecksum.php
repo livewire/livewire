@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\HydrationMiddleware;
 
 use Livewire\ComponentChecksumManager;
 use Livewire\Exceptions\CorruptComponentPayloadException;
 
-class SecureHydrationWithChecksum
+class SecureHydrationWithChecksum implements HydrationMiddleware
 {
     public function hydrate($unHydratedInstance, $request)
     {
@@ -20,8 +20,6 @@ class SecureHydrationWithChecksum
 
     public function dehydrate($instance, $response)
     {
-        $response->setChecksum(
-            (new ComponentChecksumManager)->generate($response->name, $response->id, $response->data)
-        );
+        $response->checksum = (new ComponentChecksumManager)->generate($response->name, $response->id, $response->data);
     }
 }

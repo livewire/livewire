@@ -1,8 +1,8 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\HydrationMiddleware;
 
-class PublicPropertiesManager
+class HydratePublicProperties implements HydrationMiddleware
 {
     public function hydrate($unHydratedInstance, $request)
     {
@@ -16,6 +16,6 @@ class PublicPropertiesManager
 
     public function dehydrate($instance, $response)
     {
-        $response->setData($instance->getPublicPropertiesDefinedBySubClass());
+        $response->data = $instance->getPublicPropertiesDefinedBySubClass();
     }
 }
