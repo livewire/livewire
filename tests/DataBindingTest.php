@@ -15,7 +15,7 @@ class DataBindingTest extends TestCase
 
         $component->updateProperty('foo', 'bar');
 
-        $this->assertEquals('bar', $component->instance->foo);
+        $this->assertEquals('bar', $component->foo);
     }
 
     /** @test */
@@ -27,7 +27,7 @@ class DataBindingTest extends TestCase
         $component->updateProperty('foo.0', 'bar');
         $component->updateProperty('foo.bar', 'baz');
 
-        $this->assertEquals(['bar', 'bar' => 'baz'], $component->instance->foo);
+        $this->assertEquals(['bar', 'bar' => 'baz'], $component->foo);
     }
 
     /** @test */
@@ -37,12 +37,12 @@ class DataBindingTest extends TestCase
 
         $component->updateProperty('foo', 'bar');
 
-        $this->assertEquals('bar', $component->instance->foo);
+        $this->assertEquals('bar', $component->foo);
         $this->assertEmpty($component->dirtyInputs);
 
         $component->runAction('changeFoo', 'baz');
 
-        $this->assertEquals('baz', $component->instance->foo);
+        $this->assertEquals('baz', $component->foo);
         $this->assertContains('foo', $component->dirtyInputs);
     }
 
@@ -53,12 +53,12 @@ class DataBindingTest extends TestCase
 
         $component->updateProperty('arrayProperty.1', 'baz');
 
-        $this->assertEquals(['foo', 'baz'], $component->instance->arrayProperty);
+        $this->assertEquals(['foo', 'baz'], $component->arrayProperty);
         $this->assertEmpty($component->dirtyInputs);
 
         $component->runAction('changeArrayPropertyOne', 'bar');
 
-        $this->assertEquals(['foo', 'bar'], $component->instance->arrayProperty);
+        $this->assertEquals(['foo', 'bar'], $component->arrayProperty);
         $this->assertContains('arrayProperty.1', $component->dirtyInputs);
     }
 
@@ -69,7 +69,7 @@ class DataBindingTest extends TestCase
 
         $component->runAction('removeArrayPropertyOne');
 
-        $this->assertEquals(['foo'], $component->instance->arrayProperty);
+        $this->assertEquals(['foo'], $component->arrayProperty);
         $this->assertContains('arrayProperty.1', $component->dirtyInputs);
     }
 
@@ -80,7 +80,7 @@ class DataBindingTest extends TestCase
 
         $component->updateProperty('propertyWithHook', 'something');
 
-        $this->assertEquals('something else', $component->instance->propertyWithHook);
+        $this->assertEquals('something else', $component->propertyWithHook);
         $this->assertContains('propertyWithHook', $component->dirtyInputs);
     }
 
