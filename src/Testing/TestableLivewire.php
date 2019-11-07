@@ -3,7 +3,7 @@
 namespace Livewire\Testing;
 
 use Illuminate\Support\Str;
-use Livewire\Connection\ComponentHydrator;
+use Livewire\Livewire;
 
 class TestableLivewire
 {
@@ -12,7 +12,6 @@ class TestableLivewire
     public $children;
     public $checksum;
     public $prefix;
-    public $instance;
     public $dom;
     public $data;
     public $dirtyInputs;
@@ -48,7 +47,6 @@ class TestableLivewire
         $this->data = $output->data;
         $this->children = $output->children;
         $this->events = $output->events;
-        $this->instance = $output->instance;
         $this->checksum = $output->checksum;
         $this->gc = [];
     }
@@ -70,13 +68,23 @@ class TestableLivewire
         // Imitate the front-end clearing the garbage collector
         // of ids that have already been garbage collected.
         $this->gc = array_diff($this->gc, $output['gc']);
+    }
 
-        $this->instance = ComponentHydrator::hydrate($this->name, $this->id, $this->data, $this->checksum);
+    public function instance()
+    {
+        return Livewire::activate($this->name, $this->id);
+    }
+
+    public function get($property)
+    {
+        $cachedProtectedProperties = data_get(cache()->get("{$this->id}"), '__protected_properties', []);
+
+        return data_get($this->data + $cachedProtectedProperties, $property);
     }
 
     public function __get($property)
     {
-        return $this->instance->getPropertyValue($property);
+        return $this->get($property);
     }
 
     public function __call($method, $params)

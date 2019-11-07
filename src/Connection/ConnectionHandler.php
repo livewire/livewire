@@ -2,17 +2,21 @@
 
 namespace Livewire\Connection;
 
-use Livewire\Routing\Redirector;
-use Livewire\ComponentCacheManager;
-use Livewire\ComponentChecksumManager;
-use Livewire\SubsequentResponsePayload;
 use Illuminate\Validation\ValidationException;
+use Livewire\ComponentCacheManager;
+use Livewire\Livewire;
+use Livewire\Routing\Redirector;
+use Livewire\SubsequentResponsePayload;
 
 abstract class ConnectionHandler
 {
     public function handle($payload)
     {
-        $instance = ComponentHydrator::hydrate($payload['name'], $payload['id'], $payload['data'], $payload['checksum']);
+        $class = app('livewire')->getComponentClass($payload['name']);
+
+        $instance = new $class($payload['id']);
+
+        Livewire::hydrate($instance, $payload);
 
         $instance->setPreviouslyRenderedChildren($payload['children']);
         $instance->hashPropertiesForDirtyDetection();
@@ -30,19 +34,18 @@ abstract class ConnectionHandler
         }
 
         $dom = $instance->output($errors ?? null);
-        $data = ComponentHydrator::dehydrate($instance);
+
         $events = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
 
         $response = new SubsequentResponsePayload([
             'id' => $payload['id'],
+            'name' => $payload['name'],
             'dom' => $dom,
-            'checksum' => (new ComponentChecksumManager)->generate($payload['name'], $payload['id'], $data),
             'dirtyInputs' => $instance->getDirtyProperties(),
             'children' => $instance->getRenderedChildren(),
             'eventQueue' => $eventQueue,
             'events' => $events,
-            'data' => $data,
             'redirectTo' => $instance->redirectTo ?? false,
             'fromPrefetch' => $payload['fromPrefetch'] ?? false,
             'gc' => ComponentCacheManager::garbageCollect($payload['gc']),
@@ -51,6 +54,8 @@ abstract class ConnectionHandler
         if (empty($instance->redirectTo)) {
             session()->forget(session()->get('_flash.new'));
         }
+
+        Livewire::dehydrate($instance, $response);
 
         return $response;
     }

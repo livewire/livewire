@@ -57,7 +57,7 @@ class ComponentHydratorTest extends TestCase
             (new ComponentChecksumManager)->generate('for-hydration', $original->id, $data)
         );
 
-        $this->assertEquals($reHydrated->getGoo(), 'caz');
+        $this->assertEquals('car', $reHydrated->getGoo());
     }
 }
 

@@ -86,6 +86,12 @@ class LivewireServiceProvider extends ServiceProvider
             ]);
         }
 
+        Livewire::registerHydrationMiddleware([
+            SecureHydrationWithChecksum::class,
+            PublicPropertiesManager::class,
+            ProtectedStorageManager::class,
+        ]);
+
         $this->registerRoutes();
         $this->registerViews();
         $this->registerCommands();

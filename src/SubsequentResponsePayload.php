@@ -8,6 +8,7 @@ use Illuminate\Contracts\Support\Arrayable;
 class SubsequentResponsePayload extends ResponsePayload implements Arrayable, Jsonable
 {
     public $id;
+    public $name;
     public $dom;
     public $data;
     public $checksum;
@@ -22,9 +23,8 @@ class SubsequentResponsePayload extends ResponsePayload implements Arrayable, Js
     public function __construct($data)
     {
         $this->id = $data['id'];
+        $this->name = $data['name'];
         $this->dom = $data['dom'];
-        $this->data = $data['data'];
-        $this->checksum = $data['checksum'];
         $this->children = $data['children'];
         $this->eventQueue = $data['eventQueue'];
         $this->redirectTo = $data['redirectTo'];
@@ -34,10 +34,21 @@ class SubsequentResponsePayload extends ResponsePayload implements Arrayable, Js
         $this->gc = $data['gc'];
     }
 
+    public function setData($value)
+    {
+        $this->data = $value;
+    }
+
+    public function setChecksum($value)
+    {
+        $this->checksum = $value;
+    }
+
     public function toArray()
     {
         return [
             'id' => $this->id,
+            'name' => $this->name,
             'dom' => $this->injectComponentDataAsHtmlAttributesInRootElement(
                 $this->dom, ['id' => $this->id]
             ),

@@ -12,8 +12,8 @@ class ComponentUsesCustomNameTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(UsesDefaultComponentName::class);
 
-        $this->assertEquals('Hello World', $component->instance->name);
-        $this->assertEquals('tests.uses-default-component-name', $component->instance->getName());
+        $this->assertEquals('Hello World', $component->get('name'));
+        $this->assertEquals('tests.uses-default-component-name', $component->instance()->getName());
     }
 
     /** @test */
@@ -21,8 +21,8 @@ class ComponentUsesCustomNameTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(PreservesNameProperty::class);
 
-        $this->assertEquals('Hello World', $component->instance->name);
-        $this->assertEquals('uses-custom-name', $component->instance->getName());
+        $this->assertEquals('Hello World', $component->get('name'));
+        $this->assertEquals('uses-custom-name', $component->instance()->getName());
     }
 }
 

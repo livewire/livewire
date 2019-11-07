@@ -19,7 +19,7 @@ class LifecycleHooksTest extends TestCase
             'updated' => false,
             'updatingFoo' => false,
             'updatedFoo' => false,
-        ], $component->instance->lifecycles);
+        ], $component->lifecycles);
 
         $component->runAction('$refresh');
 
@@ -30,7 +30,7 @@ class LifecycleHooksTest extends TestCase
             'updated' => false,
             'updatingFoo' => false,
             'updatedFoo' => false,
-        ], $component->instance->lifecycles);
+        ], $component->lifecycles);
 
         $component->updateProperty('baz', 'bing');
 
@@ -41,7 +41,7 @@ class LifecycleHooksTest extends TestCase
             'updated' => true,
             'updatingFoo' => false,
             'updatedFoo' => false,
-        ], $component->instance->lifecycles);
+        ], $component->lifecycles);
 
         $component->updateProperty('foo', 'bar');
 
@@ -52,7 +52,7 @@ class LifecycleHooksTest extends TestCase
             'updated' => true,
             'updatingFoo' => true,
             'updatedFoo' => true,
-        ], $component->instance->lifecycles);
+        ], $component->lifecycles);
     }
 }
 

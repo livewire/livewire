@@ -15,6 +15,7 @@ class LivewireManager
 
     protected $prefix = 'wire';
     protected $componentAliases = [];
+    protected $hydrationMiddleware = [];
     protected $customComponentResolver;
     protected $container;
     public static $isLivewireRequestTestingOverride;
@@ -88,7 +89,7 @@ class LivewireManager
         $instance->mount(...array_values($parameters));
 
         $dom = $instance->output();
-        $properties = ComponentHydrator::dehydrate($instance);
+        $properties = $instance->getPublicPropertiesDefinedBySubClass();
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
         $checksum = (new ComponentChecksumManager)->generate($name, $id, $properties);
@@ -215,5 +216,30 @@ HTML;
         }
 
         return request()->hasHeader('X-Livewire');
+    }
+
+    public function registerHydrationMiddleware(array $classes)
+    {
+        $this->hydrationMiddleware += $classes;
+    }
+
+    public function hydrate($instance, $request)
+    {
+        foreach ($this->hydrationMiddleware as $class) {
+            $middleware = new $class;
+
+            $middleware->hydrate($instance, $request);
+        }
+    }
+
+    public function dehydrate($instance, $response)
+    {
+        // The array is being reversed here, so the middleware dehydrate phase order of execution is
+        // the inverse of hydrate. This makes the middlewares behave like layers in a shell.
+        foreach (array_reverse($this->hydrationMiddleware) as $class) {
+            $middleware = new $class;
+
+            $middleware->dehydrate($instance, $response);
+        }
     }
 }

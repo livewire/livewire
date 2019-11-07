@@ -45,7 +45,7 @@ EOT
 
         $component = app(LivewireManager::class)->test('App\Http\Livewire\App\DefaultNamespace');
 
-        $this->assertEquals('app.default-namespace', $component->instance->getName());
+        $this->assertEquals('app.default-namespace', $component->instance()->getName());
     }
 
     /** @test */
@@ -85,6 +85,6 @@ EOT
         require(app_path('Custom/Controllers/Http') . '/CustomNamespace.php');
         $component = app(LivewireManager::class)->test('Custom\Controllers\Http\CustomNamespace');
 
-        $this->assertEquals('custom-namespace', $component->instance->getName());
+        $this->assertEquals('custom-namespace', $component->instance()->getName());
     }
 }
