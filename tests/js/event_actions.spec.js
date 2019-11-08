@@ -15,6 +15,18 @@ test('basic click', async () => {
     })
 })
 
+test('basic click with self modifier', async () => {
+    var payload
+    mount('<button wire:click.self="outerMethod"><span wire:click="innerMethod"></span></button>', i => payload = i)
+
+    document.querySelector('span').click()
+
+    await wait(() => {
+        expect(payload.actionQueue[0].payload.method).toEqual('innerMethod')
+        expect(payload.actionQueue[1]).toBeUndefined()
+    })
+})
+
 test('click with params', async () => {
     var payload
     mount(`<button wire:click="someMethod('foo', 'bar')"></button>`, i => payload = i)
