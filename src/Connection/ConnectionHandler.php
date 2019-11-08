@@ -2,55 +2,46 @@
 
 namespace Livewire\Connection;
 
-use Livewire\Routing\Redirector;
-use Livewire\ComponentCacheManager;
-use Livewire\ComponentChecksumManager;
-use Livewire\SubsequentResponsePayload;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
+use Livewire\SubsequentResponsePayload;
 
 abstract class ConnectionHandler
 {
     public function handle($payload)
     {
-        $instance = ComponentHydrator::hydrate($payload['name'], $payload['id'], $payload['data'], $payload['checksum']);
+        $class = app('livewire')->getComponentClass($payload['name']);
 
-        $instance->setPreviouslyRenderedChildren($payload['children']);
-        $instance->hashPropertiesForDirtyDetection();
+        $instance = new $class($payload['id']);
+
+        Livewire::hydrate($instance, $payload);
 
         $instance->hydrate();
 
         try {
-            $this->interceptRedirects($instance, function () use ($payload, $instance) {
-                foreach ($this->prioritizeInputSyncing($payload['actionQueue']) as $action) {
-                    $this->processMessage($action['type'], $action['payload'], $instance);
-                }
-            });
+            foreach ($payload['actionQueue'] as $action) {
+                $this->processMessage($action['type'], $action['payload'], $instance);
+            }
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
         }
 
         $dom = $instance->output($errors ?? null);
-        $data = ComponentHydrator::dehydrate($instance);
+
         $events = $instance->getEventsBeingListenedFor();
         $eventQueue = $instance->getEventQueue();
 
         $response = new SubsequentResponsePayload([
             'id' => $payload['id'],
+            'name' => $payload['name'],
             'dom' => $dom,
-            'checksum' => (new ComponentChecksumManager)->generate($payload['name'], $payload['id'], $data),
-            'dirtyInputs' => $instance->getDirtyProperties(),
-            'children' => $instance->getRenderedChildren(),
             'eventQueue' => $eventQueue,
             'events' => $events,
-            'data' => $data,
             'redirectTo' => $instance->redirectTo ?? false,
             'fromPrefetch' => $payload['fromPrefetch'] ?? false,
-            'gc' => ComponentCacheManager::garbageCollect($payload['gc']),
         ]);
 
-        if (empty($instance->redirectTo)) {
-            session()->forget(session()->get('_flash.new'));
-        }
+        Livewire::dehydrate($instance, $response);
 
         return $response;
     }
@@ -73,29 +64,5 @@ abstract class ConnectionHandler
                 throw new \Exception('Unrecongnized message type: '.$type);
                 break;
         }
-    }
-
-    protected function interceptRedirects($instance, $callback)
-    {
-        $redirector = app('redirect');
-
-        app()->bind('redirect', function () use ($instance) {
-            return app(Redirector::class)->component($instance);
-        });
-
-        $callback();
-
-        app()->instance('redirect', $redirector);
-    }
-
-    protected function prioritizeInputSyncing($actionQueue)
-    {
-        // Put all the "syncInput" actions first.
-        usort($actionQueue, function ($a, $b) {
-            return $a['type'] !== 'syncInput' && $b['type'] === 'syncInput'
-                ? 1 : 0;
-        });
-
-        return $actionQueue;
     }
 }

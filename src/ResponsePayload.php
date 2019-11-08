@@ -2,7 +2,9 @@
 
 namespace Livewire;
 
-class ResponsePayload
+use Illuminate\Support\Fluent;
+
+class ResponsePayload extends Fluent
 {
     public function injectComponentDataAsHtmlAttributesInRootElement($dom, $data)
     {

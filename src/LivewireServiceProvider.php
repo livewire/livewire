@@ -3,33 +3,42 @@
 namespace Livewire;
 
 use Exception;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
-use Livewire\Commands\CpCommand;
-use Livewire\Commands\MvCommand;
-use Livewire\Commands\RmCommand;
-use Livewire\Macros\RouteMacros;
-use Livewire\Macros\RouterMacros;
-use Livewire\Commands\CopyCommand;
-use Livewire\Commands\MakeCommand;
-use Livewire\Commands\MoveCommand;
-use Livewire\Commands\TouchCommand;
-use Livewire\Commands\DeleteCommand;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route as RouteFacade;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\View\Engines\CompilerEngine;
 use Illuminate\View\Engines\PhpEngine;
 use Livewire\Commands\ComponentParser;
+use Livewire\Commands\CopyCommand;
+use Livewire\Commands\CpCommand;
+use Livewire\Commands\DeleteCommand;
 use Livewire\Commands\DiscoverCommand;
-use Illuminate\Support\ServiceProvider;
+use Livewire\Commands\MakeCommand;
 use Livewire\Commands\MakeLivewireCommand;
-use Livewire\Exceptions\BypassViewHandler;
-use Illuminate\View\Engines\CompilerEngine;
+use Livewire\Commands\MoveCommand;
+use Livewire\Commands\MvCommand;
+use Livewire\Commands\RmCommand;
+use Livewire\Commands\TouchCommand;
 use Livewire\Connection\HttpConnectionHandler;
-use Illuminate\Support\Facades\Route as RouteFacade;
-use Illuminate\Foundation\Http\Middleware\TrimStrings;
+use Livewire\Exceptions\BypassViewHandler;
+use Livewire\HydrationMiddleware\ClearFlashMessagesIfNotRedirectingAway;
+use Livewire\HydrationMiddleware\GarbageCollectUnusedComponents;
+use Livewire\HydrationMiddleware\HashPropertiesForDirtyDetection;
+use Livewire\HydrationMiddleware\HydratePreviouslyRenderedChildren;
+use Livewire\HydrationMiddleware\HydrateProtectedProperties;
+use Livewire\HydrationMiddleware\HydratePublicProperties;
+use Livewire\HydrationMiddleware\InterceptRedirects;
+use Livewire\HydrationMiddleware\PrioritizeDataUpdatesBeforeActionCalls;
+use Livewire\HydrationMiddleware\SecureHydrationWithChecksum;
+use Livewire\Macros\RouteMacros;
+use Livewire\Macros\RouterMacros;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -86,12 +95,28 @@ class LivewireServiceProvider extends ServiceProvider
             ]);
         }
 
+        $this->registerHydrationMiddleware();
         $this->registerRoutes();
         $this->registerViews();
         $this->registerCommands();
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
         $this->registerPublishables();
+    }
+
+    public function registerHydrationMiddleware()
+    {
+        Livewire::registerHydrationMiddleware([
+            GarbageCollectUnusedComponents::class,
+            ClearFlashMessagesIfNotRedirectingAway::class,
+            SecureHydrationWithChecksum::class,
+            HydratePublicProperties::class,
+            HydrateProtectedProperties::class,
+            HydratePreviouslyRenderedChildren::class,
+            HashPropertiesForDirtyDetection::class,
+            InterceptRedirects::class,
+            PrioritizeDataUpdatesBeforeActionCalls::class,
+        ]);
     }
 
     public function registerRoutes()

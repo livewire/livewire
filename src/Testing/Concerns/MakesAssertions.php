@@ -8,7 +8,7 @@ trait MakesAssertions
 {
     public function assertSet($name, $value)
     {
-        PHPUnit::assertEquals($value, $this->instance->getPropertyValue($name));
+        PHPUnit::assertEquals($value, $this->get($name));
 
         return $this;
     }
