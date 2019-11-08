@@ -4614,7 +4614,7 @@ function syncBooleanAttrProp(fromEl, toEl, name) {
     fromEl[name] = toEl[name];
 
     if (fromEl[name]) {
-      fromEl.setAttribute(name);
+      fromEl.setAttribute(name, '');
     } else {
       fromEl.removeAttribute(name);
     }
@@ -5415,7 +5415,18 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       case 'keyup':
         this.attachListener(el, directive, component, function (e) {
           // Only handle listener if no, or matching key modifiers are passed.
-          return !(directive.modifiers.length === 0 || directive.modifiers.includes(Object(_util__WEBPACK_IMPORTED_MODULE_0__["kebabCase"])(e.key)));
+          return directive.modifiers.length === 0 || directive.modifiers.includes(Object(_util__WEBPACK_IMPORTED_MODULE_0__["kebabCase"])(e.key));
+        });
+        break;
+
+      case 'click':
+        this.attachListener(el, directive, component, function (e) {
+          // We only care about elements that have the .self modifier on them.
+          if (!directive.modifiers.includes('self')) return; // This ensures a listener is only run if the event originated
+          // on the elemenet that registered it (not children).
+          // This is useful for things like modal back-drop listeners.
+
+          return el.isSameNode(e.target);
         });
         break;
 
@@ -5436,7 +5447,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var event = directive.type;
 
     var handler = function handler(e) {
-      if (callback && callback(e) !== false) {
+      if (callback && callback(e) === false) {
         return;
       }
 

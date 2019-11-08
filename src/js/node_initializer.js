@@ -79,8 +79,19 @@ export default {
             case 'keyup':
                 this.attachListener(el, directive, component, (e) => {
                     // Only handle listener if no, or matching key modifiers are passed.
-                    return ! (directive.modifiers.length === 0
+                    return (directive.modifiers.length === 0
                         || directive.modifiers.includes(kebabCase(e.key)))
+                })
+                break;
+            case 'click':
+                this.attachListener(el, directive, component, (e) => {
+                    // We only care about elements that have the .self modifier on them.
+                    if (! directive.modifiers.includes('self')) return
+
+                    // This ensures a listener is only run if the event originated
+                    // on the elemenet that registered it (not children).
+                    // This is useful for things like modal back-drop listeners.
+                    return el.isSameNode(e.target)
                 })
                 break;
             default:
@@ -98,7 +109,7 @@ export default {
 
         const event = directive.type
         const handler = e => {
-            if (callback && callback(e) !== false) {
+            if (callback && callback(e) === false) {
                 return
             }
 
