@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 
 class StubCommand extends Command
 {
+
     protected $signature = 'livewire:stub {name}';
 
     protected $description = 'Create Livewire stubs.';
@@ -17,27 +18,50 @@ class StubCommand extends Command
         $input = preg_split('/[.]+/', $this->argument('name'));
         $component = Str::kebab(array_pop($input));
         $componentClass = Str::studly($component);
-        $this->ensureDirectoryExists('app/Http/Livewire/Stubs');
+        $this->ensureDirectoryExists(app_path('Http/Livewire/Stubs'));
         $this->ensureDirectoryExists('resources/views/livewire/stubs');
-        $this->createViewStub($component);
-        $this->createClassStub($componentClass);
-        $this->info('you ran the command with name: ' . $this->argument('name'));
+        $classCreated = $this->createViewStubIfDoesNotExist($component);
+        $viewCreated = $this->createClassStubIfDoesNotExist($componentClass);
+        if ($classCreated) {
+            $this->info('Class '.$componentClass.'.stub created');
+        }
+        if ($viewCreated) {
+            $this->info('View '.$component.'.stub created');
+        }
     }
 
     protected function ensureDirectoryExists($path)
     {
-        if (! File::isDirectory($path)) {
+        if ( !File::isDirectory($path)) {
             File::makeDirectory($path, 0777, $recursive = true, $force = true);
         }
     }
 
-    protected function createClassStub($name)
+    protected function createClassStubIfDoesNotExist($name)
     {
-        File::put('app/Http/Livewire/Stubs/'.$name.'.stub', file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'Component.stub'));
+        if ( !File::exists('app/Http/Livewire/Stubs/'.$name.'.stub')) {
+            File::put('app/Http/Livewire/Stubs/'.$name.'.stub',
+                file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'Component.stub'));
+
+            return true;
+        } else {
+            $this->error('Class stub already exists');
+
+            return false;
+        }
     }
 
-    protected function createViewStub($name)
+    protected function createViewStubIfDoesNotExist($name)
     {
-        File::put('resources/views/livewire/stubs/'.$name.'.stub', file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'view.stub'));
+        if ( !File::exists('resources/views/livewire/stubs/'.$name.'.stub')) {
+            File::put('resources/views/livewire/stubs/'.$name.'.stub',
+                file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'view.stub'));
+
+            return true;
+        } else {
+            $this->error('View stub already exists');
+
+            return false;
+        }
     }
 }
