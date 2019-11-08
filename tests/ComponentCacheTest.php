@@ -23,6 +23,8 @@ class ComponentCacheTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ComponentWithCache::class);
 
+        $this->assertEquals('buz', $component->fiz);
+
         $component->call('setValueOfFiz', 'bluth');
 
         $this->assertNotContains('fiz', $component->data);

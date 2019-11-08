@@ -8,6 +8,7 @@ use Livewire\Testing\TestableLivewire;
 use Livewire\Connection\ComponentHydrator;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Illuminate\Routing\RouteDependencyResolverTrait;
+use Livewire\HydrationMiddleware\HydrateProtectedProperties;
 
 class LivewireManager
 {
@@ -90,6 +91,11 @@ class LivewireManager
 
         $dom = $instance->output();
         $properties = $instance->getPublicPropertiesDefinedBySubClass();
+
+        // This is a hot fix. We should be using the dehydration stack that we built for subsequent requests.
+        $protectedPropertyDehydrator = new HydrateProtectedProperties;
+        $protectedPropertyDehydrator->dehydrate($instance, []);
+
         $events = $instance->getEventsBeingListenedFor();
         $children = $instance->getRenderedChildren();
         $checksum = (new ComponentChecksumManager)->generate($name, $id, $properties);
