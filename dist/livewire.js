@@ -5415,17 +5415,18 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       case 'keyup':
         this.attachListener(el, directive, component, function (e) {
           // Only handle listener if no, or matching key modifiers are passed.
-          return !(directive.modifiers.length === 0 || directive.modifiers.includes(Object(_util__WEBPACK_IMPORTED_MODULE_0__["kebabCase"])(e.key)));
+          return directive.modifiers.length === 0 || directive.modifiers.includes(Object(_util__WEBPACK_IMPORTED_MODULE_0__["kebabCase"])(e.key));
         });
         break;
 
       case 'click':
         this.attachListener(el, directive, component, function (e) {
-          if (directive.modifiers.indexOf('self') > -1 && !e.target.isEqualNode(el.el)) {
-            return true;
-          }
+          // We only care about elements that have the .self modifier on them.
+          if (!directive.modifiers.includes('self')) return; // This ensures a listener is only run if the event originated
+          // on the elemenet that registered it (not children).
+          // This is useful for things like modal back-drop listeners.
 
-          return false;
+          return el.isSameNode(e.target);
         });
         break;
 
@@ -5446,7 +5447,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var event = directive.type;
 
     var handler = function handler(e) {
-      if (callback && callback(e) !== false) {
+      if (callback && callback(e) === false) {
         return;
       }
 
@@ -5614,7 +5615,7 @@ var preventDefaultSupported = function () {
 /*!******************************!*\
   !*** ./src/js/util/index.js ***!
   \******************************/
-/*! exports provided: debounceWithFiringOnBothEnds, debounce, walk, dispatch, kebabCase, tap */
+/*! exports provided: kebabCase, tap, debounceWithFiringOnBothEnds, debounce, walk, dispatch */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5676,7 +5677,7 @@ function walk(root, callback) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /Volumes/Data/Code/livewire/src/js/index.js */"./src/js/index.js");
+module.exports = __webpack_require__(/*! /Users/calebporzio/Documents/Code/sites/livewire/src/js/index.js */"./src/js/index.js");
 
 
 /***/ })
