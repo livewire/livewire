@@ -1935,7 +1935,7 @@ function () {
         getNodeKey: function getNodeKey(node) {
           // This allows the tracking of elements by the "key" attribute, like in VueJs.
           return node.hasAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":key")) ? node.getAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":key")) // If no "key", then first check for "wire:id", then "wire:model", then "id"
-          : node.hasAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":id")) ? node.getAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":id")) : node.hasAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":model")) ? node.getAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":model")) : node.id;
+          : node.hasAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":id")) ? node.getAttribute("".concat(_dom_dom__WEBPACK_IMPORTED_MODULE_4__["default"].prefix, ":id")) : node.id;
         },
         onBeforeNodeAdded: function onBeforeNodeAdded(node) {
           return new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node).transitionElementIn();

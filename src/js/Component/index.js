@@ -222,9 +222,7 @@ export default class Component {
                     // If no "key", then first check for "wire:id", then "wire:model", then "id"
                     : (node.hasAttribute(`${DOM.prefix}:id`)
                         ? node.getAttribute(`${DOM.prefix}:id`)
-                        : (node.hasAttribute(`${DOM.prefix}:model`)
-                            ? node.getAttribute(`${DOM.prefix}:model`)
-                            : node.id))
+                        : node.id)
             },
 
             onBeforeNodeAdded: node => {
