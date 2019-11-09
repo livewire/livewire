@@ -54,3 +54,23 @@ test('element inserted before element with same tag name is handled as if they w
         expect(elThatWasAdded.el.innerHTML).toEqual('hey')
     })
 })
+
+test('adding child components with wire:model doesnt break the dom diffing', async () => {
+    mountAsRootAndReturn(
+        `<div wire:id="1" wire:data="{}">
+            <button wire:click="$refresh"></button>
+            <div wire:id="2" wire:data="{}"><div wire:model="test"></div></div>
+        </div>
+        `,
+        `<div wire:id="1" wire:data="{}">
+            <button wire:click="$refresh"></button>
+            <div wire:id="2" wire:data="{}"><div wire:model="test"></div></div>
+            <div wire:id="3" wire:data="{}"><div wire:model="test"></div></div>
+        </div>
+        `
+    )
+
+    fireEvent.click(document.querySelector('button'))
+
+    await timeout(50)
+})
