@@ -3,6 +3,7 @@
 namespace Livewire\Commands;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Console\DetectsApplicationNamespace;
 
@@ -15,8 +16,10 @@ class ComponentParser
     protected $component;
     protected $componentClass;
     protected $directories;
+    protected $stubClassPath = null;
+    protected $stubViewPath = null;
 
-    public function __construct($classNamespace, $viewPath, $rawCommand)
+    public function __construct($classNamespace, $viewPath, $rawCommand, $stub = null)
     {
         $this->baseClassNamespace = $classNamespace;
 
@@ -29,6 +32,9 @@ class ComponentParser
 
         $this->component = Str::kebab(array_pop($directories));
         $this->componentClass = Str::studly($this->component);
+
+        $this->stubViewPath = $this->baseViewPath.'stubs/'.Str::kebab($stub).'.stub';
+        $this->stubClassPath = $this->baseClassPath.'Stubs/'.Str::studly(Str::kebab($stub)).'.stub';
 
         $this->directories = array_map([Str::class, 'studly'], $directories);
     }
@@ -73,7 +79,11 @@ class ComponentParser
 
     public function classContents()
     {
-        $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'Component.stub');
+        if(File::exists($this->stubClassPath)) {
+            $template = file_get_contents($this->stubClassPath);
+        } else {
+            $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'Component.stub');
+        }
 
         return preg_replace_array(
             ['/\[namespace\]/', '/\[class\]/', '/\[view\]/'],
@@ -113,7 +123,11 @@ class ComponentParser
 
     public function viewContents()
     {
-        $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'view.stub');
+        if(File::exists($this->stubViewPath)) {
+            $template = file_get_contents($this->stubViewPath);
+        } else {
+            $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'view.stub');
+        }
 
         return preg_replace(
             '/\[quote\]/',
