@@ -13,55 +13,67 @@ class StubCommand extends Command
 
     protected $description = 'Create Livewire stubs.';
 
+    protected $parser;
+
     public function handle()
     {
-        $input = preg_split('/[.]+/', $this->argument('name'));
-        $component = Str::kebab(array_pop($input));
-        $componentClass = Str::studly($component);
-        $this->ensureDirectoryExists(app_path('Http/Livewire/Stubs'));
-        $this->ensureDirectoryExists('resources/views/livewire/stubs');
-        $classCreated = $this->createViewStubIfDoesNotExist($component);
-        $viewCreated = $this->createClassStubIfDoesNotExist($componentClass);
+        $this->parser = new StubParser(
+            config('livewire.class_namespace', 'App\\Http\\Livewire'),
+            config('livewire.view_path', resource_path('views/livewire')),
+            $this->argument('name')
+        );
+
+        $classCreated = $this->createViewStubIfDoesNotExist();
+        $viewCreated = $this->createClassStubIfDoesNotExist();
         if ($classCreated) {
-            $this->info('Class '.$componentClass.'.stub created');
+//            $this->info('Class '.$componentClass.'.stub created');
+            $this->line("<options=bold;fg=green>CLASS STUB:</> {$this->parser->relativeClassPath()}");
         }
         if ($viewCreated) {
-            $this->info('View '.$component.'.stub created');
+            $this->line("<options=bold;fg=green>VIEW STUB:</>  {$this->parser->relativeViewPath()}");
         }
     }
 
     protected function ensureDirectoryExists($path)
     {
+        $path = substr($path, 0, strrpos( $path, '/'));
         if ( !File::isDirectory($path)) {
             File::makeDirectory($path, 0777, $recursive = true, $force = true);
         }
     }
 
-    protected function createClassStubIfDoesNotExist($name)
+    protected function createClassStubIfDoesNotExist()
     {
-        if ( !File::exists('app/Http/Livewire/Stubs/'.$name.'.stub')) {
-            File::put('app/Http/Livewire/Stubs/'.$name.'.stub',
-                file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'Component.stub'));
+        $classPath = $this->parser->classPath();
 
-            return true;
-        } else {
-            $this->error('Class stub already exists');
+        if (File::exists($classPath)) {
+            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
+            $this->line("<fg=red;options=bold>Class already exists:</> {$this->parser->relativeClassPath()}");
 
             return false;
         }
+
+        $this->ensureDirectoryExists($classPath);
+
+        File::put($classPath, $this->parser->classContents());
+
+        return $classPath;
     }
 
-    protected function createViewStubIfDoesNotExist($name)
+    protected function createViewStubIfDoesNotExist()
     {
-        if ( !File::exists('resources/views/livewire/stubs/'.$name.'.stub')) {
-            File::put('resources/views/livewire/stubs/'.$name.'.stub',
-                file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'view.stub'));
+        $viewPath = $this->parser->viewPath();
 
-            return true;
-        } else {
-            $this->error('View stub already exists');
+        if (File::exists($viewPath)) {
+            $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->relativeViewPath()}");
 
             return false;
         }
+
+        $this->ensureDirectoryExists($viewPath);
+
+        File::put($viewPath, $this->parser->viewContents());
+
+        return $viewPath;
     }
 }
