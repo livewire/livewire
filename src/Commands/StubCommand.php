@@ -26,7 +26,6 @@ class StubCommand extends Command
         $classCreated = $this->createViewStubIfDoesNotExist();
         $viewCreated = $this->createClassStubIfDoesNotExist();
         if ($classCreated) {
-//            $this->info('Class '.$componentClass.'.stub created');
             $this->line("<options=bold;fg=green>CLASS STUB:</> {$this->parser->relativeClassPath()}");
         }
         if ($viewCreated) {
