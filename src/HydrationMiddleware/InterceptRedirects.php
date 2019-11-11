@@ -8,7 +8,7 @@ class InterceptRedirects implements HydrationMiddleware
 {
     public static $redirectorCache;
 
-    public function hydrate($unHydratedInstance, $request)
+    public static function hydrate($unHydratedInstance, $request)
     {
         static::$redirectorCache = app('redirect');
 
@@ -17,8 +17,10 @@ class InterceptRedirects implements HydrationMiddleware
         });
     }
 
-    public function dehydrate($instance, $response)
+    public static function dehydrate($instance, $response)
     {
         app()->instance('redirect', static::$redirectorCache);
+
+        $response->redirectTo = $instance->redirectTo ?? false;
     }
 }

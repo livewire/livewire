@@ -43,7 +43,7 @@ class TestableLivewire
     public function initialUpdateComponent($output)
     {
         $this->id = $output->id;
-        $this->dom = $output->toHtml();
+        $this->dom = $output->dom;
         $this->data = $output->data;
         $this->children = $output->children;
         $this->events = $output->events;

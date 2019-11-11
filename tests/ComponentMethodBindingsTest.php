@@ -19,7 +19,7 @@ class ComponentMethodBindingsTest extends TestCase
 
         Route::livewire('/test/{foo}', 'foo');
 
-        $this->get('/test/from-injection')->assertSee('from-injection');
+        $this->withoutExceptionHandling()->get('/test/from-injection')->assertSee('from-injection');
     }
 
     /** @test */

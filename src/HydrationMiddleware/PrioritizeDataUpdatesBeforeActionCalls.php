@@ -4,7 +4,7 @@ namespace Livewire\HydrationMiddleware;
 
 class PrioritizeDataUpdatesBeforeActionCalls implements HydrationMiddleware
 {
-    public function hydrate($unHydratedInstance, $request)
+    public static function hydrate($unHydratedInstance, $request)
     {
         // Put all the "syncInput" actions first.
         usort($request['actionQueue'], function ($a, $b) {
@@ -13,7 +13,7 @@ class PrioritizeDataUpdatesBeforeActionCalls implements HydrationMiddleware
         });
     }
 
-    public function dehydrate($instance, $response)
+    public static function dehydrate($instance, $response)
     {
         //
     }

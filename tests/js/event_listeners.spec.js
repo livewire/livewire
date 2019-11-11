@@ -35,7 +35,7 @@ test('receive event from component fire, and make sure global listener receives 
     mountAndReturnEmittedEvent(`
             <div>
                 <button id="outer-button" wire:click="$refresh"></button>
-                <div wire:id="456" wire:data="{}" wire:events="[]"></div>
+                <div wire:id="456" wire:initial-data="{}" wire:events="[]"></div>
             </div>
         `, {
         event: 'foo', params: ['bar'],

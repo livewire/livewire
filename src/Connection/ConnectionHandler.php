@@ -2,6 +2,7 @@
 
 namespace Livewire\Connection;
 
+use Illuminate\Support\Fluent;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Livewire\SubsequentResponsePayload;
@@ -10,9 +11,7 @@ abstract class ConnectionHandler
 {
     public function handle($payload)
     {
-        $class = app('livewire')->getComponentClass($payload['name']);
-
-        $instance = new $class($payload['id']);
+        $instance = app('livewire')->activate($payload['name'], $payload['id']);
 
         Livewire::hydrate($instance, $payload);
 
@@ -28,17 +27,10 @@ abstract class ConnectionHandler
 
         $dom = $instance->output($errors ?? null);
 
-        $events = $instance->getEventsBeingListenedFor();
-        $eventQueue = $instance->getEventQueue();
-
-        $response = new SubsequentResponsePayload([
+        $response = new Fluent([
             'id' => $payload['id'],
             'name' => $payload['name'],
             'dom' => $dom,
-            'eventQueue' => $eventQueue,
-            'events' => $events,
-            'redirectTo' => $instance->redirectTo ?? false,
-            'fromPrefetch' => $payload['fromPrefetch'] ?? false,
         ]);
 
         Livewire::dehydrate($instance, $response);

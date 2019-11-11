@@ -2,15 +2,15 @@
 
 namespace Livewire\HydrationMiddleware;
 
-class HashPropertiesForDirtyDetection implements HydrationMiddleware
+class RegisterEmittedEvents implements HydrationMiddleware
 {
     public static function hydrate($unHydratedInstance, $request)
     {
-        $unHydratedInstance->hashPropertiesForDirtyDetection();
+        //
     }
 
     public static function dehydrate($instance, $response)
     {
-        $response->dirtyInputs = $instance->getDirtyProperties();
+        $response->eventQueue = $instance->getEventQueue();
     }
 }

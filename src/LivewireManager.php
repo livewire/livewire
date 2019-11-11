@@ -3,12 +3,12 @@
 namespace Livewire;
 
 use Exception;
-use Illuminate\Support\Str;
-use Livewire\Testing\TestableLivewire;
-use Livewire\Connection\ComponentHydrator;
-use Livewire\Exceptions\ComponentNotFoundException;
 use Illuminate\Routing\RouteDependencyResolverTrait;
-use Livewire\HydrationMiddleware\HydrateProtectedProperties;
+use Illuminate\Support\Fluent;
+use Illuminate\Support\Str;
+use Livewire\Exceptions\ComponentNotFoundException;
+use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
+use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
@@ -17,6 +17,7 @@ class LivewireManager
     protected $prefix = 'wire';
     protected $componentAliases = [];
     protected $hydrationMiddleware = [];
+    protected $initialDehydrationMiddleware = [];
     protected $customComponentResolver;
     protected $container;
     public static $isLivewireRequestTestingOverride;
@@ -82,34 +83,26 @@ class LivewireManager
         $instance = $this->activate($name, $id);
 
         $parameters = $this->resolveClassMethodDependencies(
-            $options,
-            $instance,
-            'mount'
+            $options, $instance, 'mount'
         );
 
         $instance->mount(...array_values($parameters));
 
         $dom = $instance->output();
-        $properties = $instance->getPublicPropertiesDefinedBySubClass();
 
-        // This is a hot fix. We should be using the dehydration stack that we built for subsequent requests.
-        $protectedPropertyDehydrator = new HydrateProtectedProperties;
-        $protectedPropertyDehydrator->dehydrate($instance, []);
-
-        $events = $instance->getEventsBeingListenedFor();
-        $children = $instance->getRenderedChildren();
-        $checksum = (new ComponentChecksumManager)->generate($name, $id, $properties);
-
-        return new InitialResponsePayload([
-            'instance' => $instance,
+        $response = new Fluent([
             'id' => $id,
-            'dom' => $dom,
-            'data' => $properties,
             'name' => $name,
-            'checksum' => $checksum,
-            'children' => $children,
-            'events' => $events,
+            'dom' => $dom,
         ]);
+
+        $this->initialDehydrate($instance, $response);
+
+        $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
+            'initial-data' => $response->toArray(),
+        ]);
+
+        return $response;
     }
 
     public function dummyMount($id, $tagName)
@@ -229,12 +222,22 @@ HTML;
         $this->hydrationMiddleware += $classes;
     }
 
+    public function registerInitialDehydrationMiddleware(array $callables)
+    {
+        $this->initialDehydrationMiddleware += $callables;
+    }
+
     public function hydrate($instance, $request)
     {
         foreach ($this->hydrationMiddleware as $class) {
-            $middleware = new $class;
+            $class::hydrate($instance, $request);
+        }
+    }
 
-            $middleware->hydrate($instance, $request);
+    public function initialDehydrate($instance, $response)
+    {
+        foreach ($this->initialDehydrationMiddleware as $callable) {
+            $callable($instance, $response);
         }
     }
 
@@ -243,9 +246,14 @@ HTML;
         // The array is being reversed here, so the middleware dehydrate phase order of execution is
         // the inverse of hydrate. This makes the middlewares behave like layers in a shell.
         foreach (array_reverse($this->hydrationMiddleware) as $class) {
-            $middleware = new $class;
-
-            $middleware->dehydrate($instance, $response);
+            $class::dehydrate($instance, $response);
         }
+    }
+
+    public function getRootElementTagName($dom)
+    {
+        preg_match('/<([a-zA-Z0-9\-]*)/', $dom, $matches, PREG_OFFSET_CAPTURE);
+
+        return $matches[1][0];
     }
 }

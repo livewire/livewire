@@ -8,12 +8,12 @@ class GarbageCollectUnusedComponents implements HydrationMiddleware
 {
     public static $gc;
 
-    public function hydrate($unHydratedInstance, $request)
+    public static function hydrate($unHydratedInstance, $request)
     {
         static::$gc = $request['gc'];
     }
 
-    public function dehydrate($instance, $response)
+    public static function dehydrate($instance, $response)
     {
         $response->gc = ComponentCacheManager::garbageCollect(static::$gc);
     }

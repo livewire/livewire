@@ -6,7 +6,7 @@ use Livewire\ComponentCacheManager;
 
 class HydrateProtectedProperties implements HydrationMiddleware
 {
-    public function hydrate($unHydratedInstance, $request)
+    public static function hydrate($unHydratedInstance, $request)
     {
         // Grab the protected properties out of the cache.
         $protectedOrPrivateProperties = (new ComponentCacheManager($unHydratedInstance))
@@ -17,7 +17,7 @@ class HydrateProtectedProperties implements HydrationMiddleware
         }
     }
 
-    public function dehydrate($instance, $response)
+    public static function dehydrate($instance, $response)
     {
         // Store the protected properties in the cache.
         if ($protectedOrPrivateProperties = $instance->getProtectedOrPrivatePropertiesDefinedBySubClass()) {

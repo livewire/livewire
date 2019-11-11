@@ -32,7 +32,7 @@ class LivewireBladeDirectives
         return <<<EOT
 <?php
 if (! isset(\$_instance)) {
-    \$dom = \Livewire\Livewire::mount({$expression})->toHtml();
+    \$dom = \Livewire\Livewire::mount({$expression})->dom;
 } elseif (\$_instance->childHasBeenRendered($cachedKey)) {
     \$componentId = \$_instance->getRenderedChildComponentId($cachedKey);
     \$componentTag = \$_instance->getRenderedChildComponentTagName($cachedKey);
@@ -40,8 +40,8 @@ if (! isset(\$_instance)) {
     \$_instance->preserveRenderedChild($cachedKey);
 } else {
     \$response = \Livewire\Livewire::mount({$expression});
-    \$dom = \$response->toHtml();
-    \$_instance->logRenderedChild($cachedKey, \$response->id, \$response->getRootElementTagName());
+    \$dom = \$response->dom;
+    \$_instance->logRenderedChild($cachedKey, \$response->id, \Livewire\Livewire::getRootElementTagName(\$dom));
 }
 echo \$dom;
 ?>

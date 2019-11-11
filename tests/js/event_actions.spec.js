@@ -122,7 +122,7 @@ test('polling without specifying method refreshes by default', async () => {
 
 test('polling on root div', async () => {
     var pollHappened = false
-    mountAsRoot('<div wire:id="123" wire:data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
+    mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
 
     await timeout(49)
 
@@ -135,7 +135,7 @@ test('polling on root div', async () => {
 
 test('polling is disabled if ', async () => {
     var pollHappened = false
-    mountAsRoot('<div wire:id="123" wire:data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
+    mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
 
     await timeout(49)
 
@@ -148,7 +148,7 @@ test('polling is disabled if ', async () => {
 
 test('init', async () => {
     var initHappened = false
-    mountAsRoot('<div wire:id="123" wire:data="{}" wire:init="someMethod"></div>', () => { initHappened = true })
+    mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:init="someMethod"></div>', () => { initHappened = true })
 
     await timeout(10)
 

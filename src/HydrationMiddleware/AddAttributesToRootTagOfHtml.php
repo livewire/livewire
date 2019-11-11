@@ -1,12 +1,10 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\HydrationMiddleware;
 
-use Illuminate\Support\Fluent;
-
-class ResponsePayload extends Fluent
+class AddAttributesToRootTagOfHtml
 {
-    public function injectComponentDataAsHtmlAttributesInRootElement($dom, $data)
+    public function __invoke($dom, $data)
     {
         $prefix = app('livewire')->prefix();
 
@@ -30,19 +28,12 @@ class ResponsePayload extends Fluent
         );
     }
 
-    public function escapeStringForHtml($subject)
+    protected function escapeStringForHtml($subject)
     {
         if (is_string($subject) || is_numeric($subject)) {
             return htmlspecialchars($subject);
         }
 
         return htmlspecialchars(json_encode($subject));
-    }
-
-    public function getRootElementTagName()
-    {
-        preg_match('/<([a-zA-Z0-9\-]*)/', $this->dom, $matches, PREG_OFFSET_CAPTURE);
-
-        return $matches[1][0];
     }
 }

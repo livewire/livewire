@@ -27,13 +27,17 @@ use Livewire\Commands\TouchCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Livewire\Exceptions\BypassViewHandler;
 use Livewire\HydrationMiddleware\ClearFlashMessagesIfNotRedirectingAway;
+use Livewire\HydrationMiddleware\ForwardPrefetch;
 use Livewire\HydrationMiddleware\GarbageCollectUnusedComponents;
 use Livewire\HydrationMiddleware\HashPropertiesForDirtyDetection;
 use Livewire\HydrationMiddleware\HydratePreviouslyRenderedChildren;
 use Livewire\HydrationMiddleware\HydrateProtectedProperties;
 use Livewire\HydrationMiddleware\HydratePublicProperties;
+use Livewire\HydrationMiddleware\IncludeIdAsRootTagAttribute;
 use Livewire\HydrationMiddleware\InterceptRedirects;
 use Livewire\HydrationMiddleware\PrioritizeDataUpdatesBeforeActionCalls;
+use Livewire\HydrationMiddleware\RegisterEmittedEvents;
+use Livewire\HydrationMiddleware\RegisterEventsBeingListenedFor;
 use Livewire\HydrationMiddleware\SecureHydrationWithChecksum;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
@@ -106,16 +110,30 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerHydrationMiddleware()
     {
+        Livewire::registerInitialDehydrationMiddleware([
+            [RegisterEventsBeingListenedFor::class, 'dehydrate'],
+            [RegisterEmittedEvents::class, 'dehydrate'],
+            [HydratePublicProperties::class, 'dehydrate'],
+            [HydrateProtectedProperties::class, 'dehydrate'],
+            [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
+            [SecureHydrationWithChecksum::class, 'dehydrate'],
+            [IncludeIdAsRootTagAttribute::class, 'dehydrate'],
+        ]);
+
         Livewire::registerHydrationMiddleware([
             GarbageCollectUnusedComponents::class,
+            IncludeIdAsRootTagAttribute::class,
             ClearFlashMessagesIfNotRedirectingAway::class,
             SecureHydrationWithChecksum::class,
+            RegisterEventsBeingListenedFor::class,
+            RegisterEmittedEvents::class,
             HydratePublicProperties::class,
             HydrateProtectedProperties::class,
             HydratePreviouslyRenderedChildren::class,
             HashPropertiesForDirtyDetection::class,
             InterceptRedirects::class,
             PrioritizeDataUpdatesBeforeActionCalls::class,
+            ForwardPrefetch::class,
         ]);
     }
 

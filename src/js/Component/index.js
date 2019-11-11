@@ -15,11 +15,12 @@ export default class Component {
     constructor(el, connection) {
         el.rawNode().__livewire = this
         this.id = el.getAttribute('id')
-        this.data = JSON.parse(this.extractLivewireAttribute('data'))
-        this.events = JSON.parse(this.extractLivewireAttribute('events'))
-        this.children = JSON.parse(this.extractLivewireAttribute('children'))
-        this.checksum = this.extractLivewireAttribute('checksum')
-        this.name = this.extractLivewireAttribute('name')
+        const initialData = JSON.parse(this.extractLivewireAttribute('initial-data'))
+        this.data = initialData.data || {}
+        this.events = initialData.events || []
+        this.children = initialData.children || {}
+        this.checksum = initialData.checksum || ''
+        this.name = initialData.name || ''
         this.scopedListeners = new MessageBus,
         this.connection = connection
         this.actionQueue = []

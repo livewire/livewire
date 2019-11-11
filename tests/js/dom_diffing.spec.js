@@ -4,8 +4,8 @@ const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 test('element root is DOM diffed', async () => {
     mountAsRootAndReturn(
-        '<div wire:id="123" wire:data="{}"><button wire:click="$refresh"></button></div>',
-        '<div wire:id="123" wire:data="{}" class="bar"><button wire:click="$refresh"></button></div>'
+        '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button></div>',
+        '<div wire:id="123" wire:initial-data="{}" class="bar"><button wire:click="$refresh"></button></div>'
     )
 
     fireEvent.click(document.querySelector('button'))
@@ -19,8 +19,8 @@ test('element inserted in the middle moves subsequent elements instead of removi
     var hookWasCalled = false
 
     mountAsRootAndReturn(
-        '<div wire:id="123" wire:data="{}"><button wire:click="$refresh"></button><p>there</p></div>',
-        '<div wire:id="123" wire:data="{}" class="bar"><button wire:click="$refresh"></button><div>middle</div><p>there</p></div>'
+        '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button><p>there</p></div>',
+        '<div wire:id="123" wire:initial-data="{}" class="bar"><button wire:click="$refresh"></button><div>middle</div><p>there</p></div>'
     )
 
     window.livewire.hook('elementRemoved', () => {
@@ -39,8 +39,8 @@ test('element inserted before element with same tag name is handled as if they w
     var elThatWasAdded
 
     mountAsRootAndReturn(
-        '<div wire:id="123" wire:data="{}"><button wire:click="$refresh"></button><div>there</div></div>',
-        '<div wire:id="123" wire:data="{}" class="bar"><button wire:click="$refresh"></button><div>hey</div><div>there</div></div></div>'
+        '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button><div>there</div></div>',
+        '<div wire:id="123" wire:initial-data="{}" class="bar"><button wire:click="$refresh"></button><div>hey</div><div>there</div></div></div>'
     )
 
     window.livewire.hook('elementInitialized', (el) => {
@@ -57,15 +57,15 @@ test('element inserted before element with same tag name is handled as if they w
 
 test('adding child components with wire:model doesnt break the dom diffing', async () => {
     mountAsRootAndReturn(
-        `<div wire:id="1" wire:data="{}">
+        `<div wire:id="1" wire:initial-data="{}">
             <button wire:click="$refresh"></button>
-            <div wire:id="2" wire:data="{}"><div wire:model="test"></div></div>
+            <div wire:id="2" wire:initial-data="{}"><div wire:model="test"></div></div>
         </div>
         `,
-        `<div wire:id="1" wire:data="{}">
+        `<div wire:id="1" wire:initial-data="{}">
             <button wire:click="$refresh"></button>
-            <div wire:id="2" wire:data="{}"><div wire:model="test"></div></div>
-            <div wire:id="3" wire:data="{}"><div wire:model="test"></div></div>
+            <div wire:id="2" wire:initial-data="{}"><div wire:model="test"></div></div>
+            <div wire:id="3" wire:initial-data="{}"><div wire:model="test"></div></div>
         </div>
         `
     )

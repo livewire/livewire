@@ -1,7 +1,7 @@
 import Livewire from 'laravel-livewire'
 
 export function mount(dom, requestInterceptor = () => {}) {
-    document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -59,7 +59,7 @@ export function mountAsRootAndReturn(dom, returnedDom, dirtyInputs = [], request
 };
 
 export function mountWithEvent(dom, event, requestInterceptor = () => {}) {
-    document.body.innerHTML = '<div wire:id="123" wire:events="[&quot;'+event+'&quot;]" wire:data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{&quot;events&quot;:[&quot;'+event+'&quot;]}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -77,7 +77,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
 
-    document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -104,7 +104,7 @@ export function mountAndReturn(dom, returnedDom, dirtyInputs = [], requestInterc
 export function mountAndReturnEmittedEvent(dom, event, requestInterceptor = async () => { }) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
-    document.body.innerHTML = '<div wire:id="123" wire:data="{}"  wire:events="[]">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}"  wire:events="[]">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -132,7 +132,7 @@ export function mountAndError(dom, requestInterceptor = async () => { }) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
 
-    document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -154,7 +154,7 @@ export function mountAndError(dom, requestInterceptor = async () => { }) {
 export function mountWithData(dom, data, requestInterceptor = () => {}) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
-    document.body.innerHTML = '<div wire:id="123" wire:data="' + JSON.stringify(data).replace(/\"/g, '&quot;')+'">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{&quot;data&quot;: ' + JSON.stringify(data).replace(/\"/g, '&quot;')+'}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,
@@ -173,7 +173,7 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
     document.body.innerHTML = '';
     window.livewire && window.livewire.restart()
 
-    document.body.innerHTML = '<div wire:id="123" wire:data="{}">' + dom + '</div>'
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}">' + dom + '</div>'
 
     window.livewire = new Livewire({ driver: {
         onMessage: null,

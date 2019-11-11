@@ -4,7 +4,7 @@ namespace Livewire\HydrationMiddleware;
 
 interface HydrationMiddleware
 {
-    public function hydrate($instance, $request);
+    public static function hydrate($instance, $request);
 
-    public function dehydrate($instance, $response);
+    public static function dehydrate($instance, $response);
 }
