@@ -47,6 +47,7 @@ class TestableLivewire
         $this->data = $output->data;
         $this->children = $output->children;
         $this->events = $output->events;
+        $this->eventQueue = $output->eventQueue;
         $this->checksum = $output->checksum;
         $this->gc = [];
     }

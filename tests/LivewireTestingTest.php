@@ -4,7 +4,6 @@ namespace Tests;
 
 use Livewire\Component;
 use Livewire\LivewireManager;
-use Illuminate\Support\Facades\Artisan;
 
 class LivewireTestingTest extends TestCase
 {
@@ -50,6 +49,21 @@ class LivewireTestingTest extends TestCase
             ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, 'shouldnt see me')
             ->assertDontSee('shouldnt see me');
     }
+
+    /** @test */
+    public function test_assert_emitted()
+    {
+        app(LivewireManager::class)
+            ->test(EmitsEventsComponentStub::class)
+            ->call('emitFoo')
+            ->assertEmitted('foo')
+            ->call('emitFooWithParam', 'bar')
+            ->assertEmitted('foo', 'bar')
+            ->call('emitFooWithParam', 'baz')
+            ->assertEmitted('foo', function ($event, $params) {
+                return $event === 'foo' && $params === ['baz'];
+            });
+    }
 }
 
 class HasMountArguments extends Component
@@ -74,6 +88,24 @@ class HasMountArgumentsButDoesntPassThemToBladeView extends Component
     public function mount($name)
     {
         $this->name = $name;
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class EmitsEventsComponentStub extends Component
+{
+    public function emitFoo()
+    {
+        $this->emit('foo');
+    }
+
+    public function emitFooWithParam($param)
+    {
+        $this->emit('foo', $param);
     }
 
     public function render()
