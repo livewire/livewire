@@ -46,7 +46,7 @@ EOT
                 'component' => 'to-be-discovered',
             ])->render();
         } catch (\Exception $e) {
-            $this->assertContains('Unable to find component: [to-be-discovered]', $e->getMessage());
+            $this->assertStringContainsString('Unable to find component: [to-be-discovered]', $e->getMessage());
         }
 
         Artisan::call('livewire:discover');
@@ -55,7 +55,7 @@ EOT
             'component' => 'to-be-discovered',
         ])->render();
 
-        $this->assertContains('I\'ve been discovered!', $output);
+        $this->assertStringContainsString('I\'ve been discovered!', $output);
     }
 
     /** @test */

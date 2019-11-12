@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\LivewireManager;
 
@@ -12,7 +13,7 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(PublicPropertiesInViewStub::class);
 
-        $this->assertTrue(str_contains(
+        $this->assertTrue(Str::contains(
             $component->dom,
             'Caleb'
         ));

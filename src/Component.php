@@ -94,7 +94,7 @@ abstract class Component
 
         $view
             ->with([
-                'errors' => $errorBag,
+                'errors' => (new ViewErrorBag)->put('default', $errorBag),
                 '_instance' => $this,
             ])
             // Automatically inject all public properties into the blade view.

@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class NestingComponentsTest extends TestCase
@@ -13,7 +14,7 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertTrue(str_contains(
+        $this->assertTrue(Str::contains(
             $component->dom,
             'foo'
         ));
@@ -26,14 +27,14 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertTrue(str_contains(
+        $this->assertTrue(Str::contains(
             $component->dom,
             'foo'
         ));
 
         $component->runAction('$refresh');
 
-        $this->assertFalse(str_contains(
+        $this->assertFalse(Str::contains(
             $component->dom,
             'foo'
         ));
@@ -46,14 +47,14 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertTrue(str_contains(
+        $this->assertTrue(Str::contains(
             $component->dom,
             'span'
         ));
 
         $component->runAction('$refresh');
 
-        $this->assertTrue(str_contains(
+        $this->assertTrue(Str::contains(
             $component->dom,
             'span'
         ));
@@ -66,15 +67,15 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertTrue(str_contains($component->dom, 'foo'));
+        $this->assertTrue(Str::contains($component->dom, 'foo'));
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertFalse(str_contains($component->dom, 'foo'));
-        $this->assertTrue(str_contains($component->dom, 'bar'));
+        $this->assertFalse(Str::contains($component->dom, 'foo'));
+        $this->assertTrue(Str::contains($component->dom, 'bar'));
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertFalse(str_contains($component->dom, 'foo'));
-        $this->assertFalse(str_contains($component->dom, 'bar'));
+        $this->assertFalse(Str::contains($component->dom, 'foo'));
+        $this->assertFalse(Str::contains($component->dom, 'bar'));
     }
 }
 

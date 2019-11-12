@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\LivewireManager;
 
@@ -12,7 +13,7 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ComponentRootHasIdAndDataStub::class);
 
-        $this->assertTrue(str_contains(
+        $this->assertTrue(Str::contains(
             $component->dom,
             [$component->id, 'foo']
         ));
@@ -38,11 +39,11 @@ EOT
 
         $component->call('$refresh');
 
-        $this->assertTrue(str_contains(
+        $this->assertTrue(Str::contains(
             $component->dom, $component->id
         ));
 
-        $this->assertFalse(str_contains(
+        $this->assertFalse(Str::contains(
             $component->dom, 'foo'
         ));
     }

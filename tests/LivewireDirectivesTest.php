@@ -17,7 +17,7 @@ class LivewireDirectivesTest extends TestCase
             'component' => 'foo',
         ])->render();
 
-        $this->assertContains('div', $output);
+        $this->assertStringContainsString('div', $output);
     }
 
     /** @test */
@@ -33,7 +33,7 @@ class LivewireDirectivesTest extends TestCase
     {
         $output = view('this-directive')->render();
 
-        $this->assertContains('@this', $output);
+        $this->assertStringContainsString('@this', $output);
     }
 }
 

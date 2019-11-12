@@ -33,7 +33,7 @@ class ComponentEventsTest extends TestCase
         $component = app(LivewireManager::class)->test(ReceivesEvents::class);
 
         $this->assertTrue(in_array('bar', $component->events));
-        $this->assertContains('bar', $component->dom);
+        $this->assertStringContainsString('bar', $component->dom);
     }
 
     /** @test */
