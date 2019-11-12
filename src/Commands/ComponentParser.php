@@ -104,7 +104,8 @@ class ComponentParser
     public function viewName()
     {
         return collect()
-            ->push('livewire')
+            ->concat(explode('/',Str::after($this->baseViewPath, resource_path('views'))))
+            ->filter()
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->component)
