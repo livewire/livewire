@@ -17,6 +17,7 @@ class TestableLivewire
     public $dirtyInputs;
     public $events;
     public $eventQueue;
+    public $errorBag;
     public $redirectTo;
     public $gc;
 
@@ -48,6 +49,7 @@ class TestableLivewire
         $this->children = $output->children;
         $this->events = $output->events;
         $this->eventQueue = $output->eventQueue;
+        $this->errorBag = $output->errorBag;
         $this->checksum = $output->checksum;
         $this->gc = [];
     }
@@ -65,6 +67,7 @@ class TestableLivewire
         $this->events = $output['events'];
         $this->redirectTo = $output['redirectTo'];
         $this->eventQueue = $output['eventQueue'];
+        $this->errorBag = $output['errorBag'] ?? [];
 
         // Imitate the front-end clearing the garbage collector
         // of ids that have already been garbage collected.

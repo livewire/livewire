@@ -15,7 +15,7 @@ export default class {
     }
 
     payload() {
-        return {
+        let payload = {
             id: this.component.id,
             data: this.component.data,
             name: this.component.name,
@@ -30,6 +30,12 @@ export default class {
             }),
             gc: store.getComponentsForCollection(),
         }
+
+        if (Object.keys(this.component.errorBag).length > 0) {
+            payload.errorBag = this.component.errorBag
+        }
+
+        return payload
     }
 
     storeResponse(payload) {
@@ -44,6 +50,7 @@ export default class {
             data: payload.data,
             redirectTo: payload.redirectTo,
             gc: payload.gc,
+            errorBag: payload.errorBag || {},
         }
     }
 }

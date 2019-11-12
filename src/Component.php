@@ -88,9 +88,13 @@ abstract class Component
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
+        $this->setErrorBag(
+            $errorBag = $errors ?: ($view->errors ?: $this->getErrorBag())
+        );
+
         $view
             ->with([
-                'errors' => $view->errors ?? (new ViewErrorBag)->put('default', $errors ?: new MessageBag),
+                'errors' => $errorBag,
                 '_instance' => $this,
             ])
             // Automatically inject all public properties into the blade view.

@@ -1754,6 +1754,7 @@ function () {
     this.children = initialData.children || {};
     this.checksum = initialData.checksum || '';
     this.name = initialData.name || '';
+    this.errorBag = initialData.errorBag || {};
     this.scopedListeners = new _MessageBus__WEBPACK_IMPORTED_MODULE_11__["default"](), this.connection = connection;
     this.actionQueue = [];
     this.messageInTransit = null;
@@ -1861,6 +1862,7 @@ function () {
       this.data = response.data;
       this.checksum = response.checksum;
       this.children = response.children;
+      this.errorBag = response.errorBag;
       _Store__WEBPACK_IMPORTED_MODULE_7__["default"].setComponentsAsCollected(response.gc); // This means "$this->redirect()" was called in the component. let's just bail and redirect.
 
       if (response.redirectTo) {
@@ -2202,7 +2204,7 @@ function () {
   _createClass(_default, [{
     key: "payload",
     value: function payload() {
-      return {
+      var payload = {
         id: this.component.id,
         data: this.component.data,
         name: this.component.name,
@@ -2217,6 +2219,12 @@ function () {
         }),
         gc: _Store__WEBPACK_IMPORTED_MODULE_0__["default"].getComponentsForCollection()
       };
+
+      if (Object.keys(this.component.errorBag).length > 0) {
+        payload.errorBag = this.component.errorBag;
+      }
+
+      return payload;
     }
   }, {
     key: "storeResponse",
@@ -2231,7 +2239,8 @@ function () {
         events: payload.events,
         data: payload.data,
         redirectTo: payload.redirectTo,
-        gc: payload.gc
+        gc: payload.gc,
+        errorBag: payload.errorBag || {}
       };
     }
   }, {

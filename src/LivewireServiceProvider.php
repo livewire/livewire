@@ -35,6 +35,7 @@ use Livewire\HydrationMiddleware\HydrateProtectedProperties;
 use Livewire\HydrationMiddleware\HydratePublicProperties;
 use Livewire\HydrationMiddleware\IncludeIdAsRootTagAttribute;
 use Livewire\HydrationMiddleware\InterceptRedirects;
+use Livewire\HydrationMiddleware\PersistErrorBag;
 use Livewire\HydrationMiddleware\PrioritizeDataUpdatesBeforeActionCalls;
 use Livewire\HydrationMiddleware\RegisterEmittedEvents;
 use Livewire\HydrationMiddleware\RegisterEventsBeingListenedFor;
@@ -111,6 +112,7 @@ class LivewireServiceProvider extends ServiceProvider
     public function registerHydrationMiddleware()
     {
         Livewire::registerInitialDehydrationMiddleware([
+            [PersistErrorBag::class, 'dehydrate'],
             [RegisterEventsBeingListenedFor::class, 'dehydrate'],
             [RegisterEmittedEvents::class, 'dehydrate'],
             [HydratePublicProperties::class, 'dehydrate'],
@@ -127,6 +129,7 @@ class LivewireServiceProvider extends ServiceProvider
             SecureHydrationWithChecksum::class,
             RegisterEventsBeingListenedFor::class,
             RegisterEmittedEvents::class,
+            PersistErrorBag::class,
             HydratePublicProperties::class,
             HydrateProtectedProperties::class,
             HydratePreviouslyRenderedChildren::class,

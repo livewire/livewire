@@ -21,6 +21,7 @@ export default class Component {
         this.children = initialData.children || {}
         this.checksum = initialData.checksum || ''
         this.name = initialData.name || ''
+        this.errorBag = initialData.errorBag || {}
         this.scopedListeners = new MessageBus,
         this.connection = connection
         this.actionQueue = []
@@ -139,6 +140,7 @@ export default class Component {
         this.data = response.data
         this.checksum = response.checksum
         this.children = response.children
+        this.errorBag = response.errorBag
         store.setComponentsAsCollected(response.gc)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.

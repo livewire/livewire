@@ -5,7 +5,6 @@ namespace Livewire\Connection;
 use Illuminate\Support\Fluent;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
-use Livewire\SubsequentResponsePayload;
 
 abstract class ConnectionHandler
 {
