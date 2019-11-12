@@ -96,6 +96,8 @@ class LivewireServiceProvider extends ServiceProvider
         if ($this->app['livewire']->isLivewireRequest()) {
             $this->bypassMiddleware([
                 TrimStrings::class,
+                // In case the user has over-rode "TrimStrings"
+                \App\Http\Middleware\TrimStrings::class,
                 ConvertEmptyStringsToNull::class,
             ]);
         }
