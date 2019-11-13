@@ -92,6 +92,8 @@ abstract class Component
             $errorBag = $errors ?: ($view->errors ?: $this->getErrorBag())
         );
 
+        app('view.engine.resolver')->resolve('blade')->setLivewireComponent($this);
+
         $view
             ->with([
                 'errors' => (new ViewErrorBag)->put('default', $errorBag),
