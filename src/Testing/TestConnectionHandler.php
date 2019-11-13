@@ -6,8 +6,10 @@ use Livewire\Connection\ConnectionHandler;
 
 class TestConnectionHandler extends ConnectionHandler
 {
-    public function wrap($instance)
+    public $lastValidator;
+
+    public function interceptValidator($validator)
     {
-        return TestableComponentWrapper::wrap($instance);
+        $this->lastValidator = $validator;
     }
 }

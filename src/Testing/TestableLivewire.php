@@ -20,6 +20,7 @@ class TestableLivewire
     public $errorBag;
     public $redirectTo;
     public $gc;
+    public $lastValidator;
 
     use Concerns\HasFunLittleUtilities,
         Concerns\MakesCallsToComponent,

@@ -21,6 +21,8 @@ abstract class ConnectionHandler
                 $this->processMessage($action['type'], $action['payload'], $instance);
             }
         } catch (ValidationException $e) {
+            $this->interceptValidator($e->validator);
+
             $errors = $e->validator->errors();
         }
 
@@ -55,5 +57,10 @@ abstract class ConnectionHandler
                 throw new \Exception('Unrecongnized message type: '.$type);
                 break;
         }
+    }
+
+    public function interceptValidator($validator)
+    {
+        //
     }
 }
