@@ -1851,7 +1851,12 @@ function () {
     key: "receiveMessage",
     value: function receiveMessage(payload) {
       var response = this.messageInTransit.storeResponse(payload);
-      this.handleResponse(response);
+      this.handleResponse(response); // This bit of logic ensures that if actions were queued while a request was
+      // out to the server, they are sent when the request comes back.
+
+      if (this.actionQueue.length > 0) {
+        this.fireMessage();
+      }
     }
   }, {
     key: "handleResponse",
