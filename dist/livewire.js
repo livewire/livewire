@@ -3129,6 +3129,7 @@ __webpack_require__.r(__webpack_exports__);
         'Content-Type': 'application/json',
         'Accept': 'text/html, application/xhtml+xml',
         'X-CSRF-TOKEN': this.getCSRFToken(),
+        'X-Socket-ID': this.getSocketId(),
         'X-Livewire': true
       }
     }).then(function (response) {
@@ -3171,6 +3172,11 @@ __webpack_require__.r(__webpack_exports__);
     }
 
     return token;
+  },
+  getSocketId: function getSocketId() {
+    if (Echo) {
+      return Echo.socketId();
+    }
   },
   // This code and concept is all Jonathan Reinink - thanks main!
   showHtmlModal: function showHtmlModal(html) {
@@ -5692,7 +5698,7 @@ function walk(root, callback) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /Users/calebporzio/Documents/Code/sites/livewire/src/js/index.js */"./src/js/index.js");
+module.exports = __webpack_require__(/*! W:\projects\open-source\livewire\src\js\index.js */"./src/js/index.js");
 
 
 /***/ })
