@@ -34,6 +34,14 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_not_set()
+    {
+        app(LivewireManager::class)
+            ->test(HasMountArguments::class, 'bar')
+            ->assertNotSet('name', 'foo');
+    }
+
+    /** @test */
     public function assert_see()
     {
         app(LivewireManager::class)

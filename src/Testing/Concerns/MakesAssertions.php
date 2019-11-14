@@ -14,6 +14,13 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertNotSet($name, $value)
+    {
+        PHPUnit::assertNotEquals($value, $this->get($name));
+
+        return $this;
+    }
+
     public function assertCacheHas($key)
     {
         PHPUnit::assertTrue($this->instance->cache()->has($key));
