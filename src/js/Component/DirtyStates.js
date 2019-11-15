@@ -25,14 +25,14 @@ export default function () {
     store.registerHook('elementRemoved', (el, component) => {
         // Look through the targeted elements to remove.
         Object.keys(component.targetedDirtyElsByProperty).forEach(key => {
-            component.targetedDirtyElsByProperty[key] = component.targetedDirtyElsByProperty[key].filter(sel => {
-                return ! sel.isSameNode(el)
+            component.targetedDirtyElsByProperty[key] = component.targetedDirtyElsByProperty[key].filter(element => {
+                return ! element.isSameNode(el)
             })
         })
 
         // Look through the global/generic elements for the element to remove.
-        component.genericDirtyEls.forEach((sel, index) => {
-            if (sel.isSameNode(el)) {
+        component.genericDirtyEls.forEach((element, index) => {
+            if (element.isSameNode(el)) {
                 component.genericDirtyEls.splice(index, 1)
             }
         })
