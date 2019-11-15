@@ -132,3 +132,41 @@ test('remove element attribute while loading', async () => {
         expect(document.querySelector('span').hasAttribute('disabled')).toBeFalsy()
     })
 })
+
+test('remove element reference from components generic loading array', async () => {
+    let componentReference
+    mountAndReturn(
+        '<button wire:click="foo"></button><span wire:loading></span>',
+        '<button wire:click="foo"></button>'
+    )
+
+    window.livewire.hook('messageSent', component => {
+        componentReference = component
+    })
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('span')).toEqual(null)
+        expect(componentReference.genericLoadingEls).toEqual([])
+    })
+})
+
+test('remove element reference from components targeted loading array', async () => {
+    let componentReference
+    mountAndReturn(
+        '<button wire:click="foo"></button><span wire:loading wire:target="foo"></span>',
+        '<button wire:click="foo"></button>'
+    )
+
+    window.livewire.hook('messageSent', component => {
+        componentReference = component
+    })
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('span')).toEqual(null)
+        expect(componentReference.targetedLoadingElsByAction).toEqual({foo: []})
+    })
+})

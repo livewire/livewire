@@ -59,7 +59,19 @@ function addLoadingEl(component, el, value, actionsNames, remove) {
 }
 
 function removeLoadingEl(component, el) {
-    component.genericLoadingEls = component.genericLoadingEls.filter(loadingEl => ! loadingEl.el.isSameNode(el))
+    // Look through the global/generic elements for the element to remove.
+    component.genericLoadingEls.forEach((sel, index) => {
+        if (sel.el.isSameNode(el)) {
+            component.genericLoadingEls.splice(index, 1)
+        }
+    })
+
+    // Look through the targeted elements to remove.
+    Object.keys(component.targetedLoadingElsByAction).forEach(key => {
+        component.targetedLoadingElsByAction[key] = component.targetedLoadingElsByAction[key].filter(sel => {
+            return ! sel.el.isSameNode(el)
+        })
+    })
 }
 
 function setLoading(component, actions) {
@@ -110,9 +122,9 @@ function unsetLoading(component) {
             }
         } else if (directive.modifiers.includes('attr')) {
             if (directive.modifiers.includes('remove')) {
-                el.setAttribute(directive.value)
+                el.setAttribute(directive.value, true)
             } else {
-                el.removeAttribute(directive.value, true)
+                el.removeAttribute(directive.value)
             }
         } else {
             el.style.display = 'none'

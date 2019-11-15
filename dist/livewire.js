@@ -2288,7 +2288,7 @@ function () {
   function MessageBus() {
     _classCallCheck(this, MessageBus);
 
-    this.listeners = [];
+    this.listeners = {};
   }
 
   _createClass(MessageBus, [{
@@ -2769,6 +2769,20 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     });
     addDirtyEls(component, el, propertyNames);
   });
+  _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('elementRemoved', function (el, component) {
+    // Look through the targeted elements to remove.
+    Object.keys(component.targetedDirtyElsByProperty).forEach(function (key) {
+      component.targetedDirtyElsByProperty[key] = component.targetedDirtyElsByProperty[key].filter(function (sel) {
+        return !sel.isSameNode(el);
+      });
+    }); // Look through the global/generic elements for the element to remove.
+
+    component.genericDirtyEls.forEach(function (sel, index) {
+      if (sel.isSameNode(el)) {
+        component.genericDirtyEls.splice(index, 1);
+      }
+    });
+  });
 });
 
 function addDirtyEls(component, el, targetProperties) {
@@ -2920,8 +2934,17 @@ function addLoadingEl(component, el, value, actionsNames, remove) {
 }
 
 function removeLoadingEl(component, el) {
-  component.genericLoadingEls = component.genericLoadingEls.filter(function (loadingEl) {
-    return !loadingEl.el.isSameNode(el);
+  // Look through the global/generic elements for the element to remove.
+  component.genericLoadingEls.forEach(function (sel, index) {
+    if (sel.el.isSameNode(el)) {
+      component.genericLoadingEls.splice(index, 1);
+    }
+  }); // Look through the targeted elements to remove.
+
+  Object.keys(component.targetedLoadingElsByAction).forEach(function (key) {
+    component.targetedLoadingElsByAction[key] = component.targetedLoadingElsByAction[key].filter(function (sel) {
+      return !sel.el.isSameNode(el);
+    });
   });
 }
 
@@ -2982,9 +3005,9 @@ function unsetLoading(component) {
       }
     } else if (directive.modifiers.includes('attr')) {
       if (directive.modifiers.includes('remove')) {
-        el.setAttribute(directive.value);
+        el.setAttribute(directive.value, true);
       } else {
-        el.removeAttribute(directive.value, true);
+        el.removeAttribute(directive.value);
       }
     } else {
       el.style.display = 'none';
@@ -5631,7 +5654,7 @@ var preventDefaultSupported = function () {
 /*!******************************!*\
   !*** ./src/js/util/index.js ***!
   \******************************/
-/*! exports provided: debounceWithFiringOnBothEnds, debounce, walk, dispatch, kebabCase, tap */
+/*! exports provided: kebabCase, tap, debounceWithFiringOnBothEnds, debounce, walk, dispatch */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

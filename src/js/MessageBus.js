@@ -1,7 +1,7 @@
 
 export default class MessageBus {
     constructor() {
-        this.listeners = []
+        this.listeners = {}
     }
 
     register(name, callback) {
