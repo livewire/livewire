@@ -47,9 +47,9 @@ test('loading element is hidden after Livewire receives error from backend', asy
     })
 })
 
-test('show element while targeted element is loading', async () => {
+test('show element while targeted action is loading', async () => {
     mount(
-`<button wire:ref="foo" wire:click="onClick"></button>
+`<button wire:click="foo"></button>
 <span style="display: none" wire:loading wire:target="foo"></span>
 <h1 style="display: none" wire:loading wire:target="bar"></h1>`
     )
@@ -64,8 +64,8 @@ test('show element while targeted element is loading', async () => {
 
 test('loading element can have multiple targets', async () => {
     mount(
-`<button wire:ref="foo" wire:click="onClick"></button>
-<a wire:ref="bar" wire:click="onClick"></a>
+`<button wire:click="foo"></button>
+<a wire:click="bar"></a>
 <span style="display: none" wire:loading wire:target="foo, bar"></span>`
     )
 

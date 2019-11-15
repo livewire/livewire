@@ -60,9 +60,9 @@ test('input element with dirty directive and class.remove modifier removes class
     expect(document.querySelector('input').classList.contains('clean')).toBeTruthy()
 })
 
-test('input element with dirty directive and class modifier attaches class by reference', async () => {
+test('input element with dirty directive and class modifier attaches class by reference to data', async () => {
     mountWithData(
-        '<span wire:dirty.class="dirty" wire:target="bar"><input wire:model="foo" class="foo" wire:ref="bar"></span>',
+        '<span wire:dirty.class="dirty" wire:target="foo"><input wire:model="foo" class="foo"></span>',
         { foo: 'bar' }
     )
 
@@ -82,9 +82,9 @@ test('input element with dirty directive and class modifier attaches class by re
     expect(document.querySelector('span').classList.contains('dirty')).toBeFalsy()
 })
 
-test('input element with dirty directive and class.remove modifier attaches class by reference', async () => {
+test('input element with dirty directive and class.remove modifier attaches class by reference to data', async () => {
     mountWithData(
-        '<span class="clean" wire:dirty.class.remove="clean" wire:target="bar"><input wire:model="foo" class="foo" wire:ref="bar"></span>',
+        '<span class="clean" wire:dirty.class.remove="clean" wire:target="foo"><input wire:model="foo" class="foo"></span>',
         { foo: 'bar' }
     )
 
@@ -106,7 +106,7 @@ test('input element with dirty directive and class.remove modifier attaches clas
 
 test('element with dirty directive and no modifier will be hidden by default and shown when dirty', async () => {
     mountWithData(
-        '<span wire:dirty wire:target="bar"><input wire:model="foo" class="foo" wire:ref="bar"></span>',
+        '<span wire:dirty wire:target="foo"><input wire:model="foo" class="foo"></span>',
         { foo: 'bar' }
     )
 

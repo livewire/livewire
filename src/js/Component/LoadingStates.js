@@ -2,8 +2,8 @@ import store from '@/Store'
 
 export default function () {
     store.registerHook('componentInitialized', component => {
-        component.loadingElsByRef = {}
-        component.loadingEls = []
+        component.targetedLoadingElsByAction = {}
+        component.genericLoadingEls = []
         component.currentlyActiveLoadingEls = []
     })
 
@@ -11,20 +11,24 @@ export default function () {
         if (el.directives.missing('loading')) return
         const directive = el.directives.get('loading')
 
-        const refNames = el.directives.get('target')
+        const actionNames = el.directives.get('target')
             && el.directives.get('target').value.split(',').map(s => s.trim())
 
         addLoadingEl(
             component,
             el,
             directive.value,
-            refNames,
+            actionNames,
             directive.modifiers.includes('remove')
         )
     })
 
     store.registerHook('messageSent', (component, message) => {
-        setLoading(component, message.refs)
+        const actions = message.actionQueue.filter(action => {
+            return action.type === 'callMethod'
+        }).map(action => action.payload.method);
+
+        setLoading(component, actions)
     })
 
     store.registerHook('messageFailed', component => {
@@ -40,32 +44,28 @@ export default function () {
     })
 }
 
-function addLoadingEl(component, el, value, targetNames, remove) {
-    if (targetNames) {
-        targetNames.forEach(targetNames => {
-            if (component.loadingElsByRef[targetNames]) {
-                component.loadingElsByRef[targetNames].push({el, value, remove})
+function addLoadingEl(component, el, value, actionsNames, remove) {
+    if (actionsNames) {
+        actionsNames.forEach(actionsName => {
+            if (component.targetedLoadingElsByAction[actionsName]) {
+                component.targetedLoadingElsByAction[actionsName].push({el, value, remove})
             } else {
-                component.loadingElsByRef[targetNames] = [{el, value, remove}]
+                component.targetedLoadingElsByAction[actionsName] = [{el, value, remove}]
             }
         })
     } else {
-        component.loadingEls.push({el, value, remove})
+        component.genericLoadingEls.push({el, value, remove})
     }
 }
 
 function removeLoadingEl(component, el) {
-    component.loadingEls = component.loadingEls.filter(loadingEl => ! loadingEl.el.isSameNode(el))
-
-    if (el.ref in component.loadingElsByRef) {
-        delete component.loadingElsByRef[el.ref]
-    }
+    component.genericLoadingEls = component.genericLoadingEls.filter(loadingEl => ! loadingEl.el.isSameNode(el))
 }
 
-function setLoading(component, refs) {
-    const refEls = refs.map(ref => component.loadingElsByRef[ref]).filter(el => el).flat()
+function setLoading(component, actions) {
+    const actionTargetedEls = actions.map(action => component.targetedLoadingElsByAction[action]).filter(el => el).flat()
 
-    const allEls = component.loadingEls.concat(refEls)
+    const allEls = component.genericLoadingEls.concat(actionTargetedEls)
 
     allEls.forEach(el => {
         const directive = el.el.directives.get('loading')

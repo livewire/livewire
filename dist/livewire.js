@@ -2758,30 +2758,30 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 /* harmony default export */ __webpack_exports__["default"] = (function () {
   _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('componentInitialized', function (component) {
-    component.dirtyElsByRef = {};
-    component.dirtyEls = [];
+    component.targetedDirtyElsByProperty = {};
+    component.genericDirtyEls = [];
     registerListener(component);
   });
   _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('elementInitialized', function (el, component) {
     if (el.directives.missing('dirty')) return;
-    var refNames = el.directives.has('target') && el.directives.get('target').value.split(',').map(function (s) {
+    var propertyNames = el.directives.has('target') && el.directives.get('target').value.split(',').map(function (s) {
       return s.trim();
     });
-    addDirtyEls(component, el, refNames);
+    addDirtyEls(component, el, propertyNames);
   });
 });
 
-function addDirtyEls(component, el, targetRefs) {
-  if (targetRefs) {
-    targetRefs.forEach(function (targetRef) {
-      if (component.dirtyElsByRef[targetRef]) {
-        component.dirtyElsByRef[targetRef].push(el);
+function addDirtyEls(component, el, targetProperties) {
+  if (targetProperties) {
+    targetProperties.forEach(function (targetProperty) {
+      if (component.targetedDirtyElsByProperty[targetProperty]) {
+        component.targetedDirtyElsByProperty[targetProperty].push(el);
       } else {
-        component.dirtyElsByRef[targetRef] = [el];
+        component.targetedDirtyElsByProperty[targetProperty] = [el];
       }
     });
   } else {
-    component.dirtyEls.push(el);
+    component.genericDirtyEls.push(el);
   }
 }
 
@@ -2790,12 +2790,12 @@ function registerListener(component) {
     var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_0__["default"](e.target);
     var allEls = [];
 
-    if (el.directives.has('ref') && component.dirtyElsByRef[el.directives.get('ref').value]) {
-      allEls.push.apply(allEls, _toConsumableArray(component.dirtyElsByRef[el.directives.get('ref').value]));
+    if (el.directives.has('model') && component.targetedDirtyElsByProperty[el.directives.get('model').value]) {
+      allEls.push.apply(allEls, _toConsumableArray(component.targetedDirtyElsByProperty[el.directives.get('model').value]));
     }
 
     if (el.directives.has('dirty')) {
-      allEls.push.apply(allEls, _toConsumableArray(component.dirtyEls.filter(function (dirtyEl) {
+      allEls.push.apply(allEls, _toConsumableArray(component.genericDirtyEls.filter(function (dirtyEl) {
         return dirtyEl.directives.get('model').value === el.directives.get('model').value;
       })));
     }
@@ -2862,20 +2862,25 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 /* harmony default export */ __webpack_exports__["default"] = (function () {
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('componentInitialized', function (component) {
-    component.loadingElsByRef = {};
-    component.loadingEls = [];
+    component.targetedLoadingElsByAction = {};
+    component.genericLoadingEls = [];
     component.currentlyActiveLoadingEls = [];
   });
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementInitialized', function (el, component) {
     if (el.directives.missing('loading')) return;
     var directive = el.directives.get('loading');
-    var refNames = el.directives.get('target') && el.directives.get('target').value.split(',').map(function (s) {
+    var actionNames = el.directives.get('target') && el.directives.get('target').value.split(',').map(function (s) {
       return s.trim();
     });
-    addLoadingEl(component, el, directive.value, refNames, directive.modifiers.includes('remove'));
+    addLoadingEl(component, el, directive.value, actionNames, directive.modifiers.includes('remove'));
   });
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageSent', function (component, message) {
-    setLoading(component, message.refs);
+    var actions = message.actionQueue.filter(function (action) {
+      return action.type === 'callMethod';
+    }).map(function (action) {
+      return action.payload.method;
+    });
+    setLoading(component, actions);
   });
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageFailed', function (component) {
     unsetLoading(component);
@@ -2888,17 +2893,17 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   });
 });
 
-function addLoadingEl(component, el, value, targetNames, remove) {
-  if (targetNames) {
-    targetNames.forEach(function (targetNames) {
-      if (component.loadingElsByRef[targetNames]) {
-        component.loadingElsByRef[targetNames].push({
+function addLoadingEl(component, el, value, actionsNames, remove) {
+  if (actionsNames) {
+    actionsNames.forEach(function (actionsName) {
+      if (component.targetedLoadingElsByAction[actionsName]) {
+        component.targetedLoadingElsByAction[actionsName].push({
           el: el,
           value: value,
           remove: remove
         });
       } else {
-        component.loadingElsByRef[targetNames] = [{
+        component.targetedLoadingElsByAction[actionsName] = [{
           el: el,
           value: value,
           remove: remove
@@ -2906,7 +2911,7 @@ function addLoadingEl(component, el, value, targetNames, remove) {
       }
     });
   } else {
-    component.loadingEls.push({
+    component.genericLoadingEls.push({
       el: el,
       value: value,
       remove: remove
@@ -2915,22 +2920,18 @@ function addLoadingEl(component, el, value, targetNames, remove) {
 }
 
 function removeLoadingEl(component, el) {
-  component.loadingEls = component.loadingEls.filter(function (loadingEl) {
+  component.genericLoadingEls = component.genericLoadingEls.filter(function (loadingEl) {
     return !loadingEl.el.isSameNode(el);
   });
-
-  if (el.ref in component.loadingElsByRef) {
-    delete component.loadingElsByRef[el.ref];
-  }
 }
 
-function setLoading(component, refs) {
-  var refEls = refs.map(function (ref) {
-    return component.loadingElsByRef[ref];
+function setLoading(component, actions) {
+  var actionTargetedEls = actions.map(function (action) {
+    return component.targetedLoadingElsByAction[action];
   }).filter(function (el) {
     return el;
   }).flat();
-  var allEls = component.loadingEls.concat(refEls);
+  var allEls = component.genericLoadingEls.concat(actionTargetedEls);
   allEls.forEach(function (el) {
     var directive = el.el.directives.get('loading');
     el = el.el.el; // I'm so sorry @todo
@@ -5630,7 +5631,7 @@ var preventDefaultSupported = function () {
 /*!******************************!*\
   !*** ./src/js/util/index.js ***!
   \******************************/
-/*! exports provided: kebabCase, tap, debounceWithFiringOnBothEnds, debounce, walk, dispatch */
+/*! exports provided: debounceWithFiringOnBothEnds, debounce, walk, dispatch, kebabCase, tap */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
