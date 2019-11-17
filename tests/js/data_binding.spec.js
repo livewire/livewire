@@ -149,6 +149,14 @@ test('checkboxes bound to an array containing value are checked', async () => {
     expect(document.querySelector('#a').checked).toBeTruthy()
 })
 
+test('checkboxes bound to an array containing a numeric value are checked', async () => {
+    mountWithData(
+        `<input id="a" type="checkbox" wire:model="foo" value="2">`,
+        { foo: [2] },
+    )
+    expect(document.querySelector('#a').checked).toBeTruthy()
+})
+
 test('checkboxes bound to an array containing a different value are not', async () => {
     mountWithData(
         `<input id="a" type="checkbox" wire:model="foo" value="a">`,

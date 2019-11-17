@@ -253,9 +253,14 @@ export default class DOMElement {
             this.el.checked = this.el.value == value
         } else if (this.el.type === 'checkbox') {
             if (Array.isArray(value)) {
-                if (value.includes(this.el.value)) {
-                    this.el.checked = true
-                }
+                // I'm purposely not using Array.includes here because it's
+                // strict, and because of Numeric/String mis-casting, I
+                // want the "includes" to be "fuzzy".
+                value.forEach(val => {
+                    if (val == this.el.value) {
+                        this.el.checked = true
+                    }
+                })
             } else {
                 this.el.checked = !! value
             }
