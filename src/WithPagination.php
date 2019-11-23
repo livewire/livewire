@@ -16,7 +16,12 @@ trait WithPagination
             return $this->paginator['page'];
         });
 
-        Paginator::defaultView('livewire::pagination-links');
+        Paginator::defaultView($this->paginationView());
+    }
+
+    public function paginationView()
+    {
+        return 'livewire::pagination-links';
     }
 
     public function previousPage()
