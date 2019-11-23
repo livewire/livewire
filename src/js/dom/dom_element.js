@@ -256,11 +256,14 @@ export default class DOMElement {
                 // I'm purposely not using Array.includes here because it's
                 // strict, and because of Numeric/String mis-casting, I
                 // want the "includes" to be "fuzzy".
+                let valueFound = false
                 value.forEach(val => {
                     if (val == this.el.value) {
-                        this.el.checked = true
+                        valueFound = true
                     }
                 })
+
+                this.el.checked = valueFound
             } else {
                 this.el.checked = !! value
             }

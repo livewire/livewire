@@ -2772,13 +2772,13 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('elementRemoved', function (el, component) {
     // Look through the targeted elements to remove.
     Object.keys(component.targetedDirtyElsByProperty).forEach(function (key) {
-      component.targetedDirtyElsByProperty[key] = component.targetedDirtyElsByProperty[key].filter(function (sel) {
-        return !sel.isSameNode(el);
+      component.targetedDirtyElsByProperty[key] = component.targetedDirtyElsByProperty[key].filter(function (element) {
+        return !element.isSameNode(el);
       });
     }); // Look through the global/generic elements for the element to remove.
 
-    component.genericDirtyEls.forEach(function (sel, index) {
-      if (sel.isSameNode(el)) {
+    component.genericDirtyEls.forEach(function (element, index) {
+      if (element.isSameNode(el)) {
         component.genericDirtyEls.splice(index, 1);
       }
     });
@@ -2935,15 +2935,15 @@ function addLoadingEl(component, el, value, actionsNames, remove) {
 
 function removeLoadingEl(component, el) {
   // Look through the global/generic elements for the element to remove.
-  component.genericLoadingEls.forEach(function (sel, index) {
-    if (sel.el.isSameNode(el)) {
+  component.genericLoadingEls.forEach(function (element, index) {
+    if (element.el.isSameNode(el)) {
       component.genericLoadingEls.splice(index, 1);
     }
   }); // Look through the targeted elements to remove.
 
   Object.keys(component.targetedLoadingElsByAction).forEach(function (key) {
-    component.targetedLoadingElsByAction[key] = component.targetedLoadingElsByAction[key].filter(function (sel) {
-      return !sel.el.isSameNode(el);
+    component.targetedLoadingElsByAction[key] = component.targetedLoadingElsByAction[key].filter(function (element) {
+      return !element.el.isSameNode(el);
     });
   });
 }
@@ -3910,6 +3910,8 @@ function () {
   }, {
     key: "setInputValue",
     value: function setInputValue(value) {
+      var _this9 = this;
+
       if (this.rawNode().__vue__) {
         // If it's a vue component pass down the value prop.
         // Also, Vue will throw a warning because we are programmaticallly
@@ -3922,9 +3924,16 @@ function () {
         this.el.checked = this.el.value == value;
       } else if (this.el.type === 'checkbox') {
         if (Array.isArray(value)) {
-          if (value.includes(this.el.value)) {
-            this.el.checked = true;
-          }
+          // I'm purposely not using Array.includes here because it's
+          // strict, and because of Numeric/String mis-casting, I
+          // want the "includes" to be "fuzzy".
+          var valueFound = false;
+          value.forEach(function (val) {
+            if (val == _this9.el.value) {
+              valueFound = true;
+            }
+          });
+          this.el.checked = valueFound;
         } else {
           this.el.checked = !!value;
         }
