@@ -19,7 +19,6 @@ class TestableLivewire
     public $eventQueue;
     public $errorBag;
     public $redirectTo;
-    public $gc;
     public $lastValidator;
 
     use Concerns\HasFunLittleUtilities,
@@ -52,7 +51,6 @@ class TestableLivewire
         $this->eventQueue = $output->eventQueue;
         $this->errorBag = $output->errorBag;
         $this->checksum = $output->checksum;
-        $this->gc = [];
     }
 
     public function updateComponent($response)
@@ -69,10 +67,6 @@ class TestableLivewire
         $this->redirectTo = $output['redirectTo'];
         $this->eventQueue = $output['eventQueue'];
         $this->errorBag = $output['errorBag'] ?? [];
-
-        // Imitate the front-end clearing the garbage collector
-        // of ids that have already been garbage collected.
-        $this->gc = array_diff($this->gc, $output['gc']);
     }
 
     public function instance()

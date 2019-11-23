@@ -118,14 +118,12 @@ class LivewireServiceProvider extends ServiceProvider
             [RegisterEventsBeingListenedFor::class, 'dehydrate'],
             [RegisterEmittedEvents::class, 'dehydrate'],
             [HydratePublicProperties::class, 'dehydrate'],
-            [HydrateProtectedProperties::class, 'dehydrate'],
             [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
             [SecureHydrationWithChecksum::class, 'dehydrate'],
             [IncludeIdAsRootTagAttribute::class, 'dehydrate'],
         ]);
 
         Livewire::registerHydrationMiddleware([
-            GarbageCollectUnusedComponents::class,
             IncludeIdAsRootTagAttribute::class,
             ClearFlashMessagesIfNotRedirectingAway::class,
             SecureHydrationWithChecksum::class,
@@ -133,7 +131,6 @@ class LivewireServiceProvider extends ServiceProvider
             RegisterEmittedEvents::class,
             PersistErrorBag::class,
             HydratePublicProperties::class,
-            HydrateProtectedProperties::class,
             HydratePreviouslyRenderedChildren::class,
             HashPropertiesForDirtyDetection::class,
             InterceptRedirects::class,
