@@ -99,7 +99,7 @@ class LivewireManager
         $this->initialDehydrate($instance, $response);
 
         $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
-            'initial-data' => $response->toArray(),
+            'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
         ]);
 
         return $response;
