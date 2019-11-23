@@ -1867,8 +1867,7 @@ function () {
       this.data = response.data;
       this.checksum = response.checksum;
       this.children = response.children;
-      this.errorBag = response.errorBag;
-      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].setComponentsAsCollected(response.gc); // This means "$this->redirect()" was called in the component. let's just bail and redirect.
+      this.errorBag = response.errorBag; // This means "$this->redirect()" was called in the component. let's just bail and redirect.
 
       if (response.redirectTo) {
         window.location.href = response.redirectTo;
@@ -2221,8 +2220,7 @@ function () {
             type: action.type,
             payload: action.payload
           };
-        }),
-        gc: _Store__WEBPACK_IMPORTED_MODULE_0__["default"].getComponentsForCollection()
+        })
       };
 
       if (Object.keys(this.component.errorBag).length > 0) {
@@ -2244,7 +2242,6 @@ function () {
         events: payload.events,
         data: payload.data,
         redirectTo: payload.redirectTo,
-        gc: payload.gc,
         errorBag: payload.errorBag || {}
       };
     }
@@ -2490,30 +2487,7 @@ var store = {
     // Remove event listeners attached to the DOM.
     component.tearDown(); // Remove the component from the store.
 
-    delete this.componentsById[component.id]; // Add the component the queue for backend cache garbage collection.
-
-    this.addComponentForCollection(component.id);
-  },
-  initializeGarbageCollection: function initializeGarbageCollection() {
-    if (!window.localStorage.hasOwnProperty(this.localStorageKey())) {
-      window.localStorage.setItem(this.localStorageKey(), '');
-    }
-  },
-  getComponentsForCollection: function getComponentsForCollection() {
-    var storedString = atob(window.localStorage.getItem(this.localStorageKey()));
-    if (storedString === '') return [];
-    return storedString.split(',');
-  },
-  addComponentForCollection: function addComponentForCollection(componentId) {
-    return window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().concat(componentId).join(',')));
-  },
-  setComponentsAsCollected: function setComponentsAsCollected(componentIds) {
-    window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().filter(function (id) {
-      return !componentIds.includes(id);
-    }).join(',')));
-  },
-  localStorageKey: function localStorageKey() {
-    return 'livewire';
+    delete this.componentsById[component.id];
   }
 };
 /* harmony default export */ __webpack_exports__["default"] = (store);
@@ -5250,7 +5224,6 @@ function () {
     this.onLoadCallback = function () {};
 
     this.activatePolyfills();
-    this.components.initializeGarbageCollection();
   }
 
   _createClass(Livewire, [{
@@ -5312,9 +5285,7 @@ function () {
         _this.components.addComponent(new _Component_index__WEBPACK_IMPORTED_MODULE_2__["default"](el, _this.connection));
       });
       this.onLoadCallback();
-      Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:load'); // This is very important for garbage collecting components
-      // on the backend.
-
+      Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:load');
       window.addEventListener('beforeunload', function () {
         _this.components.tearDownComponents();
       });

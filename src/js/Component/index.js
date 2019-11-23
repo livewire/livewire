@@ -147,7 +147,6 @@ export default class Component {
         this.checksum = response.checksum
         this.children = response.children
         this.errorBag = response.errorBag
-        store.setComponentsAsCollected(response.gc)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.redirectTo) {
