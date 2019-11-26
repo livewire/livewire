@@ -20,6 +20,14 @@ class RedirectTest extends TestCase
     }
 
     /** @test */
+    public function standard_redirect_on_mount()
+    {
+        $component = app(LivewireManager::class)->test(TriggersRedirectOnMountStub::class);
+
+        $this->assertEquals('/local', $component->redirectTo);
+    }
+
+    /** @test */
     public function route_redirect()
     {
         $this->registerNamedRoute();
@@ -135,6 +143,19 @@ class TriggersRedirectStub extends Component
     public function triggerRedirectHelperUsingRoute()
     {
         return redirect()->route('foo');
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class TriggersRedirectOnMountStub extends Component
+{
+    public function mount()
+    {
+        $this->redirect('/local');
     }
 
     public function render()

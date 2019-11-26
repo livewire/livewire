@@ -113,6 +113,10 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerHydrationMiddleware()
     {
+        Livewire::registerInitialHydrationMiddleware([
+            [InterceptRedirects::class, 'hydrate'],
+        ]);
+
         Livewire::registerInitialDehydrationMiddleware([
             [PersistErrorBag::class, 'dehydrate'],
             [RegisterEventsBeingListenedFor::class, 'dehydrate'],
@@ -121,6 +125,7 @@ class LivewireServiceProvider extends ServiceProvider
             [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
             [SecureHydrationWithChecksum::class, 'dehydrate'],
             [IncludeIdAsRootTagAttribute::class, 'dehydrate'],
+            [InterceptRedirects::class, 'dehydrate'],
         ]);
 
         Livewire::registerHydrationMiddleware([

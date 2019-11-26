@@ -51,6 +51,7 @@ class TestableLivewire
         $this->eventQueue = $output->eventQueue;
         $this->errorBag = $output->errorBag;
         $this->checksum = $output->checksum;
+        $this->redirectTo = $output->redirectTo;
     }
 
     public function updateComponent($response)

@@ -17,6 +17,7 @@ class LivewireManager
     protected $prefix = 'wire';
     protected $componentAliases = [];
     protected $hydrationMiddleware = [];
+    protected $initialHydrationMiddleware = [];
     protected $initialDehydrationMiddleware = [];
     protected $customComponentResolver;
     protected $container;
@@ -81,6 +82,8 @@ class LivewireManager
         $id = Str::random(20);
 
         $instance = $this->activate($name, $id);
+
+        $this->initialHydrate($instance, []);
 
         $parameters = $this->resolveClassMethodDependencies(
             $options, $instance, 'mount'
@@ -222,6 +225,11 @@ HTML;
         $this->hydrationMiddleware += $classes;
     }
 
+    public function registerInitialHydrationMiddleware(array $callables)
+    {
+        $this->initialHydrationMiddleware += $callables;
+    }
+
     public function registerInitialDehydrationMiddleware(array $callables)
     {
         $this->initialDehydrationMiddleware += $callables;
@@ -231,6 +239,13 @@ HTML;
     {
         foreach ($this->hydrationMiddleware as $class) {
             $class::hydrate($instance, $request);
+        }
+    }
+
+    public function initialHydrate($instance, $request)
+    {
+        foreach ($this->initialHydrationMiddleware as $callable) {
+            $callable($instance, $request);
         }
     }
 

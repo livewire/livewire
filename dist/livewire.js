@@ -1755,6 +1755,7 @@ function () {
     this.checksum = initialData.checksum || '';
     this.name = initialData.name || '';
     this.errorBag = initialData.errorBag || {};
+    this.redirectTo = initialData.redirectTo || false;
     this.scopedListeners = new _MessageBus__WEBPACK_IMPORTED_MODULE_11__["default"](), this.connection = connection;
     this.actionQueue = [];
     this.messageInTransit = null;
@@ -1764,6 +1765,11 @@ function () {
     _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('componentInitialized', this);
     this.initialize();
     this.registerEchoListeners();
+
+    if (this.redirectTo) {
+      this.redirect(this.redirectTo);
+      return;
+    }
   }
 
   _createClass(Component, [{
@@ -1870,7 +1876,7 @@ function () {
       this.errorBag = response.errorBag; // This means "$this->redirect()" was called in the component. let's just bail and redirect.
 
       if (response.redirectTo) {
-        window.location.href = response.redirectTo;
+        this.redirect(response.redirectTo);
         return;
       }
 
@@ -1887,6 +1893,11 @@ function () {
           _Store__WEBPACK_IMPORTED_MODULE_7__["default"].emit.apply(_Store__WEBPACK_IMPORTED_MODULE_7__["default"], [event.event].concat(_toConsumableArray(event.params)));
         });
       }
+    }
+  }, {
+    key: "redirect",
+    value: function redirect(url) {
+      window.location.href = url;
     }
   }, {
     key: "forceRefreshDataBoundElementsMarkedAsDirty",

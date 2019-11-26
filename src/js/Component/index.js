@@ -22,6 +22,7 @@ export default class Component {
         this.checksum = initialData.checksum || ''
         this.name = initialData.name || ''
         this.errorBag = initialData.errorBag || {}
+        this.redirectTo = initialData.redirectTo || false
         this.scopedListeners = new MessageBus,
         this.connection = connection
         this.actionQueue = []
@@ -35,6 +36,12 @@ export default class Component {
         this.initialize()
 
         this.registerEchoListeners()
+
+        if (this.redirectTo) {
+            this.redirect(this.redirectTo)
+
+            return
+        }
     }
 
     get el() {
@@ -150,7 +157,8 @@ export default class Component {
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.redirectTo) {
-            window.location.href = response.redirectTo
+            this.redirect(response.redirectTo)
+
             return
         }
 
@@ -166,6 +174,10 @@ export default class Component {
                 store.emit(event.event, ...event.params)
             })
         }
+    }
+
+    redirect(url) {
+        window.location.href = url
     }
 
     forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
