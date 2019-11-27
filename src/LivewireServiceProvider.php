@@ -53,7 +53,7 @@ class LivewireServiceProvider extends ServiceProvider
 
         $this->app->instance(LivewireComponentsFinder::class, new LivewireComponentsFinder(
             new Filesystem,
-            app()->bootstrapPath('cache/livewire-components.php'),
+            config('livewire.manifest_path', app()->bootstrapPath('cache/livewire-components.php')),
             ComponentParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
         ));
 
