@@ -54,5 +54,7 @@ return [
     */
 
     'middleware_group'  => 'web',
+    
+    'manifest_path' => env('LIVEWIRE_MANIFEST_PATH'),
 
 ];
