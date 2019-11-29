@@ -55,6 +55,20 @@ return [
 
     'middleware_group'  => 'web',
     
-    'manifest_path' => env('LIVEWIRE_MANIFEST_PATH'),
+    /*
+    |--------------------------------------------------------------------------
+    | Manifest File Path
+    |--------------------------------------------------------------------------
+    |
+    | This value sets the path to Livewire manifest file path.
+    | The default should work for most cases (which is 
+    | "<app_root>/bootstrap/cache/livewire-components.php)", but for specific 
+    | cases like when hosting on Laravel Vapor, it could be set to a different value.
+    |
+    | Example: For Laravel Vapor, it would be "/tmp/storage/bootstrap/cache/livewire-components.php"
+    |
+    */
+    
+    'manifest_path' => null,
 
 ];
