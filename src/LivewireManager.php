@@ -164,7 +164,8 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
-        $appUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
+        $assetUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
+        $appUrl = config('livewire.app_url', $assetUrl);
 
         $csrf = csrf_token();
 
@@ -172,14 +173,14 @@ HTML;
         $versionedFileName = $manifest[$jsFileName];
 
         // Default to dynamic `livewire.js` (served by a Laravel route).
-        $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
+        $fullAssetPath = "{$assetUrl}/livewire{$versionedFileName}";
         $assetWarning = null;
 
         // Use static assets if they have been published
         if (file_exists(public_path('vendor/livewire'))) {
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/mix-manifest.json')), true);
             $versionedFileName = $publishedManifest[$jsFileName];
-            $fullAssetPath = "{$appUrl}/vendor/livewire{$versionedFileName}";
+            $fullAssetPath = "{$assetUrl}/vendor/livewire{$versionedFileName}";
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
