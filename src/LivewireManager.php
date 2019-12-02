@@ -3,7 +3,6 @@
 namespace Livewire;
 
 use Exception;
-use Illuminate\Routing\RouteDependencyResolverTrait;
 use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
 use Livewire\Exceptions\ComponentNotFoundException;
@@ -12,7 +11,7 @@ use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
-    use RouteDependencyResolverTrait;
+    use DependencyResolverTrait;
 
     protected $prefix = 'wire';
     protected $componentAliases = [];
