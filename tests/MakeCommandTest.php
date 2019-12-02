@@ -70,9 +70,9 @@ class MakeCommandTest extends TestCase
         Artisan::call('make:livewire foo --stub=modal');
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
-        $this->assertContains('// comment', File::get($this->livewireClassesPath('Foo.php')));
+        $this->assertStringContainsString('// comment', File::get($this->livewireClassesPath('Foo.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
-        $this->assertContains('Modal Test', File::get($this->livewireViewsPath('foo.blade.php')));
+        $this->assertStringContainsString('Modal Test', File::get($this->livewireViewsPath('foo.blade.php')));
     }
 
     /** @test */
@@ -84,8 +84,8 @@ class MakeCommandTest extends TestCase
         Artisan::call('make:livewire foo');
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
-        $this->assertContains('// comment default', File::get($this->livewireClassesPath('Foo.php')));
+        $this->assertStringContainsString('// comment default', File::get($this->livewireClassesPath('Foo.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
-        $this->assertContains('Default Test', File::get($this->livewireViewsPath('foo.blade.php')));
+        $this->assertStringContainsString('Default Test', File::get($this->livewireViewsPath('foo.blade.php')));
     }
 }
