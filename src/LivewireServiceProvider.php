@@ -24,6 +24,7 @@ use Livewire\Commands\MoveCommand;
 use Livewire\Commands\MvCommand;
 use Livewire\Commands\RmCommand;
 use Livewire\Commands\TouchCommand;
+use Livewire\Commands\StubCommand;
 use Livewire\Connection\HttpConnectionHandler;
 use Livewire\Exceptions\BypassViewHandler;
 use Livewire\HydrationMiddleware\ClearFlashMessagesIfNotRedirectingAway;
@@ -172,6 +173,7 @@ class LivewireServiceProvider extends ServiceProvider
                 MvCommand::class,
                 RmCommand::class,
                 TouchCommand::class,
+                StubCommand::class,
             ]);
         }
     }
