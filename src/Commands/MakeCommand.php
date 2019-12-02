@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class MakeCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:make {name} {--force}';
+    protected $signature = 'livewire:make {name} {--force} {--stub=default}';
 
     protected $description = 'Create a new Livewire component.';
 
@@ -15,7 +15,8 @@ class MakeCommand extends FileManipulationCommand
         $this->parser = new ComponentParser(
             config('livewire.class_namespace', 'App\\Http\\Livewire'),
             config('livewire.view_path', resource_path('views/livewire')),
-            $this->argument('name')
+            $this->argument('name'),
+            $this->option('stub')
         );
 
         $force = $this->option('force');
