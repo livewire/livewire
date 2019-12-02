@@ -153,6 +153,17 @@ test('remove element attribute while loading', async () => {
     })
 })
 
+test('add element attribute AND class while loading', async () => {
+    mount('<button wire:click="onClick"></button><span wire:loading.attr="disabled" wire:loading.class="foo"></span>')
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('span').hasAttribute('disabled')).toBeTruthy()
+        expect(document.querySelector('span').classList.contains('foo')).toBeTruthy()
+    })
+})
+
 test('remove element reference from components generic loading array', async () => {
     let componentReference
     mountAndReturn(
