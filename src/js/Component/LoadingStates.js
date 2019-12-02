@@ -11,8 +11,24 @@ export default function () {
         if (el.directives.missing('loading')) return
         const directive = el.directives.get('loading')
 
-        const actionNames = el.directives.get('target')
-            && el.directives.get('target').value.split(',').map(s => s.trim())
+        var actionNames = false
+
+        if (el.directives.get('target')) {
+            // wire:target overrides any automatic loading scoping we do.
+            actionNames = el.directives.get('target').value.split(',').map(s => s.trim())
+        } else {
+            // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
+            // and automatically scope this loading directive to that action.
+            const nonActionLivewireDirectives = ['init', 'model', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore']
+
+            actionNames = el.directives
+                .all()
+                .filter(i => ! nonActionLivewireDirectives.includes(i.type))
+                .map(i => i.value)
+
+            // If we found nothing, just set the loading directive to the global component. (run on every request)
+            if (actionNames.length < 1) actionNames = false
+        }
 
         addLoadingEl(
             component,

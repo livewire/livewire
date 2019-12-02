@@ -2868,9 +2868,26 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementInitialized', function (el, component) {
     if (el.directives.missing('loading')) return;
     var directive = el.directives.get('loading');
-    var actionNames = el.directives.get('target') && el.directives.get('target').value.split(',').map(function (s) {
-      return s.trim();
-    });
+    var actionNames = false;
+
+    if (el.directives.get('target')) {
+      // wire:target overrides any automatic loading scoping we do.
+      actionNames = el.directives.get('target').value.split(',').map(function (s) {
+        return s.trim();
+      });
+    } else {
+      // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
+      // and automatically scope this loading directive to that action.
+      var nonActionLivewireDirectives = ['init', 'model', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore'];
+      actionNames = el.directives.all().filter(function (i) {
+        return !nonActionLivewireDirectives.includes(i.type);
+      }).map(function (i) {
+        return i.value;
+      }); // If we found nothing, just set the loading directive to the global component. (run on every request)
+
+      if (actionNames.length < 1) actionNames = false;
+    }
+
     addLoadingEl(component, el, directive.value, actionNames, directive.modifiers.includes('remove'));
   });
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageSent', function (component, message) {
