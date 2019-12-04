@@ -1869,7 +1869,6 @@ function () {
     value: function handleResponse(response) {
       var _this2 = this;
 
-      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', this, response);
       this.data = response.data;
       this.checksum = response.checksum;
       this.children = response.children;
@@ -1880,6 +1879,7 @@ function () {
         return;
       }
 
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', this, response);
       this.replaceDom(response.dom, response.dirtyInputs);
       this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs);
       this.messageInTransit = null;

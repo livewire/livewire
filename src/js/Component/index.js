@@ -148,8 +148,6 @@ export default class Component {
     }
 
     handleResponse(response) {
-        store.callHook('responseReceived', this, response)
-
         this.data = response.data
         this.checksum = response.checksum
         this.children = response.children
@@ -161,6 +159,8 @@ export default class Component {
 
             return
         }
+
+        store.callHook('responseReceived', this, response)
 
         this.replaceDom(response.dom, response.dirtyInputs)
 
