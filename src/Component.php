@@ -4,13 +4,17 @@ namespace Livewire;
 
 use BadMethodCallException;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\View\View;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 abstract class Component
 {
-    use Concerns\ValidatesInput,
+    use Macroable { __call as macroCall; }
+
+    use
+        Concerns\ValidatesInput,
         Concerns\DetectsDirtyProperties,
         Concerns\HandlesActions,
         Concerns\PerformsRedirects,
@@ -190,6 +194,10 @@ abstract class Component
         ) {
             // Eat calls to the lifecycle hooks if the dev didn't define them.
             return;
+        }
+
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $params);
         }
 
         throw new BadMethodCallException(sprintf(
