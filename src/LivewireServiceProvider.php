@@ -110,6 +110,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
         $this->registerPublishables();
+        $this->registerViewCompilerEngine();
     }
 
     public function registerHydrationMiddleware()
@@ -223,5 +224,12 @@ class LivewireServiceProvider extends ServiceProvider
         foreach ((array) $groups as $group) {
             $this->publishes($paths, $group);
         }
+    }
+
+    protected function registerViewCompilerEngine()
+    {
+        $this->app->make('view.engine.resolver')->register('blade', function () {
+            return new LivewireViewCompilerEngine($this->app['blade.compiler']);
+        });
     }
 }
