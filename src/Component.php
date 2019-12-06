@@ -199,7 +199,7 @@ abstract class Component
 
     public function __get($property)
     {
-        if (method_exists($this, $computedMethodName = 'computed'.ucfirst($property))) {
+        if (method_exists($this, $computedMethodName = 'get'.ucfirst($property).'Property')) {
             if (isset($this->computedPropertyCache[$property])) {
                 return $this->computedPropertyCache[$property];
             } else {

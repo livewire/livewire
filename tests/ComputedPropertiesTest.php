@@ -26,7 +26,7 @@ class ComputedPropertyStub extends Component
 {
     public $upperCasedFoo = 'FOO';
 
-    public function computedFoo()
+    public function getFooProperty()
     {
         return strtolower($this->upperCasedFoo);
     }
@@ -41,7 +41,7 @@ class MemoizedComputedPropertyStub extends Component
 {
     public $count = 1;
 
-    public function computedFoo()
+    public function getFooProperty()
     {
         return $this->count += 1;
     }
