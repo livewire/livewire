@@ -2,11 +2,10 @@
 
 namespace Livewire;
 
-use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
-use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\View\View;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 abstract class Component
@@ -80,6 +79,14 @@ abstract class Component
 
     public function output($errors = null)
     {
+        // In the service provider, we hijack Laravel's Blade engine
+        // with our own. However, we only want Livewire hijackings,
+        // while we're rendering Livewire components. So we'll
+        // activate it here, and deactivate it at the end
+        // of this method.
+        $engine = app('view.engine.resolver')->resolve('blade');
+        $engine->startLivewireRendering($this);
+
         $view = $this->render();
 
         // Normalize all the public properties in the component for JavaScript.
@@ -92,8 +99,6 @@ abstract class Component
             $errorBag = $errors ?: ($view->errors ?: $this->getErrorBag())
         );
 
-        app('view.engine.resolver')->resolve('blade')->setLivewireComponent($this);
-
         $view
             ->with([
                 'errors' => (new ViewErrorBag)->put('default', $errorBag),
@@ -102,9 +107,11 @@ abstract class Component
             // Automatically inject all public properties into the blade view.
             ->with($this->getPublicPropertiesDefinedBySubClass());
 
-        // Render the view with a Livewire-specific Blade compiler.
+        $output = $view->render();
 
-        return (new LivewireViewCompiler($view))();
+        $engine->endLivewireRendering();
+
+        return $output;
     }
 
     public function normalizePublicPropertiesForJavaScript()
