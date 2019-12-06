@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class StubCommand extends Command
 {
 
-    protected $signature = 'livewire:stub {name}';
+    protected $signature = 'livewire:stub {name=default}';
 
     protected $description = 'Create Livewire stubs.';
 
