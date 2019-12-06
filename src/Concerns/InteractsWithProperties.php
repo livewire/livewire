@@ -8,6 +8,8 @@ use Livewire\Exceptions\ProtectedPropertyBindingException;
 
 trait InteractsWithProperties
 {
+    protected $casts = [];
+
     public function getPublicPropertiesDefinedBySubClass()
     {
         $publicProperties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PUBLIC);
@@ -78,7 +80,7 @@ trait InteractsWithProperties
 
     public function castValue($propertyName, $value)
     {
-        $casts = $this->casts ?? [];
+        $casts = $this->casts;
 
         if (! isset($casts[$propertyName])) return $value;
 

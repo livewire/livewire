@@ -22,6 +22,7 @@ abstract class Component
     protected $lifecycleHooks = [
         'mount', 'hydrate', 'updating', 'updated',
     ];
+    protected $computedPropertyCache = [];
 
     public function __construct($id)
     {
@@ -129,7 +130,7 @@ abstract class Component
     public function castDataFromUserDefinedCasters($data)
     {
         $dataCaster = new DataCaster;
-        $casts = $this->casts ?? [];
+        $casts = $this->casts;
 
         return collect($data)->map(function ($value, $key) use ($casts, $dataCaster) {
             if (isset($casts[$key])) {
@@ -194,5 +195,18 @@ abstract class Component
         throw new BadMethodCallException(sprintf(
             'Method %s::%s does not exist.', static::class, $method
         ));
+    }
+
+    public function __get($property)
+    {
+        if (method_exists($this, $computedMethodName = 'computed'.ucfirst($property))) {
+            if (isset($this->computedPropertyCache[$property])) {
+                return $this->computedPropertyCache[$property];
+            } else {
+                return $this->computedPropertyCache[$property] = $this->$computedMethodName();
+            }
+        }
+
+        throw new \Exception("Property [{$property}] does not exist on the Component instance.");
     }
 }

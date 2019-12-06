@@ -5,6 +5,7 @@ namespace Livewire\Concerns;
 trait ReceivesEvents
 {
     protected $eventQueue = [];
+    protected $listeners = [];
 
     public function emit($event, ...$params)
     {
