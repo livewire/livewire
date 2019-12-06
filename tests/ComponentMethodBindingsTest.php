@@ -47,13 +47,15 @@ class ModelToBeBoundStub
 
 class ComponentWithBindings extends Component
 {
+    public $name;
+
     public function mount(ModelToBeBoundStub $stub, $param = '')
     {
-        $this->value = $stub->value.$param;
+        $this->name = $stub->value.$param;
     }
 
     public function render()
     {
-        return app('view')->make('show-name')->with('name', $this->value);
+        return app('view')->make('show-name');
     }
 }

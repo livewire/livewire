@@ -81,11 +81,11 @@ class NestingComponentsTest extends TestCase
 
 class ParentComponentForNestingChildStub extends Component
 {
-    public $child = 'foo';
-
     public function render()
     {
-        return app('view')->make('show-child');
+        return app('view')->make('show-child', [
+            'child' => 'foo',
+        ]);
     }
 }
 
@@ -100,7 +100,9 @@ class ParentComponentForNestingChildrenStub extends Component
 
     public function render()
     {
-        return app('view')->make('show-children');
+        return app('view')->make('show-children', [
+            'children' => $this->children,
+        ]);
     }
 }
 
