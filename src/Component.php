@@ -109,13 +109,31 @@ abstract class Component
     {
         $normalizedProperties = $this->castDataToJavaScriptReadableTypes(
             $this->reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder(
-                $this->getPublicPropertiesDefinedBySubClass()
+                $this->castDataFromUserDefinedCasters(
+                    $this->getPublicPropertiesDefinedBySubClass()
+                )
             )
         );
 
         foreach ($normalizedProperties as $key => $value) {
             $this->setPropertyValue($key, $value);
         }
+    }
+
+    public function castDataFromUserDefinedCasters($data)
+    {
+        $dataCaster = new DataCaster;
+        $casts = $this->casts ?? [];
+
+        return collect($data)->map(function ($value, $key) use ($casts, $dataCaster) {
+            if (isset($casts[$key])) {
+                $type = $casts[$key];
+
+                return $dataCaster->castFrom($type, $value);
+            } else {
+                return $value;
+            }
+        })->all();
     }
 
     protected function reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($data)
