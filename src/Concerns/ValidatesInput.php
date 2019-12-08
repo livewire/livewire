@@ -2,13 +2,12 @@
 
 namespace Livewire\Concerns;
 
-use Illuminate\Mail\Message;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\MessageBag;
-use Illuminate\Support\ViewErrorBag;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Livewire\ObjectPrybar;
+use Livewire\Routing\Redirector;
 
 trait ValidatesInput
 {
@@ -49,7 +48,25 @@ trait ValidatesInput
 
     public function validate($rules, $messages = [], $attributes = [])
     {
-        $fields = array_keys($rules);
+        if (is_string($rules)) {
+            return $this
+                ->createFormRequestInstance($rules)
+                ->validateForLivewire();
+        }
+
+        return $this->validateWithValidator(
+            Validator::make(
+                $this->getPublicPropertiesDefinedBySubClass(),
+                Arr::only($rules, array_keys($rules)),
+                $messages,
+                $attributes
+            )
+        );
+    }
+
+    public function validateWithValidator($validator)
+    {
+        $fields = array_keys($validator->getRules());
 
         $result = $this->getPublicPropertiesDefinedBySubClass();
 
@@ -65,17 +82,36 @@ trait ValidatesInput
                 = $this->getPropertyValue($propertyNameFromValidationField);
         }
 
-        $result = Validator::make($result, Arr::only($rules, $fields), $messages, $attributes)
-            ->validate();
+        if ($validator->fails()) {
+            $this->setErrorBag($validator->errors());
+        } else {
+            // If the code made it this far, validation passed, so we can clear old failures.
+            $this->resetErrorBag();
+        }
 
-        // If the code made it this far, validation passed, so we can clear old failures.
-        $this->resetErrorBag();
-
-        return $result;
+        return $validator->validate();
     }
 
     public function validateOnly($field, $rules, $messages = [], $attributes = [])
     {
+        if (is_string($rules)) {
+            return $this
+                ->createFormRequestInstance($rules)
+                ->validateOnlyForLivewire($field);
+        }
+
+        return $this->validateOnlyWithValidator(
+            Validator::make(
+                $this->getPublicPropertiesDefinedBySubClass(),
+                Arr::only($rules, $field),
+                $messages,
+                $attributes
+            ),
+            $field
+        );
+    }
+
+    public function validateOnlyWithValidator($validator, $field) {
         $result = $this->getPublicPropertiesDefinedBySubClass();
 
         throw_unless(
@@ -89,8 +125,7 @@ trait ValidatesInput
             = $this->getPropertyValue($propertyNameFromValidationField);
 
         try {
-            $result = Validator::make($result, Arr::only($rules, $field), $messages, $attributes)
-                ->validate();
+            $result = $validator->validate();
         } catch (ValidationException $e) {
             $messages = $e->validator->getMessageBag();
             $target = new ObjectPrybar($e->validator);
@@ -109,5 +144,15 @@ trait ValidatesInput
         $this->resetErrorBag($field);
 
         return $result;
+    }
+
+    protected function createFormRequestInstance($class)
+    {
+        $formRequest = new $class();
+        $formRequest->setContainer(app());
+        $formRequest->setRedirector(app()->make(Redirector::class));
+        $formRequest->setComponent($this);
+
+        return $formRequest;
     }
 }
