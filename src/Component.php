@@ -27,10 +27,12 @@ abstract class Component
         'mount', 'hydrate', 'updating', 'updated',
     ];
     protected $computedPropertyCache = [];
+    protected $initialPublicProperties = [];
 
     public function __construct($id)
     {
         $this->id = $id;
+        $this->initialPublicProperties = $this->getPublicPropertiesDefinedBySubClass();
         $this->initializeTraits();
     }
 

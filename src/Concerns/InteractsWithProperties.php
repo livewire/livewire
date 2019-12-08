@@ -120,4 +120,11 @@ trait InteractsWithProperties
             ->pluck('name')
             ->search($propertyName) !== false;
     }
+
+    public function resetPublicProperties()
+    {
+        foreach ($this->initialPublicProperties as $key => $value) {
+            $this->{$key} = $value;
+        }
+    }
 }
