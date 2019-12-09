@@ -15,14 +15,14 @@ class DataCaster
     {
         $this->ensureTypeExists($type);
 
-        return $this->runCasterHydrate($type, $value);
+        return $this->runCasterCast($type, $value);
     }
 
     public function castFrom($type, $value)
     {
         $this->ensureTypeExists($type);
 
-        return $this->runCasterDehydrate($type, $value);
+        return $this->runCasterUncast($type, $value);
     }
 
     public function ensureTypeExists($type)
@@ -35,40 +35,40 @@ class DataCaster
         );
     }
 
-    public function runCasterHydrate($type, $value)
+    public function runCasterCast($type, $value)
     {
         if (isset($this->casters[$type])) {
-            return $this->casters[$type]['hydrate']($value);
+            return $this->casters[$type]['cast']($value);
         }
 
-        return (new $type)->hydrate($value);
+        return (new $type)->cast($value);
     }
 
-    public function runCasterDehydrate($type, $value)
+    public function runCasterUncast($type, $value)
     {
         if (isset($this->casters[$type])) {
-            return $this->casters[$type]['dehydrate']($value);
+            return $this->casters[$type]['uncast']($value);
         }
 
-        return (new $type)->dehydrate($value);
+        return (new $type)->uncast($value);
     }
 
     public function getCasters()
     {
         return [
             'date' => [
-                'hydrate' => function ($value) {
+                'cast' => function ($value) {
                     return \Carbon\Carbon::parse($value);
                 },
-                'dehydrate' => function ($value) {
+                'uncast' => function ($value) {
                     return $value->toString();
                 },
             ],
             'collection' => [
-                'hydrate' => function ($value) {
+                'cast' => function ($value) {
                     return collect($value);
                 },
-                'dehydrate' => function ($value) {
+                'uncast' => function ($value) {
                     return $value->toArray();
                 },
             ],

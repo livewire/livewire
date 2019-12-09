@@ -2,8 +2,9 @@
 
 namespace Tests;
 
-use Livewire\Livewire;
+use Livewire\Castable;
 use Livewire\Component;
+use Livewire\Livewire;
 
 class PublicPropertyCastersTest extends TestCase
 {
@@ -18,13 +19,13 @@ class PublicPropertyCastersTest extends TestCase
     }
 }
 
-class AllCapsCaster {
-    public function hydrate($value)
+class AllCapsCaster implements Castable {
+    public function cast($value)
     {
         return strtoupper($value);
     }
 
-    public function dehydrate($value)
+    public function uncast($value)
     {
         return strtolower($value);
     }
