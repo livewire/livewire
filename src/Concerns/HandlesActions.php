@@ -85,6 +85,11 @@ trait HandlesActions
     {
         return collect((new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC))
             ->reject(function ($method) {
+                // The "render" method is a special case. This method might be called by event listeners or other ways.
+                if ($method === 'render') {
+                    return false;
+                }
+
                 return $method->class === self::class;
             })
             ->pluck('name')
