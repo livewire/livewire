@@ -3,7 +3,6 @@
 namespace Livewire;
 
 use Exception;
-use Illuminate\Routing\RouteDependencyResolverTrait;
 use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
 use Livewire\Exceptions\ComponentNotFoundException;
@@ -12,11 +11,12 @@ use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
-    use RouteDependencyResolverTrait;
+    use DependencyResolverTrait;
 
     protected $prefix = 'wire';
     protected $componentAliases = [];
     protected $hydrationMiddleware = [];
+    protected $initialHydrationMiddleware = [];
     protected $initialDehydrationMiddleware = [];
     protected $customComponentResolver;
     protected $container;
@@ -82,6 +82,8 @@ class LivewireManager
 
         $instance = $this->activate($name, $id);
 
+        $this->initialHydrate($instance, []);
+
         $parameters = $this->resolveClassMethodDependencies(
             $options, $instance, 'mount'
         );
@@ -99,7 +101,7 @@ class LivewireManager
         $this->initialDehydrate($instance, $response);
 
         $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
-            'initial-data' => $response->toArray(),
+            'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
         ]);
 
         return $response;
@@ -222,6 +224,11 @@ HTML;
         $this->hydrationMiddleware += $classes;
     }
 
+    public function registerInitialHydrationMiddleware(array $callables)
+    {
+        $this->initialHydrationMiddleware += $callables;
+    }
+
     public function registerInitialDehydrationMiddleware(array $callables)
     {
         $this->initialDehydrationMiddleware += $callables;
@@ -231,6 +238,13 @@ HTML;
     {
         foreach ($this->hydrationMiddleware as $class) {
             $class::hydrate($instance, $request);
+        }
+    }
+
+    public function initialHydrate($instance, $request)
+    {
+        foreach ($this->initialHydrationMiddleware as $callable) {
+            $callable($instance, $request);
         }
     }
 

@@ -3,8 +3,8 @@ import store from '@/Store'
 
 export default function () {
     store.registerHook('componentInitialized', component => {
-        component.dirtyElsByRef = {}
-        component.dirtyEls = []
+        component.targetedDirtyElsByProperty = {}
+        component.genericDirtyEls = []
 
         registerListener(component)
     })
@@ -12,28 +12,44 @@ export default function () {
     store.registerHook('elementInitialized', (el, component) => {
         if (el.directives.missing('dirty')) return
 
-        const refNames = el.directives.has('target')
+        const propertyNames = el.directives.has('target')
             && el.directives.get('target').value.split(',').map(s => s.trim())
 
         addDirtyEls(
             component,
             el,
-            refNames,
+            propertyNames,
         )
+    })
+
+    store.registerHook('elementRemoved', (el, component) => {
+        // Look through the targeted elements to remove.
+        Object.keys(component.targetedDirtyElsByProperty).forEach(key => {
+            component.targetedDirtyElsByProperty[key] = component.targetedDirtyElsByProperty[key].filter(element => {
+                return ! element.isSameNode(el)
+            })
+        })
+
+        // Look through the global/generic elements for the element to remove.
+        component.genericDirtyEls.forEach((element, index) => {
+            if (element.isSameNode(el)) {
+                component.genericDirtyEls.splice(index, 1)
+            }
+        })
     })
 }
 
-function addDirtyEls(component, el, targetRefs) {
-        if (targetRefs) {
-            targetRefs.forEach(targetRef => {
-                if (component.dirtyElsByRef[targetRef]) {
-                    component.dirtyElsByRef[targetRef].push(el)
+function addDirtyEls(component, el, targetProperties) {
+        if (targetProperties) {
+            targetProperties.forEach(targetProperty => {
+                if (component.targetedDirtyElsByProperty[targetProperty]) {
+                    component.targetedDirtyElsByProperty[targetProperty].push(el)
                 } else {
-                    component.dirtyElsByRef[targetRef] = [el]
+                    component.targetedDirtyElsByProperty[targetProperty] = [el]
                 }
             })
         } else {
-            component.dirtyEls.push(el)
+            component.genericDirtyEls.push(el)
         }
     }
 
@@ -43,12 +59,12 @@ function registerListener(component) {
 
         let allEls = []
 
-        if (el.directives.has('ref') && component.dirtyElsByRef[el.directives.get('ref').value]) {
-            allEls.push(...component.dirtyElsByRef[el.directives.get('ref').value])
+        if (el.directives.has('model') && component.targetedDirtyElsByProperty[el.directives.get('model').value]) {
+            allEls.push(...component.targetedDirtyElsByProperty[el.directives.get('model').value])
         }
 
         if (el.directives.has('dirty')) {
-            allEls.push(...component.dirtyEls.filter(dirtyEl => dirtyEl.directives.get('model').value === el.directives.get('model').value))
+            allEls.push(...component.genericDirtyEls.filter(dirtyEl => dirtyEl.directives.get('model').value === el.directives.get('model').value))
         }
 
         if (allEls.length < 1) return

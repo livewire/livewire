@@ -60,17 +60,21 @@ trait MakesCallsToComponent
 
     public function sendMessage($message, $payload)
     {
-        $result = (new TestConnectionHandler)
-            ->handle([
-                'id' => $this->id,
-                'name' => $this->name,
-                'data' => $this->data,
-                'children' => $this->children,
-                'checksum' => $this->checksum,
-                'errorBag' => $this->errorBag,
-                'gc' => $this->gc,
-                'actionQueue' => [['type' => $message, 'payload' => $payload]],
-            ]);
+        $handler = (new TestConnectionHandler);
+
+        $result = $handler->handle([
+            'id' => $this->id,
+            'name' => $this->componentName,
+            'data' => $this->data,
+            'children' => $this->children,
+            'checksum' => $this->checksum,
+            'errorBag' => $this->errorBag,
+            'actionQueue' => [['type' => $message, 'payload' => $payload]],
+        ]);
+
+        if ($validator = $handler->lastValidator) {
+            $this->lastValidator = $validator;
+        }
 
         $this->updateComponent($result);
     }

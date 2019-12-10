@@ -1709,7 +1709,7 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
@@ -1755,6 +1755,7 @@ function () {
     this.checksum = initialData.checksum || '';
     this.name = initialData.name || '';
     this.errorBag = initialData.errorBag || {};
+    this.redirectTo = initialData.redirectTo || false;
     this.scopedListeners = new _MessageBus__WEBPACK_IMPORTED_MODULE_11__["default"](), this.connection = connection;
     this.actionQueue = [];
     this.messageInTransit = null;
@@ -1764,6 +1765,11 @@ function () {
     _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('componentInitialized', this);
     this.initialize();
     this.registerEchoListeners();
+
+    if (this.redirectTo) {
+      this.redirect(this.redirectTo);
+      return;
+    }
   }
 
   _createClass(Component, [{
@@ -1863,18 +1869,17 @@ function () {
     value: function handleResponse(response) {
       var _this2 = this;
 
-      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', this, response);
       this.data = response.data;
       this.checksum = response.checksum;
       this.children = response.children;
-      this.errorBag = response.errorBag;
-      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].setComponentsAsCollected(response.gc); // This means "$this->redirect()" was called in the component. let's just bail and redirect.
+      this.errorBag = response.errorBag; // This means "$this->redirect()" was called in the component. let's just bail and redirect.
 
       if (response.redirectTo) {
-        window.location.href = response.redirectTo;
+        this.redirect(response.redirectTo);
         return;
       }
 
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', this, response);
       this.replaceDom(response.dom, response.dirtyInputs);
       this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs);
       this.messageInTransit = null;
@@ -1888,6 +1893,11 @@ function () {
           _Store__WEBPACK_IMPORTED_MODULE_7__["default"].emit.apply(_Store__WEBPACK_IMPORTED_MODULE_7__["default"], [event.event].concat(_toConsumableArray(event.params)));
         });
       }
+    }
+  }, {
+    key: "redirect",
+    value: function redirect(url) {
+      window.location.href = url;
     }
   }, {
     key: "forceRefreshDataBoundElementsMarkedAsDirty",
@@ -2221,8 +2231,7 @@ function () {
             type: action.type,
             payload: action.payload
           };
-        }),
-        gc: _Store__WEBPACK_IMPORTED_MODULE_0__["default"].getComponentsForCollection()
+        })
       };
 
       if (Object.keys(this.component.errorBag).length > 0) {
@@ -2244,7 +2253,6 @@ function () {
         events: payload.events,
         data: payload.data,
         redirectTo: payload.redirectTo,
-        gc: payload.gc,
         errorBag: payload.errorBag || {}
       };
     }
@@ -2288,7 +2296,7 @@ function () {
   function MessageBus() {
     _classCallCheck(this, MessageBus);
 
-    this.listeners = [];
+    this.listeners = {};
   }
 
   _createClass(MessageBus, [{
@@ -2335,7 +2343,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -2490,30 +2498,7 @@ var store = {
     // Remove event listeners attached to the DOM.
     component.tearDown(); // Remove the component from the store.
 
-    delete this.componentsById[component.id]; // Add the component the queue for backend cache garbage collection.
-
-    this.addComponentForCollection(component.id);
-  },
-  initializeGarbageCollection: function initializeGarbageCollection() {
-    if (!window.localStorage.hasOwnProperty(this.localStorageKey())) {
-      window.localStorage.setItem(this.localStorageKey(), '');
-    }
-  },
-  getComponentsForCollection: function getComponentsForCollection() {
-    var storedString = atob(window.localStorage.getItem(this.localStorageKey()));
-    if (storedString === '') return [];
-    return storedString.split(',');
-  },
-  addComponentForCollection: function addComponentForCollection(componentId) {
-    return window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().concat(componentId).join(',')));
-  },
-  setComponentsAsCollected: function setComponentsAsCollected(componentIds) {
-    window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().filter(function (id) {
-      return !componentIds.includes(id);
-    }).join(',')));
-  },
-  localStorageKey: function localStorageKey() {
-    return 'livewire';
+    delete this.componentsById[component.id];
   }
 };
 /* harmony default export */ __webpack_exports__["default"] = (store);
@@ -2758,30 +2743,44 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 /* harmony default export */ __webpack_exports__["default"] = (function () {
   _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('componentInitialized', function (component) {
-    component.dirtyElsByRef = {};
-    component.dirtyEls = [];
+    component.targetedDirtyElsByProperty = {};
+    component.genericDirtyEls = [];
     registerListener(component);
   });
   _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('elementInitialized', function (el, component) {
     if (el.directives.missing('dirty')) return;
-    var refNames = el.directives.has('target') && el.directives.get('target').value.split(',').map(function (s) {
+    var propertyNames = el.directives.has('target') && el.directives.get('target').value.split(',').map(function (s) {
       return s.trim();
     });
-    addDirtyEls(component, el, refNames);
+    addDirtyEls(component, el, propertyNames);
+  });
+  _Store__WEBPACK_IMPORTED_MODULE_1__["default"].registerHook('elementRemoved', function (el, component) {
+    // Look through the targeted elements to remove.
+    Object.keys(component.targetedDirtyElsByProperty).forEach(function (key) {
+      component.targetedDirtyElsByProperty[key] = component.targetedDirtyElsByProperty[key].filter(function (element) {
+        return !element.isSameNode(el);
+      });
+    }); // Look through the global/generic elements for the element to remove.
+
+    component.genericDirtyEls.forEach(function (element, index) {
+      if (element.isSameNode(el)) {
+        component.genericDirtyEls.splice(index, 1);
+      }
+    });
   });
 });
 
-function addDirtyEls(component, el, targetRefs) {
-  if (targetRefs) {
-    targetRefs.forEach(function (targetRef) {
-      if (component.dirtyElsByRef[targetRef]) {
-        component.dirtyElsByRef[targetRef].push(el);
+function addDirtyEls(component, el, targetProperties) {
+  if (targetProperties) {
+    targetProperties.forEach(function (targetProperty) {
+      if (component.targetedDirtyElsByProperty[targetProperty]) {
+        component.targetedDirtyElsByProperty[targetProperty].push(el);
       } else {
-        component.dirtyElsByRef[targetRef] = [el];
+        component.targetedDirtyElsByProperty[targetProperty] = [el];
       }
     });
   } else {
-    component.dirtyEls.push(el);
+    component.genericDirtyEls.push(el);
   }
 }
 
@@ -2790,12 +2789,12 @@ function registerListener(component) {
     var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_0__["default"](e.target);
     var allEls = [];
 
-    if (el.directives.has('ref') && component.dirtyElsByRef[el.directives.get('ref').value]) {
-      allEls.push.apply(allEls, _toConsumableArray(component.dirtyElsByRef[el.directives.get('ref').value]));
+    if (el.directives.has('model') && component.targetedDirtyElsByProperty[el.directives.get('model').value]) {
+      allEls.push.apply(allEls, _toConsumableArray(component.targetedDirtyElsByProperty[el.directives.get('model').value]));
     }
 
     if (el.directives.has('dirty')) {
-      allEls.push.apply(allEls, _toConsumableArray(component.dirtyEls.filter(function (dirtyEl) {
+      allEls.push.apply(allEls, _toConsumableArray(component.genericDirtyEls.filter(function (dirtyEl) {
         return dirtyEl.directives.get('model').value === el.directives.get('model').value;
       })));
     }
@@ -2862,20 +2861,26 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 /* harmony default export */ __webpack_exports__["default"] = (function () {
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('componentInitialized', function (component) {
-    component.loadingElsByRef = {};
-    component.loadingEls = [];
+    component.targetedLoadingElsByAction = {};
+    component.genericLoadingEls = [];
     component.currentlyActiveLoadingEls = [];
   });
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementInitialized', function (el, component) {
     if (el.directives.missing('loading')) return;
-    var directive = el.directives.get('loading');
-    var refNames = el.directives.get('target') && el.directives.get('target').value.split(',').map(function (s) {
-      return s.trim();
+    var loadingDirectives = el.directives.directives.filter(function (i) {
+      return i.type === 'loading';
     });
-    addLoadingEl(component, el, directive.value, refNames, directive.modifiers.includes('remove'));
+    loadingDirectives.forEach(function (directive) {
+      processLoadingDirective(component, el, directive);
+    });
   });
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageSent', function (component, message) {
-    setLoading(component, message.refs);
+    var actions = message.actionQueue.filter(function (action) {
+      return action.type === 'callMethod';
+    }).map(function (action) {
+      return action.payload.method;
+    });
+    setLoading(component, actions);
   });
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageFailed', function (component) {
     unsetLoading(component);
@@ -2888,52 +2893,79 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   });
 });
 
-function addLoadingEl(component, el, value, targetNames, remove) {
-  if (targetNames) {
-    targetNames.forEach(function (targetNames) {
-      if (component.loadingElsByRef[targetNames]) {
-        component.loadingElsByRef[targetNames].push({
+function processLoadingDirective(component, el, directive) {
+  var actionNames = false;
+
+  if (el.directives.get('target')) {
+    // wire:target overrides any automatic loading scoping we do.
+    actionNames = el.directives.get('target').value.split(',').map(function (s) {
+      return s.trim();
+    });
+  } else {
+    // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
+    // and automatically scope this loading directive to that action.
+    var nonActionLivewireDirectives = ['init', 'model', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore'];
+    actionNames = el.directives.all().filter(function (i) {
+      return !nonActionLivewireDirectives.includes(i.type);
+    }).map(function (i) {
+      return i.method;
+    }); // If we found nothing, just set the loading directive to the global component. (run on every request)
+
+    if (actionNames.length < 1) actionNames = false;
+  }
+
+  addLoadingEl(component, el, directive, actionNames);
+}
+
+function addLoadingEl(component, el, directive, actionsNames) {
+  if (actionsNames) {
+    actionsNames.forEach(function (actionsName) {
+      if (component.targetedLoadingElsByAction[actionsName]) {
+        component.targetedLoadingElsByAction[actionsName].push({
           el: el,
-          value: value,
-          remove: remove
+          directive: directive
         });
       } else {
-        component.loadingElsByRef[targetNames] = [{
+        component.targetedLoadingElsByAction[actionsName] = [{
           el: el,
-          value: value,
-          remove: remove
+          directive: directive
         }];
       }
     });
   } else {
-    component.loadingEls.push({
+    component.genericLoadingEls.push({
       el: el,
-      value: value,
-      remove: remove
+      directive: directive
     });
   }
 }
 
 function removeLoadingEl(component, el) {
-  component.loadingEls = component.loadingEls.filter(function (loadingEl) {
-    return !loadingEl.el.isSameNode(el);
-  });
+  // Look through the global/generic elements for the element to remove.
+  component.genericLoadingEls.forEach(function (element, index) {
+    if (element.el.isSameNode(el)) {
+      component.genericLoadingEls.splice(index, 1);
+    }
+  }); // Look through the targeted elements to remove.
 
-  if (el.ref in component.loadingElsByRef) {
-    delete component.loadingElsByRef[el.ref];
-  }
+  Object.keys(component.targetedLoadingElsByAction).forEach(function (key) {
+    component.targetedLoadingElsByAction[key] = component.targetedLoadingElsByAction[key].filter(function (element) {
+      return !element.el.isSameNode(el);
+    });
+  });
 }
 
-function setLoading(component, refs) {
-  var refEls = refs.map(function (ref) {
-    return component.loadingElsByRef[ref];
+function setLoading(component, actions) {
+  var actionTargetedEls = actions.map(function (action) {
+    return component.targetedLoadingElsByAction[action];
   }).filter(function (el) {
     return el;
   }).flat();
-  var allEls = component.loadingEls.concat(refEls);
-  allEls.forEach(function (el) {
-    var directive = el.el.directives.get('loading');
-    el = el.el.el; // I'm so sorry @todo
+  var allEls = component.genericLoadingEls.concat(actionTargetedEls);
+  allEls.forEach(function (_ref) {
+    var el = _ref.el,
+        directive = _ref.directive;
+    el = el.el; // I'm so sorry @todo
 
     if (directive.modifiers.includes('class')) {
       // This is because wire:loading.class="border border-red"
@@ -2963,9 +2995,10 @@ function setLoading(component, refs) {
 }
 
 function unsetLoading(component) {
-  component.currentlyActiveLoadingEls.forEach(function (el) {
-    var directive = el.el.directives.get('loading');
-    el = el.el.el; // I'm so sorry @todo
+  component.currentlyActiveLoadingEls.forEach(function (_ref2) {
+    var el = _ref2.el,
+        directive = _ref2.directive;
+    el = el.el; // I'm so sorry @todo
 
     if (directive.modifiers.includes('class')) {
       var classes = directive.value.split(' ');
@@ -2981,9 +3014,9 @@ function unsetLoading(component) {
       }
     } else if (directive.modifiers.includes('attr')) {
       if (directive.modifiers.includes('remove')) {
-        el.setAttribute(directive.value);
+        el.setAttribute(directive.value, true);
       } else {
-        el.removeAttribute(directive.value, true);
+        el.removeAttribute(directive.value);
       }
     } else {
       el.style.display = 'none';
@@ -3892,6 +3925,8 @@ function () {
   }, {
     key: "setInputValue",
     value: function setInputValue(value) {
+      var _this9 = this;
+
       if (this.rawNode().__vue__) {
         // If it's a vue component pass down the value prop.
         // Also, Vue will throw a warning because we are programmaticallly
@@ -3904,9 +3939,16 @@ function () {
         this.el.checked = this.el.value == value;
       } else if (this.el.type === 'checkbox') {
         if (Array.isArray(value)) {
-          if (value.includes(this.el.value)) {
-            this.el.checked = true;
-          }
+          // I'm purposely not using Array.includes here because it's
+          // strict, and because of Numeric/String mis-casting, I
+          // want the "includes" to be "fuzzy".
+          var valueFound = false;
+          value.forEach(function (val) {
+            if (val == _this9.el.value) {
+              valueFound = true;
+            }
+          });
+          this.el.checked = valueFound;
         } else {
           this.el.checked = !!value;
         }
@@ -5223,7 +5265,6 @@ function () {
     this.onLoadCallback = function () {};
 
     this.activatePolyfills();
-    this.components.initializeGarbageCollection();
   }
 
   _createClass(Livewire, [{
@@ -5285,9 +5326,7 @@ function () {
         _this.components.addComponent(new _Component_index__WEBPACK_IMPORTED_MODULE_2__["default"](el, _this.connection));
       });
       this.onLoadCallback();
-      Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:load'); // This is very important for garbage collecting components
-      // on the backend.
-
+      Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:load');
       window.addEventListener('beforeunload', function () {
         _this.components.tearDownComponents();
       });
@@ -5698,7 +5737,7 @@ function walk(root, callback) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! W:\projects\open-source\livewire\src\js\index.js */"./src/js/index.js");
+module.exports = __webpack_require__(/*! /Users/calebporzio/Documents/Code/sites/livewire/src/js/index.js */"./src/js/index.js");
 
 
 /***/ })

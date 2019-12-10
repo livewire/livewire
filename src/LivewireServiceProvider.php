@@ -2,7 +2,6 @@
 
 namespace Livewire;
 
-use Exception;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
@@ -11,8 +10,6 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\View\Engines\CompilerEngine;
-use Illuminate\View\Engines\PhpEngine;
 use Livewire\Commands\ComponentParser;
 use Livewire\Commands\CopyCommand;
 use Livewire\Commands\CpCommand;
@@ -23,15 +20,13 @@ use Livewire\Commands\MakeLivewireCommand;
 use Livewire\Commands\MoveCommand;
 use Livewire\Commands\MvCommand;
 use Livewire\Commands\RmCommand;
+use Livewire\Commands\StubCommand;
 use Livewire\Commands\TouchCommand;
 use Livewire\Connection\HttpConnectionHandler;
-use Livewire\Exceptions\BypassViewHandler;
 use Livewire\HydrationMiddleware\ClearFlashMessagesIfNotRedirectingAway;
 use Livewire\HydrationMiddleware\ForwardPrefetch;
-use Livewire\HydrationMiddleware\GarbageCollectUnusedComponents;
 use Livewire\HydrationMiddleware\HashPropertiesForDirtyDetection;
 use Livewire\HydrationMiddleware\HydratePreviouslyRenderedChildren;
-use Livewire\HydrationMiddleware\HydrateProtectedProperties;
 use Livewire\HydrationMiddleware\HydratePublicProperties;
 use Livewire\HydrationMiddleware\IncludeIdAsRootTagAttribute;
 use Livewire\HydrationMiddleware\InterceptRedirects;
@@ -40,10 +35,9 @@ use Livewire\HydrationMiddleware\PrioritizeDataUpdatesBeforeActionCalls;
 use Livewire\HydrationMiddleware\RegisterEmittedEvents;
 use Livewire\HydrationMiddleware\RegisterEventsBeingListenedFor;
 use Livewire\HydrationMiddleware\SecureHydrationWithChecksum;
+use Livewire\LivewireViewCompilerEngine;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -56,39 +50,6 @@ class LivewireServiceProvider extends ServiceProvider
             app()->bootstrapPath('cache/livewire-components.php'),
             ComponentParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
         ));
-
-        $this->allowCertainExceptionsToBypassTheBladeViewHandler();
-    }
-
-    public function allowCertainExceptionsToBypassTheBladeViewHandler()
-    {
-        // Errors thrown while a view is rendering are caught by the Blade
-        // compiler and wrapped in an "ErrorException". This makes Livewire errors
-        // harder to read, AND causes issues like `abort(404)` not actually working.
-        $this->app['view.engine.resolver']->register('blade', function () {
-            return new class($this->app['blade.compiler']) extends CompilerEngine {
-                protected function handleViewException(Exception $e, $obLevel)
-                {
-                    $uses = array_flip(class_uses_recursive($e));
-
-                    if (
-                        // Don't wrap "abort(404)".
-                        $e instanceof NotFoundHttpException
-                        // Don't wrap "abort(500)".
-                        || $e instanceof HttpException
-                        // Don't wrap most Livewire exceptions.
-                        || isset($uses[BypassViewHandler::class])
-                    ) {
-                        // This is because there is no "parent::parent::".
-                        PhpEngine::handleViewException($e, $obLevel);
-
-                        return;
-                    }
-
-                    parent::handleViewException($e, $obLevel);
-                }
-            };
-        });
     }
 
     public function boot()
@@ -109,23 +70,27 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerRouterMacros();
         $this->registerBladeDirectives();
         $this->registerPublishables();
+        $this->registerViewCompilerEngine();
     }
 
     public function registerHydrationMiddleware()
     {
+        Livewire::registerInitialHydrationMiddleware([
+            [InterceptRedirects::class, 'hydrate'],
+        ]);
+
         Livewire::registerInitialDehydrationMiddleware([
             [PersistErrorBag::class, 'dehydrate'],
             [RegisterEventsBeingListenedFor::class, 'dehydrate'],
             [RegisterEmittedEvents::class, 'dehydrate'],
             [HydratePublicProperties::class, 'dehydrate'],
-            [HydrateProtectedProperties::class, 'dehydrate'],
             [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
             [SecureHydrationWithChecksum::class, 'dehydrate'],
             [IncludeIdAsRootTagAttribute::class, 'dehydrate'],
+            [InterceptRedirects::class, 'dehydrate'],
         ]);
 
         Livewire::registerHydrationMiddleware([
-            GarbageCollectUnusedComponents::class,
             IncludeIdAsRootTagAttribute::class,
             ClearFlashMessagesIfNotRedirectingAway::class,
             SecureHydrationWithChecksum::class,
@@ -133,7 +98,6 @@ class LivewireServiceProvider extends ServiceProvider
             RegisterEmittedEvents::class,
             PersistErrorBag::class,
             HydratePublicProperties::class,
-            HydrateProtectedProperties::class,
             HydratePreviouslyRenderedChildren::class,
             HashPropertiesForDirtyDetection::class,
             InterceptRedirects::class,
@@ -170,6 +134,7 @@ class LivewireServiceProvider extends ServiceProvider
                 MvCommand::class,
                 RmCommand::class,
                 TouchCommand::class,
+                StubCommand::class,
             ]);
         }
     }
@@ -219,5 +184,12 @@ class LivewireServiceProvider extends ServiceProvider
         foreach ((array) $groups as $group) {
             $this->publishes($paths, $group);
         }
+    }
+
+    protected function registerViewCompilerEngine()
+    {
+        $this->app->make('view.engine.resolver')->register('blade', function () {
+            return new LivewireViewCompilerEngine($this->app['blade.compiler']);
+        });
     }
 }

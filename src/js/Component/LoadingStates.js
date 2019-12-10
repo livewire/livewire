@@ -2,29 +2,27 @@ import store from '@/Store'
 
 export default function () {
     store.registerHook('componentInitialized', component => {
-        component.loadingElsByRef = {}
-        component.loadingEls = []
+        component.targetedLoadingElsByAction = {}
+        component.genericLoadingEls = []
         component.currentlyActiveLoadingEls = []
     })
 
     store.registerHook('elementInitialized', (el, component) => {
         if (el.directives.missing('loading')) return
-        const directive = el.directives.get('loading')
 
-        const refNames = el.directives.get('target')
-            && el.directives.get('target').value.split(',').map(s => s.trim())
+        const loadingDirectives = el.directives.directives.filter(i => i.type === 'loading')
 
-        addLoadingEl(
-            component,
-            el,
-            directive.value,
-            refNames,
-            directive.modifiers.includes('remove')
-        )
+        loadingDirectives.forEach(directive => {
+            processLoadingDirective(component, el, directive)
+        })
     })
 
     store.registerHook('messageSent', (component, message) => {
-        setLoading(component, message.refs)
+        const actions = message.actionQueue.filter(action => {
+            return action.type === 'callMethod'
+        }).map(action => action.payload.method);
+
+        setLoading(component, actions)
     })
 
     store.registerHook('messageFailed', component => {
@@ -40,36 +38,71 @@ export default function () {
     })
 }
 
-function addLoadingEl(component, el, value, targetNames, remove) {
-    if (targetNames) {
-        targetNames.forEach(targetNames => {
-            if (component.loadingElsByRef[targetNames]) {
-                component.loadingElsByRef[targetNames].push({el, value, remove})
+function processLoadingDirective(component, el, directive) {
+    var actionNames = false
+
+    if (el.directives.get('target')) {
+        // wire:target overrides any automatic loading scoping we do.
+        actionNames = el.directives.get('target').value.split(',').map(s => s.trim())
+    } else {
+        // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
+        // and automatically scope this loading directive to that action.
+        const nonActionLivewireDirectives = ['init', 'model', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore']
+
+        actionNames = el.directives
+            .all()
+            .filter(i => ! nonActionLivewireDirectives.includes(i.type))
+            .map(i => i.method)
+
+        // If we found nothing, just set the loading directive to the global component. (run on every request)
+        if (actionNames.length < 1) actionNames = false
+    }
+
+    addLoadingEl(
+        component,
+        el,
+        directive,
+        actionNames,
+    )
+}
+
+function addLoadingEl(component, el, directive, actionsNames) {
+    if (actionsNames) {
+        actionsNames.forEach(actionsName => {
+            if (component.targetedLoadingElsByAction[actionsName]) {
+                component.targetedLoadingElsByAction[actionsName].push({el, directive})
             } else {
-                component.loadingElsByRef[targetNames] = [{el, value, remove}]
+                component.targetedLoadingElsByAction[actionsName] = [{el, directive}]
             }
         })
     } else {
-        component.loadingEls.push({el, value, remove})
+        component.genericLoadingEls.push({el, directive})
     }
 }
 
 function removeLoadingEl(component, el) {
-    component.loadingEls = component.loadingEls.filter(loadingEl => ! loadingEl.el.isSameNode(el))
+    // Look through the global/generic elements for the element to remove.
+    component.genericLoadingEls.forEach((element, index) => {
+        if (element.el.isSameNode(el)) {
+            component.genericLoadingEls.splice(index, 1)
+        }
+    })
 
-    if (el.ref in component.loadingElsByRef) {
-        delete component.loadingElsByRef[el.ref]
-    }
+    // Look through the targeted elements to remove.
+    Object.keys(component.targetedLoadingElsByAction).forEach(key => {
+        component.targetedLoadingElsByAction[key] = component.targetedLoadingElsByAction[key].filter(element => {
+            return ! element.el.isSameNode(el)
+        })
+    })
 }
 
-function setLoading(component, refs) {
-    const refEls = refs.map(ref => component.loadingElsByRef[ref]).filter(el => el).flat()
+function setLoading(component, actions) {
+    const actionTargetedEls = actions.map(action => component.targetedLoadingElsByAction[action]).filter(el => el).flat()
 
-    const allEls = component.loadingEls.concat(refEls)
+    const allEls = component.genericLoadingEls.concat(actionTargetedEls)
 
-    allEls.forEach(el => {
-        const directive = el.el.directives.get('loading')
-        el = el.el.el // I'm so sorry @todo
+    allEls.forEach(({ el, directive }) => {
+        el = el.el // I'm so sorry @todo
 
         if (directive.modifiers.includes('class')) {
             // This is because wire:loading.class="border border-red"
@@ -96,9 +129,8 @@ function setLoading(component, refs) {
 }
 
 function unsetLoading(component) {
-    component.currentlyActiveLoadingEls.forEach(el => {
-        const directive = el.el.directives.get('loading')
-        el = el.el.el // I'm so sorry @todo
+    component.currentlyActiveLoadingEls.forEach(({ el, directive }) => {
+        el = el.el // I'm so sorry @todo
 
         if (directive.modifiers.includes('class')) {
             const classes = directive.value.split(' ')
@@ -110,9 +142,9 @@ function unsetLoading(component) {
             }
         } else if (directive.modifiers.includes('attr')) {
             if (directive.modifiers.includes('remove')) {
-                el.setAttribute(directive.value)
+                el.setAttribute(directive.value, true)
             } else {
-                el.removeAttribute(directive.value, true)
+                el.removeAttribute(directive.value)
             }
         } else {
             el.style.display = 'none'

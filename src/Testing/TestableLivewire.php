@@ -7,7 +7,7 @@ use Livewire\Livewire;
 
 class TestableLivewire
 {
-    public $name;
+    public $componentName;
     public $id;
     public $children;
     public $checksum;
@@ -19,7 +19,7 @@ class TestableLivewire
     public $eventQueue;
     public $errorBag;
     public $redirectTo;
-    public $gc;
+    public $lastValidator;
 
     use Concerns\HasFunLittleUtilities,
         Concerns\MakesCallsToComponent,
@@ -36,7 +36,7 @@ class TestableLivewire
             app('livewire')->component($name = Str::random(20), $componentClass);
         }
 
-        $result = app('livewire')->mount($this->name = $name, ...$params);
+        $result = app('livewire')->mount($this->componentName = $name, ...$params);
 
         $this->initialUpdateComponent($result);
     }
@@ -51,7 +51,7 @@ class TestableLivewire
         $this->eventQueue = $output->eventQueue;
         $this->errorBag = $output->errorBag;
         $this->checksum = $output->checksum;
-        $this->gc = [];
+        $this->redirectTo = $output->redirectTo;
     }
 
     public function updateComponent($response)
@@ -68,15 +68,11 @@ class TestableLivewire
         $this->redirectTo = $output['redirectTo'];
         $this->eventQueue = $output['eventQueue'];
         $this->errorBag = $output['errorBag'] ?? [];
-
-        // Imitate the front-end clearing the garbage collector
-        // of ids that have already been garbage collected.
-        $this->gc = array_diff($this->gc, $output['gc']);
     }
 
     public function instance()
     {
-        return Livewire::activate($this->name, $this->id);
+        return Livewire::activate($this->componentName, $this->id);
     }
 
     public function get($property)

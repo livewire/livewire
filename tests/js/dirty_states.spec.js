@@ -1,5 +1,5 @@
-import { fireEvent, waitForDomChange } from 'dom-testing-library'
-import { mountWithData, mountAndReturnWithData } from './utils'
+import { wait, fireEvent, waitForDomChange } from 'dom-testing-library'
+import { mountAndReturn, mountWithData, mountAndReturnWithData } from './utils'
 
 test('input element with dirty directive and class modifier attaches class to input', async () => {
     mountWithData(
@@ -60,9 +60,9 @@ test('input element with dirty directive and class.remove modifier removes class
     expect(document.querySelector('input').classList.contains('clean')).toBeTruthy()
 })
 
-test('input element with dirty directive and class modifier attaches class by reference', async () => {
+test('input element with dirty directive and class modifier attaches class by reference to data', async () => {
     mountWithData(
-        '<span wire:dirty.class="dirty" wire:target="bar"><input wire:model="foo" class="foo" wire:ref="bar"></span>',
+        '<span wire:dirty.class="dirty" wire:target="foo"><input wire:model="foo" class="foo"></span>',
         { foo: 'bar' }
     )
 
@@ -82,9 +82,9 @@ test('input element with dirty directive and class modifier attaches class by re
     expect(document.querySelector('span').classList.contains('dirty')).toBeFalsy()
 })
 
-test('input element with dirty directive and class.remove modifier attaches class by reference', async () => {
+test('input element with dirty directive and class.remove modifier attaches class by reference to data', async () => {
     mountWithData(
-        '<span class="clean" wire:dirty.class.remove="clean" wire:target="bar"><input wire:model="foo" class="foo" wire:ref="bar"></span>',
+        '<span class="clean" wire:dirty.class.remove="clean" wire:target="foo"><input wire:model="foo" class="foo"></span>',
         { foo: 'bar' }
     )
 
@@ -106,7 +106,7 @@ test('input element with dirty directive and class.remove modifier attaches clas
 
 test('element with dirty directive and no modifier will be hidden by default and shown when dirty', async () => {
     mountWithData(
-        '<span wire:dirty wire:target="bar"><input wire:model="foo" class="foo" wire:ref="bar"></span>',
+        '<span wire:dirty wire:target="foo"><input wire:model="foo" class="foo"></span>',
         { foo: 'bar' }
     )
 
@@ -117,4 +117,32 @@ test('element with dirty directive and no modifier will be hidden by default and
     expect(document.querySelector('input').value).toEqual('baz')
 
     expect(document.querySelector('span').style.display).toEqual('inline-block')
+})
+
+test('remove element reference from components generic dirty array', async () => {
+    mountAndReturn(
+        '<button wire:click="foo" wire:dirty>',
+        ''
+    )
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('span')).toEqual(null)
+        expect(window.livewire.components.findComponent(123).genericDirtyEls).toEqual([])
+    })
+})
+
+test('remove element reference from components targeted dirty array', async () => {
+    mountAndReturn(
+        '<button wire:click="foo"></button><span wire:dirty wire:target="foo"></span>',
+        '<button wire:click="foo"></button>'
+    )
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('span')).toEqual(null)
+        expect(window.livewire.components.findComponent(123).targetedDirtyElsByProperty).toEqual({foo: []})
+    })
 })

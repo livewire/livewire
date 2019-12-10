@@ -3,10 +3,13 @@
 namespace Livewire\Concerns;
 
 use Illuminate\Support\Str;
+use Livewire\DataCaster;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
 
 trait InteractsWithProperties
 {
+    protected $casts = [];
+
     public function getPublicPropertiesDefinedBySubClass()
     {
         $publicProperties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PUBLIC);
@@ -59,6 +62,8 @@ trait InteractsWithProperties
     {
         $propertyName = $this->beforeFirstDot($name);
 
+        $castValue = $this->castValue($propertyName, $value);
+
         // @todo: this is fired even if a property isn't present at all which is confusing.
         throw_unless($this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName), ProtectedPropertyBindingException::class);
 
@@ -66,11 +71,24 @@ trait InteractsWithProperties
             return data_set(
                 $this->{$propertyName},
                 $this->afterFirstDot($name),
-                $value
+                $castValue
             );
         }
 
-        return $this->{$name} = $value;
+        return $this->{$name} = $castValue;
+    }
+
+    public function castValue($propertyName, $value)
+    {
+        $casts = $this->casts;
+
+        if (! isset($casts[$propertyName])) return $value;
+
+        $type = $casts[$propertyName];
+
+        $caster = new DataCaster;
+
+        return $caster->castTo($type, $value);
     }
 
     public function setProtectedPropertyValue($name, $value)

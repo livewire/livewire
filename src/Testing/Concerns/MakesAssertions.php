@@ -3,12 +3,20 @@
 namespace Livewire\Testing\Concerns;
 
 use Illuminate\Foundation\Testing\Assert as PHPUnit;
+use Illuminate\Support\MessageBag;
 
 trait MakesAssertions
 {
     public function assertSet($name, $value)
     {
         PHPUnit::assertEquals($value, $this->get($name));
+
+        return $this;
+    }
+
+    public function assertNotSet($name, $value)
+    {
+        PHPUnit::assertNotEquals($value, $this->get($name));
 
         return $this;
     }
@@ -56,6 +64,58 @@ trait MakesAssertions
         }
 
         PHPUnit::assertTrue($test, "Failed asserting that an event [{$value}] was fired{$assertionSuffix}");
+
+        return $this;
+    }
+
+    public function assertHasErrors($keys = [])
+    {
+        $errors = new MessageBag($this->errorBag ?: []);
+
+        PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
+
+        $keys = (array) $keys;
+
+        foreach ($keys as $key => $value) {
+            if (is_int($key)) {
+                PHPUnit::assertTrue($errors->has($value), "Component missing error: $value");
+            } else {
+                $rules = array_keys($this->lastValidator->failed()[$key]);
+                $lowerCaseRules = array_map('strtolower', $rules);
+
+                foreach ((array) $value as $rule) {
+                    PHPUnit::assertContains($rule, $lowerCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
+                }
+            }
+        }
+
+        return $this;
+    }
+
+    public function assertHasNoErrors($keys = [])
+    {
+        $errors = new MessageBag($this->errorBag ?: []);
+
+        if (empty($keys)) {
+            PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors.');
+
+            return $this;
+        }
+
+        $keys = (array) $keys;
+
+        foreach ($keys as $key => $value) {
+            if (is_int($key)) {
+                PHPUnit::assertFalse($errors->has($value), "Component has error: $value");
+            } else {
+                $rules = array_keys($this->lastValidator->failed()[$key]);
+                $lowerCaseRules = array_map('strtolower', $rules);
+
+                foreach ((array) $value as $rule) {
+                    PHPUnit::assertNotContains($rule, $lowerCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
+                }
+            }
+        }
 
         return $this;
     }

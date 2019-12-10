@@ -29,8 +29,6 @@ class Livewire {
         this.onLoadCallback = () => {};
 
         this.activatePolyfills()
-
-        this.components.initializeGarbageCollection()
     }
 
     find(componentId) {
@@ -79,8 +77,6 @@ class Livewire {
         this.onLoadCallback()
         dispatch('livewire:load')
 
-        // This is very important for garbage collecting components
-        // on the backend.
         window.addEventListener('beforeunload', () => {
             this.components.tearDownComponents()
         })

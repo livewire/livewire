@@ -76,39 +76,6 @@ const store = {
         component.tearDown()
         // Remove the component from the store.
         delete this.componentsById[component.id]
-        // Add the component the queue for backend cache garbage collection.
-        this.addComponentForCollection(component.id)
-    },
-
-    initializeGarbageCollection()
-    {
-        if (! window.localStorage.hasOwnProperty(this.localStorageKey())) {
-            window.localStorage.setItem(this.localStorageKey(), '')
-        }
-    },
-
-    getComponentsForCollection() {
-        const storedString = atob(window.localStorage.getItem(this.localStorageKey()))
-
-        if (storedString === '') return []
-
-        return storedString.split(',')
-    },
-
-    addComponentForCollection(componentId) {
-        return window.localStorage.setItem(this.localStorageKey(),
-            btoa(this.getComponentsForCollection().concat(componentId).join(','))
-        )
-    },
-
-    setComponentsAsCollected(componentIds) {
-        window.localStorage.setItem(this.localStorageKey(), btoa(this.getComponentsForCollection().filter(
-            id => ! componentIds.includes(id)
-        ).join(',')))
-    },
-
-    localStorageKey() {
-        return 'livewire'
     }
 }
 
