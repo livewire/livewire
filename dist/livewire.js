@@ -3162,6 +3162,7 @@ __webpack_require__.r(__webpack_exports__);
         'Content-Type': 'application/json',
         'Accept': 'text/html, application/xhtml+xml',
         'X-CSRF-TOKEN': this.getCSRFToken(),
+        'X-Socket-ID': this.getSocketId(),
         'X-Livewire': true
       }
     }).then(function (response) {
@@ -3204,6 +3205,11 @@ __webpack_require__.r(__webpack_exports__);
     }
 
     return token;
+  },
+  getSocketId: function getSocketId() {
+    if (Echo) {
+      return Echo.socketId();
+    }
   },
   // This code and concept is all Jonathan Reinink - thanks main!
   showHtmlModal: function showHtmlModal(html) {
