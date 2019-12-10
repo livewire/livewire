@@ -7,7 +7,7 @@ use Livewire\Livewire;
 
 class TestableLivewire
 {
-    public $name;
+    public $componentName;
     public $id;
     public $children;
     public $checksum;
@@ -36,7 +36,7 @@ class TestableLivewire
             app('livewire')->component($name = Str::random(20), $componentClass);
         }
 
-        $result = app('livewire')->mount($this->name = $name, ...$params);
+        $result = app('livewire')->mount($this->componentName = $name, ...$params);
 
         $this->initialUpdateComponent($result);
     }
@@ -72,7 +72,7 @@ class TestableLivewire
 
     public function instance()
     {
-        return Livewire::activate($this->name, $this->id);
+        return Livewire::activate($this->componentName, $this->id);
     }
 
     public function get($property)
