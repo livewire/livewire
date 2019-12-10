@@ -5,7 +5,7 @@ namespace Tests;
 use Livewire\Component;
 use Livewire\LivewireManager;
 
-class ComponentCanBeFilled extends TestCase
+class ComponentCanBeFilledTest extends TestCase
 {
     /** @test */
     public function can_fill_from_an_array()
