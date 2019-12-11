@@ -8,6 +8,7 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\View\View;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
+use Livewire\PassPublicPropertiesToView;
 
 abstract class Component
 {
@@ -106,10 +107,13 @@ abstract class Component
             $errorBag = $errors ?: ($view->errors ?: $this->getErrorBag())
         );
 
+        $uses = array_flip(class_uses_recursive(static::class));
+        $shouldPassPublicPropertiesToView = isset($uses[PassPublicPropertiesToView::class]);
+
         $view->with([
             'errors' => (new ViewErrorBag)->put('default', $errorBag),
             '_instance' => $this,
-        ]);
+        ] + ($shouldPassPublicPropertiesToView ? $this->getPublicPropertiesDefinedBySubClass() : []));
 
         $output = $view->render();
 

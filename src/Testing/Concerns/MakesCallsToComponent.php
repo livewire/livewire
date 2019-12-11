@@ -64,7 +64,7 @@ trait MakesCallsToComponent
 
         $result = $handler->handle([
             'id' => $this->id,
-            'name' => $this->name,
+            'name' => $this->componentName,
             'data' => $this->data,
             'children' => $this->children,
             'checksum' => $this->checksum,
