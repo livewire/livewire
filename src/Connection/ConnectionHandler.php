@@ -2,9 +2,9 @@
 
 namespace Livewire\Connection;
 
+use Livewire\Livewire;
 use Illuminate\Support\Fluent;
 use Illuminate\Validation\ValidationException;
-use Livewire\Livewire;
 
 abstract class ConnectionHandler
 {

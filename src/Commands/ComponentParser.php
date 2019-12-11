@@ -3,8 +3,8 @@
 namespace Livewire\Commands;
 
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 use Illuminate\Console\DetectsApplicationNamespace;
 
 class ComponentParser

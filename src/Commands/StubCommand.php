@@ -2,9 +2,8 @@
 
 namespace Livewire\Commands;
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 
 class StubCommand extends Command
 {
@@ -23,12 +22,11 @@ class StubCommand extends Command
             $this->argument('name')
         );
 
-        $classCreated = $this->createViewStubIfDoesNotExist();
-        $viewCreated = $this->createClassStubIfDoesNotExist();
-        if ($classCreated) {
+        if ($this->createViewStubIfDoesNotExist()) {
             $this->line("<options=bold;fg=green>CLASS STUB:</> {$this->parser->relativeClassPath()}");
         }
-        if ($viewCreated) {
+
+        if ($this->createClassStubIfDoesNotExist()) {
             $this->line("<options=bold;fg=green>VIEW STUB:</>  {$this->parser->relativeViewPath()}");
         }
     }
@@ -36,7 +34,8 @@ class StubCommand extends Command
     protected function ensureDirectoryExists($path)
     {
         $path = substr($path, 0, strrpos( $path, '/'));
-        if ( !File::isDirectory($path)) {
+
+        if (! File::isDirectory($path)) {
             File::makeDirectory($path, 0777, $recursive = true, $force = true);
         }
     }
