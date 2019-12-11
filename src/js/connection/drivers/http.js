@@ -63,7 +63,7 @@ export default {
     },
 
     getSocketId() {
-        if(Echo) {
+        if (typeof Echo !== 'undefined') {
             return Echo.socketId();
         }
     },
