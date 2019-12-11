@@ -3,13 +3,13 @@
 namespace Livewire;
 
 use Exception;
-use Illuminate\View\Engines\CompilerEngine;
+use Throwable;
 use Illuminate\View\Engines\PhpEngine;
 use Livewire\Exceptions\BypassViewHandler;
-use Symfony\Component\Debug\Exception\FatalThrowableError;
+use Illuminate\View\Engines\CompilerEngine;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Debug\Exception\FatalThrowableError;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Throwable;
 
 class LivewireViewCompilerEngine extends CompilerEngine
 {
