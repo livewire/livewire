@@ -121,7 +121,7 @@ trait InteractsWithProperties
             ->search($propertyName) !== false;
     }
 
-    public function fill($values): void
+    public function fill($values)
     {
         $publicProperties = array_keys($this->getPublicPropertiesDefinedBySubClass());
 

@@ -56,7 +56,7 @@ trait HandlesActions
 
             default:
                 throw_unless(method_exists($this, $method), MissingComponentMethodReferencedByAction::class);
-                throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), NonPublicComponentMethodCall::class);
+                throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
                 $this->{$method}(
                     ...$this->resolveActionParameters($method, $params)
