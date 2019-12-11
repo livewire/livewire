@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Concerns;
+namespace Livewire\ComponentConcerns;
 
 use Illuminate\Mail\Message;
 use Illuminate\Support\Arr;
