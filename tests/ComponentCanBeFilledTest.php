@@ -16,7 +16,7 @@ class ComponentCanBeFilledTest extends TestCase
         $component->assertSee('protected');
         $component->assertSee('private');
 
-        $component->fill([
+        $component->call('callFill', [
             'publicProperty' => 'Caleb',
             'protectedProperty' => 'Caleb',
             'privateProperty' => 'Caleb',
@@ -36,7 +36,7 @@ class ComponentCanBeFilledTest extends TestCase
         $component->assertSee('protected');
         $component->assertSee('private');
 
-        $component->fill(new User());
+        $component->call('callFill', new User());
 
         $component->assertSee('Caleb');
         $component->assertSee('protected');
@@ -55,6 +55,11 @@ class ComponentWithFillableProperties extends Component
     public $publicProperty = 'public';
     protected $protectedProperty = 'protected';
     private $privateProperty = 'private';
+
+    public function callFill($values)
+    {
+        $this->fill($values);
+    }
 
     public function render()
     {
