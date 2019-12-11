@@ -3207,7 +3207,7 @@ __webpack_require__.r(__webpack_exports__);
     return token;
   },
   getSocketId: function getSocketId() {
-    if (Echo) {
+    if (typeof Echo !== 'undefined') {
       return Echo.socketId();
     }
   },
