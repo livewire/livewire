@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Concerns;
+namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\MessageBag;

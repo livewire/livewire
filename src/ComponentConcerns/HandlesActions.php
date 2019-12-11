@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Concerns;
+namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
@@ -56,7 +56,7 @@ trait HandlesActions
 
             default:
                 throw_unless(method_exists($this, $method), MissingComponentMethodReferencedByAction::class);
-                throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), NonPublicComponentMethodCall::class);
+                throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
                 $this->{$method}(
                     ...$this->resolveActionParameters($method, $params)
@@ -85,6 +85,11 @@ trait HandlesActions
     {
         return collect((new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC))
             ->reject(function ($method) {
+                // The "render" method is a special case. This method might be called by event listeners or other ways.
+                if ($method === 'render') {
+                    return false;
+                }
+
                 return $method->class === self::class;
             })
             ->pluck('name')

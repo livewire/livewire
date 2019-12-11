@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
@@ -59,5 +60,19 @@ class MakeCommandTest extends TestCase
 
         $this->assertTrue(File::exists($this->livewireClassesPath('FooBar/FooBar.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo-bar/foo-bar.blade.php')));
+    }
+
+    /** @test */
+    public function new_component_class_view_name_reference_matches_configured_view_path()
+    {
+        // We can't use Artisan::call here because we need to be able to set config vars.
+        $this->app['config']->set('livewire.view_path', resource_path('views/not-livewire'));
+        $this->app[Kernel::class]->call('make:livewire foo', []);
+
+        $this->assertStringContainsString(
+            "view('not-livewire.foo')",
+            File::get($this->livewireClassesPath('Foo.php'))
+        );
+        $this->assertTrue(File::exists(resource_path('views/not-livewire/foo.blade.php')));
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Facades\Facade as BaseFacade;
+use Illuminate\Support\Facades\Facade;
 
-class Livewire extends BaseFacade
+class Livewire extends Facade
 {
     public static function getFacadeAccessor()
     {

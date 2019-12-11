@@ -3,8 +3,8 @@
 namespace Livewire\Commands;
 
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 use Illuminate\Console\DetectsApplicationNamespace;
 
 class ComponentParser
@@ -114,7 +114,8 @@ class ComponentParser
     public function viewName()
     {
         return collect()
-            ->push('livewire')
+            ->concat(explode('/',Str::after($this->baseViewPath, resource_path('views'))))
+            ->filter()
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
             ->push($this->component)

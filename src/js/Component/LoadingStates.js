@@ -52,7 +52,7 @@ function processLoadingDirective(component, el, directive) {
         actionNames = el.directives
             .all()
             .filter(i => ! nonActionLivewireDirectives.includes(i.type))
-            .map(i => i.value)
+            .map(i => i.method)
 
         // If we found nothing, just set the loading directive to the global component. (run on every request)
         if (actionNames.length < 1) actionNames = false

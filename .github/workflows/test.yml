@@ -1,0 +1,37 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    types: [ready_for_review, synchronize, opened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [7.2, 7.3, 7.4]
+        laravel: [5.6.*, 5.7.*, 5.8.*, 6.*]
+        dependency-version: [prefer-lowest, prefer-stable]
+
+    name: PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}(${{ matrix.dependency-version }})
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+
+      - name: Cache dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/.composer/cache/files
+          key: dependencies-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+
+      - name: Install
+        run: composer install --no-interaction --no-suggest
+
+      - name: Run Tests
+        run: vendor/bin/phpunit

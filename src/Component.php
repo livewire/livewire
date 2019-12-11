@@ -2,44 +2,47 @@
 
 namespace Livewire;
 
+use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
-use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\ViewErrorBag;
-use Illuminate\View\View;
+use Illuminate\Support\Traits\Macroable;
+use Livewire\PassPublicPropertiesToView;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 abstract class Component
 {
     use Macroable { __call as macroCall; }
 
-    use
-        Concerns\ValidatesInput,
-        Concerns\DetectsDirtyProperties,
-        Concerns\HandlesActions,
-        Concerns\PerformsRedirects,
-        Concerns\ReceivesEvents,
-        Concerns\InteractsWithProperties,
-        Concerns\TracksRenderedChildren;
+    use ComponentConcerns\ValidatesInput,
+        ComponentConcerns\HandlesActions,
+        ComponentConcerns\ReceivesEvents,
+        ComponentConcerns\PerformsRedirects,
+        ComponentConcerns\DetectsDirtyProperties,
+        ComponentConcerns\TracksRenderedChildren,
+        ComponentConcerns\InteractsWithProperties;
 
     public $id;
+
     protected $lifecycleHooks = [
         'mount', 'hydrate', 'updating', 'updated',
     ];
+
     protected $computedPropertyCache = [];
 
     public function __construct($id)
     {
         $this->id = $id;
+
         $this->initializeTraits();
     }
 
     protected function initializeTraits()
     {
-        $class = static::class;
+        foreach (class_uses_recursive($class = static::class) as $trait) {
+            $method = 'initialize'.class_basename($trait);
 
-        foreach (class_uses_recursive($class) as $trait) {
-            if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
+            if (method_exists($class, $method)) {
                 $this->{$method}();
             }
         }
@@ -67,21 +70,6 @@ abstract class Component
         return view("livewire.{$this->getName()}");
     }
 
-    public function cache($key = null, $value = null)
-    {
-        $cacheManager = new ComponentCacheManager($this);
-
-        if (is_null($key)) {
-            return $cacheManager;
-        }
-
-        if (is_null($value)) {
-            return $cacheManager->get($key);
-        }
-
-        return $cacheManager->put($key, $value);
-    }
-
     public function output($errors = null)
     {
         // In the service provider, we hijack Laravel's Blade engine
@@ -104,10 +92,13 @@ abstract class Component
             $errorBag = $errors ?: ($view->errors ?: $this->getErrorBag())
         );
 
+        $uses = array_flip(class_uses_recursive(static::class));
+        $shouldPassPublicPropertiesToView = isset($uses[PassPublicPropertiesToView::class]);
+
         $view->with([
             'errors' => (new ViewErrorBag)->put('default', $errorBag),
             '_instance' => $this,
-        ]);
+        ] + ($shouldPassPublicPropertiesToView ? $this->getPublicPropertiesDefinedBySubClass() : []));
 
         $output = $view->render();
 

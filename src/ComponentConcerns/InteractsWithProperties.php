@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Concerns;
+namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
 use Livewire\DataCaster;
@@ -119,5 +119,16 @@ trait InteractsWithProperties
             })
             ->pluck('name')
             ->search($propertyName) !== false;
+    }
+
+    public function fill($values)
+    {
+        $publicProperties = array_keys($this->getPublicPropertiesDefinedBySubClass());
+
+        foreach ($values as $key => $value) {
+            if (in_array($key, $publicProperties)) {
+                $this->{$key} = $value;
+            }
+        }
     }
 }

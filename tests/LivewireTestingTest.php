@@ -120,7 +120,7 @@ class HasMountArguments extends Component
 
     public function render()
     {
-        return app('view')->make('show-name');
+        return app('view')->make('show-name-with-this');
     }
 }
 

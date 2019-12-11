@@ -2,8 +2,6 @@
 
 namespace Livewire\Connection;
 
-use Livewire\Livewire;
-
 class HttpConnectionHandler extends ConnectionHandler
 {
     public function __invoke()
