@@ -2,8 +2,9 @@
 
 namespace Livewire\ComponentConcerns;
 
-use Illuminate\Support\Str;
 use Livewire\DataCaster;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
 
 trait InteractsWithProperties
@@ -124,6 +125,10 @@ trait InteractsWithProperties
     public function fill($values)
     {
         $publicProperties = array_keys($this->getPublicPropertiesDefinedBySubClass());
+
+        if ($values instanceof Model) {
+            $values = $values->toArray();
+        }
 
         foreach ($values as $key => $value) {
             if (in_array($key, $publicProperties)) {
