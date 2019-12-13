@@ -66,10 +66,8 @@ class PublicPropertiesInViewWithoutThisAndWithoutTraitStub extends Component
     }
 }
 
-class PublicPropertiesInViewWithoutThisStub extends Component
+class PublicPropertiesInViewWithoutThisStub extends Component implements PassPublicPropertiesToView
 {
-    use PassPublicPropertiesToView;
-
     public $name = 'Caleb';
 
     public function render()

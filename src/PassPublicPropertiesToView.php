@@ -2,7 +2,7 @@
 
 namespace Livewire;
 
-trait PassPublicPropertiesToView
+interface PassPublicPropertiesToView
 {
     //
 }

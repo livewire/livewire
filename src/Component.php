@@ -92,8 +92,7 @@ abstract class Component
             $errorBag = $errors ?: ($view->errors ?: $this->getErrorBag())
         );
 
-        $uses = array_flip(class_uses_recursive(static::class));
-        $shouldPassPublicPropertiesToView = isset($uses[PassPublicPropertiesToView::class]);
+        $shouldPassPublicPropertiesToView = class_implements($this, PassPublicPropertiesToView::class);
 
         $view->with([
             'errors' => (new ViewErrorBag)->put('default', $errorBag),
