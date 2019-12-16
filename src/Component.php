@@ -5,37 +5,44 @@ namespace Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
-use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\Support\Traits\Macroable;
+use Livewire\PassPublicPropertiesToView;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 abstract class Component
 {
-    use Concerns\ValidatesInput,
-        Concerns\DetectsDirtyProperties,
-        Concerns\HandlesActions,
-        Concerns\PerformsRedirects,
-        Concerns\ReceivesEvents,
-        Concerns\InteractsWithProperties,
-        Concerns\TracksRenderedChildren;
+    use Macroable { __call as macroCall; }
+
+    use ComponentConcerns\ValidatesInput,
+        ComponentConcerns\HandlesActions,
+        ComponentConcerns\ReceivesEvents,
+        ComponentConcerns\PerformsRedirects,
+        ComponentConcerns\DetectsDirtyProperties,
+        ComponentConcerns\TracksRenderedChildren,
+        ComponentConcerns\InteractsWithProperties;
 
     public $id;
+
     protected $lifecycleHooks = [
         'mount', 'hydrate', 'updating', 'updated',
     ];
 
+    protected $computedPropertyCache = [];
+
     public function __construct($id)
     {
         $this->id = $id;
+
         $this->initializeTraits();
     }
 
     protected function initializeTraits()
     {
-        $class = static::class;
+        foreach (class_uses_recursive($class = static::class) as $trait) {
+            $method = 'initialize'.class_basename($trait);
 
-        foreach (class_uses_recursive($class) as $trait) {
-            if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
+            if (method_exists($class, $method)) {
                 $this->{$method}();
             }
         }
@@ -63,23 +70,16 @@ abstract class Component
         return view("livewire.{$this->getName()}");
     }
 
-    public function cache($key = null, $value = null)
-    {
-        $cacheManager = new ComponentCacheManager($this);
-
-        if (is_null($key)) {
-            return $cacheManager;
-        }
-
-        if (is_null($value)) {
-            return $cacheManager->get($key);
-        }
-
-        return $cacheManager->put($key, $value);
-    }
-
     public function output($errors = null)
     {
+        // In the service provider, we hijack Laravel's Blade engine
+        // with our own. However, we only want Livewire hijackings,
+        // while we're rendering Livewire components. So we'll
+        // activate it here, and deactivate it at the end
+        // of this method.
+        $engine = app('view.engine.resolver')->resolve('blade');
+        $engine->startLivewireRendering($this);
+
         $view = $this->render();
 
         // Normalize all the public properties in the component for JavaScript.
@@ -92,30 +92,50 @@ abstract class Component
             $errorBag = $errors ?: ($view->errors ?: $this->getErrorBag())
         );
 
-        $view
-            ->with([
-                'errors' => (new ViewErrorBag)->put('default', $errorBag),
-                '_instance' => $this,
-            ])
-            // Automatically inject all public properties into the blade view.
-            ->with($this->getPublicPropertiesDefinedBySubClass());
+        $uses = array_flip(class_uses_recursive(static::class));
+        $shouldPassPublicPropertiesToView = isset($uses[PassPublicPropertiesToView::class]);
 
-        // Render the view with a Livewire-specific Blade compiler.
+        $view->with([
+            'errors' => (new ViewErrorBag)->put('default', $errorBag),
+            '_instance' => $this,
+        ] + ($shouldPassPublicPropertiesToView ? $this->getPublicPropertiesDefinedBySubClass() : []));
 
-        return (new LivewireViewCompiler($view))();
+        $output = $view->render();
+
+        $engine->endLivewireRendering();
+
+        return $output;
     }
 
     public function normalizePublicPropertiesForJavaScript()
     {
         $normalizedProperties = $this->castDataToJavaScriptReadableTypes(
             $this->reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder(
-                $this->getPublicPropertiesDefinedBySubClass()
+                $this->castDataFromUserDefinedCasters(
+                    $this->getPublicPropertiesDefinedBySubClass()
+                )
             )
         );
 
         foreach ($normalizedProperties as $key => $value) {
             $this->setPropertyValue($key, $value);
         }
+    }
+
+    public function castDataFromUserDefinedCasters($data)
+    {
+        $dataCaster = new DataCaster;
+        $casts = $this->casts;
+
+        return collect($data)->map(function ($value, $key) use ($casts, $dataCaster) {
+            if (isset($casts[$key])) {
+                $type = $casts[$key];
+
+                return $dataCaster->castFrom($type, $value);
+            } else {
+                return $value;
+            }
+        })->all();
     }
 
     protected function reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($data)
@@ -167,8 +187,25 @@ abstract class Component
             return;
         }
 
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $params);
+        }
+
         throw new BadMethodCallException(sprintf(
             'Method %s::%s does not exist.', static::class, $method
         ));
+    }
+
+    public function __get($property)
+    {
+        if (method_exists($this, $computedMethodName = 'get'.ucfirst($property).'Property')) {
+            if (isset($this->computedPropertyCache[$property])) {
+                return $this->computedPropertyCache[$property];
+            } else {
+                return $this->computedPropertyCache[$property] = $this->$computedMethodName();
+            }
+        }
+
+        throw new \Exception("Property [{$property}] does not exist on the Component instance.");
     }
 }

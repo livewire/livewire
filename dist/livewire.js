@@ -1709,7 +1709,7 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
@@ -1869,7 +1869,6 @@ function () {
     value: function handleResponse(response) {
       var _this2 = this;
 
-      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', this, response);
       this.data = response.data;
       this.checksum = response.checksum;
       this.children = response.children;
@@ -1880,6 +1879,7 @@ function () {
         return;
       }
 
+      _Store__WEBPACK_IMPORTED_MODULE_7__["default"].callHook('responseReceived', this, response);
       this.replaceDom(response.dom, response.dirtyInputs);
       this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs);
       this.messageInTransit = null;
@@ -2343,7 +2343,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -2867,11 +2867,12 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   });
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementInitialized', function (el, component) {
     if (el.directives.missing('loading')) return;
-    var directive = el.directives.get('loading');
-    var actionNames = el.directives.get('target') && el.directives.get('target').value.split(',').map(function (s) {
-      return s.trim();
+    var loadingDirectives = el.directives.directives.filter(function (i) {
+      return i.type === 'loading';
     });
-    addLoadingEl(component, el, directive.value, actionNames, directive.modifiers.includes('remove'));
+    loadingDirectives.forEach(function (directive) {
+      processLoadingDirective(component, el, directive);
+    });
   });
   _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('messageSent', function (component, message) {
     var actions = message.actionQueue.filter(function (action) {
@@ -2892,28 +2893,49 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   });
 });
 
-function addLoadingEl(component, el, value, actionsNames, remove) {
+function processLoadingDirective(component, el, directive) {
+  var actionNames = false;
+
+  if (el.directives.get('target')) {
+    // wire:target overrides any automatic loading scoping we do.
+    actionNames = el.directives.get('target').value.split(',').map(function (s) {
+      return s.trim();
+    });
+  } else {
+    // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
+    // and automatically scope this loading directive to that action.
+    var nonActionLivewireDirectives = ['init', 'model', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore'];
+    actionNames = el.directives.all().filter(function (i) {
+      return !nonActionLivewireDirectives.includes(i.type);
+    }).map(function (i) {
+      return i.method;
+    }); // If we found nothing, just set the loading directive to the global component. (run on every request)
+
+    if (actionNames.length < 1) actionNames = false;
+  }
+
+  addLoadingEl(component, el, directive, actionNames);
+}
+
+function addLoadingEl(component, el, directive, actionsNames) {
   if (actionsNames) {
     actionsNames.forEach(function (actionsName) {
       if (component.targetedLoadingElsByAction[actionsName]) {
         component.targetedLoadingElsByAction[actionsName].push({
           el: el,
-          value: value,
-          remove: remove
+          directive: directive
         });
       } else {
         component.targetedLoadingElsByAction[actionsName] = [{
           el: el,
-          value: value,
-          remove: remove
+          directive: directive
         }];
       }
     });
   } else {
     component.genericLoadingEls.push({
       el: el,
-      value: value,
-      remove: remove
+      directive: directive
     });
   }
 }
@@ -2940,9 +2962,10 @@ function setLoading(component, actions) {
     return el;
   }).flat();
   var allEls = component.genericLoadingEls.concat(actionTargetedEls);
-  allEls.forEach(function (el) {
-    var directive = el.el.directives.get('loading');
-    el = el.el.el; // I'm so sorry @todo
+  allEls.forEach(function (_ref) {
+    var el = _ref.el,
+        directive = _ref.directive;
+    el = el.el; // I'm so sorry @todo
 
     if (directive.modifiers.includes('class')) {
       // This is because wire:loading.class="border border-red"
@@ -2972,9 +2995,10 @@ function setLoading(component, actions) {
 }
 
 function unsetLoading(component) {
-  component.currentlyActiveLoadingEls.forEach(function (el) {
-    var directive = el.el.directives.get('loading');
-    el = el.el.el; // I'm so sorry @todo
+  component.currentlyActiveLoadingEls.forEach(function (_ref2) {
+    var el = _ref2.el,
+        directive = _ref2.directive;
+    el = el.el; // I'm so sorry @todo
 
     if (directive.modifiers.includes('class')) {
       var classes = directive.value.split(' ');
@@ -3138,6 +3162,7 @@ __webpack_require__.r(__webpack_exports__);
         'Content-Type': 'application/json',
         'Accept': 'text/html, application/xhtml+xml',
         'X-CSRF-TOKEN': this.getCSRFToken(),
+        'X-Socket-ID': this.getSocketId(),
         'X-Livewire': true
       }
     }).then(function (response) {
@@ -3180,6 +3205,11 @@ __webpack_require__.r(__webpack_exports__);
     }
 
     return token;
+  },
+  getSocketId: function getSocketId() {
+    if (typeof Echo !== 'undefined') {
+      return Echo.socketId();
+    }
   },
   // This code and concept is all Jonathan Reinink - thanks main!
   showHtmlModal: function showHtmlModal(html) {

@@ -1,4 +1,3 @@
 <div>
-    {{ var_dump($foo) }}
-
+    {{ var_dump($this->foo) }}
 </div>

@@ -3,29 +3,29 @@
 namespace Livewire;
 
 use Exception;
-use Illuminate\Routing\RouteDependencyResolverTrait;
-use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
+use Illuminate\Support\Fluent;
+use Livewire\Testing\TestableLivewire;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
-use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
-    use RouteDependencyResolverTrait;
+    use DependencyResolverTrait;
 
+    protected $container;
     protected $prefix = 'wire';
     protected $componentAliases = [];
+    protected $customComponentResolver;
     protected $hydrationMiddleware = [];
     protected $initialHydrationMiddleware = [];
     protected $initialDehydrationMiddleware = [];
-    protected $customComponentResolver;
-    protected $container;
+
     public static $isLivewireRequestTestingOverride;
 
     public function __construct()
     {
-        // This property only exists to make the "RouteDependancyResolverTrait" work.
+        // This property only exists to make the "DependencyResolverTrait" work.
         $this->container = app();
     }
 

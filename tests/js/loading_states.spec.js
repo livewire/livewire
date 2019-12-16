@@ -25,6 +25,58 @@ test('show element while loading and hide after', async () => {
     })
 })
 
+test('loading is scoped to current element if it fires an action', async () => {
+    mountAndReturn(
+        `<button wire:click="foo" wire:loading.attr="disabled"><span wire:click="bar" wire:loading.class="baz"></span>`,
+        `<button wire:click="foo" wire:loading.attr="disabled"><span wire:click="bar" wire:loading.class="baz"></span>`,
+        [], async () => {
+            // Make the loading last for 50ms.
+            await timeout(50)
+        }
+    )
+
+    expect(document.querySelector('button').disabled).toEqual(false)
+    expect(document.querySelector('span').classList.contains('baz')).toEqual(false)
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toEqual(true)
+        expect(document.querySelector('span').classList.contains('baz')).toEqual(false)
+    })
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toEqual(false)
+        expect(document.querySelector('span').classList.contains('baz')).toEqual(false)
+    })
+})
+
+test('loading is scoped to current element if it fires an action, even with parameters', async () => {
+    mountAndReturn(
+        `<button wire:click="foo('bar')" wire:loading.attr="disabled"><span wire:click="bar" wire:loading.class="baz"></span>`,
+        `<button wire:click="foo('bar')" wire:loading.attr="disabled"><span wire:click="bar" wire:loading.class="baz"></span>`,
+        [], async () => {
+            // Make the loading last for 50ms.
+            await timeout(50)
+        }
+    )
+
+    expect(document.querySelector('button').disabled).toEqual(false)
+    expect(document.querySelector('span').classList.contains('baz')).toEqual(false)
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toEqual(true)
+        expect(document.querySelector('span').classList.contains('baz')).toEqual(false)
+    })
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toEqual(false)
+        expect(document.querySelector('span').classList.contains('baz')).toEqual(false)
+    })
+})
+
 test('loading element is hidden after Livewire receives error from backend', async () => {
     mountAndError(
         `<button wire:click="onClick"></button><span style="display: none" wire:loading></span>`,
@@ -86,12 +138,6 @@ test('add element class while loading', async () => {
     })
 })
 
-test('add element class while loading only after minimum time', async () => {
-    mount('<button wire:click="onClick"></button><span wire:loading.class.min.100ms="foo-class"></span>')
-
-    // @todo - find a good way to test this.
-})
-
 test('add element class with spaces while loading', async () => {
     mount('<button wire:click="onClick"></button><span wire:loading.class="foo bar"></span>')
 
@@ -130,6 +176,17 @@ test('remove element attribute while loading', async () => {
 
     await wait(() => {
         expect(document.querySelector('span').hasAttribute('disabled')).toBeFalsy()
+    })
+})
+
+test('add element attribute AND class while loading', async () => {
+    mount('<button wire:click="onClick"></button><span wire:loading.attr="disabled" wire:loading.class="foo"></span>')
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('span').hasAttribute('disabled')).toBeTruthy()
+        expect(document.querySelector('span').classList.contains('foo')).toBeTruthy()
     })
 })
 

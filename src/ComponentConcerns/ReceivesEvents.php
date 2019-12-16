@@ -1,10 +1,11 @@
 <?php
 
-namespace Livewire\Concerns;
+namespace Livewire\ComponentConcerns;
 
 trait ReceivesEvents
 {
     protected $eventQueue = [];
+    protected $listeners = [];
 
     public function emit($event, ...$params)
     {

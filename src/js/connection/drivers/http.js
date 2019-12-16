@@ -17,6 +17,7 @@ export default {
                 'Content-Type': 'application/json',
                 'Accept': 'text/html, application/xhtml+xml',
                 'X-CSRF-TOKEN': this.getCSRFToken(),
+                'X-Socket-ID': this.getSocketId(),
                 'X-Livewire': true,
             },
         }).then(response => {
@@ -59,6 +60,12 @@ export default {
         }
 
         return token
+    },
+
+    getSocketId() {
+        if (typeof Echo !== 'undefined') {
+            return Echo.socketId();
+        }
     },
 
     // This code and concept is all Jonathan Reinink - thanks main!
