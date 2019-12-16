@@ -165,7 +165,7 @@ HTML;
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
         $assetUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
-        $appUrl = config('livewire.app_url', $assetUrl);
+        $appUrl = config('livewire.app_url', rtrim($options['app_url'] ?? $assetUrl, '/'));
 
         $csrf = csrf_token();
 
