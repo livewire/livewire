@@ -50,9 +50,13 @@ class LivewireServiceProvider extends ServiceProvider
         $this->app->singleton('livewire', LivewireManager::class);
 
         $this->app->singleton(LivewireComponentsFinder::class, function () {
+            $isHostedOnVapor = $_ENV['SERVER_SOFTWARE'] === 'vapor';
             return new LivewireComponentsFinder(
                 new Filesystem,
-                config('livewire.manifest_path') ?? app()->bootstrapPath('cache/livewire-components.php'),
+                config('livewire.manifest_path') ?? (
+                    $isHostedOnVapor
+                        ? '/tmp/storage/bootstrap/cache/livewire-components.php'
+                        : app()->bootstrapPath('cache/livewire-components.php')),
                 ComponentParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
             );
         });

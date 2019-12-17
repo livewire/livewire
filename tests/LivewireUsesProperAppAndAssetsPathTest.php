@@ -52,20 +52,6 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     }
 
     /** @test */
-    public function livewire_js_calls_reference_congigured_app_url()
-    {
-        $this->assertStringContainsString(
-            '<script src="https://foo.com/assets/livewire/livewire.min.js?',
-            Livewire::assets(['asset_url' => 'https://foo.com/assets', 'app_url' => 'https://bar.com/admin'])
-        );
-
-        $this->assertStringContainsString(
-            "window.livewire_app_url = 'https://bar.com/admin';",
-            Livewire::assets(['asset_url' => 'https://foo.com/assets', 'app_url' => 'https://bar.com/admin'])
-        );
-    }
-
-    /** @test */
     public function asset_url_trailing_slashes_are_trimmed()
     {
         $this->assertStringContainsString(
@@ -76,20 +62,6 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
         $this->assertStringContainsString(
             "window.livewire_app_url = 'https://foo.com/assets';",
             Livewire::assets(['asset_url' => 'https://foo.com/assets/'])
-        );
-    }
-
-    /** @test */
-    public function app_url_trailing_slashes_are_trimmed()
-    {
-        $this->assertStringContainsString(
-            '<script src="https://foo.com/assets/livewire/livewire.min.js?',
-            Livewire::assets(['asset_url' => 'https://foo.com/assets/', 'app_url' => 'https://bar.com/admin/'])
-        );
-
-        $this->assertStringContainsString(
-            "window.livewire_app_url = 'https://bar.com/admin';",
-            Livewire::assets(['asset_url' => 'https://foo.com/assets/', 'app_url' => 'https://bar.com/admin/'])
         );
     }
 
@@ -107,24 +79,6 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
 
         $this->assertStringContainsString(
             "window.livewire_app_url = 'https://foo.com/assets';",
-            $output
-        );
-    }
-
-    /** @test */
-    public function app_url_passed_into_blade_assets_directive()
-    {
-        $output = View::make('assets-directive', [
-            'options' => ['asset_url' => 'https://foo.com/assets/', 'app_url' => 'https://bar.com/admin/'],
-        ])->render();
-
-        $this->assertStringContainsString(
-            '<script src="https://foo.com/assets/livewire/livewire.min.js?',
-            $output
-        );
-
-        $this->assertStringContainsString(
-            "window.livewire_app_url = 'https://bar.com/admin';",
             $output
         );
     }

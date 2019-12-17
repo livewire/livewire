@@ -36,27 +36,11 @@ return [
     | your app's domain root is not the correct path. By default, Livewire
     | will load its JavaScript assets from the app's "relative root".
     |
-    | Examples: "/assets", "myurl.com/app", "env('ASSET_URL', null)"
+    | Examples: "/assets", "myurl.com/app"
     |
     */
 
     'asset_url'  => null,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Livewire App URL
-    |--------------------------------------------------------------------------
-    |
-    | This value sets Livewire endpoint's base URL, for cases where
-    | your app's domain root is not the same as the assets URL above (e.g.: Laravel
-    | Vapor, where assets URL points to Cloudfront but your app is under your own domain).
-    | By default, Livewire will consider the asset URL above as the app URL.
-    |
-    | Examples: "/admin", "myurl.com/app", "env('APP_URL', null)"
-    |
-    */
-
-    'app_url' => null,
 
     /*
     |--------------------------------------------------------------------------
@@ -70,21 +54,21 @@ return [
     */
 
     'middleware_group'  => 'web',
-
+    
     /*
     |--------------------------------------------------------------------------
     | Manifest File Path
     |--------------------------------------------------------------------------
     |
     | This value sets the path to Livewire manifest file path.
-    | The default should work for most cases (which is
-    | "<app_root>/bootstrap/cache/livewire-components.php)", but for specific
+    | The default should work for most cases (which is 
+    | "<app_root>/bootstrap/cache/livewire-components.php)", but for specific 
     | cases like when hosting on Laravel Vapor, it could be set to a different value.
     |
     | Example: For Laravel Vapor, it would be "/tmp/storage/bootstrap/cache/livewire-components.php"
     |
     */
-
+    
     'manifest_path' => null,
 
 ];
