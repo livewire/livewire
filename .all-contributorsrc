@@ -13,6 +13,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Treggats",
+      "name": "Tonko Mulder",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/27585?v=4",
+      "profile": "https://www.tonkomulder.nl",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
