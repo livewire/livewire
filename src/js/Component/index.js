@@ -178,6 +178,7 @@ export default class Component {
 
     redirect(url) {
         window.location.href = url
+        window.location.reload()
     }
 
     forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
