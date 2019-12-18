@@ -1898,6 +1898,7 @@ function () {
     key: "redirect",
     value: function redirect(url) {
       window.location.href = url;
+      window.location.reload();
     }
   }, {
     key: "forceRefreshDataBoundElementsMarkedAsDirty",
