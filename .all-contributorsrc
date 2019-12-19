@@ -1,0 +1,33 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "calebporzio",
+      "name": "Caleb Porzio",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/3670578?v=4",
+      "profile": "http://calebporzio.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "lancepioch",
+      "name": "Lance Pioch",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1296882?v=4",
+      "profile": "https://lancepioch.com",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "livewire",
+  "projectOwner": "livewire",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
