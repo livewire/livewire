@@ -177,7 +177,11 @@ export default class Component {
     }
 
     redirect(url) {
-        window.location.href = url
+        if (window.Turbolinks && window.Turbolinks.supported) {
+            window.Turbolinks.visit(url)
+        } else {
+            window.location.href = url
+        }
     }
 
     forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
