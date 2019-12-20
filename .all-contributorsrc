@@ -115,6 +115,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "pddevins",
+      "name": "P. D. Devins",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/2133230?v=4",
+      "profile": "http://www.developingpatrick.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
