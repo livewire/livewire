@@ -293,6 +293,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "austenc",
+      "name": "Austen Cameron",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/575421?v=4",
+      "profile": "http://406.io",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
