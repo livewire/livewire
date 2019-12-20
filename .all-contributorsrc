@@ -235,6 +235,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "fakingfantastic",
+      "name": "Frank Lakatos",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/20476?v=4",
+      "profile": "http://www.fakingfantastic.com",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
