@@ -152,6 +152,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "intellow",
+      "name": "Intellow",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/40676515?v=4",
+      "profile": "https://intellow.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
