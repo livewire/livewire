@@ -208,6 +208,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "lassemettovaara",
+      "name": "Lasse Mettovaara",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/3303413?v=4",
+      "profile": "https://github.com/lassemettovaara",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
