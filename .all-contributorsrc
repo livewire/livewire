@@ -134,6 +134,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "marksalmon",
+      "name": "Mark Salmon",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/7000886?v=4",
+      "profile": "https://github.com/marksalmon",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
