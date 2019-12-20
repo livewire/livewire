@@ -1,6 +1,6 @@
 ![Livewire: If Vue and Blade had a baby, it would be a jellyfish.](github_banner.png)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -35,6 +35,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://github.com/jjhamkuijpers"><img src="https://avatars2.githubusercontent.com/u/7311629?v=4" width="100px;" alt=""/><br /><sub><b>Joris Kuijpers</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=jjhamkuijpers" title="Code">💻</a></td>
     <td align="center"><a href="https://adevade.com"><img src="https://avatars0.githubusercontent.com/u/1066486?v=4" width="100px;" alt=""/><br /><sub><b>Andréas Lundgren</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=adevade" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/morpheus7CS"><img src="https://avatars2.githubusercontent.com/u/8884582?v=4" width="100px;" alt=""/><br /><sub><b>Gal Jakič</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=morpheus7CS" title="Tests">⚠️</a></td>
   </tr>
 </table>
 
