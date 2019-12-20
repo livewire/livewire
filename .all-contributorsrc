@@ -311,6 +311,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "hivokas",
+      "name": "Ilya Sakovich",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/22997803?v=4",
+      "profile": "https://hivokas.com",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
