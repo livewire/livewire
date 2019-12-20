@@ -302,6 +302,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "cihantas",
+      "name": "Cihan Tas",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/1579976?v=4",
+      "profile": "https://tas.fm",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
