@@ -1,6 +1,6 @@
 ![Livewire: If Vue and Blade had a baby, it would be a jellyfish.](github_banner.png)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-26-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-27-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -56,6 +56,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/lucasmichot"><img src="https://avatars1.githubusercontent.com/u/513603?v=4" width="100px;" alt=""/><br /><sub><b>Lucas Michot</b></sub></a><br /><a href="#maintenance-lucasmichot" title="Maintenance">🚧</a></td>
     <td align="center"><a href="http://webong.dev"><img src="https://avatars2.githubusercontent.com/u/30173059?v=4" width="100px;" alt=""/><br /><sub><b>Wisdom Anthony Ebong</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=webong" title="Code">💻</a></td>
     <td align="center"><a href="http://www.fakingfantastic.com"><img src="https://avatars3.githubusercontent.com/u/20476?v=4" width="100px;" alt=""/><br /><sub><b>Frank Lakatos</b></sub></a><br /><a href="#maintenance-fakingfantastic" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="http://verrips.org"><img src="https://avatars0.githubusercontent.com/u/749015?v=4" width="100px;" alt=""/><br /><sub><b>Roy Verrips</b></sub></a><br /><a href="#maintenance-rverrips" title="Maintenance">🚧</a></td>
   </tr>
 </table>
 
