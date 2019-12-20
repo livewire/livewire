@@ -190,6 +190,15 @@
         "maintenance",
         "code"
       ]
+    },
+    {
+      "login": "wsamoht",
+      "name": "Tom Westrick",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/5725966?v=4",
+      "profile": "https://github.com/wsamoht",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
