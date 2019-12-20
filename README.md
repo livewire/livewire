@@ -1,6 +1,6 @@
 ![Livewire: If Vue and Blade had a baby, it would be a jellyfish.](github_banner.png)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -29,6 +29,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://www.tonkomulder.nl"><img src="https://avatars3.githubusercontent.com/u/27585?v=4" width="100px;" alt=""/><br /><sub><b>Tonko Mulder</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=Treggats" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/davidpiesse"><img src="https://avatars2.githubusercontent.com/u/800650?v=4" width="100px;" alt=""/><br /><sub><b>David Piesse</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=davidpiesse" title="Code">💻</a></td>
     <td align="center"><a href="https://twitter.com/melek_rebai"><img src="https://avatars1.githubusercontent.com/u/1449151?v=4" width="100px;" alt=""/><br /><sub><b>Melek REBAI</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=shadoWalker89" title="Code">💻</a></td>
+    <td align="center"><a href="https://nunomaduro.com"><img src="https://avatars2.githubusercontent.com/u/5457236?v=4" width="100px;" alt=""/><br /><sub><b>Nuno Maduro</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=nunomaduro" title="Code">💻</a></td>
   </tr>
 </table>
 
