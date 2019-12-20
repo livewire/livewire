@@ -35,7 +35,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://github.com/jjhamkuijpers"><img src="https://avatars2.githubusercontent.com/u/7311629?v=4" width="100px;" alt=""/><br /><sub><b>Joris Kuijpers</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=jjhamkuijpers" title="Code">💻</a></td>
     <td align="center"><a href="https://adevade.com"><img src="https://avatars0.githubusercontent.com/u/1066486?v=4" width="100px;" alt=""/><br /><sub><b>Andréas Lundgren</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=adevade" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/morpheus7CS"><img src="https://avatars2.githubusercontent.com/u/8884582?v=4" width="100px;" alt=""/><br /><sub><b>Gal Jakič</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=morpheus7CS" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://github.com/morpheus7CS"><img src="https://avatars2.githubusercontent.com/u/8884582?v=4" width="100px;" alt=""/><br /><sub><b>Gal Jakič</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=morpheus7CS" title="Tests">⚠️</a> <a href="#maintenance-morpheus7CS" title="Maintenance">🚧</a></td>
     <td align="center"><a href="http://justinseliga.com"><img src="https://avatars2.githubusercontent.com/u/3277067?v=4" width="100px;" alt=""/><br /><sub><b>Justin Seliga</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=jrseliga" title="Code">💻</a></td>
   </tr>
 </table>
