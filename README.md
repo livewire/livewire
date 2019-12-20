@@ -1,6 +1,6 @@
 ![Livewire: If Vue and Blade had a baby, it would be a jellyfish.](github_banner.png)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-22-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-23-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -52,6 +52,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   </tr>
   <tr>
     <td align="center"><a href="https://github.com/kotfire"><img src="https://avatars3.githubusercontent.com/u/8735081?v=4" width="100px;" alt=""/><br /><sub><b>Gustavo Real</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=kotfire" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/lassemettovaara"><img src="https://avatars0.githubusercontent.com/u/3303413?v=4" width="100px;" alt=""/><br /><sub><b>Lasse Mettovaara</b></sub></a><br /><a href="#maintenance-lassemettovaara" title="Maintenance">🚧</a></td>
   </tr>
 </table>
 
