@@ -244,6 +244,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "rverrips",
+      "name": "Roy Verrips",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/749015?v=4",
+      "profile": "http://verrips.org",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
