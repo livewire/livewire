@@ -1,6 +1,6 @@
 ![Livewire: If Vue and Blade had a baby, it would be a jellyfish.](github_banner.png)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-21-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -48,6 +48,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://www.ahmetbedir.net"><img src="https://avatars0.githubusercontent.com/u/10426366?v=4" width="100px;" alt=""/><br /><sub><b>Ahmet Bedir</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=ahmetbedir" title="Code">💻</a></td>
     <td align="center"><a href="http://jesseleite.com"><img src="https://avatars3.githubusercontent.com/u/5187394?v=4" width="100px;" alt=""/><br /><sub><b>Jesse Leite</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=jesseleite" title="Documentation">📖</a></td>
     <td align="center"><a href="https://till.im/"><img src="https://avatars0.githubusercontent.com/u/665029?v=4" width="100px;" alt=""/><br /><sub><b>Till Krüss</b></sub></a><br /><a href="#maintenance-tillkruss" title="Maintenance">🚧</a> <a href="https://github.com/livewire/livewire/commits?author=tillkruss" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/wsamoht"><img src="https://avatars0.githubusercontent.com/u/5725966?v=4" width="100px;" alt=""/><br /><sub><b>Tom Westrick</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=wsamoht" title="Code">💻</a></td>
   </tr>
 </table>
 
