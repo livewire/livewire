@@ -226,6 +226,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "webong",
+      "name": "Wisdom Anthony Ebong",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/30173059?v=4",
+      "profile": "http://webong.dev",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
