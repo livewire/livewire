@@ -1,6 +1,6 @@
 ![Livewire: If Vue and Blade had a baby, it would be a jellyfish.](github_banner.png)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-28-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-29-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -58,6 +58,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://www.fakingfantastic.com"><img src="https://avatars3.githubusercontent.com/u/20476?v=4" width="100px;" alt=""/><br /><sub><b>Frank Lakatos</b></sub></a><br /><a href="#maintenance-fakingfantastic" title="Maintenance">🚧</a></td>
     <td align="center"><a href="http://verrips.org"><img src="https://avatars0.githubusercontent.com/u/749015?v=4" width="100px;" alt=""/><br /><sub><b>Roy Verrips</b></sub></a><br /><a href="#maintenance-rverrips" title="Maintenance">🚧</a></td>
     <td align="center"><a href="https://github.com/defenestrator"><img src="https://avatars3.githubusercontent.com/u/529446?v=4" width="100px;" alt=""/><br /><sub><b>The Defenestrator</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=defenestrator" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="http://www.venconnect.co"><img src="https://avatars1.githubusercontent.com/u/13446694?v=4" width="100px;" alt=""/><br /><sub><b>Angus Allman</b></sub></a><br /><a href="#maintenance-allmanaj" title="Maintenance">🚧</a></td>
   </tr>
 </table>
 
