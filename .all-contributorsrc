@@ -262,6 +262,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "allmanaj",
+      "name": "Angus Allman",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/13446694?v=4",
+      "profile": "http://www.venconnect.co",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
