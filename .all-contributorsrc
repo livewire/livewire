@@ -217,6 +217,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "lucasmichot",
+      "name": "Lucas Michot",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/513603?v=4",
+      "profile": "https://github.com/lucasmichot",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
