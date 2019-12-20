@@ -76,6 +76,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "adevade",
+      "name": "Andréas Lundgren",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1066486?v=4",
+      "profile": "https://adevade.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
