@@ -170,6 +170,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "jesseleite",
+      "name": "Jesse Leite",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/5187394?v=4",
+      "profile": "http://jesseleite.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
