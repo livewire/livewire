@@ -179,6 +179,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "tillkruss",
+      "name": "Till Krüss",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/665029?v=4",
+      "profile": "https://till.im/",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
