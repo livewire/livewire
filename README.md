@@ -1,6 +1,6 @@
 ![Livewire: If Vue and Blade had a baby, it would be a jellyfish.](github_banner.png)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-34-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-35-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -66,6 +66,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://406.io"><img src="https://avatars2.githubusercontent.com/u/575421?v=4" width="100px;" alt=""/><br /><sub><b>Austen Cameron</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=austenc" title="Code">💻</a></td>
     <td align="center"><a href="https://tas.fm"><img src="https://avatars2.githubusercontent.com/u/1579976?v=4" width="100px;" alt=""/><br /><sub><b>Cihan Tas</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=cihantas" title="Code">💻</a></td>
     <td align="center"><a href="https://hivokas.com"><img src="https://avatars1.githubusercontent.com/u/22997803?v=4" width="100px;" alt=""/><br /><sub><b>Ilya Sakovich</b></sub></a><br /><a href="#maintenance-hivokas" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://chinleung.com"><img src="https://avatars3.githubusercontent.com/u/19669331?v=4" width="100px;" alt=""/><br /><sub><b>Chin Leung</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=chinleung" title="Code">💻</a></td>
   </tr>
 </table>
 

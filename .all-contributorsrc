@@ -320,6 +320,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "chinleung",
+      "name": "Chin Leung",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/19669331?v=4",
+      "profile": "https://chinleung.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
