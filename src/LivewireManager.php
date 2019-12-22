@@ -2,7 +2,6 @@
 
 namespace Livewire;
 
-use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Fluent;
 use Livewire\Testing\TestableLivewire;
@@ -59,6 +58,13 @@ class LivewireManager
             $this->componentAliases[$alias] ?? $finder->find($alias)
         );
 
+        if(!$class) {
+            $finder->build();
+            $class = $class ?: (
+                $this->componentAliases[$alias] ?? $finder->find($alias)
+            );
+        }
+
         throw_unless($class, new ComponentNotFoundException(
             "Unable to find component: [{$alias}]"
         ));
@@ -70,7 +76,12 @@ class LivewireManager
     {
         $componentClass = $this->getComponentClass($component);
 
-        throw_unless(class_exists($componentClass), new Exception(
+        if(!class_exists($componentClass)) {
+            app(LivewireComponentsFinder::class)->build();
+            $componentClass = $this->getComponentClass($component);
+        }
+
+        throw_unless(class_exists($componentClass), new ComponentNotFoundException(
             "Component [{$component}] class not found: [{$componentClass}]"
         ));
 
