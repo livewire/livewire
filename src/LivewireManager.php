@@ -51,19 +51,22 @@ class LivewireManager
         $class = false;
 
         if ($this->customComponentResolver) {
+            // A developer can hijack the way Livewire finds components using Livewire::componentResolver();
             $class = call_user_func($this->customComponentResolver, $alias);
         }
 
         $class = $class ?: (
+            // Let's first check if the user registered the component using:
+            // Livewire::component('name', [Livewire component class]);
+            // If not, we'll look in the auto-discovery manifest.
             $this->componentAliases[$alias] ?? $finder->find($alias)
         );
 
-        if(!$class) {
-            $finder->build();
-            $class = $class ?: (
-                $this->componentAliases[$alias] ?? $finder->find($alias)
-            );
-        }
+        $class = $class ?: (
+            // If none of the above worked, our last-ditch effort will be
+            // to re-generate the auto-discovery manifest and look again.
+            $finder->build()->find($alias)
+        );
 
         throw_unless($class, new ComponentNotFoundException(
             "Unable to find component: [{$alias}]"
@@ -75,11 +78,6 @@ class LivewireManager
     public function activate($component, $id)
     {
         $componentClass = $this->getComponentClass($component);
-
-        if(!class_exists($componentClass)) {
-            app(LivewireComponentsFinder::class)->build();
-            $componentClass = $this->getComponentClass($component);
-        }
 
         throw_unless(class_exists($componentClass), new ComponentNotFoundException(
             "Component [{$component}] class not found: [{$componentClass}]"
