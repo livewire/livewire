@@ -156,8 +156,6 @@ export default class Component {
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.redirectTo) {
             this.redirect(response.redirectTo)
-
-            return
         }
 
         store.callHook('responseReceived', this, response)
