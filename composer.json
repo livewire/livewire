@@ -10,7 +10,8 @@
     ],
     "require": {
         "illuminate/support": "^5.6|^6.0",
-        "illuminate/validation": "^5.6|^6.0"
+        "illuminate/validation": "^5.6|^6.0",
+        "symfony/http-kernel": "^4.0|^5.0"
     },
     "extra": {
         "laravel": {

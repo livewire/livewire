@@ -3,6 +3,7 @@
 namespace Livewire\Testing\Concerns;
 
 use Livewire\Testing\TestConnectionHandler;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait MakesCallsToComponent
 {
@@ -60,22 +61,26 @@ trait MakesCallsToComponent
 
     public function sendMessage($message, $payload)
     {
-        $handler = (new TestConnectionHandler);
+        try {
+            $handler = (new TestConnectionHandler);
 
-        $result = $handler->handle([
-            'id' => $this->id,
-            'name' => $this->componentName,
-            'data' => $this->data,
-            'children' => $this->children,
-            'checksum' => $this->checksum,
-            'errorBag' => $this->errorBag,
-            'actionQueue' => [['type' => $message, 'payload' => $payload]],
-        ]);
+            $result = $handler->handle([
+                'id' => $this->id,
+                'name' => $this->componentName,
+                'data' => $this->data,
+                'children' => $this->children,
+                'checksum' => $this->checksum,
+                'errorBag' => $this->errorBag,
+                'actionQueue' => [['type' => $message, 'payload' => $payload]],
+            ]);
 
-        if ($validator = $handler->lastValidator) {
-            $this->lastValidator = $validator;
+            if ($validator = $handler->lastValidator) {
+                $this->lastValidator = $validator;
+            }
+
+            $this->updateComponent($result);
+        } catch (HttpException $exception) {
+            $this->lastHttpException = $exception;
         }
-
-        $this->updateComponent($result);
     }
 }
