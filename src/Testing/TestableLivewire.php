@@ -2,8 +2,9 @@
 
 namespace Livewire\Testing;
 
-use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class TestableLivewire
 {
@@ -20,6 +21,7 @@ class TestableLivewire
     public $errorBag;
     public $redirectTo;
     public $lastValidator;
+    public $lastHttpException;
 
     use Concerns\HasFunLittleUtilities,
         Concerns\MakesCallsToComponent,
@@ -36,9 +38,13 @@ class TestableLivewire
             app('livewire')->component($name = Str::random(20), $componentClass);
         }
 
-        $result = app('livewire')->mount($this->componentName = $name, ...$params);
+        try {
+            $result = app('livewire')->mount($this->componentName = $name, ...$params);
 
-        $this->initialUpdateComponent($result);
+            $this->initialUpdateComponent($result);
+        } catch (HttpException $exception) {
+            $this->lastHttpException = $exception;
+        }
     }
 
     public function initialUpdateComponent($output)

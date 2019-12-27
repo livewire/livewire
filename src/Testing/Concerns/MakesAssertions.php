@@ -119,4 +119,39 @@ trait MakesAssertions
 
         return $this;
     }
+
+    public function assertNotFound()
+    {
+        $actual = $this->lastHttpException->getStatusCode();
+
+        PHPUnit::assertTrue(
+            $actual === 404,
+            'Response status code ['.$this->getStatusCode().'] is not a not found status code.'
+        );
+
+        return $this;
+    }
+
+    public function assertForbidden()
+    {
+        $actual = $this->lastHttpException->getStatusCode();
+
+        PHPUnit::assertTrue(
+            $actual === 403,
+            'Response status code ['.$actual.'] is not a forbidden status code.'
+        );
+
+    }
+
+    public function assertUnauthorized()
+    {
+        $actual = $this->lastHttpException->getStatusCode();
+
+        PHPUnit::assertTrue(
+            $actual === 401,
+            'Response status code ['.$actual.'] is not an unauthorized status code.'
+        );
+
+        return $this;
+    }
 }
