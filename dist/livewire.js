@@ -1952,9 +1952,7 @@ function () {
     value: function handleMorph(dom) {
       var _this4 = this;
 
-      // @todo - remove me
-      console.log('remove-me');
-      window.changes = {
+      this.morphChanges = {
         changed: [],
         added: [],
         removed: []
@@ -1983,7 +1981,7 @@ function () {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
           }
 
-          window.changes.removed.push(node);
+          _this4.morphChanges.removed.push(node);
         },
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(node) {//
         },
@@ -2012,8 +2010,7 @@ function () {
           if (fromEl.isVueComponent()) return false;
         },
         onElUpdated: function onElUpdated(node) {
-          //
-          window.changes.changed.push(node);
+          _this4.morphChanges.changed.push(node);
         },
         onNodeAdded: function onNodeAdded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
@@ -2023,10 +2020,10 @@ function () {
             _node_initializer__WEBPACK_IMPORTED_MODULE_6__["default"].initialize(el, _this4);
           } else if (el.isComponentRootEl()) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].addComponent(new Component(el, _this4.connection));
-          } // Skip.
+          }
 
+          _this4.morphChanges.added.push(node); // Skip.
 
-          window.changes.added.push(node);
         }
       });
     }
