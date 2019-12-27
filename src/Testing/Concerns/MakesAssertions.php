@@ -120,13 +120,25 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertStatus($status)
+    {
+        $actual = $this->lastHttpException->getStatusCode();
+
+        PHPUnit::assertTrue(
+            $actual === $status,
+            "Expected status code [{$status}] but received [{$actual}]."
+        );
+
+        return $this;
+    }
+
     public function assertNotFound()
     {
         $actual = $this->lastHttpException->getStatusCode();
 
         PHPUnit::assertTrue(
             $actual === 404,
-            'Response status code ['.$this->getStatusCode().'] is not a not found status code.'
+            'Response status code ['.$actual.'] is not a not found status code.'
         );
 
         return $this;
