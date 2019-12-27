@@ -22,7 +22,7 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
     }
 
     /** @test */
-    public function public_property_is_accessible_in_view_without_this_by_default()
+    public function public_properties_are_not_accessible_in_view_without_this_by_default()
     {
         $this->expectException(ErrorException::class);
 

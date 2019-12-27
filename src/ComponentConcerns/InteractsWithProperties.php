@@ -5,7 +5,6 @@ namespace Livewire\ComponentConcerns;
 use Livewire\DataCaster;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Exceptions\ProtectedPropertyBindingException;
 
 trait InteractsWithProperties
 {
@@ -57,39 +56,6 @@ trait InteractsWithProperties
         }
 
         return $value;
-    }
-
-    public function setPropertyValue($name, $value)
-    {
-        $propertyName = $this->beforeFirstDot($name);
-
-        $castValue = $this->castValue($propertyName, $value);
-
-        // @todo: this is fired even if a property isn't present at all which is confusing.
-        throw_unless($this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName), ProtectedPropertyBindingException::class);
-
-        if ($this->containsDots($name)) {
-            return data_set(
-                $this->{$propertyName},
-                $this->afterFirstDot($name),
-                $castValue
-            );
-        }
-
-        return $this->{$name} = $castValue;
-    }
-
-    public function castValue($propertyName, $value)
-    {
-        $casts = $this->casts;
-
-        if (! isset($casts[$propertyName])) return $value;
-
-        $type = $casts[$propertyName];
-
-        $caster = new DataCaster;
-
-        return $caster->castTo($type, $value);
     }
 
     public function setProtectedPropertyValue($name, $value)

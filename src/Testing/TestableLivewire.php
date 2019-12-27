@@ -77,9 +77,7 @@ class TestableLivewire
 
     public function get($property)
     {
-        $cachedProtectedProperties = data_get(cache()->get("{$this->id}"), '__protected_properties', []);
-
-        return data_get($this->data + $cachedProtectedProperties, $property);
+        return data_get($this->data, $property);
     }
 
     public function __get($property)

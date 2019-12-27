@@ -236,6 +236,9 @@ export default class Component {
     }
 
     handleMorph(dom) {
+        // @todo - remove me
+        console.log('remove-me')
+        window.changes = {changed: [], added: [], removed: []}
         morphdom(this.el.rawNode(), dom, {
             childrenOnly: false,
 
@@ -269,6 +272,8 @@ export default class Component {
                 if (node.__livewire) {
                     store.removeComponent(node.__livewire)
                 }
+
+                window.changes.removed.push(node)
             },
 
             onBeforeElChildrenUpdated: node => {
@@ -304,6 +309,7 @@ export default class Component {
 
             onElUpdated: (node) => {
                 //
+                window.changes.changed.push(node)
             },
 
             onNodeAdded: (node) => {
@@ -320,6 +326,7 @@ export default class Component {
                 }
 
                 // Skip.
+                window.changes.added.push(node)
             },
         })
     }

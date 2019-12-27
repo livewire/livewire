@@ -1897,7 +1897,11 @@ function () {
   }, {
     key: "redirect",
     value: function redirect(url) {
-      window.location.href = url;
+      if (window.Turbolinks && window.Turbolinks.supported) {
+        window.Turbolinks.visit(url);
+      } else {
+        window.location.href = url;
+      }
     }
   }, {
     key: "forceRefreshDataBoundElementsMarkedAsDirty",
@@ -1948,6 +1952,13 @@ function () {
     value: function handleMorph(dom) {
       var _this4 = this;
 
+      // @todo - remove me
+      console.log('remove-me');
+      window.changes = {
+        changed: [],
+        added: [],
+        removed: []
+      };
       Object(_dom_morphdom__WEBPACK_IMPORTED_MODULE_3__["default"])(this.el.rawNode(), dom, {
         childrenOnly: false,
         getNodeKey: function getNodeKey(node) {
@@ -1971,6 +1982,8 @@ function () {
           if (node.__livewire) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
           }
+
+          window.changes.removed.push(node);
         },
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(node) {//
         },
@@ -1998,7 +2011,9 @@ function () {
 
           if (fromEl.isVueComponent()) return false;
         },
-        onElUpdated: function onElUpdated(node) {//
+        onElUpdated: function onElUpdated(node) {
+          //
+          window.changes.changed.push(node);
         },
         onNodeAdded: function onNodeAdded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
@@ -2010,6 +2025,8 @@ function () {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].addComponent(new Component(el, _this4.connection));
           } // Skip.
 
+
+          window.changes.added.push(node);
         }
       });
     }
