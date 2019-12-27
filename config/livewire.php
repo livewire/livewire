@@ -9,7 +9,9 @@ return [
     |
     | This value sets the root namespace for Livewire component classes in
     | your application. This value effects component auto-discovery and
-    | any livewire file helper commands, like `artisan make:livewire`
+    | any livewire file helper commands, like `artisan make:livewire`.
+    | If you change this namespace, make sure to run
+    | `php artisan livewire:discover`
     |
     */
 
