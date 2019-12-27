@@ -10,8 +10,8 @@ return [
     | This value sets the root namespace for Livewire component classes in
     | your application. This value effects component auto-discovery and
     | any livewire file helper commands, like `artisan make:livewire`.
-    | If you change this namespace, make sure to run
-    | `php artisan livewire:discover`
+    |
+    | After changing this item, run: `php artisan livewire:discover`
     |
     */
 
@@ -56,21 +56,21 @@ return [
     */
 
     'middleware_group'  => 'web',
-    
+
     /*
     |--------------------------------------------------------------------------
     | Manifest File Path
     |--------------------------------------------------------------------------
     |
     | This value sets the path to Livewire manifest file path.
-    | The default should work for most cases (which is 
-    | "<app_root>/bootstrap/cache/livewire-components.php)", but for specific 
+    | The default should work for most cases (which is
+    | "<app_root>/bootstrap/cache/livewire-components.php)", but for specific
     | cases like when hosting on Laravel Vapor, it could be set to a different value.
     |
     | Example: For Laravel Vapor, it would be "/tmp/storage/bootstrap/cache/livewire-components.php"
     |
     */
-    
+
     'manifest_path' => null,
 
 ];
