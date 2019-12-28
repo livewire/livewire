@@ -3,10 +3,10 @@
 namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
-use Livewire\Exceptions\CannotBindDataToEloquenModelException;
-use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
+use Livewire\Exceptions\CannotBindDataToEloquenModelException;
+use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 
 trait HandlesActions
 {
@@ -29,9 +29,9 @@ trait HandlesActions
 
             if ($this->containsDots($name)) {
                 data_set($this->{$propertyName}, $this->afterFirstDot($name), $value);
+            } else {
+                $this->{$name} = $value;
             }
-
-            $this->{$name} = $value;
 
             $this->rehashProperty($name);
         });
