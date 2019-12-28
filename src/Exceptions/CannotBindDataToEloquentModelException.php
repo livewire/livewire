@@ -2,7 +2,7 @@
 
 namespace Livewire\Exceptions;
 
-class CannotBindDataToEloquenModelException extends \Exception
+class CannotBindDataToEloquentModelException extends \Exception
 {
     use BypassViewHandler;
 
