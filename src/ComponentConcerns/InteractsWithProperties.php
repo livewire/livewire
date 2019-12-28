@@ -2,7 +2,6 @@
 
 namespace Livewire\ComponentConcerns;
 
-use Livewire\DataCaster;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 

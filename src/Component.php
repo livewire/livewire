@@ -8,7 +8,6 @@ use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Livewire\PassPublicPropertiesToView;
-use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 abstract class Component
 {
