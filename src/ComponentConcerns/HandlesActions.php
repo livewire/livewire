@@ -5,7 +5,7 @@ namespace Livewire\ComponentConcerns;
 use Illuminate\Support\Str;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\ProtectedPropertyBindingException;
-use Livewire\Exceptions\CannotBindDataToEloquenModelException;
+use Livewire\Exceptions\CannotBindDataToEloquentModelException;
 use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 
 trait HandlesActions
@@ -21,7 +21,7 @@ trait HandlesActions
     {
         $propertyName = $this->beforeFirstDot($name);
 
-        throw_if(in_array($propertyName, $this->lockedModelProperties), new CannotBindDataToEloquenModelException($name));
+        throw_if(in_array($propertyName, $this->lockedModelProperties), new CannotBindDataToEloquentModelException($name));
 
         $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) use ($propertyName) {
             // @todo: this is fired even if a property isn't present at all which is confusing.
