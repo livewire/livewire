@@ -2,8 +2,8 @@
 
 namespace Livewire\Testing\Concerns;
 
-use Illuminate\Foundation\Testing\Assert as PHPUnit;
 use Illuminate\Support\MessageBag;
+use Illuminate\Foundation\Testing\Assert as PHPUnit;
 
 trait MakesAssertions
 {
@@ -21,23 +21,16 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertCacheHas($key)
-    {
-        PHPUnit::assertTrue($this->instance->cache()->has($key));
-
-        return $this;
-    }
-
     public function assertSee($value)
     {
-        PHPUnit::assertStringContainsString((string) $value, preg_replace('(wire:initial-data=\".+}")', '', $this->dom));
+        PHPUnit::assertStringContainsString((string) $value, preg_replace('(wire:initial-data=\".+}")', '', $this->payload['dom']));
 
         return $this;
     }
 
     public function assertDontSee($value)
     {
-        PHPUnit::assertStringNotContainsString((string) $value, preg_replace('(wire:initial-data=\".+}")', '', $this->dom));
+        PHPUnit::assertStringNotContainsString((string) $value, preg_replace('(wire:initial-data=\".+}")', '', $this->payload['dom']));
 
         return $this;
     }
@@ -47,15 +40,15 @@ trait MakesAssertions
         $assertionSuffix = '.';
 
         if (empty($params)) {
-            $test = collect($this->eventQueue)->contains('event', '=', $value);
+            $test = collect($this->payload['eventQueue'])->contains('event', '=', $value);
         } elseif (is_callable($params[0])) {
-            $event = collect($this->eventQueue)->first(function ($item) use ($value) {
+            $event = collect($this->payload['eventQueue'])->first(function ($item) use ($value) {
                 return $item['event'] === $value;
             });
 
             $test = $event && $params[0]($event['event'], $event['params']);
         } else {
-            $test = !! collect($this->eventQueue)->first(function ($item) use ($value, $params) {
+            $test = !! collect($this->payload['eventQueue'])->first(function ($item) use ($value, $params) {
                 return $item['event'] === $value
                     && $item['params'] === $params;
             });
@@ -70,7 +63,7 @@ trait MakesAssertions
 
     public function assertHasErrors($keys = [])
     {
-        $errors = new MessageBag($this->errorBag ?: []);
+        $errors = new MessageBag($this->payload['errorBag'] ?: []);
 
         PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
 
@@ -94,7 +87,7 @@ trait MakesAssertions
 
     public function assertHasNoErrors($keys = [])
     {
-        $errors = new MessageBag($this->errorBag ?: []);
+        $errors = new MessageBag($this->payload['errorBag'] ?: []);
 
         if (empty($keys)) {
             PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors.');

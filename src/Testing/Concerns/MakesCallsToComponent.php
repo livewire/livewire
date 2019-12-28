@@ -65,12 +65,12 @@ trait MakesCallsToComponent
             $handler = (new TestConnectionHandler);
 
             $result = $handler->handle([
-                'id' => $this->id,
+                'id' => $this->payload['id'],
                 'name' => $this->componentName,
-                'data' => $this->data,
-                'children' => $this->children,
-                'checksum' => $this->checksum,
-                'errorBag' => $this->errorBag,
+                'data' => $this->payload['data'],
+                'children' => $this->payload['children'],
+                'checksum' => $this->payload['checksum'],
+                'errorBag' => $this->payload['errorBag'],
                 'actionQueue' => [['type' => $message, 'payload' => $payload]],
             ]);
 

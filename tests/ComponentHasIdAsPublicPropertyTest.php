@@ -12,7 +12,7 @@ class ComponentHasIdAsPublicPropertyTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ComponentWithIdProperty::class);
 
-        $this->assertNotNull($component->id);
+        $this->assertNotNull($component->id());
     }
 }
 

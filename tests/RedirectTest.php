@@ -16,7 +16,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirect');
 
-        $this->assertEquals('/local', $component->redirectTo);
+        $this->assertEquals('/local', $component->payload['redirectTo']);
     }
 
     /** @test */
@@ -24,7 +24,7 @@ class RedirectTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(TriggersRedirectOnMountStub::class);
 
-        $this->assertEquals('/local', $component->redirectTo);
+        $this->assertEquals('/local', $component->payload['redirectTo']);
     }
 
     /** @test */
@@ -36,7 +36,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectRoute');
 
-        $this->assertEquals('http://localhost/foo', $component->redirectTo);
+        $this->assertEquals('http://localhost/foo', $component->payload['redirectTo']);
     }
 
     /** @test */
@@ -48,7 +48,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectAction');
 
-        $this->assertEquals('http://localhost/foo', $component->redirectTo);
+        $this->assertEquals('http://localhost/foo', $component->payload['redirectTo']);
     }
 
     /** @test */
@@ -58,7 +58,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectHelper');
 
-        $this->assertEquals(url('foo'), $component->redirectTo);
+        $this->assertEquals(url('foo'), $component->payload['redirectTo']);
     }
 
     /** @test */
@@ -68,7 +68,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectFacadeUsingTo');
 
-        $this->assertEquals(url('foo'), $component->redirectTo);
+        $this->assertEquals(url('foo'), $component->payload['redirectTo']);
     }
 
     /** @test */
@@ -80,7 +80,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectFacadeUsingRoute');
 
-        $this->assertEquals(route('foo'), $component->redirectTo);
+        $this->assertEquals(route('foo'), $component->payload['redirectTo']);
     }
 
     /** @test */
@@ -92,7 +92,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectHelperUsingRoute');
 
-        $this->assertEquals(route('foo'), $component->redirectTo);
+        $this->assertEquals(route('foo'), $component->payload['redirectTo']);
     }
 
     protected function registerNamedRoute()
