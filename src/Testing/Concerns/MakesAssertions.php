@@ -30,14 +30,16 @@ trait MakesAssertions
 
     public function assertSee($value)
     {
-        PHPUnit::assertStringContainsString((string) $value, preg_replace('(wire:initial-data=\".+}")', '', $this->dom));
+        PHPUnit::assertStringContainsString((string) $value,
+                                preg_replace('(wire:initial-data=\".+}")', '', $this->dom));
 
         return $this;
     }
 
     public function assertDontSee($value)
     {
-        PHPUnit::assertStringNotContainsString((string) $value, preg_replace('(wire:initial-data=\".+}")', '', $this->dom));
+        PHPUnit::assertStringNotContainsString((string) $value,
+                               preg_replace('(wire:initial-data=\".+}")', '', $this->dom));
 
         return $this;
     }
@@ -79,13 +81,19 @@ trait MakesAssertions
         foreach ($keys as $key => $value) {
             if (is_int($key)) {
                 PHPUnit::assertTrue($errors->has($value), "Component missing error: $value");
-            } else {
-                $rules = array_keys($this->lastValidator->failed()[$key]);
-                $lowerCaseRules = array_map('strtolower', $rules);
+                continue;
+            }
 
-                foreach ((array) $value as $rule) {
-                    PHPUnit::assertContains($rule, $lowerCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
-                }
+            if (!array_key_exists($key, $errors->messages())) {
+                PHPUnit::assertTrue(false, "Component has no errors for [{$key}] attribute");
+                continue;
+            }
+
+            $errorMessages = implode(" ", $errors->messages()[$key]);
+
+            foreach ((array) $value as $rule) {
+                PHPUnit::assertStringContainsStringIgnoringCase($rule, $errorMessages,
+                                        "Component has no [{$rule}] errors for [{$key}] attribute.");
             }
         }
 
@@ -107,14 +115,23 @@ trait MakesAssertions
         foreach ($keys as $key => $value) {
             if (is_int($key)) {
                 PHPUnit::assertFalse($errors->has($value), "Component has error: $value");
-            } else {
-                $rules = array_keys($this->lastValidator->failed()[$key]);
-                $lowerCaseRules = array_map('strtolower', $rules);
-
-                foreach ((array) $value as $rule) {
-                    PHPUnit::assertNotContains($rule, $lowerCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
-                }
+                continue;
             }
+
+            if (!array_key_exists($key, $this->data)) {
+                PHPUnit::assertTrue(false, "Component attribute [{$key}] has not been set");
+                continue;
+            }
+
+            if (array_key_exists($key, $errors->messages())) {
+
+                $errorMessages = implode(" ",$errors->messages()[$key]);
+                foreach ((array) $value as $rule) {
+                    PHPUnit::assertStringNotContainsStringIgnoringCase($rule, $errorMessages, "Component has no [{$rule}] errors for [{$key}] attribute.");
+                }
+                continue;
+            }
+            PHPUnit::assertTrue(true, "Component has no errors for [{$key}] attribute");
         }
 
         return $this;

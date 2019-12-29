@@ -101,6 +101,34 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function can_validate_using_key_value_pairs()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->set('foo', '')
+            ->set('bar', '')
+            ->call('runValidation')
+            ->assertHasErrors(['foo', 'bar'])
+            ->assertHasErrors(
+                [
+                    'foo' => 'Required',
+                    'bar' => 'required',
+                ]
+            )
+            ->set('foo', 'foo')
+            ->set('bar', 'bar')
+            ->call('runValidation')
+            ->assertHasNoErrors(['foo', 'bar'])
+            ->assertHasNoErrors(
+                [
+                    'foo' => 'required',
+                    'bar' => 'email',
+                ]
+            );
+    }
+
+    /** @test */
     public function can_validate_only_a_specific_field_and_preserve_other_validation_messages()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
