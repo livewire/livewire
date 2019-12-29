@@ -127,7 +127,8 @@ trait MakesAssertions
 
                 $errorMessages = implode(" ",$errors->messages()[$key]);
                 foreach ((array) $value as $rule) {
-                    PHPUnit::assertStringNotContainsStringIgnoringCase($rule, $errorMessages, "Component has no [{$rule}] errors for [{$key}] attribute.");
+                    PHPUnit::assertStringNotContainsStringIgnoringCase($rule, $errorMessages,
+                                       "Component has [{$rule}] errors for [{$key}] attribute.");
                 }
                 continue;
             }
