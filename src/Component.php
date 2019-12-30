@@ -70,6 +70,11 @@ abstract class Component
         return view("livewire.{$this->getName()}");
     }
 
+    public function renderWhen()
+    {
+        return true;
+    }
+
     public function output($errors = null)
     {
         // In the service provider, we hijack Laravel's Blade engine
@@ -79,6 +84,10 @@ abstract class Component
         // of this method.
         $engine = app('view.engine.resolver')->resolve('blade');
         $engine->startLivewireRendering($this);
+
+        if (!$this->renderWhen()) {
+            return '<div></div>';
+        }
 
         $view = $this->render();
 
