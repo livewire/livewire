@@ -4,6 +4,7 @@ namespace Tests;
 
 use Livewire\Component;
 use Livewire\LivewireManager;
+use PHPUnit\Framework\Assert as PHPUnit;
 
 class LifecycleHooksTest extends TestCase
 {
@@ -81,32 +82,32 @@ class ForLifecycleHooks extends Component
 
     public function updating($name, $value)
     {
-        assert($name === 'foo' || $name === 'baz');
-        assert($value === 'bar' || $value === 'bing');
+        PHPUnit::assertTrue($name === 'foo' || $name === 'baz' || $name === 'bar.foo' || $name === 'bar.cocktail.soft');
+        PHPUnit::assertTrue($value === 'bar' || $value === 'bing' || $value === 'baz' || $value === 'Shirley Ginger');
 
         $this->lifecycles['updating'] = true;
     }
 
     public function updated($name, $value)
     {
-        assert($name === 'foo' || $name === 'baz');
-        assert($value === 'bar' || $value === 'bing');
+        PHPUnit::assertTrue($name === 'foo' || $name === 'baz' || $name === 'bar.foo' || $name === 'bar.cocktail.soft');
+        PHPUnit::assertTrue($value === 'bar' || $value === 'bing' || $value === 'baz' || $value === 'Shirley Ginger');
 
         $this->lifecycles['updated'] = true;
     }
 
     public function updatingFoo($value)
     {
-        assert(is_null($this->foo));
-        assert($value === 'bar');
+        PHPUnit::assertNull($this->foo);
+        PHPUnit::assertSame($value, 'bar');
 
         $this->lifecycles['updatingFoo'] = true;
     }
 
     public function updatedFoo($value)
     {
-        assert($this->foo === 'bar');
-        assert($value === 'bar');
+        PHPUnit::assertSame($this->foo, 'bar');
+        PHPUnit::assertSame($value, 'bar');
 
         $this->lifecycles['updatedFoo'] = true;
     }
