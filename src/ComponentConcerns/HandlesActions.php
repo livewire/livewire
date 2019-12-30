@@ -39,17 +39,20 @@ trait HandlesActions
 
     protected function callBeforeAndAferSyncHooks($name, $value, $callback)
     {
-        $beforeMethod = 'updating'.Str::studly($name);
-        $afterMethod = 'updated'.Str::studly($name);
+        $methodName = Str::before(Str::studly($name), '.');
+        $key = Str::contains($name, '.') ? Str::after($name, '.'): null;
+
+        $beforeMethod = 'updating'.$methodName;
+        $afterMethod = 'updated'.$methodName;
 
         if (method_exists($this, $beforeMethod)) {
-            $this->{$beforeMethod}($value);
+            $this->{$beforeMethod}($value, $key);
         }
 
         $callback($name, $value);
 
         if (method_exists($this, $afterMethod)) {
-            $this->{$afterMethod}($value);
+            $this->{$afterMethod}($value, $key);
         }
     }
 
