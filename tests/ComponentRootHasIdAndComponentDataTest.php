@@ -14,8 +14,8 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
         $component = app(LivewireManager::class)->test(ComponentRootHasIdAndDataStub::class);
 
         $this->assertTrue(Str::contains(
-            $component->dom,
-            [$component->id, 'foo']
+            $component->payload['dom'],
+            [$component->id(), 'foo']
         ));
     }
 
@@ -28,7 +28,7 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
             <<<EOT
 {&quot;string&quot;:&quot;foo&quot;,&quot;array&quot;:[&quot;foo&quot;],&quot;object&quot;:{&quot;foo&quot;:&quot;bar&quot;},&quot;number&quot;:1,&quot;quote&quot;:&quot;\&quot;&quot;,&quot;singleQuote&quot;:&quot;'&quot;}
 EOT
-            , $component->dom
+            , $component->payload['dom']
         );
     }
 
@@ -40,11 +40,11 @@ EOT
         $component->call('$refresh');
 
         $this->assertTrue(Str::contains(
-            $component->dom, $component->id
+            $component->payload['dom'], $component->id()
         ));
 
         $this->assertFalse(Str::contains(
-            $component->dom, 'foo'
+            $component->payload['dom'], 'foo'
         ));
     }
 }

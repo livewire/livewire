@@ -13,7 +13,7 @@ class LivewireTestingTest extends TestCase
         $component = app(LivewireManager::class)
             ->test(HasMountArguments::class, 'foo');
 
-        $this->assertStringContainsString('foo', $component->dom);
+        $this->assertStringContainsString('foo', $component->payload['dom']);
     }
 
     /** @test */

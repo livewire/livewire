@@ -24,29 +24,12 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
     }
 
     /** @test */
-    public function exception_is_thrown_if_user_tries_to_set_public_property_to_model()
-    {
-        $this->expectException(PublicPropertyTypeNotAllowedException::class);
-
-        Livewire::test(ComponentWithPropertiesStub::class, new ModelStub);
-    }
-
-    /** @test */
-    public function exception_is_thrown_if_user_tries_to_set_public_property_to_collection_of_models()
-    {
-        $this->expectException(PublicPropertyTypeNotAllowedException::class);
-
-        $collection = new Collection([new ModelStub]);
-        Livewire::test(ComponentWithPropertiesStub::class, $collection);
-    }
-
-    /** @test */
     public function exception_is_thrown_and_not_caught_by_view_error_handler()
     {
         $this->expectException(PublicPropertyTypeNotAllowedException::class);
         Livewire::component('foo', ComponentWithPropertiesStub::class);
 
-        View::make('render-component', ['component' => 'foo', 'params' => [new ModelStub]])->render();
+        View::make('render-component', ['component' => 'foo', 'params' => [collect()]])->render();
     }
 
     /** @test */

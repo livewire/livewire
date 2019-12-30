@@ -48,6 +48,8 @@ class LivewireComponentsFinder
             })->toArray();
 
         $this->write($this->manifest);
+
+        return $this;
     }
 
     protected function write(array $manifest)

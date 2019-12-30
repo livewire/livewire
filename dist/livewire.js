@@ -1897,7 +1897,11 @@ function () {
   }, {
     key: "redirect",
     value: function redirect(url) {
-      window.location.href = url;
+      if (window.Turbolinks && window.Turbolinks.supported) {
+        window.Turbolinks.visit(url);
+      } else {
+        window.location.href = url;
+      }
     }
   }, {
     key: "forceRefreshDataBoundElementsMarkedAsDirty",
@@ -1948,6 +1952,11 @@ function () {
     value: function handleMorph(dom) {
       var _this4 = this;
 
+      this.morphChanges = {
+        changed: [],
+        added: [],
+        removed: []
+      };
       Object(_dom_morphdom__WEBPACK_IMPORTED_MODULE_3__["default"])(this.el.rawNode(), dom, {
         childrenOnly: false,
         getNodeKey: function getNodeKey(node) {
@@ -1971,6 +1980,8 @@ function () {
           if (node.__livewire) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].removeComponent(node.__livewire);
           }
+
+          _this4.morphChanges.removed.push(node);
         },
         onBeforeElChildrenUpdated: function onBeforeElChildrenUpdated(node) {//
         },
@@ -1998,7 +2009,8 @@ function () {
 
           if (fromEl.isVueComponent()) return false;
         },
-        onElUpdated: function onElUpdated(node) {//
+        onElUpdated: function onElUpdated(node) {
+          _this4.morphChanges.changed.push(node);
         },
         onNodeAdded: function onNodeAdded(node) {
           var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](node);
@@ -2008,7 +2020,9 @@ function () {
             _node_initializer__WEBPACK_IMPORTED_MODULE_6__["default"].initialize(el, _this4);
           } else if (el.isComponentRootEl()) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].addComponent(new Component(el, _this4.connection));
-          } // Skip.
+          }
+
+          _this4.morphChanges.added.push(node); // Skip.
 
         }
       });
@@ -3207,7 +3221,7 @@ __webpack_require__.r(__webpack_exports__);
     return token;
   },
   getSocketId: function getSocketId() {
-    if (Echo) {
+    if (typeof Echo !== 'undefined') {
       return Echo.socketId();
     }
   },

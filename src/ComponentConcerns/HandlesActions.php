@@ -4,14 +4,34 @@ namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
+use Livewire\Exceptions\ProtectedPropertyBindingException;
+use Livewire\Exceptions\CannotBindDataToEloquentModelException;
 use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
 
 trait HandlesActions
 {
+    protected $lockedModelProperties = [];
+
+    public function lockPropertyFromSync($property)
+    {
+        $this->lockedModelProperties[] = $property;
+    }
+
     public function syncInput($name, $value)
     {
-        $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) {
-            $this->setPropertyValue($name, $value);
+        $propertyName = $this->beforeFirstDot($name);
+
+        throw_if(in_array($propertyName, $this->lockedModelProperties), new CannotBindDataToEloquentModelException($name));
+
+        $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) use ($propertyName) {
+            // @todo: this is fired even if a property isn't present at all which is confusing.
+            throw_unless($this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName), ProtectedPropertyBindingException::class);
+
+            if ($this->containsDots($name)) {
+                data_set($this->{$propertyName}, $this->afterFirstDot($name), $value);
+            } else {
+                $this->{$name} = $value;
+            }
 
             $this->rehashProperty($name);
         });
