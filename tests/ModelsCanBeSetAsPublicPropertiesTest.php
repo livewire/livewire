@@ -5,7 +5,7 @@ namespace Tests;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
-use Livewire\Exceptions\CannotBindDataToEloquenModelException;
+use Livewire\Exceptions\CannotBindDataToEloquentModelException;
 use Livewire\Exceptions\CorruptComponentPayloadException;
 use Livewire\Livewire;
 
@@ -36,7 +36,7 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
     /** @test */
     public function an_eloquent_model_cannot_be_hijacked_by_binding_to_id_data()
     {
-        $this->expectException(CannotBindDataToEloquenModelException::class);
+        $this->expectException(CannotBindDataToEloquentModelException::class);
 
         $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
         ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
