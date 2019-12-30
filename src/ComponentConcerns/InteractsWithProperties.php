@@ -3,8 +3,7 @@
 namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
-use Livewire\DataCaster;
-use Livewire\Exceptions\ProtectedPropertyBindingException;
+use Illuminate\Database\Eloquent\Model;
 
 trait InteractsWithProperties
 {
@@ -58,39 +57,6 @@ trait InteractsWithProperties
         return $value;
     }
 
-    public function setPropertyValue($name, $value)
-    {
-        $propertyName = $this->beforeFirstDot($name);
-
-        $castValue = $this->castValue($propertyName, $value);
-
-        // @todo: this is fired even if a property isn't present at all which is confusing.
-        throw_unless($this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName), ProtectedPropertyBindingException::class);
-
-        if ($this->containsDots($name)) {
-            return data_set(
-                $this->{$propertyName},
-                $this->afterFirstDot($name),
-                $castValue
-            );
-        }
-
-        return $this->{$name} = $castValue;
-    }
-
-    public function castValue($propertyName, $value)
-    {
-        $casts = $this->casts;
-
-        if (! isset($casts[$propertyName])) return $value;
-
-        $type = $casts[$propertyName];
-
-        $caster = new DataCaster;
-
-        return $caster->castTo($type, $value);
-    }
-
     public function setProtectedPropertyValue($name, $value)
     {
         return $this->{$name} = $value;
@@ -124,6 +90,10 @@ trait InteractsWithProperties
     public function fill($values)
     {
         $publicProperties = array_keys($this->getPublicPropertiesDefinedBySubClass());
+
+        if ($values instanceof Model) {
+            $values = $values->toArray();
+        }
 
         foreach ($values as $key => $value) {
             if (in_array($key, $publicProperties)) {

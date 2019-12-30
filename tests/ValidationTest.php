@@ -14,8 +14,8 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidation');
 
-        $this->assertStringNotContainsString('The foo field is required', $component->dom);
-        $this->assertStringContainsString('The bar field is required', $component->dom);
+        $this->assertStringNotContainsString('The foo field is required', $component->payload['dom']);
+        $this->assertStringContainsString('The bar field is required', $component->payload['dom']);
     }
 
     /** @test */
@@ -25,7 +25,7 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidationWithCustomMessage');
 
-        $this->assertStringContainsString('Custom Message', $component->dom);
+        $this->assertStringContainsString('Custom Message', $component->payload['dom']);
     }
 
     /** @test */
@@ -35,7 +35,7 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidationWithCustomAttribute');
 
-        $this->assertStringContainsString('The foobar field is required.', $component->dom);
+        $this->assertStringContainsString('The foobar field is required.', $component->payload['dom']);
     }
 
     /** @test */
@@ -45,7 +45,7 @@ class ValidationTest extends TestCase
 
         $component->runAction('runNestedValidation');
 
-        $this->assertStringContainsString('emails.1 must be a valid email address.', $component->dom);
+        $this->assertStringContainsString('emails.1 must be a valid email address.', $component->payload['dom']);
     }
 
     /** @test */
@@ -55,8 +55,8 @@ class ValidationTest extends TestCase
 
         $component->runAction('runDeeplyNestedValidation');
 
-        $this->assertStringContainsString('items.1.baz field is required', $component->dom);
-        $this->assertStringNotContainsString('items.0.baz field is required', $component->dom);
+        $this->assertStringContainsString('items.1.baz field is required', $component->payload['dom']);
+        $this->assertStringNotContainsString('items.0.baz field is required', $component->payload['dom']);
     }
 
     /** @test */

@@ -8,7 +8,6 @@ use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Livewire\PassPublicPropertiesToView;
-use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 abstract class Component
 {
@@ -65,6 +64,11 @@ abstract class Component
         return $name;
     }
 
+    public function getCasts()
+    {
+        return $this->casts;
+    }
+
     public function render()
     {
         return view("livewire.{$this->getName()}");
@@ -83,7 +87,7 @@ abstract class Component
         $view = $this->render();
 
         // Normalize all the public properties in the component for JavaScript.
-        $this->normalizePublicPropertiesForJavaScript();
+        $this->normalizePublicPropertiesForBladeView();
 
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
@@ -107,44 +111,22 @@ abstract class Component
         return $output;
     }
 
-    public function normalizePublicPropertiesForJavaScript()
+    public function normalizePublicPropertiesForBladeView()
     {
-        $normalizedProperties = $this->castDataToJavaScriptReadableTypes(
-            $this->reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder(
-                $this->castDataFromUserDefinedCasters(
-                    $this->getPublicPropertiesDefinedBySubClass()
-                )
-            )
-        );
-
-        foreach ($normalizedProperties as $key => $value) {
-            $this->setPropertyValue($key, $value);
-        }
-    }
-
-    public function castDataFromUserDefinedCasters($data)
-    {
-        $dataCaster = new DataCaster;
-        $casts = $this->casts;
-
-        return collect($data)->map(function ($value, $key) use ($casts, $dataCaster) {
-            if (isset($casts[$key])) {
-                $type = $casts[$key];
-
-                return $dataCaster->castFrom($type, $value);
-            } else {
-                return $value;
+        foreach ($this->getPublicPropertiesDefinedBySubClass() as $key => $value) {
+            if (is_array($value)) {
+                $this->$key = $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
             }
-        })->all();
+        }
     }
 
-    protected function reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($data)
+    protected function reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value)
     {
-        if (! is_array($data)) {
-            return $data;
+        if (! is_array($value)) {
+            return $value;
         }
 
-        $normalizedData = $data;
+        $normalizedData = $value;
 
         // Make sure string keys are last (but not ordered). JSON.parse will do this.
         uksort($normalizedData, function ($a, $b) {
@@ -161,20 +143,8 @@ abstract class Component
         });
 
         return array_map(function ($value) {
-            return $this->reindexArraysWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
+            return $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
         }, $normalizedData);
-    }
-
-    public function castDataToJavaScriptReadableTypes($data)
-    {
-        array_walk($data, function ($value, $key) {
-            throw_unless(
-                is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value),
-                new PublicPropertyTypeNotAllowedException($this->getName(), $key, $value)
-            );
-        });
-
-        return json_decode(json_encode($data), true);
     }
 
     public function __call($method, $params)

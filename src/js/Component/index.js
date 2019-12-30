@@ -177,7 +177,11 @@ export default class Component {
     }
 
     redirect(url) {
-        window.location.href = url
+        if (window.Turbolinks && window.Turbolinks.supported) {
+            window.Turbolinks.visit(url)
+        } else {
+            window.location.href = url
+        }
     }
 
     forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
@@ -232,6 +236,8 @@ export default class Component {
     }
 
     handleMorph(dom) {
+        this.morphChanges = { changed: [], added: [], removed: [] }
+
         morphdom(this.el.rawNode(), dom, {
             childrenOnly: false,
 
@@ -265,6 +271,8 @@ export default class Component {
                 if (node.__livewire) {
                     store.removeComponent(node.__livewire)
                 }
+
+                this.morphChanges.removed.push(node)
             },
 
             onBeforeElChildrenUpdated: node => {
@@ -299,7 +307,7 @@ export default class Component {
             },
 
             onElUpdated: (node) => {
-                //
+                this.morphChanges.changed.push(node)
             },
 
             onNodeAdded: (node) => {
@@ -314,6 +322,8 @@ export default class Component {
                         new Component(el, this.connection)
                     )
                 }
+
+                this.morphChanges.added.push(node)
 
                 // Skip.
             },

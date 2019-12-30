@@ -16,20 +16,20 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
         $component = app(LivewireManager::class)->test(PublicPropertiesInViewStub::class);
 
         $this->assertTrue(Str::contains(
-            $component->dom,
+            $component->payload['dom'],
             'Caleb'
         ));
     }
 
     /** @test */
-    public function public_property_is_accessible_in_view_without_this_by_default()
+    public function public_properties_are_not_accessible_in_view_without_this_by_default()
     {
         $this->expectException(ErrorException::class);
 
         $component = app(LivewireManager::class)->test(PublicPropertiesInViewWithoutThisAndWithoutTraitStub::class);
 
         $this->assertTrue(Str::contains(
-            $component->dom,
+            $component->payload['dom'],
             'Caleb'
         ));
     }
@@ -40,7 +40,7 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
         $component = app(LivewireManager::class)->test(PublicPropertiesInViewWithoutThisStub::class);
 
         $this->assertTrue(Str::contains(
-            $component->dom,
+            $component->payload['dom'],
             'Caleb'
         ));
     }
