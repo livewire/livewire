@@ -161,9 +161,6 @@ trait MakesAssertions
         return $this;
     }
 
-    /**
-     * Assert whether the response is redirecting to a given URI.
-     */
     public function assertRedirect($uri = null)
     {
         PHPUnit::assertIsString(
