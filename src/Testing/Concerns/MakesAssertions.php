@@ -146,6 +146,7 @@ trait MakesAssertions
             'Response status code ['.$actual.'] is not a forbidden status code.'
         );
 
+        return $this;
     }
 
     public function assertUnauthorized()
@@ -156,6 +157,23 @@ trait MakesAssertions
             $actual === 401,
             'Response status code ['.$actual.'] is not an unauthorized status code.'
         );
+
+        return $this;
+    }
+
+    /**
+     * Assert whether the response is redirecting to a given URI.
+     */
+    public function assertRedirect($uri = null)
+    {
+        PHPUnit::assertIsString(
+            $this->payload['redirectTo'],
+            'Component did not perform a redirect.'
+        );
+
+        if (! is_null($uri)) {
+            PHPUnit::assertSame($uri, $this->payload['redirectTo']);
+        }
 
         return $this;
     }
