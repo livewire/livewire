@@ -4,6 +4,7 @@ namespace Tests;
 
 use Livewire\Component;
 use Livewire\LivewireManager;
+use PHPUnit\Framework\Assert as PHPUnit;
 
 class LifecycleHooksTest extends TestCase
 {
@@ -19,6 +20,8 @@ class LifecycleHooksTest extends TestCase
             'updated' => false,
             'updatingFoo' => false,
             'updatedFoo' => false,
+            'updatingBar' => false,
+            'updatedBar' => false,
         ], $component->lifecycles);
 
         $component->runAction('$refresh');
@@ -30,6 +33,8 @@ class LifecycleHooksTest extends TestCase
             'updated' => false,
             'updatingFoo' => false,
             'updatedFoo' => false,
+            'updatingBar' => false,
+            'updatedBar' => false,
         ], $component->lifecycles);
 
         $component->updateProperty('baz', 'bing');
@@ -41,6 +46,8 @@ class LifecycleHooksTest extends TestCase
             'updated' => true,
             'updatingFoo' => false,
             'updatedFoo' => false,
+            'updatingBar' => false,
+            'updatedBar' => false,
         ], $component->lifecycles);
 
         $component->updateProperty('foo', 'bar');
@@ -52,14 +59,35 @@ class LifecycleHooksTest extends TestCase
             'updated' => true,
             'updatingFoo' => true,
             'updatedFoo' => true,
+            'updatingBar' => false,
+            'updatedBar' => false,
         ], $component->lifecycles);
+
+        $component->updateProperty('bar.foo', 'baz');
+
+        $this->assertEquals([
+            'mount' => true,
+            'hydrate' => true,
+            'updating' => true,
+            'updated' => true,
+            'updatingFoo' => true,
+            'updatedFoo' => true,
+            'updatingBar' => true,
+            'updatedBar' => true,
+        ], $component->lifecycles);
+
+        $component->updateProperty('bar.cocktail.soft', 'Shirley Ginger');
     }
 }
 
 class ForLifecycleHooks extends Component
 {
     public $foo;
+
     public $baz;
+
+    public $bar = [];
+
     public $lifecycles = [
         'mount' => false,
         'hydrate' => false,
@@ -67,6 +95,8 @@ class ForLifecycleHooks extends Component
         'updated' => false,
         'updatingFoo' => false,
         'updatedFoo' => false,
+        'updatingBar' => false,
+        'updatedBar' => false,
     ];
 
     public function mount()
@@ -81,34 +111,52 @@ class ForLifecycleHooks extends Component
 
     public function updating($name, $value)
     {
-        assert($name === 'foo' || $name === 'baz');
-        assert($value === 'bar' || $value === 'bing');
+        PHPUnit::assertTrue($name === 'foo' || $name === 'baz' || $name === 'bar.foo' || $name === 'bar.cocktail.soft');
+        PHPUnit::assertTrue($value === 'bar' || $value === 'bing' || $value === 'baz' || $value === 'Shirley Ginger');
 
         $this->lifecycles['updating'] = true;
     }
 
     public function updated($name, $value)
     {
-        assert($name === 'foo' || $name === 'baz');
-        assert($value === 'bar' || $value === 'bing');
+        PHPUnit::assertTrue($name === 'foo' || $name === 'baz' || $name === 'bar.foo' || $name === 'bar.cocktail.soft');
+        PHPUnit::assertTrue($value === 'bar' || $value === 'bing' || $value === 'baz' || $value === 'Shirley Ginger');
 
         $this->lifecycles['updated'] = true;
     }
 
     public function updatingFoo($value)
     {
-        assert(is_null($this->foo));
-        assert($value === 'bar');
+        PHPUnit::assertNull($this->foo);
+        PHPUnit::assertSame($value, 'bar');
 
         $this->lifecycles['updatingFoo'] = true;
     }
 
     public function updatedFoo($value)
     {
-        assert($this->foo === 'bar');
-        assert($value === 'bar');
+        PHPUnit::assertSame($this->foo, 'bar');
+        PHPUnit::assertSame($value, 'bar');
 
         $this->lifecycles['updatedFoo'] = true;
+    }
+
+    public function updatingBar($value, $key)
+    {
+        PHPUnit::assertNull(data_get($this->bar, $key));
+        PHPUnit::assertContains($key, ['foo', 'cocktail.soft']);
+        PHPUnit::assertContains($value, ['baz', 'Shirley Ginger']);
+
+        $this->lifecycles['updatingBar'] = true;
+    }
+
+    public function updatedBar($value, $key)
+    {
+        PHPUnit::assertSame(data_get($this->bar, $key), $value);
+        PHPUnit::assertContains($key, ['foo', 'cocktail.soft']);
+        PHPUnit::assertContains($value, ['baz', 'Shirley Ginger']);
+
+        $this->lifecycles['updatedBar'] = true;
     }
 
     public function render()
