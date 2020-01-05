@@ -79,6 +79,14 @@ export default {
             case 'keyup':
                 this.attachListener(el, directive, component, (e) => {
                     // Only handle listener if no, or matching key modifiers are passed.
+                    const modifierKeys = ['ctrl', 'shift', 'alt', 'meta']
+                    modifierKeys.forEach((key) => {
+                        const keyName = key + 'Key'
+                        if (directive.modifiers.includes(key) && !e[keyName]) {
+                            return false
+                        }
+                    })
+
                     return (directive.modifiers.length === 0
                         || directive.modifiers.includes(kebabCase(e.key)))
                 })
