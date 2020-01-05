@@ -95,7 +95,7 @@ class LivewireServiceProvider extends ServiceProvider
         RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'unminified']);
         RouteFacade::get('/livewire/livewire.min.js', [LivewireJavaScriptAssets::class, 'minified']);
 
-        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
+        RouteFacade::post('/livewire/message/{name?}', HttpConnectionHandler::class)
             ->middleware(config('livewire.middleware_group', 'web'));
     }
 
