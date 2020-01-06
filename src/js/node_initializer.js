@@ -78,6 +78,21 @@ export default {
             case 'keydown':
             case 'keyup':
                 this.attachListener(el, directive, component, (e) => {
+                    // Detect system modifier key combinations if specified.
+                    const systemKeyModifiers = ['ctrl', 'shift', 'alt', 'meta', 'cmd', 'super']
+                    const selectedSystemKeyModifiers = systemKeyModifiers.filter(key => directive.modifiers.includes(key))
+
+                    if (selectedSystemKeyModifiers.length > 0) {
+                        const selectedButNotPressedKeyModifiers = selectedSystemKeyModifiers.filter(key => {
+                            // Alias "cmd" and "super" to "meta"
+                            if (key === 'cmd' || key === 'super') key = 'meta'
+
+                            return ! e[`${key}Key`]
+                        })
+
+                        if (selectedButNotPressedKeyModifiers.length > 0) return false;
+                    }
+
                     // Only handle listener if no, or matching key modifiers are passed.
                     return (directive.modifiers.length === 0
                         || directive.modifiers.includes(kebabCase(e.key)))
