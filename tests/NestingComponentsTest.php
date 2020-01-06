@@ -15,7 +15,7 @@ class NestingComponentsTest extends TestCase
         $component = app('livewire')->test('parent');
 
         $this->assertTrue(Str::contains(
-            $component->dom,
+            $component->payload['dom'],
             'foo'
         ));
     }
@@ -28,14 +28,14 @@ class NestingComponentsTest extends TestCase
         $component = app('livewire')->test('parent');
 
         $this->assertTrue(Str::contains(
-            $component->dom,
+            $component->payload['dom'],
             'foo'
         ));
 
         $component->runAction('$refresh');
 
         $this->assertFalse(Str::contains(
-            $component->dom,
+            $component->payload['dom'],
             'foo'
         ));
     }
@@ -48,14 +48,14 @@ class NestingComponentsTest extends TestCase
         $component = app('livewire')->test('parent');
 
         $this->assertTrue(Str::contains(
-            $component->dom,
+            $component->payload['dom'],
             'span'
         ));
 
         $component->runAction('$refresh');
 
         $this->assertTrue(Str::contains(
-            $component->dom,
+            $component->payload['dom'],
             'span'
         ));
     }
@@ -67,15 +67,15 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertTrue(Str::contains($component->dom, 'foo'));
+        $this->assertTrue(Str::contains($component->payload['dom'], 'foo'));
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertFalse(Str::contains($component->dom, 'foo'));
-        $this->assertTrue(Str::contains($component->dom, 'bar'));
+        $this->assertFalse(Str::contains($component->payload['dom'], 'foo'));
+        $this->assertTrue(Str::contains($component->payload['dom'], 'bar'));
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertFalse(Str::contains($component->dom, 'foo'));
-        $this->assertFalse(Str::contains($component->dom, 'bar'));
+        $this->assertFalse(Str::contains($component->payload['dom'], 'foo'));
+        $this->assertFalse(Str::contains($component->payload['dom'], 'bar'));
     }
 }
 

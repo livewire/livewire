@@ -90,7 +90,15 @@ class LivewireManager
     {
         $id = Str::random(20);
 
-        $instance = $this->activate($name, $id);
+        // Allow instantiating Livewire components directly from classes.
+        if (class_exists($name)) {
+            $instance = new $name($id);
+            // Set the name to the computed name, so that the full namespace
+            // isn't leaked to the front-end.
+            $name = $instance->getName();
+        } else {
+            $instance = $this->activate($name, $id);
+        }
 
         $this->initialHydrate($instance, []);
 

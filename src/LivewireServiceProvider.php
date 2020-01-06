@@ -51,6 +51,7 @@ class LivewireServiceProvider extends ServiceProvider
 
         $this->app->singleton(LivewireComponentsFinder::class, function () {
             $isHostedOnVapor = $_ENV['SERVER_SOFTWARE'] ?? null === 'vapor';
+
             return new LivewireComponentsFinder(
                 new Filesystem,
                 config('livewire.manifest_path') ?? (

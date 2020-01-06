@@ -20,10 +20,10 @@ class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends Te
         $this->withHeader('X-Livewire', 'true')->post("/livewire/message/{$component->componentName}", [
             'actionQueue' => [],
             'name' => $component->componentName,
-            'children' => $component->children,
-            'data' => $component->data,
-            'id' => $component->id,
-            'checksum' => $component->checksum,
+            'children' => $component->payload['children'],
+            'data' => $component->payload['data'],
+            'id' => $component->payload['id'],
+            'checksum' => $component->payload['checksum'],
             'fromPrefetch' => [],
         ])->assertJson(['data' => [
             'emptyString' => '',
@@ -45,10 +45,10 @@ class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends Te
         $this->post("/livewire/message/{$component->componentName}", [
             'actionQueue' => [],
             'name' => $component->componentName,
-            'children' => $component->children,
-            'data' => $component->data,
-            'id' => $component->id,
-            'checksum' => $component->checksum,
+            'children' => $component->payload['children'],
+            'data' => $component->payload['data'],
+            'id' => $component->payload['id'],
+            'checksum' => $component->payload['checksum'],
             'fromPrefetch' => [],
         ])->assertJson(['data' => [
             'emptyString' => null,

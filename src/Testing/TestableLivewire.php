@@ -2,28 +2,21 @@
 
 namespace Livewire\Testing;
 
-use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class TestableLivewire
 {
-    public $componentName;
-    public $id;
-    public $children;
-    public $checksum;
     public $prefix;
-    public $dom;
-    public $data;
-    public $dirtyInputs;
-    public $events;
-    public $eventQueue;
-    public $errorBag;
-    public $redirectTo;
+    public $payload = [];
+    public $componentName;
     public $lastValidator;
+    public $lastHttpException;
 
-    use Concerns\HasFunLittleUtilities,
+    use Concerns\MakesAssertions,
         Concerns\MakesCallsToComponent,
-        Concerns\MakesAssertions;
+        Concerns\HasFunLittleUtilities;
 
     public function __construct($name, $prefix, $params = [])
     {
@@ -36,50 +29,47 @@ class TestableLivewire
             app('livewire')->component($name = Str::random(20), $componentClass);
         }
 
-        $result = app('livewire')->mount($this->componentName = $name, ...$params);
+        try {
+            $result = app('livewire')->mount($name, ...$params);
 
-        $this->initialUpdateComponent($result);
+            $this->componentName = $name;
+
+            $this->updateComponent($result);
+        } catch (HttpException $exception) {
+            $this->lastHttpException = $exception;
+        }
     }
 
-    public function initialUpdateComponent($output)
+    public function updateComponent($output)
     {
-        $this->id = $output->id;
-        $this->dom = $output->dom;
-        $this->data = $output->data;
-        $this->children = $output->children;
-        $this->events = $output->events;
-        $this->eventQueue = $output->eventQueue;
-        $this->errorBag = $output->errorBag;
-        $this->checksum = $output->checksum;
-        $this->redirectTo = $output->redirectTo;
+        $this->payload = [
+            'id' => $output->id,
+            'name' => $output->name,
+            'dom' => $output->dom,
+            'data' => $output->data,
+            'children' => $output->children,
+            'events' => $output->events,
+            'eventQueue' => $output->eventQueue,
+            'errorBag' => $output->errorBag,
+            'checksum' => $output->checksum,
+            'redirectTo' => $output->redirectTo,
+            'dirtyInputs' => $output->dirtyInputs,
+        ];
     }
 
-    public function updateComponent($response)
+    public function id()
     {
-        $output = $response->toArray();
-
-        $this->id = $output['id'];
-        $this->dom = $output['dom'];
-        $this->data = $output['data'];
-        $this->checksum = $output['checksum'];
-        $this->children = $output['children'];
-        $this->dirtyInputs = $output['dirtyInputs'];
-        $this->events = $output['events'];
-        $this->redirectTo = $output['redirectTo'];
-        $this->eventQueue = $output['eventQueue'];
-        $this->errorBag = $output['errorBag'] ?? [];
+        return $this->payload['id'];
     }
 
     public function instance()
     {
-        return Livewire::activate($this->componentName, $this->id);
+        return Livewire::activate($this->componentName, $this->id());
     }
 
     public function get($property)
     {
-        $cachedProtectedProperties = data_get(cache()->get("{$this->id}"), '__protected_properties', []);
-
-        return data_get($this->data + $cachedProtectedProperties, $property);
+        return data_get($this->payload['data'], $property);
     }
 
     public function __get($property)

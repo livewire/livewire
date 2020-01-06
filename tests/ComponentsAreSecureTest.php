@@ -63,7 +63,7 @@ class ComponentsAreSecureTest extends TestCase
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
 
-        $component->data['publicProperty'] = 'different-property';
+        $component->payload['data']['publicProperty'] = 'different-property';
 
         $component->call('$refresh');
     }
@@ -76,7 +76,7 @@ class ComponentsAreSecureTest extends TestCase
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
 
-        $component->id = 'different-id';
+        $component->payload['id'] = 'different-id';
 
         $component->call('$refresh');
     }
@@ -91,7 +91,7 @@ class ComponentsAreSecureTest extends TestCase
         $component = app('livewire')->test('safe');
 
         // Hijack the "safe" component, with "unsafe"
-        $component->componentName = 'unsafe';
+        $component->payload['name'] = 'unsafe';
 
         // If the hijack was stopped, the expected exception will be thrown.
         // If it worked the, an execption will be thrown that will fail the test.
