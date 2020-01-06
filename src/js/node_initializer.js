@@ -78,15 +78,22 @@ export default {
             case 'keydown':
             case 'keyup':
                 this.attachListener(el, directive, component, (e) => {
-                    // Only handle listener if no, or matching key modifiers are passed.
-                    const modifierKeys = ['ctrl', 'shift', 'alt', 'meta']
-                    modifierKeys.forEach((key) => {
-                        const keyName = key + 'Key'
-                        if (directive.modifiers.includes(key) && !e[keyName]) {
-                            return false
-                        }
-                    })
+                    // Detect system modifier key combinations if specified.
+                    const systemKeyModifiers = ['ctrl', 'shift', 'alt', 'meta', 'cmd', 'super']
+                    const selectedSystemKeyModifiers = systemKeyModifiers.filter(key => directive.modifiers.includes(key))
 
+                    if (selectedSystemKeyModifiers.length > 0) {
+                        const selectedButNotPressedKeyModifiers = selectedSystemKeyModifiers.filter(key => {
+                            // Alias "cmd" and "super" to "meta"
+                            if (key === 'cmd' || key === 'super') key = 'meta'
+
+                            return ! e[`${key}Key`]
+                        })
+
+                        if (selectedButNotPressedKeyModifiers.length > 0) return false;
+                    }
+
+                    // Only handle listener if no, or matching key modifiers are passed.
                     return (directive.modifiers.length === 0
                         || directive.modifiers.includes(kebabCase(e.key)))
                 })
@@ -108,7 +115,7 @@ export default {
         }
     },
 
-    attachListener(el, directive, component, filter) {
+    attachListener(el, directive, component, callback) {
         if (directive.modifiers.includes('prefetch')) {
             el.addEventListener('mouseenter', () => {
                 component.addPrefetchAction(new MethodAction(directive.method, directive.params, el))
@@ -117,7 +124,7 @@ export default {
 
         const event = directive.type
         const handler = e => {
-            if (filter && filter(e) === false) {
+            if (callback && callback(e) === false) {
                 return
             }
 

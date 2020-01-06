@@ -5488,7 +5488,22 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       case 'keydown':
       case 'keyup':
         this.attachListener(el, directive, component, function (e) {
-          // Only handle listener if no, or matching key modifiers are passed.
+          // Detect system modifier key combinations if specified.
+          var systemKeyModifiers = ['ctrl', 'shift', 'alt', 'meta', 'cmd', 'super'];
+          var selectedSystemKeyModifiers = systemKeyModifiers.filter(function (key) {
+            return directive.modifiers.includes(key);
+          });
+
+          if (selectedSystemKeyModifiers.length > 0) {
+            var selectedButNotPressedKeyModifiers = selectedSystemKeyModifiers.filter(function (key) {
+              // Alias "cmd" and "super" to "meta"
+              if (key === 'cmd' || key === 'super') key = 'meta';
+              return !e["".concat(key, "Key")];
+            });
+            if (selectedButNotPressedKeyModifiers.length > 0) return false;
+          } // Only handle listener if no, or matching key modifiers are passed.
+
+
           return directive.modifiers.length === 0 || directive.modifiers.includes(Object(_util__WEBPACK_IMPORTED_MODULE_0__["kebabCase"])(e.key));
         });
         break;
