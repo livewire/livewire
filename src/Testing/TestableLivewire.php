@@ -30,7 +30,9 @@ class TestableLivewire
         }
 
         try {
-            $result = app('livewire')->mount($this->componentName = $name, ...$params);
+            $result = app('livewire')->mount($name, ...$params);
+
+            $this->componentName = $name;
 
             $this->updateComponent($result);
         } catch (HttpException $exception) {
@@ -42,6 +44,7 @@ class TestableLivewire
     {
         $this->payload = [
             'id' => $output->id,
+            'name' => $output->name,
             'dom' => $output->dom,
             'data' => $output->data,
             'children' => $output->children,

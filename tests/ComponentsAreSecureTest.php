@@ -91,7 +91,7 @@ class ComponentsAreSecureTest extends TestCase
         $component = app('livewire')->test('safe');
 
         // Hijack the "safe" component, with "unsafe"
-        $component->componentName = 'unsafe';
+        $component->payload['name'] = 'unsafe';
 
         // If the hijack was stopped, the expected exception will be thrown.
         // If it worked the, an execption will be thrown that will fail the test.
