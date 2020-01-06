@@ -21,6 +21,18 @@ class LivewireDirectivesTest extends TestCase
     }
 
     /** @test */
+    public function component_is_loaded_with_blade_directive_by_classname()
+    {
+        Artisan::call('make:livewire foo');
+
+        $output = view('render-component', [
+            'component' => \App\Http\Livewire\Foo::class,
+        ])->render();
+
+        $this->assertStringContainsString('div', $output);
+    }
+
+    /** @test */
     public function this_directive_returns_javascript_component_object_string()
     {
         Livewire::test(ComponentForTestingDirectives::class)

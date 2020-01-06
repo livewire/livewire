@@ -77,6 +77,10 @@ class LivewireManager
 
     public function activate($component, $id)
     {
+        if (class_exists($component)) {
+            return new $component($id);
+        }
+
         $componentClass = $this->getComponentClass($component);
 
         throw_unless(class_exists($componentClass), new ComponentNotFoundException(
