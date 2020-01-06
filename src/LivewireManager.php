@@ -77,9 +77,7 @@ class LivewireManager
 
     public function activate($component, $id)
     {
-        if(class_exists($component))
-        {
-            //call component by classname instead alias
+        if (class_exists($component)) {
             return new $component($id);
         }
 
