@@ -13,7 +13,7 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
     /** @test */
     public function public_property_is_accessible_in_view_via_this()
     {
-        $component = app(LivewireManager::class)->test(PublicPropertiesInViewStub::class);
+        $component = app(LivewireManager::class)->test(PublicPropertiesInViewWithThisStub::class);
 
         $this->assertTrue(Str::contains(
             $component->payload['dom'],
@@ -22,31 +22,14 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
     }
 
     /** @test */
-    public function public_properties_are_not_accessible_in_view_without_this_by_default()
-    {
-        $this->expectException(ErrorException::class);
-
-        $component = app(LivewireManager::class)->test(PublicPropertiesInViewWithoutThisAndWithoutTraitStub::class);
-
-        $this->assertTrue(Str::contains(
-            $component->payload['dom'],
-            'Caleb'
-        ));
-    }
-
-    /** @test */
-    public function public_property_is_accessible_in_view()
+    public function public_properties_are_accessible_in_view_without_this()
     {
         $component = app(LivewireManager::class)->test(PublicPropertiesInViewWithoutThisStub::class);
-
-        $this->assertTrue(Str::contains(
-            $component->payload['dom'],
-            'Caleb'
-        ));
+        $component->assertSee('Caleb');
     }
 }
 
-class PublicPropertiesInViewStub extends Component
+class PublicPropertiesInViewWithThisStub extends Component
 {
     public $name = 'Caleb';
 
@@ -56,20 +39,8 @@ class PublicPropertiesInViewStub extends Component
     }
 }
 
-class PublicPropertiesInViewWithoutThisAndWithoutTraitStub extends Component
-{
-    public $name = 'Caleb';
-
-    public function render()
-    {
-        return app('view')->make('show-name');
-    }
-}
-
 class PublicPropertiesInViewWithoutThisStub extends Component
 {
-    use PassPublicPropertiesToView;
-
     public $name = 'Caleb';
 
     public function render()
