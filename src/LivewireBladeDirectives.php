@@ -11,9 +11,14 @@ class LivewireBladeDirectives
         return "window.livewire.find('{{ \$_instance->id }}')";
     }
 
-    public static function livewireAssets($expression)
+    public static function livewireStyles($expression)
     {
-        return '{!! \Livewire\Livewire::assets('.$expression.') !!}';
+        return '{!! \Livewire\Livewire::styles('.$expression.') !!}';
+    }
+
+    public static function livewireScripts($expression)
+    {
+        return '{!! \Livewire\Livewire::scripts('.$expression.') !!}';
     }
 
     public static function livewire($expression)

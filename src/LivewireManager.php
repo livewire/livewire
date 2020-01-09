@@ -135,7 +135,22 @@ class LivewireManager
         return new TestableLivewire($name, $this->prefix, $params);
     }
 
-    public function assets($options = [])
+    public function styles($options = [])
+    {
+        $debug = config('app.debug');
+
+        $styles = $this->cssAssets();
+
+        // HTML Label.
+        $html = $debug ? ['<!-- Livewire Styles -->'] : [];
+
+        // CSS assets.
+        $html[] = $debug ? $styles : $this->minify($styles);
+
+        return implode("\n", $html);
+    }
+
+    public function scripts($options = [])
     {
         $debug = config('app.debug');
 
@@ -143,14 +158,10 @@ class LivewireManager
             ? '/livewire.js'
             : '/livewire.min.js';
 
-        $styles = $this->cssAssets();
         $scripts = $this->javaScriptAssets($jsFileName, $options);
 
         // HTML Label.
-        $html = $debug ? ['<!-- Livewire assets -->'] : [];
-
-        // CSS assets.
-        $html[] = $debug ? $styles : $this->minify($styles);
+        $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
 
         // JavaScript assets.
         $html[] = $debug ? $scripts : $this->minify($scripts);
@@ -210,16 +221,17 @@ HTML;
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
         return <<<HTML
+{$assetWarning}
+<script src="{$fullAssetPath}"></script>
 <script>
-    document.addEventListener('livewire:available', function () {
-        window.livewire = new Livewire({$jsonEncodedOptions});
+    window.livewire = new Livewire({$jsonEncodedOptions});
+    window.livewire_app_url = '{$appUrl}';
+    window.livewire_token = '{$csrf}';
+
+    document.addEventListener('DOMContentLoaded', function () {
         window.livewire.start();
-        window.livewire_app_url = '{$appUrl}';
-        window.livewire_token = '{$csrf}';
     });
 </script>
-{$assetWarning}
-<script src="{$fullAssetPath}" defer></script>
 HTML;
     }
 
