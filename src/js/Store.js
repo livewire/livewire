@@ -1,5 +1,6 @@
 import EventAction from "@/action/event";
 import HookManager from "@/HookManager";
+import DirectiveManager from "@/DirectiveManager";
 import MessageBus from "./MessageBus";
 
 const store = {
@@ -10,6 +11,7 @@ const store = {
     livewireIsInBackground: false,
     livewireIsOffline: false,
     hooks: HookManager,
+    directives: DirectiveManager,
 
     components() {
         return Object.keys(this.componentsById).map(key => {
@@ -53,6 +55,10 @@ const store = {
         return this.components().filter(component => {
             return component.events.includes(event)
         })
+    },
+
+    registerDirective(name, callback) {
+        this.directives.register(name, callback)
     },
 
     registerHook(name, callback) {

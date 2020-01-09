@@ -17,4 +17,8 @@ export default class MessageBus {
             callback(...params)
         })
     }
+
+    has(name) {
+        return Object.keys(this.listeners).includes(name)
+    }
 }
