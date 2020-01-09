@@ -14,12 +14,12 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
 
         $this->assertStringContainsString(
             '<script src="/livewire/livewire.js?',
-            Livewire::assets()
+            Livewire::scripts()
         );
 
         $this->assertStringContainsString(
             "window.livewire_app_url = '';",
-            Livewire::assets()
+            Livewire::scripts()
         );
     }
 
@@ -28,12 +28,12 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     {
         $this->assertStringContainsString(
             '<script src="/livewire/livewire.min.js?',
-            Livewire::assets()
+            Livewire::scripts()
         );
 
         $this->assertStringContainsString(
             "window.livewire_app_url = '';",
-            Livewire::assets()
+            Livewire::scripts()
         );
     }
 
@@ -42,12 +42,12 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     {
         $this->assertStringContainsString(
             '<script src="https://foo.com/assets/livewire/livewire.min.js?',
-            Livewire::assets(['asset_url' => 'https://foo.com/assets'])
+            Livewire::scripts(['asset_url' => 'https://foo.com/assets'])
         );
 
         $this->assertStringContainsString(
             "window.livewire_app_url = 'https://foo.com/assets';",
-            Livewire::assets(['asset_url' => 'https://foo.com/assets'])
+            Livewire::scripts(['asset_url' => 'https://foo.com/assets'])
         );
     }
 
@@ -56,12 +56,12 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     {
         $this->assertStringContainsString(
             '<script src="https://foo.com/assets/livewire/livewire.min.js?',
-            Livewire::assets(['asset_url' => 'https://foo.com/assets/'])
+            Livewire::scripts(['asset_url' => 'https://foo.com/assets/'])
         );
 
         $this->assertStringContainsString(
             "window.livewire_app_url = 'https://foo.com/assets';",
-            Livewire::assets(['asset_url' => 'https://foo.com/assets/'])
+            Livewire::scripts(['asset_url' => 'https://foo.com/assets/'])
         );
     }
 
