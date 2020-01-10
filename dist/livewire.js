@@ -2854,6 +2854,41 @@ function setDirtyState(el, isDirty) {
 
 /***/ }),
 
+/***/ "./src/js/component/DisableForms.js":
+/*!******************************************!*\
+  !*** ./src/js/component/DisableForms.js ***!
+  \******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _Store__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/Store */ "./src/js/Store.js");
+
+/* harmony default export */ __webpack_exports__["default"] = (function () {
+  _Store__WEBPACK_IMPORTED_MODULE_0__["default"].registerHook('elementInitialized', function (el, component) {
+    if (el.directives.missing('submit')) return; // Set a forms "disabled" state on inputs and buttons.
+    // Livewire will clean it all up automatically when the form
+    // submission returns and the new DOM lacks these additions.
+
+    el.el.addEventListener('submit', function () {
+      component.walk(function (el) {
+        var node = el.el;
+
+        if (node.tagName.toLowerCase() === 'button' && node.type === 'submit') {
+          // Disabled submit button.
+          node.disabled = true;
+        } else if (node.tagName.toLowerCase() === 'input') {
+          // Set any inputs to "read only".
+          node.readOnly = true;
+        }
+      });
+    });
+  });
+});
+
+/***/ }),
+
 /***/ "./src/js/component/LoadingStates.js":
 /*!*******************************************!*\
   !*** ./src/js/component/LoadingStates.js ***!
@@ -5235,9 +5270,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var promise_polyfill_src_polyfill__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! promise-polyfill/src/polyfill */ "./node_modules/promise-polyfill/src/polyfill.js");
 /* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./util */ "./src/js/util/index.js");
 /* harmony import */ var _component_LoadingStates__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @/component/LoadingStates */ "./src/js/component/LoadingStates.js");
-/* harmony import */ var _component_DirtyStates__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @/component/DirtyStates */ "./src/js/component/DirtyStates.js");
-/* harmony import */ var _component_OfflineStates__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @/component/OfflineStates */ "./src/js/component/OfflineStates.js");
-/* harmony import */ var _component_Polling__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @/component/Polling */ "./src/js/component/Polling.js");
+/* harmony import */ var _component_DisableForms__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @/component/DisableForms */ "./src/js/component/DisableForms.js");
+/* harmony import */ var _component_DirtyStates__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @/component/DirtyStates */ "./src/js/component/DirtyStates.js");
+/* harmony import */ var _component_OfflineStates__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @/component/OfflineStates */ "./src/js/component/OfflineStates.js");
+/* harmony import */ var _component_Polling__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @/component/Polling */ "./src/js/component/Polling.js");
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -5245,6 +5281,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
 
 
 
@@ -5385,9 +5422,10 @@ if (!window.Livewire) {
 }
 
 Object(_component_LoadingStates__WEBPACK_IMPORTED_MODULE_9__["default"])();
-Object(_component_DirtyStates__WEBPACK_IMPORTED_MODULE_10__["default"])();
-Object(_component_OfflineStates__WEBPACK_IMPORTED_MODULE_11__["default"])();
-Object(_component_Polling__WEBPACK_IMPORTED_MODULE_12__["default"])();
+Object(_component_DisableForms__WEBPACK_IMPORTED_MODULE_10__["default"])();
+Object(_component_DirtyStates__WEBPACK_IMPORTED_MODULE_11__["default"])();
+Object(_component_OfflineStates__WEBPACK_IMPORTED_MODULE_12__["default"])();
+Object(_component_Polling__WEBPACK_IMPORTED_MODULE_13__["default"])();
 Object(_util__WEBPACK_IMPORTED_MODULE_8__["dispatch"])('livewire:available');
 /* harmony default export */ __webpack_exports__["default"] = (Livewire);
 
@@ -5704,7 +5742,7 @@ var preventDefaultSupported = function () {
 /*!******************************!*\
   !*** ./src/js/util/index.js ***!
   \******************************/
-/*! exports provided: kebabCase, tap, debounceWithFiringOnBothEnds, debounce, walk, dispatch */
+/*! exports provided: debounceWithFiringOnBothEnds, debounce, walk, dispatch, kebabCase, tap */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

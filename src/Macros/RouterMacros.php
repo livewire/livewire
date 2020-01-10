@@ -24,7 +24,9 @@ class RouterMacros
 
     public function livewire()
     {
-        return function ($uri, $component) {
+        return function ($uri, $component = null) {
+            $component = $component ?: $uri;
+
             return $this->get($uri, function () use ($component) {
                 $componentClass = app('livewire')->getComponentClass($component);
                 $reflected = new \ReflectionClass($componentClass);

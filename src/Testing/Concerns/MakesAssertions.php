@@ -169,7 +169,7 @@ trait MakesAssertions
         );
 
         if (! is_null($uri)) {
-            PHPUnit::assertSame($uri, $this->payload['redirectTo']);
+            PHPUnit::assertSame(url($uri), $this->payload['redirectTo']);
         }
 
         return $this;

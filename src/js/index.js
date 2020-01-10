@@ -8,6 +8,7 @@ import 'whatwg-fetch'
 import 'promise-polyfill/src/polyfill';
 import { dispatch } from './util';
 import LoadingStates from '@/component/LoadingStates'
+import DisableForms from '@/component/DisableForms'
 import DirtyStates from '@/component/DirtyStates'
 import OfflineStates from '@/component/OfflineStates'
 import Polling from '@/component/Polling'
@@ -115,6 +116,7 @@ if (! window.Livewire) {
 }
 
 LoadingStates()
+DisableForms()
 DirtyStates()
 OfflineStates()
 Polling()

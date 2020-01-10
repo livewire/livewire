@@ -17,6 +17,11 @@ trait ValidatesInput
         return $this->errorBag ?? new MessageBag;
     }
 
+    public function addError($name, $message)
+    {
+        return $this->getErrorBag()->add($name, $message);
+    }
+
     public function setErrorBag($bag)
     {
         return $this->errorBag = $bag instanceof MessageBag

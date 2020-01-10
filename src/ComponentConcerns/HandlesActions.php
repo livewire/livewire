@@ -4,9 +4,9 @@ namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
-use Livewire\Exceptions\ProtectedPropertyBindingException;
+use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\CannotBindDataToEloquentModelException;
-use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
+use Livewire\Exceptions\MethodNotFoundException;
 
 trait HandlesActions
 {
@@ -25,7 +25,10 @@ trait HandlesActions
 
         $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) use ($propertyName) {
             // @todo: this is fired even if a property isn't present at all which is confusing.
-            throw_unless($this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName), ProtectedPropertyBindingException::class);
+            throw_unless(
+                $this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName),
+                new PublicPropertyNotFoundException($propertyName, $this->getName())
+            );
 
             if ($this->containsDots($name)) {
                 data_set($this->{$propertyName}, $this->afterFirstDot($name), $value);
@@ -78,7 +81,7 @@ trait HandlesActions
                 break;
 
             default:
-                throw_unless(method_exists($this, $method), MissingComponentMethodReferencedByAction::class);
+                throw_unless(method_exists($this, $method), new MethodNotFoundException($method, $this->getName()));
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
                 $this->{$method}(

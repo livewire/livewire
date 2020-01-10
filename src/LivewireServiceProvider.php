@@ -14,6 +14,7 @@ use Livewire\Connection\HttpConnectionHandler;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Foundation\Testing\TestResponse;
 use Livewire\Commands\{
     ComponentParser,
     CopyCommand,
@@ -77,6 +78,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerViews();
         $this->registerRoutes();
         $this->registerCommands();
+        $this->registerTestMacros();
         $this->registerRouteMacros();
         $this->registerPublishables();
         $this->registerBladeDirectives();
@@ -116,6 +118,19 @@ class LivewireServiceProvider extends ServiceProvider
                 StubCommand::class,
             ]);
         }
+    }
+
+    public function registerTestMacros()
+    {
+        TestResponse::macro('assertSeeLivewireComponent', function ($component) {
+            $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+            \Illuminate\Foundation\Testing\Assert::assertStringContainsString(
+                (string) $escapedComponentName,
+                $this->getContent(),
+                'Cannot find Livewire component ['.$component.'] rendered on page.'
+            );
+        });
     }
 
     public function registerRouteMacros()
