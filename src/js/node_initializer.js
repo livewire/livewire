@@ -18,6 +18,10 @@ export default {
                     break;
 
                 default:
+                    if (store.directives.has(directive.type)) {
+                        store.directives.call(directive.type, el, directive, component)
+                    }
+
                     this.attachDomListener(el, directive, component)
                     break;
             }

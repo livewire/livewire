@@ -36,6 +36,10 @@ class Livewire {
         return this.components.componentsById[componentId]
     }
 
+    directive(name, callback) {
+        this.components.registerDirective(name, callback)
+    }
+
     hook(name, callback) {
         this.components.registerHook(name, callback)
     }

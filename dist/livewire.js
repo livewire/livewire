@@ -2167,6 +2167,39 @@ function () {
 
 /***/ }),
 
+/***/ "./src/js/DirectiveManager.js":
+/*!************************************!*\
+  !*** ./src/js/DirectiveManager.js ***!
+  \************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _MessageBus__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MessageBus */ "./src/js/MessageBus.js");
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  directives: new _MessageBus__WEBPACK_IMPORTED_MODULE_0__["default"](),
+  register: function register(name, callback) {
+    // If directive name already exists.
+    // if (this.directives) {
+    //     throw `Livewire: Referencing unknown hook: [${name}]`
+    // }
+    this.directives.register(name, callback);
+  },
+  call: function call(name, el, directive, component) {
+    this.directives.call(name, el, directive, component);
+  },
+  has: function has(name) {
+    return this.directives.has(name);
+  } // call(name, ...params) {
+  //     this.bus.call(name, ...params)
+  // }
+
+});
+
+/***/ }),
+
 /***/ "./src/js/HookManager.js":
 /*!*******************************!*\
   !*** ./src/js/HookManager.js ***!
@@ -2333,6 +2366,11 @@ function () {
         callback.apply(void 0, params);
       });
     }
+  }, {
+    key: "has",
+    value: function has(name) {
+      return Object.keys(this.listeners).includes(name);
+    }
   }]);
 
   return MessageBus;
@@ -2434,18 +2472,21 @@ function (_Message) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _action_event__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @/action/event */ "./src/js/action/event.js");
 /* harmony import */ var _HookManager__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/HookManager */ "./src/js/HookManager.js");
-/* harmony import */ var _MessageBus__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./MessageBus */ "./src/js/MessageBus.js");
+/* harmony import */ var _DirectiveManager__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/DirectiveManager */ "./src/js/DirectiveManager.js");
+/* harmony import */ var _MessageBus__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./MessageBus */ "./src/js/MessageBus.js");
+
 
 
 
 var store = {
   componentsById: {},
-  listeners: new _MessageBus__WEBPACK_IMPORTED_MODULE_2__["default"](),
+  listeners: new _MessageBus__WEBPACK_IMPORTED_MODULE_3__["default"](),
   beforeDomUpdateCallback: function beforeDomUpdateCallback() {},
   afterDomUpdateCallback: function afterDomUpdateCallback() {},
   livewireIsInBackground: false,
   livewireIsOffline: false,
   hooks: _HookManager__WEBPACK_IMPORTED_MODULE_1__["default"],
+  directives: _DirectiveManager__WEBPACK_IMPORTED_MODULE_2__["default"],
   components: function components() {
     var _this = this;
 
@@ -2489,6 +2530,9 @@ var store = {
     return this.components().filter(function (component) {
       return component.events.includes(event);
     });
+  },
+  registerDirective: function registerDirective(name, callback) {
+    this.directives.register(name, callback);
   },
   registerHook: function registerHook(name, callback) {
     this.hooks.register(name, callback);
@@ -5324,6 +5368,11 @@ function () {
       return this.components.componentsById[componentId];
     }
   }, {
+    key: "directive",
+    value: function directive(name, callback) {
+      this.components.registerDirective(name, callback);
+    }
+  }, {
     key: "hook",
     value: function hook(name, callback) {
       this.components.registerHook(name, callback);
@@ -5477,6 +5526,10 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
           break;
 
         default:
+          if (_Store__WEBPACK_IMPORTED_MODULE_4__["default"].directives.has(directive.type)) {
+            _Store__WEBPACK_IMPORTED_MODULE_4__["default"].directives.call(directive.type, el, directive, component);
+          }
+
           _this.attachDomListener(el, directive, component);
 
           break;
