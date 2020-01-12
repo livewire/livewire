@@ -61,6 +61,32 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertDispatchedBrowserEvent($name, $data = null)
+    {
+        $assertionSuffix = '.';
+
+        if (is_null($data)) {
+            $test = collect($this->payload['dispatchQueue'])->contains('event', '=', $name);
+        } elseif (is_callable($data)) {
+            $event = collect($this->payload['dispatchQueue'])->first(function ($item) use ($name) {
+                return $item['event'] === $name;
+            });
+
+            $test = $event && $data($event['event'], $event['data']);
+        } else {
+            $test = !! collect($this->payload['dispatchQueue'])->first(function ($item) use ($name, $data) {
+                return $item['event'] === $name
+                    && $item['data'] === $data;
+            });
+            $encodedData = json_encode($data);
+            $assertionSuffix = " with parameters: {$encodedData}";
+        }
+
+        PHPUnit::assertTrue($test, "Failed asserting that an event [{$name}] was fired{$assertionSuffix}");
+
+        return $this;
+    }
+
     public function assertHasErrors($keys = [])
     {
         $errors = new MessageBag($this->payload['errorBag'] ?: []);
@@ -169,7 +195,7 @@ trait MakesAssertions
         );
 
         if (! is_null($uri)) {
-            PHPUnit::assertSame(url($uri), $this->payload['redirectTo']);
+            PHPUnit::assertSame(url($uri), url($this->payload['redirectTo']));
         }
 
         return $this;

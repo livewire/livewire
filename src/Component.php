@@ -7,7 +7,6 @@ use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
-use Livewire\PassPublicPropertiesToView;
 
 abstract class Component
 {

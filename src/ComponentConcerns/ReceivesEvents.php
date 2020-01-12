@@ -5,7 +5,12 @@ namespace Livewire\ComponentConcerns;
 trait ReceivesEvents
 {
     protected $eventQueue = [];
+    protected $dispatchQueue = [];
     protected $listeners = [];
+
+    protected function getListeners() {
+        return $this->listeners;
+    }
 
     public function emit($event, ...$params)
     {
@@ -15,18 +20,27 @@ trait ReceivesEvents
         ];
     }
 
+    public function dispatchBrowserEvent($event, $data = null)
+    {
+        $this->dispatchQueue[] = [
+            'event' => $event,
+            'data' => $data,
+        ];
+    }
+
     public function getEventQueue()
     {
         return $this->eventQueue;
     }
 
+    public function getDispatchQueue()
+    {
+        return $this->dispatchQueue;
+    }
+
     protected function getEventsAndHandlers()
     {
-        if (method_exists($this, 'listeners')) {
-            return $this->listeners();
-        }
-
-        return $this->listeners ?? [];
+        return $this->getListeners();
     }
 
     public function getEventsBeingListenedFor()

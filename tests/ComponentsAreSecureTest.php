@@ -5,15 +5,15 @@ namespace Tests;
 use Livewire\Component;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\CorruptComponentPayloadException;
-use Livewire\Exceptions\ProtectedPropertyBindingException;
-use Livewire\Exceptions\MissingComponentMethodReferencedByAction;
+use Livewire\Exceptions\PublicPropertyNotFoundException;
+use Livewire\Exceptions\MethodNotFoundException;
 
 class ComponentsAreSecureTest extends TestCase
 {
     /** @test */
     public function throws_method_not_found_exception_when_action_missing()
     {
-        $this->expectException(MissingComponentMethodReferencedByAction::class);
+        $this->expectException(MethodNotFoundException::class);
 
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
@@ -47,7 +47,7 @@ class ComponentsAreSecureTest extends TestCase
     /** @test */
     public function can_only_set_public_properties()
     {
-        $this->expectException(ProtectedPropertyBindingException::class);
+        $this->expectException(PublicPropertyNotFoundException::class);
 
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');

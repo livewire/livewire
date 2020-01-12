@@ -74,6 +74,21 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_dispatched()
+    {
+        app(LivewireManager::class)
+            ->test(DispatchesBrowserEventsComponentStub::class)
+            ->call('dispatchFoo')
+            ->assertDispatchedBrowserEvent('foo')
+            ->call('dispatchFooWithData', ['bar' => 'baz'])
+            ->assertDispatchedBrowserEvent('foo', ['bar' => 'baz'])
+            ->call('dispatchFooWithData', ['bar' => 'baz'])
+            ->assertDispatchedBrowserEvent('foo', function ($event, $data) {
+                return $event === 'foo' && $data === ['bar' => 'baz'];
+            });
+    }
+
+    /** @test */
     public function assert_has_error_with_submit_validation()
     {
         app(LivewireManager::class)
@@ -149,6 +164,24 @@ class EmitsEventsComponentStub extends Component
     public function emitFooWithParam($param)
     {
         $this->emit('foo', $param);
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class DispatchesBrowserEventsComponentStub extends Component
+{
+    public function dispatchFoo()
+    {
+        $this->dispatchBrowserEvent('foo');
+    }
+
+    public function dispatchFooWithData($data)
+    {
+        $this->dispatchBrowserEvent('foo', $data);
     }
 
     public function render()

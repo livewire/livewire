@@ -165,3 +165,23 @@ test('init', async () => {
 
     expect(initHappened).toBeTruthy()
 })
+
+test('form buttons disabled and inputs read-only during submission', async () => {
+    var payload
+    mount(`
+        <form wire:submit.prevent="someMethod">
+            <input type="text">
+            <button type="submit"></button>
+        </form>
+    `, i => payload = i)
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('someMethod')
+        expect(payload.actionQueue[0].payload.params).toEqual([])
+        expect(document.querySelector('button').disabled).toBeTruthy()
+        expect(document.querySelector('input').readOnly).toBeTruthy()
+    })
+})

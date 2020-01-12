@@ -1893,6 +1893,18 @@ function () {
           _Store__WEBPACK_IMPORTED_MODULE_7__["default"].emit.apply(_Store__WEBPACK_IMPORTED_MODULE_7__["default"], [event.event].concat(_toConsumableArray(event.params)));
         });
       }
+
+      if (response.dispatchQueue && response.dispatchQueue.length > 0) {
+        response.dispatchQueue.forEach(function (event) {
+          var data = event.data ? event.data : {};
+          var e = new CustomEvent(event.event, {
+            bubbles: true,
+            detail: data
+          });
+
+          _this2.el.el.dispatchEvent(e);
+        });
+      }
     }
   }, {
     key: "redirect",
@@ -2297,6 +2309,7 @@ function () {
         children: payload.children,
         dirtyInputs: payload.dirtyInputs,
         eventQueue: payload.eventQueue,
+        dispatchQueue: payload.dispatchQueue,
         events: payload.events,
         data: payload.data,
         redirectTo: payload.redirectTo,
@@ -2916,8 +2929,9 @@ __webpack_require__.r(__webpack_exports__);
     // submission returns and the new DOM lacks these additions.
 
     el.el.addEventListener('submit', function () {
-      component.walk(function (el) {
-        var node = el.el;
+      component.walk(function (elem) {
+        var node = elem.el;
+        if (!el.el.contains(node)) return;
 
         if (node.tagName.toLowerCase() === 'button' && node.type === 'submit') {
           // Disabled submit button.
@@ -5795,7 +5809,7 @@ var preventDefaultSupported = function () {
 /*!******************************!*\
   !*** ./src/js/util/index.js ***!
   \******************************/
-/*! exports provided: debounceWithFiringOnBothEnds, debounce, walk, dispatch, kebabCase, tap */
+/*! exports provided: kebabCase, tap, debounceWithFiringOnBothEnds, debounce, walk, dispatch */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

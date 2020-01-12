@@ -174,6 +174,14 @@ export default class Component {
                 store.emit(event.event, ...event.params)
             })
         }
+
+        if (response.dispatchQueue && response.dispatchQueue.length > 0) {
+            response.dispatchQueue.forEach(event => {
+                const data = event.data ? event.data : {}
+                const e = new CustomEvent(event.event, { bubbles: true, detail: data});
+                this.el.el.dispatchEvent(e)
+            })
+        }
     }
 
     redirect(url) {

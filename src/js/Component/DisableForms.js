@@ -8,8 +8,10 @@ export default function () {
         // Livewire will clean it all up automatically when the form
         // submission returns and the new DOM lacks these additions.
         el.el.addEventListener('submit', ()=> {
-            component.walk(el => {
-                const node = el.el
+            component.walk(elem => {
+                const node = elem.el
+
+                if (! el.el.contains(node)) return
 
                 if (node.tagName.toLowerCase() === 'button' && node.type === 'submit') {
                     // Disabled submit button.

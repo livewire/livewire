@@ -50,6 +50,7 @@ class TestableLivewire
             'children' => $output->children,
             'events' => $output->events,
             'eventQueue' => $output->eventQueue,
+            'dispatchQueue' => $output->dispatchQueue,
             'errorBag' => $output->errorBag,
             'checksum' => $output->checksum,
             'redirectTo' => $output->redirectTo,

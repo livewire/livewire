@@ -125,6 +125,32 @@ export function mountAndReturnEmittedEvent(dom, event, requestInterceptor = asyn
     return document.body.firstElementChild
 };
 
+export function mountAndReturnDispatchedEvent(dom, event, requestInterceptor = async () => { }) {
+    // This is a crude way of wiping any existing DOM & listeners before we mount.
+    document.body.innerHTML = '';
+    document.body.innerHTML = '<div wire:id="123" wire:initial-data="{}"  wire:events="[]">' + dom + '</div>'
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            await requestInterceptor(payload)
+            setTimeout(() => {
+                this.onMessage({
+                    fromPrefetch: payload.fromPrefetch,
+                    id: payload.id,
+                    data: {},
+                    dom: '<div wire:id="123">' + dom + '</div>',
+                    dispatchQueue: [event],
+                })
+            }, 1)
+        },
+    }})
+    window.livewire.start()
+
+    return document.body.firstElementChild
+};
+
 export function mountAndError(dom, requestInterceptor = async () => { }) {
     // This is a crude way of wiping any existing DOM & listeners before we mount.
     document.body.innerHTML = '';
