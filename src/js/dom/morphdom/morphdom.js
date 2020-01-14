@@ -167,6 +167,10 @@ export default function morphdomFactory(morphAttrs) {
         function handleNodeAdded(el) {
             callHook(onNodeAdded, el);
 
+            if (el.skipAddingChildren) {
+                return
+            }
+
             var curChild = el.firstChild;
             while (curChild) {
                 var nextSibling = curChild.nextSibling;

@@ -2031,11 +2031,13 @@ function () {
           if (closestComponentId === _this4.id) {
             _node_initializer__WEBPACK_IMPORTED_MODULE_6__["default"].initialize(el, _this4);
           } else if (el.isComponentRootEl()) {
-            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].addComponent(new Component(el, _this4.connection));
+            _Store__WEBPACK_IMPORTED_MODULE_7__["default"].addComponent(new Component(el, _this4.connection)); // We don't need to initialize children, the
+            // new Component constructor will do that for us.
+
+            node.skipAddingChildren = true;
           }
 
-          _this4.morphChanges.added.push(node); // Skip.
-
+          _this4.morphChanges.added.push(node);
         }
       });
     }
@@ -4431,6 +4433,11 @@ function morphdomFactory(morphAttrs) {
 
     function handleNodeAdded(el) {
       callHook(onNodeAdded, el);
+
+      if (el.skipAddingChildren) {
+        return;
+      }
+
       var curChild = el.firstChild;
 
       while (curChild) {

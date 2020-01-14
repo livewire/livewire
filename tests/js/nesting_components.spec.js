@@ -1,5 +1,6 @@
 import { wait } from 'dom-testing-library'
 import { mount, mountAndReturn } from './utils'
+const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 test('click inside nested component is assigned to nested component', async () => {
     var payload
@@ -64,5 +65,29 @@ test('component placeholder gets ignored', async () => {
 
     await wait(() => {
         expect(payload.id).toEqual('456')
+    })
+})
+
+test('can switch components', async () => {
+    var payload
+    mountAndReturn(
+    `<div>
+        <button wire:click="foo"></button>
+        <div wire:id="456" wire:initial-data="{}">
+            <button wire:click="bar" id="foo">456</button>
+        </div>
+    </div>`,
+    `<div>
+        <button wire:click="foo"></button>
+        <div wire:id="789" wire:initial-data="{}">
+            <button wire:click="bar" id="foo">789</button>
+        </div>
+    </div>`,
+   [], i => payload = i)
+
+    document.querySelector('button[wire\:click="foo"]').click()
+
+    await wait(() => {
+        expect(payload.id).toEqual('123')
     })
 })

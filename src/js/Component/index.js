@@ -329,11 +329,13 @@ export default class Component {
                     store.addComponent(
                         new Component(el, this.connection)
                     )
+
+                    // We don't need to initialize children, the
+                    // new Component constructor will do that for us.
+                    node.skipAddingChildren = true
                 }
 
                 this.morphChanges.added.push(node)
-
-                // Skip.
             },
         })
     }
