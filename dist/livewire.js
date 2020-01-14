@@ -2032,7 +2032,6 @@ function () {
             _node_initializer__WEBPACK_IMPORTED_MODULE_6__["default"].initialize(el, _this4);
           } else if (el.isComponentRootEl()) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].addComponent(new Component(el, _this4.connection));
-            return false;
           }
 
           _this4.morphChanges.added.push(node); // Skip.
