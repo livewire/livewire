@@ -221,7 +221,10 @@ HTML;
         if (file_exists(public_path('vendor/livewire'))) {
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/mix-manifest.json')), true);
             $versionedFileName = $publishedManifest[$jsFileName];
-            $fullAssetPath = "{$appUrl}/vendor/livewire{$versionedFileName}";
+
+            $isHostedOnVapor = ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
+
+            $fullAssetPath = ($isHostedOnVapor ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
