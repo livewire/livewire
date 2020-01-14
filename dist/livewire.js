@@ -2007,8 +2007,8 @@ function () {
 
           var fromEl = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](from); // Honor the "wire:ignore" attribute.
 
-          if (fromEl.directives.has('ignore')) {
-            if (fromEl.directives.get('ignore').modifiers.includes('self')) {
+          if (fromEl.directives.has('ignore') || from.__livewire_ignore === true || from.__livewire_ignore_self === true) {
+            if (fromEl.directives.has('ignore') && fromEl.directives.get('ignore').modifiers.includes('self') || from.__livewire_ignore_self === true) {
               // Don't update children of "wire:ingore.self" attribute.
               from.skipElUpdatingButStillUpdateChildren = true;
             } else {

@@ -40,3 +40,32 @@ test('wire:ignore.self ignores updates to self, but not children', async () => {
     expect(document.querySelector('button').hasAttribute('some-new-attribute')).toBeFalsy()
     expect(document.querySelector('span').innerHTML).toEqual('bar')
 })
+
+test('adding .__livewire_ignore to element ignores updates to children', async () => {
+    mountAndReturn(
+        '<button wire:click="$refresh" wire:ignore><span>foo</span></button>',
+        '<button wire:click="$refresh" wire:ignore><span>bar</span></button>',
+    )
+
+    document.querySelector('button').click()
+
+    await timeout(20)
+
+    expect(document.querySelector('span').innerHTML).toEqual('foo')
+})
+
+test('adding .__livewire_ignore_self to element ignores updates to self, but not children', async () => {
+    mountAndReturn(
+        '<button wire:click="$refresh"><span>foo</span></button>',
+        '<button wire:click="$refresh" some-new-attribute="foo"><span>bar</span></button>',
+    )
+
+    document.querySelector('button').__livewire_ignore_self = true
+
+    document.querySelector('button').click()
+
+    await timeout(20)
+
+    expect(document.querySelector('button').hasAttribute('some-new-attribute')).toBeFalsy()
+    expect(document.querySelector('span').innerHTML).toEqual('bar')
+})
