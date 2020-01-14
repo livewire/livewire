@@ -359,6 +359,15 @@
       "contributions": [
         "financial"
       ]
+    },
+    {
+      "login": "mokhosh",
+      "name": "Mo Khosh",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/6499685?v=4",
+      "profile": "https://github.com/mokhosh",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
