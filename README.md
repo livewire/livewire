@@ -1,6 +1,6 @@
 ![Livewire: If Vue and Blade had a baby, it would be a jellyfish.](github_banner.png)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-38-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-39-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -72,6 +72,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/ricardogobbosouza"><img src="https://avatars3.githubusercontent.com/u/13064722?v=4" width="100px;" alt=""/><br /><sub><b>Ricardo Gobbo de Souza</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=ricardogobbosouza" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/lucasromanojf"><img src="https://avatars2.githubusercontent.com/u/3661610?v=4" width="100px;" alt=""/><br /><sub><b>lucasromanojf</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=lucasromanojf" title="Code">💻</a></td>
     <td align="center"><a href="http://laravel.com"><img src="https://avatars3.githubusercontent.com/u/463230?v=4" width="100px;" alt=""/><br /><sub><b>Taylor Otwell</b></sub></a><br /><a href="#financial-taylorotwell" title="Financial">💵</a></td>
+    <td align="center"><a href="https://github.com/mokhosh"><img src="https://avatars1.githubusercontent.com/u/6499685?v=4" width="100px;" alt=""/><br /><sub><b>Mo Khosh</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=mokhosh" title="Code">💻</a></td>
   </tr>
 </table>
 
