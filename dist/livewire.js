@@ -2005,7 +2005,7 @@ function () {
             return false;
           }
 
-          var fromEl = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](from); // Honor the "wire:ignore" attribute.
+          var fromEl = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_5__["default"](from); // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
 
           if (fromEl.directives.has('ignore') || from.__livewire_ignore === true || from.__livewire_ignore_self === true) {
             if (fromEl.directives.has('ignore') && fromEl.directives.get('ignore').modifiers.includes('self') || from.__livewire_ignore_self === true) {
@@ -2195,10 +2195,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
   directives: new _MessageBus__WEBPACK_IMPORTED_MODULE_0__["default"](),
   register: function register(name, callback) {
-    // If directive name already exists.
-    // if (this.directives) {
-    //     throw `Livewire: Referencing unknown hook: [${name}]`
-    // }
+    if (this.has(name)) {
+      throw "Livewire: Directive already registered: [".concat(name, "]");
+    }
+
     this.directives.register(name, callback);
   },
   call: function call(name, el, directive, component) {

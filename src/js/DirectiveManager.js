@@ -4,10 +4,9 @@ export default {
     directives: new MessageBus,
 
     register(name, callback) {
-        // If directive name already exists.
-        // if (this.directives) {
-        //     throw `Livewire: Referencing unknown hook: [${name}]`
-        // }
+        if (this.has(name)) {
+            throw `Livewire: Directive already registered: [${name}]`
+        }
 
         this.directives.register(name, callback)
     },
