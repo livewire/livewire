@@ -53,7 +53,7 @@ class LivewireServiceProvider extends ServiceProvider
 
         $this->app->singleton(LivewireComponentsFinder::class, function () {
             $isHostedOnVapor = ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
-            
+
             $defaultManifestPath = $isHostedOnVapor
                 ? '/tmp/storage/bootstrap/cache/livewire-components.php'
                 : app()->bootstrapPath('cache/livewire-components.php');
@@ -154,6 +154,8 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerBladeDirectives()
     {
+        // @todo: removing in 1.0
+        Blade::directive('livewireAssets', [LivewireBladeDirectives::class, 'livewireAssets']);
         Blade::directive('livewireStyles', [LivewireBladeDirectives::class, 'livewireStyles']);
         Blade::directive('livewireScripts', [LivewireBladeDirectives::class, 'livewireScripts']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
