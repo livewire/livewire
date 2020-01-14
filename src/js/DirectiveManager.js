@@ -18,8 +18,4 @@ export default {
     has(name) {
         return this.directives.has(name)
     },
-
-    // call(name, ...params) {
-    //     this.bus.call(name, ...params)
-    // }
 }
