@@ -5,8 +5,6 @@
 
 # Laravel Livewire
 
-> Note: This project is in the early stages and is NOT ready for production usage yet.
-
 See the docs for everything: https://laravel-livewire.com/docs/quickstart/
 
 All contributions are welcomed! (but please submit an issue to make sure the PR is warranted first)
