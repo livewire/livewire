@@ -161,7 +161,20 @@ export default class DOMElement {
     }
 
     closestByAttribute(attribute) {
-        return new DOMElement(this.el.closest(`[${prefix}\\:${attribute}]`))
+        const closestEl = this.el.closest(`[${prefix}\\:${attribute}]`)
+
+        if (! closestEl) {
+            throw `
+Livewire Error:\n
+Cannot find parent element in DOM tree containing attribute: [${prefix}:${attribute}].\n
+Usually this is caused by Livewire's DOM-differ not being able to properly track changes.\n
+Reference the following guide for common causes: https://laravel-livewire.com/docs/troubleshooting \n
+Referenced element:\n
+${this.el.outerHTML}
+`
+        }
+
+        return new DOMElement(closestEl)
     }
 
     isComponentRootEl() {

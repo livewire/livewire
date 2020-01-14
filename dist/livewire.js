@@ -3936,7 +3936,13 @@ function () {
   }, {
     key: "closestByAttribute",
     value: function closestByAttribute(attribute) {
-      return new DOMElement(this.el.closest("[".concat(prefix, "\\:").concat(attribute, "]")));
+      var closestEl = this.el.closest("[".concat(prefix, "\\:").concat(attribute, "]"));
+
+      if (!closestEl) {
+        throw "\nLivewire Error:\n\nCannot find parent element in DOM tree containing attribute: [".concat(prefix, ":").concat(attribute, "].\n\nUsually this is caused by Livewire's DOM-differ not being able to properly track changes.\n\nReference the following guide for common causes: https://laravel-livewire.com/docs/troubleshooting \n\nReferenced element:\n\n").concat(this.el.outerHTML, "\n");
+      }
+
+      return new DOMElement(closestEl);
     }
   }, {
     key: "isComponentRootEl",
