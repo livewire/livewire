@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Testing\TestResponse;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Artisan;
@@ -18,6 +19,22 @@ class LivewireDirectivesTest extends TestCase
         ])->render();
 
         $this->assertStringContainsString('div', $output);
+    }
+
+    /** @test */
+    public function can_assert_see_livewire_on_standard_blade_view()
+    {
+        Artisan::call('make:livewire foo');
+
+        $testResponse = new TestResponse(new class {
+            public function getContent() {
+                return view('render-component', [
+                    'component' => 'foo',
+                ])->render();
+            }
+        });
+
+        $testResponse->assertSeeLivewire('foo');
     }
 
     /** @test */

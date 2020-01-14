@@ -14,6 +14,7 @@ use Livewire\Connection\HttpConnectionHandler;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\Foundation\Testing\TestResponse;
 use Livewire\Commands\{
     ComponentParser,
@@ -122,7 +123,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerTestMacros()
     {
-        TestResponse::macro('assertSeeLivewireComponent', function ($component) {
+        TestResponse::macro('assertSeeLivewire', function ($component) {
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \Illuminate\Foundation\Testing\Assert::assertStringContainsString(

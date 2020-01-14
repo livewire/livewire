@@ -2032,6 +2032,7 @@ function () {
             _node_initializer__WEBPACK_IMPORTED_MODULE_6__["default"].initialize(el, _this4);
           } else if (el.isComponentRootEl()) {
             _Store__WEBPACK_IMPORTED_MODULE_7__["default"].addComponent(new Component(el, _this4.connection));
+            return false;
           }
 
           _this4.morphChanges.added.push(node); // Skip.
@@ -5541,7 +5542,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
         default:
           if (_Store__WEBPACK_IMPORTED_MODULE_4__["default"].directives.has(directive.type)) {
-            _Store__WEBPACK_IMPORTED_MODULE_4__["default"].directives.call(directive.type, el, directive, component);
+            _Store__WEBPACK_IMPORTED_MODULE_4__["default"].directives.call(directive.type, el.el, directive, component);
           }
 
           _this.attachDomListener(el, directive, component);

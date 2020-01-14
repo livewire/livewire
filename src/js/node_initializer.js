@@ -19,7 +19,7 @@ export default {
 
                 default:
                     if (store.directives.has(directive.type)) {
-                        store.directives.call(directive.type, el, directive, component)
+                        store.directives.call(directive.type, el.el, directive, component)
                     }
 
                     this.attachDomListener(el, directive, component)

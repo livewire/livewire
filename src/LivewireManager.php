@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Support\Str;
 use Illuminate\Support\Fluent;
 use Livewire\Testing\TestableLivewire;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
@@ -133,6 +134,19 @@ class LivewireManager
     public function test($name, ...$params)
     {
         return new TestableLivewire($name, $this->prefix, $params);
+    }
+
+    public function actingAs(Authenticatable $user, $driver = null)
+    {
+        if (isset($user->wasRecentlyCreated) && $user->wasRecentlyCreated) {
+            $user->wasRecentlyCreated = false;
+        }
+
+        auth()->guard($driver)->setUser($user);
+
+        auth()->shouldUse($driver);
+
+        return $this;
     }
 
     public function styles($options = [])
