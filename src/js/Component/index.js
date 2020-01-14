@@ -297,7 +297,7 @@ export default class Component {
 
                 const fromEl = new DOMElement(from)
 
-                // Honor the "wire:ignore" attribute.
+                // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
                 if (fromEl.directives.has('ignore') || from.__livewire_ignore === true || from.__livewire_ignore_self === true) {
                     if ((fromEl.directives.has('ignore') && fromEl.directives.get('ignore').modifiers.includes('self')) || from.__livewire_ignore_self === true) {
                         // Don't update children of "wire:ingore.self" attribute.
