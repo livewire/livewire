@@ -19,7 +19,9 @@ class MakeCommand extends FileManipulationCommand
             $this->option('stub')
         );
 
-        if(!$this->ensureClassNameIsNotReserved()) {
+        if($this->isReservedClassName($name = $this->parser->className())) {
+            $this->line("<options=bold,reverse;fg=red> WHOOPS! </> 😳 \n");
+            $this->line("<fg=red;options=bold>Class is reserved:</> {$name}");
             return;
         }
 
@@ -76,17 +78,8 @@ class MakeCommand extends FileManipulationCommand
         return $viewPath;
     }
 
-    public function ensureClassNameIsNotReserved()
+    public function isReservedClassName($name)
     {
-        $reservedClasses = collect(['Parent', 'Component', 'Interface']);
-
-        if($reservedClasses->contains($this->parser->className())) {
-            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class is reserved:</> {$this->parser->className()}");
-
-            return false;
-        }
-
-        return true;
+        return array_search($name, ['Parent', 'Component', 'Interface']) !== false;
     }
 }
