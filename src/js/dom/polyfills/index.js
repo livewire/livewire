@@ -4,6 +4,7 @@ import 'core-js/features/array/flat';
 import 'core-js/features/array/find';
 import 'core-js/features/object/assign';
 import 'core-js/features/promise';
+import 'core-js/features/string/starts-with';
 import 'whatwg-fetch'
 import './modules/es.element.get-attribute-names';
 import './modules/es.element.matches';
