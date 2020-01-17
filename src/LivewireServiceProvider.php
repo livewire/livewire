@@ -28,7 +28,7 @@ use Livewire\Commands\{
     MvCommand,
     RmCommand,
     StubCommand,
-    TouchCommand,
+    TouchCommand
 };
 use Livewire\HydrationMiddleware\{
     ClearFlashMessagesIfNotRedirectingAway,
@@ -42,7 +42,7 @@ use Livewire\HydrationMiddleware\{
     PrioritizeDataUpdatesBeforeActionCalls,
     RegisterEmittedEvents,
     RegisterEventsBeingListenedFor,
-    SecureHydrationWithChecksum,
+    SecureHydrationWithChecksum
 };
 
 class LivewireServiceProvider extends ServiceProvider
