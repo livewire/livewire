@@ -12,7 +12,7 @@ class TestableLivewireCanAssertRedirectTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(RedirectComponent::class);
 
-        $component->performRedirect();
+        $component->call('performRedirect');
 
         $component->assertRedirect();
     }
@@ -22,7 +22,7 @@ class TestableLivewireCanAssertRedirectTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(RedirectComponent::class);
 
-        $component->performRedirect();
+        $component->call('performRedirect');
 
         $component->assertRedirect('/some');
     }

@@ -14,7 +14,7 @@ class ComponentHasNameAsPublicPropertyTest extends TestCase
 
         $component->set('name', 'Caleb');
 
-        $this->assertEquals($component->name, 'Caleb');
+        $this->assertEquals($component->get('name'), 'Caleb');
     }
 }
 

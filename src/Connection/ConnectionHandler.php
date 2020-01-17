@@ -21,7 +21,7 @@ abstract class ConnectionHandler
                 $this->processMessage($action['type'], $action['payload'], $instance);
             }
         } catch (ValidationException $e) {
-            $this->interceptValidator($e->validator);
+            Livewire::dispatch('failed-validation', $e->validator);
 
             $errors = $e->validator->errors();
         }
