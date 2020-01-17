@@ -3,9 +3,7 @@ import DOM from "@/dom/dom";
 import Component from "@/Component/index";
 import Connection from '@/connection'
 import drivers from '@/connection/drivers'
-import { ArrayFlat, ArrayFrom, ArrayIncludes, ElementGetAttributeNames } from '@/dom/polyfills';
-import 'whatwg-fetch'
-import 'promise-polyfill/src/polyfill';
+import '@/dom/polyfills/index';
 import { dispatch } from './util';
 import LoadingStates from '@/component/LoadingStates'
 import DisableForms from '@/component/DisableForms'
@@ -28,8 +26,6 @@ class Livewire {
         this.connection = new Connection(driver)
         this.components = componentStore
         this.onLoadCallback = () => {};
-
-        this.activatePolyfills()
     }
 
     find(componentId) {
@@ -46,13 +42,6 @@ class Livewire {
 
     onLoad(callback) {
         this.onLoadCallback = callback
-    }
-
-    activatePolyfills() {
-        ArrayFlat()
-        ArrayFrom()
-        ArrayIncludes()
-        ElementGetAttributeNames()
     }
 
     emit(event, ...params) {
