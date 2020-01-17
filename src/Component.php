@@ -7,6 +7,7 @@ use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
+use Livewire\Livewire;
 
 abstract class Component
 {
@@ -101,6 +102,8 @@ abstract class Component
         ] + $this->getPublicPropertiesDefinedBySubClass());
 
         $output = $view->render();
+
+        Livewire::dispatch('view:render', $view);
 
         $engine->endLivewireRendering();
 

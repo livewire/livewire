@@ -9,7 +9,7 @@ use Livewire\Exceptions\CorruptComponentPayloadException;
 class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends TestCase
 {
     /** @test */
-    public function livewire_request_data_doesnt_dont_get_manipulated()
+    public function livewire_request_data_doesnt_get_manipulated()
     {
         LivewireManager::$isLivewireRequestTestingOverride = true;
 
@@ -42,7 +42,7 @@ class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends Te
 
         $component = app(LivewireManager::class)->test(ComponentWithStringPropertiesStub::class);
 
-        $this->post("/livewire/message/{$component->componentName}", [
+        $this->withMiddleware()->post("/livewire/message/{$component->componentName}", [
             'actionQueue' => [],
             'name' => $component->componentName,
             'children' => $component->payload['children'],

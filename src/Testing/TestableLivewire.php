@@ -4,7 +4,8 @@ namespace Livewire\Testing;
 
 use Livewire\Livewire;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Route;
 
 class TestableLivewire
 {
@@ -12,7 +13,9 @@ class TestableLivewire
     public $payload = [];
     public $componentName;
     public $lastValidator;
-    public $lastHttpException;
+    public $lastRenderedView;
+    public $lastResponse;
+    public $rawMountedResponse;
 
     use Concerns\MakesAssertions,
         Concerns\MakesCallsToComponent,
@@ -20,6 +23,18 @@ class TestableLivewire
 
     public function __construct($name, $prefix, $params = [])
     {
+        Livewire::listen('view:render', function ($view) {
+            $this->lastRenderedView = $view;
+        });
+
+        Livewire::listen('failed-validation', function ($validator) {
+            $this->lastValidator = $validator;
+        });
+
+        Livewire::listen('mounted', function ($response) {
+            $this->rawMountedResponse = $response;
+        });
+
         $this->prefix = $prefix;
 
         // This allows the user to test a component by it's class name,
@@ -29,14 +44,12 @@ class TestableLivewire
             app('livewire')->component($name = Str::random(20), $componentClass);
         }
 
-        try {
-            $result = app('livewire')->mount($name, ...$params);
+        $this->componentName = $name;
 
-            $this->componentName = $name;
+        $this->lastResponse = $this->pretendWereMountingAComponentOnAPage($name, $params);
 
-            $this->updateComponent($result);
-        } catch (HttpException $exception) {
-            $this->lastHttpException = $exception;
+        if (! $this->lastResponse->exception) {
+            $this->updateComponent($this->rawMountedResponse);
         }
     }
 
@@ -58,6 +71,49 @@ class TestableLivewire
         ];
     }
 
+    public function pretendWereMountingAComponentOnAPage($name, $params)
+    {
+        $randomRoutePath = '/testing-livewire/'.Str::random(20);
+
+        Route::get($randomRoutePath, function () use ($name, $params) {
+            return View::file(__DIR__.'/../views/mount-component.blade.php', [
+                'name' => $name,
+                'params' => $params,
+            ]);
+        });
+
+        $laravelTestingWrapper = new MakesHttpRequestsWrapper(app());
+
+        $response = null;
+
+        $laravelTestingWrapper->temporarilyDisableExceptionHandlingAndMiddleware(function ($wrapper) use ($randomRoutePath, &$response) {
+            $response = $wrapper->call('GET', $randomRoutePath);
+        });
+
+        return $response;
+    }
+
+    public function pretendWereSendingAComponentUpdateRequest($message, $payload)
+    {
+        $laravelTestingWrapper = new MakesHttpRequestsWrapper(app());
+
+        $response = null;
+
+        $laravelTestingWrapper->temporarilyDisableExceptionHandlingAndMiddleware(function ($wrapper) use (&$response, $message, $payload) {
+            $response = $wrapper->call('POST', '/livewire/message/'.$this->componentName, [
+                'id' => $this->payload['id'],
+                'name' => $this->payload['name'],
+                'data' => $this->payload['data'],
+                'children' => $this->payload['children'],
+                'checksum' => $this->payload['checksum'],
+                'errorBag' => $this->payload['errorBag'],
+                'actionQueue' => [['type' => $message, 'payload' => $payload]],
+            ]);
+        });
+
+        return $response;
+    }
+
     public function id()
     {
         return $this->payload['id'];
@@ -66,6 +122,11 @@ class TestableLivewire
     public function instance()
     {
         return Livewire::activate($this->componentName, $this->id());
+    }
+
+    public function viewData($key)
+    {
+        return $this->lastRenderedView->gatherData()[$key];
     }
 
     public function get($property)
@@ -80,11 +141,6 @@ class TestableLivewire
 
     public function __call($method, $params)
     {
-        return $this->call($method, $params);
-    }
-
-    public function __set($name, $value)
-    {
-        return $this->set($name, $value);
+        return $this->lastResponse->$method(...$params);
     }
 }

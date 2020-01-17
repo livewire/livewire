@@ -14,7 +14,6 @@ use Livewire\Connection\HttpConnectionHandler;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\Foundation\Testing\TestResponse;
 use Livewire\Commands\{
     ComponentParser,

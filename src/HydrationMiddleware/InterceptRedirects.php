@@ -13,7 +13,13 @@ class InterceptRedirects implements HydrationMiddleware
         static::$redirectorCache = app('redirect');
 
         app()->bind('redirect', function () use ($unHydratedInstance) {
-            return app(Redirector::class)->component($unHydratedInstance);
+            $redirector = app(Redirector::class)->component($unHydratedInstance);
+
+            if (app('session.store')) {
+                $redirector->setSession(app('session.store'));
+            }
+
+            return $redirector;;
         });
     }
 

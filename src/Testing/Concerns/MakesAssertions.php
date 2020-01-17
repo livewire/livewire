@@ -3,6 +3,7 @@
 namespace Livewire\Testing\Concerns;
 
 use Illuminate\Support\MessageBag;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\Assert as PHPUnit;
 
 trait MakesAssertions
@@ -139,54 +140,6 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertStatus($status)
-    {
-        $actual = $this->lastHttpException->getStatusCode();
-
-        PHPUnit::assertTrue(
-            $actual === $status,
-            "Expected status code [{$status}] but received [{$actual}]."
-        );
-
-        return $this;
-    }
-
-    public function assertNotFound()
-    {
-        $actual = $this->lastHttpException->getStatusCode();
-
-        PHPUnit::assertTrue(
-            $actual === 404,
-            'Response status code ['.$actual.'] is not a not found status code.'
-        );
-
-        return $this;
-    }
-
-    public function assertForbidden()
-    {
-        $actual = $this->lastHttpException->getStatusCode();
-
-        PHPUnit::assertTrue(
-            $actual === 403,
-            'Response status code ['.$actual.'] is not a forbidden status code.'
-        );
-
-        return $this;
-    }
-
-    public function assertUnauthorized()
-    {
-        $actual = $this->lastHttpException->getStatusCode();
-
-        PHPUnit::assertTrue(
-            $actual === 401,
-            'Response status code ['.$actual.'] is not an unauthorized status code.'
-        );
-
-        return $this;
-    }
-
     public function assertRedirect($uri = null)
     {
         PHPUnit::assertIsString(
@@ -196,6 +149,21 @@ trait MakesAssertions
 
         if (! is_null($uri)) {
             PHPUnit::assertSame(url($uri), url($this->payload['redirectTo']));
+        }
+
+        return $this;
+    }
+
+    public function assertViewHas($key, $value = null)
+    {
+        if (is_null($value)) {
+            PHPUnit::assertArrayHasKey($key, $this->lastRenderedView->gatherData());
+        } elseif ($value instanceof \Closure) {
+            PHPUnit::assertTrue($value($this->lastRenderedView->gatherData()[$key]));
+        } elseif ($value instanceof Model) {
+            PHPUnit::assertTrue($value->is($this->lastRenderedView->gatherData()[$key]));
+        } else {
+            PHPUnit::assertEquals($value, $this->lastRenderedView->gatherData()[$key]);
         }
 
         return $this;

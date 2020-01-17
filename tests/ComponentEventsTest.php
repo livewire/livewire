@@ -14,7 +14,7 @@ class ComponentEventsTest extends TestCase
 
         $component->fireEvent('bar', 'baz');
 
-        $this->assertEquals($component->foo, 'baz');
+        $this->assertEquals($component->get('foo'), 'baz');
     }
 
     /** @test */
@@ -24,7 +24,7 @@ class ComponentEventsTest extends TestCase
 
         $component->fireEvent('bar', 'baz', 'blab');
 
-        $this->assertEquals($component->foo, 'bazblab');
+        $this->assertEquals($component->get('foo'), 'bazblab');
     }
 
     /** @test */

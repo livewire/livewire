@@ -20,6 +20,7 @@ class LivewireManager
     protected $hydrationMiddleware = [];
     protected $initialHydrationMiddleware = [];
     protected $initialDehydrationMiddleware = [];
+    protected $listeners = [];
 
     public static $isLivewireRequestTestingOverride;
 
@@ -122,6 +123,8 @@ class LivewireManager
         $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
             'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
         ]);
+
+        $this->dispatch('mounted', $response);
 
         return $response;
     }
@@ -361,5 +364,19 @@ HTML;
         preg_match('/<([a-zA-Z0-9\-]*)/', $dom, $matches, PREG_OFFSET_CAPTURE);
 
         return $matches[1][0];
+    }
+
+    public function dispatch($event, ...$params)
+    {
+        foreach ($this->listeners[$event] ?? [] as $listener) {
+            $listener(...$params);
+        }
+    }
+
+    public function listen($event, $callback)
+    {
+        $this->listeners[$event] ?? $this->listeners[$event] = [];
+
+        $this->listeners[$event][] = $callback;
     }
 }
