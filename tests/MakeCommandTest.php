@@ -75,4 +75,13 @@ class MakeCommandTest extends TestCase
         );
         $this->assertTrue(File::exists(resource_path('views/not-livewire/foo.blade.php')));
     }
+
+    /** @test */
+    public function a_component_is_not_created_with_a_reserved_class_name()
+    {
+        Artisan::call('make:livewire component');
+
+        $this->assertFalse(File::exists($this->livewireClassesPath('Component.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('component.blade.php')));
+    }
 }
