@@ -19,6 +19,10 @@ class MakeCommand extends FileManipulationCommand
             $this->option('stub')
         );
 
+        if(!$this->ensureClassNameIsNotReserved()) {
+            return;
+        }
+
         $force = $this->option('force');
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
@@ -70,5 +74,19 @@ class MakeCommand extends FileManipulationCommand
         File::put($viewPath, $this->parser->viewContents());
 
         return $viewPath;
+    }
+
+    public function ensureClassNameIsNotReserved()
+    {
+        $reservedClasses = collect(['Parent', 'Component', 'Interface']);
+
+        if($reservedClasses->contains($this->parser->className())) {
+            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
+            $this->line("<fg=red;options=bold>Class is reserved:</> {$this->parser->className()}");
+
+            return false;
+        }
+
+        return true;
     }
 }
