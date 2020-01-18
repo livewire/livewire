@@ -5,12 +5,9 @@ namespace Livewire\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Livewire\LivewireComponentsFinder;
-use Illuminate\Console\DetectsApplicationNamespace;
 
 class FileManipulationCommand extends Command
 {
-    use DetectsApplicationNamespace;
-
     protected $parser;
 
     protected function ensureDirectoryExists($path)

@@ -4,12 +4,7 @@ namespace Livewire;
 
 use Exception;
 use Throwable;
-use Illuminate\View\Engines\PhpEngine;
-use Livewire\Exceptions\BypassViewHandler;
-use Illuminate\View\Engines\CompilerEngine;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Debug\Exception\FatalThrowableError;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class LivewireViewCompilerEngine extends CompilerEngine
 {
@@ -81,29 +76,5 @@ class LivewireViewCompilerEngine extends CompilerEngine
     public function removeLivewireDirectivesFromCompiler()
     {
         $this->exposedCompiler->setProperty('customDirectives', $this->tmpCustomDirectives);
-    }
-
-    // Errors thrown while a view is rendering are caught by the Blade
-    // compiler and wrapped in an "ErrorException". This makes Livewire errors
-    // harder to read, AND causes issues like `abort(404)` not actually working.
-    protected function handleViewException(Exception $e, $obLevel)
-    {
-        $uses = array_flip(class_uses_recursive($e));
-
-        if (
-            // Don't wrap "abort(404)".
-            $e instanceof NotFoundHttpException
-            // Don't wrap "abort(500)".
-            || $e instanceof HttpException
-            // Don't wrap most Livewire exceptions.
-            || isset($uses[BypassViewHandler::class])
-        ) {
-            // This is because there is no "parent::parent::".
-            PhpEngine::handleViewException($e, $obLevel);
-
-            return;
-        }
-
-        parent::handleViewException($e, $obLevel);
     }
 }

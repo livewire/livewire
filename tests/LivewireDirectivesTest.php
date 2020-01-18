@@ -2,7 +2,9 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestResponse;
+use Illuminate\Testing\TestResponse as Laravel7TestResponse;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Artisan;
@@ -26,13 +28,20 @@ class LivewireDirectivesTest extends TestCase
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
 
-        $testResponse = new TestResponse(new class {
-            public function getContent() {
+        $fakeClass = new class {
+            public function getContent()
+            {
                 return view('render-component', [
                     'component' => 'foo',
                 ])->render();
             }
-        });
+        };
+
+        if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=')) {
+            $testResponse = new Laravel7TestResponse($fakeClass);
+        } else {
+            $testResponse = new TestResponse($fakeClass);
+        }
 
         $testResponse->assertSeeLivewire('foo');
     }
