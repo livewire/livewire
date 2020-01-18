@@ -12,7 +12,7 @@ class LivewireDirectivesTest extends TestCase
     /** @test */
     public function component_is_loaded_with_blade_directive()
     {
-        Artisan::call('make:livewire foo');
+        Artisan::call('make:livewire', ['name' => 'foo']);
 
         $output = view('render-component', [
             'component' => 'foo',
@@ -24,7 +24,7 @@ class LivewireDirectivesTest extends TestCase
     /** @test */
     public function can_assert_see_livewire_on_standard_blade_view()
     {
-        Artisan::call('make:livewire foo');
+        Artisan::call('make:livewire', ['name' => 'foo']);
 
         $testResponse = new TestResponse(new class {
             public function getContent() {
@@ -40,7 +40,7 @@ class LivewireDirectivesTest extends TestCase
     /** @test */
     public function component_is_loaded_with_blade_directive_by_classname()
     {
-        Artisan::call('make:livewire foo');
+        Artisan::call('make:livewire', ['name' => 'foo']);
 
         $output = view('render-component', [
             'component' => \App\Http\Livewire\Foo::class,

@@ -6,6 +6,7 @@ use Livewire\Livewire;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Assert as PHPUnit;
 
 class TestableLivewire
 {

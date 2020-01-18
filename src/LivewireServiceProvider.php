@@ -126,7 +126,7 @@ class LivewireServiceProvider extends ServiceProvider
         TestResponse::macro('assertSeeLivewire', function ($component) {
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
-            \Illuminate\Foundation\Testing\Assert::assertStringContainsString(
+            \PHPUnit\Framework\Assert::assertStringContainsString(
                 (string) $escapedComponentName,
                 $this->getContent(),
                 'Cannot find Livewire component ['.$component.'] rendered on page.'

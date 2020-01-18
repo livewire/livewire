@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Application;
 use Livewire\Component;
 use Livewire\LivewireManager;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -27,6 +28,10 @@ class TestableLivewireCanAssertStatusCodesTest extends TestCase
     /** @test */
     public function can_assert_a_401_status_code_when_an_exception_is_encountered()
     {
+        if (version_compare(Application::VERSION, '5.8.24', '<')) {
+            $this->markTestSkipped('assertUnauthorized is unavailable prior to Laravel 5.8');
+        }
+
         $component = app(LivewireManager::class)->test(UnauthorizedComponent::class);
 
         $component->assertUnauthorized();

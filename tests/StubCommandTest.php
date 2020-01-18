@@ -19,7 +19,7 @@ class StubCommandTest extends TestCase
     /** @test */
     public function custom_stub_is_created_by_stub_command()
     {
-        Artisan::call('livewire:stub pizza');
+        Artisan::call('livewire:stub', ['name' => 'pizza']);
 
         $this->assertTrue(File::exists($this->livewireViewStubsPath('pizza.stub')));
         $this->assertTrue(File::exists($this->livewireClassStubsPath('Pizza.stub')));
@@ -28,10 +28,10 @@ class StubCommandTest extends TestCase
     /** @test */
     public function component_is_created_with_view_and_class_stubs()
     {
-        Artisan::call('livewire:stub modal');
-        File::replace($this->livewireViewsPath('stubs/modal.stub'), '<div>Modal Test</div>');
+        Artisan::call('livewire:stub', ['name' => 'modal']);
+        File::put($this->livewireViewsPath('stubs/modal.stub'), '<div>Modal Test</div>');
         File::append($this->livewireClassesPath('Stubs/Modal.stub'), '// comment');
-        Artisan::call('make:livewire foo --stub=modal');
+        Artisan::call('make:livewire', ['name' => 'foo', '--stub' => 'modal']);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
         $this->assertStringContainsString('// comment', File::get($this->livewireClassesPath('Foo.php')));
@@ -43,9 +43,9 @@ class StubCommandTest extends TestCase
     public function component_is_created_with_view_and_class_custom_default_stubs()
     {
         Artisan::call('livewire:stub');
-        File::replace($this->livewireViewsPath('stubs/default.stub'), '<div>Default Test</div>');
+        File::put($this->livewireViewsPath('stubs/default.stub'), '<div>Default Test</div>');
         File::append($this->livewireClassesPath('Stubs/Default.stub'), '// comment default');
-        Artisan::call('make:livewire foo');
+        Artisan::call('make:livewire', ['name' => 'foo']);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
         $this->assertStringContainsString('// comment default', File::get($this->livewireClassesPath('Foo.php')));
