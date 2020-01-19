@@ -61,7 +61,11 @@ class DataCaster
                     return \Carbon\Carbon::parse($value);
                 },
                 'uncast' => function ($value) {
-                    return $value->toString();
+                    if (method_exists($value, 'toString')) {
+                        return $value->toString();
+                    }
+
+                    return $value->__toString();
                 },
             ],
             'collection' => [
