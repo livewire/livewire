@@ -1,6 +1,7 @@
 import ElementDirectives from "./directive_manager"
 import get from 'get-value'
-const prefix = require('./prefix.js')()
+import findPrefix from './prefix.js'
+const prefix = findPrefix()
 
 /**
  * Consider this a decorator for the ElementNode JavaScript object. (Hence the

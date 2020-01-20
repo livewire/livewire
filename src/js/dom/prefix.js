@@ -1,6 +1,6 @@
 var prefix = null;
 
-module.exports = function () {
+export default function () {
     if (prefix === null) {
         prefix = (
             document.querySelector('meta[name="livewire-prefix"]')

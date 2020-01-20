@@ -4,14 +4,14 @@ namespace Livewire;
 
 class LivewireJavaScriptAssets
 {
-    public function unminified()
+    public function source()
     {
         return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.js');
     }
 
-    public function minified()
+    public function maps()
     {
-        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.min.js');
+        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.js.map');
     }
 
     public function pretendResponseIsFile($file)

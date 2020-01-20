@@ -14,6 +14,8 @@
   "devDependencies": {
     "@babel/core": "^7.7.5",
     "@babel/preset-env": "^7.7.6",
+    "@rollup/plugin-alias": "^3.0.0",
+    "@rollup/plugin-commonjs": "^11.0.1",
     "babel-jest": "^24.9.0",
     "core-js": "^3.6.4",
     "cross-env": "^5.2.1",
@@ -24,13 +26,17 @@
     "jest": "^24.9.0",
     "jest-dom": "^3.5.0",
     "jsdom-simulant": "^1.1.2",
-    "laravel-mix": "^4.1.4",
-    "laravel-mix-merge-manifest": "^0.1.2",
+    "md5": "^2.2.1",
     "mock-echo": "^1.1.1",
     "query-string": "^5.1.1",
-    "turbolinks": "^5.2.0",
-    "vue-template-compiler": "^2.6.10",
+    "rollup-plugin-output-manifest": "^1.0.2",
     "whatwg-fetch": "^3.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "rollup": "^1.29.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-filesize": "^6.2.1",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^5.2.0"
+  }
 }
