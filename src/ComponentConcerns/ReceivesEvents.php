@@ -40,7 +40,12 @@ trait ReceivesEvents
 
     protected function getEventsAndHandlers()
     {
-        return $this->getListeners();
+        return collect($this->getListeners())
+            ->mapWithKeys(function ($value, $key) {
+                $key = is_numeric($key) ? $value : $key;
+
+                return [$key => $value];
+            })->toArray();
     }
 
     public function getEventsBeingListenedFor()

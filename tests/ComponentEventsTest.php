@@ -18,6 +18,16 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
+    public function receive_event_with_single_value_listenr()
+    {
+        $component = app(LivewireManager::class)->test(ReceivesEventsWithSingleValueListener::class);
+
+        $component->fireEvent('bar', 'baz');
+
+        $this->assertEquals($component->get('foo'), 'baz');
+    }
+
+    /** @test */
     public function receive_event_with_multiple_parameters()
     {
         $component = app(LivewireManager::class)->test(ReceivesEvents::class);
@@ -87,6 +97,24 @@ class ReceivesEvents extends Component
         return app('view')->make('null-view');
     }
 }
+
+class ReceivesEventsWithSingleValueListener extends Component
+{
+    public $foo;
+
+    protected $listeners = ['bar'];
+
+    public function bar($value)
+    {
+        $this->foo = $value;
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
 class ReceivesEventsWithDynamicListeners extends Component
 {
     public $listener;

@@ -131,6 +131,8 @@ class LivewireServiceProvider extends ServiceProvider
                 $this->getContent(),
                 'Cannot find Livewire component ['.$component.'] rendered on page.'
             );
+
+            return $this;
         });
     }
 
