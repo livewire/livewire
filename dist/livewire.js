@@ -5215,17 +5215,8 @@ function () {
     key: "replaceDom",
     value: function replaceDom(rawDom) {
       _Store__WEBPACK_IMPORTED_MODULE_7__["default"].beforeDomUpdateCallback();
-      this.handleMorph(this.formatDomBeforeDiffToAvoidConflictsWithVue(rawDom.trim()));
+      this.handleMorph(rawDom.trim());
       _Store__WEBPACK_IMPORTED_MODULE_7__["default"].afterDomUpdateCallback();
-    }
-  }, {
-    key: "formatDomBeforeDiffToAvoidConflictsWithVue",
-    value: function formatDomBeforeDiffToAvoidConflictsWithVue(inputDom) {
-      if (!window.Vue) return inputDom;
-      var div = document.createElement('div');
-      div.innerHTML = inputDom;
-      new window.Vue().$mount(div.firstElementChild);
-      return div.firstElementChild.outerHTML;
     }
   }, {
     key: "addPrefetchAction",
@@ -5301,9 +5292,7 @@ function () {
           } // Children will update themselves.
 
 
-          if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== _this4.id) return false; // Don't touch Vue components
-
-          if (fromEl.isVueComponent()) return false;
+          if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== _this4.id) return false;
         },
         onElUpdated: function onElUpdated(node) {
           _this4.morphChanges.changed.push(node);
@@ -7233,16 +7222,6 @@ function () {
       return this.hasAttribute('id');
     }
   }, {
-    key: "isVueComponent",
-    value: function isVueComponent() {
-      return !!this.asVueComponent();
-    }
-  }, {
-    key: "asVueComponent",
-    value: function asVueComponent() {
-      return this.rawNode().__vue__;
-    }
-  }, {
     key: "hasAttribute",
     value: function hasAttribute(attribute) {
       return this.el.hasAttribute("".concat(prefix, ":").concat(attribute));
@@ -7323,15 +7302,7 @@ function () {
     value: function setInputValue(value) {
       var _this9 = this;
 
-      if (this.rawNode().__vue__) {
-        // If it's a vue component pass down the value prop.
-        // Also, Vue will throw a warning because we are programmaticallly
-        // setting a prop, we need to silence that.
-        var originalSilent = window.Vue.config.silent;
-        window.Vue.config.silent = true;
-        this.rawNode().__vue__.$props.value = value;
-        window.Vue.config.silent = originalSilent;
-      } else if (this.el.type === 'radio') {
+      if (this.el.type === 'radio') {
         this.el.checked = this.el.value == value;
       } else if (this.el.type === 'checkbox') {
         if (Array.isArray(value)) {
@@ -8706,29 +8677,20 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       return condition ? component.modelSyncDebounce(callback, time) : callback;
     };
 
-    var hasDebounceModifier = directive.modifiers.includes('debounce'); // If it's a Vue component, listen for Vue input event emission.
+    var hasDebounceModifier = directive.modifiers.includes('debounce');
+    var defaultEventType = el.isTextInput() ? 'input' : 'change'; // If it's a text input and not .lazy, debounce, otherwise fire immediately.
 
-    if (el.isVueComponent()) {
-      el.asVueComponent().$on('input', debounceIf(hasDebounceModifier, function (e) {
-        var model = directive.value;
-        var value = e;
-        component.addAction(new _action_model__WEBPACK_IMPORTED_MODULE_1__["default"](model, value, el));
-      }, directive.durationOr(150)));
-    } else {
-      var defaultEventType = el.isTextInput() ? 'input' : 'change'; // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-
-      var event = isLazy ? 'change' : defaultEventType;
-      var handler = debounceIf(hasDebounceModifier || el.isTextInput() && !isLazy, function (e) {
-        var model = directive.value;
-        var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_3__["default"](e.target);
-        var value = el.valueFromInput(component);
-        component.addAction(new _action_model__WEBPACK_IMPORTED_MODULE_1__["default"](model, value, el));
-      }, directive.durationOr(150));
-      el.addEventListener(event, handler);
-      component.addListenerForTeardown(function () {
-        el.removeEventListener(event, handler);
-      });
-    }
+    var event = isLazy ? 'change' : defaultEventType;
+    var handler = debounceIf(hasDebounceModifier || el.isTextInput() && !isLazy, function (e) {
+      var model = directive.value;
+      var el = new _dom_dom_element__WEBPACK_IMPORTED_MODULE_3__["default"](e.target);
+      var value = el.valueFromInput(component);
+      component.addAction(new _action_model__WEBPACK_IMPORTED_MODULE_1__["default"](model, value, el));
+    }, directive.durationOr(150));
+    el.addEventListener(event, handler);
+    component.addListenerForTeardown(function () {
+      el.removeEventListener(event, handler);
+    });
   },
   attachDomListener: function attachDomListener(el, directive, component) {
     switch (directive.type) {
@@ -9013,7 +8975,7 @@ function walk(root, callback) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /Users/harry/Documents/Code/livewire-framework/src/js/index.js */"./src/js/index.js");
+module.exports = __webpack_require__(/*! /Users/calebporzio/Documents/Code/sites/livewire/src/js/index.js */"./src/js/index.js");
 
 
 /***/ })
