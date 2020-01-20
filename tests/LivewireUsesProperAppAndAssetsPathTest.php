@@ -27,7 +27,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     public function livewire_js_calls_reference_relative_root()
     {
         $this->assertStringContainsString(
-            '<script src="/livewire/livewire.min.js?',
+            '<script src="/livewire/livewire.js?',
             Livewire::scripts()
         );
 
@@ -41,7 +41,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     public function livewire_js_calls_reference_congigured_asset_url()
     {
         $this->assertStringContainsString(
-            '<script src="https://foo.com/assets/livewire/livewire.min.js?',
+            '<script src="https://foo.com/assets/livewire/livewire.js?',
             Livewire::scripts(['asset_url' => 'https://foo.com/assets'])
         );
 
@@ -55,7 +55,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
     public function asset_url_trailing_slashes_are_trimmed()
     {
         $this->assertStringContainsString(
-            '<script src="https://foo.com/assets/livewire/livewire.min.js?',
+            '<script src="https://foo.com/assets/livewire/livewire.js?',
             Livewire::scripts(['asset_url' => 'https://foo.com/assets/'])
         );
 
@@ -73,7 +73,7 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
         ])->render();
 
         $this->assertStringContainsString(
-            '<script src="https://foo.com/assets/livewire/livewire.min.js?',
+            '<script src="https://foo.com/assets/livewire/livewire.js?',
             $output
         );
 
