@@ -48,33 +48,23 @@ export default {
         }
         const hasDebounceModifier = directive.modifiers.includes('debounce')
 
-        // If it's a Vue component, listen for Vue input event emission.
-        if (el.isVueComponent()) {
-            el.asVueComponent().$on('input', debounceIf(hasDebounceModifier, e => {
-                const model = directive.value
-                const value = e
+        const defaultEventType = el.isTextInput() ? 'input' : 'change'
 
-                component.addAction(new ModelAction(model, value, el))
-            }, directive.durationOr(150)))
-        } else {
-            const defaultEventType = el.isTextInput() ? 'input' : 'change'
+        // If it's a text input and not .lazy, debounce, otherwise fire immediately.
+        const event = isLazy ? 'change' : defaultEventType
+        const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
+            const model = directive.value
+            const el = new DOMElement(e.target)
+            const value = el.valueFromInput(component)
 
-            // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-            const event = isLazy ? 'change' : defaultEventType
-            const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
-                const model = directive.value
-                const el = new DOMElement(e.target)
-                const value = el.valueFromInput(component)
+            component.addAction(new ModelAction(model, value, el))
+        }, directive.durationOr(150))
 
-                component.addAction(new ModelAction(model, value, el))
-            }, directive.durationOr(150))
+        el.addEventListener(event, handler)
 
-            el.addEventListener(event, handler)
-
-            component.addListenerForTeardown(() => {
-                el.removeEventListener(event, handler)
-            })
-        }
+        component.addListenerForTeardown(() => {
+            el.removeEventListener(event, handler)
+        })
     },
 
     attachDomListener(el, directive, component) {

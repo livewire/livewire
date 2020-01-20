@@ -181,14 +181,6 @@ ${this.el.outerHTML}
         return this.hasAttribute('id')
     }
 
-    isVueComponent() {
-        return !! this.asVueComponent()
-    }
-
-    asVueComponent() {
-        return this.rawNode().__vue__
-    }
-
     hasAttribute(attribute) {
         return this.el.hasAttribute(`${prefix}:${attribute}`)
     }
@@ -254,15 +246,7 @@ ${this.el.outerHTML}
     }
 
     setInputValue(value) {
-        if (this.rawNode().__vue__) {
-            // If it's a vue component pass down the value prop.
-            // Also, Vue will throw a warning because we are programmaticallly
-            // setting a prop, we need to silence that.
-            const originalSilent = window.Vue.config.silent
-            window.Vue.config.silent = true
-            this.rawNode().__vue__.$props.value = value
-            window.Vue.config.silent = originalSilent
-        } else if (this.el.type === 'radio') {
+        if (this.el.type === 'radio') {
             this.el.checked = this.el.value == value
         } else if (this.el.type === 'checkbox') {
             if (Array.isArray(value)) {
