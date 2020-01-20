@@ -1,6 +1,7 @@
 import ElementDirective from './directive';
 
-const prefix = require('./prefix.js')()
+import findPrefix from './prefix.js'
+const prefix = findPrefix()
 
 export default class {
     constructor(el) {

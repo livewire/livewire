@@ -159,11 +159,7 @@ class LivewireManager
 
         $styles = $this->cssAssets();
 
-        $jsFileName = $debug
-            ? '/livewire.js'
-            : '/livewire.min.js';
-
-        $scripts = $this->javaScriptAssets($jsFileName, $options, $defer = true);
+        $scripts = $this->javaScriptAssets($options, $defer = true);
 
         // HTML Label.
         $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
@@ -199,11 +195,7 @@ class LivewireManager
     {
         $debug = config('app.debug');
 
-        $jsFileName = $debug
-            ? '/livewire.js'
-            : '/livewire.min.js';
-
-        $scripts = $this->javaScriptAssets($jsFileName, $options);
+        $scripts = $this->javaScriptAssets($options);
 
         // HTML Label.
         $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
@@ -233,7 +225,7 @@ class LivewireManager
 HTML;
     }
 
-    protected function javaScriptAssets($jsFileName, $options, $defer = false)
+    protected function javaScriptAssets($options, $defer = false)
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
@@ -241,8 +233,8 @@ HTML;
 
         $csrf = csrf_token();
 
-        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
-        $versionedFileName = $manifest[$jsFileName];
+        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/manifest.json'), true);
+        $versionedFileName = $manifest['/livewire.js'];
 
         // Default to dynamic `livewire.js` (served by a Laravel route).
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
@@ -250,8 +242,8 @@ HTML;
 
         // Use static assets if they have been published
         if (file_exists(public_path('vendor/livewire'))) {
-            $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/mix-manifest.json')), true);
-            $versionedFileName = $publishedManifest[$jsFileName];
+            $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
+            $versionedFileName = $publishedManifest['/livewire.js'];
 
             $isHostedOnVapor = ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
 

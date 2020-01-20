@@ -1,5 +1,6 @@
 import DOMElement from './dom_element'
-const prefix = require('./prefix.js')()
+import findPrefix from './prefix.js'
+const prefix = findPrefix()
 
 /**
  * This is intended to isolate all native DOM operations. The operations that happen
