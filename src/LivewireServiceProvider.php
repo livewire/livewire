@@ -97,8 +97,8 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerRoutes()
     {
-        RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'unminified']);
-        RouteFacade::get('/livewire/livewire.min.js', [LivewireJavaScriptAssets::class, 'minified']);
+        RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
+        RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
 
         RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
             ->middleware(config('livewire.middleware_group', 'web'));
@@ -133,6 +133,8 @@ class LivewireServiceProvider extends ServiceProvider
                 $this->getContent(),
                 'Cannot find Livewire component ['.$component.'] rendered on page.'
             );
+
+            return $this;
         };
 
         if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=')) {
@@ -140,7 +142,6 @@ class LivewireServiceProvider extends ServiceProvider
         } else {
             TestResponse::macro('assertSeeLivewire', $macro);
         }
-
     }
 
     public function registerRouteMacros()

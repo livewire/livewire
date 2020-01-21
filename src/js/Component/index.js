@@ -206,22 +206,9 @@ export default class Component {
     replaceDom(rawDom) {
         store.beforeDomUpdateCallback()
 
-        this.handleMorph(
-            this.formatDomBeforeDiffToAvoidConflictsWithVue(rawDom.trim()),
-        )
+        this.handleMorph(rawDom.trim())
 
         store.afterDomUpdateCallback()
-    }
-
-    formatDomBeforeDiffToAvoidConflictsWithVue(inputDom) {
-        if (! window.Vue) return inputDom
-
-        const div = document.createElement('div')
-        div.innerHTML =  inputDom
-
-        new window.Vue().$mount(div.firstElementChild)
-
-        return div.firstElementChild.outerHTML
     }
 
     addPrefetchAction(action) {
@@ -309,9 +296,6 @@ export default class Component {
 
                 // Children will update themselves.
                 if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== this.id) return false
-
-                // Don't touch Vue components
-                if (fromEl.isVueComponent()) return false
             },
 
             onElUpdated: (node) => {
