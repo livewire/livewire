@@ -28,14 +28,13 @@
     "md5": "^2.2.1",
     "mock-echo": "^1.1.1",
     "query-string": "^6.10.1",
-    "rollup-plugin-output-manifest": "^1.0.2",
-    "whatwg-fetch": "^3.0.0"
-  },
-  "dependencies": {
     "rollup": "^1.29.0",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-filesize": "^6.2.1",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^5.2.0"
-  }
+    "rollup-plugin-terser": "^5.2.0",
+    "rollup-plugin-output-manifest": "^1.0.2",
+    "whatwg-fetch": "^3.0.0"
+  },
+  "dependencies": {}
 }
