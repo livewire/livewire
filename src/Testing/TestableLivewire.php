@@ -68,6 +68,7 @@ class TestableLivewire
             'checksum' => $output->checksum,
             'redirectTo' => $output->redirectTo,
             'dirtyInputs' => $output->dirtyInputs,
+            'updatesQueryString' => $output->updatesQueryString,
         ];
     }
 

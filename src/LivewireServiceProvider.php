@@ -30,6 +30,7 @@ use Livewire\Commands\{
     TouchCommand
 };
 use Livewire\HydrationMiddleware\{
+    UpdateQueryString,
     ClearFlashMessagesIfNotRedirectingAway,
     ForwardPrefetch,
     HashPropertiesForDirtyDetection,
@@ -199,6 +200,7 @@ class LivewireServiceProvider extends ServiceProvider
             InterceptRedirects::class,
             PrioritizeDataUpdatesBeforeActionCalls::class,
             ForwardPrefetch::class,
+            UpdateQueryString::class,
         ]);
     }
 

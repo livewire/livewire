@@ -20,11 +20,11 @@ export default {
         resolve(),
         commonjs({
             // These npm packages still use common-js modules. Ugh.
-            include: /node_modules\/(get-value|isobject|core-js)/,
+            include: /node_modules\/(get-value|isobject|core-js|query-string|strict-uri-encode|split-on-first|decode-uri-component)/,
         }),
         filesize(),
         terser({
-            // mangle: false,
+            mangle: false,
             compress: {
                 drop_debugger: false,
             },
