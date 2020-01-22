@@ -11,6 +11,13 @@ use Livewire\Livewire;
 
 abstract class Component
 {
+    protected $updatesQueryString = [];
+
+    public function getUpdatesQueryString()
+    {
+        return $this->updatesQueryString;
+    }
+
     use Macroable { __call as macroCall; }
 
     use ComponentConcerns\ValidatesInput,

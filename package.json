@@ -4,10 +4,8 @@
   "scripts": {
     "test": "jest",
     "test:debug": "node --inspect node_modules/.bin/jest --runInBand",
-    "unminified": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "minified": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "watch": "npm run unminified -- --watch",
-    "build": "npm run unminified && npm run minified"
+    "watch": "npx rollup -c -w",
+    "build": "npx rollup -c"
   },
   "author": "Caleb Porzio",
   "license": "MIT",
@@ -28,7 +26,7 @@
     "jsdom-simulant": "^1.1.2",
     "md5": "^2.2.1",
     "mock-echo": "^1.1.1",
-    "query-string": "^5.1.1",
+    "query-string": "^6.10.1",
     "rollup-plugin-output-manifest": "^1.0.2",
     "whatwg-fetch": "^3.0.0"
   },

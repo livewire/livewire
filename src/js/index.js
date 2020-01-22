@@ -10,6 +10,7 @@ import DisableForms from '@/component/DisableForms'
 import DirtyStates from '@/component/DirtyStates'
 import OfflineStates from '@/component/OfflineStates'
 import Polling from '@/component/Polling'
+import UpdateQueryString from '@/component/UpdateQueryString'
 
 class Livewire {
     constructor(options = {}) {
@@ -108,6 +109,7 @@ if (! window.Livewire) {
     window.Livewire = Livewire
 }
 
+UpdateQueryString()
 LoadingStates()
 DisableForms()
 DirtyStates()
