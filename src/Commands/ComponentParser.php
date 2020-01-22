@@ -5,12 +5,9 @@ namespace Livewire\Commands;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
-use Illuminate\Console\DetectsApplicationNamespace;
 
 class ComponentParser
 {
-    use DetectsApplicationNamespace;
-
     protected $appPath;
     protected $viewPath;
     protected $component;

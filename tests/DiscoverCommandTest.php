@@ -55,7 +55,7 @@ EOT
         $manifestPath = app()->bootstrapPath('cache/livewire-components.php');
 
         // I'm calling "make:livewire" as a shortcut to generate a manifest file
-        Artisan::call('make:livewire foo');
+        Artisan::call('make:livewire', ['name' => 'foo']);
 
         File::delete($manifestPath);
 

@@ -4,7 +4,7 @@ namespace Livewire\Testing\Concerns;
 
 use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Testing\Assert as PHPUnit;
+use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MakesAssertions
 {

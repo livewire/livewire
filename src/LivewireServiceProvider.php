@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use Livewire\Macros\RouteMacros;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Illuminate\Foundation\Testing\TestResponse;
+use Illuminate\Testing\TestResponse as Laravel7TestResponse;
 use Livewire\Commands\{
     ComponentParser,
     CopyCommand,
@@ -124,17 +126,23 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerTestMacros()
     {
-        TestResponse::macro('assertSeeLivewire', function ($component) {
+        $macro = function ($component) {
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
-            \Illuminate\Foundation\Testing\Assert::assertStringContainsString(
+            \PHPUnit\Framework\Assert::assertStringContainsString(
                 (string) $escapedComponentName,
                 $this->getContent(),
                 'Cannot find Livewire component ['.$component.'] rendered on page.'
             );
 
             return $this;
-        });
+        };
+
+        if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=')) {
+            Laravel7TestResponse::macro('assertSeeLivewire', $macro);
+        } else {
+            TestResponse::macro('assertSeeLivewire', $macro);
+        }
     }
 
     public function registerRouteMacros()
