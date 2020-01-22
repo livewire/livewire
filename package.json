@@ -22,6 +22,7 @@
     "cross-spawn": "^6.0.5",
     "dom-testing-library": "^3.19.4",
     "false": "^0.0.4",
+    "fs-extra": "^8.1.0",
     "get-value": "^3.0.1",
     "jest": "^24.9.0",
     "jest-dom": "^3.5.0",
