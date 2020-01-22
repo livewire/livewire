@@ -48,6 +48,8 @@ export default {
         }
         const hasDebounceModifier = directive.modifiers.includes('debounce')
 
+        store.callHook('interceptWireModelAttachListener', el, directive, component, debounceIf)
+
         const defaultEventType = el.isTextInput() ? 'input' : 'change'
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.

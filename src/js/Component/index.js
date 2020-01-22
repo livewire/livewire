@@ -204,11 +204,12 @@ export default class Component {
     }
 
     replaceDom(rawDom) {
-        store.beforeDomUpdateCallback()
+        let objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook = { html: rawDom }
+        store.callHook('beforeDomUpdate', objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook)
 
-        this.handleMorph(rawDom.trim())
+        this.handleMorph(objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook.html.trim())
 
-        store.afterDomUpdateCallback()
+        store.callHook('afterDomUpdate')
     }
 
     addPrefetchAction(action) {

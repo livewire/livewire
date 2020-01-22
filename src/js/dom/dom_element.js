@@ -1,6 +1,7 @@
 import ElementDirectives from "./directive_manager"
 import get from 'get-value'
 import findPrefix from './prefix.js'
+import store from '@/Store'
 const prefix = findPrefix()
 
 /**
@@ -247,6 +248,8 @@ ${this.el.outerHTML}
     }
 
     setInputValue(value) {
+        store.callHook('interceptWireModelSetValue', this, value)
+
         if (this.el.type === 'radio') {
             this.el.checked = this.el.value == value
         } else if (this.el.type === 'checkbox') {

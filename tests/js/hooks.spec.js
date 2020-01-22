@@ -6,7 +6,7 @@ test('beforeDomUpdate hook', async () => {
 
     mountAndReturn('<button wire:click="onClick"></button>', '<div id="foo"></div>')
 
-    window.livewire.beforeDomUpdate(() => {
+    window.livewire.hook('beforeDomUpdate', () => {
         hookWasCalled = true
         expect(document.querySelector('#foo')).toBeFalsy()
     })
@@ -24,7 +24,7 @@ test('afterDomUpdate hook', async () => {
 
     mountAndReturn('<button wire:click="onClick"></button>', '<div id="foo"></div>')
 
-    window.livewire.afterDomUpdate(() => {
+    window.livewire.hook('afterDomUpdate', () => {
         hookWasCalled = true
         expect(document.querySelector('#foo')).toBeTruthy()
     })

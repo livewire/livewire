@@ -8,6 +8,10 @@ export default {
         'messageSent',
         'messageFailed',
         'responseReceived',
+        'beforeDomUpdate',
+        'afterDomUpdate',
+        'interceptWireModelSetValue',
+        'interceptWireModelAttachListener',
     ],
 
     bus: new MessageBus,

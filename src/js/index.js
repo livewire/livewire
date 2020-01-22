@@ -11,6 +11,7 @@ import DirtyStates from '@/component/DirtyStates'
 import OfflineStates from '@/component/OfflineStates'
 import Polling from '@/component/Polling'
 import UpdateQueryString from '@/component/UpdateQueryString'
+import SupportVueJs from '@/component/SupportVueJs'
 
 class Livewire {
     constructor(options = {}) {
@@ -92,14 +93,6 @@ class Livewire {
         })
     }
 
-    beforeDomUpdate(callback) {
-        this.components.beforeDomUpdate(callback)
-    }
-
-    afterDomUpdate(callback) {
-        this.components.afterDomUpdate(callback)
-    }
-
     plugin(callable) {
         callable(this)
     }
@@ -110,6 +103,7 @@ if (! window.Livewire) {
 }
 
 UpdateQueryString()
+SupportVueJs()
 LoadingStates()
 DisableForms()
 DirtyStates()
