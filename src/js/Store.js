@@ -6,8 +6,6 @@ import MessageBus from "./MessageBus";
 const store = {
     componentsById: {},
     listeners: new MessageBus,
-    beforeDomUpdateCallback: () => {},
-    afterDomUpdateCallback: () => {},
     livewireIsInBackground: false,
     livewireIsOffline: false,
     hooks: HookManager,
@@ -67,14 +65,6 @@ const store = {
 
     callHook(name, ...params) {
         this.hooks.call(name, ...params)
-    },
-
-    beforeDomUpdate(callback) {
-        this.beforeDomUpdateCallback = callback
-    },
-
-    afterDomUpdate(callback) {
-        this.afterDomUpdateCallback = callback
     },
 
     removeComponent(component) {
