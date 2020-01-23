@@ -377,6 +377,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "lalov",
+      "name": "Lars Erik Løvhaug",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/3465648?v=4",
+      "profile": "https://github.com/lalov",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
