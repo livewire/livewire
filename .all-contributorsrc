@@ -395,6 +395,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "driesvints",
+      "name": "Dries Vints",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/594614?v=4",
+      "profile": "https://driesvints.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
