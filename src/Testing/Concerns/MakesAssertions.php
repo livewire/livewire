@@ -99,13 +99,19 @@ trait MakesAssertions
         foreach ($keys as $key => $value) {
             if (is_int($key)) {
                 PHPUnit::assertTrue($errors->has($value), "Component missing error: $value");
-            } else {
-                $rules = array_keys($this->lastValidator->failed()[$key]);
-                $lowerCaseRules = array_map('strtolower', $rules);
+                break;
+            }
 
-                foreach ((array) $value as $rule) {
-                    PHPUnit::assertContains($rule, $lowerCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
-                }
+            if (!array_key_exists($key, $this->lastValidator->failed())) {
+                PHPUnit::assertArrayHasKey($key, $this->lastValidator->failed(), "Component has no errors for [{$key}] attribute.");
+                break;
+            }
+
+            $rules = array_keys($this->lastValidator->failed()[$key]);
+            $lowerCaseRules = array_map('strtolower', $rules);
+
+            foreach ((array) $value as $rule) {
+                PHPUnit::assertContains($rule, $lowerCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
             }
         }
 
@@ -127,13 +133,19 @@ trait MakesAssertions
         foreach ($keys as $key => $value) {
             if (is_int($key)) {
                 PHPUnit::assertFalse($errors->has($value), "Component has error: $value");
-            } else {
-                $rules = array_keys($this->lastValidator->failed()[$key]);
-                $lowerCaseRules = array_map('strtolower', $rules);
+                break;
+            }
 
-                foreach ((array) $value as $rule) {
-                    PHPUnit::assertNotContains($rule, $lowerCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
-                }
+            if (!array_key_exists($key, $this->lastValidator->failed())) {
+                PHPUnit::assertArrayNotHasKey($key, $this->lastValidator->failed());
+                break;
+            }
+
+            $rules = array_keys($this->lastValidator->failed()[$key]);
+            $lowerCaseRules = array_map('strtolower', $rules);
+
+            foreach ((array) $value as $rule) {
+                PHPUnit::assertNotContains($rule, $lowerCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
             }
         }
 

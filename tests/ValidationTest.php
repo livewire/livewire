@@ -116,6 +116,42 @@ class ValidationTest extends TestCase
             ->assertSee('The foo field is required')
             ->assertSee('The bar field is required');
     }
+
+    /** @test */
+    public function can_validate_using_key_value_pairs()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->set('foo', '')
+            ->set('bar', '')
+            ->call('runValidation')
+            ->assertHasErrors(['foo', 'bar'])
+            ->assertHasErrors(
+                [
+                    'foo' => 'required',
+                    'bar' => 'required',
+                ]
+            );
+    }
+
+    /** @test */
+    public function can_validate_no_errors_using_key_value_pairs()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', '')
+            ->call('runValidation')
+            ->assertHasNoErrors('foo')
+            ->assertHasNoErrors(
+                [
+                    'foo' => 'required',
+                    'bar' => ['email', 'min'],
+                ]
+            );
+    }
 }
 
 class ForValidation extends Component
