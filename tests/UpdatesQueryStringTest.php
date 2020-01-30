@@ -17,6 +17,12 @@ class UpdatesQueryStringTest extends TestCase
         $this->assertEquals(['foo'], $component->payload['updatesQueryString']);
         $this->assertEquals('baz', $component->payload['data']['foo']);
     }
+
+    /** @test */
+    public function can_remove_items_from_query_string_if_except_is_specified()
+    {
+        //
+    }
 }
 
 class UpdatesQueryStringStub extends Component
