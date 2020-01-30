@@ -11,13 +11,6 @@ use Livewire\Livewire;
 
 abstract class Component
 {
-    protected $updatesQueryString = [];
-
-    public function getUpdatesQueryString()
-    {
-        return $this->updatesQueryString;
-    }
-
     use Macroable { __call as macroCall; }
 
     use ComponentConcerns\ValidatesInput,
@@ -30,11 +23,11 @@ abstract class Component
 
     public $id;
 
+    protected $computedPropertyCache = [];
+    protected $updatesQueryString = [];
     protected $lifecycleHooks = [
         'mount', 'hydrate', 'updating', 'updated',
     ];
-
-    protected $computedPropertyCache = [];
 
     public function __construct($id)
     {
@@ -69,6 +62,11 @@ abstract class Component
         }
 
         return $name;
+    }
+
+    public function getUpdatesQueryString()
+    {
+        return $this->updatesQueryString;
     }
 
     public function getCasts()
