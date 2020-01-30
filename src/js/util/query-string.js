@@ -1,62 +1,62 @@
-const {toString, hasOwnProperty} = Object.prototype;
-const OBJECT_TYPE = "[object Object]";
-const ARRAY_TYPE = "[object Array]";
+const { toString, hasOwnProperty } = Object.prototype
+const OBJECT_TYPE = "[object Object]"
+const ARRAY_TYPE = "[object Array]"
 
 export default {
     join(path, key) {
-        return path != null ? path + "[" + key + "]" : key;
+        return path != null ? path + "[" + key + "]" : key
     },
 
     flatten(obj, path, result) {
-        const type = toString.call(obj);
+        const type = toString.call(obj)
 
         if (result === undefined) {
             if (type === OBJECT_TYPE) {
-                result = {};
+                result = {}
             } else if (type === ARRAY_TYPE) {
-                result = [];
+                result = []
             } else {
-                return;
+                return
             }
         }
 
         for (const key in obj) {
-            /* istanbul ignore if */
-            if (!hasOwnProperty.call(obj, key)) {
-                continue;
+            if (! hasOwnProperty.call(obj, key)) {
+                continue
             }
 
-            const val = obj[key];
+            const val = obj[key]
             if (val == null) {
-                continue;
+                continue
             }
 
             switch (toString.call(val)) {
                 case ARRAY_TYPE:
                 case OBJECT_TYPE:
-                    this.flatten(val, this.join(path, key), result);
-                    break;
+                    this.flatten(val, this.join(path, key), result)
+                    break
                 default:
-                    result[this.join(path, key)] = val;
-                    break;
+                    result[this.join(path, key)] = val
+                    break
             }
         }
 
-        return result;
+        return result
     },
 
     stringify(obj) {
         let parts = this.flatten(obj)
+
         return Object
             .keys(parts)
             .map(key => `${key}=${parts[key]}`)
-            .join('&');
+            .join('&')
     },
 
     parse(query) {
         let obj = {}
-        query = query.slice(1);
-        query = query.split('&');
+        query = query.slice(1)
+        query = query.split('&')
 
         query.map(part => {
             let parts = part.split('=')
@@ -83,6 +83,6 @@ export default {
             obj[parts[0]] = value
         })
 
-        return obj;
+        return obj
     }
-};
+}

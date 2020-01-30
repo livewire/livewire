@@ -3,7 +3,7 @@ import fs from 'fs-extra'
 import outputManifest from 'rollup-plugin-output-manifest';
 import babel from 'rollup-plugin-babel';
 import filesize from 'rollup-plugin-filesize';
-import {terser} from "rollup-plugin-terser";
+import { terser } from "rollup-plugin-terser";
 import resolve from "rollup-plugin-node-resolve"
 import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
@@ -20,14 +20,7 @@ export default {
         resolve(),
         commonjs({
             // These npm packages still use common-js modules. Ugh.
-            include: /node_modules\/(get-value|isobject|core-js|query-string|strict-uri-encode|split-on-first|decode-uri-component)/,
-
-            namedExports: {
-                // left-hand side can be an absolute path, a path
-                // relative to the current directory, or the name
-                // of a module in node_modules
-                'qs/lib': ['stringify', 'parse']
-            }
+            include: /node_modules\/(get-value|isobject|core-js)/,
         }),
         filesize(),
         terser({
@@ -41,7 +34,7 @@ export default {
         }),
         alias({
             entries: [
-                {find: '@', replacement: __dirname + '/src/js'},
+                { find: '@', replacement: __dirname + '/src/js' },
             ]
         }),
         // Mimic Laravel Mix's mix-manifest file for auto-cache-busting.
