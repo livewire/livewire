@@ -50,7 +50,7 @@ export default class {
             data: payload.data,
             redirectTo: payload.redirectTo,
             errorBag: payload.errorBag || {},
-            updatesQueryString: payload.updatesQueryString || [],
+            updatesQueryString: payload.updatesQueryString,
         }
     }
 }

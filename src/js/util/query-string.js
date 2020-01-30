@@ -55,7 +55,9 @@ export default {
 
     parse(query) {
         let obj = {}
-        query = query.slice(1)
+        if (query.slice(0, 1) === '?') {
+            query = query.slice(1)
+        }
         query = query.split('&')
 
         query.map(part => {
