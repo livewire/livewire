@@ -1,19 +1,20 @@
 import store from '@/Store'
-import queryString from 'query-string'
+import url from '@/util/url'
 
 export default function () {
+
     store.registerHook('responseReceived', (component, response) => {
         if (response.updatesQueryString.length) {
-            var dateDestinedForQueryString = {}
+            var dataDestinedForQueryString = {}
 
-            response.updatesQueryString.forEach(i => dateDestinedForQueryString[i] = component.data[i])
+            response.updatesQueryString.forEach(i => dataDestinedForQueryString[i] = component.data[i])
 
-            const stringifiedQueryString = queryString.stringify({
-                ...queryString.parse(window.location.search),
-                ...dateDestinedForQueryString,
-            })
+            var stringifiedQueryString = url.stringify({
+                ...url.parse(window.location.search),
+                ...dataDestinedForQueryString,
+            });
 
-            history.replaceState(null, "", window.location.pathname+'?'+stringifiedQueryString)
+            history.replaceState(null, "", window.location.pathname + '?' + stringifiedQueryString)
         }
     })
 }
