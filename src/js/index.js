@@ -1,6 +1,6 @@
 import componentStore from '@/Store'
 import DOM from "@/dom/dom";
-import Component from "@/Component/index";
+import Component from "@/component/index";
 import Connection from '@/connection'
 import drivers from '@/connection/drivers'
 import '@/dom/polyfills/index';
