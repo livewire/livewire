@@ -51,7 +51,7 @@ export default class {
             // This "$event" is for use inside the livewire event handler.
             const $event = this.eventContext
             method = methodAndParamString[1]
-            params = methodAndParamString[2].split(', ').map(param => eval(param))
+            params = methodAndParamString[2].split(/\s?,\s?/).map(param => eval(param))
         }
 
         return { method, params }

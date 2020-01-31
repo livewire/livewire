@@ -185,3 +185,55 @@ test('form buttons disabled and inputs read-only during submission', async () =>
         expect(document.querySelector('input').readOnly).toBeTruthy()
     })
 })
+
+test('action paramters without space around comma', async () => {
+    var payload
+    mount(`<button wire:click="callSomething('foo','bar')"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual(['foo', 'bar'])
+    })
+})
+
+test('action paramters with space before comma', async () => {
+    var payload
+    mount(`<button wire:click="callSomething('foo' ,'bar')"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual(['foo', 'bar'])
+    })
+})
+
+test('action paramters with space after comma', async () => {
+    var payload
+    mount(`<button wire:click="callSomething('foo', 'bar')"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual(['foo', 'bar'])
+    })
+})
+
+test('action paramters with space around comma', async () => {
+    var payload
+    mount(`<button wire:click="callSomething('foo' , 'bar')"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual(['foo', 'bar'])
+    })
+})
