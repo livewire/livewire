@@ -237,3 +237,16 @@ test('action paramters with space around comma', async () => {
         expect(payload.actionQueue[0].payload.params).toEqual(['foo', 'bar'])
     })
 })
+
+test('action paramters with space and comma inside will be handled', async () => {
+    var payload
+    mount(`<button wire:click="callSomething('foo, bar', true , 'baz',null,'x,y')"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual(['foo, bar', true, 'baz', null, 'x,y'])
+    })
+})
