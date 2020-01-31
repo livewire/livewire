@@ -1,5 +1,5 @@
 import md5 from 'md5'
-import fs  from 'fs-extra'
+import fs from 'fs-extra'
 import outputManifest from 'rollup-plugin-output-manifest';
 import babel from 'rollup-plugin-babel';
 import filesize from 'rollup-plugin-filesize';
@@ -20,7 +20,7 @@ export default {
         resolve(),
         commonjs({
             // These npm packages still use common-js modules. Ugh.
-            include: /node_modules\/(get-value|isobject|core-js|query-string|strict-uri-encode|split-on-first|decode-uri-component)/,
+            include: /node_modules\/(get-value|isobject|core-js)/,
         }),
         filesize(),
         terser({
