@@ -2,6 +2,7 @@
 
 namespace Livewire\Testing\Concerns;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -100,7 +101,7 @@ trait MakesAssertions
             if (is_int($key)) {
                 PHPUnit::assertTrue($errors->has($value), "Component missing error: $value");
             } else {
-                $rules = array_keys($this->lastValidator->failed()[$key]);
+                $rules = array_keys(Arr::get($this->lastValidator->failed(), $key, []));
                 $lowerCaseRules = array_map('strtolower', $rules);
 
                 foreach ((array) $value as $rule) {
