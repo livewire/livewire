@@ -2,11 +2,11 @@ import store from '@/Store'
 import ModelAction from '@/action/model'
 
 export default function () {
-    store.registerHook('beforeDomUpdate', (yo) => {
+    store.registerHook('beforeDomUpdate', (component, mutableHtmlContainer) => {
         if (! window.Vue) return
 
         const div = document.createElement('div')
-        div.innerHTML =  yo.html
+        div.innerHTML =  mutableHtmlContainer.html
 
         new window.Vue().$mount(div.firstElementChild)
 
