@@ -377,6 +377,33 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "lalov",
+      "name": "Lars Erik Løvhaug",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/3465648?v=4",
+      "profile": "https://github.com/lalov",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "harrygulliford",
+      "name": "Harry Gulliford",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/5051286?v=4",
+      "profile": "http://www.harrygulliford.com",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "driesvints",
+      "name": "Dries Vints",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/594614?v=4",
+      "profile": "https://driesvints.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
