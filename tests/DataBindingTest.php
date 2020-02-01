@@ -78,7 +78,7 @@ class DataBindingTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(DataBindingStub::class);
 
-        $component->updateProperty('propertyWithHook', 'something');
+        $component->set('propertyWithHook', 'something');
 
         $this->assertEquals('something else', $component->propertyWithHook);
         $this->assertContains('propertyWithHook', $component->payload['dirtyInputs']);

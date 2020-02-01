@@ -14,8 +14,15 @@ class PublicPropertyCastersTest extends TestCase
         Livewire::test(ComponentWithPublicPropertyCasters::class)
             ->call('storeTypeOfs')
             ->assertSet('typeOfs.date', 'Carbon\Carbon')
+            ->assertSet('typeOfs.dateWithFormat', 'Carbon\Carbon')
             ->assertSet('typeOfs.collection', 'Illuminate\Support\Collection')
-            ->assertSet('typeOfs.allCaps', 'FOO');
+            ->assertSet('typeOfs.allCaps', 'FOO')
+            ->assertSet('date', 'Mon Jan 01 1900 00:00:00 GMT+0000')
+            ->assertSet('dateWithFormat', '00-01-01')
+            ->assertSet('collection', ['foo', 'bar'])
+            ->assertSet('allCaps', 'foo')
+            ->set('dateWithFormat', '00-02-02')
+            ->assertSet('dateWithFormat', '00-02-02');
     }
 }
 
@@ -34,19 +41,22 @@ class AllCapsCaster implements Castable {
 class ComponentWithPublicPropertyCasters extends Component
 {
     public $date;
+    public $dateWithFormat;
     public $collection;
     public $allCaps;
     public $typeOfs;
 
     protected $casts = [
         'date' => 'date',
+        'dateWithFormat' => 'date:y-m-d',
         'collection' => 'collection',
         'allCaps' => AllCapsCaster::class,
     ];
 
     public function mount()
     {
-        $this->date = \Carbon\Carbon::parse('a year ago');
+        $this->date = \Carbon\Carbon::parse('Jan 1 1900');
+        $this->dateWithFormat = \Carbon\Carbon::parse('Jan 1 1900');
         $this->collection = collect(['foo', 'bar']);
         $this->allCaps = 'FOO';
     }
@@ -55,6 +65,7 @@ class ComponentWithPublicPropertyCasters extends Component
     {
         $this->typeOfs = [
             'date' => get_class($this->date),
+            'dateWithFormat' => get_class($this->date),
             'collection' => get_class($this->collection),
             'allCaps' => $this->allCaps,
         ];
