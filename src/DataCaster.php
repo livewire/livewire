@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Str;
+
 class DataCaster
 {
     protected $casters;
@@ -11,21 +13,25 @@ class DataCaster
         $this->casters = $this->getCasters();
     }
 
-    public function castTo($type, $value)
+    public function castTo($rawType, $value)
     {
+        [$type, $extras] = $this->parseTypeAndExtras($rawType);
+
         $this->ensureTypeExists($type);
 
-        return $this->runCasterCast($type, $value);
+        return $this->runCasterCast($type, $extras, $value);
     }
 
-    public function castFrom($type, $value)
+    public function castFrom($rawType, $value)
     {
+        [$type, $extras] = $this->parseTypeAndExtras($rawType);
+
         $this->ensureTypeExists($type);
 
-        return $this->runCasterUncast($type, $value);
+        return $this->runCasterUncast($type, $extras, $value);
     }
 
-    public function ensureTypeExists($type)
+    protected function ensureTypeExists($type)
     {
         $isSupported = isset($this->casters[$type]) || class_exists($type);
 
@@ -35,36 +41,45 @@ class DataCaster
         );
     }
 
-    public function runCasterCast($type, $value)
+    protected function runCasterCast($type, $extras, $value)
     {
         if (isset($this->casters[$type])) {
-            return $this->casters[$type]['cast']($value);
+            return $this->casters[$type]['cast']($value, $extras);
         }
 
         return (new $type)->cast($value);
     }
 
-    public function runCasterUncast($type, $value)
+    protected function runCasterUncast($type, $extras, $value)
     {
         if (isset($this->casters[$type])) {
-            return $this->casters[$type]['uncast']($value);
+            return $this->casters[$type]['uncast']($value, $extras);
         }
 
         return (new $type)->uncast($value);
     }
 
-    public function getCasters()
+    protected function getCasters()
     {
         return [
             'date' => [
-                'cast' => function ($value) {
+                'cast' => function ($value, $extras) {
+                    if (isset($extras['format'])) {
+                        return \Carbon\Carbon::createFromFormat($extras['format'], $value);
+                    }
+
                     return \Carbon\Carbon::parse($value);
                 },
-                'uncast' => function ($value) {
+                'uncast' => function ($value, $extras) {
+                    if (method_exists($value, 'format') && isset($extras['format'])) {
+                        return $value->format($extras['format']);
+                    }
+
                     if (method_exists($value, 'toString')) {
                         return $value->toString();
                     }
 
+                    dump($value);
                     return $value->__toString();
                 },
             ],
@@ -77,5 +92,24 @@ class DataCaster
                 },
             ],
         ];
+    }
+
+    protected function getCaster($type)
+    {
+        return $this->caster[$type];
+    }
+
+    protected function parseTypeAndExtras($rawType)
+    {
+        // If the user specified a date format.
+        if (Str::startsWith($rawType, 'date:')) {
+            $type = 'date';
+            $extras = ['format' => Str::after($rawType, 'date:')];
+        } else {
+            $type = $rawType;
+            $extras = [];
+        }
+
+        return [ $type, $extras ];
     }
 }

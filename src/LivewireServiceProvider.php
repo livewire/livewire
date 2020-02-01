@@ -2,49 +2,52 @@
 
 namespace Livewire;
 
-use Illuminate\Foundation\Application;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Livewire\LivewireViewCompilerEngine;
 use Livewire\Connection\HttpConnectionHandler;
+use Illuminate\Foundation\Testing\TestResponse;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Illuminate\Foundation\Testing\TestResponse;
 use Illuminate\Testing\TestResponse as Laravel7TestResponse;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Livewire\Commands\{
-    ComponentParser,
-    CopyCommand,
     CpCommand,
-    DeleteCommand,
-    DiscoverCommand,
-    MakeCommand,
-    MakeLivewireCommand,
-    MoveCommand,
     MvCommand,
     RmCommand,
+    CopyCommand,
+    MakeCommand,
+    MoveCommand,
     StubCommand,
-    TouchCommand
+    TouchCommand,
+    DeleteCommand,
+    ComponentParser,
+    DiscoverCommand,
+    MakeLivewireCommand
 };
 use Livewire\HydrationMiddleware\{
-    UpdateQueryString,
-    ClearFlashMessagesIfNotRedirectingAway,
     ForwardPrefetch,
+    PersistErrorBag,
+    UpdateQueryString,
+    InterceptRedirects,
+    CastPublicProperties,
+    RegisterEmittedEvents,
+    HydratePublicProperties,
+    SecureHydrationWithChecksum,
+    IncludeIdAsRootTagAttribute,
+    RegisterEventsBeingListenedFor,
     HashPropertiesForDirtyDetection,
     HydratePreviouslyRenderedChildren,
-    HydratePublicProperties,
-    IncludeIdAsRootTagAttribute,
-    InterceptRedirects,
-    PersistErrorBag,
+    ClearFlashMessagesIfNotRedirectingAway,
     PrioritizeDataUpdatesBeforeActionCalls,
-    RegisterEmittedEvents,
-    RegisterEventsBeingListenedFor,
-    SecureHydrationWithChecksum
+    HydrateEloquentModelsAsPublicProperties,
+    PerformPublicPropertyFromDataBindingUpdates
 };
 
 class LivewireServiceProvider extends ServiceProvider
@@ -180,35 +183,47 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function registerHydrationMiddleware()
     {
+        Livewire::registerHydrationMiddleware([
+        /* This is the core middleware stack of Livewire. It's important */
+        /* to understand that the request goes through each class by the */
+        /* order it is listed in this array, and is reversed on response */
+        /*                                                               */
+        /* Incoming Request                            Outgoing Response */
+        /* v */ IncludeIdAsRootTagAttribute::class,                 /* ^ */
+        /* v */ ClearFlashMessagesIfNotRedirectingAway::class,      /* ^ */
+        /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
+        /* v */ RegisterEventsBeingListenedFor::class,              /* ^ */
+        /* v */ RegisterEmittedEvents::class,                       /* ^ */
+        /* v */ PersistErrorBag::class,                             /* ^ */
+        /* v */ HydratePublicProperties::class,                     /* ^ */
+        /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
+        /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
+        /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
+        /* v */ CastPublicProperties::class,                        /* ^ */
+        /* v */ HydratePreviouslyRenderedChildren::class,           /* ^ */
+        /* v */ InterceptRedirects::class,                          /* ^ */
+        /* v */ PrioritizeDataUpdatesBeforeActionCalls::class,      /* ^ */
+        /* v */ ForwardPrefetch::class,                             /* ^ */
+        /* v */ UpdateQueryString::class,                           /* ^ */
+        ]);
+
         Livewire::registerInitialHydrationMiddleware([
-            [InterceptRedirects::class, 'hydrate'],
+        /* Initial Request */
+        /* v */ [InterceptRedirects::class, 'hydrate'],
         ]);
 
         Livewire::registerInitialDehydrationMiddleware([
-            [PersistErrorBag::class, 'dehydrate'],
-            [RegisterEventsBeingListenedFor::class, 'dehydrate'],
-            [RegisterEmittedEvents::class, 'dehydrate'],
-            [HydratePublicProperties::class, 'dehydrate'],
-            [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
-            [SecureHydrationWithChecksum::class, 'dehydrate'],
-            [IncludeIdAsRootTagAttribute::class, 'dehydrate'],
-            [InterceptRedirects::class, 'dehydrate'],
-        ]);
-
-        Livewire::registerHydrationMiddleware([
-            IncludeIdAsRootTagAttribute::class,
-            ClearFlashMessagesIfNotRedirectingAway::class,
-            SecureHydrationWithChecksum::class,
-            RegisterEventsBeingListenedFor::class,
-            RegisterEmittedEvents::class,
-            PersistErrorBag::class,
-            HydratePublicProperties::class,
-            HydratePreviouslyRenderedChildren::class,
-            HashPropertiesForDirtyDetection::class,
-            InterceptRedirects::class,
-            PrioritizeDataUpdatesBeforeActionCalls::class,
-            ForwardPrefetch::class,
-            UpdateQueryString::class,
+        /* Initial Response */
+        /* ^ */ [IncludeIdAsRootTagAttribute::class, 'dehydrate'],
+        /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
+        /* ^ */ [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
+        /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
+        /* ^ */ [HydrateEloquentModelsAsPublicProperties::class, 'dehydrate'],
+        /* ^ */ [CastPublicProperties::class, 'dehydrate'],
+        /* ^ */ [RegisterEmittedEvents::class, 'dehydrate'],
+        /* ^ */ [RegisterEventsBeingListenedFor::class, 'dehydrate'],
+        /* ^ */ [PersistErrorBag::class, 'dehydrate'],
+        /* ^ */ [InterceptRedirects::class, 'dehydrate'],
         ]);
     }
 
