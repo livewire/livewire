@@ -17,7 +17,6 @@ class PublicPropertyCastersTest extends TestCase
             ->assertSet('typeOfs.dateWithFormat', 'Carbon\Carbon')
             ->assertSet('typeOfs.collection', 'Illuminate\Support\Collection')
             ->assertSet('typeOfs.allCaps', 'FOO')
-            ->assertSet('date', 'Mon Jan 01 1900 00:00:00 GMT+0000')
             ->assertSet('dateWithFormat', '00-01-01')
             ->assertSet('collection', ['foo', 'bar'])
             ->assertSet('allCaps', 'foo')
