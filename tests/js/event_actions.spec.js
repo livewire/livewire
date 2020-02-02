@@ -263,3 +263,16 @@ test('action paramters must be separated by comma', async () => {
         expect(payload.actionQueue[0].payload.params).not.toEqual(['foo', 'bar'])
     })
 })
+
+test('action paramter can be empty', async () => {
+    var payload
+    mount(`<button wire:click="callSomething()"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual([])
+    })
+})
