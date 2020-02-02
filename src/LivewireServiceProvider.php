@@ -54,34 +54,12 @@ class LivewireServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $this->app->singleton('livewire', LivewireManager::class);
-
-        $this->app->singleton(LivewireComponentsFinder::class, function () {
-            $isHostedOnVapor = ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
-
-            $defaultManifestPath = $isHostedOnVapor
-                ? '/tmp/storage/bootstrap/cache/livewire-components.php'
-                : app()->bootstrapPath('cache/livewire-components.php');
-
-            return new LivewireComponentsFinder(
-                new Filesystem,
-                config('livewire.manifest_path') ?? $defaultManifestPath,
-                ComponentParser::generatePathFromNamespace(config('livewire.class_namespace', 'App\\Http\\Livewire'))
-            );
-        });
+        $this->registerLivewireSingleton();
+        $this->registerComponentAutoDiscovery();
     }
 
     public function boot()
     {
-        if ($this->app['livewire']->isLivewireRequest()) {
-            $this->bypassMiddleware([
-                TrimStrings::class,
-                // In case the user has over-rode "TrimStrings"
-                \App\Http\Middleware\TrimStrings::class,
-                ConvertEmptyStringsToNull::class,
-            ]);
-        }
-
         $this->registerViews();
         $this->registerRoutes();
         $this->registerCommands();
@@ -91,15 +69,56 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerBladeDirectives();
         $this->registerViewCompilerEngine();
         $this->registerHydrationMiddleware();
+
+        // Bypass specific middlewares during Livewire requests.
+        // These are usually helpful during a typical request, but
+        // during Livewire requests, they can damage data properties.
+        $this->bypassTheseMiddlewaresDuringLivewireRequests([
+            TrimStrings::class,
+            ConvertEmptyStringsToNull::class,
+            // If the app overrode "TrimStrings".
+            \App\Http\Middleware\TrimStrings::class,
+        ]);
     }
 
-    public function registerViews()
+    protected function registerLivewireSingleton()
     {
-        // This is for Livewire's pagination views.
-        $this->loadViewsFrom(__DIR__.DIRECTORY_SEPARATOR.'views', config('livewire.view-path', 'livewire'));
+        $this->app->singleton('livewire', LivewireManager::class);
     }
 
-    public function registerRoutes()
+    protected function registerComponentAutoDiscovery()
+    {
+        // Rather than forcing users to register each individual component,
+        // we will auto-detect the component's class based on its kebab-cased
+        // alias. For instance: 'examples.foo' => App\Http\Livewire\Examples\Foo
+
+        // We will generate a manifest file so we don't have to do the lookup every time.
+        $defaultManifestPath = $this->app['livewire']->isOnVapor()
+            ? '/tmp/storage/bootstrap/cache/livewire-components.php'
+            : app()->bootstrapPath('cache/livewire-components.php');
+
+        $this->app->singleton(LivewireComponentsFinder::class, function () use ($defaultManifestPath) {
+            return new LivewireComponentsFinder(
+                new Filesystem,
+                config('livewire.manifest_path', $defaultManifestPath),
+                ComponentParser::generatePathFromNamespace(
+                    config('livewire.class_namespace', 'App\\Http\\Livewire')
+                )
+            );
+        });
+    }
+
+    protected function registerViews()
+    {
+        // This is mainly for overriding Laravel's pagination views
+        // when a user applies the WithPagination trait to a component.
+        $this->loadViewsFrom(
+            __DIR__.DIRECTORY_SEPARATOR.'views',
+            config('livewire.view-path', 'livewire')
+        );
+    }
+
+    protected function registerRoutes()
     {
         RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
         RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
@@ -108,47 +127,50 @@ class LivewireServiceProvider extends ServiceProvider
             ->middleware(config('livewire.middleware_group', 'web'));
     }
 
-    public function registerCommands()
+    protected function registerCommands()
     {
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                CopyCommand::class,
-                CpCommand::class,
-                DeleteCommand::class,
-                DiscoverCommand::class,
-                MakeCommand::class,
-                MakeLivewireCommand::class,
-                MoveCommand::class,
-                MvCommand::class,
-                RmCommand::class,
-                TouchCommand::class,
-                StubCommand::class,
-            ]);
-        }
+        if (! $this->app->runningInConsole()) return;
+
+        $this->commands([
+            MakeLivewireCommand::class, // make:livewire
+            MakeCommand::class,         // livewire:make
+            TouchCommand::class,        // livewire:touch
+            CopyCommand::class,         // livewire:copy
+            CpCommand::class,           // livewire:cp
+            DeleteCommand::class,       // livewire:delete
+            RmCommand::class,           // livewire:rm
+            MoveCommand::class,         // livewire:move
+            MvCommand::class,           // livewire:mv
+            StubCommand::class,         // livewire:stub
+            DiscoverCommand::class,     // livewire:discover
+        ]);
     }
 
-    public function registerTestMacros()
+    protected function registerTestMacros()
     {
+        // Usage: $this->assertSeeLivewire('counter');
         $macro = function ($component) {
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringContainsString(
-                (string) $escapedComponentName,
-                $this->getContent(),
+                (string) $escapedComponentName, $this->getContent(),
                 'Cannot find Livewire component ['.$component.'] rendered on page.'
             );
 
             return $this;
         };
 
-        if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=')) {
+        if (
+            Application::VERSION === '7.x-dev' ||
+            version_compare(Application::VERSION, '7.0', '>=')
+        ) {
             Laravel7TestResponse::macro('assertSeeLivewire', $macro);
         } else {
             TestResponse::macro('assertSeeLivewire', $macro);
         }
     }
 
-    public function registerRouteMacros()
+    protected function registerRouteMacros()
     {
         Route::mixin(new RouteMacros);
         Router::mixin(new RouterMacros);
@@ -157,31 +179,35 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerPublishables()
     {
         $this->publishesToGroups([
-            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
-        ], ['livewire', 'livewire:config']);
-
-        $this->publishesToGroups([
             __DIR__.'/../dist' => public_path('vendor/livewire'),
         ], ['livewire', 'livewire:assets']);
+
+        $this->publishesToGroups([
+            __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
+        ], ['livewire', 'livewire:config']);
     }
 
-    public function registerBladeDirectives()
+    protected function registerBladeDirectives()
     {
-        // @todo: removing in 1.0
-        Blade::directive('livewireAssets', [LivewireBladeDirectives::class, 'livewireAssets']);
+        Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
         Blade::directive('livewireStyles', [LivewireBladeDirectives::class, 'livewireStyles']);
         Blade::directive('livewireScripts', [LivewireBladeDirectives::class, 'livewireScripts']);
-        Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
+
+        // @todo: removing in 1.0
+        Blade::directive('livewireAssets', [LivewireBladeDirectives::class, 'livewireAssets']);
     }
 
     protected function registerViewCompilerEngine()
     {
+        // This is a custom view engine that gets used when rendering
+        // Livewire views. Things like letting certain exceptions bubble
+        // to the handler, and registering custom directives like: "@this".
         $this->app->make('view.engine.resolver')->register('blade', function () {
             return new LivewireViewCompilerEngine($this->app['blade.compiler']);
         });
     }
 
-    public function registerHydrationMiddleware()
+    protected function registerHydrationMiddleware()
     {
         Livewire::registerHydrationMiddleware([
         /* This is the core middleware stack of Livewire. It's important */
@@ -227,8 +253,10 @@ class LivewireServiceProvider extends ServiceProvider
         ]);
     }
 
-    protected function bypassMiddleware(array $middlewareToExclude)
+    protected function bypassTheseMiddlewaresDuringLivewireRequests(array $middlewareToExclude)
     {
+        if (! $this->app['livewire']->isLivewireRequest()) return;
+
         $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
 
         $openKernel = new ObjectPrybar($kernel);
