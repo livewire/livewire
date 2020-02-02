@@ -18,7 +18,7 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
-    public function receive_event_with_single_value_listenr()
+    public function receive_event_with_single_value_listener()
     {
         $component = app(LivewireManager::class)->test(ReceivesEventsWithSingleValueListener::class);
 
@@ -57,6 +57,16 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
+    public function server_emitted_up_events_are_provided_to_frontend()
+    {
+        $component = app(LivewireManager::class)->test(ReceivesEvents::class);
+
+        $component->runAction('emitUpGoo');
+
+        $this->assertTrue(in_array(['ancestorsOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->payload['eventQueue']));
+    }
+
+    /** @test */
     public function server_dispatched_browser_events_are_provided_to_frontend()
     {
         $component = app(LivewireManager::class)->test(DispatchesBrowserEvents::class);
@@ -90,6 +100,11 @@ class ReceivesEvents extends Component
     public function emitGoo()
     {
         $this->emit('goo', 'car');
+    }
+
+    public function emitUpGoo()
+    {
+        $this->emitUp('goo', 'car');
     }
 
     public function render()
