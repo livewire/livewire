@@ -49,6 +49,31 @@ const store = {
         )
     },
 
+    emitUp(el, event, ...params) {
+        this.componentsListeningForEventThatAreTreeAncestors(el, event).forEach(
+            component => component.addAction(new EventAction(
+                event, params
+            ))
+        )
+    },
+
+    componentsListeningForEventThatAreTreeAncestors(el, event) {
+        var parentIds = []
+
+        var parent = el.rawNode().parentElement.closest('[wire\\:id]')
+
+        while (parent) {
+            parentIds.push(parent.getAttribute('wire:id'))
+
+            parent = parent.parentElement.closest('[wire\\:id]')
+        }
+
+        return this.components().filter(component => {
+            return component.events.includes(event)
+                && parentIds.includes(component.id)
+        })
+    },
+
     componentsListeningForEvent(event) {
         return this.components().filter(component => {
             return component.events.includes(event)

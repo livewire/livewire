@@ -142,6 +142,11 @@ export default {
                     return
                 }
 
+                if (method === '$emitUp') {
+                    store.emitUp(el, ...params)
+                    return
+                }
+
                 if (directive.value) {
                     component.addAction(new MethodAction(method, params, el))
                 }
