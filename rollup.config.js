@@ -9,7 +9,7 @@ import resolve from "rollup-plugin-node-resolve"
 import outputManifest from 'rollup-plugin-output-manifest';
 
 export default {
-    input: 'src/js/index.js',
+    input: 'js/index.js',
     output: {
         format: 'umd',
         sourcemap: true,
@@ -34,7 +34,7 @@ export default {
         }),
         alias({
             entries: [
-                { find: '@', replacement: __dirname + '/src/js' },
+                { find: '@', replacement: __dirname + '/js' },
             ]
         }),
         // Mimic Laravel Mix's mix-manifest file for auto-cache-busting.
