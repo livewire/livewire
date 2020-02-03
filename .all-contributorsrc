@@ -404,6 +404,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "tormjens",
+      "name": "Tor Morten Jensen",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/3974889?v=4",
+      "profile": "http://tormorten.no",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
