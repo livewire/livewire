@@ -422,6 +422,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "nuernbergerA",
+      "name": "Adrian Nürnberger",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/13331388?v=4",
+      "profile": "https://github.com/nuernbergerA",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
