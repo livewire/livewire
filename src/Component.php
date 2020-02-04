@@ -2,12 +2,12 @@
 
 namespace Livewire;
 
+use Livewire\Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
-use Livewire\Livewire;
 
 abstract class Component
 {
@@ -23,11 +23,8 @@ abstract class Component
 
     public $id;
 
-    protected $computedPropertyCache = [];
     protected $updatesQueryString = [];
-    protected $lifecycleHooks = [
-        'mount', 'hydrate', 'updating', 'updated',
-    ];
+    protected $computedPropertyCache = [];
 
     public function __construct($id)
     {
@@ -39,9 +36,7 @@ abstract class Component
     protected function initializeTraits()
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
-            $method = 'initialize'.class_basename($trait);
-
-            if (method_exists($class, $method)) {
+            if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
                 $this->{$method}();
             }
         }
@@ -53,15 +48,15 @@ abstract class Component
             ->map([Str::class, 'kebab'])
             ->implode('.');
 
-        $name = collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
+        $fullName = collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
             ->map([Str::class, 'kebab'])
             ->implode('.');
 
-        if (Str::startsWith($name, $namespace)) {
-            return Str::substr($name, strlen($namespace) + 1);
+        if (Str::startsWith($fullName, $namespace)) {
+            return Str::substr($fullName, strlen($namespace) + 1);
         }
 
-        return $name;
+        return $fullName;
     }
 
     public function getUpdatesQueryString()
@@ -91,8 +86,7 @@ abstract class Component
 
         $view = $this->render();
 
-        // Normalize all the public properties in the component for JavaScript.
-        $this->normalizePublicPropertiesForBladeView();
+        $this->normalizePublicPropertiesForJavaScript();
 
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
@@ -115,7 +109,7 @@ abstract class Component
         return $output;
     }
 
-    public function normalizePublicPropertiesForBladeView()
+    public function normalizePublicPropertiesForJavaScript()
     {
         foreach ($this->getPublicPropertiesDefinedBySubClass() as $key => $value) {
             if (is_array($value)) {
@@ -151,10 +145,23 @@ abstract class Component
         }, $normalizedData);
     }
 
+    public function __get($property)
+    {
+        if (method_exists($this, $computedMethodName = 'get'.ucfirst($property).'Property')) {
+            if (isset($this->computedPropertyCache[$property])) {
+                return $this->computedPropertyCache[$property];
+            } else {
+                return $this->computedPropertyCache[$property] = $this->$computedMethodName();
+            }
+        }
+
+        throw new \Exception("Property [{$property}] does not exist on the Component instance.");
+    }
+
     public function __call($method, $params)
     {
         if (
-            in_array($method, $this->lifecycleHooks)
+            in_array($method, ['mount', 'hydrate', 'updating', 'updated'])
             || Str::startsWith($method, ['updating', 'updated'])
         ) {
             // Eat calls to the lifecycle hooks if the dev didn't define them.
@@ -168,18 +175,5 @@ abstract class Component
         throw new BadMethodCallException(sprintf(
             'Method %s::%s does not exist.', static::class, $method
         ));
-    }
-
-    public function __get($property)
-    {
-        if (method_exists($this, $computedMethodName = 'get'.ucfirst($property).'Property')) {
-            if (isset($this->computedPropertyCache[$property])) {
-                return $this->computedPropertyCache[$property];
-            } else {
-                return $this->computedPropertyCache[$property] = $this->$computedMethodName();
-            }
-        }
-
-        throw new \Exception("Property [{$property}] does not exist on the Component instance.");
     }
 }
