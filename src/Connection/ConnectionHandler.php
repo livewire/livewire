@@ -52,9 +52,4 @@ abstract class ConnectionHandler
                 break;
         }
     }
-
-    public function interceptValidator($validator)
-    {
-        //
-    }
 }
