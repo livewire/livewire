@@ -101,4 +101,19 @@ trait InteractsWithProperties
             }
         }
     }
+
+    public function reset(...$properties)
+    {
+        $propertyKeys = array_keys($this->getPublicPropertiesDefinedBySubClass());
+
+        if (empty($properties)) {
+            $properties = $propertyKeys;
+        }
+
+        foreach ($properties as $property) {
+            $freshInstance = new static($this->id);
+
+            $this->{$property} = $freshInstance->{$property};
+        }
+    }
 }
