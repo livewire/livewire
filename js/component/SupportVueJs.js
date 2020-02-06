@@ -10,7 +10,7 @@ export default function () {
 
         new window.Vue().$mount(div.firstElementChild)
 
-        component.html = div.firstElementChild.outerHTML
+        mutableHtmlContainer.html = div.firstElementChild.outerHTML
     })
 
     store.registerHook('elementInitialized', el => {
