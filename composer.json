@@ -1,6 +1,6 @@
 {
     "name": "livewire/livewire",
-    "description": "Build and test rich client-side functionality: with only backend code.",
+    "description": "A front-end framework for Laravel.",
     "license": "MIT",
     "authors": [
         {
@@ -10,17 +10,17 @@
     ],
     "require": {
         "php": "^7.1.3",
-        "illuminate/database": "~5.6.0|~5.7.0|~5.8.0|^6.0|^7.0",
+        "symfony/http-kernel": "^4.0|^5.0",
         "illuminate/support": "~5.6.0|~5.7.0|~5.8.0|^6.0|^7.0",
-        "illuminate/validation": "~5.6.0|~5.7.0|~5.8.0|^6.0|^7.0",
-        "symfony/http-kernel": "^4.0|^5.0"
+        "illuminate/database": "~5.6.0|~5.7.0|~5.8.0|^6.0|^7.0",
+        "illuminate/validation": "~5.6.0|~5.7.0|~5.8.0|^6.0|^7.0"
     },
     "require-dev": {
-        "laravel/framework": "~5.6.0|~5.7.0|~5.8.0|^6.0|^7.0",
+        "psy/psysh": "@stable",
         "mockery/mockery": "^1.3.1",
-        "orchestra/testbench": "~3.6.0|~3.7.0|~3.8.0|^4.0|^5.0",
         "phpunit/phpunit": "^7.5.15|^8.4|^9.0",
-        "psy/psysh": "@stable"
+        "laravel/framework": "~5.6.0|~5.7.0|~5.8.0|^6.0|^7.0",
+        "orchestra/testbench": "~3.6.0|~3.7.0|~3.8.0|^4.0|^5.0"
     },
     "autoload": {
         "psr-4": {
@@ -29,8 +29,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/",
-            "App\\": "vendor/orchestra/testbench-core/laravel/app"
+            "App\\": "vendor/orchestra/testbench-core/laravel/app",
+            "Tests\\": "tests/"
         }
     },
     "extra": {
@@ -42,9 +42,6 @@
                 "Livewire": "Livewire\\Livewire"
             }
         }
-    },
-    "config": {
-        "sort-packages": true
     },
     "minimum-stability": "dev",
     "prefer-stable": true

@@ -12,11 +12,11 @@ abstract class ConnectionHandler
     {
         $instance = app('livewire')->activate($payload['name'], $payload['id']);
 
-        Livewire::hydrate($instance, $payload);
-
-        $instance->hydrate();
-
         try {
+            Livewire::hydrate($instance, $payload);
+
+            $instance->hydrate();
+
             foreach ($payload['actionQueue'] as $action) {
                 $this->processMessage($action['type'], $action['payload'], $instance);
             }
@@ -42,11 +42,6 @@ abstract class ConnectionHandler
     public function processMessage($type, $data, $instance)
     {
         switch ($type) {
-            case 'syncInput':
-                $instance->updating($data['name'], $data['value']);
-                $instance->syncInput($data['name'], $data['value']);
-                $instance->updated($data['name'], $data['value']);
-                break;
             case 'callMethod':
                 $instance->callMethod($data['method'], $data['params']);
                 break;
@@ -54,13 +49,7 @@ abstract class ConnectionHandler
                 $instance->fireEvent($data['event'], $data['params']);
                 break;
             default:
-                throw new \Exception('Unrecongnized message type: '.$type);
                 break;
         }
-    }
-
-    public function interceptValidator($validator)
-    {
-        //
     }
 }

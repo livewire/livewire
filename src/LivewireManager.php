@@ -337,7 +337,7 @@ HTML;
 
     public function initialDehydrate($instance, $response)
     {
-        foreach ($this->initialDehydrationMiddleware as $callable) {
+        foreach (array_reverse($this->initialDehydrationMiddleware) as $callable) {
             $callable($instance, $response);
         }
     }
@@ -370,5 +370,10 @@ HTML;
         $this->listeners[$event] ?? $this->listeners[$event] = [];
 
         $this->listeners[$event][] = $callback;
+    }
+
+    public function isOnVapor()
+    {
+        return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
     }
 }

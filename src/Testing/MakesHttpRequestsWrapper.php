@@ -2,12 +2,11 @@
 
 namespace Livewire\Testing;
 
-use Exception;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Debug\ExceptionHandler;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithExceptionHandling;
-use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
+use Illuminate\Auth\Access\AuthorizationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithExceptionHandling;
 
 class MakesHttpRequestsWrapper
 {

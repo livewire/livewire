@@ -20,6 +20,15 @@ trait ReceivesEvents
         ];
     }
 
+    public function emitUp($event, ...$params)
+    {
+        $this->eventQueue[] = [
+            'event' => $event,
+            'params' => $params,
+            'ancestorsOnly' => true,
+        ];
+    }
+
     public function dispatchBrowserEvent($event, $data = null)
     {
         $this->dispatchQueue[] = [

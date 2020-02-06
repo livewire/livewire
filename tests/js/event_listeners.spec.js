@@ -65,6 +65,98 @@ test('receive event from component fire, and make sure global listener receives 
     })
 })
 
+test('receive event from component fired only to ancestors, and make sure global listener doesnt receive it', async () => {
+    document.body.innerHTML = `
+        <div wire:id="123" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }">
+            <div wire:id="456" wire:initial-data="{}" wire:events="[]">
+                <button wire:click="$refresh"></button>
+            </div>
+        </div>
+        <div wire:id="789" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }"></div>
+    `
+
+    var payloadsThatSentARequest = []
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            payloadsThatSentARequest.push(payload)
+
+            if (payloadsThatSentARequest.length > 1) return
+
+            setTimeout(() => {
+                this.onMessage({
+                    fromPrefetch: payload.fromPrefetch,
+                    id: payload.id,
+                    data: {},
+                    dom: `<div wire:id="456">
+                        <button wire:click="$refresh"></button>
+                    </div>`,
+                    eventQueue: [{
+                        ancestorsOnly: true,
+                        event: 'foo',
+                        params: [],
+                    }],
+                })
+            }, 1)
+        },
+    }})
+
+    window.livewire.start()
+
+    var globalEventReceived = false
+    window.livewire.on('foo', () => { globalEventReceived = true })
+
+    document.querySelector('button').click()
+
+    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(2) })
+
+    await wait(() => {
+        expect(globalEventReceived).toEqual(false)
+        expect(payloadsThatSentARequest[0].id).toEqual('456')
+        expect(payloadsThatSentARequest[1].id).toEqual('123')
+        expect(payloadsThatSentARequest[2]).toEqual(undefined)
+    })
+})
+
+test('receive event from action fired only to ancestors, and make sure global listener doesnt receive it', async () => {
+    document.body.innerHTML = `
+        <div wire:id="123" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }">
+            <div wire:id="456" wire:initial-data="{}" wire:events="[]">
+                <button wire:click="$emitUp('foo')"></button>
+            </div>
+        </div>
+        <div wire:id="789" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }"></div>
+    `
+
+    var payloadsThatSentARequest = []
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            payloadsThatSentARequest.push(payload)
+        },
+    }})
+
+    window.livewire.start()
+
+    var globalEventReceived = false
+    window.livewire.on('foo', () => { globalEventReceived = true })
+
+    document.querySelector('button').click()
+
+    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(1) })
+
+    await wait(() => {
+        expect(globalEventReceived).toEqual(false)
+        expect(payloadsThatSentARequest[0].id).toEqual('123')
+        expect(payloadsThatSentARequest[1]).toEqual(undefined)
+        expect(payloadsThatSentARequest[2]).toEqual(undefined)
+    })
+})
+
 describe('test Laravel Echo', () => {
     let mockEcho
 

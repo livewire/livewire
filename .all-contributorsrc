@@ -404,6 +404,34 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "tormjens",
+      "name": "Tor Morten Jensen",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/3974889?v=4",
+      "profile": "http://tormorten.no",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "kdion4891",
+      "name": "Kevin Dion",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/54263485?v=4",
+      "profile": "https://github.com/kdion4891",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "nuernbergerA",
+      "name": "Adrian Nürnberger",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/13331388?v=4",
+      "profile": "https://github.com/nuernbergerA",
+      "contributions": [
+        "maintenance",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
