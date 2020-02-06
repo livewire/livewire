@@ -186,7 +186,7 @@ test('form buttons disabled and inputs read-only during submission', async () =>
     })
 })
 
-test('action paramters without space around comma', async () => {
+test('action parameters without space around comma', async () => {
     var payload
     mount(`<button wire:click="callSomething('foo','bar')"></button>`, i => payload = i)
 
@@ -199,7 +199,7 @@ test('action paramters without space around comma', async () => {
     })
 })
 
-test('action paramters with space before comma', async () => {
+test('action parameters with space before comma', async () => {
     var payload
     mount(`<button wire:click="callSomething('foo' ,'bar')"></button>`, i => payload = i)
 
@@ -212,7 +212,7 @@ test('action paramters with space before comma', async () => {
     })
 })
 
-test('action paramters with space after comma', async () => {
+test('action parameters with space after comma', async () => {
     var payload
     mount(`<button wire:click="callSomething('foo', 'bar')"></button>`, i => payload = i)
 
@@ -225,7 +225,7 @@ test('action paramters with space after comma', async () => {
     })
 })
 
-test('action paramters with space around comma', async () => {
+test('action parameters with space around comma', async () => {
     var payload
     mount(`<button wire:click="callSomething('foo' , 'bar')"></button>`, i => payload = i)
 
@@ -235,5 +235,57 @@ test('action paramters with space around comma', async () => {
         expect(payload.actionQueue[0].type).toEqual('callMethod')
         expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
         expect(payload.actionQueue[0].payload.params).toEqual(['foo', 'bar'])
+    })
+})
+
+test('action parameters with space and comma inside will be handled', async () => {
+    var payload
+    mount(`<button wire:click="callSomething('foo, bar', true , 'baz',null,'x,y')"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual(['foo, bar', true, 'baz', null, 'x,y'])
+    })
+})
+
+test('action parameters must be separated by comma', async () => {
+    var payload
+    mount(`<button wire:click="callSomething('foo'|'bar')"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).not.toEqual(['foo', 'bar'])
+    })
+})
+
+test('action parameter can be empty', async () => {
+    var payload
+    mount(`<button wire:click="callSomething()"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual([])
+    })
+})
+
+test('action parameter can use double-quotes', async () => {
+    var payload
+    mount(`<button wire:click='callSomething("double-quotes are ugly", true)'></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual(['double-quotes are ugly', true])
     })
 })
