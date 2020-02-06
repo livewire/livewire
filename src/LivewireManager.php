@@ -371,4 +371,9 @@ HTML;
 
         $this->listeners[$event][] = $callback;
     }
+
+    public function isOnVapor()
+    {
+        return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
+    }
 }

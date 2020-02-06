@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit backupGlobals="false"
+<phpunit colors="true"
+         stopOnFailure="false"
+         backupGlobals="false"
+         processIsolation="false"
          backupStaticAttributes="false"
          bootstrap="vendor/autoload.php"
-         colors="true"
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         processIsolation="false"
-         stopOnFailure="false">
+         convertWarningsToExceptions="true">
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="Test.php">./tests</directory>

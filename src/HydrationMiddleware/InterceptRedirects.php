@@ -2,7 +2,7 @@
 
 namespace Livewire\HydrationMiddleware;
 
-use Livewire\Routing\Redirector;
+use Livewire\Redirector;
 
 class InterceptRedirects implements HydrationMiddleware
 {

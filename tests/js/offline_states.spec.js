@@ -1,5 +1,5 @@
 import { mount } from './utils'
-import { dispatch } from './../../src/js/util'
+import { dispatch } from './../../js/util'
 
 test('element is toggled when going offline and back online', async () => {
     mount(`<span wire:offline style="display: none"></span>`)

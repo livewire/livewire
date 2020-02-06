@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Routing;
+namespace Livewire;
 
 use Livewire\Component;
 use Illuminate\Routing\Redirector as BaseRedirector;

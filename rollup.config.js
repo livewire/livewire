@@ -1,20 +1,20 @@
 import md5 from 'md5'
 import fs from 'fs-extra'
-import outputManifest from 'rollup-plugin-output-manifest';
 import babel from 'rollup-plugin-babel';
+import alias from '@rollup/plugin-alias';
 import filesize from 'rollup-plugin-filesize';
 import { terser } from "rollup-plugin-terser";
-import resolve from "rollup-plugin-node-resolve"
-import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
+import resolve from "rollup-plugin-node-resolve"
+import outputManifest from 'rollup-plugin-output-manifest';
 
 export default {
-    input: 'src/js/index.js',
+    input: 'js/index.js',
     output: {
-        name: 'Livewire',
-        file: 'dist/livewire.js',
         format: 'umd',
         sourcemap: true,
+        name: 'Livewire',
+        file: 'dist/livewire.js',
     },
     plugins: [
         resolve(),
@@ -34,7 +34,7 @@ export default {
         }),
         alias({
             entries: [
-                { find: '@', replacement: __dirname + '/src/js' },
+                { find: '@', replacement: __dirname + '/js' },
             ]
         }),
         // Mimic Laravel Mix's mix-manifest file for auto-cache-busting.
