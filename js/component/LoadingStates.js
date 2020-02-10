@@ -22,7 +22,11 @@ export default function () {
             return action.type === 'callMethod'
         }).map(action => action.payload.method);
 
-        setLoading(component, actions)
+        const models = message.actionQueue.filter(action => {
+            return action.type === 'syncInput'
+        }).map(action => action.payload.name);
+
+        setLoading(component, actions.concat(models))
     })
 
     store.registerHook('messageFailed', component => {
@@ -47,11 +51,11 @@ function processLoadingDirective(component, el, directive) {
     } else {
         // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
         // and automatically scope this loading directive to that action.
-        const nonActionLivewireDirectives = ['init', 'model', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore']
+        const nonActionOrModelLivewireDirectives = ['init', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore', 'key', 'id']
 
         actionNames = el.directives
             .all()
-            .filter(i => ! nonActionLivewireDirectives.includes(i.type))
+            .filter(i => ! nonActionOrModelLivewireDirectives.includes(i.type))
             .map(i => i.method)
 
         // If we found nothing, just set the loading directive to the global component. (run on every request)

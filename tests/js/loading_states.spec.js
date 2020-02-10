@@ -51,6 +51,32 @@ test('loading is scoped to current element if it fires an action', async () => {
     })
 })
 
+test('loading is scoped to current element if it binds data with wire:model', async () => {
+    mountAndReturn(
+        `<button wire:click="foo" wire:loading.attr="disabled"><input wire:model="bar" wire:loading.class="baz"></button>`,
+        `<button wire:click="foo" wire:loading.attr="disabled"><input wire:model="bar" wire:loading.class="baz"></button>`,
+        [], async () => {
+            // Make the loading last for 50ms.
+            await timeout(50)
+        }
+    )
+
+    expect(document.querySelector('button').disabled).toEqual(false)
+    expect(document.querySelector('input').classList.contains('baz')).toEqual(false)
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toEqual(true)
+        expect(document.querySelector('input').classList.contains('baz')).toEqual(false)
+    })
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toEqual(false)
+        expect(document.querySelector('input').classList.contains('baz')).toEqual(false)
+    })
+})
+
 test('loading is scoped to current element if it fires an action, even with parameters', async () => {
     mountAndReturn(
         `<button wire:click="foo('bar')" wire:loading.attr="disabled"><span wire:click="bar" wire:loading.class="baz"></span>`,
