@@ -107,11 +107,11 @@ class LivewireManager
 
         $this->initialHydrate($instance, []);
 
-        $parameters = $this->resolveClassMethodDependencies(
+        $resolvedParameters = $this->resolveClassMethodDependencies(
             $params, $instance, 'mount'
         );
 
-        $instance->mount(...$parameters);
+        $instance->mount(...$resolvedParameters);
 
         $dom = $instance->output();
 
