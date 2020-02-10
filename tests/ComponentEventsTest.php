@@ -79,7 +79,7 @@ class ComponentEventsTest extends TestCase
     /** @test */
     public function component_can_set_dynamic_listeners()
     {
-        $component = app(LivewireManager::class)->test(ReceivesEventsWithDynamicListeners::class, 'bob');
+        $component = app(LivewireManager::class)->test(ReceivesEventsWithDynamicListeners::class, ['listener' => 'bob']);
 
         $component->fireEvent('bob', 'lob');
         $component->assertSet('foo', 'lob');

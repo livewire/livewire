@@ -88,8 +88,11 @@ class LivewireManager
         return new $componentClass($id);
     }
 
-    public function mount($name, ...$options)
+    public function mount($name, $params = [])
     {
+        // This is if a user doesn't pass params, BUT passes key() as the second argument.
+        if (is_string($params)) $params = [];
+
         $id = Str::random(20);
 
         // Allow instantiating Livewire components directly from classes.
@@ -104,11 +107,11 @@ class LivewireManager
 
         $this->initialHydrate($instance, []);
 
-        $parameters = $this->resolveClassMethodDependencies(
-            $options, $instance, 'mount'
+        $resolvedParameters = $this->resolveClassMethodDependencies(
+            $params, $instance, 'mount'
         );
 
-        $instance->mount(...array_values($parameters));
+        $instance->mount(...$resolvedParameters);
 
         $dom = $instance->output();
 
@@ -134,7 +137,7 @@ class LivewireManager
         return "<{$tagName} wire:id=\"{$id}\"></{$tagName}>";
     }
 
-    public function test($name, ...$params)
+    public function test($name, $params = [])
     {
         return new TestableLivewire($name, $this->prefix, $params);
     }

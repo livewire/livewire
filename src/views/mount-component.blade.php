@@ -1,1 +1,1 @@
-@livewire($name, ...$params)
+@livewire($name, $params)

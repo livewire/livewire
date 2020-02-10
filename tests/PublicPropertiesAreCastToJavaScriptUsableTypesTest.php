@@ -16,7 +16,7 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
     {
         $this->expectException(PublicPropertyTypeNotAllowedException::class);
 
-        Livewire::test(ComponentWithPropertiesStub::class, collect(['foo' => 'bar']))
+        Livewire::test(ComponentWithPropertiesStub::class, ['foo' => collect(['foo' => 'bar'])])
             ->assertDontSee('class Illuminate\Support\Collection')
             ->assertSee('array(1)')
             ->assertSee('foo')
@@ -29,7 +29,7 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
         $this->expectException(PublicPropertyTypeNotAllowedException::class);
         Livewire::component('foo', ComponentWithPropertiesStub::class);
 
-        View::make('render-component', ['component' => 'foo', 'params' => [collect()]])->render();
+        View::make('render-component', ['component' => 'foo', 'params' => ['foo' => collect()]])->render();
     }
 
     /** @test */
@@ -40,7 +40,7 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
             0 => 'bar',
         ];
 
-        $foo = Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)->foo;
+        $foo = Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])->foo;
 
         $this->assertSame([
             0 => 'bar',
@@ -59,7 +59,7 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
             2 => 'baz',
         ];
 
-        $foo = Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)
+        $foo = Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])
             ->foo;
 
         $this->assertSame([
@@ -81,7 +81,7 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
             ],
         ];
 
-        Livewire::test(ComponentWithPropertiesStub::class, $orderedNumericArray)
+        Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])
             ->assertSet('foo', [[0 => 'bar', 1 => 'foo']]);
     }
 }

@@ -1,5 +1,5 @@
 @extends($layout)
 
 @section($section)
-    @livewire($component, ...$componentOptions)
+    @livewire($component, $componentParameters)
 @endsection

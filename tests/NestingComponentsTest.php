@@ -84,7 +84,7 @@ class ParentComponentForNestingChildStub extends Component
     public function render()
     {
         return app('view')->make('show-child', [
-            'child' => 'foo',
+            'child' => ['name' => 'foo'],
         ]);
     }
 }
