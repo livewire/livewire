@@ -27,7 +27,7 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
     {
         $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
 
-        Livewire::test(ComponentWithModelPublicProperty::class, $model)
+        Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model])
             ->assertSee('foo')
             ->call('refresh')
             ->assertSee('foo');
@@ -41,7 +41,7 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
         $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
         ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
 
-        Livewire::test(ComponentWithModelPublicProperty::class, $model)
+        Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model])
             ->set('model.id', 2)
             ->call('refresh')
             ->assertSee('foo')
@@ -56,7 +56,7 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
         $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
         ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
 
-        $component = Livewire::test(ComponentWithModelPublicProperty::class, $model);
+        $component = Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model]);
 
         $component->payload['data']['model']['id'] = 2;
 
@@ -71,7 +71,7 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
 
         $models = ModelForSerialization::all();
 
-        Livewire::test(ComponentWithModelsPublicProperty::class, $models)
+        Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models])
             ->assertSee('foo')
             ->assertSee('bar')
             ->call('refresh')

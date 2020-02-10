@@ -14,19 +14,19 @@ class MountComponentTest extends TestCase
         $this->assertSame(null, $component->foo);
         $this->assertSame([], $component->bar);
 
-        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, 'caleb');
+        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, ['foo' => 'caleb']);
         $this->assertSame('caleb', $component->foo);
         $this->assertSame([], $component->bar);
 
-        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, null, 'porzio');
+        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, ['bar' => 'porzio']);
         $this->assertSame(null, $component->foo);
         $this->assertSame('porzio', $component->bar);
 
-        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, 'caleb', 'porzio');
+        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, ['foo' => 'caleb', 'bar' => 'porzio']);
         $this->assertSame('caleb', $component->foo);
         $this->assertSame('porzio', $component->bar);
 
-        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, null, null);
+        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, ['foo' => null, 'bar' => null]);
         $this->assertSame(null, $component->foo);
         $this->assertSame(null, $component->bar);
     }

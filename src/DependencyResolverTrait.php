@@ -2,10 +2,11 @@
 
 namespace Livewire;
 
-use ReflectionMethod;
-use ReflectionParameter;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Arr;
 use ReflectionFunctionAbstract;
+use ReflectionMethod;
+use ReflectionParameter;
 
 trait DependencyResolverTrait
 {
@@ -22,6 +23,66 @@ trait DependencyResolverTrait
 
     public function resolveMethodDependencies(array $parameters, ReflectionFunctionAbstract $reflector)
     {
+        $dependencies = $reflector->getParameters();
+
+        try {
+            $instances = $this->resolveDependencies($dependencies, $parameters);
+        } catch (BindingResolutionException $e) {
+            throw $e;
+        }
+
+        return $instances;
+    }
+
+    protected function resolveDependencies(array $dependencies, $parameters)
+    {
+        $results = [];
+
+        foreach ($dependencies as $dependency) {
+            if (array_key_exists($dependency->name, $parameters)) {
+                $results[] = $parameters[$dependency->name];
+
+                continue;
+            }
+
+            $results[] = is_null($dependency->getClass())
+                            ? $this->resolvePrimitive($dependency)
+                            : $this->resolveClass($dependency);
+        }
+
+        return $results;
+    }
+
+    protected function resolvePrimitive(ReflectionParameter $parameter)
+    {
+        if ($parameter->isDefaultValueAvailable()) {
+            return $parameter->getDefaultValue();
+        }
+
+        $this->unresolvablePrimitive($parameter);
+    }
+
+    protected function unresolvablePrimitive(ReflectionParameter $parameter)
+    {
+        $message = "Unresolvable dependency resolving [$parameter] in class {$parameter->getDeclaringClass()->getName()}";
+
+        throw new BindingResolutionException($message);
+    }
+
+    protected function resolveClass(ReflectionParameter $parameter)
+    {
+        try {
+            return app()->make($parameter->getClass()->name);
+        } catch (BindingResolutionException $e) {
+            if ($parameter->isOptional()) {
+                return $parameter->getDefaultValue();
+            }
+
+            throw $e;
+        }
+    }
+
+    public function hey($parameters, $reflector) {
         $instanceCount = 0;
 
         $values = array_values($parameters);
