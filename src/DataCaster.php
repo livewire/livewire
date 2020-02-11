@@ -79,7 +79,6 @@ class DataCaster
                         return $value->toString();
                     }
 
-                    dump($value);
                     return $value->__toString();
                 },
             ],
