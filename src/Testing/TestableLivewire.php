@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Route;
 
 class TestableLivewire
 {
-    public $prefix;
     public $payload = [];
     public $componentName;
     public $lastValidator;
@@ -21,7 +20,7 @@ class TestableLivewire
         Concerns\MakesCallsToComponent,
         Concerns\HasFunLittleUtilities;
 
-    public function __construct($name, $prefix, $params = [])
+    public function __construct($name, $params = [])
     {
         Livewire::listen('view:render', function ($view) {
             $this->lastRenderedView = $view;
@@ -34,8 +33,6 @@ class TestableLivewire
         Livewire::listen('mounted', function ($response) {
             $this->rawMountedResponse = $response;
         });
-
-        $this->prefix = $prefix;
 
         // This allows the user to test a component by it's class name,
         // and not have to register an alias.

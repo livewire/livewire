@@ -1,6 +1,4 @@
 import DOMElement from './dom_element'
-import findPrefix from './prefix.js'
-const prefix = findPrefix()
 
 /**
  * This is intended to isolate all native DOM operations. The operations that happen
@@ -8,12 +6,8 @@ const prefix = findPrefix()
  * perform on the "document" (like "document.querySelector") will be static methods.
  */
 export default class DOM {
-    static get prefix() {
-        return prefix
-    }
-
     static rootComponentElements() {
-        return Array.from(document.querySelectorAll(`[${prefix}\\:id]`))
+        return Array.from(document.querySelectorAll(`[wire\\:id]`))
             .map(el => new DOMElement(el))
     }
 
@@ -24,8 +18,8 @@ export default class DOM {
         // have a root ancestor, then select all roots that DONT, then diff the two.
 
         // Convert NodeLists to Arrays so we can use ".includes()". Ew.
-        const allEls = Array.from(document.querySelectorAll(`[${prefix}\\:id]`))
-        const onlyChildEls = Array.from(document.querySelectorAll(`[${prefix}\\:id] [${prefix}\\:id]`))
+        const allEls = Array.from(document.querySelectorAll(`[wire\\:id]`))
+        const onlyChildEls = Array.from(document.querySelectorAll(`[wire\\:id] [wire\\:id]`))
 
         return allEls
             .filter(el => ! onlyChildEls.includes(el))
@@ -34,11 +28,11 @@ export default class DOM {
 
     static allModelElementsInside(root) {
         return Array.from(
-            root.querySelectorAll(`[${prefix}\\:model]`)
+            root.querySelectorAll(`[wire\\:model]`)
         ).map(el => new DOMElement(el))
     }
 
     static getByAttributeAndValue(attribute, value) {
-        return new DOMElement(document.querySelector(`[${prefix}\\:${attribute}="${value}"]`))
+        return new DOMElement(document.querySelector(`[wire\\:${attribute}="${value}"]`))
     }
 }

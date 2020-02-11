@@ -6,11 +6,9 @@ class AddAttributesToRootTagOfHtml
 {
     public function __invoke($dom, $data)
     {
-        $prefix = app('livewire')->prefix();
-
         $attributesFormattedForHtmlElement = collect($data)
-            ->mapWithKeys(function ($value, $key) use ($prefix) {
-                return ["{$prefix}:{$key}" => $this->escapeStringForHtml($value)];
+            ->mapWithKeys(function ($value, $key) {
+                return ["wire:{$key}" => $this->escapeStringForHtml($value)];
             })->map(function ($value, $key) {
                 return sprintf('%s="%s"', $key, $value);
             })->implode(' ');

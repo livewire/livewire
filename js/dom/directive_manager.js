@@ -1,8 +1,5 @@
 import ElementDirective from './directive';
 
-import findPrefix from './prefix.js'
-const prefix = findPrefix()
-
 export default class {
     constructor(el) {
         this.el = el
@@ -28,10 +25,10 @@ export default class {
     extractTypeModifiersAndValue() {
         return Array.from(this.el.getAttributeNames()
             // Filter only the livewire directives.
-            .filter(name => name.match(new RegExp(prefix + ':')))
+            .filter(name => name.match(new RegExp('wire:')))
             // Parse out the type, modifiers, and value from it.
             .map(name => {
-                const [type, ...modifiers] = name.replace(new RegExp(prefix + ':'), '').split('.')
+                const [type, ...modifiers] = name.replace(new RegExp('wire:'), '').split('.')
 
                 return new ElementDirective(type, modifiers, name, this.el)
             }))

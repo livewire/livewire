@@ -14,7 +14,6 @@ class LivewireManager
     use DependencyResolverTrait;
 
     protected $container;
-    protected $prefix = 'wire';
     protected $componentAliases = [];
     protected $customComponentResolver;
     protected $hydrationMiddleware = [];
@@ -28,12 +27,6 @@ class LivewireManager
     {
         // This property only exists to make the "DependencyResolverTrait" work.
         $this->container = app();
-    }
-
-    public function prefix($prefix = null)
-    {
-        // Yes, this is both a getter and a setter. Fight me.
-        return $this->prefix = $prefix ?: $this->prefix;
     }
 
     public function component($alias, $viewClass)
@@ -139,7 +132,7 @@ class LivewireManager
 
     public function test($name, $params = [])
     {
-        return new TestableLivewire($name, $this->prefix, $params);
+        return new TestableLivewire($name, $params);
     }
 
     public function actingAs(Authenticatable $user, $driver = null)

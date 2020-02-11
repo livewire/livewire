@@ -1,8 +1,6 @@
 import ElementDirectives from "./directive_manager"
 import get from 'get-value'
-import findPrefix from './prefix.js'
 import store from '@/Store'
-const prefix = findPrefix()
 
 /**
  * Consider this a decorator for the ElementNode JavaScript object. (Hence the
@@ -163,12 +161,12 @@ export default class DOMElement {
     }
 
     closestByAttribute(attribute) {
-        const closestEl = this.el.closest(`[${prefix}\\:${attribute}]`)
+        const closestEl = this.el.closest(`[wire\\:${attribute}]`)
 
         if (! closestEl) {
             throw `
 Livewire Error:\n
-Cannot find parent element in DOM tree containing attribute: [${prefix}:${attribute}].\n
+Cannot find parent element in DOM tree containing attribute: [wire:${attribute}].\n
 Usually this is caused by Livewire's DOM-differ not being able to properly track changes.\n
 Reference the following guide for common causes: https://laravel-livewire.com/docs/troubleshooting \n
 Referenced element:\n
@@ -184,19 +182,19 @@ ${this.el.outerHTML}
     }
 
     hasAttribute(attribute) {
-        return this.el.hasAttribute(`${prefix}:${attribute}`)
+        return this.el.hasAttribute(`wire:${attribute}`)
     }
 
     getAttribute(attribute) {
-        return this.el.getAttribute(`${prefix}:${attribute}`)
+        return this.el.getAttribute(`wire:${attribute}`)
     }
 
     removeAttribute(attribute) {
-        return this.el.removeAttribute(`${prefix}:${attribute}`)
+        return this.el.removeAttribute(`wire:${attribute}`)
     }
 
     setAttribute(attribute, value) {
-        return this.el.setAttribute(`${prefix}:${attribute}`, value)
+        return this.el.setAttribute(`wire:${attribute}`, value)
     }
 
     isFocused() {
