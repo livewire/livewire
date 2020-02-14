@@ -229,7 +229,7 @@ ${this.el.outerHTML}
                 return modelValue
             }
 
-            return this.el.checked
+            return this.el.checked ? true : null;
         } else if (this.el.tagName === 'SELECT' && this.el.multiple) {
             return this.getSelectValues()
         }
