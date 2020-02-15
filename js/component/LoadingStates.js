@@ -125,7 +125,11 @@ function setLoading(component, actions) {
                 el.setAttribute(directive.value, true)
             }
         } else {
-            el.style.display = 'inline-block'
+            if (directive.modifiers.includes('remove')) {
+                el.style.display = 'none'
+            } else {
+                el.style.display = 'inline-block'
+            }
         }
     })
 
