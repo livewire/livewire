@@ -155,7 +155,9 @@ abstract class Component
             }
         }
 
-        throw new \Exception("Property [{$property}] does not exist on the Component instance.");
+        $className = class_basename($this);
+
+        throw new \Exception("Property [{$property}] does not exist on the {$className} component instance.");
     }
 
     public function __call($method, $params)
