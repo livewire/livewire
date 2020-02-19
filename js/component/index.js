@@ -253,15 +253,11 @@ export default class Component {
             },
 
             onBeforeNodeAdded: node => {
-                return (new DOMElement(node)).transitionElementIn()
+                //
             },
 
             onBeforeNodeDiscarded: node => {
-                const el = new DOMElement(node)
-
-                return el.transitionElementOut(nodeDiscarded => {
-                    store.callHook('elementRemoved', el, this)
-                })
+                //
             },
 
             onNodeDiscarded: node => {
