@@ -302,6 +302,13 @@ export default class Component {
 
                 // Children will update themselves.
                 if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== this.id) return false
+
+                // If the element we are updating is an Alpine component...
+                if (from.__x) {
+                    // Then temporarily clone it (with it's data) to the "to" element.
+                    // This should simulate backend Livewire being aware of Alpine changes.
+                    window.Alpine.cloneComponent(from.__x, to)
+                }
             },
 
             onElUpdated: (node) => {
