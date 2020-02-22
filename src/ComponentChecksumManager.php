@@ -2,13 +2,15 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Arr;
+
 class ComponentChecksumManager
 {
     public function generate($name, $id, $data)
     {
         $hashKey = app('encrypter')->getKey();
 
-        $stringForHashing = $name.$id.json_encode($data);
+        $stringForHashing = $name.$id.json_encode(Arr::sortRecursive($data));
 
         return hash_hmac('sha256', $stringForHashing, $hashKey);
     }
