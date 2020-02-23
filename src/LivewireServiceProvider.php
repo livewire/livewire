@@ -23,7 +23,7 @@ use Livewire\Commands\{
     CopyCommand,
     MakeCommand,
     MoveCommand,
-    StubCommand,
+    StubsCommand,
     TouchCommand,
     DeleteCommand,
     ComponentParser,
@@ -141,7 +141,7 @@ class LivewireServiceProvider extends ServiceProvider
             RmCommand::class,           // livewire:rm
             MoveCommand::class,         // livewire:move
             MvCommand::class,           // livewire:mv
-            StubCommand::class,         // livewire:stub
+            StubsCommand::class,        // livewire:stubs
             DiscoverCommand::class,     // livewire:discover
         ]);
     }
