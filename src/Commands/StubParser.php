@@ -6,7 +6,6 @@ use Illuminate\Support\Str;
 
 class StubParser extends ComponentParser
 {
-
     public function __construct($classNamespace, $viewPath, $rawCommand)
     {
         $this->baseClassNamespace = $classNamespace;
