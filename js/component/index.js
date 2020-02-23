@@ -303,7 +303,7 @@ export default class Component {
                 if (from.__x) {
                     // Then temporarily clone it (with it's data) to the "to" element.
                     // This should simulate backend Livewire being aware of Alpine changes.
-                    window.Alpine.cloneComponent(from.__x, to)
+                    window.Alpine.clone(from.__x, to)
                 }
             },
 
