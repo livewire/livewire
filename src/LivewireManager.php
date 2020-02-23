@@ -148,30 +148,6 @@ class LivewireManager
         return $this;
     }
 
-    // @todo remove in 1.0
-    public function assets($options = [])
-    {
-        $debug = config('app.debug');
-
-        $styles = $this->cssAssets();
-
-        $scripts = $this->javaScriptAssets($options);
-
-        // HTML Label.
-        $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
-
-        // JavaScript assets.
-        $html[] = $debug ? $scripts : $this->minify($scripts);
-
-        // HTML Label.
-        $html[] = $debug ? '<!-- Livewire Styles -->' : '';
-
-        // CSS assets.
-        $html[] = $debug ? $styles : $this->minify($styles);
-
-        return implode("\n", $html);
-    }
-
     public function styles($options = [])
     {
         $debug = config('app.debug');
