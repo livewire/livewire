@@ -100,7 +100,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->app->singleton(LivewireComponentsFinder::class, function () use ($defaultManifestPath) {
             return new LivewireComponentsFinder(
                 new Filesystem,
-                config('livewire.manifest_path', $defaultManifestPath),
+                config('livewire.manifest_path') ?: $defaultManifestPath,
                 ComponentParser::generatePathFromNamespace(
                     config('livewire.class_namespace', 'App\\Http\\Livewire')
                 )
