@@ -239,12 +239,9 @@ HTML;
     window.livewire = new Livewire({$jsonEncodedOptions});
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
+    window.livewire.start();
 
     var firstTime = true
-    document.addEventListener('DOMContentLoaded', function () {
-        window.livewire.start();
-    });
-
     document.addEventListener("turbolinks:load", function() {
         // We only want this handler to run AFTER the first load.
         if  (firstTime) {
