@@ -239,7 +239,10 @@ HTML;
     window.livewire = new Livewire({$jsonEncodedOptions});
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
-    window.livewire.start();
+
+    document.addEventListener("DOMContentLoaded", function() {
+        window.livewire.start();
+    })
 
     var firstTime = true
     document.addEventListener("turbolinks:load", function() {
