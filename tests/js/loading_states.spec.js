@@ -163,7 +163,6 @@ test('show element while targeted action is loading', async () => {
     })
 })
 
-
 test('hide element while targeted action is loading', async () => {
     mount(
         `<button wire:click="foo"></button>
