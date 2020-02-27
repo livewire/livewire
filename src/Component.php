@@ -166,9 +166,7 @@ abstract class Component
             }
         }
 
-        $className = class_basename($this);
-
-        throw new \Exception("Property [{$property}] does not exist on the {$className} component instance.");
+        throw new \Exception("Property [{$property}] does not exist on the {$this->getName()} component.");
     }
 
     public function __call($method, $params)
