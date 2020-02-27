@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Livewire\Component;
+use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 use Livewire\LivewireManager;
 
 class ComponentHasIdAsPublicPropertyTest extends TestCase
@@ -11,6 +12,16 @@ class ComponentHasIdAsPublicPropertyTest extends TestCase
     public function public_id_property_is_set()
     {
         $component = app(LivewireManager::class)->test(ComponentWithIdProperty::class);
+
+        $this->assertNotNull($component->id());
+    }
+
+    /** @test */
+    public function livewires_id_property_cannot_be_overridden_on_child_component()
+    {
+        $this->expectException(CannotUseReservedLivewireComponentProperties::class);
+
+        $component = app(LivewireManager::class)->test(ComponentWithReservedProperties::class);
 
         $this->assertNotNull($component->id());
     }
@@ -23,5 +34,15 @@ class ComponentWithIdProperty extends Component
     public function render()
     {
         return app('view')->make('show-name-with-this');
+    }
+}
+
+class ComponentWithReservedProperties extends Component
+{
+    public $id = 'foo';
+
+    public function render()
+    {
+        return app('view')->make('null-view');
     }
 }
