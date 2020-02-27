@@ -50,14 +50,18 @@ export default {
 
         store.callHook('interceptWireModelAttachListener', el, directive, component, debounceIf)
 
-        const defaultEventType = el.isTextInput() ? 'input' : 'change'
+        const event = (el.rawNode().tagName.toLowerCase() === 'select')
+            || ['checkbox', 'radio'].includes(el.rawNode().type)
+            || directive.modifiers.includes('lazy')
+            ? 'change' : 'input'
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-        const event = isLazy ? 'change' : defaultEventType
         const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
             const model = directive.value
             const el = new DOMElement(e.target)
-            const value = el.valueFromInput(component)
+            const value = e instanceof CustomEvent
+                ? e.detail
+                : el.valueFromInput(component)
 
             component.addAction(new ModelAction(model, value, el))
         }, directive.durationOr(150))
@@ -133,7 +137,11 @@ export default {
                 // a value still prevents default.
                 this.preventAndStop(e, directive.modifiers)
                 const method = directive.method
-                const params = directive.params
+                let params = directive.params
+
+                if (params.length === 0 && e instanceof CustomEvent && e.detail) {
+                    params.push(e.detail)
+                }
 
                 // Check for global event emission.
                 if (method === '$emit') {

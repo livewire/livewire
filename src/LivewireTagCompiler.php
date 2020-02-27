@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Str;
 use Illuminate\View\Compilers\ComponentTagCompiler;
 
 class LivewireTagCompiler extends ComponentTagCompiler
@@ -40,6 +41,11 @@ class LivewireTagCompiler extends ComponentTagCompiler
 
         return preg_replace_callback($pattern, function (array $matches) {
             $attributes = $this->getAttributesFromAttributeString($matches['attributes']);
+
+            // Convert kebab attributes to camel-case.
+            $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
+                return [Str::camel($key) => $value];
+            })->toArray();
 
             if ($matches[1] === 'styles') return '@livewireStyles';
             if ($matches[1] === 'scripts') return '@livewireScripts';

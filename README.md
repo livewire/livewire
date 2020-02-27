@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-46-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-47-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -8,7 +8,7 @@ See the docs for everything: https://laravel-livewire.com/docs/quickstart/
 
 All contributions are welcomed! (but please submit an issue to make sure the PR is warranted first)
 
-Open GitHub issues for all questions, ideas, and bugs. We will use GitHub issues to host discussion until it gets too busy, then we can move to something like Slack or Discord.
+Open GitHub issues for all bugs. Ideas and questions belong on the forum: https://forum.laravel-livewire.com/
 
 Contribute to the docs here: https://github.com/livewire/docs
 
@@ -79,6 +79,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://tormorten.no"><img src="https://avatars0.githubusercontent.com/u/3974889?v=4" width="100px;" alt=""/><br /><sub><b>Tor Morten Jensen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=tormjens" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/kdion4891"><img src="https://avatars0.githubusercontent.com/u/54263485?v=4" width="100px;" alt=""/><br /><sub><b>Kevin Dion</b></sub></a><br /><a href="#maintenance-kdion4891" title="Maintenance">🚧</a></td>
     <td align="center"><a href="https://github.com/nuernbergerA"><img src="https://avatars3.githubusercontent.com/u/13331388?v=4" width="100px;" alt=""/><br /><sub><b>Adrian Nürnberger</b></sub></a><br /><a href="#maintenance-nuernbergerA" title="Maintenance">🚧</a> <a href="https://github.com/livewire/livewire/commits?author=nuernbergerA" title="Code">💻</a></td>
+    <td align="center"><a href="https://stefanbauer.me"><img src="https://avatars1.githubusercontent.com/u/3192662?v=4" width="100px;" alt=""/><br /><sub><b>Stefan Bauer</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=stefanbauer" title="Code">💻</a></td>
   </tr>
 </table>
 

@@ -148,30 +148,6 @@ class LivewireManager
         return $this;
     }
 
-    // @todo remove in 1.0
-    public function assets($options = [])
-    {
-        $debug = config('app.debug');
-
-        $styles = $this->cssAssets();
-
-        $scripts = $this->javaScriptAssets($options, $defer = true);
-
-        // HTML Label.
-        $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
-
-        // JavaScript assets.
-        $html[] = $debug ? $scripts : $this->minify($scripts);
-
-        // HTML Label.
-        $html[] = $debug ? '<!-- Livewire Styles -->' : '';
-
-        // CSS assets.
-        $html[] = $debug ? $styles : $this->minify($styles);
-
-        return implode("\n", $html);
-    }
-
     public function styles($options = [])
     {
         $debug = config('app.debug');
@@ -221,7 +197,7 @@ class LivewireManager
 HTML;
     }
 
-    protected function javaScriptAssets($options, $defer = false)
+    protected function javaScriptAssets($options)
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
@@ -254,35 +230,47 @@ HTML;
             }
         }
 
-        // @todo: remove in 1.0
-        if ($defer) {
-            return <<<HTML
-<script>
-    document.addEventListener('livewire:available', () => {
-        window.livewire = new Livewire({$jsonEncodedOptions});
-        window.livewire.start();
-        window.livewire_app_url = '{$appUrl}';
-        window.livewire_token = '{$csrf}';
-    })
-</script>
-{$assetWarning}
-<script src="{$fullAssetPath}" defer></script>
-HTML;
-
-        }
-
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
         return <<<HTML
 {$assetWarning}
-<script src="{$fullAssetPath}"></script>
-<script>
+<script src="{$fullAssetPath}" data-turbolinks-eval="false"></script>
+<script data-turbolinks-eval="false">
     window.livewire = new Livewire({$jsonEncodedOptions});
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener("DOMContentLoaded", function() {
         window.livewire.start();
+    });
+
+    var firstTime = true;
+    document.addEventListener("turbolinks:load", function() {
+        /* We only want this handler to run AFTER the first load. */
+        if  (firstTime) {
+            firstTime = false;
+            return;
+        }
+
+        window.livewire.restart();
+    });
+
+    document.addEventListener("turbolinks:before-cache", function() {
+        document.querySelectorAll(`[wire\\\:id]`).forEach(el => {
+            const component = el.__livewire;
+
+            const dataObject = {
+                data: component.data,
+                events: component.events,
+                children: component.children,
+                checksum: component.checksum,
+                name: component.name,
+                errorBag: component.errorBag,
+                redirectTo: component.redirectTo,
+            };
+
+            el.setAttribute('wire:initial-data', JSON.stringify(dataObject));
+        });
     });
 </script>
 HTML;
