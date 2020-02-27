@@ -242,22 +242,22 @@ HTML;
 
     document.addEventListener("DOMContentLoaded", function() {
         window.livewire.start();
-    })
+    });
 
-    var firstTime = true
+    var firstTime = true;
     document.addEventListener("turbolinks:load", function() {
-        // We only want this handler to run AFTER the first load.
+        /* We only want this handler to run AFTER the first load. */
         if  (firstTime) {
-            firstTime = false
-            return
+            firstTime = false;
+            return;
         }
 
-        window.livewire.restart()
-    })
+        window.livewire.restart();
+    });
 
     document.addEventListener("turbolinks:before-cache", function() {
         document.querySelectorAll(`[wire\\\:id]`).forEach(el => {
-            const component = el.__livewire
+            const component = el.__livewire;
 
             const dataObject = {
                 data: component.data,
@@ -267,11 +267,11 @@ HTML;
                 name: component.name,
                 errorBag: component.errorBag,
                 redirectTo: component.redirectTo,
-            }
+            };
 
-            el.setAttribute('wire:initial-data', JSON.stringify(dataObject))
-        })
-    })
+            el.setAttribute('wire:initial-data', JSON.stringify(dataObject));
+        });
+    });
 </script>
 HTML;
     }
