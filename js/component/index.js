@@ -7,10 +7,10 @@ import DOMElement from '@/dom/dom_element'
 import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
 import PrefetchManager from './PrefetchManager'
+import EchoManager from './EchoManager'
 import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
 import MessageBus from '../MessageBus'
-import EchoManager from './EchoManager'
 
 export default class Component {
     constructor(el, connection) {
