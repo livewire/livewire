@@ -7,6 +7,7 @@ import DOMElement from '@/dom/dom_element'
 import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
 import PrefetchManager from './PrefetchManager'
+import EchoManager from './EchoManager'
 import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
 import MessageBus from '../MessageBus'
@@ -30,12 +31,13 @@ export default class Component {
         this.modelTimeout = null
         this.tearDownCallbacks = []
         this.prefetchManager = new PrefetchManager(this)
+        this.echoManager = new EchoManager(this)
 
         store.callHook('componentInitialized', this)
 
         this.initialize()
 
-        this.registerEchoListeners()
+        this.echoManager.registerListeners()
 
         if (this.redirectTo) {
             this.redirect(this.redirectTo)
@@ -244,24 +246,20 @@ export default class Component {
 
             getNodeKey: node => {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
-                return node.hasAttribute(`${DOM.prefix}:key`)
-                    ? node.getAttribute(`${DOM.prefix}:key`)
+                return node.hasAttribute(`wire:key`)
+                    ? node.getAttribute(`wire:key`)
                     // If no "key", then first check for "wire:id", then "wire:model", then "id"
-                    : (node.hasAttribute(`${DOM.prefix}:id`)
-                        ? node.getAttribute(`${DOM.prefix}:id`)
+                    : (node.hasAttribute(`wire:id`)
+                        ? node.getAttribute(`wire:id`)
                         : node.id)
             },
 
             onBeforeNodeAdded: node => {
-                return (new DOMElement(node)).transitionElementIn()
+                //
             },
 
             onBeforeNodeDiscarded: node => {
-                const el = new DOMElement(node)
-
-                return el.transitionElementOut(nodeDiscarded => {
-                    store.callHook('elementRemoved', el, this)
-                })
+                //
             },
 
             onNodeDiscarded: node => {
@@ -302,6 +300,13 @@ export default class Component {
 
                 // Children will update themselves.
                 if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== this.id) return false
+
+                // If the element we are updating is an Alpine component...
+                if (from.__x) {
+                    // Then temporarily clone it (with it's data) to the "to" element.
+                    // This should simulate backend Livewire being aware of Alpine changes.
+                    window.Alpine.clone(from.__x, to)
+                }
             },
 
             onElUpdated: (node) => {
@@ -346,47 +351,6 @@ export default class Component {
 
             callback(el)
         })
-    }
-
-    registerEchoListeners() {
-        if (Array.isArray(this.events)) {
-            this.events.forEach(event => {
-                if (event.startsWith('echo')) {
-                    if (typeof Echo === 'undefined') {
-                        console.warn('Laravel Echo cannot be found')
-                        return
-                    }
-
-                    let event_parts = event.split(/(echo:|echo-)|:|,/)
-
-                    if (event_parts[1] == 'echo:') {
-                        event_parts.splice(2,0,'channel',undefined)
-                    }
-
-                    if (event_parts[2] == 'notification') {
-                        event_parts.push(undefined, undefined)
-                    }
-
-                    let [s1, signature, channel_type, s2, channel, s3, event_name] = event_parts
-
-                    if (['channel','private'].includes(channel_type)) {
-                        Echo[channel_type](channel).listen(event_name, (e) => {
-                            store.emit(event, e)
-                        })
-                    } else if (channel_type == 'presence') {
-                        Echo.join(channel)[event_name]((e) => {
-                            store.emit(event, e)
-                        })
-                    } else if (channel_type == 'notification') {
-                        Echo.private(channel).notification((notification) => {
-                            store.emit(event, notification)
-                        })
-                    } else{
-                        console.warn('Echo channel type not yet supported')
-                    }
-                }
-            })
-        }
     }
 
     modelSyncDebounce(callback, time) {

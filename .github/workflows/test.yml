@@ -8,9 +8,14 @@ on:
     types: [ready_for_review, synchronize, opened]
 
 jobs:
+  jest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Run Jest
+        uses: stefanoeb/jest-action@1.0.2
   build:
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: true
       matrix:

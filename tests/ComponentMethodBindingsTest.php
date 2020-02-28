@@ -32,7 +32,7 @@ class ComponentMethodBindingsTest extends TestCase
     /** @test */
     public function mount_method_receives_bindings_with_subsequent_param()
     {
-        Livewire::test(ComponentWithBindings::class, 'foo')
+        Livewire::test(ComponentWithBindings::class, ['param' => 'foo'])
             ->assertSee('from-injectionfoo');
     }
 }

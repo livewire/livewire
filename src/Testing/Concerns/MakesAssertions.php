@@ -25,16 +25,27 @@ trait MakesAssertions
 
     public function assertSee($value)
     {
-        PHPUnit::assertStringContainsString((string) $value, preg_replace('(wire:initial-data=\".+}")', '', $this->payload['dom']));
+        PHPUnit::assertStringContainsString(
+            e((string) $value),
+            $this->stripOutInitialData($this->payload['dom'])
+        );
 
         return $this;
     }
 
     public function assertDontSee($value)
     {
-        PHPUnit::assertStringNotContainsString((string) $value, preg_replace('(wire:initial-data=\".+}")', '', $this->payload['dom']));
+        PHPUnit::assertStringNotContainsString(
+            e((string) $value),
+            $this->stripOutInitialData($this->payload['dom'])
+        );
 
         return $this;
+    }
+
+    protected function stripOutInitialData($subject)
+    {
+        return preg_replace('(wire:initial-data=\".+}")', '', $subject);
     }
 
     public function assertEmitted($value, ...$params)

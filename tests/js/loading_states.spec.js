@@ -25,6 +25,29 @@ test('show element while loading and hide after', async () => {
     })
 })
 
+test('hide element while loading and show after', async () => {
+    mountAndReturn(
+        `<button wire:click="onClick"></button><span style="display: inline-block" wire:loading.remove></span>`,
+        `<button wire:click="onClick"></button><span style="display: inline-block" wire:loading.remove></span>`,
+        [], async () => {
+            // Make the loading last for 50ms.
+            await timeout(50)
+        }
+    )
+
+    expect(document.querySelector('span').style.display).toEqual('inline-block')
+
+    document.querySelector('button').click()
+
+    await wait(async () => {
+        expect(document.querySelector('span').style.display).toEqual('none')
+
+        await wait(async () => {
+            expect(document.querySelector('span').style.display).toEqual('inline-block')
+        })
+    })
+})
+
 test('loading is scoped to current element if it fires an action', async () => {
     mountAndReturn(
         `<button wire:click="foo" wire:loading.attr="disabled"><span wire:click="bar" wire:loading.class="baz"></span>`,
@@ -48,6 +71,32 @@ test('loading is scoped to current element if it fires an action', async () => {
     await wait(() => {
         expect(document.querySelector('button').disabled).toEqual(false)
         expect(document.querySelector('span').classList.contains('baz')).toEqual(false)
+    })
+})
+
+test('loading is scoped to current element if it binds data with wire:model', async () => {
+    mountAndReturn(
+        `<button wire:click="foo" wire:loading.attr="disabled"><input wire:model="bar" wire:loading.class="baz"></button>`,
+        `<button wire:click="foo" wire:loading.attr="disabled"><input wire:model="bar" wire:loading.class="baz"></button>`,
+        [], async () => {
+            // Make the loading last for 50ms.
+            await timeout(50)
+        }
+    )
+
+    expect(document.querySelector('button').disabled).toEqual(false)
+    expect(document.querySelector('input').classList.contains('baz')).toEqual(false)
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toEqual(true)
+        expect(document.querySelector('input').classList.contains('baz')).toEqual(false)
+    })
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toEqual(false)
+        expect(document.querySelector('input').classList.contains('baz')).toEqual(false)
     })
 })
 
@@ -111,6 +160,21 @@ test('show element while targeted action is loading', async () => {
     await wait(() => {
         expect(document.querySelector('span').style.display).toEqual('inline-block')
         expect(document.querySelector('h1').style.display).toEqual('none')
+    })
+})
+
+test('hide element while targeted action is loading', async () => {
+    mount(
+        `<button wire:click="foo"></button>
+<span style="display: inline-block" wire:loading.remove wire:target="foo"></span>
+<h1 style="display: inline-block" wire:loading.remove wire:target="bar"></h1>`
+    )
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('span').style.display).toEqual('none')
+        expect(document.querySelector('h1').style.display).toEqual('inline-block')
     })
 })
 

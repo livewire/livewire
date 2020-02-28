@@ -164,7 +164,8 @@
       "profile": "https://intellow.com",
       "contributions": [
         "code",
-        "maintenance"
+        "maintenance",
+        "financial"
       ]
     },
     {
@@ -430,6 +431,15 @@
       "profile": "https://github.com/nuernbergerA",
       "contributions": [
         "maintenance",
+        "code"
+      ]
+    },
+    {
+      "login": "stefanbauer",
+      "name": "Stefan Bauer",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/3192662?v=4",
+      "profile": "https://stefanbauer.me",
+      "contributions": [
         "code"
       ]
     }

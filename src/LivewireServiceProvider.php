@@ -8,7 +8,6 @@ use Livewire\Macros\RouteMacros;
 use Livewire\Macros\RouterMacros;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Livewire\LivewireViewCompilerEngine;
 use Livewire\Connection\HttpConnectionHandler;
@@ -24,7 +23,7 @@ use Livewire\Commands\{
     CopyCommand,
     MakeCommand,
     MoveCommand,
-    StubCommand,
+    StubsCommand,
     TouchCommand,
     DeleteCommand,
     ComponentParser,
@@ -65,6 +64,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerTestMacros();
         $this->registerRouteMacros();
+        $this->registerTagCompiler();
         $this->registerPublishables();
         $this->registerBladeDirectives();
         $this->registerViewCompilerEngine();
@@ -100,7 +100,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->app->singleton(LivewireComponentsFinder::class, function () use ($defaultManifestPath) {
             return new LivewireComponentsFinder(
                 new Filesystem,
-                config('livewire.manifest_path', $defaultManifestPath),
+                config('livewire.manifest_path') ?: $defaultManifestPath,
                 ComponentParser::generatePathFromNamespace(
                     config('livewire.class_namespace', 'App\\Http\\Livewire')
                 )
@@ -141,7 +141,7 @@ class LivewireServiceProvider extends ServiceProvider
             RmCommand::class,           // livewire:rm
             MoveCommand::class,         // livewire:move
             MvCommand::class,           // livewire:mv
-            StubCommand::class,         // livewire:stub
+            StubsCommand::class,        // livewire:stubs
             DiscoverCommand::class,     // livewire:discover
         ]);
     }
@@ -160,10 +160,9 @@ class LivewireServiceProvider extends ServiceProvider
             return $this;
         };
 
-        if (
-            Application::VERSION === '7.x-dev' ||
-            version_compare(Application::VERSION, '7.0', '>=')
-        ) {
+        if (class_exists(Laravel7TestResponse::class)) {
+            // TestResponse was moved from illuminate/foundation
+            // and moved to illuminate/testing for Laravel 7.
             Laravel7TestResponse::macro('assertSeeLivewire', $macro);
         } else {
             TestResponse::macro('assertSeeLivewire', $macro);
@@ -174,6 +173,15 @@ class LivewireServiceProvider extends ServiceProvider
     {
         Route::mixin(new RouteMacros);
         Router::mixin(new RouterMacros);
+    }
+
+    protected function registerTagCompiler()
+    {
+        if (method_exists($this->app['blade.compiler'], 'precompiler')) {
+            $this->app['blade.compiler']->precompiler(function ($string) {
+                return (new LivewireTagCompiler)->compile($string);
+            });
+        }
     }
 
     protected function registerPublishables()
@@ -192,9 +200,6 @@ class LivewireServiceProvider extends ServiceProvider
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
         Blade::directive('livewireStyles', [LivewireBladeDirectives::class, 'livewireStyles']);
         Blade::directive('livewireScripts', [LivewireBladeDirectives::class, 'livewireScripts']);
-
-        // @todo: removing in 1.0
-        Blade::directive('livewireAssets', [LivewireBladeDirectives::class, 'livewireAssets']);
     }
 
     protected function registerViewCompilerEngine()

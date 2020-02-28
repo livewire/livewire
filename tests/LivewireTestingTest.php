@@ -11,7 +11,7 @@ class LivewireTestingTest extends TestCase
     public function method_accepts_arguments_to_pass_to_mount()
     {
         $component = app(LivewireManager::class)
-            ->test(HasMountArguments::class, 'foo');
+            ->test(HasMountArguments::class, ['name' => 'foo']);
 
         $this->assertStringContainsString('foo', $component->payload['dom']);
     }
@@ -20,7 +20,7 @@ class LivewireTestingTest extends TestCase
     public function set_multiple_with_array()
     {
         app(LivewireManager::class)
-            ->test(HasMountArguments::class, 'foo')
+            ->test(HasMountArguments::class, ['name' => 'foo'])
             ->set(['name' => 'bar'])
             ->assertSet('name', 'bar');
     }
@@ -29,7 +29,7 @@ class LivewireTestingTest extends TestCase
     public function assert_set()
     {
         app(LivewireManager::class)
-            ->test(HasMountArguments::class, 'foo')
+            ->test(HasMountArguments::class, ['name' => 'foo'])
             ->assertSet('name', 'foo');
     }
 
@@ -37,7 +37,7 @@ class LivewireTestingTest extends TestCase
     public function assert_not_set()
     {
         app(LivewireManager::class)
-            ->test(HasMountArguments::class, 'bar')
+            ->test(HasMountArguments::class, ['name' => 'bar'])
             ->assertNotSet('name', 'foo');
     }
 
@@ -45,7 +45,7 @@ class LivewireTestingTest extends TestCase
     public function assert_see()
     {
         app(LivewireManager::class)
-            ->test(HasMountArguments::class, 'should see me')
+            ->test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertSee('should see me');
     }
 
@@ -54,7 +54,7 @@ class LivewireTestingTest extends TestCase
     {
         // See for more info: https://github.com/calebporzio/livewire/issues/62
         app(LivewireManager::class)
-            ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, 'shouldnt see me')
+            ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => 'shouldnt see me'])
             ->assertDontSee('shouldnt see me');
     }
 

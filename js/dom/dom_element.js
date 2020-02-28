@@ -1,8 +1,6 @@
 import ElementDirectives from "./directive_manager"
 import get from 'get-value'
-import findPrefix from './prefix.js'
 import store from '@/Store'
-const prefix = findPrefix()
 
 /**
  * Consider this a decorator for the ElementNode JavaScript object. (Hence the
@@ -24,151 +22,17 @@ export default class DOMElement {
         return this.el
     }
 
-    transitionElementIn() {
-        if (! this.directives.has('transition')) return
-        const directive = this.directives.get('transition')
-
-        // If ".out" modifier is passed, don't fade in.
-        if (directive.modifiers.includes('out') && ! directive.modifiers.includes('in')) {
-            return true
-        }
-
-        if (directive.modifiers.includes('fade')) {
-            this.fadeIn(directive)
-            return
-        }
-
-        if (directive.modifiers.includes('slide')) {
-            this.slideIn(directive)
-            return
-        }
-
-        const transitionName = directive.value
-
-        this.el.classList.add(`${transitionName}-enter`)
-        this.el.classList.add(`${transitionName}-enter-active`)
-
-        this.nextFrame(() => {
-            this.el.classList.remove(`${transitionName}-enter`)
-
-            const duration = Number(getComputedStyle(this.el).transitionDuration.replace('s', '')) * 1000
-
-            setTimeout(() => {
-                this.el.classList.remove(`${transitionName}-enter-active`)
-            }, duration)
-        })
-    }
-
-    transitionElementOut(onDiscarded) {
-        if (!this.directives.has('transition')) return true
-        const directive = this.directives.get('transition')
-
-        // If ".in" modifier is passed, don't fade out.
-        if (directive.modifiers.includes('in') && ! directive.modifiers.includes('out')) {
-            return true
-        }
-
-        if (directive.modifiers.includes('fade')) {
-            this.fadeOut(directive, onDiscarded)
-
-            return false
-        }
-
-        if (directive.modifiers.includes('slide')) {
-            this.slideOut(directive, onDiscarded)
-
-            return false
-        }
-
-        const transitionName = directive.value
-
-        this.el.classList.add(`${transitionName}-leave-active`)
-
-        this.nextFrame(() => {
-            this.el.classList.add(`${transitionName}-leave`)
-
-            const duration = Number(getComputedStyle(this.el).transitionDuration.replace('s', '')) * 1000
-
-            setTimeout(() => {
-                onDiscarded(this.el)
-
-                this.el.remove()
-            }, duration)
-        })
-
-        return false
-    }
-
-    fadeIn(directive) {
-        this.el.style.opacity = 0
-        this.el.style.transition = `opacity ${directive.durationOr(300) / 1000}s ease`
-
-        this.nextFrame(() => {
-            this.el.style.opacity = 1
-        })
-    }
-
-    slideIn(directive) {
-        const directions = {
-            up: 'translateY(10px)',
-            down: 'translateY(-10px)',
-            left: 'translateX(-10px)',
-            right: 'translateX(10px)',
-        }
-
-        this.el.style.opacity = 0
-        this.el.style.transform = directions[directive.cardinalDirectionOr('right')]
-        this.el.style.transition = `opacity ${directive.durationOr(300) / 1000}s ease, transform ${directive.durationOr(300) / 1000}s ease`
-
-        this.nextFrame(() => {
-            this.el.style.opacity = 1
-            this.el.style.transform = ``
-        })
-    }
-
-    fadeOut(directive, onDiscarded) {
-        this.nextFrame(() => {
-            this.el.style.opacity = 0
-
-            setTimeout(() => {
-                onDiscarded(this.el)
-
-                this.el.remove()
-            }, directive.durationOr(300));
-        })
-    }
-
-    slideOut(directive, onDiscarded) {
-        const directions = {
-            up: 'translateY(10px)',
-            down: 'translateY(-10px)',
-            left: 'translateX(-10px)',
-            right: 'translateX(10px)',
-        }
-
-        this.nextFrame(() => {
-            this.el.style.opacity = 0
-            this.el.style.transform = directions[directive.cardinalDirectionOr('right')]
-
-            setTimeout(() => {
-                onDiscarded(this.el)
-
-                this.el.remove()
-            }, directive.durationOr(300));
-        })
-    }
-
     closestRoot() {
         return this.closestByAttribute('id')
     }
 
     closestByAttribute(attribute) {
-        const closestEl = this.el.closest(`[${prefix}\\:${attribute}]`)
+        const closestEl = this.el.closest(`[wire\\:${attribute}]`)
 
         if (! closestEl) {
             throw `
 Livewire Error:\n
-Cannot find parent element in DOM tree containing attribute: [${prefix}:${attribute}].\n
+Cannot find parent element in DOM tree containing attribute: [wire:${attribute}].\n
 Usually this is caused by Livewire's DOM-differ not being able to properly track changes.\n
 Reference the following guide for common causes: https://laravel-livewire.com/docs/troubleshooting \n
 Referenced element:\n
@@ -184,19 +48,19 @@ ${this.el.outerHTML}
     }
 
     hasAttribute(attribute) {
-        return this.el.hasAttribute(`${prefix}:${attribute}`)
+        return this.el.hasAttribute(`wire:${attribute}`)
     }
 
     getAttribute(attribute) {
-        return this.el.getAttribute(`${prefix}:${attribute}`)
+        return this.el.getAttribute(`wire:${attribute}`)
     }
 
     removeAttribute(attribute) {
-        return this.el.removeAttribute(`${prefix}:${attribute}`)
+        return this.el.removeAttribute(`wire:${attribute}`)
     }
 
     setAttribute(attribute, value) {
-        return this.el.setAttribute(`${prefix}:${attribute}`, value)
+        return this.el.setAttribute(`wire:${attribute}`, value)
     }
 
     isFocused() {

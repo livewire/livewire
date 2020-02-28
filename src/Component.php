@@ -8,6 +8,7 @@ use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
+use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
 abstract class Component
 {
@@ -30,7 +31,17 @@ abstract class Component
     {
         $this->id = $id;
 
+        $this->ensureIdPropertyIsntOverridden();
+
         $this->initializeTraits();
+    }
+
+    protected function ensureIdPropertyIsntOverridden()
+    {
+        throw_if(
+            in_array('id', array_keys($this->getPublicPropertiesDefinedBySubClass())),
+            new CannotUseReservedLivewireComponentProperties('id', $this->getName())
+        );
     }
 
     protected function initializeTraits()
@@ -155,7 +166,7 @@ abstract class Component
             }
         }
 
-        throw new \Exception("Property [{$property}] does not exist on the Component instance.");
+        throw new \Exception("Property [{$property}] does not exist on the {$this->getName()} component.");
     }
 
     public function __call($method, $params)

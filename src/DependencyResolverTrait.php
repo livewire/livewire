@@ -4,8 +4,8 @@ namespace Livewire;
 
 use ReflectionMethod;
 use ReflectionParameter;
-use Illuminate\Support\Arr;
 use ReflectionFunctionAbstract;
+use Illuminate\Contracts\Container\BindingResolutionException;
 
 trait DependencyResolverTrait
 {
@@ -22,53 +22,62 @@ trait DependencyResolverTrait
 
     public function resolveMethodDependencies(array $parameters, ReflectionFunctionAbstract $reflector)
     {
-        $instanceCount = 0;
+        $dependencies = $reflector->getParameters();
 
-        $values = array_values($parameters);
+        try {
+            $instances = $this->resolveDependencies($dependencies, $parameters);
+        } catch (BindingResolutionException $e) {
+            throw $e;
+        }
 
-        foreach ($reflector->getParameters() as $key => $parameter) {
-            $instance = $this->transformDependency(
-                $parameter, $parameters
-            );
+        return $instances;
+    }
 
-            if (! is_null($instance)) {
-                $instanceCount++;
+    protected function resolveDependencies(array $dependencies, $parameters)
+    {
+        $results = [];
 
-                $this->spliceIntoParameters($parameters, $key, $instance);
-            } elseif (! array_key_exists($key - $instanceCount, $values) &&
-                      $parameter->isDefaultValueAvailable()) {
-                $this->spliceIntoParameters($parameters, $key, $parameter->getDefaultValue());
+        foreach ($dependencies as $dependency) {
+            if (array_key_exists($dependency->name, $parameters)) {
+                $results[] = $parameters[$dependency->name];
+
+                continue;
             }
+
+            $results[] = is_null($dependency->getClass())
+                            ? $this->resolvePrimitive($dependency)
+                            : $this->resolveClass($dependency);
         }
 
-        return $parameters;
+        return $results;
     }
 
-    protected function transformDependency(ReflectionParameter $parameter, $parameters)
+    protected function resolvePrimitive(ReflectionParameter $parameter)
     {
-        $class = $parameter->getClass();
-
-        // If the parameter has a type-hinted class, we will check to see if it is already in
-        // the list of parameters. If it is we will just skip it as it is probably a model
-        // binding and we do not want to mess with those; otherwise, we resolve it here.
-        if ($class && ! $this->alreadyInParameters($class->name, $parameters)) {
-            return $parameter->isDefaultValueAvailable()
-                ? $parameter->getDefaultValue()
-                : $this->container->make($class->name);
+        if ($parameter->isDefaultValueAvailable()) {
+            return $parameter->getDefaultValue();
         }
+
+        $this->unresolvablePrimitive($parameter);
     }
 
-    protected function alreadyInParameters($class, array $parameters)
+    protected function unresolvablePrimitive(ReflectionParameter $parameter)
     {
-        return ! is_null(Arr::first($parameters, function ($value) use ($class) {
-            return $value instanceof $class;
-        }));
+        $message = "Unresolvable dependency resolving [$parameter] in class {$parameter->getDeclaringClass()->getName()}";
+
+        throw new BindingResolutionException($message);
     }
 
-    protected function spliceIntoParameters(array &$parameters, $offset, $value)
+    protected function resolveClass(ReflectionParameter $parameter)
     {
-        array_splice(
-            $parameters, $offset, 0, [$value]
-        );
+        try {
+            return app()->make($parameter->getClass()->name);
+        } catch (BindingResolutionException $e) {
+            if ($parameter->isOptional()) {
+                return $parameter->getDefaultValue();
+            }
+
+            throw $e;
+        }
     }
 }

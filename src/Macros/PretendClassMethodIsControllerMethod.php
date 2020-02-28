@@ -33,8 +33,6 @@ class PretendClassMethodIsControllerMethod
         // Restore the original route action.
         $route->uses($cache);
 
-        // We can throw away the keys here (the variable names), because only the values
-        // will be passed into the method.
-        return array_values($options);
+        return $options;
     }
 }

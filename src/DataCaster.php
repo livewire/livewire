@@ -64,6 +64,8 @@ class DataCaster
         return [
             'date' => [
                 'cast' => function ($value, $extras) {
+                    if (is_null($value)) return $value;
+
                     if (isset($extras['format'])) {
                         return \Carbon\Carbon::createFromFormat($extras['format'], $value);
                     }
@@ -71,6 +73,8 @@ class DataCaster
                     return \Carbon\Carbon::parse($value);
                 },
                 'uncast' => function ($value, $extras) {
+                    if (is_null($value)) return $value;
+
                     if (method_exists($value, 'format') && isset($extras['format'])) {
                         return $value->format($extras['format']);
                     }
@@ -79,7 +83,6 @@ class DataCaster
                         return $value->toString();
                     }
 
-                    dump($value);
                     return $value->__toString();
                 },
             ],
