@@ -469,6 +469,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "jasonlbeggs",
+      "name": "Jason Beggs",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/25065083?v=4",
+      "profile": "https://jasonlbeggs.com",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
