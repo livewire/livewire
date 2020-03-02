@@ -451,6 +451,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "ruudschuurmans",
+      "name": "Ruud Schuurmans",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/12184008?v=4",
+      "profile": "http://ruudschuurmans.nl",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
