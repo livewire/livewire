@@ -460,6 +460,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "jgile",
+      "name": "John Gile",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/3780633?v=4",
+      "profile": "https://github.com/jgile",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
