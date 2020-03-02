@@ -106,10 +106,14 @@ abstract class Component
             $errorBag = $errors ?: ($view->errors ?: $this->getErrorBag())
         );
 
+        $errors = (new ViewErrorBag)->put('default', $errorBag);
+
         $view->with([
-            'errors' => (new ViewErrorBag)->put('default', $errorBag),
+            'errors' => $errors,
             '_instance' => $this,
         ] + $this->getPublicPropertiesDefinedBySubClass());
+
+        session()->flash('errors', $errors);
 
         $output = $view->render();
 
