@@ -44,7 +44,7 @@ if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, 
         // Errors thrown while a view is rendering are caught by the Blade
         // compiler and wrapped in an "ErrorException". This makes Livewire errors
         // harder to read, AND causes issues like `abort(404)` not actually working.
-        protected function handleViewException(Throwable $e, $obLevel)
+        protected function handleViewException(Exception $e, $obLevel)
         {
             if($e instanceof Exception){
                 $uses = array_flip(class_uses_recursive($e));
