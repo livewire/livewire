@@ -442,6 +442,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "beganovich",
+      "name": "Benjamin Beganović",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/13711415?v=4",
+      "profile": "https://beganovich.github.io",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
