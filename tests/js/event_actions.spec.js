@@ -144,15 +144,6 @@ test('polling on root div', async () => {
     expect(pollHappened).toBeTruthy()
 })
 
-test('init', async () => {
-    var initHappened = false
-    mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:init="someMethod"></div>', () => { initHappened = true })
-
-    await timeout(10)
-
-    expect(initHappened).toBeTruthy()
-})
-
 test('polling on minute', async () => {
     useFakeTimers(() => {
         var pollHappened = false
@@ -168,6 +159,15 @@ test('polling on minute', async () => {
 
         expect(pollHappened).toBeTruthy()
     })
+})
+
+test('init', async () => {
+    var initHappened = false
+    mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:init="someMethod"></div>', () => { initHappened = true })
+
+    await timeout(10)
+
+    expect(initHappened).toBeTruthy()
 })
 
 test('form buttons disabled and inputs read-only during submission', async () => {
