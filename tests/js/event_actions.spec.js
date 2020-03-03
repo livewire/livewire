@@ -144,19 +144,6 @@ test('polling on root div', async () => {
     expect(pollHappened).toBeTruthy()
 })
 
-test('polling is disabled if ', async () => {
-    var pollHappened = false
-    mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
-
-    await timeout(49)
-
-    expect(pollHappened).toBeFalsy()
-
-    await timeout(10)
-
-    expect(pollHappened).toBeTruthy()
-})
-
 test('init', async () => {
     var initHappened = false
     mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:init="someMethod"></div>', () => { initHappened = true })
