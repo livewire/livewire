@@ -151,7 +151,7 @@ test('polling on minute', async () => {
 
         mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:poll.on-minute></div>', () => { pollHappened = true })
 
-        jest.advanceTimersByTime(msUntilMinute - 500)
+        jest.advanceTimersByTime(msUntilMinute)
 
         expect(pollHappened).toBeFalsy()
 
