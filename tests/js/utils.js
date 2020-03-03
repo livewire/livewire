@@ -217,3 +217,11 @@ export function mountAndReturnWithData(dom, returnedDom, data, dirtyInputs = [])
 
     return document.body.firstElementChild
 };
+
+export function useFakeTimers(callback) {
+    jest.useFakeTimers()
+
+    if (typeof callback === 'function') callback()
+
+    jest.useRealTimers()
+};
