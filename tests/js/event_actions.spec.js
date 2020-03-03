@@ -1,5 +1,5 @@
 import { fireEvent, wait } from 'dom-testing-library'
-import { mount, mountAsRoot } from './utils'
+import { mount, mountAsRoot, useFakeTimers } from './utils'
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 test('basic click', async () => {
@@ -151,6 +151,23 @@ test('init', async () => {
     await timeout(10)
 
     expect(initHappened).toBeTruthy()
+})
+
+test('polling on minute', async () => {
+    useFakeTimers(() => {
+        var pollHappened = false
+        var msUntilMinute = (60 - (new Date).getSeconds()) * 1000
+
+        mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:poll.on-minute></div>', () => { pollHappened = true })
+
+        jest.advanceTimersByTime(msUntilMinute)
+
+        expect(pollHappened).toBeFalsy()
+
+        jest.advanceTimersByTime(1000)
+
+        expect(pollHappened).toBeTruthy()
+    })
 })
 
 test('form buttons disabled and inputs read-only during submission', async () => {
