@@ -97,6 +97,10 @@ abstract class Component
 
         $view = $this->render();
 
+        if (is_string($view) && Livewire::isLaravel7()) {
+            $view = app('view')->make((new CreateBladeViewFromString)($view));
+        }
+
         $this->normalizePublicPropertiesForJavaScript();
 
         throw_unless($view instanceof View,

@@ -2,12 +2,13 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Fluent;
-use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Fluent;
+use Illuminate\Support\Str;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
+use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
@@ -359,5 +360,10 @@ HTML;
     public function isOnVapor()
     {
         return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
+    }
+
+    public function isLaravel7()
+    {
+        return Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=');
     }
 }
