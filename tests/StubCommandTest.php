@@ -22,15 +22,11 @@ class StubCommandTest extends TestCase
     {
         Artisan::call('livewire:stubs');
         File::append($this->stubsPath('livewire.stub'), '// comment default');
-        File::append($this->stubsPath('livewire.inline.stub'), '// comment inline default');
         File::put($this->stubsPath('livewire.view.stub'), '<div>Default Test</div>');
         Artisan::call('make:livewire', ['name' => 'foo']);
-        Artisan::call('make:livewire', ['name' => 'bar', '--inline' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
         $this->assertStringContainsString('// comment default', File::get($this->livewireClassesPath('Foo.php')));
-        $this->assertTrue(File::exists($this->livewireClassesPath('Bar.php')));
-        $this->assertStringContainsString('// comment inline default', File::get($this->livewireClassesPath('Bar.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
         $this->assertStringContainsString('Default Test', File::get($this->livewireViewsPath('foo.blade.php')));
     }

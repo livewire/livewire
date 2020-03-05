@@ -12,6 +12,6 @@ class [class] extends Component
             <div>
                 {{-- [quote] --}}
             </div>
-blade;
+        blade;
     }
 }
