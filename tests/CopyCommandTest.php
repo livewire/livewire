@@ -26,6 +26,23 @@ class CopyCommandTest extends TestCase
     }
 
     /** @test */
+    public function inline_component_is_copied_by_copy_command()
+    {
+        Artisan::call('make:livewire', ['name' => 'bob', '--inline' => true]);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bob.blade.php')));
+
+        Artisan::call('livewire:copy', ['name' => 'bob', 'new-name' => 'lob', '--inline' => true]);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Lob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('lob.blade.php')));
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bob.blade.php')));
+    }
+
+    /** @test */
     public function component_is_copied_by_cp_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob']);

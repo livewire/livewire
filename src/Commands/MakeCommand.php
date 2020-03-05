@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class MakeCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:make {name} {--force}';
+    protected $signature = 'livewire:make {name} {--force} {--inline}';
 
     protected $description = 'Create a new Livewire component.';
 
@@ -25,24 +25,31 @@ class MakeCommand extends FileManipulationCommand
         }
 
         $force = $this->option('force');
+        $inline = $this->option('inline');
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
 
-        $class = $this->createClass($force);
-        $view = $this->createView($force);
+        $class = $this->createClass($force, $inline);
+
+        if (! $inline) {
+            $view = $this->createView($force);
+        }
 
         $this->refreshComponentAutodiscovery();
 
-        ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
+        $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
         $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");
-        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
+
+        if (! $inline) {
+            $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
+        }
 
         if ($showWelcomeMessage && ! app()->environment('testing')) {
             $this->writeWelcomeMessage();
         }
     }
 
-    protected function createClass($force = false)
+    protected function createClass($force = false, $inline = false)
     {
         $classPath = $this->parser->classPath();
 
@@ -55,7 +62,7 @@ class MakeCommand extends FileManipulationCommand
 
         $this->ensureDirectoryExists($classPath);
 
-        File::put($classPath, $this->parser->classContents());
+        File::put($classPath, $this->parser->classContents($inline));
 
         return $classPath;
     }

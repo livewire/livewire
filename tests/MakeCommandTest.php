@@ -18,6 +18,15 @@ class MakeCommandTest extends TestCase
     }
 
     /** @test */
+    public function component_is_created_without_view_by_make_command_with_inline_option()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo', '--inline' => true]);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('foo.blade.php')));
+    }
+
+    /** @test */
     public function component_is_created_by_livewire_make_command()
     {
         Artisan::call('livewire:make', ['name' => 'foo']);

@@ -69,12 +69,18 @@ class ComponentParser
         return $this->componentClass;
     }
 
-    public function classContents()
+    public function classContents($inline = false)
     {
-        if(File::exists($stubPath = base_path('stubs/livewire.stub'))) {
+        $stubName = $inline ? 'livewire.inline.stub' : 'livewire.stub';
+
+        if(File::exists($stubPath = base_path('stubs/'.$stubName))) {
             $template = file_get_contents($stubPath);
         } else {
-            $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'livewire.stub');
+            $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.$stubName);
+        }
+
+        if ($inline) {
+            $template = preg_replace('/\[quote\]/', $this->wisdomOfTheTao(), $template);
         }
 
         return preg_replace_array(

@@ -13,7 +13,7 @@ class ComponentParserFromExistingComponent extends ComponentParser
         parent::__construct($classNamespace, $viewPath, $rawCommand);
     }
 
-    public function classContents()
+    public function classContents($inline = false)
     {
         $originalFile = file_get_contents($this->existingParser->classPath());
 

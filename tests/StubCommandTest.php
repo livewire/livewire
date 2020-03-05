@@ -13,6 +13,7 @@ class StubCommandTest extends TestCase
         Artisan::call('livewire:stubs');
 
         $this->assertTrue(File::exists($this->stubsPath('livewire.stub')));
+        $this->assertTrue(File::exists($this->stubsPath('livewire.inline.stub')));
         $this->assertTrue(File::exists($this->stubsPath('livewire.view.stub')));
     }
 
