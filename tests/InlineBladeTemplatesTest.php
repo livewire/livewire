@@ -25,6 +25,7 @@ class ComponentWithInlineBladeTemplate extends Component
             <div>
                 <span>{{ $name }}</span>
             </div>
-        blade;
+blade
+        ;
     }
 }
