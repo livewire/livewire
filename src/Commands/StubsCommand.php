@@ -26,6 +26,11 @@ class StubsCommand extends Command
         );
 
         file_put_contents(
+            $stubsPath.'/livewire.inline.stub',
+            file_get_contents(__DIR__.'/livewire.inline.stub')
+        );
+
+        file_put_contents(
             $stubsPath.'/livewire.view.stub',
             file_get_contents(__DIR__.'/livewire.view.stub')
         );

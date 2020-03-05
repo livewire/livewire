@@ -29,7 +29,7 @@ class MakeCommand extends FileManipulationCommand
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
 
-        $class = $this->createClass($force);
+        $class = $this->createClass($force, $inline);
 
         if (! $inline) {
             $view = $this->createView($force);
@@ -49,7 +49,7 @@ class MakeCommand extends FileManipulationCommand
         }
     }
 
-    protected function createClass($force = false)
+    protected function createClass($force = false, $inline = false)
     {
         $classPath = $this->parser->classPath();
 
@@ -62,7 +62,7 @@ class MakeCommand extends FileManipulationCommand
 
         $this->ensureDirectoryExists($classPath);
 
-        File::put($classPath, $this->parser->classContents());
+        File::put($classPath, $this->parser->classContents($inline));
 
         return $classPath;
     }
