@@ -25,6 +25,22 @@ class MoveCommandTest extends TestCase
     }
 
     /** @test */
+    public function inline_component_is_renamed_by_move_command()
+    {
+        Artisan::call('make:livewire', ['name' => 'bob', '--inline' => true]);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bob.blade.php')));
+
+        Artisan::call('livewire:move', ['name' => 'bob', 'new-name' => 'lob', '--inline' => true]);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Lob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('lob.blade.php')));
+
+        $this->assertFalse(File::exists($this->livewireClassesPath('Bob.php')));
+    }
+
+    /** @test */
     public function component_is_renamed_by_mv_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob']);

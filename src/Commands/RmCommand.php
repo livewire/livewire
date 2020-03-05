@@ -4,7 +4,7 @@ namespace Livewire\Commands;
 
 class RmCommand extends DeleteCommand
 {
-    protected $signature = 'livewire:rm {name} {--force}';
+    protected $signature = 'livewire:rm {name} {--inline} {--force}';
 
     protected function configure()
     {

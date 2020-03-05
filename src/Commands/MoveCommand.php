@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class MoveCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:move {name} {new-name} {--force}';
+    protected $signature = 'livewire:move {name} {new-name} {--force} {--inline}';
 
     protected $description = 'Move a Livewire component.';
 
@@ -25,14 +25,16 @@ class MoveCommand extends FileManipulationCommand
             $this->parser
         );
 
+        $inline = $this->option('inline');
+
         $class = $this->renameClass();
-        $view = $this->renameView();
+        if (! $inline) $view = $this->renameView();
 
         $this->refreshComponentAutodiscovery();
 
-        ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT MOVED </> 🤙\n");
+        $this->line("<options=bold,reverse;fg=green> COMPONENT MOVED </> 🤙\n");
         $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()} <options=bold;fg=green>=></> {$this->newParser->relativeClassPath()}");
-        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
+        if (! $inline) $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
     }
 
     protected function renameClass()

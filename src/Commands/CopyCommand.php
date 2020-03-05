@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class CopyCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:copy {name} {new-name} {--force}';
+    protected $signature = 'livewire:copy {name} {new-name} {--inline} {--force}';
 
     protected $description = 'Copy a Livewire component.';
 
@@ -26,15 +26,16 @@ class CopyCommand extends FileManipulationCommand
         );
 
         $force = $this->option('force');
+        $inline = $this->option('inline');
 
         $class = $this->copyClass($force);
-        $view = $this->copyView($force);
+        if (! $inline) $view = $this->copyView($force);
 
         $this->refreshComponentAutodiscovery();
 
-        ($class && $view) && $this->line("<options=bold,reverse;fg=green> COMPONENT COPIED </> 🤙\n");
+        $this->line("<options=bold,reverse;fg=green> COMPONENT COPIED </> 🤙\n");
         $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()} <options=bold;fg=green>=></> {$this->newParser->relativeClassPath()}");
-        $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
+        if (! $inline) $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
     }
 
     protected function copyClass($force)
