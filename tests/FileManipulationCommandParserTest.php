@@ -20,9 +20,9 @@ class FileManipulationCommandParserTest extends TestCase
 
         $this->assertEquals($component, $parser->component());
         $this->assertEquals($namespace, $parser->classNamespace());
-        $this->assertEquals(app_path($classPath), $parser->classPath());
+        $this->assertEquals($this->normalizeDirectories(app_path($classPath)), $this->normalizeDirectories($parser->classPath()));
         $this->assertEquals($viewName, $parser->viewName());
-        $this->assertEquals(resource_path('views/'.$viewPath), $parser->viewPath());
+        $this->assertEquals($this->normalizeDirectories(resource_path('views/'.$viewPath)), $this->normalizeDirectories($parser->viewPath()));
     }
 
     public function classPathProvider()
@@ -85,5 +85,10 @@ class FileManipulationCommandParserTest extends TestCase
                 'livewire/foo-bar.blade.php',
             ],
         ];
+    }
+
+    private function normalizeDirectories($subject)
+    {
+        return str_replace(DIRECTORY_SEPARATOR, '/', $subject);
     }
 }
