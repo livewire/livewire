@@ -44,31 +44,33 @@ class LivewireManager
     {
         $finder = app()->make(LivewireComponentsFinder::class);
 
-        $class = false;
-
-        if ($this->customComponentResolver) {
-            // A developer can hijack the way Livewire finds components using Livewire::componentResolver();
-            $class = call_user_func($this->customComponentResolver, $alias);
+        // A developer can hijack the way Livewire finds components using Livewire::componentResolver();
+        if ($this->customComponentResolver && $class = call_user_func($this->customComponentResolver, $alias)) {
+            return $class;
         }
 
-        $class = $class ?: (
-            // Let's first check if the user registered the component using:
-            // Livewire::component('name', [Livewire component class]);
-            // If not, we'll look in the auto-discovery manifest.
-            $this->componentAliases[$alias] ?? $finder->find($alias)
-        );
+        // Let's first check if the user registered the component
+        if (array_key_exists($alias, $this->componentAliases)) {
+            return $this->componentAliases[$alias];
+        }
 
-        $class = $class ?: (
-            // If none of the above worked, our last-ditch effort will be
-            // to re-generate the auto-discovery manifest and look again.
-            $finder->build()->find($alias)
-        );
+        // Livewire::component('name', NameComponent::class);
+        if (in_array($alias, $this->componentAliases, true)) {
+            return $alias;
+        }
 
-        throw_unless($class, new ComponentNotFoundException(
-            "Unable to find component: [{$alias}]"
-        ));
+        // If not, we'll look in the auto-discovery manifest.
+        if ($class = $finder->find($alias)) {
+            return $class;
+        }
 
-        return $class;
+        // If none of the above worked, our last-ditch effort will be
+        // to re-generate the auto-discovery manifest and look again.
+        if ($class = $finder->build()->find($alias)) {
+            return $class;
+        }
+
+        throw new ComponentNotFoundException("Unable to find component: [{$alias}]");
     }
 
     public function activate($component, $id)
