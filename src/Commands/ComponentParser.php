@@ -41,12 +41,12 @@ class ComponentParser
         return $this->baseClassPath.collect()
             ->concat($this->directories)
             ->push($this->classFile())
-            ->implode(DIRECTORY_SEPARATOR);
+            ->implode('/');
     }
 
     public function relativeClassPath()
     {
-        return Str::replaceFirst(base_path().'/', '', $this->classPath());
+        return Str::replaceFirst(base_path().DIRECTORY_SEPARATOR, '', $this->classPath());
     }
 
     public function classFile()
