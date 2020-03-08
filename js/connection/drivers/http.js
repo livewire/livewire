@@ -74,14 +74,21 @@ export default {
         page.innerHTML = html
         page.querySelectorAll('a').forEach(a => a.setAttribute('target', '_top'))
 
-        let modal = document.createElement('div')
-        modal.id = 'burst-error'
-        modal.style.position = 'fixed'
-        modal.style.width = '100vw'
-        modal.style.height = '100vh'
-        modal.style.padding = '50px'
-        modal.style.backgroundColor = 'rgba(0, 0, 0, .6)'
-        modal.style.zIndex = 200000
+        let modal = document.getElementById('burst-error');
+
+        if(typeof(modal) != 'undefined' && modal != null){
+            // Modal already exists.
+            modal.innerHTML = ''
+        } else {
+            modal = document.createElement('div')
+            modal.id = 'burst-error'
+            modal.style.position = 'fixed'
+            modal.style.width = '100vw'
+            modal.style.height = '100vh'
+            modal.style.padding = '50px'
+            modal.style.backgroundColor = 'rgba(0, 0, 0, .6)'
+            modal.style.zIndex = 200000
+        }
 
         let iframe = document.createElement('iframe')
         iframe.style.backgroundColor = '#17161A'
