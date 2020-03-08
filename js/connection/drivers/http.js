@@ -76,8 +76,8 @@ export default {
 
         let modal = document.getElementById('burst-error');
 
-        //Burst error Modal already exist
         if(typeof(modal) != 'undefined' && modal != null){
+            // Modal already exists.
             modal.innerHTML = ''
         } else {
             modal = document.createElement('div')
