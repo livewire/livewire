@@ -480,6 +480,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "mhetreramesh",
+      "name": "Ramesh Mhetre",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/3095445?v=4",
+      "profile": "http://fullstackworld.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
