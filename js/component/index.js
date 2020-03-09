@@ -72,6 +72,8 @@ export default class Component {
                 new Component(el, this.connection)
             )
         })
+
+        window.onhashchange = () => window.livewireInitiatedRedirect && window.location.reload()
     }
 
     get(name) {
@@ -195,6 +197,7 @@ export default class Component {
         if (window.Turbolinks && window.Turbolinks.supported) {
             window.Turbolinks.visit(url)
         } else {
+            window.livewireInitiatedRedirect = true
             window.location.href = url
         }
     }
