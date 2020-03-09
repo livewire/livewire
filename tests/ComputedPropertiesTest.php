@@ -11,7 +11,7 @@ class ComputedPropertiesTest extends TestCase
     public function compute_property_is_accessable_within_blade_view()
     {
         Livewire::test(ComputedPropertyStub::class)
-            ->assertSee('foo');
+            ->assertSee('foo_bar');
     }
 
     /** @test */
@@ -24,16 +24,16 @@ class ComputedPropertiesTest extends TestCase
 
 class ComputedPropertyStub extends Component
 {
-    public $upperCasedFoo = 'FOO';
+    public $upperCasedFoo = 'FOO_BAR';
 
-    public function getFooProperty()
+    public function getFooBarProperty()
     {
         return strtolower($this->upperCasedFoo);
     }
 
     public function render()
     {
-        return view('var-dump-foo');
+        return view('var-dump-foo-bar');
     }
 }
 
@@ -41,7 +41,7 @@ class MemoizedComputedPropertyStub extends Component
 {
     public $count = 1;
 
-    public function getFooProperty()
+    public function getFooBarProperty()
     {
         return $this->count += 1;
     }
@@ -49,8 +49,8 @@ class MemoizedComputedPropertyStub extends Component
     public function render()
     {
         // Access foo once here to start the cache.
-        $this->foo;
+        $this->foo_bar;
 
-        return view('var-dump-foo');
+        return view('var-dump-foo-bar');
     }
 }
