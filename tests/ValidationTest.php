@@ -2,8 +2,10 @@
 
 namespace Tests;
 
+use Illuminate\Validation\Validator;
 use Livewire\Component;
 use Livewire\LivewireManager;
+use Livewire\Testing\TestableLivewire;
 
 class ValidationTest extends TestCase
 {
@@ -127,30 +129,22 @@ class ValidationTest extends TestCase
             ->call('runValidation')
             ->assertSee('The bar field is required')
             ->assertSee('sessionError:The bar field is required')
-            ->assertSee('sessionInsideAtSyntaxComponentError:The bar field is required')
             ->set('bar', 'bar')
             ->call('runValidation')
             ->assertDontSee('The bar field is required')
-            ->assertDontSee('sessionError:The bar field is required')
-            ->assertDontSee('sessionInsideAtSyntaxComponentError:The bar field is required');
+            ->assertDontSee('sessionError:The bar field is required');
     }
 
     /** @test */
-    public function validation_errors_are_flashed_to_session_and_carried_to_class_based_components()
+    public function validation_errors_are_shared_for_all_views()
     {
-        $isAtLeastLaravel7 = version_compare(app()::VERSION, '7.0.0');
-        if ($isAtLeastLaravel7 >= 0) {
-            $component = app(LivewireManager::class)->test(ForValidation::class);
-            $component
-                ->set('bar', '')
-                ->call('runValidation')
-                ->assertSee('sessionInsideNewSyntaxComponentError:The bar field is required')
-                ->set('bar', 'bar')
-                ->call('runValidation')
-                ->assertDontSee('sessionInsideNewSyntaxComponentError:The bar field is required');
-        } else {
-            $this->markTestSkipped('This test is only for Laravel 7 and above');
-        }
+        /** @var TestableLivewire $component */
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->set('bar', '')
+            ->call('runValidation')
+            ->assertSee('sharedError:The bar field is required');
     }
 }
 

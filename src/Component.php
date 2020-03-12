@@ -112,6 +112,8 @@ abstract class Component
 
         $errors = (new ViewErrorBag)->put('default', $errorBag);
 
+        $view->getFactory()->share('errors', $errors);
+
         $view->with([
             'errors' => $errors,
             '_instance' => $this,

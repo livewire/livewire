@@ -5,6 +5,5 @@
 
     @error('test') @enderror
 
-    @component('dump-errors-nested-component-at-syntax')@endcomponent
-    <x-dump-errors-nested-component-new-syntax/>
+    @component('dump-errors-nested-component')@endcomponent
 </div>
