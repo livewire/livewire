@@ -2,6 +2,7 @@
 
 namespace Livewire\Commands;
 
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
@@ -149,8 +150,24 @@ class ComponentParser
 
     public static function generatePathFromNamespace($namespace)
     {
-        $name = Str::replaceFirst(app()->getNamespace(), '', $namespace);
+        return base_path().'/'.str_replace(
+            '\\',
+            '/',
+            static::psr4NamespaceToPath($namespace)
+        );
+    }
 
-        return app('path').'/'.str_replace('\\', '/', $name);
+    protected static function psr4NamespaceToPath(string $namespace)
+    {
+        $filesystem = new Filesystem;
+        $composer = json_decode($filesystem->get(base_path('composer.json')), true);
+        $psr4Base = (array) data_get($composer, 'autoload.psr-4');
+
+        foreach ($psr4Base as $psr4Namespace => $path) {
+            if (Str::startsWith($namespace, $psr4Namespace)) {
+                return $path.Str::after($namespace, $psr4Namespace);
+            }
+        }
+        return $namespace;
     }
 }

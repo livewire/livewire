@@ -63,17 +63,34 @@ class LivewireComponentsFinder
 
     public function getClassNames()
     {
+        $composer = json_decode($this->files->get(base_path('composer.json')), true);
+        $psr4Base = (array) data_get($composer, 'autoload.psr-4');
+
         return collect($this->files->allFiles($this->path))
-            ->map(function (SplFileInfo $file) {
-                return app()->getNamespace().str_replace(
-                    ['/', '.php'],
-                    ['\\', ''],
-                    Str::after($file->getPathname(), app_path().'/')
+            ->map(function (SplFileInfo $file) use ($psr4Base) {
+                return $this->pathToPsr4Namespace(
+                    Str::after($file->getPathname(), base_path().'/'),
+                    $psr4Base
                 );
             })
             ->filter(function (string $class) {
                 return is_subclass_of($class, Component::class) &&
                     ! (new ReflectionClass($class))->isAbstract();
             });
+    }
+
+    protected function pathToPsr4Namespace(string $filename, array $psr4Base)
+    {
+        foreach ($psr4Base as $baseNamespace => $basePath) {
+            if (Str::startsWith($filename, $basePath)) {
+                $filename = $baseNamespace.Str::after($filename, $basePath);
+                break;
+            }
+        }
+        return str_replace(
+            ['/', '.php'],
+            ['\\', ''],
+            $filename
+        );
     }
 }
