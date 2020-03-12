@@ -1,3 +1,3 @@
 <div>
-    @error('bar') sharedError:{{ $message }} @enderror
+    @if (isset($errors) && $errors->has('bar')) sharedError:{{ $errors->first('bar') }} @endif
 </div>
