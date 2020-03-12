@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use Illuminate\Validation\Validator;
 use Livewire\Component;
 use Livewire\LivewireManager;
 use Livewire\Testing\TestableLivewire;
