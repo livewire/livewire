@@ -125,8 +125,6 @@ abstract class Component
             '_instance' => $this,
         ] + $this->getPublicPropertiesDefinedBySubClass());
 
-        session()->flash('errors', $errors);
-
         $output = $view->render();
 
         app('view')->share('errors', $previouslySharedErrors);
