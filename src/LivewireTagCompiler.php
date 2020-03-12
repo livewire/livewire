@@ -26,7 +26,7 @@ class LivewireTagCompiler extends ComponentTagCompiler
                         (
                             =
                             (?:
-                                \\\"[^\\\"]+\\\"
+                                \\\"[^\\\"]*\\\"
                                 |
                                 \'[^\']+\'
                                 |
