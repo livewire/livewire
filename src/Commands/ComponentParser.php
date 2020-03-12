@@ -16,6 +16,7 @@ class ComponentParser
 
     public function __construct($classNamespace, $viewPath, $rawCommand)
     {
+
         $this->baseClassNamespace = $classNamespace;
 
         $classPath = static::generatePathFromNamespace($classNamespace);
@@ -25,7 +26,11 @@ class ComponentParser
 
         $directories = preg_split('/[.]+/', $rawCommand);
 
-        $this->component = Str::kebab(array_pop($directories));
+
+        $camelCase = Str::camel(array_pop($directories));
+        $kebabCase = Str::kebab($camelCase);
+
+        $this->component = $kebabCase;
         $this->componentClass = Str::studly($this->component);
 
         $this->directories = array_map([Str::class, 'studly'], $directories);
