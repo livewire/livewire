@@ -12,6 +12,9 @@ Open GitHub issues for all bugs. Ideas and questions belong on the forum: https:
 
 Contribute to the docs here: https://github.com/livewire/docs
 
+## v2 Roadmap
+* Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`
+
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
