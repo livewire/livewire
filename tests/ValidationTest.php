@@ -121,7 +121,6 @@ class ValidationTest extends TestCase
     /** @test */
     public function validation_errors_are_shared_for_all_views()
     {
-        /** @var TestableLivewire $component */
         $component = app(LivewireManager::class)->test(ForValidation::class);
 
         app('view')->share('errors', $errors = new ViewErrorBag);
