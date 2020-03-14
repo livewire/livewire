@@ -72,6 +72,24 @@ class MakeCommandTest extends TestCase
     }
 
     /** @test */
+    public function snake_case_component_is_automatically_converted_by_make_command()
+    {
+        Artisan::call('make:livewire', ['name' => 'text_replace']);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('TextReplace.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('text-replace.blade.php')));
+    }
+
+    /** @test */
+    public function snake_case_component_is_automatically_converted_by_make_command_on_nested_component()
+    {
+        Artisan::call('make:livewire', ['name' => 'TextManager.text_replace']);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('TextManager/TextReplace.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('text-manager/text-replace.blade.php')));
+    }
+
+    /** @test */
     public function new_component_class_view_name_reference_matches_configured_view_path()
     {
         // We can't use Artisan::call here because we need to be able to set config vars.
