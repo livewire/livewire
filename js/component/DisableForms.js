@@ -13,10 +13,12 @@ export default function () {
 
                 if (! el.el.contains(node)) return
 
-                if (node.tagName.toLowerCase() === 'button' && node.type === 'submit') {
+                if ((node.tagName.toLowerCase() === 'button' && node.type === 'submit') || node.tagName.toLowerCase() === 'select'
+                    || (node.tagName.toLowerCase() === 'input' && (node.type === 'checkbox' || node.type === 'radio'))) {
+
                     // Disabled submit button.
                     node.disabled = true
-                } else if (node.tagName.toLowerCase() === 'input') {
+                } else if (node.tagName.toLowerCase() === 'input' || node.tagName.toLowerCase() === 'textarea') {
                     // Set any inputs to "read only".
                     node.readOnly = true
                 }
