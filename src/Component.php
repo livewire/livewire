@@ -107,19 +107,27 @@ abstract class Component
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
         $this->setErrorBag(
-            $errorBag = $errors ?: ($view->errors ?: $this->getErrorBag())
+            $errorBag = $errors ?: ($view->getData()['errors'] ?? $this->getErrorBag())
         );
 
+        $previouslySharedErrors = app('view')->getShared()['errors'] ?? new ViewErrorBag;
+
         $errors = (new ViewErrorBag)->put('default', $errorBag);
+
+        $errors->getBag('default')->merge(
+            $previouslySharedErrors->getBag('default')
+        );
+
+        app('view')->share('errors', $errors);
 
         $view->with([
             'errors' => $errors,
             '_instance' => $this,
         ] + $this->getPublicPropertiesDefinedBySubClass());
 
-        session()->flash('errors', $errors);
-
         $output = $view->render();
+
+        app('view')->share('errors', $previouslySharedErrors);
 
         Livewire::dispatch('view:render', $view);
 
