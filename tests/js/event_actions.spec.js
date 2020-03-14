@@ -166,7 +166,7 @@ test('init', async () => {
     expect(initHappened).toBeTruthy()
 })
 
-test('form buttons, selects, checkboxes and radiobuttons disabled and other inputs and textareas read-only during submission', async () => {
+test('elements are marked as read-only or disabled during form submissions', async () => {
     var payload
     mount(`
         <form wire:submit.prevent="someMethod">
