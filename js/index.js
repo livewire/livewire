@@ -73,10 +73,6 @@ class Livewire {
         this.onLoadCallback()
         dispatch('livewire:load')
 
-        window.addEventListener('beforeunload', () => {
-            this.components.tearDownComponents()
-        })
-
         document.addEventListener('visibilitychange', () => {
             this.components.livewireIsInBackground = document.hidden
         }, false);

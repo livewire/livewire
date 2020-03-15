@@ -12,7 +12,12 @@ Open GitHub issues for all bugs. Ideas and questions belong on the forum: https:
 
 Contribute to the docs here: https://github.com/livewire/docs
 
-## v2 Roadmap
+## Roadmap
+* More flexibility for scoping listeners (`->emitSelf()`, and emiting to specific components or ids)
+* Add a `$formData` magic property to pass into submit handler actions: `wire:submit="save($formData)"`
+* Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
+
+## V2 Roadmap
 * Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`
 
 ## Contributors ✨
