@@ -286,6 +286,8 @@ export default class Component {
                     return false
                 }
 
+                store.callHook('beforeElementUpdate', from, to, this)
+
                 const fromEl = new DOMElement(from)
 
                 // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
@@ -311,6 +313,8 @@ export default class Component {
 
             onElUpdated: (node) => {
                 this.morphChanges.changed.push(node)
+
+                store.callHook('elementUpdated', node, this)
             },
 
             onNodeAdded: (node) => {
