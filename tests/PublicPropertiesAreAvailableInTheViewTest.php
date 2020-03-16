@@ -22,10 +22,12 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
     }
 
     /** @test */
-    public function public_static_properties_are_supported()
+    public function protected_static_properties_are_supported()
     {
         Livewire::test(PublicStaticPropertyOnComponent::class)
             ->call('$refresh');
+
+        $this->assertTrue(true);
     }
 }
 
@@ -51,7 +53,7 @@ class PublicPropertiesInViewWithoutThisStub extends Component
 
 class PublicStaticPropertyOnComponent extends Component
 {
-    public static $name = 'Caleb';
+    protected static $name = 'Caleb';
 
     public function render()
     {
