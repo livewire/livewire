@@ -157,6 +157,76 @@ test('receive event from action fired only to ancestors, and make sure global li
     })
 })
 
+test('receive event from action fired only to self, and make sure global listener doesnt receive it', async () => {
+    document.body.innerHTML = `
+        <div wire:id="123" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }">
+            <button wire:click="$emitSelf('foo')"></button>
+        </div>
+        <div wire:id="456" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }"></div>
+    `
+
+    var payloadsThatSentARequest = []
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            payloadsThatSentARequest.push(payload)
+        },
+    }})
+
+    window.livewire.start()
+
+    var globalEventReceived = false
+    window.livewire.on('foo', () => { globalEventReceived = true })
+
+    document.querySelector('button').click()
+
+    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(1) })
+
+    await wait(() => {
+        expect(globalEventReceived).toEqual(false)
+        expect(payloadsThatSentARequest[0].id).toEqual('123')
+        expect(payloadsThatSentARequest[1]).toEqual(undefined)
+        expect(payloadsThatSentARequest[2]).toEqual(undefined)
+    })
+})
+
+test('receive event from action fired only to component name, and make sure global listener doesnt receive it', async () => {
+    document.body.innerHTML = `
+        <div wire:id="123" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;], &quot;name&quot;: &quot;the-wrong-name&quot; }">
+            <button wire:click="$emitTo('the-right-name', 'foo')"></button>
+        </div>
+        <div wire:id="456" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;], &quot;name&quot;: &quot;the-right-name&quot; }"></div>
+    `
+
+    var payloadsThatSentARequest = []
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            payloadsThatSentARequest.push(payload)
+        },
+    }})
+
+    window.livewire.start()
+
+    var globalEventReceived = false
+    window.livewire.on('foo', () => { globalEventReceived = true })
+
+    document.querySelector('button').click()
+
+    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(1) })
+
+    await wait(() => {
+        expect(globalEventReceived).toEqual(false)
+        expect(payloadsThatSentARequest[0].id).toEqual('456')
+        expect(payloadsThatSentARequest[1]).toEqual(undefined)
+        expect(payloadsThatSentARequest[2]).toEqual(undefined)
+    })
+})
+
 describe('test Laravel Echo', () => {
     let mockEcho
 

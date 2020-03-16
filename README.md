@@ -16,6 +16,7 @@ Contribute to the docs here: https://github.com/livewire/docs
 * More flexibility for scoping listeners (`->emitSelf()`, and emiting to specific components or ids)
 * Add a `$formData` magic property to pass into submit handler actions: `wire:submit="save($formData)"`
 * Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
+* Remove `wire:poll` setIntervals when component or element is removed. #563
 
 ## V2 Roadmap
 * Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`

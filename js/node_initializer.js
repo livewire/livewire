@@ -155,6 +155,16 @@ export default {
                     return
                 }
 
+                if (method === '$emitSelf') {
+                    store.emitSelf(component.id, ...params)
+                    return
+                }
+
+                if (method === '$emitTo') {
+                    store.emitTo(...params)
+                    return
+                }
+
                 if (directive.value) {
                     component.addAction(new MethodAction(method, params, el))
                 }
