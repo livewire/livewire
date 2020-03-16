@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-53-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-54-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -97,6 +97,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://jasonlbeggs.com"><img src="https://avatars2.githubusercontent.com/u/25065083?v=4" width="100px;" alt=""/><br /><sub><b>Jason Beggs</b></sub></a><br /><a href="#maintenance-jasonlbeggs" title="Maintenance">🚧</a></td>
     <td align="center"><a href="http://fullstackworld.com"><img src="https://avatars0.githubusercontent.com/u/3095445?v=4" width="100px;" alt=""/><br /><sub><b>Ramesh Mhetre</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=mhetreramesh" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/ManojKiranA"><img src="https://avatars0.githubusercontent.com/u/30294553?v=4" width="100px;" alt=""/><br /><sub><b>Manojkiran Appathurai</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=ManojKiranA" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/stevebauman"><img src="https://avatars3.githubusercontent.com/u/6421846?v=4" width="100px;" alt=""/><br /><sub><b>Steve Bauman</b></sub></a><br /><a href="#maintenance-stevebauman" title="Maintenance">🚧</a></td>
   </tr>
 </table>
 

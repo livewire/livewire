@@ -498,6 +498,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "stevebauman",
+      "name": "Steve Bauman",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/6421846?v=4",
+      "profile": "https://github.com/stevebauman",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
