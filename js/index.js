@@ -50,6 +50,10 @@ class Livewire {
         this.components.emit(event, ...params)
     }
 
+    emitTo(name, event, ...params) {
+        this.components.emitTo(name, event, ...params)
+    }
+
     on(event, callback) {
         this.components.on(event, callback)
     }

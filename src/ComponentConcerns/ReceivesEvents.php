@@ -29,6 +29,24 @@ trait ReceivesEvents
         ];
     }
 
+    public function emitSelf($event, ...$params)
+    {
+        $this->eventQueue[] = [
+            'event' => $event,
+            'params' => $params,
+            'selfOnly' => true,
+        ];
+    }
+
+    public function emitTo($name, $event, ...$params)
+    {
+        $this->eventQueue[] = [
+            'event' => $event,
+            'params' => $params,
+            'to' => $name,
+        ];
+    }
+
     public function dispatchBrowserEvent($event, $data = null)
     {
         $this->dispatchQueue[] = [

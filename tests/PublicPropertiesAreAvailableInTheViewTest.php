@@ -20,6 +20,15 @@ class PublicPropertiesAreAvailableInTheViewTest extends TestCase
         Livewire::test(PublicPropertiesInViewWithoutThisStub::class)
             ->assertSee('Caleb');
     }
+
+    /** @test */
+    public function protected_static_properties_are_supported()
+    {
+        Livewire::test(PublicStaticPropertyOnComponent::class)
+            ->call('$refresh');
+
+        $this->assertTrue(true);
+    }
 }
 
 class PublicPropertiesInViewWithThisStub extends Component
@@ -39,5 +48,15 @@ class PublicPropertiesInViewWithoutThisStub extends Component
     public function render()
     {
         return app('view')->make('show-name');
+    }
+}
+
+class ProtectedStaticPropertyOnComponent extends Component
+{
+    protected static $name = 'Caleb';
+
+    public function render()
+    {
+        return app('view')->make('null-view');
     }
 }
