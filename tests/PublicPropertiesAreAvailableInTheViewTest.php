@@ -51,7 +51,7 @@ class PublicPropertiesInViewWithoutThisStub extends Component
     }
 }
 
-class PublicStaticPropertyOnComponent extends Component
+class ProtectedStaticPropertyOnComponent extends Component
 {
     protected static $name = 'Caleb';
 
