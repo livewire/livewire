@@ -507,6 +507,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "code-distortion",
+      "name": "Tim",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/56794290?v=4",
+      "profile": "https://github.com/code-distortion",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
