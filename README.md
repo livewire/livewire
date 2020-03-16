@@ -20,6 +20,7 @@ Contribute to the docs here: https://github.com/livewire/docs
 
 ## V2 Roadmap
 * Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`
+* Change `window.livewire` to `window.Livewire` (And update Alpine to adapt)
 
 ## Contributors ✨
 
