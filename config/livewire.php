@@ -40,7 +40,7 @@ return [
     |
     */
 
-    'asset_url'  =>  config('app.asset_url', config('app.url')),
+    'asset_url'  =>  config('app.asset_url', config('app.url', '/')),
 
     /*
     |--------------------------------------------------------------------------
