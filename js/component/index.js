@@ -174,7 +174,11 @@ export default class Component {
             response.eventQueue.forEach(event => {
                 this.scopedListeners.call(event.event, ...event.params)
 
-                if (event.ancestorsOnly) {
+                if (event.selfOnly) {
+                    store.emitSelf(this.id, event.event, ...event.params)
+                } else if (event.to) {
+                    store.emitTo(event.to, event.event, ...event.params)
+                } else if (event.ancestorsOnly) {
                     store.emitUp(this.el, event.event, ...event.params)
                 } else {
                     store.emit(event.event, ...event.params)

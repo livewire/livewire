@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-52-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-55-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -12,8 +12,15 @@ Open GitHub issues for all bugs. Ideas and questions belong on the forum: https:
 
 Contribute to the docs here: https://github.com/livewire/docs
 
-## v2 Roadmap
+## Roadmap
+* More flexibility for scoping listeners (`->emitSelf()`, and emiting to specific components or ids)
+* Add a `$formData` magic property to pass into submit handler actions: `wire:submit="save($formData)"`
+* Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
+* Remove `wire:poll` setIntervals when component or element is removed. #563
+
+## V2 Roadmap
 * Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`
+* Change `window.livewire` to `window.Livewire` (And update Alpine to adapt)
 
 ## Contributors ✨
 
@@ -71,7 +78,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://github.com/ricardogobbosouza"><img src="https://avatars3.githubusercontent.com/u/13064722?v=4" width="100px;" alt=""/><br /><sub><b>Ricardo Gobbo de Souza</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=ricardogobbosouza" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/lucasromanojf"><img src="https://avatars2.githubusercontent.com/u/3661610?v=4" width="100px;" alt=""/><br /><sub><b>lucasromanojf</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=lucasromanojf" title="Code">💻</a></td>
-    <td align="center"><a href="http://laravel.com"><img src="https://avatars3.githubusercontent.com/u/463230?v=4" width="100px;" alt=""/><br /><sub><b>Taylor Otwell</b></sub></a><br /><a href="#financial-taylorotwell" title="Financial">💵</a></td>
+    <td align="center"><a href="http://laravel.com"><img src="https://avatars3.githubusercontent.com/u/463230?v=4" width="100px;" alt=""/><br /><sub><b>Taylor Otwell</b></sub></a><br /><a href="#financial-taylorotwell" title="Financial">💵</a> <a href="https://github.com/livewire/livewire/commits?author=taylorotwell" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/mokhosh"><img src="https://avatars1.githubusercontent.com/u/6499685?v=4" width="100px;" alt=""/><br /><sub><b>Mo Khosh</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=mokhosh" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/caominhduc3108"><img src="https://avatars1.githubusercontent.com/u/17726941?v=4" width="100px;" alt=""/><br /><sub><b>duccm</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=caominhduc3108" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/lalov"><img src="https://avatars3.githubusercontent.com/u/3465648?v=4" width="100px;" alt=""/><br /><sub><b>Lars Erik Løvhaug</b></sub></a><br /><a href="#maintenance-lalov" title="Maintenance">🚧</a></td>
@@ -90,6 +97,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/jgile"><img src="https://avatars3.githubusercontent.com/u/3780633?v=4" width="100px;" alt=""/><br /><sub><b>John Gile</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=jgile" title="Code">💻</a> <a href="https://github.com/livewire/livewire/commits?author=jgile" title="Tests">⚠️</a></td>
     <td align="center"><a href="https://jasonlbeggs.com"><img src="https://avatars2.githubusercontent.com/u/25065083?v=4" width="100px;" alt=""/><br /><sub><b>Jason Beggs</b></sub></a><br /><a href="#maintenance-jasonlbeggs" title="Maintenance">🚧</a></td>
     <td align="center"><a href="http://fullstackworld.com"><img src="https://avatars0.githubusercontent.com/u/3095445?v=4" width="100px;" alt=""/><br /><sub><b>Ramesh Mhetre</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=mhetreramesh" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/ManojKiranA"><img src="https://avatars0.githubusercontent.com/u/30294553?v=4" width="100px;" alt=""/><br /><sub><b>Manojkiran Appathurai</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=ManojKiranA" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/stevebauman"><img src="https://avatars3.githubusercontent.com/u/6421846?v=4" width="100px;" alt=""/><br /><sub><b>Steve Bauman</b></sub></a><br /><a href="#maintenance-stevebauman" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://github.com/code-distortion"><img src="https://avatars2.githubusercontent.com/u/56794290?v=4" width="100px;" alt=""/><br /><sub><b>Tim</b></sub></a><br /><a href="#maintenance-code-distortion" title="Maintenance">🚧</a></td>
   </tr>
 </table>
 

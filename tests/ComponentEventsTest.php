@@ -67,6 +67,26 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
+    public function server_emitted_self_events_are_provided_to_frontend()
+    {
+        $component = app(LivewireManager::class)->test(ReceivesEvents::class);
+
+        $component->runAction('emitSelfGoo');
+
+        $this->assertTrue(in_array(['selfOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->payload['eventQueue']));
+    }
+
+    /** @test */
+    public function server_emitted_to_events_are_provided_to_frontend()
+    {
+        $component = app(LivewireManager::class)->test(ReceivesEvents::class);
+
+        $component->runAction('emitToGooGone');
+
+        $this->assertTrue(in_array(['to' => 'goo', 'event' => 'gone', 'params' => ['car']], $component->payload['eventQueue']));
+    }
+
+    /** @test */
     public function server_dispatched_browser_events_are_provided_to_frontend()
     {
         $component = app(LivewireManager::class)->test(DispatchesBrowserEvents::class);
@@ -105,6 +125,16 @@ class ReceivesEvents extends Component
     public function emitUpGoo()
     {
         $this->emitUp('goo', 'car');
+    }
+
+    public function emitSelfGoo()
+    {
+        $this->emitSelf('goo', 'car');
+    }
+
+    public function emitToGooGone()
+    {
+        $this->emitTo('goo', 'gone', 'car');
     }
 
     public function render()
