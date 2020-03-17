@@ -151,30 +151,30 @@ class LivewireManager
 
     public function styles($options = [])
     {
-        $debug = config('app.debug');
+        $minify = config('livewire.minify_style');
 
         $styles = $this->cssAssets();
 
         // HTML Label.
-        $html = $debug ? ['<!-- Livewire Styles -->'] : [];
+        $html = $minify ? [] : ['<!-- Livewire Styles -->'];
 
         // CSS assets.
-        $html[] = $debug ? $styles : $this->minify($styles);
+        $html[] = $minify ? $this->minify($styles) : $styles;
 
         return implode("\n", $html);
     }
 
     public function scripts($options = [])
     {
-        $debug = config('app.debug');
+        $minify = config('livewire.minify_javascript');
 
         $scripts = $this->javaScriptAssets($options);
 
         // HTML Label.
-        $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
+        $html = $minify ? [] : ['<!-- Livewire Scripts -->'];
 
         // JavaScript assets.
-        $html[] = $debug ? $scripts : $this->minify($scripts);
+        $html[] = $minify ? $this->minify($scripts) : $scripts;
 
         return implode("\n", $html);
     }
@@ -241,11 +241,11 @@ HTML;
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
 
-    // Make Alpine wait until Livewire is finished rendering to do its thing.
+    /* Make Alpine wait until Livewire is finished rendering to do its thing. */
     window.deferLoadingAlpine = (callback) => {
         window.addEventListener('livewire:load', () => {
-            callback()
-        })
+            callback();
+        });
     }
 
     document.addEventListener("DOMContentLoaded", function() {
