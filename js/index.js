@@ -11,7 +11,6 @@ import DirtyStates from '@/component/DirtyStates'
 import OfflineStates from '@/component/OfflineStates'
 import Polling from '@/component/Polling'
 import UpdateQueryString from '@/component/UpdateQueryString'
-import SupportVueJs from '@/component/SupportVueJs'
 
 class Livewire {
     constructor(options = {}) {
@@ -103,7 +102,6 @@ if (! window.Livewire) {
 }
 
 UpdateQueryString()
-SupportVueJs()
 LoadingStates()
 DisableForms()
 DirtyStates()
