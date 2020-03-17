@@ -8,19 +8,40 @@ trait WithPagination
 {
     public $page = 1;
 
+    public function isQueryStringEnabled()
+    {
+        if (property_exists($this, 'paginationQueryStringEnabled')) {
+            return $this->paginationQueryStringEnabled;
+        }
+        return true;
+    }
+
     public function getUpdatesQueryString()
     {
-        return array_merge(['page' => ['except' => 1]], $this->updatesQueryString);
+        if ($this->isQueryStringEnabled()) {
+            return array_merge([$this->paginationQueryString], $this->updatesQueryString);
+        }
     }
 
     public function initializeWithPagination()
     {
-        // The "page" query string item should only be available
+        if (!property_exists($this, 'paginationQueryString')) {
+            $this->paginationQueryString = 'page';
+        }
+
+        $this->{$this->paginationQueryString} = 1;
+
+        // The query string item should only be available
         // from within the original component mount run.
-        $this->page = request()->query('page', $this->page);
+        if ($this->isQueryStringEnabled()) {
+            $this->{$this->paginationQueryString} = request()->query(
+                $this->paginationQueryString,
+                $this->{$this->paginationQueryString}
+            );
+        }
 
         Paginator::currentPageResolver(function () {
-            return $this->page;
+            return $this->{$this->paginationQueryString};
         });
 
         Paginator::defaultView($this->paginationView());
@@ -33,16 +54,16 @@ trait WithPagination
 
     public function previousPage()
     {
-        $this->page = $this->page - 1;
+        $this->{$this->paginationQueryString} = $this->{$this->paginationQueryString} - 1;
     }
 
     public function nextPage()
     {
-        $this->page = $this->page + 1;
+        $this->{$this->paginationQueryString} = $this->{$this->paginationQueryString} + 1;
     }
 
     public function gotoPage($page)
     {
-        $this->page = $page;
+        $this->{$this->paginationQueryString} = $page;
     }
 }
