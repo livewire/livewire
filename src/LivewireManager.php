@@ -241,14 +241,14 @@ HTML;
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
 
-    // Make Alpine wait until Livewire is finished rendering to do its thing.
-    window.deferLoadingAlpine = (callback) => {
-        window.addEventListener('livewire:load', () => {
-            callback()
-        })
-    }
+    /* Make Alpine wait until Livewire is finished rendering to do its thing. */
+    window.deferLoadingAlpine = function (callback) {
+        window.addEventListener('livewire:load', function () {
+            callback();
+        });
+    };
 
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         window.livewire.start();
     });
 
