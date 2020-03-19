@@ -314,7 +314,7 @@ export default class Component {
             onElUpdated: (node) => {
                 this.morphChanges.changed.push(node)
 
-                store.callHook('elementUpdated', node, this)
+                store.callHook('afterElementUpdate', node, this)
             },
 
             onNodeAdded: (node) => {

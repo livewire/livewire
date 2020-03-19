@@ -10,7 +10,7 @@ export default {
         'responseReceived',
         'beforeDomUpdate',
         'beforeElementUpdate',
-        'elementUpdated',
+        'afterElementUpdate',
         'afterDomUpdate',
         'interceptWireModelSetValue',
         'interceptWireModelAttachListener',
