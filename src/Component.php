@@ -119,6 +119,8 @@ abstract class Component
             $previouslySharedErrors->getBag('default')
         );
 
+        session()->flash('errors', $errors);
+
         app('view')->share('errors', $errors);
         app('view')->share('_instance', $this);
 
