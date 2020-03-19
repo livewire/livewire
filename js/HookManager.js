@@ -9,6 +9,8 @@ export default {
         'messageFailed',
         'responseReceived',
         'beforeDomUpdate',
+        'beforeElementUpdate',
+        'afterElementUpdate',
         'afterDomUpdate',
         'interceptWireModelSetValue',
         'interceptWireModelAttachListener',
