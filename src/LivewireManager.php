@@ -264,7 +264,7 @@ HTML;
     });
 
     document.addEventListener("turbolinks:before-cache", function() {
-        document.querySelectorAll(`[wire\\\:id]`).forEach(el => {
+        document.querySelectorAll('[wire\\\:id]').forEach(function(el) {
             const component = el.__livewire;
 
             const dataObject = {
