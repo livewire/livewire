@@ -518,6 +518,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "chrisrhymes",
+      "name": "CS Rhymes",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/4160546?v=4",
+      "profile": "https://www.csrhymes.com/",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
