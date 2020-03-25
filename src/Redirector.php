@@ -14,6 +14,13 @@ class Redirector extends BaseRedirector
         return $this;
     }
 
+    public function away($path, $status = 302, $headers = [])
+    {
+        $this->component->redirect($path, []);
+
+        return $this;
+    }
+
     public function component(Component $component)
     {
         $this->component = $component;
