@@ -527,6 +527,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "nielspeen",
+      "name": "Niels Peen",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/5564176?v=4",
+      "profile": "https://peen.dev",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

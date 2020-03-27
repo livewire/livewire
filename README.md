@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-56-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-57-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -103,6 +103,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/stevebauman"><img src="https://avatars3.githubusercontent.com/u/6421846?v=4" width="100px;" alt=""/><br /><sub><b>Steve Bauman</b></sub></a><br /><a href="#maintenance-stevebauman" title="Maintenance">🚧</a></td>
     <td align="center"><a href="https://github.com/code-distortion"><img src="https://avatars2.githubusercontent.com/u/56794290?v=4" width="100px;" alt=""/><br /><sub><b>Tim</b></sub></a><br /><a href="#maintenance-code-distortion" title="Maintenance">🚧</a></td>
     <td align="center"><a href="https://www.csrhymes.com/"><img src="https://avatars0.githubusercontent.com/u/4160546?v=4" width="100px;" alt=""/><br /><sub><b>CS Rhymes</b></sub></a><br /><a href="#maintenance-chrisrhymes" title="Maintenance">🚧</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://peen.dev"><img src="https://avatars1.githubusercontent.com/u/5564176?v=4" width="100px;" alt=""/><br /><sub><b>Niels Peen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=nielspeen" title="Code">💻</a></td>
   </tr>
 </table>
 
