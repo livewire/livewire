@@ -536,6 +536,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "salparadise",
+      "name": "Wojtek Mieszczak",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4439778?v=4",
+      "profile": "https://github.com/salparadise",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
