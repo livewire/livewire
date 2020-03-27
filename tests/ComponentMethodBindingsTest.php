@@ -23,22 +23,6 @@ class ComponentMethodBindingsTest extends TestCase
     }
 
     /** @test */
-    public function livewire_route_accepts_also_fcqn()
-    {
-        Livewire::component('foo', ComponentWithBindings::class);
-
-        $this->assertEquals(ComponentWithBindings::class, Livewire::getComponentClass(ComponentWithBindings::class));
-
-        Route::bind('foo', function ($value) {
-            return new ModelToBeBoundStub($value);
-        });
-
-        Route::livewire('/test/{foo}', ComponentWithBindings::class);
-
-        $this->withoutExceptionHandling()->get('/test/from-injection')->assertSee('from-injection');
-    }
-
-    /** @test */
     public function mount_method_receives_bindings()
     {
         Livewire::test(ComponentWithBindings::class)
