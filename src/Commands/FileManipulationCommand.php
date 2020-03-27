@@ -2,6 +2,7 @@
 
 namespace Livewire\Commands;
 
+use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Livewire\LivewireComponentsFinder;
@@ -24,7 +25,9 @@ class FileManipulationCommand extends Command
 
     public function isFirstTimeMakingAComponent()
     {
-        $livewireFolder = app_path(collect(['Http', 'Livewire'])->implode(DIRECTORY_SEPARATOR));
+        $namespace = Str::replaceFirst(app()->getNamespace(), '', config('livewire.class_namespace', 'App\\Http\\Livewire'));
+
+        $livewireFolder = app_path(collect(explode('\\', $namespace))->implode(DIRECTORY_SEPARATOR));
 
         return ! File::isDirectory($livewireFolder);
     }
