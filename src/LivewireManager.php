@@ -42,6 +42,10 @@ class LivewireManager
 
     public function getComponentClass($alias)
     {
+        if (class_exists($alias)) {
+            return $alias;
+        }
+
         $finder = app()->make(LivewireComponentsFinder::class);
 
         $class = false;
@@ -89,15 +93,7 @@ class LivewireManager
 
         $id = Str::random(20);
 
-        // Allow instantiating Livewire components directly from classes.
-        if (class_exists($name)) {
-            $instance = new $name($id);
-            // Set the name to the computed name, so that the full namespace
-            // isn't leaked to the front-end.
-            $name = $instance->getName();
-        } else {
-            $instance = $this->activate($name, $id);
-        }
+        $instance = $this->activate($name, $id);
 
         $this->initialHydrate($instance, []);
 
