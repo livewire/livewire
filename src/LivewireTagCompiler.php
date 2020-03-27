@@ -26,9 +26,9 @@ class LivewireTagCompiler extends ComponentTagCompiler
                         (
                             =
                             (?:
-                                \\\"[^\\\"]+\\\"
+                                \\\"[^\\\"]*\\\"
                                 |
-                                \'[^\']+\'
+                                \'[^\']*\'
                                 |
                                 [^\'\\\"=<>]+
                             )
@@ -60,9 +60,9 @@ class LivewireTagCompiler extends ComponentTagCompiler
             $key = $attributes['key'];
             unset($attributes['key']);
 
-            return "@livewire('{$component}', [".$this->attributesToString($attributes)."], key({$key}))";
+            return "@livewire('{$component}', [".$this->attributesToString($attributes, $escapeBound = false)."], key({$key}))";
         }
 
-        return "@livewire('{$component}', [".$this->attributesToString($attributes).'])';
+        return "@livewire('{$component}', [".$this->attributesToString($attributes, $escapeBound = false).'])';
     }
 }

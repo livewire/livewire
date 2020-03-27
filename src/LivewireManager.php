@@ -243,7 +243,14 @@ HTML;
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
 
-    document.addEventListener("DOMContentLoaded", function() {
+    /* Make Alpine wait until Livewire is finished rendering to do its thing. */
+    window.deferLoadingAlpine = function (callback) {
+        window.addEventListener('livewire:load', function () {
+            callback();
+        });
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
         window.livewire.start();
     });
 
@@ -259,7 +266,7 @@ HTML;
     });
 
     document.addEventListener("turbolinks:before-cache", function() {
-        document.querySelectorAll(`[wire\\\:id]`).forEach(el => {
+        document.querySelectorAll('[wire\\\:id]').forEach(function(el) {
             const component = el.__livewire;
 
             const dataObject = {

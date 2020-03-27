@@ -44,6 +44,21 @@ test('properties are lazy synced when action is fired', async () => {
     })
 })
 
+test('textarea data binding with class change works as expected and doesn\'t wipe its value', async () => {
+    mountAndReturn(
+        '<textarea wire:model="foo" class="foo"></textarea>',
+        '<textarea wire:model="foo" class="foo bar"></textarea>',
+        []
+    )
+
+    fireEvent.input(document.querySelector('textarea'), { target: { value: 'bar' }})
+
+    await wait(() => {
+        expect(document.querySelector('textarea').value).toEqual('bar')
+        expect(document.querySelector('textarea').classList.contains('bar')).toBeTruthy()
+    })
+})
+
 test('input element value doesnt change unless property is marked as dirty', async () => {
     mountAndReturn(
         '<input wire:model="foo" value="">',

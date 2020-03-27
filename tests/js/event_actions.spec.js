@@ -166,11 +166,15 @@ test('init', async () => {
     expect(initHappened).toBeTruthy()
 })
 
-test('form buttons disabled and inputs read-only during submission', async () => {
+test('elements are marked as read-only or disabled during form submissions', async () => {
     var payload
     mount(`
         <form wire:submit.prevent="someMethod">
             <input type="text">
+            <input type="checkbox">
+            <input type="radio">
+            <select></select>
+            <textarea></textarea>
             <button type="submit"></button>
         </form>
     `, i => payload = i)
@@ -182,7 +186,11 @@ test('form buttons disabled and inputs read-only during submission', async () =>
         expect(payload.actionQueue[0].payload.method).toEqual('someMethod')
         expect(payload.actionQueue[0].payload.params).toEqual([])
         expect(document.querySelector('button').disabled).toBeTruthy()
-        expect(document.querySelector('input').readOnly).toBeTruthy()
+        expect(document.querySelector('select').disabled).toBeTruthy()
+        expect(document.querySelector('input[type=checkbox]').disabled).toBeTruthy()
+        expect(document.querySelector('input[type=radio]').disabled).toBeTruthy()
+        expect(document.querySelector('input[type=text]').readOnly).toBeTruthy()
+        expect(document.querySelector('textarea').readOnly).toBeTruthy()
     })
 })
 

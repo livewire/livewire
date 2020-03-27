@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
 use Livewire\LivewireManager;
 
@@ -118,19 +119,18 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    public function validation_errors_are_flashed_to_session()
+    public function validation_errors_are_shared_for_all_views()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        app('view')->share('errors', $errors = new ViewErrorBag);
 
         $component
             ->set('bar', '')
             ->call('runValidation')
-            ->assertSee('The bar field is required')
-            ->assertSee('sessionError:The bar field is required')
-            ->set('bar', 'bar')
-            ->call('runValidation')
-            ->assertDontSee('The bar field is required')
-            ->assertDontSee('sessionError:The bar field is required');
+            ->assertSee('sharedError:The bar field is required');
+
+        $this->assertTrue(app('view')->shared('errors') === $errors);
     }
 }
 

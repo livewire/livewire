@@ -358,7 +358,8 @@
       "avatar_url": "https://avatars3.githubusercontent.com/u/463230?v=4",
       "profile": "http://laravel.com",
       "contributions": [
-        "financial"
+        "financial",
+        "code"
       ]
     },
     {
@@ -469,7 +470,8 @@
       "profile": "https://github.com/jgile",
       "contributions": [
         "code",
-        "test"
+        "test",
+        "maintenance"
       ]
     },
     {
@@ -477,6 +479,51 @@
       "name": "Jason Beggs",
       "avatar_url": "https://avatars2.githubusercontent.com/u/25065083?v=4",
       "profile": "https://jasonlbeggs.com",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "mhetreramesh",
+      "name": "Ramesh Mhetre",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/3095445?v=4",
+      "profile": "http://fullstackworld.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "ManojKiranA",
+      "name": "Manojkiran Appathurai",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/30294553?v=4",
+      "profile": "https://github.com/ManojKiranA",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "stevebauman",
+      "name": "Steve Bauman",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/6421846?v=4",
+      "profile": "https://github.com/stevebauman",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "code-distortion",
+      "name": "Tim",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/56794290?v=4",
+      "profile": "https://github.com/code-distortion",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "chrisrhymes",
+      "name": "CS Rhymes",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/4160546?v=4",
+      "profile": "https://www.csrhymes.com/",
       "contributions": [
         "maintenance"
       ]

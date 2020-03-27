@@ -6,7 +6,7 @@ class RouteMacros
 {
     public function layout()
     {
-        return function ($layout) {
+        return function ($layout, $params = []) {
             if (isset($this->action['layout'])) {
                 // If ->layout() has already been called in a parent root,
                 // we want to nest the new layouts rather than overriding them.
@@ -14,6 +14,8 @@ class RouteMacros
             } else {
                 $this->action['layout'] = $layout;
             }
+
+            $this->layoutParamsFromLivewire = $params;
 
             return $this;
         };

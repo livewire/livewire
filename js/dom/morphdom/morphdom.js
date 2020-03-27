@@ -241,7 +241,12 @@ export default function morphdomFactory(morphAttrs) {
             if (fromEl.nodeName !== 'TEXTAREA') {
                 morphChildren(fromEl, toEl);
             } else {
-              specialElHandlers.TEXTAREA(fromEl, toEl);
+                if (fromEl.innerHTML != toEl.innerHTML) {
+                    // @livewireModification
+                    // Only mess with the "value" of textarea if the new dom has something
+                    // inside the <textarea></textarea> tag.
+                    specialElHandlers.TEXTAREA(fromEl, toEl);
+                }
             }
         }
 

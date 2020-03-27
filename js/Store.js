@@ -25,6 +25,13 @@ const store = {
         return this.componentsById[id]
     },
 
+    getComponentsByName(name) {
+        return this.components()
+            .filter(component => {
+                return component.name === name
+            })
+    },
+
     hasComponent(id) {
         return !! this.componentsById[id]
     },
@@ -55,6 +62,28 @@ const store = {
                 event, params
             ))
         )
+    },
+
+    emitSelf(componentId, event, ...params) {
+        let component = this.findComponent(componentId)
+
+        if (component.events.includes(event)) {
+            component.addAction(new EventAction(
+                event, params
+            ))
+        }
+    },
+
+    emitTo(componentName, event, ...params) {
+        let components = this.getComponentsByName(componentName)
+
+        components.forEach(component => {
+            if (component.events.includes(event)) {
+                component.addAction(new EventAction(
+                    event, params
+                ))
+            }
+        })
     },
 
     componentsListeningForEventThatAreTreeAncestors(el, event) {
