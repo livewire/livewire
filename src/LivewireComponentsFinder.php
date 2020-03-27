@@ -24,10 +24,6 @@ class LivewireComponentsFinder
 
     public function find($alias)
     {
-        if (in_array($alias, $this->getManifest(), true)) {
-            return $alias;
-        }
-
         return $this->getManifest()[$alias] ?? null;
     }
 
