@@ -95,6 +95,18 @@ class RedirectTest extends TestCase
         $this->assertEquals(route('foo'), $component->payload['redirectTo']);
     }
 
+    /** @test */
+    public function redirect_helper_with_away_method()
+    {
+        $this->registerNamedRoute();
+
+        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectHelperUsingAway');
+
+        $this->assertEquals(route('foo'), $component->payload['redirectTo']);
+    }
+
     protected function registerNamedRoute()
     {
         Route::get('foo', function () {
@@ -143,6 +155,11 @@ class TriggersRedirectStub extends Component
     public function triggerRedirectHelperUsingRoute()
     {
         return redirect()->route('foo');
+    }
+
+    public function triggerRedirectHelperUsingAway()
+    {
+        return redirect()->away('foo');
     }
 
     public function render()
