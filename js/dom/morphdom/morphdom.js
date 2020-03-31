@@ -117,34 +117,6 @@ export default function morphdomFactory(morphAttrs) {
             walkDiscardedChildNodes(node, skipKeyedNodes);
         }
 
-        // // TreeWalker implementation is no faster, but keeping this around in case this changes in the future
-        // function indexTree(root) {
-        //     var treeWalker = document.createTreeWalker(
-        //         root,
-        //         NodeFilter.SHOW_ELEMENT);
-        //
-        //     var el;
-        //     while((el = treeWalker.nextNode())) {
-        //         var key = callHook(getNodeKey, el);
-        //         if (key) {
-        //             fromNodesLookup[key] = el;
-        //         }
-        //     }
-        // }
-
-        // // NodeIterator implementation is no faster, but keeping this around in case this changes in the future
-        //
-        // function indexTree(node) {
-        //     var nodeIterator = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT);
-        //     var el;
-        //     while((el = nodeIterator.nextNode())) {
-        //         var key = callHook(getNodeKey, el);
-        //         if (key) {
-        //             fromNodesLookup[key] = el;
-        //         }
-        //     }
-        // }
-
         function indexTree(node) {
             if (node.nodeType === ELEMENT_NODE || node.nodeType === DOCUMENT_FRAGMENT_NODE) {
                 var curChild = node.firstChild;
@@ -181,6 +153,11 @@ export default function morphdomFactory(morphAttrs) {
                     if (unmatchedFromEl && compareNodeNames(curChild, unmatchedFromEl)) {
                         curChild.parentNode.replaceChild(unmatchedFromEl, curChild);
                         morphEl(unmatchedFromEl, curChild);
+
+                        // @livewireModification
+                        // Otherwise, "curChild" will be unnatached when it is passed to "handleNodeAdde"
+                        // things like .parent and .closest will break.
+                        curChild = unmatchedFromEl
                     }
                 }
 
@@ -337,10 +314,10 @@ export default function morphdomFactory(morphAttrs) {
 
                             isCompatible = isCompatible !== false && compareNodeNames(curFromNodeChild, curToNodeChild);
                             if (isCompatible) {
+                                // @livewireModification
                                 // If the two nodes are different, but the next element is an exact match,
                                 // we can assume that the new node is meant to be inserted, instead of
                                 // used as a morph target.
-                                // @livewireUpdate
                                 if (
                                     ! curToNodeChild.isEqualNode(curFromNodeChild)
                                     && curToNodeChild.nextElementSibling
@@ -375,29 +352,29 @@ export default function morphdomFactory(morphAttrs) {
                         continue outer;
                     }
 
-                    // No compatible match so remove the old node from the DOM and continue trying to find a
-                    // match in the original DOM. However, we only do this if the from node is not keyed
-                    // since it is possible that a keyed node might match up with a node somewhere else in the
-                    // target tree and we don't want to discard it just yet since it still might find a
-                    // home in the final DOM tree. After everything is done we will remove any keyed nodes
-                    // that didn't find a home
-                    if (curFromNodeKey) {
-                        // Since the node is keyed it might be matched up later so we defer
-                        // the actual removal to later
-                        addKeyedRemoval(curFromNodeKey);
+                    // @livewireModification
+                    // Before we just remove the original element, let's see if it's the very next
+                    // element in the "to" list. If it is, we can assume we can insert the new
+                    // element before the original one instead of removing it. This is kind of
+                    // a "look-ahead".
+                    if (curToNodeChild.nextElementSibling && curToNodeChild.nextElementSibling.isEqualNode(curFromNodeChild)) {
+                        const nodeToBeAdded = curToNodeChild.cloneNode(true)
+                        fromEl.insertBefore(nodeToBeAdded, curFromNodeChild)
+                        handleNodeAdded(nodeToBeAdded)
+                        curToNodeChild = curToNodeChild.nextElementSibling.nextSibling;
+                        curFromNodeChild = fromNextSibling;
+                        continue outer;
                     } else {
-                        // Before we just remove the original element, let's see if it's the very next
-                        // element in the "to" list. If it is, we can assume we can insert the new
-                        // element before the original one instead of removing it. This is kind of
-                        // a "look-ahead".
-                        // @livewireUpdate
-                        if (curToNodeChild.nextElementSibling && curToNodeChild.nextElementSibling.isEqualNode(curFromNodeChild)) {
-                            const nodeToBeAdded = curToNodeChild.cloneNode(true)
-                            fromEl.insertBefore(nodeToBeAdded, curFromNodeChild)
-                            handleNodeAdded(nodeToBeAdded)
-                            curToNodeChild = curToNodeChild.nextElementSibling.nextSibling;
-                            curFromNodeChild = fromNextSibling;
-                            continue outer;
+                        // No compatible match so remove the old node from the DOM and continue trying to find a
+                        // match in the original DOM. However, we only do this if the from node is not keyed
+                        // since it is possible that a keyed node might match up with a node somewhere else in the
+                        // target tree and we don't want to discard it just yet since it still might find a
+                        // home in the final DOM tree. After everything is done we will remove any keyed nodes
+                        // that didn't find a home
+                        if (curFromNodeKey) {
+                            // Since the node is keyed it might be matched up later so we defer
+                            // the actual removal to later
+                            addKeyedRemoval(curFromNodeKey);
                         } else {
                             // NOTE: we skip nested keyed nodes from being removed since there is
                             //       still a chance they will be matched up later
