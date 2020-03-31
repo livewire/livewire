@@ -74,3 +74,39 @@ test('adding child components with wire:model doesnt break the dom diffing', asy
 
     await timeout(50)
 })
+
+test('elements added with keys are recognized in the custom lookahead', async () => {
+    mountAsRootAndReturn(
+        `<div wire:id="1" wire:initial-data="{}">
+            <div wire:key="foo">1</div>
+
+            <div>
+                <div id="ag">2</div>
+            </div>
+
+            <button wire:click="$refresh"></button>
+        </div>`,
+        `<div wire:id="1" wire:initial-data="{}">
+            <div>0</div>
+
+            <div wire:key="foo">1</div>
+
+            <div>
+                <div id="ag">2</div>
+            </div>
+
+            <button wire:click="$refresh"></button>
+        </div>`
+    )
+
+    fireEvent.click(document.querySelector('button'))
+
+    await timeout(50)
+
+    let changes = window.livewire.find(1).morphChanges
+
+    await wait(() => {
+        expect(changes.added.length).toEqual(1)
+        expect(changes.removed.length).toEqual(0)
+    })
+})
