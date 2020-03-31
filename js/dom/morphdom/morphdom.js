@@ -314,11 +314,10 @@ export default function morphdomFactory(morphAttrs) {
 
                             isCompatible = isCompatible !== false && compareNodeNames(curFromNodeChild, curToNodeChild);
                             if (isCompatible) {
+                                // @livewireModification
                                 // If the two nodes are different, but the next element is an exact match,
                                 // we can assume that the new node is meant to be inserted, instead of
                                 // used as a morph target.
-                                // @livewireModification
-                                debugger
                                 if (
                                     ! curToNodeChild.isEqualNode(curFromNodeChild)
                                     && curToNodeChild.nextElementSibling
