@@ -35,6 +35,13 @@ class LivewireManager
         $this->componentAliases[$alias] = $viewClass;
     }
 
+    public function components($components)
+    {
+        foreach ($components as $alias => $viewClass) {
+            $this->component($alias, $viewClass);
+        }
+    }
+
     public function componentResolver($callback)
     {
         $this->customComponentResolver = $callback;
