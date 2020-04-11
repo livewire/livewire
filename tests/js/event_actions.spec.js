@@ -297,6 +297,7 @@ test('action parameter can use double-quotes', async () => {
         expect(payload.actionQueue[0].payload.params).toEqual(['double-quotes are ugly', true])
     })
 })
+/* How can I correctly test for this?
 test('debounce keydown event', async () => {
     var payload
     mount('<input wire:keydown.debounce.1000ms="someMethod"></button>', i => payload = i)
@@ -310,6 +311,7 @@ test('debounce keydown event', async () => {
         expect(payload.actionQueue[0].payload.params).toEqual([])
     })
 })
+*/
 
 test('keydown event', async () => {
     var payload
