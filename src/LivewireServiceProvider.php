@@ -10,9 +10,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\LivewireViewCompilerEngine;
-use Livewire\Connection\HttpConnectionHandler;
 use Illuminate\Foundation\Testing\TestResponse;
-use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Testing\TestResponse as Laravel7TestResponse;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
@@ -120,11 +118,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
-        RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
-        RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
-
-        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
-            ->middleware(config('livewire.middleware_group', 'web'));
+        if (! config('livewire.use_custom_routes')) {
+            Livewire::routes();
+        }
     }
 
     protected function registerCommands()
