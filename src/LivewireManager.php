@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Fluent;
+use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\Str;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
@@ -372,5 +373,14 @@ HTML;
     public function isLaravel7()
     {
         return Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=');
+    }
+    
+    public function routes()
+    {
+        RouteFacade::get('/livewire/livewire.js', '\\Livewire\\LivewireJavaScriptAssets@source');
+        RouteFacade::get('/livewire/livewire.js.map', '\\Livewire\\LivewireJavaScriptAssets@maps');
+
+        RouteFacade::post('/livewire/message/{name}', '\\Livewire\\Connection\\HttpConnectionHandler')
+            ->middleware(config('livewire.middleware_group', 'web'));
     }
 }
