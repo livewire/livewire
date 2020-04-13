@@ -80,7 +80,7 @@ return [
     |
     | Setting this value to true allows for you to decide where to put the routes.
     |
-    | Example: Wanting to use a prefix that uses Route Model Binding "http(s)://{tenant}.foo.com/{bar}/livewire..."
+    | Example: Wanting to use a prefix that uses Route Model Binding "http(s)://{tenant}.myurl.com/{bar}/livewire..."
     |
     */
 
