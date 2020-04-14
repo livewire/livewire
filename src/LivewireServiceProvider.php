@@ -195,7 +195,7 @@ class LivewireServiceProvider extends ServiceProvider
         ], ['livewire', 'livewire:config']);
         
         $this->publishesToGroups([
-            __DIR__..'/views' => resource_path('views/vendor/livewire'),
+            __DIR__.'/views' => resource_path('views/vendor/livewire'),
         ], ['livewire', 'livewire:views']);
     }
 
