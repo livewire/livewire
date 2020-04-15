@@ -27,7 +27,7 @@ trait MakesAssertions
     public function assertSee($value)
     {
         PHPUnit::assertStringContainsString(
-            e((string) $value),
+            e($value),
             $this->stripOutInitialData($this->payload['dom'])
         );
 
@@ -37,7 +37,7 @@ trait MakesAssertions
     public function assertDontSee($value)
     {
         PHPUnit::assertStringNotContainsString(
-            e((string) $value),
+            e($value),
             $this->stripOutInitialData($this->payload['dom'])
         );
 
