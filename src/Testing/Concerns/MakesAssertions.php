@@ -3,6 +3,7 @@
 namespace Livewire\Testing\Concerns;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -26,7 +27,7 @@ trait MakesAssertions
     public function assertSee($value)
     {
         PHPUnit::assertStringContainsString(
-            e($value),
+            e((string) $value),
             $this->stripOutInitialData($this->payload['dom'])
         );
 
@@ -36,7 +37,7 @@ trait MakesAssertions
     public function assertDontSee($value)
     {
         PHPUnit::assertStringNotContainsString(
-            e($value),
+            e((string) $value),
             $this->stripOutInitialData($this->payload['dom'])
         );
 
@@ -113,7 +114,10 @@ trait MakesAssertions
                 PHPUnit::assertTrue($errors->has($value), "Component missing error: $value");
             } else {
                 $rules = array_keys(Arr::get($this->lastValidator->failed(), $key, []));
-                $lowerCaseRules = array_map('strtolower', $rules);
+                $snakeCaseRules = array_map(function ($rule) {
+                    return Str::snake($rule);
+                }, $rules);
+                $lowerCaseRules = array_map('strtolower', $snakeCaseRules);
 
                 foreach ((array) $value as $rule) {
                     PHPUnit::assertContains($rule, $lowerCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
@@ -140,8 +144,11 @@ trait MakesAssertions
             if (is_int($key)) {
                 PHPUnit::assertFalse($errors->has($value), "Component has error: $value");
             } else {
-                $rules = array_keys($this->lastValidator->failed()[$key]);
-                $lowerCaseRules = array_map('strtolower', $rules);
+                $rules = array_keys(Arr::get($this->lastValidator->failed(), $key, []));
+                $snakeCaseRules = array_map(function ($rule) {
+                    return Str::snake($rule);
+                }, $rules);
+                $lowerCaseRules = array_map('strtolower', $snakeCaseRules);
 
                 foreach ((array) $value as $rule) {
                     PHPUnit::assertNotContains($rule, $lowerCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
