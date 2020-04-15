@@ -117,10 +117,9 @@ trait MakesAssertions
                 $snakeCaseRules = array_map(function ($rule) {
                     return Str::snake($rule);
                 }, $rules);
-                $lowerCaseRules = array_map('strtolower', $snakeCaseRules);
 
                 foreach ((array) $value as $rule) {
-                    PHPUnit::assertContains($rule, $lowerCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
+                    PHPUnit::assertContains($rule, $snakeCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
                 }
             }
         }
@@ -148,10 +147,9 @@ trait MakesAssertions
                 $snakeCaseRules = array_map(function ($rule) {
                     return Str::snake($rule);
                 }, $rules);
-                $lowerCaseRules = array_map('strtolower', $snakeCaseRules);
 
                 foreach ((array) $value as $rule) {
-                    PHPUnit::assertNotContains($rule, $lowerCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
+                    PHPUnit::assertNotContains($rule, $snakeCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
                 }
             }
         }
