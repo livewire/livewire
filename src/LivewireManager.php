@@ -6,9 +6,14 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Livewire\Exceptions\ComponentNotFoundException;
+use Livewire\Exceptions\CorruptComponentPayloadException;
+use Livewire\Exceptions\InvalidComponentMountStateException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 use Livewire\Testing\TestableLivewire;
+use ReflectionClass;
+use ReflectionMethod;
 
 class LivewireManager
 {
@@ -104,6 +109,8 @@ class LivewireManager
         $resolvedParameters = $this->resolveClassMethodDependencies(
             $params, $instance, 'mount'
         );
+
+        $this->componentCanMountWithNonNumericKeyedParams($instance, $resolvedParameters);
 
         $instance->mount(...$resolvedParameters);
 
@@ -372,5 +379,42 @@ HTML;
     public function isLaravel7()
     {
         return Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=');
+    }
+
+    private function componentCanMountWithNonNumericKeyedParams($instance, $resolvedParameters)
+    {
+        if (count($resolvedParameters) === 0) {
+            return;
+        }
+
+        if (is_numeric(key($resolvedParameters))) {
+            return;
+        }
+
+        $methods = $this->getComponentsNonInheritedMethods($instance);
+
+        throw_if(
+            $this->componentMissingMountMethod($methods),
+            new InvalidComponentMountStateException($instance->getName())
+        );
+    }
+
+    private function getComponentsNonInheritedMethods($instance)
+    {
+        $methods = [];
+
+        $reflection = new ReflectionClass($instance);
+        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+            if ($method->class == $reflection->getName()) {
+                $methods[] = $method->name;
+            }
+        }
+
+        return $methods;
+    }
+
+    private function componentMissingMountMethod(array $methods)
+    {
+        return !in_array('mount', $methods);
     }
 }
