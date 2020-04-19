@@ -40,6 +40,11 @@ trait ValidatesInput
         );
     }
 
+    public function clearValidation($field = null)
+    {
+        $this->resetErrorBag($field);
+    }
+
     public function resetValidation($field = null)
     {
         $this->resetErrorBag($field);
