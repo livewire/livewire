@@ -59,7 +59,7 @@ export default {
         const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
             const model = directive.value
             const el = new DOMElement(e.target)
-            const value = e instanceof CustomEvent
+            const value = e instanceof CustomEvent && typeof e.detail != 'undefined'
                 ? e.detail
                 : el.valueFromInput(component)
 
