@@ -391,30 +391,9 @@ HTML;
             return;
         }
 
-        $methods = $this->getComponentsNonInheritedMethods($instance);
-
         throw_if(
-            $this->componentMissingMountMethod($methods),
+            method_exists($instance, 'mount') === false,
             new InvalidComponentMountStateException($instance->getName())
         );
-    }
-
-    private function getComponentsNonInheritedMethods($instance)
-    {
-        $methods = [];
-
-        $reflection = new ReflectionClass($instance);
-        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            if ($method->class == $reflection->getName()) {
-                $methods[] = $method->name;
-            }
-        }
-
-        return $methods;
-    }
-
-    private function componentMissingMountMethod(array $methods)
-    {
-        return !in_array('mount', $methods);
     }
 }
