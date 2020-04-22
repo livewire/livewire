@@ -545,6 +545,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "i-bajrai",
+      "name": "Imran Bajerai",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/3688374?v=4",
+      "profile": "https://github.com/i-bajrai",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-58-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-59-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -107,6 +107,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://peen.dev"><img src="https://avatars1.githubusercontent.com/u/5564176?v=4" width="100px;" alt=""/><br /><sub><b>Niels Peen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=nielspeen" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/salparadise"><img src="https://avatars2.githubusercontent.com/u/4439778?v=4" width="100px;" alt=""/><br /><sub><b>Wojtek Mieszczak</b></sub></a><br /><a href="#maintenance-salparadise" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://github.com/i-bajrai"><img src="https://avatars1.githubusercontent.com/u/3688374?v=4" width="100px;" alt=""/><br /><sub><b>Imran Bajerai</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=i-bajrai" title="Code">💻</a></td>
   </tr>
 </table>
 
