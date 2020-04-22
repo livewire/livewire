@@ -22,8 +22,10 @@ if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, 
             $uses = array_flip(class_uses_recursive($e));
 
             if (
+                // Don't wrap "abort(403)".
+                $e instanceof AuthorizationException
                 // Don't wrap "abort(404)".
-                $e instanceof NotFoundHttpException
+                || $e instanceof NotFoundHttpException
                 // Don't wrap "abort(500)".
                 || $e instanceof HttpException
                 // Don't wrap most Livewire exceptions.
@@ -46,12 +48,14 @@ if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, 
         // harder to read, AND causes issues like `abort(404)` not actually working.
         protected function handleViewException(Exception $e, $obLevel)
         {
-            if($e instanceof Exception){
+            if ($e instanceof Exception){
                 $uses = array_flip(class_uses_recursive($e));
 
                 if (
+                    // Don't wrap "abort(403)".
+                    $e instanceof AuthorizationException
                     // Don't wrap "abort(404)".
-                    $e instanceof NotFoundHttpException
+                    || $e instanceof NotFoundHttpException
                     // Don't wrap "abort(500)".
                     || $e instanceof HttpException
                     // Don't wrap most Livewire exceptions.
@@ -64,10 +68,9 @@ if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, 
                 }
 
                 parent::handleViewException($e, $obLevel);
-            }else{
+            } else {
                 throw($e);
             }
-
         }
     }
 }
