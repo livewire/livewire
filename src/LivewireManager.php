@@ -2,13 +2,14 @@
 
 namespace Livewire;
 
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
-use Livewire\Exceptions\ComponentNotFoundException;
-use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
+use Illuminate\Support\Fluent;
+use Illuminate\Foundation\Application;
 use Livewire\Testing\TestableLivewire;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Livewire\Exceptions\ComponentNotFoundException;
+use Livewire\Exceptions\MountMethodMissingException;
+use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
 class LivewireManager
 {
@@ -104,6 +105,8 @@ class LivewireManager
         $resolvedParameters = $this->resolveClassMethodDependencies(
             $params, $instance, 'mount'
         );
+
+        $this->ensureComponentHasMountMethod($instance, $resolvedParameters);
 
         $instance->mount(...$resolvedParameters);
 
@@ -372,5 +375,17 @@ HTML;
     public function isLaravel7()
     {
         return Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=');
+    }
+
+    private function ensureComponentHasMountMethod($instance, $resolvedParameters)
+    {
+        if (count($resolvedParameters) === 0) return;
+
+        if (is_numeric(key($resolvedParameters))) return;
+
+        throw_unless(
+            method_exists($instance, 'mount'),
+            new MountMethodMissingException($instance->getName())
+        );
     }
 }
