@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-60-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-61-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -109,6 +109,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/salparadise"><img src="https://avatars2.githubusercontent.com/u/4439778?v=4" width="100px;" alt=""/><br /><sub><b>Wojtek Mieszczak</b></sub></a><br /><a href="#maintenance-salparadise" title="Maintenance">🚧</a></td>
     <td align="center"><a href="https://github.com/i-bajrai"><img src="https://avatars1.githubusercontent.com/u/3688374?v=4" width="100px;" alt=""/><br /><sub><b>Imran Bajerai</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=i-bajrai" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/dododedodonl"><img src="https://avatars2.githubusercontent.com/u/100052?v=4" width="100px;" alt=""/><br /><sub><b>Tom Janssen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=dododedodonl" title="Code">💻</a></td>
+    <td align="center"><a href="https://DanHarrin.com"><img src="https://avatars2.githubusercontent.com/u/41773797?v=4" width="100px;" alt=""/><br /><sub><b>Dan Harrin</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=DanHarrin" title="Code">💻</a></td>
   </tr>
 </table>
 
