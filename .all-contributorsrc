@@ -572,6 +572,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "mblarsen",
+      "name": "Michael Bøcker-Larsen",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/247048?v=4",
+      "profile": "https://www.codeboutique.com",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
