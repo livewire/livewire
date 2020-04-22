@@ -6,6 +6,7 @@ use Exception;
 use ErrorException;
 use Livewire\Livewire;
 use Livewire\Component;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\View;
 use Livewire\Exceptions\BypassViewHandler;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -51,6 +52,16 @@ class ErrorsThrownInLivewireViewsAreConditionallyWrappedTest extends TestCase
         $this->expectException(HttpException::class);
 
         Livewire::component('foo', Abort500IsThrownInComponentMountStub::class);
+
+        View::make('render-component', ['component' => 'foo'])->render();
+    }
+
+    /** @test */
+    public function errors_thrown_by_authorization_exception_function_are_not_wrapped()
+    {
+        $this->expectException(AuthorizationException::class);
+
+        Livewire::component('foo', AuthorizationExceptionIsThrownInComponentMountStub::class);
 
         View::make('render-component', ['component' => 'foo'])->render();
     }
@@ -103,6 +114,19 @@ class Abort500IsThrownInComponentMountStub extends Component
     public function mount()
     {
         abort(500);
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class AuthorizationExceptionIsThrownInComponentMountStub extends Component
+{
+    public function mount()
+    {
+        throw new AuthorizationException;
     }
 
     public function render()
