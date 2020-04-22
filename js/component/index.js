@@ -206,6 +206,7 @@ export default class Component {
     forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
         this.walk(el => {
             if (el.directives.missing('model')) return
+
             const modelValue = el.directives.get('model').value
 
             if (el.isFocused() && ! dirtyInputs.includes(modelValue)) return
