@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Application;
 use Illuminate\View\Engines\CompilerEngine as LaravelCompilerEngine;
 use Illuminate\View\Engines\PhpEngine;
