@@ -1,4 +1,4 @@
-import { kebabCase, debounce} from '@/util'
+import { kebabCase, debounce } from '@/util'
 import ModelAction from '@/action/model'
 import MethodAction from '@/action/method'
 import DOMElement from '@/dom/dom_element'
@@ -93,10 +93,15 @@ export default {
                         if (selectedButNotPressedKeyModifiers.length > 0) return false;
                     }
 
+                    // Strip 'debounce' modifier and time modifiers from modifiers list
+                    let modifiers = directive.modifiers.filter(modifier => {
+                        return ! modifier.match(/debounce/)
+                            && ! modifier.match(/[0-9ms]/)
+                            && ! modifier.match(/[0-9s]/)
+                    })
+
                     // Only handle listener if no, or matching key modifiers are passed.
-                    return (directive.modifiers.length === 0
-                        || directive.modifiers.includes(kebabCase(e.key)))
-                        || directive.modifiers.includes('debounce')
+                    return modifiers.length === 0 || modifiers.includes(kebabCase(e.key))
                 })
                 break;
             case 'click':
@@ -177,8 +182,10 @@ export default {
                 ? debounce(callback, time)
                 : callback
         }
+
         const hasDebounceModifier = directive.modifiers.includes('debounce')
-        const debouncedHandler =  debounceIf(hasDebounceModifier,handler,directive.durationOr(150))
+        const debouncedHandler = debounceIf(hasDebounceModifier, handler, directive.durationOr(150))
+
         el.addEventListener(event, debouncedHandler)
 
         component.addListenerForTeardown(() => {

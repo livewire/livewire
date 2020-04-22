@@ -297,21 +297,46 @@ test('action parameter can use double-quotes', async () => {
         expect(payload.actionQueue[0].payload.params).toEqual(['double-quotes are ugly', true])
     })
 })
-/* How can I correctly test for this?
-test('debounce keydown event', async () => {
+
+test('debounce keyup event', async () => {
     var payload
-    mount('<input wire:keydown.debounce.1000ms="someMethod"></button>', i => payload = i)
+    mount('<input wire:keyup.debounce.50ms="someMethod"></button>', i => payload = i)
 
-    fireEvent.keyDown(document.querySelector('input'), { key: 'x' })
+    fireEvent.keyUp(document.querySelector('input'), { key: 'x' })
 
-    await wait(() => {
+    await timeout(1)
 
-        expect(payload.actionQueue[0].type).toEqual('callMethod')
-        expect(payload.actionQueue[0].payload.method).toEqual('someMethod')
-        expect(payload.actionQueue[0].payload.params).toEqual([])
-    })
+    expect(payload).toEqual(undefined)
+
+    await timeout(60)
+
+    expect(payload.actionQueue[0].payload.method).toEqual('someMethod')
 })
-*/
+
+test('debounce keyup event with key specified', async () => {
+    var payload
+    mount('<input wire:keyup.x.debounce.50ms="someMethod"></button>', i => payload = i)
+
+    fireEvent.keyUp(document.querySelector('input'), { key: 'k' })
+
+    await timeout(5)
+
+    expect(payload).toEqual(undefined)
+
+    await timeout(60)
+
+    expect(payload).toEqual(undefined)
+
+    fireEvent.keyUp(document.querySelector('input'), { key: 'x' })
+
+    await timeout(5)
+
+    expect(payload).toEqual(undefined)
+
+    await timeout(60)
+
+    expect(payload.actionQueue[0].payload.method).toEqual('someMethod')
+})
 
 test('keydown event', async () => {
     var payload
