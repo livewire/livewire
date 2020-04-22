@@ -59,7 +59,8 @@ export default {
         const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
             const model = directive.value
             const el = new DOMElement(e.target)
-            const value = e instanceof CustomEvent
+            // We have to check for typeof e.detail here for IE 11.
+            const value = e instanceof CustomEvent && typeof e.detail != 'undefined'
                 ? e.detail
                 : el.valueFromInput(component)
 

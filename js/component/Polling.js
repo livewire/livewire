@@ -5,7 +5,11 @@ export default function () {
     store.registerHook('elementInitialized', (el, component) => {
         if (el.directives.missing('poll')) return
 
-        fireActionOnInterval(el, component)
+        let intervalId = fireActionOnInterval(el, component)
+
+        component.addListenerForTeardown(() => {
+            clearInterval(intervalId)
+        })
     })
 }
 
@@ -13,7 +17,7 @@ function fireActionOnInterval(el, component) {
     const directive = el.directives.get('poll')
     const method = directive.method || '$refresh'
 
-    setInterval(() => {
+    return setInterval(() => {
         // Don't poll when the tab is in the background.
         // The "Math.random" business effectivlly prevents 95% of requests
         // from executing. We still want "some" requests to get through.

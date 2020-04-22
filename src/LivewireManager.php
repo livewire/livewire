@@ -2,13 +2,14 @@
 
 namespace Livewire;
 
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
-use Livewire\Exceptions\ComponentNotFoundException;
-use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
+use Illuminate\Support\Fluent;
+use Illuminate\Foundation\Application;
 use Livewire\Testing\TestableLivewire;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Livewire\Exceptions\ComponentNotFoundException;
+use Livewire\Exceptions\MountMethodMissingException;
+use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
 class LivewireManager
 {
@@ -42,10 +43,6 @@ class LivewireManager
 
     public function getComponentClass($alias)
     {
-        if (class_exists($alias)) {
-            return $alias;
-        }
-
         $finder = app()->make(LivewireComponentsFinder::class);
 
         $class = false;
@@ -93,13 +90,23 @@ class LivewireManager
 
         $id = Str::random(20);
 
-        $instance = $this->activate($name, $id);
+        // Allow instantiating Livewire components directly from classes.
+        if (class_exists($name)) {
+            $instance = new $name($id);
+            // Set the name to the computed name, so that the full namespace
+            // isn't leaked to the front-end.
+            $name = $instance->getName();
+        } else {
+            $instance = $this->activate($name, $id);
+        }
 
         $this->initialHydrate($instance, []);
 
         $resolvedParameters = $this->resolveClassMethodDependencies(
             $params, $instance, 'mount'
         );
+
+        $this->ensureComponentHasMountMethod($instance, $resolvedParameters);
 
         $instance->mount(...$resolvedParameters);
 
@@ -368,5 +375,17 @@ HTML;
     public function isLaravel7()
     {
         return Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=');
+    }
+
+    private function ensureComponentHasMountMethod($instance, $resolvedParameters)
+    {
+        if (count($resolvedParameters) === 0) return;
+
+        if (is_numeric(key($resolvedParameters))) return;
+
+        throw_unless(
+            method_exists($instance, 'mount'),
+            new MountMethodMissingException($instance->getName())
+        );
     }
 }

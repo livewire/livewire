@@ -20,7 +20,14 @@ export default class Connection {
         if (payload.fromPrefetch) {
             componentStore.findComponent(payload.id).receivePrefetchMessage(payload)
         } else {
-            componentStore.findComponent(payload.id).receiveMessage(payload)
+            let component = componentStore.findComponent(payload.id)
+
+            if (! component) {
+                console.warn(`Livewire: Component [${payload.name}] triggered an update, but not found on page.`)
+                return
+            }
+
+            component.receiveMessage(payload)
 
             dispatch('livewire:update')
         }

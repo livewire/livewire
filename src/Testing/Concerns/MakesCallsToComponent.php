@@ -35,6 +35,15 @@ trait MakesCallsToComponent
         return $this;
     }
 
+    public function fill($values)
+    {
+        foreach ($values as $name => $value) {
+            $this->set($name, $value);
+        }
+
+        return $this;
+    }
+
     public function set($name, $value = null)
     {
         return $this->updateProperty($name, $value);

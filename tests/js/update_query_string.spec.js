@@ -79,7 +79,7 @@ test('data will be removed from the query string if "except" is present', async 
     document.querySelector('button').click()
 
     await wait(async () => {
-        expect(newUri).toEqual('/?')
+        expect(newUri).toEqual('/')
     })
 })
 

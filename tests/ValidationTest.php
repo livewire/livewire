@@ -132,6 +132,17 @@ class ValidationTest extends TestCase
 
         $this->assertTrue(app('view')->shared('errors') === $errors);
     }
+
+    /** @test */
+    public function multi_word_validation_rules_are_assertable()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->set('foo', 'bar')
+            ->call('runValidationWithMultiWordRule')
+            ->assertHasErrors(['foo' => 'ends_with']);
+    }
 }
 
 class ForValidation extends Component
@@ -149,6 +160,13 @@ class ForValidation extends Component
         $this->validate([
             'foo' => 'required',
             'bar' => 'required',
+        ]);
+    }
+
+    public function runValidationWithMultiWordRule()
+    {
+        $this->validate([
+            'foo' => 'ends_with:baz',
         ]);
     }
 

@@ -43,6 +43,6 @@ export default function () {
 
         var stringifiedQueryString = queryString.stringify(queryData)
 
-        history.replaceState({turbolinks: {}}, "", window.location.pathname + '?' + stringifiedQueryString)
+        history.replaceState({turbolinks: {}}, "", [window.location.pathname, stringifiedQueryString].filter(Boolean).join('?'))
     })
 }
