@@ -3,7 +3,7 @@
 namespace Tests;
 
 use Livewire\Component;
-use Livewire\Exceptions\InvalidComponentMountStateException;
+use Livewire\Exceptions\MountMethodMissingException;
 use Livewire\LivewireManager;
 
 class MountComponentTest extends TestCase
@@ -35,7 +35,7 @@ class MountComponentTest extends TestCase
     /** @test */
     public function it_throws_an_exception_when_mount_is_missing()
     {
-        $this->expectException(InvalidComponentMountStateException::class);
+        $this->expectException(MountMethodMissingException::class);
 
         app(LivewireManager::class)->test(ComponentWithoutMount::class, ['foo' => 10]);
     }

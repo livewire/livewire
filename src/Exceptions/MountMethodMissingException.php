@@ -2,7 +2,7 @@
 
 namespace Livewire\Exceptions;
 
-class InvalidComponentMountStateException extends \Exception
+class MountMethodMissingException extends \Exception
 {
     use BypassViewHandler;
 
@@ -10,8 +10,7 @@ class InvalidComponentMountStateException extends \Exception
     {
         parent::__construct(
             "Livewire encountered a missing mount method when trying to initialise the [{$component}] " .
-            "component. \n When passing non-numeric keyed arrays to components ensure you have a mount method " .
-            "on the component."
+            "component. \n When passing component parameters, make sure you have a mount method."
         );
     }
 }
