@@ -563,6 +563,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "DanHarrin",
+      "name": "Dan Harrin",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/41773797?v=4",
+      "profile": "https://DanHarrin.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
