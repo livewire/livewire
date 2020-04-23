@@ -16,7 +16,7 @@ trait InteractsWithProperties
 
         foreach ($publicProperties as $property) {
             if ($property->getDeclaringClass()->getName() !== self::class) {
-                $data[$property->getName()] = $property->getValue($this);
+                $data[$property->getName()] = $this->getInitializedPropertyValue($property);
             }
         }
 
@@ -31,11 +31,21 @@ trait InteractsWithProperties
         foreach ($properties as $property) {
             if ($property->getDeclaringClass()->getName() !== self::class) {
                 $property->setAccessible(true);
-                $data[$property->getName()] = $property->getValue($this);
+                $data[$property->getName()] = $this->getInitializedPropertyValue($property);
             }
         }
 
         return $data;
+    }
+
+    public function getInitializedPropertyValue(\ReflectionProperty $property) {
+        // Ensures typed property is initialized in PHP >=7.4, if so, return its value,
+        // if not initialized, return null (as expected in earlier PHP Versions)
+        if (method_exists($property, 'isInitialized') && !$property->isInitialized($this)) {
+            return null;
+        }
+
+        return $property->getValue($this);
     }
 
     public function hasProperty($prop)
