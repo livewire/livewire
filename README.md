@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-58-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-63-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -102,11 +102,16 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/ManojKiranA"><img src="https://avatars0.githubusercontent.com/u/30294553?v=4" width="100px;" alt=""/><br /><sub><b>Manojkiran Appathurai</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=ManojKiranA" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/stevebauman"><img src="https://avatars3.githubusercontent.com/u/6421846?v=4" width="100px;" alt=""/><br /><sub><b>Steve Bauman</b></sub></a><br /><a href="#maintenance-stevebauman" title="Maintenance">🚧</a></td>
     <td align="center"><a href="https://github.com/code-distortion"><img src="https://avatars2.githubusercontent.com/u/56794290?v=4" width="100px;" alt=""/><br /><sub><b>Tim</b></sub></a><br /><a href="#maintenance-code-distortion" title="Maintenance">🚧</a></td>
-    <td align="center"><a href="https://www.csrhymes.com/"><img src="https://avatars0.githubusercontent.com/u/4160546?v=4" width="100px;" alt=""/><br /><sub><b>CS Rhymes</b></sub></a><br /><a href="#maintenance-chrisrhymes" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://www.csrhymes.com/"><img src="https://avatars0.githubusercontent.com/u/4160546?v=4" width="100px;" alt=""/><br /><sub><b>CS Rhymes</b></sub></a><br /><a href="#maintenance-chrisrhymes" title="Maintenance">🚧</a> <a href="https://github.com/livewire/livewire/commits?author=chrisrhymes" title="Code">💻</a></td>
   </tr>
   <tr>
     <td align="center"><a href="https://peen.dev"><img src="https://avatars1.githubusercontent.com/u/5564176?v=4" width="100px;" alt=""/><br /><sub><b>Niels Peen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=nielspeen" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/salparadise"><img src="https://avatars2.githubusercontent.com/u/4439778?v=4" width="100px;" alt=""/><br /><sub><b>Wojtek Mieszczak</b></sub></a><br /><a href="#maintenance-salparadise" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://github.com/i-bajrai"><img src="https://avatars1.githubusercontent.com/u/3688374?v=4" width="100px;" alt=""/><br /><sub><b>Imran Bajerai</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=i-bajrai" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/dododedodonl"><img src="https://avatars2.githubusercontent.com/u/100052?v=4" width="100px;" alt=""/><br /><sub><b>Tom Janssen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=dododedodonl" title="Code">💻</a></td>
+    <td align="center"><a href="https://DanHarrin.com"><img src="https://avatars2.githubusercontent.com/u/41773797?v=4" width="100px;" alt=""/><br /><sub><b>Dan Harrin</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=DanHarrin" title="Code">💻</a></td>
+    <td align="center"><a href="https://www.codeboutique.com"><img src="https://avatars0.githubusercontent.com/u/247048?v=4" width="100px;" alt=""/><br /><sub><b>Michael Bøcker-Larsen</b></sub></a><br /><a href="#maintenance-mblarsen" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://github.com/DavideMoney"><img src="https://avatars0.githubusercontent.com/u/39701809?v=4" width="100px;" alt=""/><br /><sub><b>DavideMoney</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=DavideMoney" title="Code">💻</a></td>
   </tr>
 </table>
 

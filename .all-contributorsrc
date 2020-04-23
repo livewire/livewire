@@ -525,7 +525,8 @@
       "avatar_url": "https://avatars0.githubusercontent.com/u/4160546?v=4",
       "profile": "https://www.csrhymes.com/",
       "contributions": [
-        "maintenance"
+        "maintenance",
+        "code"
       ]
     },
     {
@@ -544,6 +545,51 @@
       "profile": "https://github.com/salparadise",
       "contributions": [
         "maintenance"
+      ]
+    },
+    {
+      "login": "i-bajrai",
+      "name": "Imran Bajerai",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/3688374?v=4",
+      "profile": "https://github.com/i-bajrai",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "dododedodonl",
+      "name": "Tom Janssen",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/100052?v=4",
+      "profile": "https://github.com/dododedodonl",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "DanHarrin",
+      "name": "Dan Harrin",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/41773797?v=4",
+      "profile": "https://DanHarrin.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mblarsen",
+      "name": "Michael Bøcker-Larsen",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/247048?v=4",
+      "profile": "https://www.codeboutique.com",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "DavideMoney",
+      "name": "DavideMoney",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/39701809?v=4",
+      "profile": "https://github.com/DavideMoney",
+      "contributions": [
+        "code"
       ]
     }
   ],

@@ -8,11 +8,21 @@ use Livewire\LivewireManager;
 class ComponentHasNameAsPublicPropertyTest extends TestCase
 {
     /** @test */
-    public function public_id_property_is_set()
+    public function public_name_property_is_set()
     {
         $component = app(LivewireManager::class)->test(ComponentWithNameProperty::class);
 
         $component->set('name', 'Caleb');
+
+        $this->assertEquals($component->get('name'), 'Caleb');
+    }
+
+    /** @test */
+    public function public_name_property_is_filled()
+    {
+        $component = app(LivewireManager::class)->test(ComponentWithNameProperty::class);
+
+        $component->fill(['name' => 'Caleb']);
 
         $this->assertEquals($component->get('name'), 'Caleb');
     }

@@ -131,6 +131,12 @@ test('polling without specifying method refreshes by default', async () => {
     expect(pollPayload.actionQueue[0].payload.method).toEqual('$refresh')
 })
 
+test('polling will stop if component is conditionally removed', async () => {
+    // @todo: This assertion is hard to make given the current testing utilities.
+    // Leaving this here so that we're aware of the need for it.
+    expect(true).toBeTruthy()
+})
+
 test('polling on root div', async () => {
     var pollHappened = false
     mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
@@ -295,5 +301,59 @@ test('action parameter can use double-quotes', async () => {
         expect(payload.actionQueue[0].type).toEqual('callMethod')
         expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
         expect(payload.actionQueue[0].payload.params).toEqual(['double-quotes are ugly', true])
+    })
+})
+
+test('debounce keyup event', async () => {
+    var payload
+    mount('<input wire:keyup.debounce.50ms="someMethod"></button>', i => payload = i)
+
+    fireEvent.keyUp(document.querySelector('input'), { key: 'x' })
+
+    await timeout(1)
+
+    expect(payload).toEqual(undefined)
+
+    await timeout(60)
+
+    expect(payload.actionQueue[0].payload.method).toEqual('someMethod')
+})
+
+test('debounce keyup event with key specified', async () => {
+    var payload
+    mount('<input wire:keyup.x.debounce.50ms="someMethod"></button>', i => payload = i)
+
+    fireEvent.keyUp(document.querySelector('input'), { key: 'k' })
+
+    await timeout(5)
+
+    expect(payload).toEqual(undefined)
+
+    await timeout(60)
+
+    expect(payload).toEqual(undefined)
+
+    fireEvent.keyUp(document.querySelector('input'), { key: 'x' })
+
+    await timeout(5)
+
+    expect(payload).toEqual(undefined)
+
+    await timeout(60)
+
+    expect(payload.actionQueue[0].payload.method).toEqual('someMethod')
+})
+
+test('keydown event', async () => {
+    var payload
+    mount('<input wire:keydown="someMethod"></button>', i => payload = i)
+
+    fireEvent.keyDown(document.querySelector('input'), { key: 'x' })
+
+    await wait(() => {
+
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('someMethod')
+        expect(payload.actionQueue[0].payload.params).toEqual([])
     })
 })

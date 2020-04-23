@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Livewire\Component;
+use Livewire\Exceptions\MountMethodMissingException;
 use Livewire\LivewireManager;
 
 class MountComponentTest extends TestCase
@@ -30,6 +31,14 @@ class MountComponentTest extends TestCase
         $this->assertSame(null, $component->foo);
         $this->assertSame(null, $component->bar);
     }
+
+    /** @test */
+    public function it_throws_an_exception_when_mount_is_missing()
+    {
+        $this->expectException(MountMethodMissingException::class);
+
+        app(LivewireManager::class)->test(ComponentWithoutMount::class, ['foo' => 10]);
+    }
 }
 
 class ComponentWithOptionalParameters extends Component
@@ -42,6 +51,16 @@ class ComponentWithOptionalParameters extends Component
         $this->foo = $foo;
         $this->bar = $bar;
     }
+
+    public function render()
+    {
+        return view('null-view');
+    }
+}
+
+class ComponentWithoutMount extends Component
+{
+    public $foo = 0;
 
     public function render()
     {
