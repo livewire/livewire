@@ -139,9 +139,9 @@ class ValidationTest extends TestCase
         $component = app(LivewireManager::class)->test(ForValidation::class);
 
         $component
-            ->set('foo', 'bar')
+            ->set('foo', 'bar123&*(O)')
             ->call('runValidationWithMultiWordRule')
-            ->assertHasErrors(['foo' => 'ends_with']);
+            ->assertHasErrors(['foo' => 'alpha_dash']);
     }
 }
 
@@ -166,7 +166,7 @@ class ForValidation extends Component
     public function runValidationWithMultiWordRule()
     {
         $this->validate([
-            'foo' => 'ends_with:baz',
+            'foo' => 'alpha_dash',
         ]);
     }
 
