@@ -9,14 +9,28 @@ use ReflectionClass;
 class LivewireSPAController
 {
     /**
-     * @param Route $route
-     * @param Router $router
+     * @var Route
+     */
+    private $route;
+
+    /**
+     * @var Router
+     */
+    private $router;
+
+    public function __construct(Route $route, Router $router)
+    {
+        $this->route = $route;
+        $this->router = $router;
+    }
+
+    /**
      * @param string $method
      * @param array $parameters
+     *
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View|mixed
-     * @throws \ReflectionException
      */
-    public function __call(Route $route, Router $router, $method, $parameters)
+    public function __call($method, $parameters)
     {
         $componentName = $method;
 
@@ -24,17 +38,17 @@ class LivewireSPAController
         $reflected = new ReflectionClass($componentClass);
 
         $componentParameters = $reflected->hasMethod('mount')
-            ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), $router))->retrieveBindings()
+            ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), $this->router))->retrieveBindings()
             : [];
 
-        return view(
+        return view()->file(
             __DIR__ . '/livewire-view.blade.php',
             [
-                'layout' => $route->getAction('layout') ?? 'layouts.app',
-                'section' => $route->getAction('section') ?? 'content',
+                'layout' => $this->route->getAction('layout') ?? 'layouts.app',
+                'section' => $this->route->getAction('section') ?? 'content',
                 'component' => $componentName,
                 'componentParameters' => $componentParameters,
             ]
-        )->with($route->layoutParamsFromLivewire ?? []);
+        )->with($this->route->layoutParamsFromLivewire ?? []);
     }
 }
