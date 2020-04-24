@@ -41,14 +41,11 @@ class LivewireSPAController
             ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), $this->router))->retrieveBindings()
             : [];
 
-        return view()->file(
-            __DIR__ . '/livewire-view.blade.php',
-            [
-                'layout' => $this->route->getAction('layout') ?? 'layouts.app',
-                'section' => $this->route->getAction('section') ?? 'content',
-                'component' => $componentName,
-                'componentParameters' => $componentParameters,
-            ]
-        )->with($this->route->layoutParamsFromLivewire ?? []);
+        return view()->file(__DIR__ . '/livewire-view.blade.php', [
+            'layout' => $this->route->getAction('layout') ?? 'layouts.app',
+            'section' => $this->route->getAction('section') ?? 'content',
+            'component' => $componentName,
+            'componentParameters' => $componentParameters,
+        ])->with($this->route->layoutParamsFromLivewire ?? []);
     }
 }
