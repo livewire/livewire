@@ -12,11 +12,22 @@ Open GitHub issues for all bugs. Ideas and questions belong on the forum: https:
 
 Contribute to the docs here: https://github.com/livewire/docs
 
+## Release Schedule
+Livewire uses semantic versioning and will use the following release schedule strategy:
+* Urgent bug fix? Release as "patch" version bump right away
+* Patch? Group of small enhancements and bugfixes to be released every ~2 weeks-ish
+* Minor? New features or significant API additions
+* Major? Breaking changes and big strategy changes
+
+> Important Note: All "major" versions will be tagged alongside Laravel's major version release schedule (every 6 months). That does not mean Livewire will release a major version every 6 months, just that when it DOES release a major version, it will coincide with a Laravel release.
+
 ## Roadmap
-* More flexibility for scoping listeners (`->emitSelf()`, and emiting to specific components or ids)
 * Add a `$formData` magic property to pass into submit handler actions: `wire:submit="save($formData)"`
 * Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
-* Remove `wire:poll` setIntervals when component or element is removed. #563
+* Remove `wire:poll` setIntervals an element is removed, or when the attribute is removed. #563
+* Implement `wire:model.passive`
+* Add `wire:eval` for latent script tag evaluation
+* Add `wire:append` for appending DOM changes rather than replacing them
 
 ## V2 Roadmap
 * Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`
