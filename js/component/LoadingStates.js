@@ -26,11 +26,11 @@ export default function () {
           if (!params) {
             return action.payload.method;
           }
+
           return [
             action.payload.method,
             `${action.payload.method}:${params}`,
           ]
-
         }).flat();
 
         const models = message.actionQueue.filter(action => {
