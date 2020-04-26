@@ -123,6 +123,6 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 ## License
 
-Copyright © 2019-2020 Caleb Porzio and contributors
+Copyright © Caleb Porzio
 
 Licensed under the MIT license, see [LICENSE.md](LICENSE.md) for details.
