@@ -591,6 +591,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "dennisvandalen",
+      "name": "Dennis van Dalen",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/4375758?v=4",
+      "profile": "http://www.dennisvandalen.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
