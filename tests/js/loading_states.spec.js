@@ -165,11 +165,10 @@ test('show element while targeted action is loading', async () => {
 
 test('show element while targeted action is loading with parameters', async () => {
     mount(
-`<button wire:click="foo('test',2)"></button>
-<span style="display: none" wire:loading wire:target="foo:test:2"></span>
-<h1 style="display: none" wire:loading wire:target="foo"></h1>
-<h2 style="display: none" wire:loading wire:target="foo:1"></h2>
-`
+        `<button wire:click="foo('test',2)"></button>
+        <span style="display: none" wire:loading wire:target="foo:test:2"></span>
+        <h1 style="display: none" wire:loading wire:target="foo"></h1>
+        <h2 style="display: none" wire:loading wire:target="foo:1"></h2>`
     )
 
     document.querySelector('button').click()
