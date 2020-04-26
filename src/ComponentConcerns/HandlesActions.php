@@ -94,17 +94,19 @@ trait HandlesActions
 
     protected function resolveActionParameters($method, $params)
     {
-        return collect((new \ReflectionMethod($this, $method))->getParameters())->map(function ($parameter) use (&$params) {
-            return rescue(function () use ($parameter) {
-                if ($class = $parameter->getClass()) {
-                    return app($class->name);
-                }
+        return collect((new \ReflectionMethod($this, $method))->getParameters())
+            ->map(function ($parameter) use (&$params) {
+                return rescue(function () use ($parameter) {
+                    if ($class = $parameter->getClass()) {
+                        return app($class->name);
+                    }
 
-                return app($parameter->name);
-            }, function () use (&$params) {
-                return array_shift($params);
-            }, false);
-        });
+                    return app($parameter->name);
+                }, function () use (&$params) {
+                    return array_shift($params);
+                }, false);
+            })
+            ->concat($params);
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)
