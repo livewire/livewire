@@ -20,7 +20,18 @@ export default function () {
     store.registerHook('messageSent', (component, message) => {
         const actions = message.actionQueue.filter(action => {
             return action.type === 'callMethod'
-        }).map(action => action.payload.method);
+        }).map(action => {
+          const params = action.payload.params.join(':');
+
+          if (!params) {
+            return action.payload.method;
+          }
+          return [
+            action.payload.method,
+            `${action.payload.method}:${params}`,
+          ]
+
+        }).flat();
 
         const models = message.actionQueue.filter(action => {
             return action.type === 'syncInput'
