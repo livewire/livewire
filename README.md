@@ -125,4 +125,4 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 Copyright © Caleb Porzio
 
-Licensed under the MIT license, see [LICENSE.md](LICENSE.md) for details.
+Laravel Livewire is open-sourced software licensed under the [MIT license](LICENSE.md).
