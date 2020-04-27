@@ -28,6 +28,7 @@ Livewire uses semantic versioning and will use the following release schedule st
 * Implement `wire:model.passive`
 * Add `wire:eval` for latent script tag evaluation
 * Add `wire:append` for appending DOM changes rather than replacing them
+* Allow traits to hook into all lifecycle hooks
 
 ## V2 Roadmap
 * Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`
