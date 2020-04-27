@@ -122,6 +122,24 @@ class LivewireTestingTest extends TestCase
             ->set('bar', '')
             ->assertHasErrors(['foo', 'bar']);
     }
+
+    /** @test */
+    public function assert_called_action_without_spread_operator()
+    {
+        app(LivewireManager::class)
+            ->test(ActionWithoutSpreadOperator::class)
+            ->call('merge', 'te', 'st')
+            ->assertSet('word', 'test');
+    }
+
+    /** @test */
+    public function assert_called_action_with_spread_operator()
+    {
+        app(LivewireManager::class)
+            ->test(ActionWithSpreadOperator::class)
+            ->call('merge', 't', 'e', 's', 't')
+            ->assertSet('word', 'test');
+    }
 }
 
 class HasMountArguments extends Component
@@ -220,6 +238,36 @@ class ValidatesDataWithRealTimeStub extends Component
             'foo' => 'required|min:6',
             'bar' => 'required',
         ]);
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class ActionWithoutSpreadOperator extends Component
+{
+    public $word;
+
+    public function merge($first, $second)
+    {
+        $this->word = "{$first}{$second}";
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class ActionWithSpreadOperator extends Component
+{
+    public $word;
+
+    public function merge(...$characters)
+    {
+        $this->word = implode('', $characters);
     }
 
     public function render()

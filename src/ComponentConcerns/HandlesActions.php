@@ -104,7 +104,7 @@ trait HandlesActions
             }, function () use (&$params) {
                 return array_shift($params);
             }, false);
-        });
+        })->concat($params);
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)
