@@ -31,22 +31,28 @@ export default function () {
 }
 
 function toggleOffline(el, isOffline) {
-    const directive = el.directives.get('offline')
+    const directives = el.directives.directives.filter(obj => { return obj.type === 'offline' })
 
-    if (directive.modifiers.includes('class')) {
-        const classes = directive.value.split(' ')
-        if (directive.modifiers.includes('remove') !== isOffline) {
-            el.rawNode().classList.add(...classes)
-        } else {
-            el.rawNode().classList.remove(...classes)
+    directives.forEach(function(directive) {
+        if (directive.modifiers.includes('class') || directive.modifiers.includes('attr')) {
+            if (directive.modifiers.includes('class')) {
+                const classes = directive.value.split(' ')
+                if (directive.modifiers.includes('remove') !== isOffline) {
+                    el.rawNode().classList.add(...classes)
+                } else {
+                    el.rawNode().classList.remove(...classes)
+                }
+            }
+            if (directive.modifiers.includes('attr')) {
+                if (directive.modifiers.includes('remove') !== isOffline) {
+                    el.rawNode().setAttribute(directive.value, true)
+                } else {
+                    el.rawNode().removeAttribute(directive.value)
+                }
+            }
+        } else if (! el.directives.get('model')) {
+            el.rawNode().style.display = isOffline ? 'inline-block' : 'none'
         }
-    } else if (directive.modifiers.includes('attr')) {
-        if (directive.modifiers.includes('remove') !== isOffline) {
-            el.rawNode().setAttribute(directive.value, true)
-        } else {
-            el.rawNode().removeAttribute(directive.value)
-        }
-    } else if (! el.directives.get('model')) {
-        el.rawNode().style.display = isOffline ? 'inline-block' : 'none'
-    }
+    })
+
 }
