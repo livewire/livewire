@@ -111,12 +111,10 @@ function setLoading(component, actions) {
         if (directive.modifiers.includes('class')) {
             // This is because wire:loading.class="border border-red"
             // wouldn't work with classList.add.
-            const classes = directive.value.split(' ')
+            const classes = directive.value.split(' ').filter(Boolean)
 
-            if (directive.modifiers.includes('remove')) {
-                el.classList.remove(...classes)
-            } else {
-                el.classList.add(...classes)
+            if(classes.length){
+                directive.modifiers.includes('remove') ? el.classList.remove(...classes) : el.classList.add(...classes);
             }
         } else if (directive.modifiers.includes('attr')) {
             if (directive.modifiers.includes('remove')) {
@@ -141,12 +139,10 @@ function unsetLoading(component) {
         el = el.el // I'm so sorry @todo
 
         if (directive.modifiers.includes('class')) {
-            const classes = directive.value.split(' ')
+            const classes = directive.value.split(' ').filter(Boolean)
 
-            if (directive.modifiers.includes('remove')) {
-                el.classList.add(...classes)
-            } else {
-                el.classList.remove(...classes)
+            if(classes.length){
+                directive.modifiers.includes('remove') ? el.classList.add(...classes) : el.classList.remove(...classes);
             }
         } else if (directive.modifiers.includes('attr')) {
             if (directive.modifiers.includes('remove')) {
