@@ -1,0 +1,3 @@
+<div>
+    {{ $dummy->foo }}
+</div>
