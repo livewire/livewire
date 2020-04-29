@@ -13,8 +13,6 @@ use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
 class LivewireManager
 {
-    use DependencyResolverTrait;
-
     protected $container;
     protected $componentAliases = [];
     protected $customComponentResolver;
@@ -24,12 +22,6 @@ class LivewireManager
     protected $listeners = [];
 
     public static $isLivewireRequestTestingOverride;
-
-    public function __construct()
-    {
-        // This property only exists to make the "DependencyResolverTrait" work.
-        $this->container = app();
-    }
 
     public function component($alias, $viewClass)
     {
@@ -102,13 +94,7 @@ class LivewireManager
 
         $this->initialHydrate($instance, []);
 
-        $resolvedParameters = $this->resolveClassMethodDependencies(
-            $params, $instance, 'mount'
-        );
-
-        $this->ensureComponentHasMountMethod($instance, $resolvedParameters);
-
-        $instance->mount(...$resolvedParameters);
+        method_exists($instance, 'mount') ? app()->call([$instance, 'mount'], $params) : $this->ensureComponentHasMountMethod($instance,$params);
 
         $dom = $instance->output();
 
