@@ -6,6 +6,7 @@ use Livewire\ObjectPrybar;
 use Illuminate\Support\Arr;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 trait ValidatesInput
@@ -55,6 +56,13 @@ trait ValidatesInput
         return new MessageBag(Arr::except($this->errorBag->toArray(), $field));
     }
 
+    public function getRulesByField($field, $rules)
+    {
+        return Arr::where($rules, function ($value, $key) use ($field) {
+            return Str::is($key, $field);
+        });
+    }
+
     public function validate($rules, $messages = [], $attributes = [])
     {
         $fields = array_keys($rules);
@@ -97,7 +105,7 @@ trait ValidatesInput
             = $this->getPropertyValue($propertyNameFromValidationField);
 
         try {
-            $result = Validator::make($result, Arr::only($rules, $field), $messages, $attributes)
+            $result = Validator::make($result, $this->getRulesByField($field, $rules), $messages, $attributes)
                 ->validate();
         } catch (ValidationException $e) {
             $messages = $e->validator->getMessageBag();
