@@ -305,6 +305,10 @@ export default class Component {
                     }
                 }
 
+                if(fromEl.directives.has('append')){
+                    to.insertAdjacentHTML('afterbegin', from.innerHTML)
+                }
+
                 // Children will update themselves.
                 if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== this.id) return false
 
