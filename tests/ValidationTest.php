@@ -119,6 +119,18 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function can_validate_only_a_specific_field_with_deeply_nested_array()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->runAction('runDeeplyNestedValidationOnly', 'items.0.baz')
+            ->assertDontSee('items.0.baz field is required')
+            ->runAction('runDeeplyNestedValidationOnly', 'items.1.baz')
+            ->assertSee('items.1.baz field is required');
+    }
+
+    /** @test */
     public function validation_errors_are_shared_for_all_views()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
@@ -175,6 +187,16 @@ class ForValidation extends Component
         $this->validateOnly($field, [
             'foo' => 'required',
             'bar' => 'required',
+        ]);
+    }
+
+    public function runDeeplyNestedValidationOnly($field)
+    {
+        $this->validateOnly($field, [
+            'items' => ['required', 'array'],
+            'items.*' => 'array',
+            'items.*.foo' => ['required', 'string'],
+            'items.*.baz' => ['required', 'string'],
         ]);
     }
 
