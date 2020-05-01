@@ -609,6 +609,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "Te7a-Houdini",
+      "name": "Ahmed Mohamed Abd El Ftah",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/17250137?v=4",
+      "profile": "https://twitter.com/Te7aHoudini",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
