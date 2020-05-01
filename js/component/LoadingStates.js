@@ -113,8 +113,10 @@ function setLoading(component, actions) {
             // wouldn't work with classList.add.
             const classes = directive.value.split(' ').filter(Boolean)
 
-            if(classes.length){
-                directive.modifiers.includes('remove') ? el.classList.remove(...classes) : el.classList.add(...classes);
+            if (directive.modifiers.includes('remove')) {
+                el.classList.remove(...classes)
+            } else {
+                el.classList.add(...classes)
             }
         } else if (directive.modifiers.includes('attr')) {
             if (directive.modifiers.includes('remove')) {
@@ -141,8 +143,10 @@ function unsetLoading(component) {
         if (directive.modifiers.includes('class')) {
             const classes = directive.value.split(' ').filter(Boolean)
 
-            if(classes.length){
-                directive.modifiers.includes('remove') ? el.classList.add(...classes) : el.classList.remove(...classes);
+            if (directive.modifiers.includes('remove')) {
+                el.classList.add(...classes)
+            } else {
+                el.classList.remove(...classes)
             }
         } else if (directive.modifiers.includes('attr')) {
             if (directive.modifiers.includes('remove')) {

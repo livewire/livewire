@@ -291,3 +291,28 @@ test('remove element reference from components targeted loading array', async ()
         expect(componentReference.targetedLoadingElsByAction).toEqual({foo: []})
     })
 })
+
+test('do nothing when the loading class is empty when adding classes', async () => {
+    mount('<button wire:click="onClick"></button><span wire:loading.class=""></span>')
+
+    document.querySelector('button').click()
+
+     await timeout(5)
+
+     await wait(() => {
+         expect(document.querySelector('span').classList.length).toEqual(0)
+     })
+})
+
+test('do nothing when the loading class is empty when removing classes', async () => {
+    mount('<button wire:click="onClick"></button><span class="foo" wire:loading.remove.class=""></span>')
+
+    document.querySelector('button').click()
+
+     await timeout(5)
+
+     await wait(() => {
+         expect(document.querySelector('span').classList.length).toEqual(1)
+         expect(document.querySelector('span').classList.contains('foo')).toBeTruthy()
+     })
+ })
