@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-63-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-64-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -12,11 +12,23 @@ Open GitHub issues for all bugs. Ideas and questions belong on the forum: https:
 
 Contribute to the docs here: https://github.com/livewire/docs
 
+## Release Schedule
+Livewire uses semantic versioning and will use the following release schedule strategy:
+* Urgent bug fix? Release as "patch" version bump right away
+* Patch? Group of small enhancements and bugfixes to be released every ~2 weeks-ish
+* Minor? New features or significant API additions
+* Major? Breaking changes and big strategy changes
+
+> Important Note: All "major" versions will be tagged alongside Laravel's major version release schedule (every 6 months). That does not mean Livewire will release a major version every 6 months, just that when it DOES release a major version, it will coincide with a Laravel release.
+
 ## Roadmap
-* More flexibility for scoping listeners (`->emitSelf()`, and emiting to specific components or ids)
 * Add a `$formData` magic property to pass into submit handler actions: `wire:submit="save($formData)"`
 * Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
-* Remove `wire:poll` setIntervals when component or element is removed. #563
+* Remove `wire:poll` setIntervals an element is removed, or when the attribute is removed. #563
+* Implement `wire:model.passive`
+* Add `wire:eval` for latent script tag evaluation
+* Add `wire:append` for appending DOM changes rather than replacing them
+* Allow traits to hook into all lifecycle hooks
 
 ## V2 Roadmap
 * Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`
@@ -112,6 +124,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://DanHarrin.com"><img src="https://avatars2.githubusercontent.com/u/41773797?v=4" width="100px;" alt=""/><br /><sub><b>Dan Harrin</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=DanHarrin" title="Code">💻</a></td>
     <td align="center"><a href="https://www.codeboutique.com"><img src="https://avatars0.githubusercontent.com/u/247048?v=4" width="100px;" alt=""/><br /><sub><b>Michael Bøcker-Larsen</b></sub></a><br /><a href="#maintenance-mblarsen" title="Maintenance">🚧</a></td>
     <td align="center"><a href="https://github.com/DavideMoney"><img src="https://avatars0.githubusercontent.com/u/39701809?v=4" width="100px;" alt=""/><br /><sub><b>DavideMoney</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=DavideMoney" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="http://www.dennisvandalen.com"><img src="https://avatars3.githubusercontent.com/u/4375758?v=4" width="100px;" alt=""/><br /><sub><b>Dennis van Dalen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=dennisvandalen" title="Code">💻</a></td>
   </tr>
 </table>
 

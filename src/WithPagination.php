@@ -45,4 +45,9 @@ trait WithPagination
     {
         $this->page = $page;
     }
+
+    public function resetPage()
+    {
+        $this->page = 1;
+    }
 }

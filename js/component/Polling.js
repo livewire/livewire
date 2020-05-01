@@ -18,6 +18,9 @@ function fireActionOnInterval(el, component) {
     const method = directive.method || '$refresh'
 
     return setInterval(() => {
+        // Don't poll when directive is removed from element.
+        if(directive.value === null) return
+
         // Don't poll when the tab is in the background.
         // The "Math.random" business effectivlly prevents 95% of requests
         // from executing. We still want "some" requests to get through.
