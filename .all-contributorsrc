@@ -600,6 +600,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "cao-minh-duc",
+      "name": "Cao Minh Duc",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/17726941?v=4",
+      "profile": "https://github.com/cao-minh-duc",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
