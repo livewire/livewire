@@ -56,13 +56,6 @@ trait ValidatesInput
         return new MessageBag(Arr::except($this->errorBag->toArray(), $field));
     }
 
-    public function getRulesByField($field, $rules)
-    {
-        return Arr::where($rules, function ($value, $key) use ($field) {
-            return Str::is($key, $field);
-        });
-    }
-
     public function validate($rules, $messages = [], $attributes = [])
     {
         $fields = array_keys($rules);
@@ -105,7 +98,12 @@ trait ValidatesInput
             = $this->getPropertyValue($propertyNameFromValidationField);
 
         try {
-            $result = Validator::make($result, $this->getRulesByField($field, $rules), $messages, $attributes)
+            // If the field is "items.0.foo", we should apply the validation rule for "items.*.foo".
+            $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
+                return Str::is($fullFieldKey, $field);
+            })->toArray();
+
+            $result = Validator::make($result, $rulesForField, $messages, $attributes)
                 ->validate();
         } catch (ValidationException $e) {
             $messages = $e->validator->getMessageBag();
