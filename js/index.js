@@ -1,9 +1,9 @@
+import '@/dom/polyfills/index';
 import componentStore from '@/Store'
 import DOM from "@/dom/dom";
 import Component from "@/component/index";
 import Connection from '@/connection'
 import drivers from '@/connection/drivers'
-import '@/dom/polyfills/index';
 import { dispatch } from './util';
 import LoadingStates from '@/component/LoadingStates'
 import DisableForms from '@/component/DisableForms'
