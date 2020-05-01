@@ -35,6 +35,7 @@ Livewire uses semantic versioning and will use the following release schedule st
 * Change `window.livewire` to `window.Livewire` (And update Alpine to adapt)
 * Make `->getName()` in `src/Component.php` a static method
 * Use camel-cased accessors for snake-cased properties ($this->foo_bar -> $this->getFooBarProperty) (PR ready here: #690)
+* Maybe remove base `render()` method to allow for DI in method params (PR here: #893)
 
 ## Contributors ✨
 
