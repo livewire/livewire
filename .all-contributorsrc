@@ -618,6 +618,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "yateric",
+      "name": "Eric Chow",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1567297?v=4",
+      "profile": "https://github.com/yateric",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
