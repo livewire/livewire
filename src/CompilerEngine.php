@@ -29,6 +29,8 @@ if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, 
                 || $e instanceof NotFoundHttpException
                 // Don't wrap "abort(500)".
                 || $e instanceof HttpException
+                // Don't wrap in debug mode
+                || config('app.debug')
                 // Don't wrap most Livewire exceptions.
                 || isset($uses[BypassViewHandler::class])
             ) {
