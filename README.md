@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-64-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-65-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -128,6 +128,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   </tr>
   <tr>
     <td align="center"><a href="http://www.dennisvandalen.com"><img src="https://avatars3.githubusercontent.com/u/4375758?v=4" width="100px;" alt=""/><br /><sub><b>Dennis van Dalen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=dennisvandalen" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/cao-minh-duc"><img src="https://avatars1.githubusercontent.com/u/17726941?v=4" width="100px;" alt=""/><br /><sub><b>Cao Minh Duc</b></sub></a><br /><a href="#maintenance-cao-minh-duc" title="Maintenance">🚧</a></td>
   </tr>
 </table>
 
