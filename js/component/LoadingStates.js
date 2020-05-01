@@ -111,7 +111,7 @@ function setLoading(component, actions) {
         if (directive.modifiers.includes('class')) {
             // This is because wire:loading.class="border border-red"
             // wouldn't work with classList.add.
-            const classes = directive.value.split(' ')
+            const classes = directive.value.split(' ').filter(Boolean)
 
             if (directive.modifiers.includes('remove')) {
                 el.classList.remove(...classes)
@@ -141,7 +141,7 @@ function unsetLoading(component) {
         el = el.el // I'm so sorry @todo
 
         if (directive.modifiers.includes('class')) {
-            const classes = directive.value.split(' ')
+            const classes = directive.value.split(' ').filter(Boolean)
 
             if (directive.modifiers.includes('remove')) {
                 el.classList.add(...classes)
