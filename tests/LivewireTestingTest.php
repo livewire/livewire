@@ -58,6 +58,14 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_dont_see_html()
+    {
+        app(LivewireManager::class)
+            ->test(HasHtml::class)
+            ->assertDontSeeHtml('<span style="display: none">Hello HTML</span>');
+    }
+
+    /** @test */
     public function assert_see_doesnt_include_json_encoded_data_put_in_wire_data_attribute()
     {
         // See for more info: https://github.com/calebporzio/livewire/issues/62
