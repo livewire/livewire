@@ -44,6 +44,16 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertSeeHtml($value)
+    {
+        PHPUnit::assertStringContainsString(
+            $value,
+            $this->stripOutInitialData($this->payload['dom'])
+        );
+
+        return $this;
+    }
+
     protected function stripOutInitialData($subject)
     {
         return preg_replace('(wire:initial-data=\".+}")', '', $subject);

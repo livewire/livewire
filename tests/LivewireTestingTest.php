@@ -50,6 +50,14 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_see_html()
+    {
+        app(LivewireManager::class)
+            ->test(HasHtml::class)
+            ->assertSeeHtml('<p style="display: none">Hello HTML</p>');
+    }
+
+    /** @test */
     public function assert_see_doesnt_include_json_encoded_data_put_in_wire_data_attribute()
     {
         // See for more info: https://github.com/calebporzio/livewire/issues/62
@@ -136,6 +144,14 @@ class HasMountArguments extends Component
     public function render()
     {
         return app('view')->make('show-name-with-this');
+    }
+}
+
+class HasHtml extends Component
+{
+    public function render()
+    {
+        return app('view')->make('show-html');
     }
 }
 
