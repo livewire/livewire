@@ -84,9 +84,7 @@ trait HandlesActions
                 throw_unless(method_exists($this, $method), new MethodNotFoundException($method, $this->getName()));
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
-                $this->{$method}(
-                    ...$this->resolveActionParameters($method, $params)
-                );
+                app()->call([$this, $method], $this->resolveActionParameters($method, $params));
 
                 break;
         }
@@ -94,17 +92,11 @@ trait HandlesActions
 
     protected function resolveActionParameters($method, $params)
     {
-        return collect((new \ReflectionMethod($this, $method))->getParameters())->map(function ($parameter) use (&$params) {
-            return rescue(function () use ($parameter) {
-                if ($class = $parameter->getClass()) {
-                    return app($class->name);
-                }
-
-                return app($parameter->name);
-            }, function () use (&$params) {
-                return array_shift($params);
-            }, false);
-        });
+        return collect((new \ReflectionMethod($this, $method))->getParameters())->flatMap(function ($parameter) use (&$params) {
+            if(!$parameter->getClass()){
+                return [$parameter->getName() => array_shift($params)];
+            }
+        })->filter()->toArray();
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)

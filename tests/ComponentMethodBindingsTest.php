@@ -35,6 +35,28 @@ class ComponentMethodBindingsTest extends TestCase
         Livewire::test(ComponentWithBindings::class, ['param' => 'foo'])
             ->assertSee('from-injectionfoo');
     }
+
+    /** @test */
+    public function custom_method_recieves_bindings()
+    {
+        $component = Livewire::test(ComponentWithBindings::class);
+
+        $component->call('customMethod', '/path/to/some/file');
+
+        $this->assertEquals('/path/to/some/file', $component->path);
+        $this->assertEquals('from-injection', $component->stubValue);
+    }
+
+    /** @test */
+    public function custom_method_without_dependencies()
+    {
+        $component = Livewire::test(ComponentWithBindings::class);
+
+        $component->call('customMethodWithoutDependencies');
+
+        $this->assertEquals(null, $component->path);
+        $this->assertEquals(null, $component->stubValue);
+    }
 }
 
 class ModelToBeBoundStub
@@ -49,6 +71,10 @@ class ComponentWithBindings extends Component
 {
     public $name;
 
+    public $path;
+
+    public $stubValue;
+
     public function mount(ModelToBeBoundStub $stub, $param = '')
     {
         $this->name = $stub->value.$param;
@@ -57,5 +83,16 @@ class ComponentWithBindings extends Component
     public function render()
     {
         return app('view')->make('show-name-with-this');
+    }
+
+    public function customMethod($path, ModelToBeBoundStub $stub)
+    {
+        $this->path = $path;
+        $this->stubValue = $stub->value;
+    }
+
+    public function customMethodWithoutDependencies()
+    {
+        
     }
 }
