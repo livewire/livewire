@@ -45,9 +45,18 @@ class MakeCommandTest extends TestCase
     }
 
     /** @test */
-    public function nested_component_is_created_by_make_command()
+    public function dot_nested_component_is_created_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo.bar']);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Foo/Bar.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('foo/bar.blade.php')));
+    }
+
+    /** @test */
+    public function forward_slash_nested_component_is_created_by_make_command()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo/bar']);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo/Bar.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo/bar.blade.php')));
