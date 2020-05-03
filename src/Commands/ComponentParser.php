@@ -24,7 +24,7 @@ class ComponentParser
         $this->baseClassPath = rtrim($classPath, DIRECTORY_SEPARATOR).'/';
         $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
 
-        $directories = preg_split('/[.]+/', $rawCommand);
+        $directories = preg_split('/[.\/]+/', $rawCommand);
 
 
         $camelCase = Str::camel(array_pop($directories));

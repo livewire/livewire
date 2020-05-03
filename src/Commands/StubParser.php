@@ -15,7 +15,7 @@ class StubParser extends ComponentParser
         $this->baseClassPath = rtrim($classPath, DIRECTORY_SEPARATOR).'/Stubs/';
         $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/stubs/';
 
-        $directories = preg_split('/[.]+/', $rawCommand);
+        $directories = preg_split('/[.\/]+/', $rawCommand);
 
         $this->component = Str::kebab(array_pop($directories));
         $this->componentClass = Str::studly($this->component);
