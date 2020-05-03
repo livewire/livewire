@@ -93,10 +93,17 @@ trait HandlesActions
     protected function resolveActionParameters($method, $params)
     {
         return collect((new \ReflectionMethod($this, $method))->getParameters())->flatMap(function ($parameter) use (&$params) {
-            if(!$parameter->getClass()){
+            if (!$parameter->getClass()) {
                 return [$parameter->getName() => array_shift($params)];
             }
-        })->filter()->toArray();
+
+            $instance = rescue(function () use ($class) { return app($class->name); });
+            if ($instance instanceof UrlRoutable) {
+                if ($model = $instance->resolveRouteBinding(array_shift($params))) {
+                    return [$parameter->getName() => $model];
+                };
+            }
+        })->filter()->all();
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)
