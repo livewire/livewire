@@ -110,6 +110,8 @@ class LivewireManager
 
         $instance->mount(...$resolvedParameters);
 
+        $this->invokeTraitInitializers($instance, 'mount', $params);
+
         $dom = $instance->output();
 
         $response = new Fluent([
@@ -387,5 +389,16 @@ HTML;
             method_exists($instance, 'mount'),
             new MountMethodMissingException($instance->getName())
         );
+    }
+
+    private function invokeTraitInitializers($instance, $runtime, $params = [])
+    {
+        foreach (class_uses($instance) as $trait) {
+            $method = $runtime.class_basename($trait);
+
+            if (method_exists($instance, $method)) {
+                app()->call([$instance, $method], $params);
+            }
+        }
     }
 }
