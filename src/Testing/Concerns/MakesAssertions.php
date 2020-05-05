@@ -71,6 +71,24 @@ trait MakesAssertions
 
     public function assertEmitted($value, ...$params)
     {
+        $result = $this->testEmitted($value, $params);
+
+        PHPUnit::assertTrue($result['test'], "Failed asserting that an event [{$value}] was fired{$result['assertionSuffix']}");
+
+        return $this;
+    }
+
+    public function assertNotEmitted($value, ...$params)
+    {
+        $result = $this->testEmitted($value, $params);
+
+        PHPUnit::assertFalse($result['test'], "Failed asserting that an event [{$value}] was not fired{$result['assertionSuffix']}");
+
+        return $this;
+    }
+
+    protected function testEmitted($value, $params)
+    {
         $assertionSuffix = '.';
 
         if (empty($params)) {
@@ -82,7 +100,7 @@ trait MakesAssertions
 
             $test = $event && $params[0]($event['event'], $event['params']);
         } else {
-            $test = !! collect($this->payload['eventQueue'])->first(function ($item) use ($value, $params) {
+            $test = ! ! collect($this->payload['eventQueue'])->first(function ($item) use ($value, $params) {
                 return $item['event'] === $value
                     && $item['params'] === $params;
             });
@@ -90,9 +108,10 @@ trait MakesAssertions
             $assertionSuffix = " with parameters: {$encodedParams}";
         }
 
-        PHPUnit::assertTrue($test, "Failed asserting that an event [{$value}] was fired{$assertionSuffix}");
-
-        return $this;
+        return [
+            'test'            => $test,
+            'assertionSuffix' => $assertionSuffix,
+        ];
     }
 
     public function assertDispatchedBrowserEvent($name, $data = null)
@@ -108,7 +127,7 @@ trait MakesAssertions
 
             $test = $event && $data($event['event'], $event['data']);
         } else {
-            $test = !! collect($this->payload['dispatchQueue'])->first(function ($item) use ($name, $data) {
+            $test = ! ! collect($this->payload['dispatchQueue'])->first(function ($item) use ($name, $data) {
                 return $item['event'] === $name
                     && $item['data'] === $data;
             });
@@ -127,7 +146,7 @@ trait MakesAssertions
 
         PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
 
-        $keys = (array) $keys;
+        $keys = (array)$keys;
 
         foreach ($keys as $key => $value) {
             if (is_int($key)) {
@@ -138,8 +157,9 @@ trait MakesAssertions
                     return Str::snake($rule);
                 }, $rules);
 
-                foreach ((array) $value as $rule) {
-                    PHPUnit::assertContains($rule, $snakeCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
+                foreach ((array)$value as $rule) {
+                    PHPUnit::assertContains($rule, $snakeCaseRules,
+                        "Component has no [{$rule}] errors for [{$key}] attribute.");
                 }
             }
         }
@@ -157,7 +177,7 @@ trait MakesAssertions
             return $this;
         }
 
-        $keys = (array) $keys;
+        $keys = (array)$keys;
 
         foreach ($keys as $key => $value) {
             if (is_int($key)) {
@@ -168,8 +188,9 @@ trait MakesAssertions
                     return Str::snake($rule);
                 }, $rules);
 
-                foreach ((array) $value as $rule) {
-                    PHPUnit::assertNotContains($rule, $snakeCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
+                foreach ((array)$value as $rule) {
+                    PHPUnit::assertNotContains($rule, $snakeCaseRules,
+                        "Component has [{$rule}] errors for [{$key}] attribute.");
                 }
             }
         }
@@ -184,7 +205,7 @@ trait MakesAssertions
             'Component did not perform a redirect.'
         );
 
-        if (! is_null($uri)) {
+        if ( ! is_null($uri)) {
             PHPUnit::assertSame(url($uri), url($this->payload['redirectTo']));
         }
 
