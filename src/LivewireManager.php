@@ -391,10 +391,10 @@ HTML;
         );
     }
 
-    private function invokeTraitInitializers($instance, $runtime, $params = [])
+    private function invokeTraitInitializers($instance, $lifecycle, $params = [])
     {
         foreach (class_uses($instance) as $trait) {
-            $method = $runtime.class_basename($trait);
+            $method = $lifecycle.class_basename($trait);
 
             if (method_exists($instance, $method)) {
                 app()->call([$instance, $method], $params);
