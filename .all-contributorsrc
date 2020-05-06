@@ -636,6 +636,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "vardyb",
+      "name": "Brent Vardy",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/5463577?v=4",
+      "profile": "http://brentvardy.com",
+      "contributions": [
+        "test"
+      ]
     }
   ],
   "contributorsPerLine": 7,
