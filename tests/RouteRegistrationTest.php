@@ -23,7 +23,7 @@ class RouteRegistrationTest extends TestCase
     /** @test */
     public function by_default_livewire_component_view_data_is_not_shared_with_outer_view_scope()
     {
-        $this->expectErrorMessage('Undefined variable: title');
+        $this->expectExceptionMessage('Undefined variable: title');
 
         Livewire::component('foo', ComponentWithTitleViewDataShared::class);
 
