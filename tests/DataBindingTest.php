@@ -83,17 +83,6 @@ class DataBindingTest extends TestCase
         $this->assertEquals('something else', $component->propertyWithHook);
         $this->assertContains('propertyWithHook', $component->payload['dirtyInputs']);
     }
-
-    /** @test */
-    public function component_actions_get_automatic_dependancy_injection()
-    {
-        $component = app(LivewireManager::class)->test(DataBindingStub::class);
-
-        $component->runAction('hasInjections', 'foobar');
-
-        $this->assertEquals('http://localhost', $component->foo);
-        $this->assertEquals('foobar', $component->bar);
-    }
 }
 
 class DataBindingStub extends Component
@@ -121,12 +110,6 @@ class DataBindingStub extends Component
     public function removeArrayPropertyOne()
     {
         unset($this->arrayProperty[1]);
-    }
-
-    public function hasInjections(UrlGenerator $generator, $bar)
-    {
-        $this->foo = $generator->to('/');
-        $this->bar = $bar;
     }
 
     public function render()
