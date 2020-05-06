@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-68-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-69-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -132,6 +132,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://twitter.com/Te7aHoudini"><img src="https://avatars0.githubusercontent.com/u/17250137?v=4" width="100px;" alt=""/><br /><sub><b>Ahmed Mohamed Abd El Ftah</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=Te7a-Houdini" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/yateric"><img src="https://avatars1.githubusercontent.com/u/1567297?v=4" width="100px;" alt=""/><br /><sub><b>Eric Chow</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=yateric" title="Code">💻</a></td>
     <td align="center"><a href="https://nemrut.co"><img src="https://avatars3.githubusercontent.com/u/5906125?v=4" width="100px;" alt=""/><br /><sub><b>Muzaffer Dede</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=muzafferdede" title="Code">💻</a></td>
+    <td align="center"><a href="http://brentvardy.com"><img src="https://avatars1.githubusercontent.com/u/5463577?v=4" width="100px;" alt=""/><br /><sub><b>Brent Vardy</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=vardyb" title="Tests">⚠️</a></td>
   </tr>
 </table>
 
