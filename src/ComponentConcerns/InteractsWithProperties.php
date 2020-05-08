@@ -126,4 +126,15 @@ trait InteractsWithProperties
             $this->{$property} = $freshInstance->{$property};
         }
     }
+
+    public function only($properties)
+    {
+        $results = [];
+
+        foreach ($properties as $property) {
+            $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
+        }
+
+        return $results;
+    }
 }
