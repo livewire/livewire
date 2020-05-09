@@ -1,10 +1,7 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
+about: Report on something that doesn't work to help us improve
+labels: 'Type: Bug'
 ---
 
 **Describe the bug**
@@ -17,14 +14,18 @@ Steps to reproduce the behavior:
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**Code**
+If applicable, add a minimal code example that demonstrates your problem.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - Browser [e.g. chrome, safari]
+**Expected behavior**
+A clear and concise description of what you expected to happen.
 
-**Additional context**
-Add any other context about the problem here.
+**Context**
+- Browser: [e.g. Chrome, Safari]
+- Laravel version: [e.g. 7.x]
+
+**Additional details**
+Add any other details about the problem here.
