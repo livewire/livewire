@@ -1,5 +1,6 @@
 ---
 name: New feature
+about: Suggest a new feature that would improve your experience
 labels: 'Type: Enhancement'
 ---
 
