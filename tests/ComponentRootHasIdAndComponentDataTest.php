@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Livewire\Exceptions\RootTagMissingFromViewException;
 use Livewire\LivewireManager;
 
 class ComponentRootHasIdAndComponentDataTest extends TestCase
@@ -17,6 +18,14 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
             $component->payload['dom'],
             [$component->id(), 'foo']
         ));
+    }
+
+    /** @test */
+    public function root_element_exists()
+    {
+        $this->expectException(RootTagMissingFromViewException::class);
+
+        $component = app(LivewireManager::class)->test(ComponentRootExists::class);
     }
 
     /** @test */
@@ -61,5 +70,13 @@ class ComponentRootHasIdAndDataStub extends Component
     public function render()
     {
         return app('view')->make('null-view');
+    }
+}
+
+class ComponentRootExists extends Component
+{
+    public function render()
+    {
+        return app('view')->make('rootless-view');
     }
 }
