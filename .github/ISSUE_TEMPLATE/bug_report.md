@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report on something that doesn't work to help us improve
+about: Report something that doesn't work
 labels: 'Type: Bug'
 ---
 
