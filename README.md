@@ -4,7 +4,7 @@
 
 # Laravel Livewire
 
-See the docs for everything: https://laravel-livewire.com/docs/quickstart/
+See the docs for everything: https://laravel-livewire.com/docs/quickstart
 
 All contributions are welcomed! (but please submit an issue to make sure the PR is warranted first)
 
