@@ -34,7 +34,7 @@ class ComputedPropertiesTest extends TestCase
             ->assertSee('int(7)')
             ->call('callForgetComputed', ['foo', 'bar'])
             ->assertSee('int(9)')
-            ->call('callForgetComputed', 'bar', 'foo')
+            ->call('callForgetComputedWithTwoArgs', 'bar', 'foo')
             ->assertSee('int(11)');
     }
 }
@@ -63,11 +63,20 @@ class MemoizedComputedPropertyStub extends Component
         return $this->count += 1;
     }
 
-    public function callForgetComputed(...$args)
+    public function callForgetComputed($arg)
     {
         $this->foo;
 
-        $this->forgetComputed(...$args);
+        $this->forgetComputed($arg);
+
+        $this->foo;
+    }
+
+    public function callForgetComputedWithTwoArgs($argOne, $argTwo)
+    {
+        $this->foo;
+
+        $this->forgetComputed($argOne, $argTwo);
 
         $this->foo;
     }
