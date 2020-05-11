@@ -323,6 +323,11 @@ export default class Component {
             },
 
             onNodeAdded: (node) => {
+                if (node.tagName.toLowerCase() === 'script') {
+                    eval(node.innerHTML)
+                    return false
+                }
+
                 const el = new DOMElement(node)
 
                 const closestComponentId = el.closestRoot().getAttribute('id')
