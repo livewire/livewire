@@ -175,6 +175,22 @@ abstract class Component
         }, $normalizedData);
     }
 
+    public function forgetComputed($key = null)
+    {
+        if (is_null($key)) {
+           $this->computedPropertyCache = [];
+           return;
+        }
+
+        $keys = is_array($key) ? $key : func_get_args();
+
+        collect($keys)->each(function ($i) {
+            if (isset($this->computedPropertyCache[$i])) {
+                unset($this->computedPropertyCache[$i]);
+            }
+        });
+    }
+
     public function __get($property)
     {
         if (method_exists($this, $computedMethodName = 'get'.ucfirst($property).'Property')) {
