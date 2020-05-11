@@ -133,7 +133,8 @@ trait MakesAssertions
             if (is_int($key)) {
                 PHPUnit::assertTrue($errors->has($value), "Component missing error: $value");
             } else {
-                $rules = array_keys(Arr::get($this->lastValidator->failed(), $key, []));
+                $failed = optional($this->lastValidator)->failed() ?: [];
+                $rules = array_keys(Arr::get($failed, $key, []));
                 $snakeCaseRules = array_map(function ($rule) {
                     return Str::snake($rule);
                 }, $rules);
@@ -163,7 +164,8 @@ trait MakesAssertions
             if (is_int($key)) {
                 PHPUnit::assertFalse($errors->has($value), "Component has error: $value");
             } else {
-                $rules = array_keys(Arr::get($this->lastValidator->failed(), $key, []));
+                $failed = optional($this->lastValidator)->failed() ?: [];
+                $rules = array_keys(Arr::get($failed, $key, []));
                 $snakeCaseRules = array_map(function ($rule) {
                     return Str::snake($rule);
                 }, $rules);

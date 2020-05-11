@@ -155,6 +155,18 @@ class ValidationTest extends TestCase
             ->call('runValidationWithMultiWordRule')
             ->assertHasErrors(['foo' => 'alpha_dash']);
     }
+
+    /** @test */
+    public function can_assert_has_no_errors_when_no_validation_has_faile_and_specific_keys_are_supplied()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', 'bar')
+            ->call('runValidation')
+            ->assertHasNoErrors(['foo' => 'required']);
+    }
 }
 
 class ForValidation extends Component
