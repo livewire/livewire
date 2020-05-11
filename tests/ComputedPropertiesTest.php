@@ -81,24 +81,6 @@ class MemoizedComputedPropertyStub extends Component
         $this->foo;
     }
 
-    public function callForgetComputedArray($args)
-    {
-        $this->foo;
-
-        $this->forgetComputed($args);
-
-        $this->foo;
-    }
-
-    public function callForgetComputedSpread(...$args)
-    {
-        $this->foo;
-
-        $this->forgetComputed(...$args);
-
-        $this->foo;
-    }
-
     public function render()
     {
         // Access foo once here to start the cache.
