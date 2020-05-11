@@ -63,7 +63,7 @@ class MemoizedComputedPropertyStub extends Component
         return $this->count += 1;
     }
 
-    public function callForgetComputed($arg)
+    public function callForgetComputed($arg = null)
     {
         $this->foo;
 
