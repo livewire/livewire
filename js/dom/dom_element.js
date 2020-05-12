@@ -107,6 +107,8 @@ ${this.el.outerHTML}
         const modelString = this.directives.get('model').value
         const modelValue = get(component.data, modelString)
         if (modelValue === undefined) return
+        // Don't manually set file input's values.
+        if (this.el.tagName.toLowerCase() === 'input' && this.el.type === 'file') return
 
         this.setInputValue(modelValue)
     }

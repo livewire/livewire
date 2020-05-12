@@ -43,6 +43,7 @@ use Livewire\HydrationMiddleware\{
     RegisterEventsBeingListenedFor,
     HashPropertiesForDirtyDetection,
     HydratePreviouslyRenderedChildren,
+    HydrateFileUploadsAsPublicProperties,
     ClearFlashMessagesIfNotRedirectingAway,
     PrioritizeDataUpdatesBeforeActionCalls,
     HydrateEloquentModelsAsPublicProperties,
@@ -125,6 +126,16 @@ class LivewireServiceProvider extends ServiceProvider
 
         RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
             ->middleware(config('livewire.middleware_group', 'web'));
+
+        RouteFacade::post('/livewire/file-upload', function () {
+            request()->validate([
+                'file' => 'required|file|max:2048'
+            ]);
+
+            $id = request()->file('file')->store('livewire');
+
+            return ['path' => str_replace('livewire/', '', $id)];
+        });
     }
 
     protected function registerCommands()
@@ -229,6 +240,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
         /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
+        /* v */ HydrateFileUploadsAsPublicProperties::class,     /* ^ */
         /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
         /* v */ CastPublicProperties::class,                        /* ^ */
         /* v */ HydratePreviouslyRenderedChildren::class,           /* ^ */

@@ -57,6 +57,20 @@ export default {
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.
         const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
+            if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'file') {
+                let file = e.target.files[0]
+                let formData = new FormData()
+                formData.append("file", file)
+                fetch('/livewire/file-upload', { method: "POST", body: formData }).then(i => i.json()).then(({ path }) => {
+                    const model = directive.value
+                    const el = new DOMElement(e.target)
+                    let value = 'livewire-file:'+path
+
+                    component.addAction(new ModelAction(model, value, el))
+                })
+                return
+            }
+
             const model = directive.value
             const el = new DOMElement(e.target)
             // We have to check for typeof e.detail here for IE 11.
