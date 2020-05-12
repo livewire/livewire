@@ -36,6 +36,7 @@ Livewire uses semantic versioning and will use the following release schedule st
 * Make `->getName()` in `src/Component.php` a static method
 * Use camel-cased accessors for snake-cased properties ($this->foo_bar -> $this->getFooBarProperty) (PR ready here: #690)
 * Maybe remove base `render()` method to allow for DI in method params (PR here: #893)
+* Set initial properties from the query string if using `$updatesQueryString`?
 
 ## Contributors ✨
 
