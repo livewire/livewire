@@ -2,7 +2,7 @@ import store from '@/Store'
 import queryString from '@/util/query-string'
 
 export default function () {
-    window.addEventListener('popstate', (event) => {
+    window.addEventListener('onpopstate', (event) => {
         if (event && event.state && event.state.livewire) {
             Object.keys(event.state.livewire.updates).forEach(id => {
                 let component = window.livewire.find(id)
