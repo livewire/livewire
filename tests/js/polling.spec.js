@@ -67,10 +67,10 @@ test('polling will start if directive is added', async () => {
 
     document.querySelector('button').click()
 
-    await timeout(49) // 49ms
+    await timeout(49)
     expect(pollCount).toBe(1)
 
-    await timeout(75) // 124
+    await timeout(55)
     expect(pollCount).toBe(2)
 })
 
