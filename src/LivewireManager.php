@@ -22,7 +22,6 @@ class LivewireManager
     protected $initialHydrationMiddleware = [];
     protected $initialDehydrationMiddleware = [];
     protected $listeners = [];
-    protected $shareComponentViewData = false;
 
     public static $isLivewireRequestTestingOverride;
 
@@ -376,16 +375,6 @@ HTML;
     public function isLaravel7()
     {
         return Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=');
-    }
-
-    public function routesShareComponentViewData()
-    {
-        $this->shareComponentViewData = true;
-    }
-
-    public function componentViewDataIsShared()
-    {
-        return $this->shareComponentViewData;
     }
 
     private function ensureComponentHasMountMethod($instance, $resolvedParameters)
