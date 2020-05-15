@@ -10,7 +10,7 @@ class StubsCommand extends Command
 {
     protected $signature = 'livewire:stubs';
 
-    protected $description = 'Publish Livewire stubs.';
+    protected $description = 'Publish Livewire stubs';
 
     protected $parser;
 
