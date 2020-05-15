@@ -95,7 +95,7 @@ ${this.el.outerHTML}
                 return modelValue
             }
 
-            return this.el.getAttribute('value') ? this.el.value : this.el.checked;
+            return this.el.getAttribute('value') || this.el.checked;
         } else if (this.el.tagName === 'SELECT' && this.el.multiple) {
             return this.getSelectValues()
         }
