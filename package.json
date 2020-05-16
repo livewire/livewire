@@ -39,5 +39,11 @@
         "@rollup/plugin-node-resolve": "^7.0.0",
         "rollup-plugin-output-manifest": "^1.0.2"
     },
-    "dependencies": {}
+    "dependencies": {},
+    "prettier": {
+        "arrowParens": "avoid",
+        "requirePragma": true,
+        "semi": false,
+        "singleQuote": true
+    }
 }
