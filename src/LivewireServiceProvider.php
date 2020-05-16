@@ -30,6 +30,7 @@ use Livewire\Commands\{
     DiscoverCommand,
     MakeLivewireCommand
 };
+use Livewire\Contracts\TokenStorage;
 use Livewire\HydrationMiddleware\{
     ForwardPrefetch,
     PersistErrorBag,
@@ -54,6 +55,7 @@ class LivewireServiceProvider extends ServiceProvider
     public function register()
     {
         $this->registerLivewireSingleton();
+        $this->registerTokenStorage();
         $this->registerComponentAutoDiscovery();
     }
 
@@ -84,6 +86,14 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerLivewireSingleton()
     {
         $this->app->singleton('livewire', LivewireManager::class);
+    }
+
+    protected function registerTokenStorage()
+    {
+        $this->app
+            ->when(Token::class)
+            ->needs(TokenStorage::class)
+            ->give(LivewireManager::class);
     }
 
     protected function registerComponentAutoDiscovery()

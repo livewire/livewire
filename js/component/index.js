@@ -19,6 +19,7 @@ export default class Component {
         const initialData = JSON.parse(this.extractLivewireAttribute('initial-data'))
         this.data = initialData.data || {}
         this.events = initialData.events || []
+        this.tokens = initialData.tokens || []
         this.children = initialData.children || {}
         this.checksum = initialData.checksum || ''
         this.name = initialData.name || ''
@@ -154,6 +155,7 @@ export default class Component {
         this.checksum = response.checksum
         this.children = response.children
         this.errorBag = response.errorBag
+        this.tokens = response.tokens
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.redirectTo) {

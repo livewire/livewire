@@ -75,6 +75,11 @@ const store = {
     },
 
     emitTo(componentName, event, ...params) {
+        if (event === 'token') {
+            this.emitToToken(componentName, ...params)
+            return
+        }
+
         let components = this.getComponentsByName(componentName)
 
         components.forEach(component => {
@@ -84,6 +89,16 @@ const store = {
                 ))
             }
         })
+    },
+
+    emitToToken(token, ...params) {
+        const tokenParams = token.split('#')
+        const componentId = tokenParams.pop()
+        const tokenName = tokenParams.pop()
+        const component = this.componentsById[componentId]
+        if (component.tokens.includes(tokenName)) {
+            component.addAction(new EventAction('token#' + tokenName, params))
+        }
     },
 
     componentsListeningForEventThatAreTreeAncestors(el, event) {

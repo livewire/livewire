@@ -2,6 +2,8 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Illuminate\Support\Str;
+
 trait ReceivesEvents
 {
     protected $eventQueue = [];
@@ -82,7 +84,14 @@ trait ReceivesEvents
 
     public function fireEvent($event, $params)
     {
-        $method = $this->getEventsAndHandlers()[$event];
+        if (Str::startsWith($event, 'token#')) {
+            $event = Str::after($event, 'token#');
+            $handlers = $this->getEventsAndHandlers();
+            $method = $handlers[$event] ?? $event;
+        } else {
+            $method = $this->getEventsAndHandlers()[$event];
+        }
+
 
         $this->callMethod($method, $params);
     }

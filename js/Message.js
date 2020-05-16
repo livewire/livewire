@@ -21,6 +21,7 @@ export default class {
             name: this.component.name,
             checksum: this.component.checksum,
             children: this.component.children,
+            tokens: this.component.tokens,
             actionQueue: this.actionQueue.map(action => {
                 // This ensures only the type & payload properties only get sent over.
                 return {
@@ -44,6 +45,7 @@ export default class {
             checksum: payload.checksum,
             children: payload.children,
             dirtyInputs: payload.dirtyInputs,
+            tokens: payload.tokens,
             eventQueue: payload.eventQueue,
             dispatchQueue: payload.dispatchQueue,
             events: payload.events,

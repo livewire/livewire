@@ -7,13 +7,15 @@ use Illuminate\Support\Fluent;
 use Illuminate\Foundation\Application;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Livewire\Contracts\TokenStorage;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Exceptions\MountMethodMissingException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
-class LivewireManager
+class LivewireManager implements TokenStorage
 {
     use DependencyResolverTrait;
+    use StoresTokens;
 
     protected $container;
     protected $componentAliases = [];
