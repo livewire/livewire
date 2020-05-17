@@ -2,7 +2,6 @@
 
 namespace Livewire;
 
-use Livewire\Contracts\ResolvesToken;
 use Livewire\Contracts\TokenStorage;
 
 class Token

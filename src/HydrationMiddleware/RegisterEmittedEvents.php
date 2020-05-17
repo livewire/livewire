@@ -53,12 +53,8 @@ class RegisterEmittedEvents implements HydrationMiddleware
             $token = $event['to'];
             // replace it with its string notation
             $event['to'] = (string) $token;
-            // unshift first param unto params array since
-            // emitTo called with token doesn't require event
-            // name.
-            array_unshift($event['params'], $event['event']);
-            // change event name to 'token' a special event
-            $event['event'] = 'token';
+            // set type to token event
+            $event['event'] = 'token#' . $event['event'];
         }
     }
 }

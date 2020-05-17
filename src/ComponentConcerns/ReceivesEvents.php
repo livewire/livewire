@@ -84,14 +84,7 @@ trait ReceivesEvents
 
     public function fireEvent($event, $params)
     {
-        if (Str::startsWith($event, 'token#')) {
-            $event = Str::after($event, 'token#');
-            $handlers = $this->getEventsAndHandlers();
-            $method = $handlers[$event] ?? $event;
-        } else {
-            $method = $this->getEventsAndHandlers()[$event];
-        }
-
+        $method = $this->getEventsAndHandlers()[$event];
 
         $this->callMethod($method, $params);
     }

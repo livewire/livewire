@@ -75,8 +75,8 @@ const store = {
     },
 
     emitTo(componentName, event, ...params) {
-        if (event === 'token') {
-            this.emitToToken(componentName, ...params)
+        if (event.startsWith('token#')) {
+            this.emitToToken(componentName, event, ...params)
             return
         }
 
@@ -91,13 +91,14 @@ const store = {
         })
     },
 
-    emitToToken(token, ...params) {
+    emitToToken(token, event, ...params) {
         const tokenParams = token.split('#')
         const componentId = tokenParams.pop()
         const tokenName = tokenParams.pop()
         const component = this.componentsById[componentId]
-        if (component.tokens.includes(tokenName)) {
-            component.addAction(new EventAction('token#' + tokenName, params))
+        const eventName = event.substr('token#'.length)
+        if (component.tokens.includes(tokenName) && component.events.includes(eventName)) {
+            component.addAction(new EventAction(eventName, params))
         }
     },
 
