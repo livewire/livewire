@@ -2,6 +2,7 @@
 
 namespace Livewire\Commands;
 
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 
 class MoveCommand extends FileManipulationCommand
@@ -29,6 +30,8 @@ class MoveCommand extends FileManipulationCommand
 
         $class = $this->renameClass();
         if (! $inline) $view = $this->renameView();
+
+        $this->renameComponentInViews();
 
         $this->refreshComponentAutodiscovery();
 
@@ -68,5 +71,23 @@ class MoveCommand extends FileManipulationCommand
         File::move($this->parser->viewPath(), $newViewPath);
 
         return $newViewPath;
+    }
+
+    protected function renameComponentInViews()
+    {
+        $componentName = Str::replaceFirst('livewire.', '', $this->parser->viewName());
+        $newComponentName = Str::replaceFirst('livewire.', '', $this->newParser->viewName());
+
+        collect(config('view.paths'))->each(function ($path) use ($componentName, $newComponentName) {
+            collect(File::allFiles($path))->each(function ($file) use ($componentName, $newComponentName) {
+                $content = preg_replace(
+                    "/(<|@)livewire(:|\('){$componentName}/",
+                    "$1livewire$2{$newComponentName}",
+                    $file->getContents()
+                );
+
+                File::put($file->getPathName(), $content);
+            });
+        });
     }
 }
