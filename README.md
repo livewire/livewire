@@ -32,7 +32,7 @@ Livewire uses semantic versioning and will use the following release schedule st
 
 ## V2 Roadmap
 * Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`
-* Change `window.livewire` to `window.Livewire` (And update Alpine to adapt)
+* Change `window.livewire` to `window.wire` (And update Alpine to adapt)
 * Make `->getName()` in `src/Component.php` a static method
 * Use camel-cased accessors for snake-cased properties ($this->foo_bar -> $this->getFooBarProperty) (PR ready here: #690)
 * Maybe remove base `render()` method to allow for DI in method params (PR here: #893)
