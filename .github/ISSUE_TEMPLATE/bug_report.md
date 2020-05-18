@@ -1,31 +1,14 @@
 ---
 name: Bug report
-about: Report something that doesn't work
+about: Report something that's broken
 labels: 'Type: Bug'
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+### Description
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
-
-**Code**
-If applicable, add a minimal code example that demonstrates your problem.
-
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+### Steps to reproduce
 
 **Context**
+- Livewire version: [e.g. 1.0.0]
+- Laravel version: [e.g. 7.0.0]
 - Browser: [e.g. Chrome, Safari]
-- Laravel version: [e.g. 7.x]
-
-**Additional details**
-Add any other details about the problem here.
