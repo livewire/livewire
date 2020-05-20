@@ -1,3 +1,5 @@
+import { getCsrfToken } from '@/util'
+
 export default {
     onError: null,
     onMessage: null,
@@ -16,7 +18,7 @@ export default {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'text/html, application/xhtml+xml',
-                'X-CSRF-TOKEN': this.getCSRFToken(),
+                'X-CSRF-TOKEN': getCsrfToken(),
                 'X-Socket-ID': this.getSocketId(),
                 'X-Livewire': true,
             },
@@ -43,23 +45,6 @@ export default {
 
     isOutputFromDump(output) {
         return !! output.match(/<script>Sfdump\(".+"\)<\/script>/)
-    },
-
-    getCSRFToken() {
-        const tokenTag = document.head.querySelector('meta[name="csrf-token"]')
-        let token
-
-        if (!tokenTag) {
-            if (!window.livewire_token) {
-                throw new Error('Whoops, looks like you haven\'t added a "csrf-token" meta tag')
-            }
-
-            token = window.livewire_token
-        } else {
-            token = tokenTag.content
-        }
-
-        return token
     },
 
     getSocketId() {

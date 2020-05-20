@@ -1,4 +1,4 @@
-import { kebabCase, debounce } from '@/util'
+import { kebabCase, debounce, getCsrfToken } from '@/util'
 import ModelAction from '@/action/model'
 import MethodAction from '@/action/method'
 import DOMElement from '@/dom/dom_element'
@@ -55,31 +55,82 @@ export default {
             || directive.modifiers.includes('lazy')
             ? 'change' : 'input'
 
-        // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-        const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
-            if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'file') {
-                let file = e.target.files[0]
+        let handler
+        if (el.rawNode().tagName.toLowerCase() === 'input' && el.rawNode().type === 'file') {
+            handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
+                let conformFileToFileInfoObject = file => {
+                    return {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                    }
+                }
+
+                let fileInfo = Array.from(e.target.files).map(conformFileToFileInfoObject)
+                let model = directive.value
+                component.call('generateSignedRoute', model, fileInfo, !! e.target.multiple);
+            })
+
+            component.on('generatedSignedUrl', url => {
+                el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-started', { bubbles: true }))
+                let files = el.rawNode().files
+                let model = directive.value
                 let formData = new FormData()
-                formData.append("file", file)
-                fetch('/livewire/file-upload', { method: "POST", body: formData }).then(i => i.json()).then(({ path }) => {
-                    const model = directive.value
-                    const el = new DOMElement(e.target)
-                    let value = 'livewire-file:'+path
-
-                    component.addAction(new ModelAction(model, value, el))
+                Array.from(files).forEach(file => formData.append('files[]', file))
+                axios.post(url, formData, {
+                    onUploadProgress(progressEvent) {
+                        var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
+                        el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-progress', { bubbles: true, detail: { progress: percentCompleted } }))
+                    },
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                    }
                 })
-                return
-            }
+                    .then(function (res) {
+                        console.log(res.data)
+                        component.call('finishUpload', model, res.data.paths, el.rawNode().multiple)
+                        el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finished', { bubbles: true }))
+                    })
+                    .catch(function (err) {
+                        el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
+                        // @todo: handle main endpoint validation.
+                        if (err.response.status === 422) {
+                            err.response.data.errors
+                        }
+                    });
+                // fetch(url, { method: "POST", body: formData }).then(i => i.json()).then(({ path }) => {
+                //     component.call('finishUpload', model, path)
+                //     el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finished', { bubbles: true }))
+                // })
+            });
+        } else {
+            // If it's a text input and not .lazy, debounce, otherwise fire immediately.
+            handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
+                if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'file') {
+                    let model = directive.value
+                    let file = e.target.files[0]
+                    let fileData = {
+                        name: file.name,
+                        size: '50000',
+                        type: file.type,
+                        lastModified: file.lastModified,
+                    }
 
-            const model = directive.value
-            const el = new DOMElement(e.target)
-            // We have to check for typeof e.detail here for IE 11.
-            const value = e instanceof CustomEvent && typeof e.detail != 'undefined'
-                ? e.detail
-                : el.valueFromInput(component)
+                    component.call('generateSignedRoute', model, fileData);
+                    return
+                }
 
-            component.addAction(new ModelAction(model, value, el))
-        }, directive.durationOr(150))
+                const model = directive.value
+                const el = new DOMElement(e.target)
+                // We have to check for typeof e.detail here for IE 11.
+                const value = e instanceof CustomEvent && typeof e.detail != 'undefined'
+                    ? e.detail
+                    : el.valueFromInput(component)
+
+                component.addAction(new ModelAction(model, value, el))
+            }, directive.durationOr(150))
+        }
 
         el.addEventListener(event, handler)
 

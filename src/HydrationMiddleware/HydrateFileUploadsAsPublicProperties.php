@@ -5,6 +5,7 @@ namespace Livewire\HydrationMiddleware;
 use finfo;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Livewire\LivewireNotYetUploadedFile;
 use Livewire\LivewireUploadedFile;
 
 class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
@@ -14,23 +15,13 @@ class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
         $publicProperties = $unHydratedInstance->getPublicPropertiesDefinedBySubClass();
 
         foreach ($publicProperties as $property => $value) {
-            if (Str::startsWith($value, 'livewire-file:')) {
-                $filename = Str::after($value, 'livewire-file:');
-                $file_path = Storage::path('livewire/'.$filename);
-                $finfo = new finfo(FILEINFO_MIME_TYPE);
+            if (! is_string($value)) return;
 
-                if (Storage::exists('livewire/'.$filename)) {
-                    $unHydratedInstance->$property = new LivewireUploadedFile(
-                        $file_path,
-                        $filename,
-                        $finfo->file($file_path),
-                        filesize($file_path),
-                        0,
-                        false
-                    );
-                }
+            if (LivewireUploadedFile::canUnserialize($value)) {
+                $unHydratedInstance->$property = LivewireUploadedFile::unserializeFromLivewireRequest($value);
+            } elseif (LivewireNotYetUploadedFile::canUnserialize($value)) {
+                $unHydratedInstance->$property = LivewireUploadedFile::unserializeFromLivewireRequest($value);
             }
-
         }
     }
 
@@ -39,9 +30,17 @@ class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
         $publicProperties = $instance->getPublicPropertiesDefinedBySubClass();
 
         foreach ($publicProperties as $property => $value) {
-            if ($value instanceof LivewireUploadedFile) {
-                $instance->$property = 'livewire-file:'.$value->getFilename();
+            if (static::isLivewireUploadedFile($value)) {
+                $instance->$property = $value->serializeForLivewireResponse();
+            } elseif (is_array($value) && isset($value[0]) && static::isLivewireUploadedFile($value[0])) {
+                $instance->$property = $value[0]::serializeMultipleForLivewireResponse($value);
             }
         }
+    }
+
+    protected static function isLivewireUploadedFile($value)
+    {
+        return $value instanceof LivewireNotYetUploadedFile
+            || $value instanceof LivewireUploadedFile;
     }
 }
