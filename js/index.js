@@ -5,6 +5,7 @@ import Component from "@/component/index";
 import Connection from '@/connection'
 import drivers from '@/connection/drivers'
 import { dispatch } from './util';
+import FileUploads from '@/component/FileUploads'
 import LoadingStates from '@/component/LoadingStates'
 import DisableForms from '@/component/DisableForms'
 import DirtyStates from '@/component/DirtyStates'
@@ -102,6 +103,7 @@ if (! window.Livewire) {
 }
 
 UpdateQueryString()
+FileUploads()
 LoadingStates()
 DisableForms()
 DirtyStates()

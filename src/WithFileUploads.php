@@ -16,11 +16,15 @@ trait WithFileUploads
 
         $this->syncInput($modelName, $file);
 
-        $signedUrl = URL::temporarySignedRoute(
-            'livewire.upload-file', now()->addMinutes(30)
-        );
+        $payload = (new GeneratePreSignedS3UploadUrl)($file);
 
-        $this->emitSelf('generatedSignedUrl', $signedUrl);
+        $this->emitSelf('generatedPreSignedS3Url', $payload);
+
+        // $signedUrl = URL::temporarySignedRoute(
+        //     'livewire.upload-file', now()->addMinutes(30)
+        // );
+
+        // $this->emitSelf('generatedSignedUrl', $signedUrl);
     }
 
     public function finishUpload($modelName, $tmpPath, $isMultiple)
