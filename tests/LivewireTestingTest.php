@@ -90,6 +90,27 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_not_emitted()
+    {
+        app(LivewireManager::class)
+            ->test(EmitsEventsComponentStub::class)
+            ->call('emitFoo')
+            ->assertNotEmitted('bar')
+            ->call('emitFooWithParam', 'not-bar')
+            ->assertNotEmitted('foo', 'bar')
+            ->call('emitFooWithParam', 'foo')
+            ->assertNotEmitted('bar', 'foo')
+            ->call('emitFooWithParam', 'baz')
+            ->assertNotEmitted('bar', function ($event, $params) {
+                return $event !== 'bar' && $params === ['baz'];
+            })
+            ->call('emitFooWithParam', 'baz')
+            ->assertNotEmitted('foo', function ($event, $params) {
+                return $event !== 'foo' && $params !== ['bar'];
+            });
+    }
+
+    /** @test */
     public function assert_dispatched()
     {
         app(LivewireManager::class)

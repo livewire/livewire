@@ -71,6 +71,24 @@ trait MakesAssertions
 
     public function assertEmitted($value, ...$params)
     {
+        $result = $this->testEmitted($value, $params);
+
+        PHPUnit::assertTrue($result['test'], "Failed asserting that an event [{$value}] was fired{$result['assertionSuffix']}");
+
+        return $this;
+    }
+
+    public function assertNotEmitted($value, ...$params)
+    {
+        $result = $this->testEmitted($value, $params);
+
+        PHPUnit::assertFalse($result['test'], "Failed asserting that an event [{$value}] was not fired{$result['assertionSuffix']}");
+
+        return $this;
+    }
+
+    protected function testEmitted($value, $params)
+    {
         $assertionSuffix = '.';
 
         if (empty($params)) {
@@ -90,9 +108,10 @@ trait MakesAssertions
             $assertionSuffix = " with parameters: {$encodedParams}";
         }
 
-        PHPUnit::assertTrue($test, "Failed asserting that an event [{$value}] was fired{$assertionSuffix}");
-
-        return $this;
+        return [
+            'test'            => $test,
+            'assertionSuffix' => $assertionSuffix,
+        ];
     }
 
     public function assertDispatchedBrowserEvent($name, $data = null)
@@ -139,7 +158,7 @@ trait MakesAssertions
                     return Str::snake($rule);
                 }, $rules);
 
-                foreach ((array) $value as $rule) {
+                foreach ((array)$value as $rule) {
                     PHPUnit::assertContains($rule, $snakeCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
                 }
             }
