@@ -122,7 +122,7 @@ class LivewireManager
 
         $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
             'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
-        ]);
+        ], $instance);
 
         $this->dispatch('mounted', $response);
 
