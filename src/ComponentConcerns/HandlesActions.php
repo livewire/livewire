@@ -101,8 +101,14 @@ trait HandlesActions
                 }
 
                 return app($parameter->name);
-            }, function () use (&$params) {
-                return array_shift($params);
+            }, function () use (&$params, $parameter) {
+                $value = array_shift($params);
+
+                if ($value === null && $parameter->isDefaultValueAvailable()) {
+                    return $parameter->getDefaultValue();
+                }
+
+                return $value;
             }, false);
         });
     }

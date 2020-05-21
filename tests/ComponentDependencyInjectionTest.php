@@ -36,7 +36,28 @@ class ComponentDependencyInjectionTest extends TestCase
         $component->runAction('primitive', 1);
 
         $this->assertEquals(1, $component->foo);
-        $this->assertEquals('', $component->bar);
+    }
+
+    /** @test */
+    public function component_action_with_default_value()
+    {
+        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+
+        $component->runAction('primitiveWithDefault', 10, 'foo');
+        $this->assertEquals(10, $component->foo);
+        $this->assertEquals('foo', $component->bar);
+
+        $component->runAction('primitiveWithDefault', 100);
+        $this->assertEquals(100, $component->foo);
+        $this->assertEquals('default', $component->bar);
+
+        $component->runAction('primitiveWithDefault');
+        $this->assertEquals(1, $component->foo);
+        $this->assertEquals('default', $component->bar);
+
+        $component->runAction('primitiveWithDefault', null, 'foo');
+        $this->assertEquals(1, $component->foo);
+        $this->assertEquals('foo', $component->bar);
     }
 
     /** @test */
@@ -68,7 +89,12 @@ class ComponentWithDependencyInjection extends Component
         $this->bar = $bar;
     }
 
-    public function primitive(int $foo, $bar = '')
+    public function primitive(int $foo)
+    {
+        $this->foo = $foo;
+    }
+
+    public function primitiveWithDefault(int $foo = 1, $bar = 'default')
     {
         $this->foo = $foo;
         $this->bar = $bar;
