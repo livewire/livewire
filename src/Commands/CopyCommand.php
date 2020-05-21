@@ -8,7 +8,7 @@ class CopyCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:copy {name} {new-name} {--inline} {--force}';
 
-    protected $description = 'Copy a Livewire component.';
+    protected $description = 'Copy a Livewire component';
 
     public function handle()
     {
