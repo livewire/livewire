@@ -116,6 +116,12 @@ trait InteractsWithProperties
     {
         $propertyKeys = array_keys($this->getPublicPropertiesDefinedBySubClass());
 
+        // Keys to reset from array
+        if (count($properties) && is_array($properties[0])) {
+            $properties = $properties[0];
+        }
+
+        // Reset all
         if (empty($properties)) {
             $properties = $propertyKeys;
         }
@@ -125,5 +131,16 @@ trait InteractsWithProperties
 
             $this->{$property} = $freshInstance->{$property};
         }
+    }
+
+    public function only($properties)
+    {
+        $results = [];
+
+        foreach ($properties as $property) {
+            $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
+        }
+
+        return $results;
     }
 }

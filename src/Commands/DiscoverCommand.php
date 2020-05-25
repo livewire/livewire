@@ -9,7 +9,7 @@ class DiscoverCommand extends Command
 {
     protected $signature = 'livewire:discover';
 
-    protected $description = 'Regenerate Livewire component auto-discovery manifest.';
+    protected $description = 'Regenerate Livewire component auto-discovery manifest';
 
     public function handle()
     {

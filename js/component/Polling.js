@@ -30,7 +30,7 @@ export default function () {
                 })
 
                 from.__livewire_polling_interval = intervalId
-            }, 50)
+            }, 0)
         }
     })
 }
