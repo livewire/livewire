@@ -1,6 +1,8 @@
 <?php
 
-namespace Livewire\Connection;
+namespace Livewire\Controllers;
+
+use Livewire\Connection\ConnectionHandler;
 
 class HttpConnectionHandler extends ConnectionHandler
 {

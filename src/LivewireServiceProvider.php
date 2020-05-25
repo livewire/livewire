@@ -10,8 +10,10 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\LivewireViewCompilerEngine;
-use Livewire\Connection\HttpConnectionHandler;
+use Livewire\Controllers\FileUploadHandler;
+use Livewire\Controllers\HttpConnectionHandler;
 use Illuminate\Foundation\Testing\TestResponse;
+use Livewire\Controllers\LivewireJavaScriptAssets;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Testing\TestResponse as Laravel7TestResponse;
@@ -127,22 +129,11 @@ class LivewireServiceProvider extends ServiceProvider
         RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
             ->middleware(config('livewire.middleware_group', 'web'));
 
-        RouteFacade::post('/livewire/upload-file', function () {
-            abort_unless(request()->hasValidSignature(), 401);
-
-            request()->validate([
-                'files.*' => 'required|'.config('livewire.file_upload.rules') ?: 'file'
-            ]);
-
-            $hashes = collect(request('files'))->map->store('tmp', [
-                'disk' => config('livewire.file_upload.disk') ?: config('filsystems.default')
-            ]);
-
-            return ['paths' => $hashes->map(function ($hash) { return str_replace('tmp/', '', $hash); })];
-        })->middleware(
-            config('livewire.middleware_group', 'web'),
-            config('livewire.file_upload.middleware') ?: 'throttle:60,1'
-        )->name('livewire.upload-file');
+        RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
+            ->middleware(
+                config('livewire.middleware_group', 'web'),
+                config('livewire.file_upload.middleware') ?: 'throttle:60,1'
+            )->name('livewire.upload-file');
     }
 
     protected function registerCommands()

@@ -93,20 +93,25 @@ class TestableLivewire
 
     public function pretendWereSendingAComponentUpdateRequest($message, $payload)
     {
+        return $this->callEndpoint('POST', '/livewire/message/'.$this->componentName, [
+            'id' => $this->payload['id'],
+            'name' => $this->payload['name'],
+            'data' => $this->payload['data'],
+            'children' => $this->payload['children'],
+            'checksum' => $this->payload['checksum'],
+            'errorBag' => $this->payload['errorBag'],
+            'actionQueue' => [['type' => $message, 'payload' => $payload]],
+        ]);
+    }
+
+    public function callEndpoint($method, $url, $payload)
+    {
         $laravelTestingWrapper = new MakesHttpRequestsWrapper(app());
 
         $response = null;
 
-        $laravelTestingWrapper->temporarilyDisableExceptionHandlingAndMiddleware(function ($wrapper) use (&$response, $message, $payload) {
-            $response = $wrapper->call('POST', '/livewire/message/'.$this->componentName, [
-                'id' => $this->payload['id'],
-                'name' => $this->payload['name'],
-                'data' => $this->payload['data'],
-                'children' => $this->payload['children'],
-                'checksum' => $this->payload['checksum'],
-                'errorBag' => $this->payload['errorBag'],
-                'actionQueue' => [['type' => $message, 'payload' => $payload]],
-            ]);
+        $laravelTestingWrapper->temporarilyDisableExceptionHandlingAndMiddleware(function ($wrapper) use (&$response, $method, $url, $payload) {
+            $response = $wrapper->call($method, $url, $payload);
         });
 
         return $response;

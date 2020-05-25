@@ -3,10 +3,11 @@
 namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
+use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
+use Livewire\Exceptions\MissingWithFileUploadsTraitException;
 use Livewire\Exceptions\CannotBindDataToEloquentModelException;
-use Livewire\Exceptions\MethodNotFoundException;
 
 trait HandlesActions
 {
@@ -78,6 +79,13 @@ trait HandlesActions
 
             case '$refresh':
                 return;
+                break;
+
+            case 'generateSignedRoute':
+                // This is a check to make sure the component is capable of uploading
+                // a file. Meaning tt has the WithFileUploads trait applied to it.
+                throw_unless(method_exists($this, 'generateSignedRoute'), new MissingWithFileUploadsTraitException($this));
+
                 break;
 
             default:

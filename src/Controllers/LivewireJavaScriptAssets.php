@@ -1,17 +1,17 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Controllers;
 
 class LivewireJavaScriptAssets
 {
     public function source()
     {
-        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.js');
+        return $this->pretendResponseIsFile(__DIR__.'/../../dist/livewire.js');
     }
 
     public function maps()
     {
-        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.js.map');
+        return $this->pretendResponseIsFile(__DIR__.'/../../dist/livewire.js.map');
     }
 
     public function pretendResponseIsFile($file)

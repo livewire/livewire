@@ -15,7 +15,7 @@ class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
         $publicProperties = $unHydratedInstance->getPublicPropertiesDefinedBySubClass();
 
         foreach ($publicProperties as $property => $value) {
-            if (! is_string($value)) return;
+            if (! is_string($value)) continue;
 
             if (LivewireUploadedFile::canUnserialize($value)) {
                 $unHydratedInstance->$property = LivewireUploadedFile::unserializeFromLivewireRequest($value);

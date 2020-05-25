@@ -67,7 +67,7 @@ class LivewireUploadedFile extends UploadedFile
         $newPath = trim($path.'/'.$name, '/');
 
         if ($disk === $this->disk) {
-            return $this->storage->copy($this->path, $newPath);
+            return $this->storage->move($this->path, $newPath);
         }
 
         return Storage::disk($disk)->put(
@@ -87,7 +87,9 @@ class LivewireUploadedFile extends UploadedFile
 
     public static function createFromLivewire($filePath)
     {
-        $disk = config('livewire.file_upload.disk') ?: config('filsystems.default');
+        $disk = app()->environment('testing')
+            ? 'tmp-for-tests'
+            : (config('livewire.file_upload.disk') ?: config('filsystems.default'));
 
         return new static($filePath, $disk);
     }
