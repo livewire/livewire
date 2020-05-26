@@ -30,7 +30,11 @@ class LivewireUploadedFile extends UploadedFile
 
     public function getSize()
     {
-        return $this->storage->size($this->path);
+        if (app()->environment('testing') && str::contains($this->getfilename(), '-size:')) {
+            return (int) str::between($this->getfilename(), '-size:', '.');
+        }
+
+        return (int) $this->storage->size($this->path);
     }
 
     public function getMimeType()
@@ -41,6 +45,11 @@ class LivewireUploadedFile extends UploadedFile
     public function getFilename()
     {
         return $this->getName($this->path);
+    }
+
+    public function getRealPath()
+    {
+        return $this->storage->path($this->path);
     }
 
     public function readStream()

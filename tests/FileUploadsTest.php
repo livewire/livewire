@@ -4,12 +4,12 @@ namespace Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
-use Livewire\LivewireManager;
+use Livewire\WithFileUploads;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MissingWithFileUploadsTraitException;
-use Livewire\WithFileUploads;
 
 class FileUploadsTest extends TestCase
 {
@@ -18,7 +18,7 @@ class FileUploadsTest extends TestCase
     {
         $this->expectException(MissingWithFileUploadsTraitException::class);
 
-        Livewire::test(FileUploadComponent::class)
+        Livewire::test(NonFileUploadComponent::class)
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
     }
 
@@ -43,7 +43,7 @@ class FileUploadsTest extends TestCase
 
         Storage::fake('avatars');
 
-        $file = UploadedFile::fake()->image('avatar.jpg')->size(13000); // 33MB
+        $file = UploadedFile::fake()->image('avatar.jpg')->size(13000); // 13MB
 
         Livewire::test(FileUploadComponent::class)
             ->set('photo', $file);
@@ -61,7 +61,36 @@ class FileUploadsTest extends TestCase
         Livewire::test(FileUploadComponent::class)
             ->set('photo', $file)
             ->call('validateUpload')
-            ->assertHasErrors('max');
+            ->assertHasErrors(['photo' => 'max']);
+
+        Storage::disk('avatars')->assertMissing('uploaded-avatar.png');
+    }
+
+    /** @test */
+    public function a_file_can_be_valited_in_real_time()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->create('avatar.xls', 75);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->assertHasErrors(['photo' => 'image']);
+
+        Storage::disk('avatars')->assertMissing('uploaded-avatar.png');
+    }
+
+    /** @test */
+    public function image_dimensions_can_be_validated()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.png', 100, 200);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('validateUploadWithDimensions')
+            ->assertHasErrors(['photo' => 'dimensions']);
 
         Storage::disk('avatars')->assertMissing('uploaded-avatar.png');
     }
@@ -80,6 +109,11 @@ class FileUploadComponent extends Component
 
     public $photo;
 
+    public function updatedPhoto()
+    {
+        $this->validate(['photo' => 'image|max:300']);
+    }
+
     public function upload()
     {
         $this->photo->storeAs('/', 'uploaded-avatar.png', $disk = 'avatars');
@@ -88,6 +122,13 @@ class FileUploadComponent extends Component
     public function validateUpload()
     {
         $this->validate(['photo' => 'file|max:100']);
+    }
+
+    public function validateUploadWithDimensions()
+    {
+        $this->validate([
+            'photo' => Rule::dimensions()->maxWidth(100)->maxHeight(100),
+        ]);
     }
 
     public function render() { return app('view')->make('null-view'); }

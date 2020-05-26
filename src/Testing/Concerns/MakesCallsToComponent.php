@@ -2,6 +2,7 @@
 
 namespace Livewire\Testing\Concerns;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Controllers\FileUploadHandler;
@@ -81,10 +82,13 @@ trait MakesCallsToComponent
             // file in a tmp directory.
             Storage::fake($disk = 'tmp-for-tests');
             $fileHash = (new FileUploadHandler)->validateAndStore([$value], $disk)[0];
+            $newFileHash = Str::replaceFirst('.', "-size:{$value->getSize()}.", $fileHash);
+
+            Storage::disk($disk)->move('/tmp/'.$fileHash, '/tmp/'.$newFileHash);
 
             $this->sendMessage('callMethod', [
                 'method' => 'finishUpload',
-                'params' => [$name, [$fileHash]],
+                'params' => [$name, [$newFileHash]],
             ], false);
 
             return $this;

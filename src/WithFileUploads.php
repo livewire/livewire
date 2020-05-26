@@ -8,13 +8,13 @@ trait WithFileUploads
 {
     public function generateSignedRoute($modelName, $fileInfo, $isMultiple)
     {
-        $file = $isMultiple
-            ? collect($fileInfo)->map(function ($i) {
-                return LivewireNotYetUploadedFile::createFromLivewire($i);
-            })->toArray()
-            : LivewireNotYetUploadedFile::createFromLivewire($fileInfo[0]);
+        // $file = $isMultiple
+        //     ? collect($fileInfo)->map(function ($i) {
+        //         return LivewireNotYetUploadedFile::createFromLivewire($i);
+        //     })->toArray()
+        //     : LivewireNotYetUploadedFile::createFromLivewire($fileInfo[0]);
 
-        $this->syncInput($modelName, $file);
+        // $this->syncInput($modelName, $file);
 
         // $payload = (new GeneratePreSignedS3UploadUrl)($file);
 
