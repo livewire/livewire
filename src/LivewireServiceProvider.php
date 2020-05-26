@@ -49,7 +49,8 @@ use Livewire\HydrationMiddleware\{
     ClearFlashMessagesIfNotRedirectingAway,
     PrioritizeDataUpdatesBeforeActionCalls,
     HydrateEloquentModelsAsPublicProperties,
-    PerformPublicPropertyFromDataBindingUpdates
+    PerformPublicPropertyFromDataBindingUpdates,
+    HydratePropertiesWithCustomRuntimeHydrators
 };
 
 class LivewireServiceProvider extends ServiceProvider
@@ -240,6 +241,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
         /* v */ HydrateFileUploadsAsPublicProperties::class,     /* ^ */
         /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
+        /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
         /* v */ CastPublicProperties::class,                        /* ^ */
         /* v */ HydratePreviouslyRenderedChildren::class,           /* ^ */
         /* v */ InterceptRedirects::class,                          /* ^ */
@@ -260,6 +262,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* ^ */ [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
         /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
         /* ^ */ [HydrateEloquentModelsAsPublicProperties::class, 'dehydrate'],
+        /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
         /* ^ */ [CastPublicProperties::class, 'dehydrate'],
         /* ^ */ [RegisterEmittedEvents::class, 'dehydrate'],
         /* ^ */ [RegisterEventsBeingListenedFor::class, 'dehydrate'],
