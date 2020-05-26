@@ -5,8 +5,6 @@ namespace Tests;
 use Livewire\Livewire;
 use Livewire\Component;
 
-use function PHPUnit\Framework\assertEquals;
-
 class RuntimeHydrationMiddlewareTest extends TestCase
 {
     /** @test */
@@ -14,14 +12,14 @@ class RuntimeHydrationMiddlewareTest extends TestCase
     {
         Livewire::hydrateProperty(function ($value, $property) {
             if ($value === 'BAR') {
-                assertEquals('foo', $property);
+                assert('foo' === $property);
                 return 'bar';
             }
 
             return $value;
         })->dehydrateProperty(function ($value, $property) {
             if ($value === 'bar') {
-                assertEquals('foo', $property);
+                assert('foo' === $property);
                 return 'BAR';
             }
 
@@ -41,7 +39,7 @@ class ComponentForCustomRuntimeHydrationMiddleware extends Component
 
     public function assertSlice()
     {
-        assertEquals('bar', $this->foo);
+        assert('bar' === $this->foo);
     }
 
     public function render()
