@@ -98,7 +98,7 @@ class LivewireUploadedFile extends UploadedFile
     {
         $disk = app()->environment('testing')
             ? 'tmp-for-tests'
-            : (config('livewire.file_upload.disk') ?: config('filsystems.default'));
+            : (config('livewire.temporary_file_upload.disk') ?: config('filsystems.default'));
 
         return new static($filePath, $disk);
     }

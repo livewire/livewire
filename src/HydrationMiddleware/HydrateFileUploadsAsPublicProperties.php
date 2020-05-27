@@ -2,10 +2,6 @@
 
 namespace Livewire\HydrationMiddleware;
 
-use finfo;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
-use Livewire\LivewireNotYetUploadedFile;
 use Livewire\LivewireUploadedFile;
 
 class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
@@ -19,8 +15,6 @@ class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
 
             if (LivewireUploadedFile::canUnserialize($value)) {
                 $unHydratedInstance->$property = LivewireUploadedFile::unserializeFromLivewireRequest($value);
-            } elseif (LivewireNotYetUploadedFile::canUnserialize($value)) {
-                $unHydratedInstance->$property = LivewireUploadedFile::unserializeFromLivewireRequest($value);
             }
         }
     }
@@ -30,17 +24,11 @@ class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
         $publicProperties = $instance->getPublicPropertiesDefinedBySubClass();
 
         foreach ($publicProperties as $property => $value) {
-            if (static::isLivewireUploadedFile($value)) {
+            if ($value instanceof LivewireUploadedFile) {
                 $instance->$property = $value->serializeForLivewireResponse();
-            } elseif (is_array($value) && isset($value[0]) && static::isLivewireUploadedFile($value[0])) {
+            } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof LivewireUploadedFile) {
                 $instance->$property = $value[0]::serializeMultipleForLivewireResponse($value);
             }
         }
-    }
-
-    protected static function isLivewireUploadedFile($value)
-    {
-        return $value instanceof LivewireNotYetUploadedFile
-            || $value instanceof LivewireUploadedFile;
     }
 }

@@ -103,11 +103,11 @@ if (! window.Livewire) {
 }
 
 UpdateQueryString()
-FileUploads()
+OfflineStates()
 LoadingStates()
 DisableForms()
+FileUploads()
 DirtyStates()
-OfflineStates()
 Polling()
 
 dispatch('livewire:available')

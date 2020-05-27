@@ -2,7 +2,7 @@
 
 namespace Livewire\Exceptions;
 
-class MissingWithFileUploadsTraitException extends \Exception
+class MissingFileUploadsTraitException extends \Exception
 {
     use BypassViewHandler;
 

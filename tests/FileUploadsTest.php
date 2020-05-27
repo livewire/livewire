@@ -9,14 +9,14 @@ use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Livewire\Exceptions\MissingWithFileUploadsTraitException;
+use Livewire\Exceptions\MissingFileUploadsTraitException;
 
 class FileUploadsTest extends TestCase
 {
     /** @test */
     public function component_must_have_file_uploades_trait_to_accept_file_uploads()
     {
-        $this->expectException(MissingWithFileUploadsTraitException::class);
+        $this->expectException(MissingFileUploadsTraitException::class);
 
         Livewire::test(NonFileUploadComponent::class)
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));

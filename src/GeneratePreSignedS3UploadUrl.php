@@ -3,7 +3,6 @@
 namespace Livewire;
 
 use Aws\S3\S3Client;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class GeneratePreSignedS3UploadUrl
@@ -18,19 +17,17 @@ class GeneratePreSignedS3UploadUrl
 
         $client = $this->storageClient();
 
-        $uuid = $file->hashName();
+        $fileHashName = $file->hashName();
 
         $signedRequest = $client->createPresignedRequest(
-            $this->createCommand($client, $bucket, $key = ('tmp/'.$uuid), $fileType, $visibility),
+            $this->createCommand($client, $bucket, ('tmp/'.$fileHashName), $fileType, $visibility),
             '+5 minutes'
         );
 
         $uri = $signedRequest->getUri();
 
         return [
-            'uuid' => $uuid,
-            'bucket' => $bucket,
-            'key' => $key,
+            'path' => $fileHashName,
             'url' => 'https://'.$uri->getHost().$uri->getPath().'?'.$uri->getQuery(),
             'headers' => $this->headers($signedRequest, $fileType),
         ];

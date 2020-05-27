@@ -10,23 +10,23 @@ class FileUploadHandler
     {
         abort_unless(request()->hasValidSignature(), 401);
 
-        $disk = config('livewire.file_upload.disk') ?: config('filsystems.default');
+        $disk = config('livewire.temporary_file_upload.disk') ?: config('filsystems.default');
 
-        $hashes = $this->validateAndStore(request('files'), $disk);
+        $filePaths = $this->validateAndStore(request('files'), $disk);
 
-        return ['paths' => $hashes];
+        return ['paths' => $filePaths];
     }
 
     public function validateAndStore($files, $disk)
     {
         Validator::make(['files' => $files], [
-            'files.*' => 'required|'.(config('livewire.file_upload.rules') ?: 'file|max:12288')
+            'files.*' => 'required|'.(config('livewire.temporary_file_upload.rules') ?: 'file|max:12288') // Max: 12MB
         ])->validate();
 
-        $hashes = collect($files)->map->store('/tmp', [
+        $fileHashPaths = collect($files)->map->store('/tmp', [
             'disk' => $disk
         ]);
 
-        return $hashes->map(function ($hash) { return str_replace('tmp/', '', $hash); });
+        return $fileHashPaths->map(function ($path) { return str_replace('tmp/', '', $path); });
     }
 }

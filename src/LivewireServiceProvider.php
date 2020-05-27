@@ -133,7 +133,7 @@ class LivewireServiceProvider extends ServiceProvider
         RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
             ->middleware(
                 config('livewire.middleware_group', 'web'),
-                config('livewire.file_upload.middleware') ?: 'throttle:60,1'
+                config('livewire.temporary_file_upload.middleware') ?: 'throttle:60,1'
             )->name('livewire.upload-file');
     }
 
@@ -239,7 +239,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
         /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
-        /* v */ HydrateFileUploadsAsPublicProperties::class,     /* ^ */
+        /* v */ HydrateFileUploadsAsPublicProperties::class,        /* ^ */
         /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
         /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
         /* v */ CastPublicProperties::class,                        /* ^ */

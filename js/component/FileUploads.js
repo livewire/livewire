@@ -47,7 +47,7 @@ function handleS3PreSignedUrl(payload, component, el, directive)
             )
         }
     }).then(response => {
-        component.call('finishUpload', directive.value, [payload.uuid], el.rawNode().multiple)
+        component.call('finishUpload', directive.value, [payload.path], el.rawNode().multiple)
         el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finished', { bubbles: true }))
     }).catch(error => {
         el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
