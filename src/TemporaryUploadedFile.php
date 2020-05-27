@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-class LivewireUploadedFile extends UploadedFile
+class TemporaryUploadedFile extends UploadedFile
 {
     protected $storage;
     protected $path;

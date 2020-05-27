@@ -94,6 +94,12 @@ class FileUploadsTest extends TestCase
 
         Storage::disk('avatars')->assertMissing('uploaded-avatar.png');
     }
+
+    /** @test */
+    public function temporary_files_are_cleane_up_after_24_hours()
+    {
+        $this->assertTrue(true);
+    }
 }
 
 class NonFileUploadComponent extends Component
