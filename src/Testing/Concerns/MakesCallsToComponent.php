@@ -68,36 +68,47 @@ trait MakesCallsToComponent
         }
 
         if ($value instanceof UploadedFile) {
-            $this->sendMessage('callMethod', [
-                'method' => 'generateSignedRoute',
-                'params' => [$name, [[
-                    'name' => $value->name,
-                    'size' => $value->getSize(),
-                    'type' => $value->getMimeType(),
-                ]]],
-            ], false);
-
-            // This is where either the pre-signed S3 url or the regular Livewire signed
-            // upload url would do its thing and return a hashed version of the uploaded
-            // file in a tmp directory.
-            Storage::fake($disk = 'tmp-for-tests');
-            $fileHash = (new FileUploadHandler)->validateAndStore([$value], $disk)[0];
-            $newFileHash = Str::replaceFirst('.', "-size:{$value->getSize()}.", $fileHash);
-
-            Storage::disk($disk)->move('/tmp/'.$fileHash, '/tmp/'.$newFileHash);
-
-            $this->sendMessage('callMethod', [
-                'method' => 'finishUpload',
-                'params' => [$name, [$newFileHash]],
-            ], false);
-
-            return $this;
+            return $this->syncUploadedFile($name, $value);
         }
 
         $this->sendMessage('syncInput', [
             'name' => $name,
             'value' => $value,
         ]);
+
+        return $this;
+    }
+
+    public function syncUploadedFile($name, $value)
+    {
+        // This methhod simulates the calls Livewire's JavaScript
+        // normally makes for file uploads.
+        $this->sendMessage('callMethod', [
+            'method' => 'generateSignedRoute',
+            'params' => [$name, [[
+                'name' => $value->name,
+                'size' => $value->getSize(),
+                'type' => $value->getMimeType(),
+            ]]],
+        ], false);
+
+        // This is where either the pre-signed S3 url or the regular Livewire signed
+        // upload url would do its thing and return a hashed version of the uploaded
+        // file in a tmp directory.
+        Storage::fake($disk = 'tmp-for-tests');
+        $fileHash = (new FileUploadHandler)->validateAndStore([$value], $disk)[0];
+
+        // We are going to encode the file size in the filename so that when we create
+        // a new TemporaryUploadedFile instance we can fake a specific file size.
+        $newFileHash = Str::replaceFirst('.', "-size:{$value->getSize()}.", $fileHash);
+        Storage::disk($disk)->move('/tmp/'.$fileHash, '/tmp/'.$newFileHash);
+
+        // Now we finish the upload with a final call to the Livewire component
+        // with the temporarily uploaded file path.
+        $this->sendMessage('callMethod', [
+            'method' => 'finishUpload',
+            'params' => [$name, [$newFileHash]],
+        ], false);
 
         return $this;
     }

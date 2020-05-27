@@ -2,7 +2,6 @@
 
 namespace Livewire\Testing;
 
-use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\View;

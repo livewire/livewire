@@ -84,16 +84,6 @@ class TemporaryUploadedFile extends UploadedFile
         );
     }
 
-    public function stillUploading()
-    {
-        return false;
-    }
-
-    public function finishedUploading()
-    {
-        return true;
-    }
-
     public static function createFromLivewire($filePath)
     {
         $disk = app()->environment('testing')
