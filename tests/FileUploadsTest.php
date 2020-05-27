@@ -4,12 +4,15 @@ namespace Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use Illuminate\Http\Request;
 use Livewire\WithFileUploads;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
+use Livewire\FileUploadConfiguration;
 
 class FileUploadsTest extends TestCase
 {
@@ -23,7 +26,7 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function can_simulate_a_file_upload_by_setting_a_file_as_a_property_and_storing_it()
+    public function can_set_a_file_as_a_property_and_store_it()
     {
         Storage::fake('avatars');
 
@@ -31,7 +34,7 @@ class FileUploadsTest extends TestCase
 
         Livewire::test(FileUploadComponent::class)
             ->set('photo', $file)
-            ->call('upload');
+            ->call('upload', 'uploaded-avatar.png');
 
         Storage::disk('avatars')->assertExists('uploaded-avatar.png');
     }
@@ -96,9 +99,34 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function temporary_files_are_cleane_up_after_24_hours()
+    public function temporary_files_older_than_24_hours_are_cleaned_up_on_every_new_upload()
     {
-        $this->assertTrue(true);
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+        $file2 = UploadedFile::fake()->image('avatar.jpg');
+        $file3 = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('upload', 'uploaded-avatar.png');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file2)
+            ->call('upload', 'uploaded-avatar2.png');
+
+        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
+
+        // Make temporary files look 2 days old.
+        foreach (FileUploadConfiguration::storage()->allFiles() as $fileShortPath) {
+            touch(FileUploadConfiguration::storage()->path($fileShortPath), now()->subDays(2)->timestamp);
+        }
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file3)
+            ->call('upload', 'uploaded-avatar3.png');
+
+        $this->assertCount(1, FileUploadConfiguration::storage()->allFiles());
     }
 }
 
@@ -120,9 +148,9 @@ class FileUploadComponent extends Component
         $this->validate(['photo' => 'image|max:300']);
     }
 
-    public function upload()
+    public function upload($name)
     {
-        $this->photo->storeAs('/', 'uploaded-avatar.png', $disk = 'avatars');
+        $this->photo->storeAs('/', $name, $disk = 'avatars');
     }
 
     public function validateUpload()

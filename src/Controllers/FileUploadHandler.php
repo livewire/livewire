@@ -3,6 +3,7 @@
 namespace Livewire\Controllers;
 
 use Illuminate\Support\Facades\Validator;
+use Livewire\FileUploadConfiguration;
 
 class FileUploadHandler
 {
@@ -10,7 +11,7 @@ class FileUploadHandler
     {
         abort_unless(request()->hasValidSignature(), 401);
 
-        $disk = config('livewire.temporary_file_upload.disk') ?: config('filsystems.default');
+        $disk = FileUploadConfiguration::disk();
 
         $filePaths = $this->validateAndStore(request('files'), $disk);
 
@@ -20,7 +21,7 @@ class FileUploadHandler
     public function validateAndStore($files, $disk)
     {
         Validator::make(['files' => $files], [
-            'files.*' => 'required|'.(config('livewire.temporary_file_upload.rules') ?: 'file|max:12288') // Max: 12MB
+            'files.*' => 'required|'.FileUploadConfiguration::rules()
         ])->validate();
 
         $fileHashPaths = collect($files)->map->store('/tmp', [

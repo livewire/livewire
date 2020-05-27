@@ -133,7 +133,7 @@ class LivewireServiceProvider extends ServiceProvider
         RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
             ->middleware(
                 config('livewire.middleware_group', 'web'),
-                config('livewire.temporary_file_upload.middleware') ?: 'throttle:60,1'
+                FileUploadConfiguration::middleware()
             )->name('livewire.upload-file');
     }
 

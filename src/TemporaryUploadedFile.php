@@ -86,11 +86,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public static function createFromLivewire($filePath)
     {
-        $disk = app()->environment('testing')
-            ? 'tmp-for-tests'
-            : (config('livewire.temporary_file_upload.disk') ?: config('filsystems.default'));
-
-        return new static($filePath, $disk);
+        return new static($filePath, FileUploadConfiguration::disk());
     }
 
     public static function canUnserialize($subject)

@@ -2,7 +2,9 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Storage;
 
 trait WithFileUploads
 {
@@ -21,7 +23,7 @@ trait WithFileUploads
         // $this->emitSelf('generatedPreSignedS3Url', $payload);
 
         $signedUrl = URL::temporarySignedRoute(
-            'livewire.upload-file', now()->addMinutes(30)
+            'livewire.upload-file', now()->addMinutes(5)
         );
 
         $this->emitSelf('generatedSignedUrl', $signedUrl);
@@ -29,8 +31,7 @@ trait WithFileUploads
 
     public function finishUpload($modelName, $tmpPath, $isMultiple)
     {
-        // every 5%-100%? of requests cleans the tmp directory of files older than 24hrs.
-        // on s3 auto-config /tmp cleanup
+        $this->cleanupOldUploads();
 
         $file = $isMultiple
             ? collect($tmpPath)->map(function ($i) {
@@ -39,5 +40,17 @@ trait WithFileUploads
             : TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
 
         $this->syncInput($modelName, $file);
+    }
+
+    protected function cleanupOldUploads()
+    {
+        $storage = FileUploadConfiguration::storage();
+
+        foreach ($storage->allFiles('/tmp') as $filePathname) {
+            $yesterdaysStamp = now()->subDay()->timestamp;
+            if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
+                $storage->delete($filePathname);
+            }
+        }
     }
 }
