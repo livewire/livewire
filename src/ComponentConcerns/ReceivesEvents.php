@@ -8,8 +8,11 @@ trait ReceivesEvents
     protected $dispatchQueue = [];
     protected $listeners = [];
 
-    protected function getListeners() {
-        return $this->listeners;
+    protected function getListeners()
+    {
+        return array_merge([
+            '__livewire_refresh' => '$refresh',
+        ], $this->listeners);
     }
 
     public function emit($event, ...$params)

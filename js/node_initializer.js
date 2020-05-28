@@ -150,6 +150,11 @@ export default {
                     params.push(e.detail)
                 }
 
+                if (method === '$refresh') {
+                    store.emit('__livewire_refresh')
+                    return;
+                }
+
                 // Check for global event emission.
                 if (method === '$emit') {
                     component.scopedListeners.call(...params)
