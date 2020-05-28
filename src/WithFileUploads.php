@@ -29,9 +29,9 @@ trait WithFileUploads
 
         $file = $isMultiple
             ? collect($tmpPath)->map(function ($i) {
-                return TemporaryUploadedFile::createFromLivewire($i);
+                return TemporarilyUploadedFile::createFromLivewire($i);
             })->toArray()
-            : TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
+            : TemporarilyUploadedFile::createFromLivewire($tmpPath[0]);
 
         $this->syncInput($modelName, $file);
     }

@@ -2,7 +2,7 @@
 
 namespace Livewire\HydrationMiddleware;
 
-use Livewire\TemporaryUploadedFile;
+use Livewire\TemporarilyUploadedFile;
 
 class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
 {
@@ -13,8 +13,8 @@ class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
         foreach ($publicProperties as $property => $value) {
             if (! is_string($value)) continue;
 
-            if (TemporaryUploadedFile::canUnserialize($value)) {
-                $unHydratedInstance->$property = TemporaryUploadedFile::unserializeFromLivewireRequest($value);
+            if (TemporarilyUploadedFile::canUnserialize($value)) {
+                $unHydratedInstance->$property = TemporarilyUploadedFile::unserializeFromLivewireRequest($value);
             }
         }
     }
@@ -24,9 +24,9 @@ class HydrateFileUploadsAsPublicProperties implements HydrationMiddleware
         $publicProperties = $instance->getPublicPropertiesDefinedBySubClass();
 
         foreach ($publicProperties as $property => $value) {
-            if ($value instanceof TemporaryUploadedFile) {
+            if ($value instanceof TemporarilyUploadedFile) {
                 $instance->$property = $value->serializeForLivewireResponse();
-            } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof TemporaryUploadedFile) {
+            } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof TemporarilyUploadedFile) {
                 $instance->$property = $value[0]::serializeMultipleForLivewireResponse($value);
             }
         }
