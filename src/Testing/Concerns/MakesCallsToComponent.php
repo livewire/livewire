@@ -70,6 +70,8 @@ trait MakesCallsToComponent
 
         if ($value instanceof UploadedFile) {
             return $this->syncUploadedFile($name, $value);
+        } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof UploadedFile) {
+            return $this->syncMultipleUploadedFiles($name, $value);
         }
 
         $this->sendMessage('syncInput', [
@@ -110,6 +112,47 @@ trait MakesCallsToComponent
             'method' => 'finishUpload',
             'params' => [$name, [$newFileHash], $multiple = false],
         ], false);
+
+        return $this;
+    }
+
+    public function syncMultipleUploadedFiles($name, $files)
+    {
+        // This methhod simulates the calls Livewire's JavaScript
+        // normally makes for file uploads.
+        $this->sendMessage('callMethod', [
+            'method' => 'generateSignedRoute',
+            'params' => [$name, collect($files)->map(function ($file) {
+                return [
+                    'name' => $file->name,
+                    'size' => $file->getSize(),
+                    'type' => $file->getMimeType(),
+                ];
+            })->toArray(), $multiple = true],
+        ]);
+
+        // This is where either the pre-signed S3 url or the regular Livewire signed
+        // upload url would do its thing and return a hashed version of the uploaded
+        // file in a tmp directory.
+        $storage = FileUploadConfiguration::storage();
+        $fileHashes = (new FileUploadHandler)->validateAndStore($files, FileUploadConfiguration::disk());
+
+        // We are going to encode the file size in the filename so that when we create
+        // a new TemporaryUploadedFile instance we can fake a specific file size.
+        $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
+            return Str::replaceFirst('.', "-size:{$file->getSize()}.", $fileHash);
+        })->toArray();
+
+        collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
+            $storage->move('/tmp/'.$fileHash, '/tmp/'.$newFileHash);
+        });
+
+        // Now we finish the upload with a final call to the Livewire component
+        // with the temporarily uploaded file path.
+        $this->sendMessage('callMethod', [
+            'method' => 'finishUpload',
+            'params' => [$name, $newFileHashes, $multiple = true],
+        ]);
 
         return $this;
     }

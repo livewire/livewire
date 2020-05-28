@@ -4,10 +4,18 @@ namespace Livewire;
 
 use Aws\S3\S3Client;
 use InvalidArgumentException;
+use Illuminate\Support\Facades\URL;
 
-class GeneratePreSignedS3UploadUrl
+class GenerateSignedUploadUrl
 {
-    public function __invoke($file, $visibility = 'private')
+    public function forLocal()
+    {
+        return URL::temporarySignedRoute(
+            'livewire.upload-file', now()->addMinutes(5)
+        );
+    }
+
+    public function forS3($file, $visibility = 'private')
     {
         $this->ensureEnvironmentVariablesAreAvailable();
 

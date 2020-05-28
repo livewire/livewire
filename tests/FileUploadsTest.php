@@ -4,25 +4,35 @@ namespace Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
-use Illuminate\Http\Request;
 use Livewire\WithFileUploads;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Carbon;
+use Livewire\FileUploadConfiguration;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
-use Livewire\FileUploadConfiguration;
+use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
 class FileUploadsTest extends TestCase
 {
     /** @test */
-    public function component_must_have_file_uploades_trait_to_accept_file_uploads()
+    public function component_must_have_file_uploads_trait_to_accept_file_uploads()
     {
         $this->expectException(MissingFileUploadsTraitException::class);
 
         Livewire::test(NonFileUploadComponent::class)
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
+    }
+
+    /** @test */
+    public function s3_driver_only_supports_single_file_uploads()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        $this->expectException(S3DoesntSupportMultipleFileUploads::class);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photos', [UploadedFile::fake()->image('avatar.jpg')]);
     }
 
     /** @test */
@@ -40,6 +50,38 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function can_set_a_file_as_a_property_using_the_s3_driver_and_store_it()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('upload', 'uploaded-avatar.png');
+
+        Storage::disk('avatars')->assertExists('uploaded-avatar.png');
+    }
+
+    /** @test */
+    public function can_set_multiple_files_as_a_property_and_store_them()
+    {
+        Storage::fake('avatars');
+
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photos', [$file1, $file2])
+            ->call('uploadMultiple', 'uploaded-avatar');
+
+        Storage::disk('avatars')->assertExists('uploaded-avatar1.png');
+        Storage::disk('avatars')->assertExists('uploaded-avatar2.png');
+    }
+
+    /** @test */
     public function a_file_cant_be_larger_than_12mb_or_the_global_livewire_uploader_will_fail()
     {
         $this->expectException(ValidationException::class);
@@ -50,8 +92,20 @@ class FileUploadsTest extends TestCase
 
         Livewire::test(FileUploadComponent::class)
             ->set('photo', $file);
+    }
 
-        Storage::disk('avatars')->assertMissing('uploaded-avatar.png');
+    /** @test */
+    public function multiple_files_cant_be_larger_than_12mb_or_the_global_livewire_uploader_will_fail()
+    {
+        $this->expectException(ValidationException::class);
+
+        Storage::fake('avatars');
+
+        $file1 = UploadedFile::fake()->image('avatar.jpg')->size(13000); // 13MB
+        $file2 = UploadedFile::fake()->image('avatar.jpg')->size(13000); // 13MB
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photos', [$file1, $file2]);
     }
 
     /** @test */
@@ -65,8 +119,20 @@ class FileUploadsTest extends TestCase
             ->set('photo', $file)
             ->call('validateUpload')
             ->assertHasErrors(['photo' => 'max']);
+    }
 
-        Storage::disk('avatars')->assertMissing('uploaded-avatar.png');
+    /** @test */
+    public function multiple_uploaded_files_can_be_validated()
+    {
+        Storage::fake('avatars');
+
+        $file1 = UploadedFile::fake()->image('avatar.jpg');
+        $file2 = UploadedFile::fake()->image('avatar.jpg')->size(200);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photos', [$file1, $file2])
+            ->call('validateMultipleUploads')
+            ->assertHasErrors(['photos.1' => 'max']);
     }
 
     /** @test */
@@ -79,8 +145,19 @@ class FileUploadsTest extends TestCase
         Livewire::test(FileUploadComponent::class)
             ->set('photo', $file)
             ->assertHasErrors(['photo' => 'image']);
+    }
 
-        Storage::disk('avatars')->assertMissing('uploaded-avatar.png');
+    /** @test */
+    public function multiple_files_can_be_valited_in_real_time()
+    {
+        Storage::fake('avatars');
+
+        $file1 = UploadedFile::fake()->image('avatar.png');
+        $file2 = UploadedFile::fake()->create('avatar.xls', 75);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photos', [$file1, $file2])
+            ->assertHasErrors(['photos.1' => 'image']);
     }
 
     /** @test */
@@ -142,10 +219,16 @@ class FileUploadComponent extends Component
     use WithFileUploads;
 
     public $photo;
+    public $photos;
 
     public function updatedPhoto()
     {
         $this->validate(['photo' => 'image|max:300']);
+    }
+
+    public function updatedPhotos()
+    {
+        $this->validate(['photos.*' => 'image|max:300']);
     }
 
     public function upload($name)
@@ -153,9 +236,23 @@ class FileUploadComponent extends Component
         $this->photo->storeAs('/', $name, $disk = 'avatars');
     }
 
+    public function uploadMultiple($baseName)
+    {
+        $number = 1;
+
+        foreach ($this->photos as $photo) {
+            $photo->storeAs('/', $baseName.$number++.'.png', $disk = 'avatars');
+        }
+    }
+
     public function validateUpload()
     {
         $this->validate(['photo' => 'file|max:100']);
+    }
+
+    public function validateMultipleUploads()
+    {
+        $this->validate(['photos.*' => 'file|max:100']);
     }
 
     public function validateUploadWithDimensions()

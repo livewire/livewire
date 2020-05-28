@@ -9,8 +9,15 @@ class FileUploadConfiguration
     public static function storage()
     {
         if (app()->environment('testing')) {
-            static $cache;
-            return $cache ?: $cache = Storage::fake(static::disk());
+            // We want to "fake" the first time in a test run, but not again because
+            // ::fake() whipes the storage directory every time its called.
+            rescue(function () {
+                // If the storage disk is not found (meaning it's the first time),
+                // this will throw an error and trip the second callback.
+                return Storage::disk(static::disk());
+            }, function () {
+                return Storage::fake(static::disk());
+            });
         }
 
         return Storage::disk(static::disk());
@@ -21,6 +28,13 @@ class FileUploadConfiguration
         return app()->environment('testing')
             ? 'tmp-for-tests'
             : (config('livewire.temporary_file_upload.disk') ?: config('filsystems.default'));
+    }
+
+    public static function isUsingS3()
+    {
+        $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filsystems.default');
+
+        return strtolower($diskBeforeTestFake) === 's3';
     }
 
     public static function middleware()

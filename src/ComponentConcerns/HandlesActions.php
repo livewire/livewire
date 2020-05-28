@@ -86,8 +86,6 @@ trait HandlesActions
                 // a file. Meaning it has the WithFileUploads trait applied to it.
                 throw_unless(method_exists($this, 'generateSignedRoute'), new MissingFileUploadsTraitException($this));
 
-                break;
-
             default:
                 throw_unless(method_exists($this, $method), new MethodNotFoundException($method, $this->getName()));
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));

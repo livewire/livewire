@@ -2,31 +2,25 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use Facades\Livewire\GenerateSignedUploadUrl;
+use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
 trait WithFileUploads
 {
     public function generateSignedRoute($modelName, $fileInfo, $isMultiple)
     {
-        // $file = $isMultiple
-        //     ? collect($fileInfo)->map(function ($i) {
-        //         return LivewireNotYetUploadedFile::createFromLivewire($i);
-        //     })->toArray()
-        //     : LivewireNotYetUploadedFile::createFromLivewire($fileInfo[0]);
+        if (FileUploadConfiguration::isUsingS3()) {
+            throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
 
-        // $this->syncInput($modelName, $file);
+            $file = UploadedFile::fake()->create('test', $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
 
-        // $payload = (new GeneratePreSignedS3UploadUrl)($file);
+            $this->emitSelf('generatedPreSignedS3Url', GenerateSignedUploadUrl::forS3($file));
 
-        // $this->emitSelf('generatedPreSignedS3Url', $payload);
+            return;
+        }
 
-        $signedUrl = URL::temporarySignedRoute(
-            'livewire.upload-file', now()->addMinutes(5)
-        );
-
-        $this->emitSelf('generatedSignedUrl', $signedUrl);
+        $this->emitSelf('generatedSignedUrl', GenerateSignedUploadUrl::forLocal());
     }
 
     public function finishUpload($modelName, $tmpPath, $isMultiple)

@@ -6,6 +6,7 @@ use Livewire\Livewire;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
+use Facades\Livewire\GenerateSignedUploadUrl;
 
 class TestableLivewire
 {
@@ -33,6 +34,9 @@ class TestableLivewire
         Livewire::listen('mounted', function ($response) {
             $this->rawMountedResponse = $response;
         });
+
+        // Don't actually generate S3 signedUrls during testing.
+        GenerateSignedUploadUrl::partialMock()->shouldReceive('forS3')->andReturn([]);
 
         // This allows the user to test a component by it's class name,
         // and not have to register an alias.
