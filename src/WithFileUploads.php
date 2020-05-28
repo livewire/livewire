@@ -36,6 +36,22 @@ trait WithFileUploads
         $this->syncInput($modelName, $file);
     }
 
+    protected function hydratePropertyFromWithFileUploads($name, $value)
+    {
+        if (TemporarilyUploadedFile::canUnserialize($value)) {
+            return TemporarilyUploadedFile::unserializeFromLivewireRequest($value);
+        }
+    }
+
+    protected function dehydratePropertyFromWithFileUploads($name, $value)
+    {
+        if ($value instanceof TemporarilyUploadedFile) {
+            return $value->serializeForLivewireResponse();
+        } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof TemporarilyUploadedFile) {
+            return $value[0]::serializeMultipleForLivewireResponse($value);
+        }
+    }
+
     protected function cleanupOldUploads()
     {
         $storage = FileUploadConfiguration::storage();

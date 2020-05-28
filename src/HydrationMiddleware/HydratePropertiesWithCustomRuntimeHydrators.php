@@ -13,6 +13,8 @@ class HydratePropertiesWithCustomRuntimeHydrators implements HydrationMiddleware
         foreach ($publicProperties as $property => $value) {
             $newValue = Livewire::performHydrateProperty($value, $property, $unHydratedInstance);
 
+            $newValue = $unHydratedInstance->handleHydrateProperty($property, $newValue);
+
             if ($newValue !== $value) {
                 $unHydratedInstance->{$property} = $newValue;
             }
@@ -25,6 +27,8 @@ class HydratePropertiesWithCustomRuntimeHydrators implements HydrationMiddleware
 
         foreach ($publicProperties as $property => $value) {
             $newValue = Livewire::performDehydrateProperty($value, $property, $instance);
+
+            $newValue = $instance->handleDehydrateProperty($property, $newValue);
 
             if ($newValue !== $value) {
                 $instance->{$property} = $newValue;

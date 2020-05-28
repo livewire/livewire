@@ -45,7 +45,6 @@ use Livewire\HydrationMiddleware\{
     RegisterEventsBeingListenedFor,
     HashPropertiesForDirtyDetection,
     HydratePreviouslyRenderedChildren,
-    HydrateFileUploadsAsPublicProperties,
     ClearFlashMessagesIfNotRedirectingAway,
     PrioritizeDataUpdatesBeforeActionCalls,
     HydrateEloquentModelsAsPublicProperties,
@@ -239,7 +238,6 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
         /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
-        /* v */ HydrateFileUploadsAsPublicProperties::class,        /* ^ */
         /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
         /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
         /* v */ CastPublicProperties::class,                        /* ^ */

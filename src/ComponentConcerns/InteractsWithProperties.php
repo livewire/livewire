@@ -9,6 +9,44 @@ trait InteractsWithProperties
 {
     protected $casts = [];
 
+    public function handleHydrateProperty($property, $value)
+    {
+        $newValue = $value;
+
+        if (method_exists($this, 'hydrateProperty')) {
+            $newValue = $this->hydrateProperty($property, $newValue);
+        }
+
+        foreach (array_diff(class_uses_recursive($this), class_uses(self::class)) as $trait) {
+            $method = 'hydratePropertyFrom'.class_basename($trait);
+
+            if (method_exists($this, $method)) {
+                $newValue = $this->{$method}($property, $newValue);
+            }
+        }
+
+        return $newValue;
+    }
+
+    public function handleDehydrateProperty($property, $value)
+    {
+        $newValue = $value;
+
+        if (method_exists($this, 'dehydrateProperty')) {
+            $newValue = $this->dehydrateProperty($property, $newValue);
+        }
+
+        foreach (array_diff(class_uses_recursive($this), class_uses(self::class)) as $trait) {
+            $method = 'dehydratePropertyFrom'.class_basename($trait);
+
+            if (method_exists($this, $method)) {
+                $newValue = $this->{$method}($property, $newValue);
+            }
+        }
+
+        return $newValue;
+    }
+
     public function getPublicPropertiesDefinedBySubClass()
     {
         $publicProperties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PUBLIC);

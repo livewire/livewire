@@ -59,64 +59,30 @@ trait MakesCallsToComponent
     {
         if (is_array($name)) {
             foreach ($name as $key => $value) {
-                $this->sendMessage('syncInput', [
-                    'name' => $key,
-                    'value' => $value,
-                ]);
+                $this->syncInput($key, $value);
             }
 
             return $this;
         }
 
+        return $this->syncInput($name, $value);
+    }
+
+    public function syncInput($name, $value)
+    {
         if ($value instanceof UploadedFile) {
-            return $this->syncUploadedFile($name, $value);
+            return $this->syncUploadedFiles($name, [$value]);
         } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof UploadedFile) {
-            return $this->syncMultipleUploadedFiles($name, $value);
+            return $this->syncUploadedFiles($name, $value, $isMultiple = true);
         }
 
-        $this->sendMessage('syncInput', [
+        return $this->sendMessage('syncInput', [
             'name' => $name,
             'value' => $value,
         ]);
-
-        return $this;
     }
 
-    public function syncUploadedFile($name, $value)
-    {
-        // This methhod simulates the calls Livewire's JavaScript
-        // normally makes for file uploads.
-        $this->sendMessage('callMethod', [
-            'method' => 'generateSignedRoute',
-            'params' => [$name, [[
-                'name' => $value->name,
-                'size' => $value->getSize(),
-                'type' => $value->getMimeType(),
-            ]], $multiple = false],
-        ], false);
-
-        // This is where either the pre-signed S3 url or the regular Livewire signed
-        // upload url would do its thing and return a hashed version of the uploaded
-        // file in a tmp directory.
-        $storage = FileUploadConfiguration::storage();
-        $fileHash = (new FileUploadHandler)->validateAndStore([$value], FileUploadConfiguration::disk())[0];
-
-        // We are going to encode the file size in the filename so that when we create
-        // a new TemporaryUploadedFile instance we can fake a specific file size.
-        $newFileHash = Str::replaceFirst('.', "-size:{$value->getSize()}.", $fileHash);
-        $storage->move('/tmp/'.$fileHash, '/tmp/'.$newFileHash);
-
-        // Now we finish the upload with a final call to the Livewire component
-        // with the temporarily uploaded file path.
-        $this->sendMessage('callMethod', [
-            'method' => 'finishUpload',
-            'params' => [$name, [$newFileHash], $multiple = false],
-        ], false);
-
-        return $this;
-    }
-
-    public function syncMultipleUploadedFiles($name, $files)
+    public function syncUploadedFiles($name, $files, $isMultiple = false)
     {
         // This methhod simulates the calls Livewire's JavaScript
         // normally makes for file uploads.
@@ -128,7 +94,7 @@ trait MakesCallsToComponent
                     'size' => $file->getSize(),
                     'type' => $file->getMimeType(),
                 ];
-            })->toArray(), $multiple = true],
+            })->toArray(), $isMultiple],
         ]);
 
         // This is where either the pre-signed S3 url or the regular Livewire signed
@@ -151,7 +117,7 @@ trait MakesCallsToComponent
         // with the temporarily uploaded file path.
         $this->sendMessage('callMethod', [
             'method' => 'finishUpload',
-            'params' => [$name, $newFileHashes, $multiple = true],
+            'params' => [$name, $newFileHashes, $isMultiple],
         ]);
 
         return $this;
@@ -164,5 +130,7 @@ trait MakesCallsToComponent
         if (! $this->lastResponse->exception) {
             $this->updateComponent($this->lastResponse->original);
         }
+
+        return $this;
     }
 }
