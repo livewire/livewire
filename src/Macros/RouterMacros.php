@@ -31,9 +31,14 @@ class RouterMacros
                 $componentClass = app('livewire')->getComponentClass($component);
                 $reflected = new \ReflectionClass($componentClass);
 
+                // the default is catched by the route action "layout" or the fallback.
+                // This can be overwritten from the layout function of a component.
+                $layout = $this->current()->getAction('layout') ?? 'layouts.app';
+
                 return app('view')->file(__DIR__.'/livewire-view.blade.php', [
-                    'layout' => $this->current()->getAction('layout') ?? 'layouts.app',
+                    'layout' => app('livewire')->getLayout($component) ?? $layout,
                     'section' => $this->current()->getAction('section') ?? 'content',
+                    'layout_params' => app('livewire')->getLayoutParams($component),
                     'component' => $component,
                     'componentParameters' => $reflected->hasMethod('mount')
                         ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), $this))->retrieveBindings()

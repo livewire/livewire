@@ -341,4 +341,15 @@ HTML;
             new MountMethodMissingException($instance->getName())
         );
     }
+
+    public function getLayoutParams($component)
+    {
+        $element = $this->activate($component, Str::random(20));
+        return method_exists($element, 'layoutParams') ? $element->layoutParams() : null;
+    }
+
+    public function getLayout($component) {
+        $element = $this->activate($component, Str::random(20));
+        return method_exists($element, 'layout') ? $element->layout() : null;
+    }
 }
