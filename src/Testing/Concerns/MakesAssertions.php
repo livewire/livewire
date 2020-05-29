@@ -23,6 +23,13 @@ trait MakesAssertions
 
         return $this;
     }
+    
+    public function assertCount($name, $value)
+    {
+        PHPUnit::assertCount($value, $this->get($name));
+
+        return $this;
+    }
 
     public function assertSee($value)
     {
