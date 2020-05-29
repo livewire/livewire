@@ -24,7 +24,7 @@ class ResetExceptPropertiesTest extends TestCase
             ->call('resetExceptFooAndBob')
             ->assertSet('foo', 'baz')
             ->assertSet('bob', 'law')
-            ->assertSet('john', 'doe');            ;
+            ->assertSet('john', 'doe');
     }
 }
 
