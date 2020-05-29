@@ -10,7 +10,7 @@ class ResetExceptPropertiesTest extends TestCase
     /** @test */
     public function can_reset_except_properties()
     {
-        Livewire::test(ResetPropertiesComponent::class)
+        Livewire::test(ResetExceptPropertiesComponent::class)
             ->assertSet('foo', 'bar')
             ->assertSet('bob', 'lob')
             ->assertSet('john', 'doe')
@@ -28,7 +28,7 @@ class ResetExceptPropertiesTest extends TestCase
     }
 }
 
-class ResetPropertiesComponent extends Component
+class ResetExceptPropertiesComponent extends Component
 {
     public $foo  = 'bar';
     public $bob  = 'lob';
