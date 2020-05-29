@@ -143,4 +143,15 @@ trait InteractsWithProperties
 
         return $results;
     }
+    
+    public function resetExcept(array $exceptProperties = [])
+    {
+
+        $properties = array_keys($this->getPublicPropertiesDefinedBySubClass());
+
+        $properties = array_diff($properties, $exceptProperties);
+
+        $this->reset(...$properties);
+
+    }
 }
