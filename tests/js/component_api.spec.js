@@ -1,8 +1,11 @@
-import { mount, mountWithData } from './utils'
 import { wait } from 'dom-testing-library';
+import testHarness from './fixtures/test_harness'
 
 test('get component data item value', async () => {
-    mountWithData('<span></span>', { foo: 'bar' })
+    testHarness.mount({
+        dom: '<span></span>',
+        initialData: { foo: 'bar' },
+    })
 
     const component = window.livewire.find(123)
 
@@ -11,7 +14,10 @@ test('get component data item value', async () => {
 
 test('set component data item value', async () => {
     var payload
-    mount('<span></span>', i => payload = i)
+    testHarness.mount({
+        dom: '<span></span>',
+        requestInterceptor: i => payload = i,
+    })
 
     const component = window.livewire.find(123)
 
@@ -26,7 +32,10 @@ test('set component data item value', async () => {
 
 test('call component action', async () => {
     var payload
-    mount('<span></span>', i => payload = i)
+    testHarness.mount({
+        dom: '<span></span>',
+        requestInterceptor: i => payload = i,
+    })
 
     const component = window.livewire.find(123)
 

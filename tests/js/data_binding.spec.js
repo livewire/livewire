@@ -1,9 +1,12 @@
 import { fireEvent, wait, waitForDomChange } from 'dom-testing-library'
-import { mount, mountWithData, mountAndReturn, mountAndReturnWithData } from './utils'
+import testHarness from './fixtures/test_harness'
 
 test('properties sync on input change', async () => {
     var payload
-    mount('<input wire:model="foo">', i => payload = i)
+    testHarness.mount({
+        dom: '<input wire:model="foo">',
+        requestInterceptor: i => payload = i,
+    })
 
     fireEvent.input(document.querySelector('input'), { target: { value: 'bar' }})
 
@@ -16,11 +19,11 @@ test('properties sync on input change', async () => {
 
 test('nested properties sync on input change', async () => {
     var payload
-    mountWithData(
-        '<input wire:model="foo.one.two">',
-        { foo: [] },
-        i => payload = i
-    )
+    testHarness.mount({
+        dom: '<input wire:model="foo.one.two">',
+        initialData: { foo: [] },
+        requestInterceptor: i => payload = i,
+    })
 
     fireEvent.input(document.querySelector('input'), { target: { value: 'bar' }})
 
@@ -33,7 +36,10 @@ test('nested properties sync on input change', async () => {
 
 test('properties are lazy synced when action is fired', async () => {
     var payload
-    mount('<input wire:model.lazy="foo"><button wire:click="onClick"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<input wire:model.lazy="foo"><button wire:click="onClick"></button>',
+        requestInterceptor: i => payload = i,
+    })
 
     fireEvent.change(document.querySelector('input'), { target: { value: 'bar' }})
 
@@ -45,11 +51,12 @@ test('properties are lazy synced when action is fired', async () => {
 })
 
 test('textarea data binding with class change works as expected and doesn\'t wipe its value', async () => {
-    mountAndReturn(
-        '<textarea wire:model="foo" class="foo"></textarea>',
-        '<textarea wire:model="foo" class="foo bar"></textarea>',
-        []
-    )
+    testHarness.mount({
+        dom: '<textarea wire:model="foo" class="foo"></textarea>',
+        response: {
+            dom: '<textarea wire:model="foo" class="foo bar"></textarea>',
+        }
+    })
 
     fireEvent.input(document.querySelector('textarea'), { target: { value: 'bar' }})
 
@@ -60,11 +67,12 @@ test('textarea data binding with class change works as expected and doesn\'t wip
 })
 
 test('input element value doesnt change unless property is marked as dirty', async () => {
-    mountAndReturn(
-        '<input wire:model="foo" value="">',
-        '<input wire:model="foo" value="bar"><button>Im here to trigger dom change</button>',
-        []
-    )
+    testHarness.mount({
+        dom: '<input wire:model="foo" value="">',
+        response: {
+            dom: '<input wire:model="foo" value="bar"><button>Im here to trigger dom change</button>',
+        }
+    })
 
     fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
 
@@ -72,11 +80,13 @@ test('input element value doesnt change unless property is marked as dirty', asy
         expect(document.querySelector('input').value).toEqual('baz')
     })
 
-    mountAndReturn(
-        '<input wire:model="foo" value="">',
-        '<input wire:model="foo" value="bar"><button>Im here to trigger dom change</button>',
-        ['foo']
-    )
+    testHarness.mount({
+        dom: '<input wire:model="foo" value="">',
+        response: {
+            dom: '<input wire:model="foo" value="bar"><button>Im here to trigger dom change</button>',
+            dirtyInputs: ['foo'],
+        }
+    })
 
     fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
 
@@ -86,11 +96,13 @@ test('input element value doesnt change unless property is marked as dirty', asy
 })
 
 test('input element value doesnt change, but other attributes do when not marked as dirty', async () => {
-    mountAndReturn(
-        '<input wire:model="foo" class="foo" value="">',
-        '<input wire:model="foo" class="foo bar" value="bar">',
-        []
-    )
+    testHarness.mount({
+        dom: '<input wire:model="foo" class="foo" value="">',
+        response: {
+            dom: '<input wire:model="foo" class="foo bar" value="bar">',
+            dirtyInputs: []
+        }
+    })
 
     document.querySelector('input').focus()
     fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
@@ -102,11 +114,14 @@ test('input element value doesnt change, but other attributes do when not marked
 })
 
 test('input element value attribute is automatically updated if present in returned dom', async () => {
-    mountAndReturnWithData(
-        '<input wire:model="foo"><button wire:click="onClick"></button>',
-        '<input wire:model="foo"><button wire:click="onClick"></button>',
-        { foo: 'bar' }, ['foo']
-    )
+    testHarness.mount({
+        dom: '<input wire:model="foo"><button wire:click="onClick"></button>',
+        response: {
+            dom: '<input wire:model="foo"><button wire:click="onClick"></button>',
+            data: { foo: 'bar' },
+            dirtyInputs: ['foo'],
+        }
+    })
 
     document.querySelector('button').click()
 
@@ -116,10 +131,10 @@ test('input element value attribute is automatically updated if present in retur
 })
 
 test('input element value is automatically updated', async () => {
-    mountWithData(
-        '<input wire:model="foo">',
-        { foo: 'bar' }
-    )
+    testHarness.mount({
+        dom: '<input wire:model="foo">',
+        initialData: { foo: 'bar' },
+    })
 
     await wait(() => {
         expect(document.querySelector('input').value).toBe('bar')
@@ -127,10 +142,10 @@ test('input element value is automatically updated', async () => {
 })
 
 test('textarea element value is automatically updated', async () => {
-    mountWithData(
-        '<textarea wire:model="foo"></textarea>',
-        { foo: 'bar' }
-    )
+    testHarness.mount({
+        dom: '<textarea wire:model="foo"></textarea>',
+        initialData: { foo: 'bar' },
+    })
 
     await wait(() => {
         expect(document.querySelector('textarea').value).toBe('bar')
@@ -138,10 +153,10 @@ test('textarea element value is automatically updated', async () => {
 })
 
 test('checkbox element value attribute is automatically added if not present in the initial dom', async () => {
-    mountWithData(
-        '<input type="checkbox" wire:model="foo">',
-        { foo: true }
-    )
+    testHarness.mount({
+        dom: '<input type="checkbox" wire:model="foo">',
+        initialData: { foo: true },
+    })
 
     await wait(() => {
         expect(document.querySelector('input').checked).toBeTruthy()
@@ -149,44 +164,44 @@ test('checkbox element value attribute is automatically added if not present in 
 })
 
 test('checkboxes bound to empty array arent checked', async () => {
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
-        { foo: [] },
-    )
+    testHarness.mount({
+        dom: `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        initialData: { foo: [] },
+    })
     expect(document.querySelector('#a').checked).toBeFalsy()
 })
 
 test('checkboxes bound to an array containing value are checked', async () => {
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
-        { foo: ['a'] },
-    )
+    testHarness.mount({
+        dom: `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        initialData: { foo: ['a'] },
+    })
     expect(document.querySelector('#a').checked).toBeTruthy()
 })
 
 test('checkboxes bound to an array containing a numeric value are checked', async () => {
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="2">`,
-        { foo: [2] },
-    )
+    testHarness.mount({
+        dom: `<input id="a" type="checkbox" wire:model="foo" value="2">`,
+        initialData: { foo: [2] },
+    })
     expect(document.querySelector('#a').checked).toBeTruthy()
 })
 
 test('checkboxes bound to an array containing a different value are not', async () => {
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
-        { foo: ['b'] },
-    )
+    testHarness.mount({
+        dom: `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        initialData: { foo: ['b'] },
+    })
     expect(document.querySelector('#a').checked).toBeFalsy()
 })
 
 test('checking a checkbox bound to an array will toggle its value inside the array', async () => {
     var payload
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
-        { foo: [] },
-        i => payload = i
-    )
+    testHarness.mount({
+        dom: `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        initialData: { foo: [] },
+        requestInterceptor: i => payload = i,
+    })
 
     fireEvent.click(document.querySelector('#a'))
 
@@ -197,11 +212,11 @@ test('checking a checkbox bound to an array will toggle its value inside the arr
     })
 
     var payload
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
-        { foo: ['a'] },
-        i => payload = i
-    )
+    testHarness.mount({
+        dom: `<input id="a" type="checkbox" wire:model="foo" value="a">`,
+        initialData: { foo: ['a'] },
+        requestInterceptor: i => payload = i,
+    })
 
     fireEvent.click(document.querySelector('#a'))
 
@@ -213,10 +228,10 @@ test('checking a checkbox bound to an array will toggle its value inside the arr
 })
 
 test('select element options are automatically selected', async () => {
-    mountWithData(
-        '<select wire:model="foo"><option>bar</option><option>baz</option></select>',
-        { foo: 'baz' }
-    )
+    testHarness.mount({
+        dom: '<select wire:model="foo"><option>bar</option><option>baz</option></select>',
+        initialData: { foo: 'baz' },
+    })
 
     await wait(() => {
         expect(document.querySelectorAll('option')[1].selected).toBeTruthy()
@@ -224,10 +239,10 @@ test('select element options are automatically selected', async () => {
 })
 
 test('select element options are automatically selected by value attribute', async () => {
-    mountWithData(
-        '<select wire:model="foo"><option value="bar">ignore</option><option value="baz">ignore</option></select>',
-        { foo: 'baz' }
-    )
+    testHarness.mount({
+        dom: '<select wire:model="foo"><option value="bar">ignore</option><option value="baz">ignore</option></select>',
+        initialData: { foo: 'baz' },
+    })
 
     await wait(() => {
         expect(document.querySelectorAll('option')[1].selected).toBeTruthy()
@@ -235,10 +250,10 @@ test('select element options are automatically selected by value attribute', asy
 })
 
 test('select element options with numeric values work', async () => {
-    mountWithData(
-        '<select wire:model="foo"><option value="1">ignore</option><option value="2">ignore</option></select>',
-        { foo: 2 }
-    )
+    testHarness.mount({
+        dom: '<select wire:model="foo"><option value="1">ignore</option><option value="2">ignore</option></select>',
+        initialData: { foo: 2 },
+    })
 
     await wait(() => {
         expect(document.querySelectorAll('option')[1].selected).toBeTruthy()
@@ -246,20 +261,20 @@ test('select element options with numeric values work', async () => {
 })
 
 test('multiple select element options are automatically selected', async () => {
-    mountWithData(
-        '<select wire:model="foo" multiple><option>bar</option><option>baz</option></select>',
-        { foo: 'baz' }
-    )
+    testHarness.mount({
+        dom: '<select wire:model="foo" multiple><option>bar</option><option>baz</option></select>',
+        initialData: { foo: 'baz' },
+    })
 
     await wait(() => {
         expect(document.querySelectorAll('option')[0].selected).toBeFalsy()
         expect(document.querySelectorAll('option')[1].selected).toBeTruthy()
     })
 
-    mountWithData(
-        '<select wire:model="foo" multiple><option>bar</option><option>baz</option></select>',
-        { foo: ['bar', 'baz'] }
-    )
+    testHarness.mount({
+        dom: '<select wire:model="foo" multiple><option>bar</option><option>baz</option></select>',
+        initialData: { foo: ['bar', 'baz'] },
+    })
 
     await wait(() => {
         expect(document.querySelectorAll('option')[0].selected).toBeTruthy()
