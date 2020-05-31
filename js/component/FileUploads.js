@@ -15,7 +15,9 @@ export default function () {
             let isMultiple = !! e.target.multiple
             let modelName = directive.value
 
-            component.call('generateSignedRoute', modelName, fileInfos, isMultiple);
+            component.call('startUpload', modelName, fileInfos, isMultiple);
+
+            markUploadStarted(component, el, directive)
         }
 
         el.addEventListener('change', eventHandler)
@@ -25,16 +27,20 @@ export default function () {
         })
 
         component.on('file-upload:generatedSignedUrl', url => {
+            // We have to add reduntant "setLoading" calls because the dom-patch
+            // from the first response will clear the setUploadLoading call
+            // from the first upload call.
             setUploadLoading(component, directive.value)
+
             handleSignedUrl(url, component, el, directive)
         })
         component.on('file-upload:generatedSignedUrlForS3', payload => {
             setUploadLoading(component, directive.value)
+
             handleS3PreSignedUrl(payload, component, el, directive)
         })
-        component.on('file-upload:finished', () => {
-            unsetUploadLoading(component)
-        })
+        component.on('file-upload:finished', () => markUploadFinished(component, el))
+        component.on('file-upload:errored', () => markUploadErrored(component, el))
     })
 }
 
@@ -65,19 +71,20 @@ function handleS3PreSignedUrl(payload, component, el, directive) {
 }
 
 function makeRequest(component, el, directive, formData, method, url, headers, retrievePaths) {
-    markUploadStarted(el)
+    let request = new XMLHttpRequest()
+    request.open(method, url)
 
-    let request = new XMLHttpRequest();
-    request.open(method, url);
     Object.entries(headers).forEach(([key, value]) => {
         request.setRequestHeader(key, value)
     })
+
     request.upload.addEventListener('progress', handleUploadProgress(el))
+
     request.addEventListener('load', () => {
         if ((request.status+'')[0] === '2') {
             let paths = retrievePaths(request.response && JSON.parse(request.response))
 
-            markUploadFinished(component, el, directive.value, paths, !! el.rawNode().multiple)
+            component.call('finishUpload', directive.value, paths, !! el.rawNode().multiple)
 
             return
         }
@@ -88,8 +95,9 @@ function makeRequest(component, el, directive, formData, method, url, headers, r
             errors = request.response
         }
 
-        markUploadErrored(component, el, directive.value, errors, !! el.rawNode().multiple)
-    });
+        component.call('uploadErrored', directive.value, errors, !! el.rawNode().multiple)
+    })
+
     request.send(formData)
 }
 
@@ -105,20 +113,20 @@ function handleUploadProgress(el) {
     }
 }
 
-function markUploadStarted(el) {
+function markUploadStarted(component, el, directive) {
+    setUploadLoading(component, directive.value)
+
     el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-started', { bubbles: true }))
 }
 
-function markUploadFinished(component, el, modelName, filePaths, isMultiple)
-{
-    component.call('finishUpload', modelName, filePaths, isMultiple)
+function markUploadFinished(component, el) {
+    unsetUploadLoading(component)
 
     el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finished', { bubbles: true }))
 }
 
-function markUploadErrored(component, el, modelName, errors, isMultiple)
-{
-    component.call('uploadErrored', modelName, errors, isMultiple)
+function markUploadErrored(component, el) {
+    unsetUploadLoading(component)
 
     el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
 }

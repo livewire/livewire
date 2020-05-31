@@ -9,7 +9,7 @@ use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
 trait WithFileUploads
 {
-    public function generateSignedRoute($modelName, $fileInfo, $isMultiple)
+    public function startUpload($modelName, $fileInfo, $isMultiple)
     {
         if (FileUploadConfiguration::isUsingS3()) {
             throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
@@ -40,7 +40,7 @@ trait WithFileUploads
     }
 
     public function uploadErrored($modelName, $errorsInJson, $isMultiple) {
-        $this->emitSelf('file-upload:finished');
+        $this->emitSelf('file-upload:errored');
 
         if (is_null($errorsInJson)) {
             $genericValidationMessage = trans('validation.uploaded', ['attribute' => $modelName]);
