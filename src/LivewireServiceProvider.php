@@ -98,7 +98,7 @@ class LivewireServiceProvider extends ServiceProvider
 
         // We will generate a manifest file so we don't have to do the lookup every time.
         $defaultManifestPath = $this->app['livewire']->isOnVapor()
-            ? '/tmp/storage/bootstrap/cache/livewire-components.php'
+            ? '/livewire-tmp/storage/bootstrap/cache/livewire-components.php'
             : app()->bootstrapPath('cache/livewire-components.php');
 
         $this->app->singleton(LivewireComponentsFinder::class, function () use ($defaultManifestPath) {

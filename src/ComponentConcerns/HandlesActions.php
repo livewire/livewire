@@ -81,11 +81,6 @@ trait HandlesActions
                 return;
                 break;
 
-            case 'generateSignedRoute':
-                // This is a check to make sure the component is capable of uploading
-                // a file. Meaning it has the WithFileUploads trait applied to it.
-                throw_unless(method_exists($this, 'generateSignedRoute'), new MissingFileUploadsTraitException($this));
-
             default:
                 throw_unless(method_exists($this, $method), new MethodNotFoundException($method, $this->getName()));
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));

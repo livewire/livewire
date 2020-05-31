@@ -9,7 +9,7 @@ class FilePreviewHandler
 {
     public function handle($filename)
     {
-        return $this->pretendResponseIsFile(FileUploadConfiguration::storage()->path('tmp/'.$filename));
+        return $this->pretendResponseIsFile(FileUploadConfiguration::storage()->path('livewire-tmp/'.$filename));
     }
 
     public function pretendResponseIsFile($file)

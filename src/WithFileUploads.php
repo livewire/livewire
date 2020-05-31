@@ -79,7 +79,7 @@ trait WithFileUploads
     {
         $storage = FileUploadConfiguration::storage();
 
-        foreach ($storage->allFiles('/tmp') as $filePathname) {
+        foreach ($storage->allFiles('/livewire-tmp') as $filePathname) {
             $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);

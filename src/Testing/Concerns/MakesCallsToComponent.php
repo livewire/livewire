@@ -87,7 +87,7 @@ trait MakesCallsToComponent
         // This methhod simulates the calls Livewire's JavaScript
         // normally makes for file uploads.
         $this->sendMessage('callMethod', [
-            'method' => 'generateSignedRoute',
+            'method' => 'startUpload',
             'params' => [$name, collect($files)->map(function ($file) {
                 return [
                     'name' => $file->name,
@@ -116,7 +116,7 @@ trait MakesCallsToComponent
         })->toArray();
 
         collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
-            $storage->move('/tmp/'.$fileHash, '/tmp/'.$newFileHash);
+            $storage->move('/livewire-tmp/'.$fileHash, '/livewire-tmp/'.$newFileHash);
         });
 
         // Now we finish the upload with a final call to the Livewire component

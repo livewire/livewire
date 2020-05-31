@@ -16,15 +16,6 @@ use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 class FileUploadsTest extends TestCase
 {
     /** @test */
-    public function component_must_have_file_uploads_trait_to_accept_file_uploads()
-    {
-        $this->expectException(MissingFileUploadsTraitException::class);
-
-        Livewire::test(NonFileUploadComponent::class)
-            ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
-    }
-
-    /** @test */
     public function s3_driver_only_supports_single_file_uploads()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');

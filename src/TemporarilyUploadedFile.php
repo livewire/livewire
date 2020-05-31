@@ -17,7 +17,7 @@ class TemporarilyUploadedFile extends UploadedFile
     {
         $this->disk = $disk;
         $this->storage = Storage::disk($this->disk);
-        $this->path = 'tmp/'.$path;
+        $this->path = 'livewire-tmp/'.$path;
 
         $tmpFile = tmpfile();
 
