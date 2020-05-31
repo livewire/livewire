@@ -4,6 +4,7 @@ namespace Livewire;
 
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\GenerateSignedUploadUrl;
+use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
 trait WithFileUploads
@@ -15,16 +16,18 @@ trait WithFileUploads
 
             $file = UploadedFile::fake()->create('test', $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
 
-            $this->emitSelf('generatedPreSignedS3Url', GenerateSignedUploadUrl::forS3($file));
+            $this->emitSelf('file-upload:generatedSignedUrlForS3', GenerateSignedUploadUrl::forS3($file));
 
             return;
         }
 
-        $this->emitSelf('generatedSignedUrl', GenerateSignedUploadUrl::forLocal());
+        $this->emitSelf('file-upload:generatedSignedUrl', GenerateSignedUploadUrl::forLocal());
     }
 
     public function finishUpload($modelName, $tmpPath, $isMultiple)
     {
+        $this->emitSelf('file-upload:finished');
+
         $this->cleanupOldUploads();
 
         $file = $isMultiple
@@ -36,11 +39,30 @@ trait WithFileUploads
         $this->syncInput($modelName, $file);
     }
 
+    public function uploadErrored($modelName, $errorsInJson, $isMultiple) {
+        $this->emitSelf('file-upload:finished');
+
+        if (is_null($errorsInJson)) {
+            $genericValidationMessage = trans('validation.uploaded', ['attribute' => $modelName]);
+            if ($genericValidationMessage === 'validation.uploaded') $genericValidationMessage = "The {$modelName} failed to upload.";
+            throw ValidationException::withMessages([$modelName => $genericValidationMessage]);
+        }
+
+        $errorsInJson = $isMultiple
+            ? str_replace('files', $modelName, $errorsInJson)
+            : str_replace('files.0', $modelName, $errorsInJson);
+
+        $errors = json_decode($errorsInJson, true)['errors'];
+
+        throw (ValidationException::withMessages($errors));
+    }
+
     protected function hydratePropertyFromWithFileUploads($name, $value)
     {
         if (TemporarilyUploadedFile::canUnserialize($value)) {
             return TemporarilyUploadedFile::unserializeFromLivewireRequest($value);
         }
+        return $value;
     }
 
     protected function dehydratePropertyFromWithFileUploads($name, $value)
@@ -50,6 +72,7 @@ trait WithFileUploads
         } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof TemporarilyUploadedFile) {
             return $value[0]::serializeMultipleForLivewireResponse($value);
         }
+        return $value;
     }
 
     protected function cleanupOldUploads()

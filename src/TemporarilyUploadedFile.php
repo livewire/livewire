@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 
 class TemporarilyUploadedFile extends UploadedFile
@@ -50,6 +51,17 @@ class TemporarilyUploadedFile extends UploadedFile
     public function getRealPath()
     {
         return $this->storage->path($this->path);
+    }
+
+    public function previewUrl()
+    {
+        if (FileUploadConfiguration::isUsingS3() && ! app()->environment('testing')) {
+            return $this->storage->temporaryUrl($this->path, now()->addDay());
+        }
+
+        return URL::temporarySignedRoute(
+            'livewire.preview-file', now()->addMinutes(30), ['filename' => $this->getFilename()]
+        );
     }
 
     public function readStream()

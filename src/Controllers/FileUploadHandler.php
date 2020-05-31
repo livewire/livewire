@@ -7,6 +7,14 @@ use Livewire\FileUploadConfiguration;
 
 class FileUploadHandler
 {
+    public function getMiddleware()
+    {
+        return [[
+            'middleware' => FileUploadConfiguration::middleware(),
+            'options' => [],
+        ]];
+    }
+
     public function handle()
     {
         abort_unless(request()->hasValidSignature(), 401);

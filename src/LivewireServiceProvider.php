@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\LivewireViewCompilerEngine;
 use Livewire\Controllers\FileUploadHandler;
+use Livewire\Controllers\FilePreviewHandler;
 use Livewire\Controllers\HttpConnectionHandler;
 use Illuminate\Foundation\Testing\TestResponse;
 use Livewire\Controllers\LivewireJavaScriptAssets;
@@ -130,10 +131,12 @@ class LivewireServiceProvider extends ServiceProvider
             ->middleware(config('livewire.middleware_group', 'web'));
 
         RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
-            ->middleware(
-                config('livewire.middleware_group', 'web'),
-                FileUploadConfiguration::middleware()
-            )->name('livewire.upload-file');
+            ->middleware(config('livewire.middleware_group', 'web'))
+            ->name('livewire.upload-file');
+
+        RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
+            ->middleware(config('livewire.middleware_group', 'web'))
+            ->name('livewire.preview-file');
     }
 
     protected function registerCommands()

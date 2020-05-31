@@ -1,18 +1,21 @@
 import { getCsrfToken } from '@/util'
 import store from '@/Store'
+import { setUploadLoading, unsetUploadLoading } from './LoadingStates'
 
 export default function () {
-    store.registerHook('interceptWireModelAttachListener', (el, directive, component, debounceIf) => {
+    store.registerHook('interceptWireModelAttachListener', (el, directive, component) => {
         if (! (el.rawNode().tagName.toLowerCase() === 'input' && el.rawNode().type === 'file')) return
 
         let eventHandler = e => {
-            let conformFileToFileInfoObject = file => {
+            let conformToFileInfoObject = file => {
                 return { name: file.name, size: file.size, type: file.type }
             }
 
-            let fileInfo = Array.from(e.target.files).map(conformFileToFileInfoObject)
+            let fileInfos = Array.from(e.target.files).map(conformToFileInfoObject)
+            let isMultiple = !! e.target.multiple
+            let modelName = directive.value
 
-            component.call('generateSignedRoute', directive.value, fileInfo, !! e.target.multiple);
+            component.call('generateSignedRoute', modelName, fileInfos, isMultiple);
         }
 
         el.addEventListener('change', eventHandler)
@@ -21,79 +24,101 @@ export default function () {
             el.removeEventListener('change', eventHandler)
         })
 
-        component.on('generatedPreSignedS3Url', payload => handleS3PreSignedUrl(payload, component, el, directive))
-        component.on('generatedSignedUrl', url => handleSignedUrl(url, component, el, directive))
+        component.on('file-upload:generatedSignedUrl', url => {
+            setUploadLoading(component, directive.value)
+            handleSignedUrl(url, component, el, directive)
+        })
+        component.on('file-upload:generatedSignedUrlForS3', payload => {
+            setUploadLoading(component, directive.value)
+            handleS3PreSignedUrl(payload, component, el, directive)
+        })
+        component.on('file-upload:finished', () => {
+            unsetUploadLoading(component)
+        })
     })
 }
 
-function handleS3PreSignedUrl(payload, component, el, directive)
-{
-    let headers = payload.headers;
+function handleSignedUrl(url, component, el, directive) {
+    let formData = new FormData()
+    Array.from(el.rawNode().files).forEach(file => formData.append('files[]', file))
 
-    if ('Host' in headers) {
-        delete headers.Host;
+    let headers = {
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
     }
 
-    axios.put(payload.url, el.rawNode().files[0], {
-        cancelToken: '',
-        headers: headers,
-        onUploadProgress: (progressEvent) => {
-            var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
-
-            el.rawNode().dispatchEvent(
-                new CustomEvent('livewire-upload-progress', {
-                    bubbles: true, detail: { progress: percentCompleted }
-                })
-            )
-        }
-    }).then(response => {
-        component.call('finishUpload', directive.value, [payload.path], el.rawNode().multiple)
-        el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finished', { bubbles: true }))
-    }).catch(error => {
-        el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
-        // @todo: handle main endpoint validation.
-        // if (error.response.status === 422) {
-        //     error.response.data.errors
-        // }
+    makeRequest(component, el, directive, formData, 'post', url, headers, response => {
+        return response.paths
     })
-
-    // response.data.extension = file.name.split('.').pop()
 }
 
-function handleSignedUrl(url, component, el, directive)
-{
-    el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-started', { bubbles: true }))
+function handleS3PreSignedUrl(payload, component, el, directive) {
+    let formData = el.rawNode().files[0]
 
-    let model = directive.value
-    let files = el.rawNode().files
-    let formData = new FormData()
+    let headers = payload.headers
+    if ('Host' in headers) delete headers.Host
+    let url = payload.url
 
-    Array.from(files).forEach(file => formData.append('files[]', file))
-
-    axios.post(url, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-            'X-CSRF-TOKEN': getCsrfToken(),
-        },
-        onUploadProgress(progressEvent) {
-            var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
-
-            el.rawNode().dispatchEvent(
-                new CustomEvent('livewire-upload-progress', {
-                    bubbles: true, detail: { progress: percentCompleted }
-                })
-            )
-        },
+    makeRequest(component, el, directive, formData, 'put', url, headers, response => {
+        return [payload.path]
     })
-    .then(function (response) {
-        component.call('finishUpload', model, response.data.paths, el.rawNode().multiple)
-        el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finished', { bubbles: true }))
+}
+
+function makeRequest(component, el, directive, formData, method, url, headers, retrievePaths) {
+    markUploadStarted(el)
+
+    let request = new XMLHttpRequest();
+    request.open(method, url);
+    Object.entries(headers).forEach(([key, value]) => {
+        request.setRequestHeader(key, value)
     })
-    .catch(function (error) {
-        el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
-        // @todo: handle main endpoint validation.
-        if (error.response.status === 422) {
-            error.response.data.errors
+    request.upload.addEventListener('progress', handleUploadProgress(el))
+    request.addEventListener('load', () => {
+        if ((request.status+'')[0] === '2') {
+            let paths = retrievePaths(request.response && JSON.parse(request.response))
+
+            markUploadFinished(component, el, directive.value, paths, !! el.rawNode().multiple)
+
+            return
         }
+
+        let errors = null
+
+        if (request.status === 422) {
+            errors = request.response
+        }
+
+        markUploadErrored(component, el, directive.value, errors, !! el.rawNode().multiple)
     });
+    request.send(formData)
+}
+
+function handleUploadProgress(el) {
+    return (progressEvent) => {
+        var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
+
+        el.rawNode().dispatchEvent(
+            new CustomEvent('livewire-upload-progress', {
+                bubbles: true, detail: { progress: percentCompleted }
+            })
+        )
+    }
+}
+
+function markUploadStarted(el) {
+    el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-started', { bubbles: true }))
+}
+
+function markUploadFinished(component, el, modelName, filePaths, isMultiple)
+{
+    component.call('finishUpload', modelName, filePaths, isMultiple)
+
+    el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finished', { bubbles: true }))
+}
+
+function markUploadErrored(component, el, modelName, errors, isMultiple)
+{
+    component.call('uploadErrored', modelName, errors, isMultiple)
+
+    el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
 }

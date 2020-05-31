@@ -8,8 +8,8 @@ use Livewire\WithFileUploads;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
 use Livewire\FileUploadConfiguration;
+use Facades\Livewire\GenerateSignedUploadUrl;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
@@ -84,28 +84,41 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function a_file_cant_be_larger_than_12mb_or_the_global_livewire_uploader_will_fail()
     {
-        $this->expectException(ValidationException::class);
-
         Storage::fake('avatars');
 
         $file = UploadedFile::fake()->image('avatar.jpg')->size(13000); // 13MB
 
         Livewire::test(FileUploadComponent::class)
-            ->set('photo', $file);
+            ->set('photo', $file)
+            ->assertHasErrors('photo');
+    }
+
+    /** @test */
+    public function the_global_upload_validation_rules_can_be_configured_and_the_error_messages_show_as_normal_validation_errors_for_the_property()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg')->size(100); // 100KB
+
+        config()->set('livewire.temporary_file_upload.rules', 'file|max:50');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->assertHasErrors('photo');
     }
 
     /** @test */
     public function multiple_files_cant_be_larger_than_12mb_or_the_global_livewire_uploader_will_fail()
     {
-        $this->expectException(ValidationException::class);
-
         Storage::fake('avatars');
 
         $file1 = UploadedFile::fake()->image('avatar.jpg')->size(13000); // 13MB
         $file2 = UploadedFile::fake()->image('avatar.jpg')->size(13000); // 13MB
 
         Livewire::test(FileUploadComponent::class)
-            ->set('photos', [$file1, $file2]);
+            ->set('photos', [$file1, $file2])
+            ->assertHasErrors('photos.0')
+            ->assertHasErrors('photos.1');
     }
 
     /** @test */
@@ -204,6 +217,68 @@ class FileUploadsTest extends TestCase
             ->call('upload', 'uploaded-avatar3.png');
 
         $this->assertCount(1, FileUploadConfiguration::storage()->allFiles());
+    }
+
+    /** @test */
+    public function the_global_upload_route_middleware_is_configurable()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', 'Tests\DummyMiddleware');
+
+        $url = GenerateSignedUploadUrl::forLocal();
+
+        try {
+            $this->withoutExceptionHandling()->post($url);
+        } catch (\Throwable $th) {
+            $this->assertEquals('Middleware was hit!', $th->getMessage());
+        }
+    }
+
+    /** @test */
+    public function can_preview_a_temporary_files_with_a_temporary_signed_url()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        ob_start();
+        $this->get($photo->previewUrl())->sendContent();
+        $rawFileContents = ob_get_clean();
+
+        $this->assertEquals($file->get(), $rawFileContents);
+    }
+
+    /** @test */
+    public function can_preview_a_temporary_files_with_a_temporary_signed_url_from_s3()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        // When testing, rather than trying to hit an s3 server, we just serve
+        // the local driver preview URL.
+        ob_start();
+        $this->get($photo->previewUrl())->sendContent();
+        $rawFileContents = ob_get_clean();
+
+        $this->assertEquals($file->get(), $rawFileContents);
+    }
+}
+
+class DummyMiddleware
+{
+    public function handle($request, $next)
+    {
+        throw new \Exception('Middleware was hit!');
     }
 }
 

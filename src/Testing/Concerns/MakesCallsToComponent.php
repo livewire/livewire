@@ -4,7 +4,7 @@ namespace Livewire\Testing\Concerns;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Controllers\FileUploadHandler;
 use Livewire\FileUploadConfiguration;
 
@@ -101,7 +101,13 @@ trait MakesCallsToComponent
         // upload url would do its thing and return a hashed version of the uploaded
         // file in a tmp directory.
         $storage = FileUploadConfiguration::storage();
-        $fileHashes = (new FileUploadHandler)->validateAndStore($files, FileUploadConfiguration::disk());
+        try {
+            $fileHashes = (new FileUploadHandler)->validateAndStore($files, FileUploadConfiguration::disk());
+        } catch (ValidationException $e) {
+            $this->runAction('uploadErrored', $name, json_encode(['errors' => $e->errors()]), $isMultiple);
+
+            return $this;
+        }
 
         // We are going to encode the file size in the filename so that when we create
         // a new TemporaryUploadedFile instance we can fake a specific file size.
