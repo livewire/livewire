@@ -4,9 +4,9 @@ namespace Livewire\Testing\Concerns;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\ValidationException;
-use Livewire\Controllers\FileUploadHandler;
 use Livewire\FileUploadConfiguration;
+use Livewire\Controllers\FileUploadHandler;
+use Illuminate\Validation\ValidationException;
 
 trait MakesCallsToComponent
 {

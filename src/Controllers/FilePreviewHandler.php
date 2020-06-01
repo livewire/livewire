@@ -9,6 +9,9 @@ class FilePreviewHandler
 {
     public function handle($filename)
     {
+        abort_unless(request()->hasValidSignature(), 401);
+
+        dd($filename);
         return $this->pretendResponseIsFile(FileUploadConfiguration::storage()->path(FileUploadConfiguration::directory().$filename));
     }
 

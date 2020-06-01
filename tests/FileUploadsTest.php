@@ -4,6 +4,7 @@ namespace Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
@@ -11,6 +12,7 @@ use Livewire\FileUploadConfiguration;
 use Illuminate\Support\Facades\Storage;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
+use LogicException;
 
 class FileUploadsTest extends TestCase
 {
@@ -284,6 +286,31 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function public_temporary_file_url_must_have_valid_signature()
+    {
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->viewData('photo');
+
+        $this->get(Str::before($photo->previewUrl(), '&signature='))->assertStatus(401);
+    }
+
+    /** @test */
+    public function file_paths_cant_include_slashes_which_would_allow_them_to_access_other_private_directories()
+    {
+        $this->expectException(LogicException::class);
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file);
+
+        // Try to hijack the photo property to a path outside the temporary livewire directory root.
+        $component->set('photo', 'livewire-file:../dangerous.png')
+            ->call('$refresh');
+    }
+
+    /** @test */
     public function can_preview_a_temporary_files_with_a_temporary_signed_url_from_s3()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');
@@ -350,6 +377,11 @@ class FileUploadComponent extends Component
         foreach ($this->photos as $photo) {
             $photo->storeAs('/', $baseName.$number++.'.png', $disk = 'avatars');
         }
+    }
+
+    public function uploadDangerous()
+    {
+        $this->photo->store();
     }
 
     public function validateUpload()
