@@ -41,6 +41,16 @@ class MountComponentTest extends TestCase
     }
 
     /** @test */
+    public function it_does_not_call_mount_on_the_component_if_only_wire_key_is_given()
+    {
+        $component = app(LivewireManager::class)->test(ComponentWithoutMount::class, ['wire:key' => 10]);
+        $component->assertHasNoErrors();
+
+        $this->expectException(MountMethodMissingException::class);
+        app(LivewireManager::class)->test(ComponentWithoutMount::class, ['wire:key' => 10, 'foo' => 10]);
+    }
+
+    /** @test */
     public function it_sets_missing_dynamically_passed_in_parameters_to_null()
     {
         $fooBar = ['foo' => 10, 'bar' => 5];

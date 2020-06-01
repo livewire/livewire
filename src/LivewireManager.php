@@ -83,8 +83,9 @@ class LivewireManager
 
     public function mount($name, $params = [])
     {
-        // This is if a user doesn't pass params, BUT passes key() as the second argument.
-        if (is_string($params)) $params = [];
+        $params = is_array($params) ?
+            $this->stripParams($params):
+            []; // This is if a user doesn't pass params, BUT passes key() as the second argument.
 
         $id = Str::random(20);
 
@@ -328,6 +329,14 @@ HTML;
     public function isLaravel7()
     {
         return Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=');
+    }
+
+    private function stripParams($params) {
+        if (isset($params['wire:key'])) {
+            unset($params['wire:key']);
+        }
+
+        return $params;
     }
 
     private function ensureComponentHasMountMethod($instance, $resolvedParameters)
