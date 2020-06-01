@@ -13,6 +13,6 @@ class IncludeIdAsRootTagAttribute implements HydrationMiddleware
     {
         $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
             'id' => $instance->id,
-        ]);
+        ], $instance);
     }
 }
