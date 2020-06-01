@@ -31,6 +31,7 @@ use Livewire\Commands\{
     DeleteCommand,
     ComponentParser,
     DiscoverCommand,
+    S3CleanupCommand,
     MakeLivewireCommand
 };
 use Livewire\HydrationMiddleware\{
@@ -155,6 +156,7 @@ class LivewireServiceProvider extends ServiceProvider
             MvCommand::class,           // livewire:mv
             StubsCommand::class,        // livewire:stubs
             DiscoverCommand::class,     // livewire:discover
+            S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
         ]);
     }
 

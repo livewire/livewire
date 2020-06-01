@@ -10,7 +10,6 @@ use Illuminate\Http\UploadedFile;
 use Livewire\FileUploadConfiguration;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
 class FileUploadsTest extends TestCase
@@ -208,6 +207,15 @@ class FileUploadsTest extends TestCase
             ->call('upload', 'uploaded-avatar3.png');
 
         $this->assertCount(1, FileUploadConfiguration::storage()->allFiles());
+    }
+
+    /** @test */
+    public function S3_can_be_configured_so_that_temporary_files_older_than_24_hours_are_cleaned_up_automatically()
+    {
+        $this->artisan('livewire:configure-s3-upload-cleanup')
+            ->expectsOutput("Configuration ['livewire.temporary_file_upload.disk'] is not set to a disk with an S3 driver.");
+
+        // Can't "really" test this without using a live S3 bucket.
     }
 
     /** @test */

@@ -27,14 +27,24 @@ class FileUploadConfiguration
     {
         return app()->environment('testing')
             ? 'tmp-for-tests'
-            : (config('livewire.temporary_file_upload.disk') ?: config('filsystems.default'));
+            : (config('livewire.temporary_file_upload.disk') ?: config('filesystems.default'));
+    }
+
+    public static function diskConfig()
+    {
+        return config('filesystems.disks.'.static::disk());
     }
 
     public static function isUsingS3()
     {
         $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filsystems.default');
 
-        return strtolower($diskBeforeTestFake) === 's3';
+        return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
+    }
+
+    public static function directory()
+    {
+        return 'livewire-tmp/';
     }
 
     public static function middleware()

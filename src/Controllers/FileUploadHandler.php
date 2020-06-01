@@ -32,10 +32,10 @@ class FileUploadHandler
             'files.*' => 'required|'.FileUploadConfiguration::rules()
         ])->validate();
 
-        $fileHashPaths = collect($files)->map->store('/livewire-tmp', [
+        $fileHashPaths = collect($files)->map->store('/'. rtrim(FileUploadConfiguration::directory(), '/'), [
             'disk' => $disk
         ]);
 
-        return $fileHashPaths->map(function ($path) { return str_replace('livewire-tmp/', '', $path); });
+        return $fileHashPaths->map(function ($path) { return str_replace(FileUploadConfiguration::directory(), '', $path); });
     }
 }

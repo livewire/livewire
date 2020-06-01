@@ -27,8 +27,10 @@ class GenerateSignedUploadUrl
 
         $fileHashName = $file->hashName();
 
+        $directory = FileUploadConfiguration::directory();
+
         $signedRequest = $client->createPresignedRequest(
-            $this->createCommand($client, $bucket, ('livewire-tmp/'.$fileHashName), $fileType, $visibility),
+            $this->createCommand($client, $bucket, ($directory.$fileHashName), $fileType, $visibility),
             '+5 minutes'
         );
 
