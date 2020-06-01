@@ -77,6 +77,8 @@ trait WithFileUploads
 
     protected function cleanupOldUploads()
     {
+        if (FileUploadConfiguration::isUsingS3()) return;
+
         $storage = FileUploadConfiguration::storage();
 
         foreach ($storage->allFiles(FileUploadConfiguration::directory()) as $filePathname) {
