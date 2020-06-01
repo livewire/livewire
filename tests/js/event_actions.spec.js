@@ -246,6 +246,19 @@ test('action parameter can use double-quotes', async () => {
     })
 })
 
+test('action parameters can include expressions', async () => {
+    var payload
+    mount(`<button wire:click="callSomething('foo', new Array('1','2'))"></button>`, i => payload = i)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('callMethod')
+        expect(payload.actionQueue[0].payload.method).toEqual('callSomething')
+        expect(payload.actionQueue[0].payload.params).toEqual(['foo', ['1','2']])
+    })
+})
+
 test('debounce keyup event', async () => {
     var payload
     mount('<input wire:keyup.debounce.50ms="someMethod"></button>', i => payload = i)
