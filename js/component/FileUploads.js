@@ -6,7 +6,7 @@ export default function () {
 
         let start = () => el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true }))
         let finish = () => el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true }))
-        let error = () => el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true }))
+        let error = () => el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
         let progress = (progressEvent) => {
             var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
 

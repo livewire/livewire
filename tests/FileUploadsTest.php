@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use LogicException;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Str;
@@ -11,11 +12,20 @@ use Illuminate\Http\UploadedFile;
 use Livewire\FileUploadConfiguration;
 use Illuminate\Support\Facades\Storage;
 use Facades\Livewire\GenerateSignedUploadUrl;
+use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
-use LogicException;
 
 class FileUploadsTest extends TestCase
 {
+    /** @test */
+    public function component_must_have_file_uploads_trait_to_accept_file_uploads()
+    {
+        $this->expectException(MissingFileUploadsTraitException::class);
+
+        Livewire::test(NonFileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
+    }
+
     /** @test */
     public function s3_driver_only_supports_single_file_uploads()
     {
