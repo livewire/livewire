@@ -9,24 +9,24 @@ use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
 trait WithFileUploads
 {
-    public function startUpload($modelName, $fileInfo, $isMultiple)
+    public function startUpload($name, $fileInfo, $isMultiple)
     {
         if (FileUploadConfiguration::isUsingS3()) {
             throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
 
             $file = UploadedFile::fake()->create('test', $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
 
-            $this->emitSelf('file-upload:generatedSignedUrlForS3', GenerateSignedUploadUrl::forS3($file));
+            $this->emitSelf('upload:generatedSignedUrlForS3', $name, GenerateSignedUploadUrl::forS3($file));
 
             return;
         }
 
-        $this->emitSelf('file-upload:generatedSignedUrl', GenerateSignedUploadUrl::forLocal());
+        $this->emitSelf('upload:generatedSignedUrl', $name, GenerateSignedUploadUrl::forLocal());
     }
 
-    public function finishUpload($modelName, $tmpPath, $isMultiple)
+    public function finishUpload($name, $tmpPath, $isMultiple)
     {
-        $this->emitSelf('file-upload:finished');
+        $this->emitSelf('upload:finished', $name);
 
         $this->cleanupOldUploads();
 
@@ -36,21 +36,21 @@ trait WithFileUploads
             })->toArray()
             : TemporarilyUploadedFile::createFromLivewire($tmpPath[0]);
 
-        $this->syncInput($modelName, $file);
+        $this->syncInput($name, $file);
     }
 
-    public function uploadErrored($modelName, $errorsInJson, $isMultiple) {
-        $this->emitSelf('file-upload:errored');
+    public function uploadErrored($name, $errorsInJson, $isMultiple) {
+        $this->emitSelf('upload:errored', $name);
 
         if (is_null($errorsInJson)) {
-            $genericValidationMessage = trans('validation.uploaded', ['attribute' => $modelName]);
-            if ($genericValidationMessage === 'validation.uploaded') $genericValidationMessage = "The {$modelName} failed to upload.";
-            throw ValidationException::withMessages([$modelName => $genericValidationMessage]);
+            $genericValidationMessage = trans('validation.uploaded', ['attribute' => $name]);
+            if ($genericValidationMessage === 'validation.uploaded') $genericValidationMessage = "The {$name} failed to upload.";
+            throw ValidationException::withMessages([$name => $genericValidationMessage]);
         }
 
         $errorsInJson = $isMultiple
-            ? str_replace('files', $modelName, $errorsInJson)
-            : str_replace('files.0', $modelName, $errorsInJson);
+            ? str_replace('files', $name, $errorsInJson)
+            : str_replace('files.0', $name, $errorsInJson);
 
         $errors = json_decode($errorsInJson, true)['errors'];
 
