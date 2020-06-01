@@ -4,8 +4,9 @@ namespace Livewire\Testing;
 
 use Livewire\Livewire;
 use Illuminate\Support\Str;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Routing\RouteCollection;
 
 class TestableLivewire
 {
@@ -72,13 +73,7 @@ class TestableLivewire
     public function pretendWereMountingAComponentOnAPage($name, $params)
     {
         $randomRoutePath = '/testing-livewire/'.Str::random(20);
-
-        Route::get($randomRoutePath, function () use ($name, $params) {
-            return View::file(__DIR__.'/../views/mount-component.blade.php', [
-                'name' => $name,
-                'params' => $params,
-            ]);
-        });
+        $this->createTestingRoute($randomRoutePath, $name, $params);
 
         $laravelTestingWrapper = new MakesHttpRequestsWrapper(app());
 
@@ -89,6 +84,28 @@ class TestableLivewire
         });
 
         return $response;
+    }
+
+    private function createTestingRoute($path, $name, $params)
+    {
+        $router = app('router');
+        $routes = $router->getRoutes();
+
+        $testRoute = new Route(['GET', 'HEAD'], $path, function () use ($name, $params) {
+            return View::file(__DIR__.'/../views/mount-component.blade.php', [
+                'name' => $name,
+                'params' => $params,
+            ]);
+        });
+
+        $newRouteCollection = new RouteCollection;
+        $newRouteCollection->add($testRoute);
+
+        foreach ($routes as $route) {
+            $newRouteCollection->add($route);
+        }
+
+        $router->setRoutes($newRouteCollection);
     }
 
     public function pretendWereSendingAComponentUpdateRequest($message, $payload)
