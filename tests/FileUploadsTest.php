@@ -3,6 +3,7 @@
 namespace Tests;
 
 use LogicException;
+use RuntimeException;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Str;
@@ -14,7 +15,6 @@ use Illuminate\Support\Facades\Storage;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
-use RuntimeException;
 
 class FileUploadsTest extends TestCase
 {
