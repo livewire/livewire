@@ -57,6 +57,11 @@ class TemporarilyUploadedFile extends UploadedFile
         return $this->storage->path($this->path);
     }
 
+    public function getClientOriginalName()
+    {
+        return $this->extractOriginalNameFromFilePath($this->path);
+    }
+
     public function temporaryUrl()
     {
         if (FileUploadConfiguration::isUsingS3() && ! app()->environment('testing')) {
@@ -105,6 +110,20 @@ class TemporarilyUploadedFile extends UploadedFile
         return Storage::disk($disk)->put(
             $newPath, $this->storage->readStream($this->path), $options
         );
+    }
+
+    public static function generateHashNameWithOriginalNameEmbedded($file)
+    {
+        $hash = Str::random(30);
+        $meta = '-meta'.base64_encode($file->getClientOriginalName()).'-';
+        $extension = '.'.$file->guessExtension();
+
+        return $hash.$meta.$extension;
+    }
+
+    public function extractOriginalNameFromFilePath($path)
+    {
+        return base64_decode(head(explode('-', last(explode('-meta', $path)))));
     }
 
     public static function createFromLivewire($filePath)

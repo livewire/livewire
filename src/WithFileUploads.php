@@ -14,7 +14,7 @@ trait WithFileUploads
         if (FileUploadConfiguration::isUsingS3()) {
             throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
 
-            $file = UploadedFile::fake()->create('test', $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
+            $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
 
             $this->emitSelf('upload:generatedSignedUrlForS3', $name, GenerateSignedUploadUrl::forS3($file));
 

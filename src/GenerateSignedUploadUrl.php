@@ -25,7 +25,7 @@ class GenerateSignedUploadUrl
 
         $client = $this->storageClient();
 
-        $fileHashName = $file->hashName();
+        $fileHashName = TemporarilyUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
 
         $directory = FileUploadConfiguration::directory();
 
