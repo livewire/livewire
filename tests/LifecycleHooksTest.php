@@ -23,6 +23,12 @@ class LifecycleHooksTest extends TestCase
             'updatingBar' => false,
             'updatedBar' => false,
         ], $component->lifecycles);
+    }
+
+    /** @test */
+    public function refresh_magic_method()
+    {
+        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
 
         $component->runAction('$refresh');
 
@@ -36,6 +42,31 @@ class LifecycleHooksTest extends TestCase
             'updatingBar' => false,
             'updatedBar' => false,
         ], $component->lifecycles);
+    }
+
+    /** @test */
+    public function update_property()
+    {
+        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
+
+        $component->updateProperty('foo', 'bar');
+
+        $this->assertEquals([
+            'mount' => true,
+            'hydrate' => true,
+            'updating' => true,
+            'updated' => true,
+            'updatingFoo' => true,
+            'updatedFoo' => true,
+            'updatingBar' => false,
+            'updatedBar' => false,
+        ], $component->lifecycles);
+    }
+
+    /** @test */
+    public function update_two_properties()
+    {
+        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
 
         $component->updateProperty('baz', 'bing');
 
@@ -62,6 +93,12 @@ class LifecycleHooksTest extends TestCase
             'updatingBar' => false,
             'updatedBar' => false,
         ], $component->lifecycles);
+    }
+
+    /** @test */
+    public function update_nested_properties()
+    {
+        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
 
         $component->updateProperty('bar.foo', 'baz');
 
@@ -70,13 +107,24 @@ class LifecycleHooksTest extends TestCase
             'hydrate' => true,
             'updating' => true,
             'updated' => true,
-            'updatingFoo' => true,
-            'updatedFoo' => true,
+            'updatingFoo' => false,
+            'updatedFoo' => false,
             'updatingBar' => true,
             'updatedBar' => true,
         ], $component->lifecycles);
 
         $component->updateProperty('bar.cocktail.soft', 'Shirley Ginger');
+
+        $this->assertEquals([
+            'mount' => true,
+            'hydrate' => true,
+            'updating' => true,
+            'updated' => true,
+            'updatingFoo' => false,
+            'updatedFoo' => false,
+            'updatingBar' => true,
+            'updatedBar' => true,
+        ], $component->lifecycles);
     }
 }
 
