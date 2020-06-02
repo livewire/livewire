@@ -56,7 +56,7 @@ class ComponentDependencyInjectionTest extends TestCase
         $this->assertEquals('default', $component->bar);
 
         $component->runAction('primitiveWithDefault', null, 'foo');
-        $this->assertEquals(1, $component->foo);
+        $this->assertEquals(null, $component->foo);
         $this->assertEquals('foo', $component->bar);
     }
 
@@ -69,6 +69,24 @@ class ComponentDependencyInjectionTest extends TestCase
 
         $this->assertEquals('http://localhost/some-url/1', $component->foo);
         $this->assertEquals(1, $component->bar);
+    }
+
+    /** @test */
+    public function component_action_with_dependency_and_optional_primitive()
+    {
+        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+
+        $component->runAction('mixedWithDefault', 10);
+        $this->assertEquals('http://localhost/some-url', $component->foo);
+        $this->assertEquals(10, $component->bar);
+
+        $component->runAction('mixedWithDefault');
+        $this->assertEquals('http://localhost/some-url', $component->foo);
+        $this->assertEquals(1, $component->bar);
+
+        $component->runAction('mixedWithDefault', null);
+        $this->assertEquals('http://localhost/some-url', $component->foo);
+        $this->assertNull($component->bar);
     }
 }
 
@@ -94,7 +112,7 @@ class ComponentWithDependencyInjection extends Component
         $this->foo = $foo;
     }
 
-    public function primitiveWithDefault(int $foo = 1, $bar = 'default')
+    public function primitiveWithDefault(?int $foo = 1, $bar = 'default')
     {
         $this->foo = $foo;
         $this->bar = $bar;
@@ -103,6 +121,12 @@ class ComponentWithDependencyInjection extends Component
     public function mixed(UrlGenerator $generator, int $id)
     {
         $this->foo = $generator->to('/some-url', $id);
+        $this->bar = $id;
+    }
+
+    public function mixedWithDefault(UrlGenerator $generator, ?int $id = 1)
+    {
+        $this->foo = $generator->to('/some-url');
         $this->bar = $id;
     }
 
