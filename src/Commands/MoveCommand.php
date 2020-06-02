@@ -8,7 +8,7 @@ class MoveCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:move {name} {new-name} {--force} {--inline}';
 
-    protected $description = 'Move a Livewire component.';
+    protected $description = 'Move a Livewire component';
 
     public function handle()
     {

@@ -2,9 +2,11 @@
 
 namespace Livewire\HydrationMiddleware;
 
+use Livewire\Exceptions\RootTagMissingFromViewException;
+
 class AddAttributesToRootTagOfHtml
 {
-    public function __invoke($dom, $data)
+    public function __invoke($dom, $data, $instance)
     {
         $attributesFormattedForHtmlElement = collect($data)
             ->mapWithKeys(function ($value, $key) {
@@ -14,6 +16,12 @@ class AddAttributesToRootTagOfHtml
             })->implode(' ');
 
         preg_match('/<([a-zA-Z0-9\-]*)/', $dom, $matches, PREG_OFFSET_CAPTURE);
+
+        throw_unless(
+            count($matches),
+            new RootTagMissingFromViewException($instance->getName())
+        );
+
         $tagName = $matches[1][0];
         $lengthOfTagName = strlen($tagName);
         $positionOfFirstCharacterInTagName = $matches[1][1];

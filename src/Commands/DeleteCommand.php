@@ -8,7 +8,7 @@ class DeleteCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:delete {name} {--inline} {--force}';
 
-    protected $description = 'Delete a Livewire component.';
+    protected $description = 'Delete a Livewire component';
 
     public function handle()
     {

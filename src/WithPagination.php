@@ -15,9 +15,7 @@ trait WithPagination
 
     public function initializeWithPagination()
     {
-        // The "page" query string item should only be available
-        // from within the original component mount run.
-        $this->page = request()->query('page', $this->page);
+        $this->resolvePage();
 
         Paginator::currentPageResolver(function () {
             return $this->page;
@@ -49,5 +47,12 @@ trait WithPagination
     public function resetPage()
     {
         $this->page = 1;
+    }
+    
+    public function resolvePage()
+    {
+        // The "page" query string item should only be available
+        // from within the original component mount run.
+        $this->page = request()->query('page', $this->page);
     }
 }

@@ -23,7 +23,7 @@ trait HandlesActions
 
         throw_if(in_array($propertyName, $this->lockedModelProperties), new CannotBindDataToEloquentModelException($name));
 
-        $this->callBeforeAndAferSyncHooks($name, $value, function ($name, $value) use ($propertyName) {
+        $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName) {
             // @todo: this is fired even if a property isn't present at all which is confusing.
             throw_unless(
                 $this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName),
@@ -40,7 +40,7 @@ trait HandlesActions
         });
     }
 
-    protected function callBeforeAndAferSyncHooks($name, $value, $callback)
+    protected function callBeforeAndAfterSyncHooks($name, $value, $callback)
     {
         $propertyName = Str::before(Str::studly($name), '.');
         $keyAfterFirstDot = Str::contains($name, '.') ? Str::after($name, '.') : null;

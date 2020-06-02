@@ -8,7 +8,7 @@ class MakeCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:make {name} {--force} {--inline}';
 
-    protected $description = 'Create a new Livewire component.';
+    protected $description = 'Create a new Livewire component';
 
     public function handle()
     {
