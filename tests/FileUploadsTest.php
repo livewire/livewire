@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
+use RuntimeException;
 
 class FileUploadsTest extends TestCase
 {
@@ -278,7 +279,7 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function can_preview_a_temporary_files_with_a_temporary_signed_url()
+    public function can_preview_a_temporary_file_with_a_temporary_signed_url()
     {
         Storage::fake('avatars');
 
@@ -289,10 +290,26 @@ class FileUploadsTest extends TestCase
             ->viewData('photo');
 
         ob_start();
-        $this->get($photo->previewUrl())->sendContent();
+        $this->get($photo->temporaryUrl())->sendContent();
         $rawFileContents = ob_get_clean();
 
         $this->assertEquals($file->get(), $rawFileContents);
+    }
+
+    /** @test */
+    public function cant_preview_a_non_image_temporary_file_with_a_temporary_signed_url()
+    {
+        $this->expectException(RuntimeException::class);
+
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->create('avatar.pdf');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        $photo->temporaryUrl();
     }
 
     /** @test */
@@ -302,7 +319,7 @@ class FileUploadsTest extends TestCase
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
             ->viewData('photo');
 
-        $this->get(Str::before($photo->previewUrl(), '&signature='))->assertStatus(401);
+        $this->get(Str::before($photo->temporaryUrl(), '&signature='))->assertStatus(401);
     }
 
     /** @test */
@@ -336,7 +353,7 @@ class FileUploadsTest extends TestCase
         // When testing, rather than trying to hit an s3 server, we just serve
         // the local driver preview URL.
         ob_start();
-        $this->get($photo->previewUrl())->sendContent();
+        $this->get($photo->temporaryUrl())->sendContent();
         $rawFileContents = ob_get_clean();
 
         $this->assertEquals($file->get(), $rawFileContents);

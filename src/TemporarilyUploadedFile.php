@@ -55,9 +55,16 @@ class TemporarilyUploadedFile extends UploadedFile
         return $this->storage->path($this->path);
     }
 
-    public function previewUrl()
+    public function temporaryUrl()
     {
         if (FileUploadConfiguration::isUsingS3() && ! app()->environment('testing')) {
+            return $this->storage->temporaryUrl($this->path, now()->addDay());
+        }
+
+        $supportedPreviewTypes = ['jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
+
+        if (! in_array($this->guessExtension(), $supportedPreviewTypes)) {
+            // This will throw an error because it's not used with S3.
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
 
