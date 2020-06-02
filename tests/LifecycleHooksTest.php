@@ -78,6 +78,25 @@ class LifecycleHooksTest extends TestCase
 
         $component->updateProperty('bar.cocktail.soft', 'Shirley Ginger');
     }
+
+    /** @test */
+    public function set_magic_method()
+    {
+        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
+
+        $component->runAction('$set', 'foo', 'bar');
+
+        $this->assertEquals([
+            'mount' => true,
+            'hydrate' => true,
+            'updating' => true,
+            'updated' => true,
+            'updatingFoo' => true,
+            'updatedFoo' => true,
+            'updatingBar' => false,
+            'updatedBar' => false,
+        ], $component->lifecycles);
+    }
 }
 
 class ForLifecycleHooks extends Component
