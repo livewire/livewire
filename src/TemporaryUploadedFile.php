@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\Util;
 
-class TemporarilyUploadedFile extends UploadedFile
+class TemporaryUploadedFile extends UploadedFile
 {
     protected $storage;
     protected $path;

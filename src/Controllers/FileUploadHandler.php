@@ -6,7 +6,7 @@ use Livewire\FileMetaData;
 use Illuminate\Support\Str;
 use Livewire\FileUploadConfiguration;
 use Illuminate\Support\Facades\Validator;
-use Livewire\TemporarilyUploadedFile;
+use Livewire\TemporaryUploadedFile;
 
 class FileUploadHandler
 {
@@ -36,7 +36,7 @@ class FileUploadHandler
         ])->validate();
 
         $fileHashPaths = collect($files)->map(function ($file) use ($disk) {
-            $filename = TemporarilyUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
+            $filename = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
 
             return $file->storeAs('/'. rtrim(FileUploadConfiguration::directory(), '/'), $filename, [
                 'disk' => $disk

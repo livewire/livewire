@@ -32,9 +32,9 @@ trait WithFileUploads
 
         $file = $isMultiple
             ? collect($tmpPath)->map(function ($i) {
-                return TemporarilyUploadedFile::createFromLivewire($i);
+                return TemporaryUploadedFile::createFromLivewire($i);
             })->toArray()
-            : TemporarilyUploadedFile::createFromLivewire($tmpPath[0]);
+            : TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
 
         $this->syncInput($name, $file);
     }
@@ -59,17 +59,17 @@ trait WithFileUploads
 
     protected function hydratePropertyFromWithFileUploads($name, $value)
     {
-        if (TemporarilyUploadedFile::canUnserialize($value)) {
-            return TemporarilyUploadedFile::unserializeFromLivewireRequest($value);
+        if (TemporaryUploadedFile::canUnserialize($value)) {
+            return TemporaryUploadedFile::unserializeFromLivewireRequest($value);
         }
         return $value;
     }
 
     protected function dehydratePropertyFromWithFileUploads($name, $value)
     {
-        if ($value instanceof TemporarilyUploadedFile) {
+        if ($value instanceof TemporaryUploadedFile) {
             return $value->serializeForLivewireResponse();
-        } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof TemporarilyUploadedFile) {
+        } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof TemporaryUploadedFile) {
             return $value[0]::serializeMultipleForLivewireResponse($value);
         }
         return $value;
