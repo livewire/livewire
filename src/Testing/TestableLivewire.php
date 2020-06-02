@@ -2,12 +2,14 @@
 
 namespace Livewire\Testing;
 
+use Mockery;
 use Livewire\Livewire;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Routing\RouteCollection;
-use Facades\Livewire\GenerateSignedUploadUrl;
+use Livewire\GenerateSignedUploadUrl;
+use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
 
 class TestableLivewire
 {
@@ -37,7 +39,10 @@ class TestableLivewire
         });
 
         // Don't actually generate S3 signedUrls during testing.
-        GenerateSignedUploadUrl::partialMock()->shouldReceive('forS3')->andReturn([]);
+        // Can't use ::partialMock because it's not available in older versions of Laravel.
+        $mock = Mockery::mock(GenerateSignedUploadUrl::class);
+        $mock->makePartial()->shouldReceive('forS3')->andReturn([]);
+        GenerateSignedUploadUrlFacade::swap($mock);
 
         // This allows the user to test a component by it's class name,
         // and not have to register an alias.
