@@ -258,9 +258,7 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function S3_can_be_configured_so_that_temporary_files_older_than_24_hours_are_cleaned_up_automatically()
     {
-        $this->artisan('livewire:configure-s3-upload-cleanup')
-            ->expectsOutput("Configuration ['livewire.temporary_file_upload.disk'] is not set to a disk with an S3 driver.");
-
+        $this->artisan('livewire:configure-s3-upload-cleanup');
         // Can't "really" test this without using a live S3 bucket.
     }
 

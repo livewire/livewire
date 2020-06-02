@@ -155,7 +155,7 @@ class TestableLivewire
 
     public function viewData($key)
     {
-        return $this->lastRenderedView->gatherData()[$key];
+        return $this->lastRenderedView->getData()[$key];
     }
 
     public function get($property)
