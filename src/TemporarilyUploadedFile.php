@@ -34,7 +34,7 @@ class TemporarilyUploadedFile extends UploadedFile
     public function getSize()
     {
         if (app()->environment('testing') && str::contains($this->getfilename(), '-size:')) {
-            return (int) str::between($this->getfilename(), '-size:', '.');
+            return (int) Str::beforeLast(Str::after($this->getfilename(), '-size:'), '.');
         }
 
         return (int) $this->storage->size($this->path);
