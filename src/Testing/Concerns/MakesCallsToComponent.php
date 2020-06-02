@@ -2,6 +2,12 @@
 
 namespace Livewire\Testing\Concerns;
 
+use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
+use Livewire\FileUploadConfiguration;
+use Livewire\Controllers\FileUploadHandler;
+use Illuminate\Validation\ValidationException;
+
 trait MakesCallsToComponent
 {
     public function emit($event, ...$parameters)
@@ -53,18 +59,73 @@ trait MakesCallsToComponent
     {
         if (is_array($name)) {
             foreach ($name as $key => $value) {
-                $this->sendMessage('syncInput', [
-                    'name' => $key,
-                    'value' => $value,
-                ]);
+                $this->syncInput($key, $value);
             }
 
             return $this;
         }
 
-        $this->sendMessage('syncInput', [
+        return $this->syncInput($name, $value);
+    }
+
+    public function syncInput($name, $value)
+    {
+        if ($value instanceof UploadedFile) {
+            return $this->syncUploadedFiles($name, [$value]);
+        } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof UploadedFile) {
+            return $this->syncUploadedFiles($name, $value, $isMultiple = true);
+        }
+
+        return $this->sendMessage('syncInput', [
             'name' => $name,
             'value' => $value,
+        ]);
+    }
+
+    public function syncUploadedFiles($name, $files, $isMultiple = false)
+    {
+        // This methhod simulates the calls Livewire's JavaScript
+        // normally makes for file uploads.
+        $this->sendMessage('callMethod', [
+            'method' => 'startUpload',
+            'params' => [$name, collect($files)->map(function ($file) {
+                return [
+                    'name' => $file->name,
+                    'size' => $file->getSize(),
+                    'type' => $file->getMimeType(),
+                ];
+            })->toArray(), $isMultiple],
+        ]);
+
+        // This is where either the pre-signed S3 url or the regular Livewire signed
+        // upload url would do its thing and return a hashed version of the uploaded
+        // file in a tmp directory.
+        $storage = FileUploadConfiguration::storage();
+        try {
+            $fileHashes = (new FileUploadHandler)->validateAndStore($files, FileUploadConfiguration::disk());
+        } catch (ValidationException $e) {
+            $this->runAction('uploadErrored', $name, json_encode(['errors' => $e->errors()]), $isMultiple);
+
+            return $this;
+        }
+
+        // We are going to encode the file size in the filename so that when we create
+        // a new TemporaryUploadedFile instance we can fake a specific file size.
+        $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
+            return Str::replaceFirst('.', "-size:{$file->getSize()}.", $fileHash);
+        })->toArray();
+
+        $directory = FileUploadConfiguration::directory();
+
+        collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage, $directory) {
+            $storage->move('/'.$directory.$fileHash, '/'.$directory.$newFileHash);
+        });
+
+        // Now we finish the upload with a final call to the Livewire component
+        // with the temporarily uploaded file path.
+        $this->sendMessage('callMethod', [
+            'method' => 'finishUpload',
+            'params' => [$name, $newFileHashes, $isMultiple],
         ]);
 
         return $this;
@@ -77,5 +138,7 @@ trait MakesCallsToComponent
         if (! $this->lastResponse->exception) {
             $this->updateComponent($this->lastResponse->original);
         }
+
+        return $this;
     }
 }

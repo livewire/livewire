@@ -3,10 +3,11 @@
 namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
+use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\CannotBindDataToEloquentModelException;
-use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Exceptions\MissingFileUploadsTraitException;
 
 trait HandlesActions
 {
@@ -81,7 +82,12 @@ trait HandlesActions
                 break;
 
             default:
-                throw_unless(method_exists($this, $method), new MethodNotFoundException($method, $this->getName()));
+                if (! method_exists($this, $method)) {
+                    throw_if($method === 'startUpload', new MissingFileUploadsTraitException($this));
+
+                    throw new MethodNotFoundException($method, $this->getName());
+                }
+
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
                 $this->{$method}(
