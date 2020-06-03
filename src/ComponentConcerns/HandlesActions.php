@@ -49,11 +49,19 @@ trait HandlesActions
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
 
+        if (method_exists($this, 'updating')) {
+            $this->updating($name, $value);
+        }
+
         if (method_exists($this, $beforeMethod)) {
             $this->{$beforeMethod}($value, $keyAfterFirstDot);
         }
 
         $callback($name, $value);
+
+        if (method_exists($this, 'updated')) {
+            $this->updated($name, $value);
+        }
 
         if (method_exists($this, $afterMethod)) {
             $this->{$afterMethod}($value, $keyAfterFirstDot);
