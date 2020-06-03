@@ -12,7 +12,7 @@ class LivewireTestingTest extends TestCase
     public function testing_livewire_route_works_with_user_route_with_the_same_signature()
     {
         Route::get('/{param1}/{param2}', function() {
-            return 'Livewire is awesome!';
+            throw new \Exception('I shouldn\'t get executed!');
         });
 
         app(LivewireManager::class)->test(HasMountArguments::class, ['name' => 'foo']);

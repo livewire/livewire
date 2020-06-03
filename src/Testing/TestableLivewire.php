@@ -7,8 +7,8 @@ use Livewire\Livewire;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\View;
-use Illuminate\Routing\RouteCollection;
 use Livewire\GenerateSignedUploadUrl;
+use Illuminate\Routing\RouteCollection;
 use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
 
 class TestableLivewire
@@ -82,7 +82,13 @@ class TestableLivewire
     public function pretendWereMountingAComponentOnAPage($name, $params)
     {
         $randomRoutePath = '/testing-livewire/'.Str::random(20);
-        $this->createTestingRoute($randomRoutePath, $name, $params);
+
+        $this->registerRouteBeforeExistingRoutes($randomRoutePath, function () use ($name, $params) {
+            return View::file(__DIR__.'/../views/mount-component.blade.php', [
+                'name' => $name,
+                'params' => $params,
+            ]);
+        });
 
         $laravelTestingWrapper = new MakesHttpRequestsWrapper(app());
 
@@ -95,26 +101,27 @@ class TestableLivewire
         return $response;
     }
 
-    private function createTestingRoute($path, $name, $params)
+    private function registerRouteBeforeExistingRoutes($path, $closure)
     {
-        $router = app('router');
-        $routes = $router->getRoutes();
+        // To prevent this route from overriding wildcard routes registered within the application,
+        // We have to make sure that this route is registered before other existing routes.
+        $livewireTestingRoute = new Route(['GET', 'HEAD'], $path, $closure);
 
-        $testRoute = new Route(['GET', 'HEAD'], $path, function () use ($name, $params) {
-            return View::file(__DIR__.'/../views/mount-component.blade.php', [
-                'name' => $name,
-                'params' => $params,
-            ]);
-        });
+        $existingRoutes = app('router')->getRoutes();
 
-        $newRouteCollection = new RouteCollection;
-        $newRouteCollection->add($testRoute);
+        // Make an empty collection.
+        $runningCollection = new RouteCollection;
 
-        foreach ($routes as $route) {
-            $newRouteCollection->add($route);
+        // Add this testing route as the first one.
+        $runningCollection->add($livewireTestingRoute);
+
+        // Now add the existing routes after it.
+        foreach ($existingRoutes as $route) {
+            $runningCollection->add($route);
         }
 
-        $router->setRoutes($newRouteCollection);
+        // Now set this route collection as THE route collection for the app.
+        app('router')->setRoutes($runningCollection);
     }
 
     public function pretendWereSendingAComponentUpdateRequest($message, $payload)

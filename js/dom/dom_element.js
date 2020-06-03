@@ -95,7 +95,11 @@ ${this.el.outerHTML}
                 return modelValue
             }
 
-            return this.el.getAttribute('value') || this.el.checked;
+            if (this.el.checked) {
+                return this.el.getAttribute('value') || true;
+            } else {
+                return false
+            }
         } else if (this.el.tagName === 'SELECT' && this.el.multiple) {
             return this.getSelectValues()
         }
