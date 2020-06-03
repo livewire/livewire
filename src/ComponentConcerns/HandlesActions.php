@@ -119,7 +119,7 @@ trait HandlesActions
 
                 return array_shift($params);
             }, false);
-        });
+        })->concat($params);
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)

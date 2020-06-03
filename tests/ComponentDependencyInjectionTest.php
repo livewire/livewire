@@ -29,6 +29,16 @@ class ComponentDependencyInjectionTest extends TestCase
     }
 
     /** @test */
+    public function component_action_with_spread_operator()
+    {
+        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+
+        $component->runAction('spread', 'foo', 'bar', 'baz');
+
+        $this->assertEquals(['foo', 'bar', 'baz'], $component->foo);
+    }
+
+    /** @test */
     public function component_action_with_paramter_name_that_matches_a_container_registration_name()
     {
         $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
@@ -117,6 +127,11 @@ class ComponentWithDependencyInjection extends Component
     {
         $this->foo = $generator->to('/');
         $this->bar = $bar;
+    }
+
+    public function spread(...$params)
+    {
+        $this->foo = $params;
     }
 
     public function primitive(int $foo)
