@@ -219,9 +219,7 @@ HTML;
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
             $versionedFileName = $publishedManifest['/livewire.js'];
 
-            $isHostedOnVapor = ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
-
-            $fullAssetPath = ($isHostedOnVapor ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
+            $fullAssetPath = ($this->isOnVapor() ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
@@ -322,7 +320,7 @@ HTML;
 
     public function isOnVapor()
     {
-        return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
+        return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor' || ($_SERVER['SERVER_SOFTWARE'] ?? null) === 'vapor';
     }
 
     public function isLaravel7()
