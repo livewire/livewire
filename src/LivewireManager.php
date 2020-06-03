@@ -320,7 +320,7 @@ HTML;
 
     public function isOnVapor()
     {
-        return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor' || ($_SERVER['SERVER_SOFTWARE'] ?? null) === 'vapor';
+        return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
     }
 
     public function isLaravel7()
