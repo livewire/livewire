@@ -111,7 +111,7 @@ trait HandlesActions
                     return app($class->name);
                 }
 
-                return app($parameter->name);
+                throw new \Exception;
             }, function () use (&$params, $parameter) {
                 if (count($params) === 0 && $parameter->isDefaultValueAvailable()) {
                     return $parameter->getDefaultValue();

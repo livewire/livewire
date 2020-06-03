@@ -29,6 +29,18 @@ class ComponentDependencyInjectionTest extends TestCase
     }
 
     /** @test */
+    public function component_action_with_paramter_name_that_matches_a_container_registration_name()
+    {
+        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+
+        app()->bind('foo', \StdClass::class);
+
+        $component->runAction('actionWithContainerBoundNameCollision', 'bar');
+
+        $this->assertEquals('bar', $component->foo);
+    }
+
+    /** @test */
     public function component_action_with_primitive()
     {
         $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
@@ -128,6 +140,11 @@ class ComponentWithDependencyInjection extends Component
     {
         $this->foo = $generator->to('/some-url');
         $this->bar = $id;
+    }
+
+    public function actionWithContainerBoundNameCollision($foo)
+    {
+        $this->foo = $foo;
     }
 
     public function render()
