@@ -331,6 +331,13 @@ export default class Component {
                     return false
                 }
 
+                let scripts = node.querySelectorAll('script');
+                if (scripts && scripts.length) {
+                    scripts.forEach(function(el, i) {
+                        eval(el.innerHTML);
+                    });
+                }
+
                 const el = new DOMElement(node)
 
                 const closestComponentId = el.closestRoot().getAttribute('id')
