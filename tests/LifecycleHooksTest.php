@@ -6,12 +6,6 @@ use Livewire\Component;
 use Livewire\LivewireManager;
 use PHPUnit\Framework\Assert as PHPUnit;
 
-/**
- * Tests that LifecycleHooks are called.
- *
- * Also tests that the correct keys and values are provided and updated on the
- * component.
- */
 class LifecycleHooksTest extends TestCase
 {
     /** @test */
@@ -36,7 +30,7 @@ class LifecycleHooksTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
 
-        $component->runAction('$refresh');
+        $component->call('$refresh');
 
         $this->assertEquals([
             'mount' => true,
@@ -64,9 +58,8 @@ class LifecycleHooksTest extends TestCase
                 'updatingFoo' => ['bar'],
                 'updatedFoo' => ['bar'],
             ]
-        ]);
+        ])->set('foo', 'bar');
 
-        $component->updateProperty('foo', 'bar');
 
         $this->assertEquals([
             'mount' => true,
@@ -129,9 +122,20 @@ class LifecycleHooksTest extends TestCase
     /** @test */
     public function set_magic_method()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
+        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class, [
+            'expected' => [
+                'updating' => [[
+                    'foo' => 'bar',
+                ]],
+                'updated' => [[
+                    'foo' => 'bar',
+                ]],
+                'updatingFoo' => ['bar'],
+                'updatedFoo' => ['bar'],
+            ]
+        ]);
 
-        $component->runAction('$set', 'foo', 'bar');
+        $component->call('$set', 'foo', 'bar');
 
         $this->assertEquals([
             'mount' => true,

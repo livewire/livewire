@@ -272,7 +272,9 @@ class FileUploadsTest extends TestCase
     public function S3_can_be_configured_so_that_temporary_files_older_than_24_hours_are_cleaned_up_automatically()
     {
         $this->artisan('livewire:configure-s3-upload-cleanup');
+
         // Can't "really" test this without using a live S3 bucket.
+        $this->assertTrue(true);
     }
 
     /** @test */
