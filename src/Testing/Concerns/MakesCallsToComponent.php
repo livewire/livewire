@@ -12,7 +12,7 @@ trait MakesCallsToComponent
 {
     public function emit($event, ...$parameters)
     {
-        return $this->fireEvent($event, $parameters);
+        return $this->fireEvent($event, ...$parameters);
     }
 
     public function fireEvent($event, ...$parameters)
