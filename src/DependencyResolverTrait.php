@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Str;
 use ReflectionMethod;
 use ReflectionParameter;
 use ReflectionFunctionAbstract;
@@ -37,9 +38,17 @@ trait DependencyResolverTrait
     {
         $results = [];
 
+        $parameter_keys = collect(array_keys($parameters))->map(function ($parameterKey) {
+            return Str::camel($parameterKey);
+        })->toArray();
+
+        $parameters = array_combine($parameter_keys, array_values($parameters));
+
         foreach ($dependencies as $dependency) {
-            if (array_key_exists($dependency->name, $parameters)) {
-                $results[] = $parameters[$dependency->name];
+            $dependencyName = Str::camel($dependency->name);
+
+            if (array_key_exists($dependencyName, $parameters)) {
+                $results[] = $parameters[$dependencyName];
 
                 continue;
             }
