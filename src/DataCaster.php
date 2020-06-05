@@ -47,7 +47,7 @@ class DataCaster
             return $this->casters[$type]['cast']($value, $extras);
         }
 
-        return (new $type)->cast($value);
+        return (new $type)->cast($value, $extras);
     }
 
     protected function runCasterUncast($type, $extras, $value)
@@ -56,7 +56,7 @@ class DataCaster
             return $this->casters[$type]['uncast']($value, $extras);
         }
 
-        return (new $type)->uncast($value);
+        return (new $type)->uncast($value, $extras);
     }
 
     protected function getCasters()
@@ -108,6 +108,10 @@ class DataCaster
         if (Str::startsWith($rawType, 'date:')) {
             $type = 'date';
             $extras = ['format' => Str::after($rawType, 'date:')];
+        }
+        else if (Str::contains($rawType, ':')) {
+            [$type, $params] = explode(':', $rawType);
+            $extras = explode(',', $params);
         } else {
             $type = $rawType;
             $extras = [];
