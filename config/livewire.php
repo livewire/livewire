@@ -92,4 +92,17 @@ return [
 
     'manifest_path' => null,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Nonce callback function
+    |--------------------------------------------------------------------------
+    |
+    | This value sets a callback to generate a nonce hash in assets markups
+    | If you use csp policy, you may need to add a nonce hash in markups
+    |
+    | Example : 'csp_nonce'
+    |
+    */
+
+    'csp_callback' => null,
 ];

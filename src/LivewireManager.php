@@ -182,8 +182,10 @@ class LivewireManager
 
     protected function cssAssets()
     {
+        $nonce = $this->nonce();
+
         return <<<HTML
-<style>
+<style {$nonce}>
     [wire\:loading] {
         display: none;
     }
@@ -209,6 +211,8 @@ HTML;
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
+
+        $nonce = $this->nonce();
 
         // Default to dynamic `livewire.js` (served by a Laravel route).
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
@@ -236,6 +240,8 @@ HTML;
 {$assetWarning}
 <script src="{$fullAssetPath}" data-turbolinks-eval="false"></script>
 <script data-turbolinks-eval="false">
+<script src="{$fullAssetPath}" data-turbolinks-eval="false" {$nonce}></script>
+<script data-turbolinks-eval="false" {$nonce}>
     window.livewire = new Livewire({$jsonEncodedOptions});
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
@@ -286,6 +292,15 @@ HTML;
     protected function minify($subject)
     {
         return preg_replace('~(\v|\t|\s{2,})~m', '', $subject);
+    }
+
+    protected function nonce()
+    {
+        $cspCallback = config('livewire.csp_callback');
+
+        if ($cspCallback) {
+            return "nonce='".call_user_func($cspCallback)."'";
+        }
     }
 
     public function isLivewireRequest()
