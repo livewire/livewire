@@ -17,8 +17,8 @@ class PretendClassMethodIsControllerMethod
     {
         $route = $this->router->current();
 
-        // Cache the current route action (this callback actually), just to be safe.
-        $cache = $route->getAction('uses');
+        // Cache the current route action, to restore and undo side effects.
+        $cache = $route->getAction();
 
         // We'll set the route action to be the "mount" method from the chosen
         // Livewire component, to get the proper implicit bindings.
@@ -31,7 +31,7 @@ class PretendClassMethodIsControllerMethod
         $options = $route->resolveMethodDependencies($route->parameters(), $this->method);
 
         // Restore the original route action.
-        $route->uses($cache);
+        $route->setAction($cache);
 
         return $options;
     }
