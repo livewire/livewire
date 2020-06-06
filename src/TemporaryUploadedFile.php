@@ -69,6 +69,10 @@ class TemporaryUploadedFile extends UploadedFile
         }
 
         $supportedPreviewTypes = ['jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
+        $supportedPreviewTypes = [
+            'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
+            'mp4', 'mov', 'avi', 'wmv',
+        ];
 
         if (! in_array($this->guessExtension(), $supportedPreviewTypes)) {
             // This will throw an error because it's not used with S3.
