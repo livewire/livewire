@@ -53,6 +53,21 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function storing_a_file_returns_its_filename()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $storedFilename = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('uploadAndSetStoredFilename')
+            ->get('storedFilename');
+
+        Storage::disk('avatars')->assertExists($storedFilename);
+    }
+
+    /** @test */
     public function can_get_a_file_original_name()
     {
         $file = UploadedFile::fake()->image('avatar.jpg');
@@ -409,6 +424,7 @@ class FileUploadComponent extends Component
 
     public $photo;
     public $photos;
+    public $storedFilename;
 
     public function updatedPhoto()
     {
@@ -432,6 +448,11 @@ class FileUploadComponent extends Component
         foreach ($this->photos as $photo) {
             $photo->storeAs('/', $baseName.$number++.'.png', $disk = 'avatars');
         }
+    }
+
+    public function uploadAndSetStoredFilename()
+    {
+        $this->storedFilename = $this->photo->store('/', $disk = 'avatars');
     }
 
     public function uploadDangerous()
