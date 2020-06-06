@@ -2,7 +2,9 @@
 
 namespace Tests;
 
+use Carbon\Carbon;
 use Illuminate\Support\ViewErrorBag;
+use Livewire\Castable;
 use Livewire\Component;
 use Livewire\LivewireManager;
 
@@ -37,6 +39,57 @@ class ValidationTest extends TestCase
         $component->runAction('runValidationWithCustomAttribute');
 
         $this->assertStringContainsString('The foobar field is required.', $component->payload['dom']);
+    }
+
+    /** @test */
+    public function validate_component_properties_with_date_cast()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        // before:today
+        $component
+            ->set('date', 'yesterday')
+            ->runAction('runValidationWithDateCastAttribute')
+            ->assertHasNoErrors('date');
+
+        $component
+            ->set('date', 'tomorrow')
+            ->runAction('runValidationWithDateCastAttribute')
+            ->assertHasErrors('date', 'before');
+    }
+
+    /** @test */
+    public function validate_component_properties_with_collection_cast()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        // array
+        $component
+            ->set('collection', 'not an array')
+            ->runAction('runValidationWithCollectionCastAttribute')
+            ->assertHasErrors('collection', 'array');
+
+        $component
+            ->set('collection', [1, 2, 3])
+            ->runAction('runValidationWithCollectionCastAttribute')
+            ->assertHasNoErrors('collection');
+    }
+
+    /** @test */
+    public function validate_component_properties_with_custom_cast()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        // array
+        // $component
+        //     ->set('custom', 'not a uuid')
+        //     ->runAction('runValidationWithCustomCastAttribute')
+        //     ->assertHasErrors('custom', 'uuid');
+
+        $component
+            ->set('custom', '26e72cac-9dcf-4b30-b7f9-78b14632cbe7')
+            ->runAction('runValidationWithCustomCastAttribute')
+            ->assertHasNoErrors('custom');
     }
 
     /** @test */
@@ -169,6 +222,28 @@ class ValidationTest extends TestCase
     }
 }
 
+class CustomCaster implements Castable
+{
+    public function cast($value)
+    {
+        return new CustomCastObject($value);
+    }
+
+    public function uncast($value)
+    {
+        return $value->id ?? null;
+    }
+}
+
+class CustomCastObject
+{
+    public $id;
+
+    public function __construct($id) {
+        $this->id = $id;
+    }
+}
+
 class ForValidation extends Component
 {
     public $foo = 'foo';
@@ -178,6 +253,22 @@ class ForValidation extends Component
         ['foo' => 'bar', 'baz' => 'blab'],
         ['foo' => 'bar', 'baz' => ''],
     ];
+
+    public $custom;
+    public $date;
+    public $collection;
+
+    protected $casts = [
+        'custom' => CustomCaster::class,
+        'date' => 'date',
+        'collection' => 'collection',
+    ];
+
+    public function mount() {
+        $this->date = Carbon::parse('today');
+        $this->collection = collect([8, 9, 10]);
+        $this->custom = new CustomCastObject('26e72cac-9dcf-4b30-b7f9-78b14632cbe7');
+    }
 
     public function runValidation()
     {
@@ -224,6 +315,27 @@ class ForValidation extends Component
         $this->validate([
             'bar' => 'required',
         ], [], ['bar' => 'foobar']);
+    }
+
+    public function runValidationWithDateCastAttribute()
+    {
+        $this->validate([
+            'date' => 'required|before:today',
+        ]);
+    }
+
+    public function runValidationWithCollectionCastAttribute()
+    {
+        $this->validate([
+            'collection' => 'required|array',
+        ]);
+    }
+
+    public function runValidationWithCustomCastAttribute()
+    {
+        $this->validate([
+            'custom' => 'required|uuid',
+        ]);
     }
 
     public function runNestedValidation()
