@@ -83,7 +83,7 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function can_get_multiple_files_original_name()
     {
-        $file1 = UploadedFile::fake()->image('avatar1jpg');
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
         $file2 = UploadedFile::fake()->image('avatar2.jpg');
 
         $component = Livewire::test(FileUploadComponent::class)
