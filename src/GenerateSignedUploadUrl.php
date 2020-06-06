@@ -30,7 +30,7 @@ class GenerateSignedUploadUrl
         $directory = FileUploadConfiguration::directory();
 
         $signedRequest = $client->createPresignedRequest(
-            $this->createCommand($client, $bucket, ($directory.$fileHashName), $fileType, $visibility),
+            $this->createCommand($client, $bucket, ($directory.'/'.$fileHashName), $fileType, $visibility),
             '+5 minutes'
         );
 

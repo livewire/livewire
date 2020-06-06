@@ -44,7 +44,7 @@ class FileUploadConfiguration
 
     public static function directory()
     {
-        return config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp/';
+        return config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp';
     }
 
     public static function middleware()

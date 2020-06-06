@@ -118,7 +118,7 @@ trait MakesCallsToComponent
         $directory = FileUploadConfiguration::directory();
 
         collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage, $directory) {
-            $storage->move('/'.$directory.$fileHash, '/'.$directory.$newFileHash);
+            $storage->move('/'.$directory.'/'.$fileHash, '/'.$directory.'/'.$newFileHash);
         });
 
         // Now we finish the upload with a final call to the Livewire component
