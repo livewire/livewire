@@ -55,7 +55,7 @@ class ValidationTest extends TestCase
         $component
             ->set('date', 'tomorrow')
             ->runAction('runValidationWithDateCastAttribute')
-            ->assertHasErrors('date', 'before');
+            ->assertHasErrors(['date' => 'before']);
     }
 
     /** @test */
@@ -63,14 +63,14 @@ class ValidationTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
 
-        // array
+        // array|size:4
         $component
             ->set('collection', 'not an array')
             ->runAction('runValidationWithCollectionCastAttribute')
-            ->assertHasErrors('collection', 'array');
+            ->assertHasErrors(['collection' => 'size']);
 
         $component
-            ->set('collection', [1, 2, 3])
+            ->set('collection', [1, 2, 3, 4])
             ->runAction('runValidationWithCollectionCastAttribute')
             ->assertHasNoErrors('collection');
     }
@@ -81,10 +81,10 @@ class ValidationTest extends TestCase
         $component = app(LivewireManager::class)->test(ForValidation::class);
 
         // array
-        // $component
-        //     ->set('custom', 'not a uuid')
-        //     ->runAction('runValidationWithCustomCastAttribute')
-        //     ->assertHasErrors('custom', 'uuid');
+        $component
+            ->set('custom', 'not a uuid')
+            ->runAction('runValidationWithCustomCastAttribute')
+            ->assertHasErrors(['custom' => 'uuid']);
 
         $component
             ->set('custom', '26e72cac-9dcf-4b30-b7f9-78b14632cbe7')
@@ -327,7 +327,7 @@ class ForValidation extends Component
     public function runValidationWithCollectionCastAttribute()
     {
         $this->validate([
-            'collection' => 'required|array',
+            'collection' => 'required|array|size:4',
         ]);
     }
 
