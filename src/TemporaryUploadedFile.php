@@ -133,6 +133,8 @@ class TemporaryUploadedFile extends UploadedFile
 
     public static function canUnserialize($subject)
     {
+        if (! is_string($subject)) return false;
+
         return Str::startsWith($subject, 'livewire-file:')
             || Str::startsWith($subject, 'livewire-files:');
     }

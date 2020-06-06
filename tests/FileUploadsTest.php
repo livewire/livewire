@@ -66,6 +66,21 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function can_get_multiple_files_original_name()
+    {
+        $file1 = UploadedFile::fake()->image('avatar1jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photos', [$file1, $file2]);
+
+        $tmpFiles = $component->viewData('photos');
+
+        $this->assertEquals('avatar1.jpg', $tmpFiles[0]->getClientOriginalName());
+        $this->assertEquals('avatar2.jpg', $tmpFiles[1]->getClientOriginalName());
+    }
+
+    /** @test */
     public function can_set_a_file_as_a_property_using_the_s3_driver_and_store_it()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');

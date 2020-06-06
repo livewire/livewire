@@ -47,7 +47,7 @@ class UploadManager {
 
     uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
         this.setUpload(name, {
-            files,
+            files: Array.from(files),
             multiple: true,
             finishCallback,
             errorCallback,
@@ -103,7 +103,12 @@ class UploadManager {
             request.setRequestHeader(key, value)
         })
 
-        request.upload.addEventListener('progress', this.find(name).progressCallback)
+        request.upload.addEventListener('progress', e => {
+            e.detail = {}
+            e.detail.progress = Math.round((e.loaded * 100) / e.total)
+
+            this.find(name).progressCallback(e)
+        })
 
         request.addEventListener('load', () => {
             if ((request.status+'')[0] === '2') {
