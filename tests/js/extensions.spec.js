@@ -1,29 +1,28 @@
 import { wait } from 'dom-testing-library'
 import Livewire from 'laravel-livewire'
+import testHarness from './fixtures/test_harness'
 
 test('can add custom directives', async () => {
-    document.body.innerHTML = `
+    let dom = `
         <div wire:id="123" wire:initial-data="{}">
             <button wire:foo.bar="baz('bob', 'lob')"></button>
         </div>
     `
 
     var payload
-    window.livewire = new Livewire({ driver: {
-        onMessage: null,
-        init() {},
-        sendMessage(i) {
-            payload = i
-        },
-    }})
-
-    window.livewire.directive('foo', (el, directive, component) => {
-        el.addEventListener('click', () => {
-            component.call('foo', directive.modifiers[0], directive.method, directive.params)
-        })
+    testHarness.mount({
+        dom,
+        asRoot: true,
+        requestInterceptor: i => payload = i,
+        directives: [{
+            name: 'foo',
+            callback: (el, directive, component) => {
+                el.addEventListener('click', () => {
+                    component.call('foo', directive.modifiers[0], directive.method, directive.params)
+                })
+            }
+        }]
     })
-
-    window.livewire.start()
 
     document.querySelector('button').click()
 

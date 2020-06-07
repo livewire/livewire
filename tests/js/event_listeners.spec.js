@@ -1,10 +1,14 @@
 import { wait } from 'dom-testing-library'
 import MockEcho from 'mock-echo'
-import { mountWithEvent, mountAndReturnEmittedEvent } from './utils'
+import testHarness from './fixtures/test_harness'
 
 test('receive event from global fire', async () => {
     var payload
-    mountWithEvent('<div></div>', ['foo'], i => payload = i)
+    testHarness.mount({
+        dom: '<div></div>',
+        initialData: { events: ['foo'] },
+        requestInterceptor: i => payload = i
+    })
 
     window.livewire.emit('foo', 'bar');
 
@@ -17,7 +21,11 @@ test('receive event from global fire', async () => {
 
 test('receive event from action fire', async () => {
     var payload
-    mountWithEvent('<button wire:click="$emit(\'foo\', \'bar\')"></button>', ['foo'], i => payload = i)
+    testHarness.mount({
+        dom: '<button wire:click="$emit(\'foo\', \'bar\')"></button>',
+        initialData: { events: ['foo'] },
+        requestInterceptor: i => payload = i
+    })
 
     document.querySelector('button').click()
 
@@ -32,13 +40,18 @@ test('receive event from component fire, and make sure global listener receives 
     var returnedParamFromOuterListener
     var returnedParamFromInnerListener
     var returnedParamFromGlobalListener
-    mountAndReturnEmittedEvent(`
-            <div>
-                <button id="outer-button" wire:click="$refresh"></button>
-                <div wire:id="456" wire:initial-data="{}" wire:events="[]"></div>
-            </div>
-        `, {
-        event: 'foo', params: ['bar'],
+    let dom = `
+        <div>
+            <button id="outer-button" wire:click="$refresh"></button>
+            <div wire:id="456" wire:initial-data="{}" wire:events="[]"></div>
+        </div>
+    `
+    testHarness.mount({
+        dom,
+        response: {
+            dom,
+            eventQueue: [{ event: 'foo', params: ['bar'] }],
+        }
     })
 
     const outerComponent = window.livewire.components.findComponent(123)
@@ -66,7 +79,7 @@ test('receive event from component fire, and make sure global listener receives 
 })
 
 test('receive event from component fired only to ancestors, and make sure global listener doesnt receive it', async () => {
-    document.body.innerHTML = `
+    let dom = `
         <div wire:id="123" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }">
             <div wire:id="456" wire:initial-data="{}" wire:events="[]">
                 <button wire:click="$refresh"></button>
@@ -74,54 +87,42 @@ test('receive event from component fired only to ancestors, and make sure global
         </div>
         <div wire:id="789" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }"></div>
     `
+    let requestInterceptor = jest.fn()
 
-    var payloadsThatSentARequest = []
+    testHarness.mount({
+        dom,
+        asRoot: true,
+        requestInterceptor,
+        response: [
+            {
+                dom,
+                eventQueue: [{
+                    ancestorsOnly: true,
+                    event: 'foo',
+                    params: [],
+                }],
+            },
+            {
+                dom,
+            },
+        ]
+    })
 
-    window.livewire = new Livewire({ driver: {
-        onMessage: null,
-        init() {},
-        async sendMessage(payload) {
-            payloadsThatSentARequest.push(payload)
-
-            if (payloadsThatSentARequest.length > 1) return
-
-            setTimeout(() => {
-                this.onMessage({
-                    fromPrefetch: payload.fromPrefetch,
-                    id: payload.id,
-                    data: {},
-                    dom: `<div wire:id="456">
-                        <button wire:click="$refresh"></button>
-                    </div>`,
-                    eventQueue: [{
-                        ancestorsOnly: true,
-                        event: 'foo',
-                        params: [],
-                    }],
-                })
-            }, 1)
-        },
-    }})
-
-    window.livewire.start()
-
-    var globalEventReceived = false
-    window.livewire.on('foo', () => { globalEventReceived = true })
+    let globalEventHandler = jest.fn()
+    window.livewire.on('foo', globalEventHandler)
 
     document.querySelector('button').click()
 
-    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(2) })
-
     await wait(() => {
-        expect(globalEventReceived).toEqual(false)
-        expect(payloadsThatSentARequest[0].id).toEqual('456')
-        expect(payloadsThatSentARequest[1].id).toEqual('123')
-        expect(payloadsThatSentARequest[2]).toEqual(undefined)
+        expect(requestInterceptor).toHaveBeenCalledTimes(2)
+        expect(requestInterceptor.mock.calls[0][0].id).toEqual('456')
+        expect(requestInterceptor.mock.calls[1][0].id).toEqual('123')
+        expect(globalEventHandler).not.toHaveBeenCalled()
     })
 })
 
 test('receive event from action fired only to ancestors, and make sure global listener doesnt receive it', async () => {
-    document.body.innerHTML = `
+    let dom = `
         <div wire:id="123" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }">
             <div wire:id="456" wire:initial-data="{}" wire:events="[]">
                 <button wire:click="$emitUp('foo')"></button>
@@ -129,101 +130,77 @@ test('receive event from action fired only to ancestors, and make sure global li
         </div>
         <div wire:id="789" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }"></div>
     `
+    let requestInterceptor = jest.fn()
 
-    var payloadsThatSentARequest = []
+    testHarness.mount({
+        dom,
+        asRoot: true,
+        requestInterceptor,
+    })
 
-    window.livewire = new Livewire({ driver: {
-        onMessage: null,
-        init() {},
-        async sendMessage(payload) {
-            payloadsThatSentARequest.push(payload)
-        },
-    }})
-
-    window.livewire.start()
-
-    var globalEventReceived = false
-    window.livewire.on('foo', () => { globalEventReceived = true })
+    let globalEventHandler = jest.fn()
+    window.livewire.on('foo', globalEventHandler)
 
     document.querySelector('button').click()
 
-    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(1) })
-
     await wait(() => {
-        expect(globalEventReceived).toEqual(false)
-        expect(payloadsThatSentARequest[0].id).toEqual('123')
-        expect(payloadsThatSentARequest[1]).toEqual(undefined)
-        expect(payloadsThatSentARequest[2]).toEqual(undefined)
+        expect(requestInterceptor).toHaveBeenCalledTimes(1)
+        expect(requestInterceptor.mock.calls[0][0].id).toEqual('123')
+        expect(globalEventHandler).not.toHaveBeenCalled()
     })
 })
 
 test('receive event from action fired only to self, and make sure global listener doesnt receive it', async () => {
-    document.body.innerHTML = `
+    let dom = `
         <div wire:id="123" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }">
             <button wire:click="$emitSelf('foo')"></button>
         </div>
         <div wire:id="456" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }"></div>
     `
+    let requestInterceptor = jest.fn()
 
-    var payloadsThatSentARequest = []
+    testHarness.mount({
+        dom,
+        asRoot: true,
+        requestInterceptor,
+    })
 
-    window.livewire = new Livewire({ driver: {
-        onMessage: null,
-        init() {},
-        async sendMessage(payload) {
-            payloadsThatSentARequest.push(payload)
-        },
-    }})
-
-    window.livewire.start()
-
-    var globalEventReceived = false
-    window.livewire.on('foo', () => { globalEventReceived = true })
+    let globalEventHandler = jest.fn()
+    window.livewire.on('foo', globalEventHandler)
 
     document.querySelector('button').click()
 
-    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(1) })
-
     await wait(() => {
-        expect(globalEventReceived).toEqual(false)
-        expect(payloadsThatSentARequest[0].id).toEqual('123')
-        expect(payloadsThatSentARequest[1]).toEqual(undefined)
-        expect(payloadsThatSentARequest[2]).toEqual(undefined)
+        expect(requestInterceptor).toHaveBeenCalledTimes(1)
+        expect(requestInterceptor.mock.calls[0][0].id).toEqual('123')
+        expect(globalEventHandler).not.toHaveBeenCalled()
     })
 })
 
 test('receive event from action fired only to component name, and make sure global listener doesnt receive it', async () => {
-    document.body.innerHTML = `
+    let dom = `
         <div wire:id="123" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;], &quot;name&quot;: &quot;the-wrong-name&quot; }">
             <button wire:click="$emitTo('the-right-name', 'foo')"></button>
         </div>
         <div wire:id="456" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;], &quot;name&quot;: &quot;the-right-name&quot; }"></div>
     `
+    let requestInterceptor = jest.fn()
 
-    var payloadsThatSentARequest = []
+    testHarness.mount({
+        dom,
+        asRoot: true,
+        requestInterceptor,
+    })
 
-    window.livewire = new Livewire({ driver: {
-        onMessage: null,
-        init() {},
-        async sendMessage(payload) {
-            payloadsThatSentARequest.push(payload)
-        },
-    }})
-
-    window.livewire.start()
-
-    var globalEventReceived = false
-    window.livewire.on('foo', () => { globalEventReceived = true })
+    let globalEventHandler = jest.fn()
+    window.livewire.on('foo', globalEventHandler)
 
     document.querySelector('button').click()
 
-    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(1) })
-
     await wait(() => {
-        expect(globalEventReceived).toEqual(false)
-        expect(payloadsThatSentARequest[0].id).toEqual('456')
-        expect(payloadsThatSentARequest[1]).toEqual(undefined)
-        expect(payloadsThatSentARequest[2]).toEqual(undefined)
+        expect(requestInterceptor).toHaveBeenCalledTimes(1)
+        expect(requestInterceptor.mock.calls[0][0].id).toEqual('456')
+        expect(globalEventHandler).not.toHaveBeenCalled()
     })
 })
 
@@ -243,7 +220,11 @@ describe('test Laravel Echo', () => {
         expect(mockEcho.channelExist('foo')).toBe(false)
 
         var payload
-        mountWithEvent('<div></div>', ['echo:foo,bar'], i => payload = i)
+        testHarness.mount({
+            dom: '<div></div>',
+            initialData: { events: ['echo:foo,bar'] },
+            requestInterceptor: i => payload = i,
+        })
 
         expect(mockEcho.channelExist('foo')).toBe(true)
         expect(mockEcho.getChannel('foo').eventExist('bar')).toBe(true)
@@ -261,7 +242,11 @@ describe('test Laravel Echo', () => {
         expect(mockEcho.privateChannelExist('foo')).toBe(false)
 
         var payload
-        mountWithEvent('<div></div>', ['echo-private:foo,bar'], i => payload = i)
+        testHarness.mount({
+            dom: '<div></div>',
+            initialData: { events: ['echo-private:foo,bar'] },
+            requestInterceptor: i => payload = i,
+        })
 
         expect(mockEcho.privateChannelExist('foo')).toBe(true)
         expect(mockEcho.getPrivateChannel('foo').eventExist('bar')).toBe(true)
@@ -280,7 +265,11 @@ describe('test Laravel Echo', () => {
         expect(mockEcho.presenceChannelExist('foo')).toBe(false)
 
         var payload
-        mountWithEvent('<div></div>', ['echo-presence:foo,here'], i => payload = i)
+        testHarness.mount({
+            dom: '<div></div>',
+            initialData: { events: ['echo-presence:foo,here'] },
+            requestInterceptor: i => payload = i,
+        })
 
         expect(mockEcho.presenceChannelExist('foo')).toBe(true)
 
@@ -297,7 +286,11 @@ describe('test Laravel Echo', () => {
         expect(mockEcho.privateChannelExist('foo')).toBe(false)
 
         var payload
-        mountWithEvent('<div></div>', ['echo-notification:foo'], i => payload = i)
+        testHarness.mount({
+            dom: '<div></div>',
+            initialData: { events: ['echo-notification:foo'] },
+            requestInterceptor: i => payload = i,
+        })
 
         expect(mockEcho.privateChannelExist('foo')).toBe(true)
     })

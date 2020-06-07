@@ -1,5 +1,4 @@
 import { wait, fireEvent, waitForDomChange } from 'dom-testing-library'
-import { mountAndReturn, mountWithData, mountAndReturnWithData } from './utils'
 import harness from 'fixtures/test_harness'
 
 test('input element with dirty directive and class modifier attaches class to input', async () => {

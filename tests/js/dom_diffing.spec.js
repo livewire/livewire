@@ -1,12 +1,15 @@
 import { fireEvent, wait } from 'dom-testing-library'
-import { mountAsRootAndReturn } from './utils'
+import testHarness from './fixtures/test_harness'
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 test('element root is DOM diffed', async () => {
-    mountAsRootAndReturn(
-        '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button></div>',
-        '<div wire:id="123" wire:initial-data="{}" class="bar"><button wire:click="$refresh"></button></div>'
-    )
+    testHarness.mount({
+        dom: '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button></div>',
+        asRoot: true,
+        response: {
+            dom: '<div wire:id="123" wire:initial-data="{}" class="bar"><button wire:click="$refresh"></button></div>'
+        }
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -18,10 +21,13 @@ test('element root is DOM diffed', async () => {
 test('element inserted in the middle moves subsequent elements instead of removing them', async () => {
     var hookWasCalled = false
 
-    mountAsRootAndReturn(
-        '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button><p>there</p></div>',
-        '<div wire:id="123" wire:initial-data="{}" class="bar"><button wire:click="$refresh"></button><div>middle</div><p>there</p></div>'
-    )
+    testHarness.mount({
+        dom: '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button><p>there</p></div>',
+        asRoot: true,
+        response: {
+            dom: '<div wire:id="123" wire:initial-data="{}" class="bar"><button wire:click="$refresh"></button><div>middle</div><p>there</p></div>'
+        }
+    })
 
     window.livewire.hook('elementRemoved', () => {
         hookWasCalled = true
@@ -38,10 +44,13 @@ test('element inserted in the middle moves subsequent elements instead of removi
 test('element inserted before element with same tag name is handled as if they were different.', async () => {
     var elThatWasAdded
 
-    mountAsRootAndReturn(
-        '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button><div>there</div></div>',
-        '<div wire:id="123" wire:initial-data="{}" class="bar"><button wire:click="$refresh"></button><div>hey</div><div>there</div></div></div>'
-    )
+    testHarness.mount({
+        dom: '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button><div>there</div></div>',
+        asRoot: true,
+        response: {
+            dom: '<div wire:id="123" wire:initial-data="{}" class="bar"><button wire:click="$refresh"></button><div>hey</div><div>there</div></div></div>'
+        }
+    })
 
     window.livewire.hook('elementInitialized', (el) => {
         elThatWasAdded = el
@@ -56,19 +65,24 @@ test('element inserted before element with same tag name is handled as if they w
 })
 
 test('adding child components with wire:model doesnt break the dom diffing', async () => {
-    mountAsRootAndReturn(
-        `<div wire:id="1" wire:initial-data="{}">
-            <button wire:click="$refresh"></button>
-            <div wire:id="2" wire:initial-data="{}"><div wire:model="test"></div></div>
-        </div>
-        `,
-        `<div wire:id="1" wire:initial-data="{}">
-            <button wire:click="$refresh"></button>
-            <div wire:id="2" wire:initial-data="{}"><div wire:model="test"></div></div>
-            <div wire:id="3" wire:initial-data="{}"><div wire:model="test"></div></div>
-        </div>
-        `
-    )
+    testHarness.mount({
+        dom:
+            `<div wire:id="1" wire:initial-data="{}">
+                <button wire:click="$refresh"></button>
+                <div wire:id="2" wire:initial-data="{}"><div wire:model="test"></div></div>
+            </div>
+            `,
+        asRoot: true,
+        response: {
+            dom:
+                `<div wire:id="1" wire:initial-data="{}">
+                    <button wire:click="$refresh"></button>
+                    <div wire:id="2" wire:initial-data="{}"><div wire:model="test"></div></div>
+                    <div wire:id="3" wire:initial-data="{}"><div wire:model="test"></div></div>
+                </div>
+                `
+        }
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -76,28 +90,33 @@ test('adding child components with wire:model doesnt break the dom diffing', asy
 })
 
 test('elements added with keys are recognized in the custom lookahead', async () => {
-    mountAsRootAndReturn(
-        `<div wire:id="1" wire:initial-data="{}">
-            <div wire:key="foo">1</div>
+    testHarness.mount({
+        dom:
+            `<div wire:id="1" wire:initial-data="{}">
+                <div wire:key="foo">1</div>
 
-            <div>
-                <div id="ag">2</div>
-            </div>
+                <div>
+                    <div id="ag">2</div>
+                </div>
 
-            <button wire:click="$refresh"></button>
-        </div>`,
-        `<div wire:id="1" wire:initial-data="{}">
-            <div>0</div>
+                <button wire:click="$refresh"></button>
+            </div>`,
+        asRoot: true,
+        response: {
+            dom:
+                `<div wire:id="1" wire:initial-data="{}">
+                    <div>0</div>
 
-            <div wire:key="foo">1</div>
+                    <div wire:key="foo">1</div>
 
-            <div>
-                <div id="ag">2</div>
-            </div>
+                    <div>
+                        <div id="ag">2</div>
+                    </div>
 
-            <button wire:click="$refresh"></button>
-        </div>`
-    )
+                    <button wire:click="$refresh"></button>
+                </div>`
+        }
+    })
 
     fireEvent.click(document.querySelector('button'))
 

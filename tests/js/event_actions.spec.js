@@ -1,10 +1,13 @@
 import { fireEvent, wait } from 'dom-testing-library'
-import { mount, mountAsRoot, mountAsRootAndReturn } from './utils'
+import testHarness from './fixtures/test_harness'
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 test('basic click', async () => {
     var payload
-    mount('<button wire:click="someMethod"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<button wire:click="someMethod"></button>',
+        requestInterceptor: i => payload = i
+    })
 
     document.querySelector('button').click()
 
@@ -17,7 +20,10 @@ test('basic click', async () => {
 
 test('basic click with self modifier', async () => {
     var payload
-    mount('<button wire:click.self="outerMethod"><span wire:click="innerMethod"></span></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<button wire:click.self="outerMethod"><span wire:click="innerMethod"></span></button>',
+        requestInterceptor: i => payload = i
+    })
 
     document.querySelector('span').click()
 
@@ -29,7 +35,10 @@ test('basic click with self modifier', async () => {
 
 test('click with params', async () => {
     var payload
-    mount(`<button wire:click="someMethod('foo', 'bar')"></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click="someMethod('foo', 'bar')"></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     document.querySelector('button').click()
 
@@ -42,7 +51,10 @@ test('click with params', async () => {
 
 test('if a click and blur happen at the same time, the actions are queued and sent together', async () => {
     var payload
-    mount('<input wire:blur="onBlur"><button wire:click="onClick"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<input wire:blur="onBlur"><button wire:click="onClick"></button>',
+        requestInterceptor: i => payload = i
+    })
 
     document.querySelector('input').focus()
     document.querySelector('button').click()
@@ -58,7 +70,10 @@ test('if a click and blur happen at the same time, the actions are queued and se
 
 test('two keydown events', async () => {
     var payload
-    mount('<button wire:keydown="someMethod" wire:keydown.enter="otherMethod"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<button wire:keydown="someMethod" wire:keydown.enter="otherMethod"></button>',
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.keyDown(document.querySelector('button'), { key: 'Enter' })
 
@@ -74,7 +89,10 @@ test('two keydown events', async () => {
 
 test('keydown.enter doesnt fire when other keys are pressed', async () => {
     var payload
-    mount('<button wire:keydown.enter="otherMethod"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<button wire:keydown.enter="otherMethod"></button>',
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.keyDown(document.querySelector('button'), { key: 'Escape' })
 
@@ -85,7 +103,10 @@ test('keydown.enter doesnt fire when other keys are pressed', async () => {
 
 test('keyup.enter doesnt fire when other keys are pressed', async () => {
     var payload
-    mount('<button wire:keyup.enter="otherMethod"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<button wire:keyup.enter="otherMethod"></button>',
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.keyUp(document.querySelector('button'), { key: 'Escape' })
 
@@ -96,7 +117,10 @@ test('keyup.enter doesnt fire when other keys are pressed', async () => {
 
 test('keyup.cmd.enter', async () => {
     var payload
-    mount('<button wire:keyup.cmd.enter="otherMethod"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<button wire:keyup.cmd.enter="otherMethod"></button>',
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.keyUp(document.querySelector('button'), { metaKey: false, key: 'Enter' })
 
@@ -107,7 +131,11 @@ test('keyup.cmd.enter', async () => {
 
 test('init', async () => {
     var initHappened = false
-    mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:init="someMethod"></div>', () => { initHappened = true })
+    testHarness.mount({
+        dom: '<div wire:id="123" wire:initial-data="{}" wire:init="someMethod"></div>',
+        asRoot: true,
+        requestInterceptor: () => { initHappened = true }
+    })
 
     await timeout(10)
 
@@ -116,16 +144,19 @@ test('init', async () => {
 
 test('elements are marked as read-only or disabled during form submissions', async () => {
     var payload
-    mount(`
-        <form wire:submit.prevent="someMethod">
-            <input type="text">
-            <input type="checkbox">
-            <input type="radio">
-            <select></select>
-            <textarea></textarea>
-            <button type="submit"></button>
-        </form>
-    `, i => payload = i)
+    testHarness.mount({
+        dom: `
+            <form wire:submit.prevent="someMethod">
+                <input type="text">
+                <input type="checkbox">
+                <input type="radio">
+                <select></select>
+                <textarea></textarea>
+                <button type="submit"></button>
+            </form>
+        `,
+        requestInterceptor: i => payload = i
+    })
 
     document.querySelector('button').click()
 
@@ -144,7 +175,10 @@ test('elements are marked as read-only or disabled during form submissions', asy
 
 test('action parameters without space around comma', async () => {
     var payload
-    mount(`<button wire:click="callSomething('foo','bar')"></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click="callSomething('foo','bar')"></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -157,7 +191,10 @@ test('action parameters without space around comma', async () => {
 
 test('action parameters with space before comma', async () => {
     var payload
-    mount(`<button wire:click="callSomething('foo' ,'bar')"></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click="callSomething('foo' ,'bar')"></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -170,7 +207,10 @@ test('action parameters with space before comma', async () => {
 
 test('action parameters with space after comma', async () => {
     var payload
-    mount(`<button wire:click="callSomething('foo', 'bar')"></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click="callSomething('foo', 'bar')"></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -183,7 +223,10 @@ test('action parameters with space after comma', async () => {
 
 test('action parameters with space around comma', async () => {
     var payload
-    mount(`<button wire:click="callSomething('foo' , 'bar')"></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click="callSomething('foo' , 'bar')"></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -196,7 +239,10 @@ test('action parameters with space around comma', async () => {
 
 test('action parameters with space and comma inside will be handled', async () => {
     var payload
-    mount(`<button wire:click="callSomething('foo, bar', true , 'baz',null,'x,y')"></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click="callSomething('foo, bar', true , 'baz',null,'x,y')"></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -209,7 +255,10 @@ test('action parameters with space and comma inside will be handled', async () =
 
 test('action parameters must be separated by comma', async () => {
     var payload
-    mount(`<button wire:click="callSomething('foo'|'bar')"></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click="callSomething('foo'|'bar')"></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -222,7 +271,10 @@ test('action parameters must be separated by comma', async () => {
 
 test('action parameter can be empty', async () => {
     var payload
-    mount(`<button wire:click="callSomething()"></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click="callSomething()"></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -235,7 +287,10 @@ test('action parameter can be empty', async () => {
 
 test('action parameter can use double-quotes', async () => {
     var payload
-    mount(`<button wire:click='callSomething("double-quotes are ugly", true)'></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click='callSomething("double-quotes are ugly", true)'></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.click(document.querySelector('button'))
 
@@ -248,7 +303,10 @@ test('action parameter can use double-quotes', async () => {
 
 test('debounce keyup event', async () => {
     var payload
-    mount('<input wire:keyup.debounce.50ms="someMethod"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<input wire:keyup.debounce.50ms="someMethod"></button>',
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.keyUp(document.querySelector('input'), { key: 'x' })
 
@@ -263,7 +321,10 @@ test('debounce keyup event', async () => {
 
 test('debounce keyup event with key specified', async () => {
     var payload
-    mount('<input wire:keyup.x.debounce.50ms="someMethod"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<input wire:keyup.x.debounce.50ms="someMethod"></button>',
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.keyUp(document.querySelector('input'), { key: 'k' })
 
@@ -288,7 +349,10 @@ test('debounce keyup event with key specified', async () => {
 
 test('keydown event', async () => {
     var payload
-    mount('<input wire:keydown="someMethod"></button>', i => payload = i)
+    testHarness.mount({
+        dom: '<input wire:keydown="someMethod"></button>',
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.keyDown(document.querySelector('input'), { key: 'x' })
 

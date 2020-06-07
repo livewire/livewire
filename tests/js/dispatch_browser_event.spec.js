@@ -1,11 +1,15 @@
 import { wait } from 'dom-testing-library'
-import { mountAndReturnDispatchedEvent } from './utils'
+import testHarness from './fixtures/test_harness'
 
 test('receive event from global fire', async () => {
-    mountAndReturnDispatchedEvent(
-        '<div><button wire:click="$refresh"></button></div>',
-        {event: 'foo', data: {bar: 'baz'}},
-    )
+    let dom = '<div><button wire:click="$refresh"></button></div>'
+    testHarness.mount({
+        dom,
+        response: {
+            dom,
+            dispatchQueue: [ {event: 'foo', data: {bar: 'baz'}} ]
+        }
+    })
 
     var eventReceived;
     window.addEventListener('foo', e => {
