@@ -11,18 +11,28 @@ export default {
         if (this.config.requestInterceptor) {
             this.config.requestInterceptor(payload)
         }
-        if (this.config.response || this.config.error) {
+        if (this.config.response) {
+            let response = this.fetchResponse()
             setTimeout(() => {
-                if (this.config.error) {
-                    this.onError !== null && this.onError({ id: payload.id })
+                if (response.error) {
+                    delete response.error
+                    this.onError !== null && this.onError({ id: payload.id, ...response })
                 } else {
                     this.onMessage && this.onMessage({
                         id: payload && payload.id,
                         fromPrefetch: payload && payload.fromPrefetch,
-                        ...this.config.response,
+                        ...response
                     })
                 }
             }, this.config.delay || 1)
         }
+    },
+
+    fetchResponse() {
+        if (this.config.response && Array.isArray(this.config.response)) {
+            return this.config.response.shift() || {}
+        }
+
+        return this.config.response || {}
     },
 }

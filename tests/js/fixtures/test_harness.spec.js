@@ -119,5 +119,33 @@ describe('the test harness', () => {
         }).initializeDriver()
 
         expect(harness.driver.config.response.dom).toEqual('<div wire:id=\"123\">some dom stuff</div>')
+
+    test('can simulate multiple responses', async () => {
+        harness.configure({
+            response: [
+                { foo: 'response 1' },
+                { foo: 'response 2' },
+            ]
+        }).initializeDriver()
+        let spy = jest.fn()
+        harness.driver.onMessage = spy
+
+        harness.driver.sendMessage({})
+        await wait(() => {
+            expect(spy).toHaveBeenCalledTimes(1)
+            expect(spy.mock.calls[spy.mock.calls.length-1][0]).toMatchObject({ foo: 'response 1' })
+        })
+
+        harness.driver.sendMessage({})
+        await wait(() => {
+            expect(spy).toHaveBeenCalledTimes(2)
+            expect(spy.mock.calls[spy.mock.calls.length-1][0]).toMatchObject({ foo: 'response 2' })
+        })
+
+        harness.driver.sendMessage({})
+        await wait(() => {
+            expect(spy).toHaveBeenCalledTimes(3)
+            expect(Object.keys(spy.mock.calls[spy.mock.calls.length-1][0])).toEqual(['id', 'fromPrefetch'])
+        })
     })
 })
