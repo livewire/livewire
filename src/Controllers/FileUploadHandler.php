@@ -44,6 +44,6 @@ class FileUploadHandler
         });
 
         // Strip out the livewire-tmp directory from the paths.
-        return $fileHashPaths->map(function ($path) { return str_replace(FileUploadConfiguration::directory().'/', '', $path); });
+        return $fileHashPaths->map(function ($path) { return str_replace(FileUploadConfiguration::directory('/'), '', $path); });
     }
 }

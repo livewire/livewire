@@ -27,10 +27,10 @@ class GenerateSignedUploadUrl
 
         $fileHashName = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
 
-        $directory = FileUploadConfiguration::directory();
+        $directory = FileUploadConfiguration::directory('/');
 
         $signedRequest = $client->createPresignedRequest(
-            $this->createCommand($client, $bucket, ($directory.'/'.$fileHashName), $fileType, $visibility),
+            $this->createCommand($client, $bucket, ($directory.$fileHashName), $fileType, $visibility),
             '+5 minutes'
         );
 

@@ -42,9 +42,9 @@ class FileUploadConfiguration
         return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
     }
 
-    public static function directory()
+    public static function directory($suffix = '')
     {
-        return config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp';
+        return (config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp').$suffix;
     }
 
     public static function middleware()

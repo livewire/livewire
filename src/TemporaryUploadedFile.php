@@ -19,7 +19,7 @@ class TemporaryUploadedFile extends UploadedFile
         $this->disk = $disk;
         $this->storage = Storage::disk($this->disk);
         // Strip out any directory seperators.
-        $this->path = FileUploadConfiguration::directory().'/'.Util::normalizeRelativePath($path);
+        $this->path = FileUploadConfiguration::directory('/').Util::normalizeRelativePath($path);
 
         $tmpFile = tmpfile();
 
