@@ -68,7 +68,11 @@ class TemporaryUploadedFile extends UploadedFile
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
 
-        $supportedPreviewTypes = ['jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
+        $supportedPreviewTypes = [
+            'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
+            'mp4', 'mov', 'avi', 'wmv',
+            'mp3', 'wav', 'm4a', 'wma',
+        ];
 
         if (! in_array($this->guessExtension(), $supportedPreviewTypes)) {
             // This will throw an error because it's not used with S3.
