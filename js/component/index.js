@@ -8,6 +8,7 @@ import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
 import PrefetchManager from './PrefetchManager'
 import EchoManager from './EchoManager'
+import UploadManager from './UploadManager'
 import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
 import MessageBus from '../MessageBus'
@@ -32,12 +33,14 @@ export default class Component {
         this.tearDownCallbacks = []
         this.prefetchManager = new PrefetchManager(this)
         this.echoManager = new EchoManager(this)
+        this.uploadManager = new UploadManager(this)
 
         store.callHook('componentInitialized', this)
 
         this.initialize()
 
         this.echoManager.registerListeners()
+        this.uploadManager.registerListeners()
 
         if (this.redirectTo) {
             this.redirect(this.redirectTo)
@@ -407,6 +410,7 @@ export default class Component {
         // If the enter key submits a form or something, the submission
         // will happen BEFORE the model input finishes syncing because
         // of the debounce. This makes sure to clear anything in the debounce queue.
+
         if (this.modelDebounceCallbacks) {
             this.modelDebounceCallbacks.forEach(callbackRegister => {
                 callbackRegister.callback()
@@ -423,5 +427,17 @@ export default class Component {
 
     tearDown() {
         this.tearDownCallbacks.forEach(callback => callback())
+    }
+
+    upload(name, file, finishCallback = () => {}, errorCallback = () => {}, progressCallback = () => {}) {
+        this.uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback)
+    }
+
+    uploadMultiple(name, files, finishCallback = () => {}, errorCallback = () => {}, progressCallback = () => {}) {
+        this.uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback)
+    }
+
+    removeUpload(name, tmpFilename, finishCallback = () => {}, errorCallback = () => {}) {
+        this.uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback)
     }
 }

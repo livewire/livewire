@@ -1,19 +1,9 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Controllers;
 
-class LivewireJavaScriptAssets
+trait CanPretendToBeAFile
 {
-    public function source()
-    {
-        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.js');
-    }
-
-    public function maps()
-    {
-        return $this->pretendResponseIsFile(__DIR__.'/../dist/livewire.js.map');
-    }
-
     public function pretendResponseIsFile($file)
     {
         $expires = strtotime('+1 year');

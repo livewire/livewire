@@ -10,8 +10,11 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\LivewireViewCompilerEngine;
-use Livewire\Connection\HttpConnectionHandler;
+use Livewire\Controllers\FileUploadHandler;
+use Livewire\Controllers\FilePreviewHandler;
+use Livewire\Controllers\HttpConnectionHandler;
 use Illuminate\Foundation\Testing\TestResponse;
+use Livewire\Controllers\LivewireJavaScriptAssets;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Testing\TestResponse as Laravel7TestResponse;
@@ -28,6 +31,7 @@ use Livewire\Commands\{
     DeleteCommand,
     ComponentParser,
     DiscoverCommand,
+    S3CleanupCommand,
     MakeLivewireCommand
 };
 use Livewire\HydrationMiddleware\{
@@ -126,6 +130,14 @@ class LivewireServiceProvider extends ServiceProvider
 
         RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
             ->middleware(config('livewire.middleware_group', 'web'));
+
+        RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
+            ->middleware(config('livewire.middleware_group', 'web'))
+            ->name('livewire.upload-file');
+
+        RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
+            ->middleware(config('livewire.middleware_group', 'web'))
+            ->name('livewire.preview-file');
     }
 
     protected function registerCommands()
@@ -144,6 +156,7 @@ class LivewireServiceProvider extends ServiceProvider
             MvCommand::class,           // livewire:mv
             StubsCommand::class,        // livewire:stubs
             DiscoverCommand::class,     // livewire:discover
+            S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
         ]);
     }
 

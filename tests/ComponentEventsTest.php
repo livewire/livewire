@@ -12,7 +12,7 @@ class ComponentEventsTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ReceivesEvents::class);
 
-        $component->fireEvent('bar', 'baz');
+        $component->emit('bar', 'baz');
 
         $this->assertEquals($component->get('foo'), 'baz');
     }
@@ -22,7 +22,7 @@ class ComponentEventsTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ReceivesEventsWithSingleValueListener::class);
 
-        $component->fireEvent('bar', 'baz');
+        $component->emit('bar', 'baz');
 
         $this->assertEquals($component->get('foo'), 'baz');
     }
@@ -32,7 +32,7 @@ class ComponentEventsTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ReceivesEvents::class);
 
-        $component->fireEvent('bar', 'baz', 'blab');
+        $component->emit('bar', 'baz', 'blab');
 
         $this->assertEquals($component->get('foo'), 'bazblab');
     }
@@ -101,7 +101,7 @@ class ComponentEventsTest extends TestCase
     {
         $component = app(LivewireManager::class)->test(ReceivesEventsWithDynamicListeners::class, ['listener' => 'bob']);
 
-        $component->fireEvent('bob', 'lob');
+        $component->emit('bob', 'lob');
         $component->assertSet('foo', 'lob');
     }
 }

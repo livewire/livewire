@@ -3,10 +3,11 @@
 namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
+use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\CannotBindDataToEloquentModelException;
-use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Exceptions\MissingFileUploadsTraitException;
 
 trait HandlesActions
 {
@@ -48,11 +49,16 @@ trait HandlesActions
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
 
+
+        $this->updating($name, $value);
+
         if (method_exists($this, $beforeMethod)) {
             $this->{$beforeMethod}($value, $keyAfterFirstDot);
         }
 
         $callback($name, $value);
+
+        $this->updated($name, $value);
 
         if (method_exists($this, $afterMethod)) {
             $this->{$afterMethod}($value, $keyAfterFirstDot);
@@ -81,7 +87,12 @@ trait HandlesActions
                 break;
 
             default:
-                throw_unless(method_exists($this, $method), new MethodNotFoundException($method, $this->getName()));
+                if (! method_exists($this, $method)) {
+                    throw_if($method === 'startUpload', new MissingFileUploadsTraitException($this));
+
+                    throw new MethodNotFoundException($method, $this->getName());
+                }
+
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
                 $this->{$method}(
@@ -100,11 +111,15 @@ trait HandlesActions
                     return app($class->name);
                 }
 
-                return app($parameter->name);
-            }, function () use (&$params) {
+                throw new \Exception;
+            }, function () use (&$params, $parameter) {
+                if (count($params) === 0 && $parameter->isDefaultValueAvailable()) {
+                    return $parameter->getDefaultValue();
+                }
+
                 return array_shift($params);
             }, false);
-        });
+        })->concat($params);
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)

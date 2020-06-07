@@ -95,7 +95,11 @@ ${this.el.outerHTML}
                 return modelValue
             }
 
-            return this.el.checked
+            if (this.el.checked) {
+                return this.el.getAttribute('value') || true;
+            } else {
+                return false
+            }
         } else if (this.el.tagName === 'SELECT' && this.el.multiple) {
             return this.getSelectValues()
         }
@@ -107,6 +111,8 @@ ${this.el.outerHTML}
         const modelString = this.directives.get('model').value
         const modelValue = get(component.data, modelString)
         if (modelValue === undefined) return
+        // Don't manually set file input's values.
+        if (this.el.tagName.toLowerCase() === 'input' && this.el.type === 'file') return
 
         this.setInputValue(modelValue)
     }

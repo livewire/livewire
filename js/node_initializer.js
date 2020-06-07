@@ -50,13 +50,16 @@ export default {
 
         store.callHook('interceptWireModelAttachListener', el, directive, component, debounceIf)
 
+        // File uploads are handled by UploadFiles.js.
+        if (el.rawNode().tagName.toLowerCase() === 'input' && el.rawNode().type === 'file') return
+
         const event = (el.rawNode().tagName.toLowerCase() === 'select')
             || ['checkbox', 'radio'].includes(el.rawNode().type)
             || directive.modifiers.includes('lazy')
             ? 'change' : 'input'
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-        const handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
+        let handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
             const model = directive.value
             const el = new DOMElement(e.target)
             // We have to check for typeof e.detail here for IE 11.

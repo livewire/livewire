@@ -11,9 +11,7 @@ class PerformPublicPropertyFromDataBindingUpdates implements HydrationMiddleware
 
             $data = $action['payload'];
 
-            $unHydratedInstance->updating($data['name'], $data['value']);
             $unHydratedInstance->syncInput($data['name'], $data['value']);
-            $unHydratedInstance->updated($data['name'], $data['value']);
         }
     }
 
