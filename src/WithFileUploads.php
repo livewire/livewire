@@ -26,15 +26,23 @@ trait WithFileUploads
 
     public function finishUpload($name, $tmpPath, $isMultiple)
     {
-        $this->emitSelf('upload:finished', $name);
-
         $this->cleanupOldUploads();
 
-        $file = $isMultiple
-            ? collect($tmpPath)->map(function ($i) {
+        if ($isMultiple) {
+            $file = collect($tmpPath)->map(function ($i) {
                 return TemporaryUploadedFile::createFromLivewire($i);
-            })->toArray()
-            : TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
+            })->toArray();
+            $this->emitSelf('upload:finished', $name, collect($file)->map->getFilename()->toArray());
+        } else {
+            $file = TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
+            $this->emitSelf('upload:finished', $name, [$file->getFilename()]);
+
+            // If the property is an array, but the upload ISNT set to "multiple"
+            // then APPEND the upload to the array, rather than replacing it.
+            if (is_array($value = $this->getPropertyValue($name))) {
+                $file = array_merge($value, [$file]);
+            }
+        }
 
         $this->syncInput($name, $file);
     }
@@ -57,11 +65,36 @@ trait WithFileUploads
         throw (ValidationException::withMessages($errors));
     }
 
+    public function removeUpload($name, $tmpFilename)
+    {
+        $uploads = $this->getPropertyValue($name);
+
+        if (is_array($uploads) && isset($uploads[0]) && $uploads[0] instanceof TemporaryUploadedFile) {
+            $this->emitSelf('upload:removed', $name, $tmpFilename);
+
+            $this->syncInput($name, array_values(array_filter($uploads, function ($upload) use ($tmpFilename) {
+                if ($upload->getFilename() === $tmpFilename) {
+                    $upload->delete();
+                    return false;
+                }
+
+                return true;
+            })));
+        } elseif ($uploads instanceof TemporaryUploadedFile) {
+            $uploads->delete();
+
+            $this->emitSelf('upload:removed', $name, $tmpFilename);
+
+            if ($uploads->getFilename() === $tmpFilename) $this->syncInput($name, null);
+        }
+    }
+
     protected function hydratePropertyFromWithFileUploads($name, $value)
     {
         if (TemporaryUploadedFile::canUnserialize($value)) {
             return TemporaryUploadedFile::unserializeFromLivewireRequest($value);
         }
+
         return $value;
     }
 
@@ -72,6 +105,7 @@ trait WithFileUploads
         } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof TemporaryUploadedFile) {
             return $value[0]::serializeMultipleForLivewireResponse($value);
         }
+
         return $value;
     }
 
