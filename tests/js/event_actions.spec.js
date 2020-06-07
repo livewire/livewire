@@ -303,7 +303,10 @@ test('action parameter can use double-quotes', async () => {
 
 test('action parameters can include expressions', async () => {
     var payload
-    mount(`<button wire:click="callSomething('foo', new Array('1','2'))"></button>`, i => payload = i)
+    testHarness.mount({
+        dom: `<button wire:click="callSomething('foo', new Array('1','2'))"></button>`,
+        requestInterceptor: i => payload = i
+    })
 
     fireEvent.click(document.querySelector('button'))
 
