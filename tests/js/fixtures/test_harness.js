@@ -49,7 +49,11 @@ export default {
 
     initializeDriver() {
         // make sure the simulated response dom has the test wire:id attribute
-        if (this.response && this.response.dom && ! this.response.dom.includes('wire:id')) {
+        if (! this.asRoot &&
+            this.response &&
+            this.response.dom &&
+            ! this.response.dom.includes(`wire:id="${this.id}"`)
+        ) {
             this.response.dom = `<div wire:id="${this.id}">${this.response.dom}</div>`
         }
 
@@ -83,7 +87,9 @@ export default {
 
         if (typeof this.initialData === 'object' &&
             Object.keys(this.initialData).length > 0 &&
-            ! Object.keys(this.initialData).includes('data')) {
+            ! Object.keys(this.initialData).includes('data') &&
+            ! Object.keys(this.initialData).includes('events')
+        ) {
             this.initialData = { data: this.initialData }
         }
 

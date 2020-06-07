@@ -118,9 +118,10 @@ describe('the test harness', () => {
         let spy = jest.fn()
         harness.driver.onMessage = spy
 
-        document.querySelector('button').click()
+        harness.driver.sendMessage({})
 
         await wait(() => {
+            expect(spy).toHaveBeenCalledTimes(1)
             expect(spy.mock.calls[spy.mock.calls.length-1][0]).toMatchObject({ foo: 'bar' })
         })
     })
@@ -129,8 +130,23 @@ describe('the test harness', () => {
         harness.configure({
             response: { dom: 'some dom stuff' }
         }).initializeDriver()
-
         expect(harness.driver.config.response.dom).toEqual('<div wire:id=\"123\">some dom stuff</div>')
+
+        harness.configure({
+            response: { dom: '<div wire:id="456">stuff</div>' }
+        }).initializeDriver()
+        expect(harness.driver.config.response.dom).toEqual('<div wire:id=\"123\"><div wire:id=\"456\">stuff</div></div>')
+
+        harness.configure({
+            response: { dom: '<div wire:id=\"123\">some dom stuff</div>' }
+        }).initializeDriver()
+        expect(harness.driver.config.response.dom).toEqual('<div wire:id=\"123\">some dom stuff</div>')
+
+        harness.configure({
+            response: { dom: '<div wire:id=\"123\"><div wire:id="456">stuff</div></div>' }
+        }).initializeDriver()
+        expect(harness.driver.config.response.dom).toEqual('<div wire:id=\"123\"><div wire:id=\"456\">stuff</div></div>')
+    })
 
     test('can simulate multiple responses', async () => {
         harness.configure({
