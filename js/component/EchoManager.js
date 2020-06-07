@@ -17,7 +17,7 @@ class EchoManager {
                     let event_parts = event.split(/(echo:|echo-)|:|,/)
 
                     if (event_parts[1] == 'echo:') {
-                        event_parts.splice(2,0,'channel',undefined)
+                        event_parts.splice(2, 0, 'channel', undefined)
                     }
 
                     if (event_parts[2] == 'notification') {
@@ -26,19 +26,19 @@ class EchoManager {
 
                     let [s1, signature, channel_type, s2, channel, s3, event_name] = event_parts
 
-                    if (['channel','private'].includes(channel_type)) {
+                    if (['channel', 'private'].includes(channel_type)) {
                         Echo[channel_type](channel).listen(event_name, (e) => {
                             store.emit(event, e)
                         })
                     } else if (channel_type == 'presence') {
-                        Echo.join(channel)[event_name]((e) => {
+                        Echo.join(channel).listen(event_name, ((e) => {
                             store.emit(event, e)
-                        })
+                        }));
                     } else if (channel_type == 'notification') {
                         Echo.private(channel).notification((notification) => {
                             store.emit(event, notification)
                         })
-                    } else{
+                    } else {
                         console.warn('Echo channel type not yet supported')
                     }
                 }
