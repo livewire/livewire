@@ -12,6 +12,7 @@ export default {
         this.response = config.response
         this.error = config.error
         this.delay = config.delay
+        this.directives = config.directives
 
         this.driver = { ...driver } // get new copy of the driver
 
@@ -24,6 +25,8 @@ export default {
         this.unmount()
         this.initializeDom()
         this.initializeDriver()
+        this.initializeLivewire()
+        this.registerDirectives()
         this.startLivewire()
 
         return document.body.firstElementChild
@@ -58,9 +61,20 @@ export default {
         }
     },
 
-    startLivewire()
+    initializeLivewire()
     {
         window.livewire = new Livewire({ driver: this.driver })
+    },
+
+    registerDirectives()
+    {
+        this.directives && this.directives.forEach(d =>
+            window.livewire.directive(d.name, d.callback)
+        )
+    },
+
+    startLivewire()
+    {
         window.livewire.start()
     },
 

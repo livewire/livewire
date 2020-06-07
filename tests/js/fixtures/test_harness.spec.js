@@ -84,6 +84,18 @@ describe('the test harness', () => {
         expect(el.__livewire.id).toEqual('123')
     })
 
+    test('can register livewire directives', () => {
+        harness.mount({
+            dom: 'some dom',
+            directives: [{
+                name: 'foo',
+                callback: () => 'bar'
+            }]
+        })
+
+        expect(window.livewire.components.directives.directives.listeners['foo']).toBeTruthy()
+    })
+
     test('can intercept the connection request', async () => {
         let spy = jest.fn()
         harness.mount({
