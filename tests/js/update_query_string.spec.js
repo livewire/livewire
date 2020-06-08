@@ -4,7 +4,7 @@ import Livewire from 'laravel-livewire'
 test('data can be added to the query string', async () => {
     var newUri
 
-    window.history.replaceState = (object, title, uri) => {
+    window.history.pushState = (object, title, uri) => {
         newUri = uri
     }
 
@@ -45,7 +45,7 @@ test('data can be added to the query string', async () => {
 test('data will be removed from the query string if "except" is present', async () => {
     var newUri
 
-    window.history.replaceState = (object, title, uri) => {
+    window.history.pushState = (object, title, uri) => {
         newUri = uri
     }
 
@@ -86,7 +86,7 @@ test('data will be removed from the query string if "except" is present', async 
 test('data can be an object and still be passed to the query string', async () => {
     var newUri
 
-    window.history.replaceState = (object, title, uri) => {
+    window.history.pushState = (object, title, uri) => {
         newUri = uri
     }
 
