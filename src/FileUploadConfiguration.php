@@ -52,18 +52,14 @@ class FileUploadConfiguration
         return config('livewire.temporary_file_upload.middleware') ?: 'throttle:60,1';
     }
 
-    public static function rules(): array
+    public static function rules()
     {
         $rules = config('livewire.temporary_file_upload.rules');
 
-        if (! empty($rules)) {
-            if (is_array($rules)) {
-                return $rules;
-            }
+        if (is_null($rules)) return ['required', 'file', 'max:12288'];
 
-            return explode('|', $rules);
-        }
+        if (is_array($rules)) return $rules;
 
-        return ['required', 'file', 'max:12288'];
+        return explode('|', $rules);
     }
 }

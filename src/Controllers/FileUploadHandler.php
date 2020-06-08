@@ -2,11 +2,10 @@
 
 namespace Livewire\Controllers;
 
-use Livewire\FileMetaData;
-use Illuminate\Support\Str;
+
+use Livewire\TemporaryUploadedFile;
 use Livewire\FileUploadConfiguration;
 use Illuminate\Support\Facades\Validator;
-use Livewire\TemporaryUploadedFile;
 
 class FileUploadHandler
 {
