@@ -127,12 +127,14 @@ abstract class Component
             '_instance' => $this,
         ] + $this->getPublicPropertiesDefinedBySubClass());
 
+        Livewire::dispatch('view:rendering', $view);
+
         $output = $view->render();
 
         app('view')->share('errors', $previouslySharedErrors);
         app('view')->share('_instance', $previouslySharedInstance);
 
-        Livewire::dispatch('view:render', $view);
+        Livewire::dispatch('view:rendered', $view);
 
         $engine->endLivewireRendering();
 

@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Testing\TestResponse as Laravel7TestResponse;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\View\View;
 use Livewire\Commands\{
     CpCommand,
     MvCommand,
@@ -187,6 +188,18 @@ class LivewireServiceProvider extends ServiceProvider
     {
         Route::mixin(new RouteMacros);
         Router::mixin(new RouterMacros);
+
+        View::macro('extends', function ($view, $params = []) {
+            $this->livewireExtends = ['view' => $view, 'params' => $params];
+
+            return $this;
+        });
+
+        View::macro('section', function ($name) {
+            $this->livewireSection = $name;
+
+            return $this;
+        });
     }
 
     protected function registerTagCompiler()

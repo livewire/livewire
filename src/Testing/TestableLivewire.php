@@ -26,7 +26,7 @@ class TestableLivewire
 
     public function __construct($name, $params = [])
     {
-        Livewire::listen('view:render', function ($view) {
+        Livewire::listen('view:rendered', function ($view) {
             $this->lastRenderedView = $view;
         });
 
@@ -34,7 +34,7 @@ class TestableLivewire
             $this->lastValidator = $validator;
         });
 
-        Livewire::listen('mounted', function ($response) {
+        Livewire::listen('rendered', function ($response) {
             $this->rawMountedResponse = $response;
         });
 

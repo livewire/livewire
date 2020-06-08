@@ -108,6 +108,8 @@ class LivewireManager
 
         $instance->mount(...$resolvedParameters);
 
+        $this->dispatch('mounted', $instance);
+
         $dom = $instance->output();
 
         $response = new Fluent([
@@ -122,7 +124,7 @@ class LivewireManager
             'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
         ], $instance);
 
-        $this->dispatch('mounted', $response);
+        $this->dispatch('rendered', $response);
 
         return $response;
     }
