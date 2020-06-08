@@ -75,7 +75,7 @@ export default function () {
         state.livewire.updates[component.id] = dataDestinedForQueryString
 
         if (component.useReplaceState === true) {
-            component.useReplaceState = false
+            component.useReplaceState = false;
             history.replaceState(state, "", [window.location.pathname, stringifiedQueryString].filter(Boolean).join('?'))
         } else {
             history.pushState(state, "", [window.location.pathname, stringifiedQueryString].filter(Boolean).join('?'))
