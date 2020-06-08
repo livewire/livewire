@@ -32,7 +32,7 @@ class FileUploadHandler
     public function validateAndStore($files, $disk)
     {
         Validator::make(['files' => $files], [
-            'files.*' => 'required|'.FileUploadConfiguration::rules()
+            'files.*' => FileUploadConfiguration::rules()
         ])->validate();
 
         $fileHashPaths = collect($files)->map(function ($file) use ($disk) {
