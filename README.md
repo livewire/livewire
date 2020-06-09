@@ -26,7 +26,6 @@ Livewire uses semantic versioning and will use the following release schedule st
 * Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
 * Remove `wire:poll` setIntervals an element is removed, or when the attribute is removed. #563
 * Implement `wire:model.passive`
-* Add `wire:eval` for latent script tag evaluation
 * Add `wire:append` for appending DOM changes rather than replacing them
 * Allow traits to hook into all lifecycle hooks
 
