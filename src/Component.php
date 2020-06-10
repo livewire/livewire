@@ -18,6 +18,7 @@ abstract class Component
         ComponentConcerns\HandlesActions,
         ComponentConcerns\ReceivesEvents,
         ComponentConcerns\PerformsRedirects,
+        ComponentConcerns\WatchesAttributes,
         ComponentConcerns\DetectsDirtyProperties,
         ComponentConcerns\TracksRenderedChildren,
         ComponentConcerns\InteractsWithProperties;

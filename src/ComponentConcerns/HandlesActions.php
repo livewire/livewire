@@ -60,6 +60,8 @@ trait HandlesActions
 
         $this->updated($name, $value);
 
+        $this->watch($name, $value);
+
         if (method_exists($this, $afterMethod)) {
             $this->{$afterMethod}($value, $keyAfterFirstDot);
         }
