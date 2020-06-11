@@ -3,7 +3,9 @@
 namespace Tests;
 
 use Illuminate\Contracts\Routing\UrlRoutable;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -61,6 +63,10 @@ class ComponentRouteBindingsTest extends TestCase
     /** @test */
     public function mount_method_receives_implicit_route_model_relationship_bindings()
     {
+        if (version_compare(Application::VERSION, '7.0', '<')) {
+            $this->markTestSkipped('scoping of implicit route binding is unavailable prior to Laravel 7.0');
+        }
+
         Livewire::component('foo', ComponentWithModelRelationshipBindings::class);
 
         Route::livewire('/test/{parent}/{child:id}', 'foo');
