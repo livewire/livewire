@@ -1,0 +1,194 @@
+<?php
+
+namespace Tests;
+
+use Illuminate\Contracts\Routing\UrlRoutable;
+use Illuminate\Support\Facades\Route;
+use Livewire\Component;
+use Livewire\Livewire;
+
+class ComponentRouteBindingsTest extends TestCase
+{
+    /** @test */
+    public function component_can_be_registered_as_route_target_without_side_effects()
+    {
+        Livewire::component('foo', ComponentWithoutBindings::class);
+
+        Route::livewire('/foo', 'foo');
+
+        $this->withoutExceptionHandling()
+            ->get('/foo')
+            ->assertSeeText('param-default');
+
+        // check for side effects, which would appear with subsequent requests
+        $this->withoutExceptionHandling()
+            ->get('/foo')
+            ->assertSeeText('param-default');
+        Livewire::test(ComponentWithoutBindings::class)
+            ->assertSeeText('param-default');
+    }
+
+    /** @test */
+    public function mount_method_receives_explicit_bindings_registered_for_route()
+    {
+        Livewire::component('foo', ComponentWithClassBindings::class);
+
+        Route::bind('foo', function ($value) {
+            return new ClassToBeBound($value);
+        });
+
+        Route::livewire('/test/{foo}', 'foo');
+
+        $this->withoutExceptionHandling()
+            ->get('/test/from-injection')
+            ->assertSeeText('from-injection')
+            ->assertSeeText('param-default');
+    }
+
+    /** @test */
+    public function mount_method_receives_implicit_route_model_bindings()
+    {
+        Livewire::component('foo', ComponentWithModelBindings::class);
+
+        Route::livewire('/test/{foo}', 'foo');
+
+        $this->withoutExceptionHandling()
+            ->get('/test/from-injection')
+            ->assertSeeText('from-injection')
+            ->assertSeeText('param-default');
+    }
+
+    /** @test */
+    public function mount_method_receives_implicit_route_model_relationship_bindings()
+    {
+        Livewire::component('foo', ComponentWithModelRelationshipBindings::class);
+
+        Route::livewire('/test/{parent}/{child:id}', 'foo');
+
+        $this->withoutExceptionHandling()
+            ->get('/test/moms/first-born')
+            ->assertSeeText('moms')
+            ->assertSeeText('child')
+            ->assertSeeText('first-born')
+            ->assertSeeText('param-default');
+    }
+
+    /** @test */
+    public function component_without_bindings_can_mounted_for_route_with_parameters()
+    {
+        Livewire::component('foo', ComponentWithoutBindings::class);
+
+        Route::livewire('/test/{foo}', 'foo');
+
+        $this->withoutExceptionHandling()
+            ->get('/test/foo')
+            ->assertDontSeeText('foo')
+            ->assertSeeText('param-default');
+    }
+
+    /** @test */
+    public function mount_method_can_simulate_route_bindings()
+    {
+        Livewire::test(ComponentWithModelBindings::class, [
+            'foo' => (new ModelToBeBound('from-injection'))
+        ])->assertSeeText('from-injection')->assertSeeText('param-default');
+
+        Livewire::test(ComponentWithClassBindings::class, [
+            'foo' => (new ClassToBeBound('from-injection'))
+        ])->assertSeeText('from-injection')->assertSeeText('param-default');
+
+        Livewire::test(ComponentWithModelRelationshipBindings::class, [
+            'parent' => (new ModelToBeBound('moms')),
+            'child' => (new ChildModel('first-born')),
+        ])->assertSeeText('moms')->assertSeeText('first-born');
+    }
+}
+
+class ClassToBeBound
+{
+    public function __construct($value = 'class-default')
+    {
+        $this->value = $value;
+    }
+}
+
+class ModelToBeBound implements UrlRoutable
+{
+    public function __construct($value = 'model-default')
+    {
+        $this->value = $value;
+    }
+    public function getRouteKey() {}
+    public function getRouteKeyName() {}
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $this->value = $value;
+        return $this;
+    }
+    public function resolveChildRouteBinding($childType, $value, $field)
+    {
+        return new ChildModel($childType.':'.$value);
+    }
+}
+
+class ChildModel extends ModelToBeBound {}
+
+class ComponentWithModelBindings extends Component
+{
+    public $name;
+
+    public function mount(ModelToBeBound $foo, $param = 'param-default')
+    {
+        $this->name = $foo->value.':'.$param;
+    }
+
+    public function render()
+    {
+        return app('view')->make('show-name-with-this');
+    }
+}
+
+class ComponentWithClassBindings extends Component
+{
+    public $name;
+
+    public function mount(ClassToBeBound $foo, $param = 'param-default')
+    {
+        $this->name = $foo->value.':'.$param;
+    }
+
+    public function render()
+    {
+        return app('view')->make('show-name-with-this');
+    }
+}
+
+class ComponentWithModelRelationshipBindings extends Component
+{
+    public $name;
+
+    public function mount(ModelToBeBound $parent, $param = 'param-default', ChildModel $child)
+    {
+        $this->name = $parent->value.':'.$param.':'.$child->value;
+    }
+
+    public function render()
+    {
+        return app('view')->make('show-name-with-this');
+    }
+}
+
+class ComponentWithoutBindings extends Component
+{
+    public $name;
+
+    public function mount($param = 'param-default')
+    {
+        $this->name = $param;
+    }
+
+    public function render()
+    {
+        return app('view')->make('show-name-with-this');
+    }
+}
