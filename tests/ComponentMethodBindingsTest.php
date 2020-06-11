@@ -9,20 +9,6 @@ use Illuminate\Support\Facades\Route;
 class ComponentMethodBindingsTest extends TestCase
 {
     /** @test */
-    public function mount_method_receives_route_model_bindings()
-    {
-        Livewire::component('foo', ComponentWithBindings::class);
-
-        Route::bind('foo', function ($value) {
-            return new ModelToBeBoundStub($value);
-        });
-
-        Route::livewire('/test/{foo}', 'foo');
-
-        $this->withoutExceptionHandling()->get('/test/from-injection')->assertSee('from-injection');
-    }
-
-    /** @test */
     public function mount_method_receives_bindings()
     {
         Livewire::test(ComponentWithBindings::class)
