@@ -13,11 +13,10 @@ use Livewire\LivewireViewCompilerEngine;
 use Livewire\Controllers\FileUploadHandler;
 use Livewire\Controllers\FilePreviewHandler;
 use Livewire\Controllers\HttpConnectionHandler;
-use Illuminate\Foundation\Testing\TestResponse;
 use Livewire\Controllers\LivewireJavaScriptAssets;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
-use Illuminate\Testing\TestResponse as Laravel7TestResponse;
+use Illuminate\Testing\TestResponse;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Livewire\Commands\{
     CpCommand,
@@ -174,13 +173,7 @@ class LivewireServiceProvider extends ServiceProvider
             return $this;
         };
 
-        if (class_exists(Laravel7TestResponse::class)) {
-            // TestResponse was moved from illuminate/foundation
-            // and moved to illuminate/testing for Laravel 7.
-            Laravel7TestResponse::macro('assertSeeLivewire', $macro);
-        } else {
-            TestResponse::macro('assertSeeLivewire', $macro);
-        }
+        TestResponse::macro('assertSeeLivewire', $macro);
     }
 
     protected function registerRouteMacros()

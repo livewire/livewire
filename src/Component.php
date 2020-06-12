@@ -97,7 +97,7 @@ abstract class Component
 
         $view = $this->render();
 
-        if (is_string($view) && Livewire::isLaravel7()) {
+        if (is_string($view)) {
             $view = app('view')->make((new CreateBladeViewFromString)($view));
         }
 
