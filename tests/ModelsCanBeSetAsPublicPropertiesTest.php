@@ -78,6 +78,25 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
             ->assertSee('foo')
             ->assertSee('bar');
     }
+
+    /** @test */
+    public function a_sorted_eloquent_model_collection_can_be_set_as_a_public_property()
+    {
+        ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
+        ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
+
+        $models = ModelForSerialization::all()->sortKeysDesc();
+
+        $component = Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models])
+            ->assertSee('foo')
+            ->assertSee('bar');
+
+        $component->payload['data']['models']['id'] = [0 => 2,  1 => 1];
+
+        $component ->call('refresh')
+            ->assertSee('foo')
+            ->assertSee('bar');
+    }
 }
 
 class ModelForSerialization extends Model

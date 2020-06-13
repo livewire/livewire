@@ -8,6 +8,7 @@ use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
 abstract class Component
@@ -144,6 +145,9 @@ abstract class Component
         foreach ($this->getPublicPropertiesDefinedBySubClass() as $key => $value) {
             if (is_array($value)) {
                 $this->$key = $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
+            }
+            if(is_object($value) && is_a($value,Collection::class)){
+                $this->$key = $value -> values();
             }
         }
     }
