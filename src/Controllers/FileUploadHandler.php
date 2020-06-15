@@ -2,11 +2,10 @@
 
 namespace Livewire\Controllers;
 
-use Livewire\FileMetaData;
-use Illuminate\Support\Str;
+
+use Livewire\TemporaryUploadedFile;
 use Livewire\FileUploadConfiguration;
 use Illuminate\Support\Facades\Validator;
-use Livewire\TemporaryUploadedFile;
 
 class FileUploadHandler
 {
@@ -32,7 +31,7 @@ class FileUploadHandler
     public function validateAndStore($files, $disk)
     {
         Validator::make(['files' => $files], [
-            'files.*' => 'required|'.FileUploadConfiguration::rules()
+            'files.*' => FileUploadConfiguration::rules()
         ])->validate();
 
         $fileHashPaths = collect($files)->map(function ($file) use ($disk) {

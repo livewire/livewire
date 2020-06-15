@@ -68,7 +68,11 @@ class TemporaryUploadedFile extends UploadedFile
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
 
-        $supportedPreviewTypes = ['jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
+        $supportedPreviewTypes = [
+            'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
+            'mp4', 'mov', 'avi', 'wmv',
+            'mp3', 'wav', 'm4a', 'wma',
+        ];
 
         if (! in_array($this->guessExtension(), $supportedPreviewTypes)) {
             // This will throw an error because it's not used with S3.
@@ -95,6 +99,11 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->storage->get($this->path);
     }
 
+    public function delete()
+    {
+        return $this->storage->delete($this->path);
+    }
+
     public function storeAs($path, $name, $options = [])
     {
         $options = $this->parseOptions($options);
@@ -104,12 +113,14 @@ class TemporaryUploadedFile extends UploadedFile
         $newPath = trim($path.'/'.$name, '/');
 
         if ($disk === $this->disk) {
-            return $this->storage->copy($this->path, $newPath);
+            $this->storage->copy($this->path, $newPath);
+        } else {
+            Storage::disk($disk)->put(
+                $newPath, $this->storage->readStream($this->path), $options
+            );
         }
 
-        return Storage::disk($disk)->put(
-            $newPath, $this->storage->readStream($this->path), $options
-        );
+        return $newPath;
     }
 
     public static function generateHashNameWithOriginalNameEmbedded($file)
@@ -133,6 +144,8 @@ class TemporaryUploadedFile extends UploadedFile
 
     public static function canUnserialize($subject)
     {
+        if (! is_string($subject)) return false;
+
         return Str::startsWith($subject, 'livewire-file:')
             || Str::startsWith($subject, 'livewire-files:');
     }

@@ -410,6 +410,7 @@ export default class Component {
         // If the enter key submits a form or something, the submission
         // will happen BEFORE the model input finishes syncing because
         // of the debounce. This makes sure to clear anything in the debounce queue.
+
         if (this.modelDebounceCallbacks) {
             this.modelDebounceCallbacks.forEach(callbackRegister => {
                 callbackRegister.callback()
@@ -434,5 +435,9 @@ export default class Component {
 
     uploadMultiple(name, files, finishCallback = () => {}, errorCallback = () => {}, progressCallback = () => {}) {
         this.uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback)
+    }
+
+    removeUpload(name, tmpFilename, finishCallback = () => {}, errorCallback = () => {}) {
+        this.uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback)
     }
 }
