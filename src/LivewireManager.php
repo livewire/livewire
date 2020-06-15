@@ -13,21 +13,13 @@ use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
 class LivewireManager
 {
-    use DependencyResolverTrait,
-        RegistersHydrationMiddleware;
+    use RegistersHydrationMiddleware;
 
-    protected $container;
     protected $componentAliases = [];
     protected $customComponentResolver;
     protected $listeners = [];
 
     public static $isLivewireRequestTestingOverride;
-
-    public function __construct()
-    {
-        // This property only exists to make the "DependencyResolverTrait" work.
-        $this->container = app();
-    }
 
     public function component($alias, $viewClass)
     {
@@ -100,13 +92,7 @@ class LivewireManager
 
         $this->initialHydrate($instance, []);
 
-        $resolvedParameters = $this->resolveClassMethodDependencies(
-            $params, $instance, 'mount'
-        );
-
-        $this->ensureComponentHasMountMethod($instance, $resolvedParameters);
-
-        $instance->mount(...$resolvedParameters);
+        $this->performMount($instance, $params);
 
         $dom = $instance->output();
 
@@ -328,15 +314,14 @@ HTML;
         return Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=');
     }
 
-    private function ensureComponentHasMountMethod($instance, $resolvedParameters)
+    private function performMount($instance, $params)
     {
-        if (count($resolvedParameters) === 0) return;
+        if (! method_exists($instance, 'mount') && count($params) > 0) {
+            throw new MountMethodMissingException($instance->getName());
+        }
 
-        if (is_numeric(key($resolvedParameters))) return;
+        if (! method_exists($instance, 'mount')) return;    // dev didn't define mount for component
 
-        throw_unless(
-            method_exists($instance, 'mount'),
-            new MountMethodMissingException($instance->getName())
-        );
+        ImplicitlyBoundMethod::call(app(), [$instance, 'mount'], $params);
     }
 }
