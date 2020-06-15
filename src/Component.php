@@ -146,8 +146,9 @@ abstract class Component
             if (is_array($value)) {
                 $this->$key = $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
             }
-            if(is_object($value) && is_a($value,Collection::class)){
-                $this->$key = $value -> values();
+            
+            if (is_object($value) && is_a($value, Collection::class)) {
+                $this->$key = $value->values();
             }
         }
     }
