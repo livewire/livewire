@@ -87,15 +87,13 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
 
         $models = ModelForSerialization::all()->sortKeysDesc();
 
-        $component = Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models])
-            ->assertSee('foo')
-            ->assertSee('bar');
+        $component = Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models]);
 
-        $component->payload['data']['models']['id'] = [0 => 2,  1 => 1];
+        $this->assertEquals([2, 1], $component->payload['data']['models']['id']);
 
-        $component ->call('refresh')
-            ->assertSee('foo')
-            ->assertSee('bar');
+        $component ->call('refresh');
+
+        $this->assertEquals([2, 1], $component->payload['data']['models']['id']);
     }
 }
 
