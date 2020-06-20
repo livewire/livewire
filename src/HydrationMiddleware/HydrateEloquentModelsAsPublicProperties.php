@@ -3,6 +3,7 @@
 namespace Livewire\HydrationMiddleware;
 
 use Illuminate\Contracts\Database\ModelIdentifier;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 
 class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
@@ -20,6 +21,18 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                 $unHydratedInstance->$property = (new static)->getRestoredPropertyValue(
                     new ModelIdentifier($value['class'], $value['id'], $value['relations'], $value['connection'])
                 );
+
+                // only needed in Laravel 5.6 and 5.7
+                if($unHydratedInstance -> $property instanceof EloquentCollection){
+                    $collection = $unHydratedInstance -> $property ->keyBy->getKey();
+                    $collectionClass = get_class($collection);
+
+                    $unHydratedInstance -> $property =  new $collectionClass(
+                        collect($value['id'])->map(function ($id) use ($collection) {
+                            return $collection[$id] ?? null;
+                        })->filter()
+                    );
+                }
             }
         }
     }
