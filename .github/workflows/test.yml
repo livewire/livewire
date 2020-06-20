@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         php: [7.1, 7.2, 7.3, 7.4]
         laravel: [5.6.*, 5.7.*, 5.8.*, 6.*, 7.*]
