@@ -63,17 +63,17 @@ return [
     |--------------------------------------------------------------------------
     |
     | Livewire handles file uploads by storing uploads in a temporary directory
-    | before the file is validated and stored permanently. All file uploads
+    | before the file is validated and stored permentantly. All file uploads
     | are directed to a global endpoint for temporary storage. The config
     | items below are used for customizing the way the endpoint works.
     |
     */
 
     'temporary_file_upload' => [
-        'disk' => null,        // Example: 'local', 's3'              Default: 'default'
-        'rules' => null,       // Example: ['file', 'mimes:png,jpg']  Default: ['required', 'file', 'max:12288'] (12MB)
-        'directory' => null,   // Example: 'tmp'                      Default  'livewire-tmp'
-        'middleware' => null,  // Example: 'throttle:5,1'             Default: 'throttle:60,1'
+        'disk' => null,        // Example: 'local', 's3'         Default: 'default'
+        'rules' => null,       // Example: 'file|mimes:png,jpg'  Default: 'file|max:12288' (12MB)
+        'directory' => null,   // Example: 'tmp'                 Default  'livewire-tmp'
+        'middleware' => null,  // Example: 'throttle:5,1'        Default: 'throttle:60,1'
     ],
 
     /*

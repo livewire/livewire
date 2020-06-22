@@ -18,8 +18,6 @@ export default function () {
         }
 
         let eventHandler = e => {
-            if (e.target.files.length === 0) return
-
             start()
 
             if (e.target.multiple) {

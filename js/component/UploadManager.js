@@ -1,12 +1,10 @@
 import { setUploadLoading, unsetUploadLoading } from './LoadingStates'
 import { getCsrfToken } from '@/util'
-import MessageBag from '../MessageBag'
 
 class UploadManager {
     constructor(component) {
         this.component = component
-        this.uploadBag = new MessageBag
-        this.removeBag = new MessageBag
+        this.uploadBag = {}
     }
 
     registerListeners() {
@@ -25,9 +23,16 @@ class UploadManager {
             this.handleS3PreSignedUrl(name, payload)
         })
 
-        this.component.on('upload:finished', (name, tmpFilenames) => this.markUploadFinished(name, tmpFilenames))
+        this.component.on('upload:finished', (name) => this.markUploadFinished(name))
         this.component.on('upload:errored', (name) => this.markUploadErrored(name))
-        this.component.on('upload:removed', (name, tmpFilename) => this.removeBag.shift(name).finishCallback(tmpFilename))
+    }
+
+    find(name) {
+        return this.uploadBag[name]
+    }
+
+    clear(name) {
+        delete this.uploadBag[name]
     }
 
     upload(name, file, finishCallback, errorCallback, progressCallback) {
@@ -42,7 +47,7 @@ class UploadManager {
 
     uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
         this.setUpload(name, {
-            files: Array.from(files),
+            files,
             multiple: true,
             finishCallback,
             errorCallback,
@@ -50,25 +55,23 @@ class UploadManager {
         })
     }
 
-    removeUpload(name, tmpFilename, finishCallback) {
-        this.removeBag.push(name, {
-            tmpFilename, finishCallback
-        })
-
-        this.component.call('removeUpload', name, tmpFilename);
-    }
-
     setUpload(name, uploadObject) {
-        this.uploadBag.add(name, uploadObject)
+        this.uploadBag[name] = uploadObject
 
-        if (this.uploadBag.get(name).length === 1) {
-            this.startUpload(name, uploadObject)
+        let conformToFileInfoObject = file => {
+            return { name: file.name, size: file.size, type: file.type }
         }
+
+        let fileInfos = uploadObject.files.map(conformToFileInfoObject)
+
+        this.component.call('startUpload', name, fileInfos, uploadObject.multiple);
+
+        this.markUploadStarted(name)
     }
 
     handleSignedUrl(name, url) {
         let formData = new FormData()
-        Array.from(this.uploadBag.first(name).files).forEach(file => formData.append('files[]', file))
+        Array.from(this.find(name).files).forEach(file => formData.append('files[]', file))
 
         let headers = {
             'X-CSRF-TOKEN': getCsrfToken(),
@@ -81,7 +84,7 @@ class UploadManager {
     }
 
     handleS3PreSignedUrl(name, payload) {
-        let formData = this.uploadBag.first(name).files[0]
+        let formData = this.find(name).files[0]
 
         let headers = payload.headers
         if ('Host' in headers) delete headers.Host
@@ -100,18 +103,13 @@ class UploadManager {
             request.setRequestHeader(key, value)
         })
 
-        request.upload.addEventListener('progress', e => {
-            e.detail = {}
-            e.detail.progress = Math.round((e.loaded * 100) / e.total)
-
-            this.uploadBag.first(name).progressCallback(e)
-        })
+        request.upload.addEventListener('progress', this.find(name).progressCallback)
 
         request.addEventListener('load', () => {
             if ((request.status+'')[0] === '2') {
                 let paths = retrievePaths(request.response && JSON.parse(request.response))
 
-                this.component.call('finishUpload', name, paths, this.uploadBag.first(name).multiple)
+                this.component.call('finishUpload', name, paths, this.find(name).multiple)
 
                 return
             }
@@ -122,37 +120,28 @@ class UploadManager {
                 errors = request.response
             }
 
-            this.component.call('uploadErrored', name, errors, this.uploadBag.first(name).multiple)
+            this.component.call('uploadErrored', name, errors, this.find(name).multiple)
         })
 
         request.send(formData)
     }
 
-    startUpload(name, uploadObject) {
-        let fileInfos = uploadObject.files.map(file => {
-            return { name: file.name, size: file.size, type: file.type }
-        })
-
-        this.component.call('startUpload', name, fileInfos, uploadObject.multiple);
-
+    markUploadStarted(name) {
         setUploadLoading(this.component, name)
     }
 
-    markUploadFinished(name, tmpFilenames) {
+    markUploadFinished(name) {
         unsetUploadLoading(this.component)
 
-        let uploadObject = this.uploadBag.shift(name)
-        uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0])
-
-        if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
+        this.find(name).finishCallback()
+        this.clear(name)
     }
 
     markUploadErrored(name) {
         unsetUploadLoading(this.component)
 
-        this.uploadBag.shift(name).errorCallback()
-
-        if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
+        this.find(name).errorCallback()
+        this.clear(name)
     }
 }
 

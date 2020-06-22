@@ -54,12 +54,6 @@ class FileUploadConfiguration
 
     public static function rules()
     {
-        $rules = config('livewire.temporary_file_upload.rules');
-
-        if (is_null($rules)) return ['required', 'file', 'max:12288'];
-
-        if (is_array($rules)) return $rules;
-
-        return explode('|', $rules);
+        return config('livewire.temporary_file_upload.rules') ?: 'file|max:12288';
     }
 }
