@@ -46,6 +46,10 @@ class Livewire {
         this.onLoadCallback = callback
     }
 
+    onError(callback) {
+        this.components.onErrorCallback = callback
+    }
+
     emit(event, ...params) {
         this.components.emit(event, ...params)
     }
