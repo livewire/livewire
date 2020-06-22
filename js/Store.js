@@ -10,6 +10,7 @@ const store = {
     livewireIsOffline: false,
     hooks: HookManager,
     directives: DirectiveManager,
+    onErrorCallback: () => {},
 
     components() {
         return Object.keys(this.componentsById).map(key => {
@@ -126,6 +127,10 @@ const store = {
         component.tearDown()
         // Remove the component from the store.
         delete this.componentsById[component.id]
+    },
+
+    onError(callback) {
+        this.onErrorCallback = callback
     }
 }
 
