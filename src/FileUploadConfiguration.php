@@ -37,7 +37,7 @@ class FileUploadConfiguration
 
     public static function isUsingS3()
     {
-        $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filsystems.default');
+        $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
 
         return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
     }
