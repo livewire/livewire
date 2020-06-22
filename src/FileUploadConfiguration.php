@@ -37,14 +37,20 @@ class FileUploadConfiguration
 
     public static function isUsingS3()
     {
-        $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filsystems.default');
+        $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
 
         return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
     }
 
-    public static function directory($suffix = '')
+    public static function directory($prefixWithRoot = true)
     {
-        return (config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp').$suffix;
+        $prefix = '';
+
+        if ($prefixWithRoot && static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig())) {
+            $prefix = static::diskConfig()['root'].'/';
+        }
+
+        return $prefix.(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
     }
 
     public static function middleware()

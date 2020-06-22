@@ -115,7 +115,7 @@ trait MakesCallsToComponent
             return Str::replaceFirst('.', "-size:{$file->getSize()}.", $fileHash);
         })->toArray();
 
-        $directory = FileUploadConfiguration::directory('/');
+        $directory = FileUploadConfiguration::directory().'/';
 
         collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage, $directory) {
             $storage->move('/'.$directory.$fileHash, '/'.$directory.$newFileHash);
