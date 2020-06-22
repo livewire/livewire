@@ -452,6 +452,26 @@ class FileUploadsTest extends TestCase
 
         $this->assertEquals($file->get(), $rawFileContents);
     }
+
+    /** @test */
+    public function removing_first_item_from_array_of_temporary_uploaded_files_serializes_correctly()
+    {
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
+        $file3 = UploadedFile::fake()->image('avatar3.jpg');
+        $file4 = UploadedFile::fake()->image('avatar4.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+                             ->set('photos', [$file1, $file2, $file3, $file4]);
+
+        $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
+
+        $component->call('removePhoto', 3);
+        $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
+
+        $component->call('removePhoto', 0);
+        $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
+    }
 }
 
 class DummyMiddleware
@@ -536,6 +556,10 @@ class FileUploadComponent extends Component
         $this->validate([
             'photo' => Rule::dimensions()->maxWidth(100)->maxHeight(100),
         ]);
+    }
+
+    public function removePhoto($key) {
+        unset($this->photos[$key]);
     }
 
     public function render() { return app('view')->make('null-view'); }
