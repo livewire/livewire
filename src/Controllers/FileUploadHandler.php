@@ -43,7 +43,7 @@ class FileUploadHandler
             ]);
         });
 
-        // Strip out the livewire-tmp directory from the paths.
+        // Strip out the temporary upload directory from the paths.
         return $fileHashPaths->map(function ($path) { return str_replace(FileUploadConfiguration::path('/'), '', $path); });
     }
 }
