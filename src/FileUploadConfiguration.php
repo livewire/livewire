@@ -50,7 +50,7 @@ class FileUploadConfiguration
 
     protected static function s3Root()
     {
-        return static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig()) && Util::normalizeRelativePath(static::diskConfig()['root']) ? Util::normalizeRelativePath(static::diskConfig()['root']) : '';
+        return static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig()) ? Util::normalizeRelativePath(static::diskConfig()['root']) : '';
     }
 
     public static function path($path = '', $withS3Root = true)
