@@ -158,6 +158,10 @@ export default class Component {
         this.checksum = response.checksum
         this.children = response.children
         this.errorBag = response.errorBag
+        
+        // Store responseReceived must be called before we redirect to prevent
+        // loading from being stuck.
+        store.callHook('responseReceived', this, response)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.redirectTo) {
@@ -165,8 +169,6 @@ export default class Component {
 
             return
         }
-
-        store.callHook('responseReceived', this, response)
 
         this.replaceDom(response.dom, response.dirtyInputs)
 
