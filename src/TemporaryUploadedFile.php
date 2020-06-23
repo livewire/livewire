@@ -7,7 +7,6 @@ use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
-use League\Flysystem\Util;
 
 class TemporaryUploadedFile extends UploadedFile
 {
@@ -18,8 +17,7 @@ class TemporaryUploadedFile extends UploadedFile
     {
         $this->disk = $disk;
         $this->storage = Storage::disk($this->disk);
-        // Strip out any directory seperators.
-        $this->path = FileUploadConfiguration::directory().Util::normalizeRelativePath($path);
+        $this->path = FileUploadConfiguration::path($path, false);
 
         $tmpFile = tmpfile();
 

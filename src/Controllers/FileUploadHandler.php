@@ -37,12 +37,12 @@ class FileUploadHandler
         $fileHashPaths = collect($files)->map(function ($file) use ($disk) {
             $filename = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
 
-            return $file->storeAs('/'. rtrim(FileUploadConfiguration::directory(), '/'), $filename, [
+            return $file->storeAs('/'.FileUploadConfiguration::path(), $filename, [
                 'disk' => $disk
             ]);
         });
 
-        // Strip out the livewire-tmp directory from the paths.
-        return $fileHashPaths->map(function ($path) { return str_replace(FileUploadConfiguration::directory(), '', $path); });
+        // Strip out the temporary upload directory from the paths.
+        return $fileHashPaths->map(function ($path) { return str_replace(FileUploadConfiguration::path('/'), '', $path); });
     }
 }
