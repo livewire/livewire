@@ -45,7 +45,7 @@ class FileUploadConfiguration
 
     public static function path($path = '', $withS3Root = true)
     {
-        $prefix = $withS3Root && static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig()) ? static::diskConfig()['root'].'/' : '';
+        $prefix = $withS3Root && static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig()) && Util::normalizeRelativePath(static::diskConfig()['root']) ? Util::normalizeRelativePath(static::diskConfig()['root']).'/' : '';
 
         $directory = Util::normalizeRelativePath(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
 
