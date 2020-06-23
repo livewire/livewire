@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Util;
 
 class FileUploadConfiguration
 {
@@ -42,17 +43,15 @@ class FileUploadConfiguration
         return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
     }
 
-    public static function directory($prefixWithRoot = true)
+    public static function path($path = '', $withS3Root = true)
     {
-        $prefix = '';
+        $prefix = $withS3Root && static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig()) ? static::diskConfig()['root'].'/' : '';
 
-        if ($prefixWithRoot && static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig())) {
-            $prefix = static::diskConfig()['root'].'/';
-        }
+        $directory = Util::normalizeRelativePath(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
 
-        $directory = ltrim(rtrim(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp', '/'), '/');
+        $path = ($path ? '/' : '').Util::normalizeRelativePath($path);
 
-        return $prefix.$directory;
+        return $prefix.$directory.$path;
     }
 
     public static function middleware()

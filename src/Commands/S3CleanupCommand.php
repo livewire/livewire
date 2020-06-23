@@ -21,7 +21,7 @@ class S3CleanupCommand extends Command
 
         $diskConfig = FileUploadConfiguration::diskConfig();
         $bucket = $diskConfig['bucket'];
-        $prefix = FileUploadConfiguration::directory();
+        $prefix = FileUploadConfiguration::path();
         $days = 1;
 
         $client = $this->storageClient($diskConfig);
