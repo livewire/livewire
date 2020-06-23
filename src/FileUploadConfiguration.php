@@ -43,15 +43,23 @@ class FileUploadConfiguration
         return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
     }
 
+    protected static function directory()
+    {
+        return Util::normalizeRelativePath(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
+    }
+
+    protected static function s3Root()
+    {
+        return static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig()) && Util::normalizeRelativePath(static::diskConfig()['root']) ? Util::normalizeRelativePath(static::diskConfig()['root']) : '';
+    }
+
     public static function path($path = '', $withS3Root = true)
     {
-        $prefix = $withS3Root && static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig()) && Util::normalizeRelativePath(static::diskConfig()['root']) ? Util::normalizeRelativePath(static::diskConfig()['root']).'/' : '';
+        $prefix = $withS3Root ? static::s3Root() : '';
+        $directory = static::directory();
+        $path = Util::normalizeRelativePath($path);
 
-        $directory = Util::normalizeRelativePath(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
-
-        $path = ($path ? '/' : '').Util::normalizeRelativePath($path);
-
-        return $prefix.$directory.$path;
+        return $prefix.($prefix ? '/' : '').$directory.($path ? '/' : '').$path;
     }
 
     public static function middleware()
