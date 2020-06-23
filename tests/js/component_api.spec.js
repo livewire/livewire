@@ -9,6 +9,14 @@ test('get component data item value', async () => {
     expect(component.get('foo')).toEqual('bar')
 })
 
+test('get nested component data item value', async () => {
+    mountWithData('<span></span>', { foo: { bar: 'baz' } })
+
+    const component = window.livewire.find(123)
+
+    expect(component.get('foo.bar')).toEqual('baz')
+})
+
 test('set component data item value', async () => {
     var payload
     mount('<span></span>', i => payload = i)
