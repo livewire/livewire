@@ -50,7 +50,9 @@ class FileUploadConfiguration
             $prefix = static::diskConfig()['root'].'/';
         }
 
-        return $prefix.(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
+        $directory = ltrim(rtrim(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp', '/'), '/');
+
+        return $prefix.$directory;
     }
 
     public static function middleware()
