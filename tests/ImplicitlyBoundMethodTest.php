@@ -5,13 +5,15 @@ namespace Tests;
 use Closure;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\ImplicitlyBoundMethod;
 use ReflectionException;
 use stdClass;
 
 class ImplicitlyBoundMethodTest extends TestCase
 {
-    public function testSequentialBinding()
+    /** @test */
+    public function sequentially_bind()
     {
         $stub = new ContainerTestCallStub;
         $result = ImplicitlyBoundMethodTester::testSequentialSubstitution([$stub, 'unresolvable'], ['foo', 'bar']);
@@ -55,7 +57,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertEqualsCanonicalizing([2=>'bar', 3=>'more', 'model'=>'model', 'bar'=>'foo'], $result);
     }
 
-    public function testCallWithSequentialParameters()
+    /** @test */
+    public function call_with_sequential_parameters()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, ContainerTestCallStub::class.'@inject', ['foo']);
@@ -76,7 +79,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame(['foo', 'bar'], $result);
     }
 
-    public function testCallWithImplicitModelBinding()
+    /** @test */
+    public function call_with_implicit_model_binding()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, ContainerTestCallStub::class.'@implicit', ['foo', 'injected', 'bar']);
@@ -126,7 +130,18 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame(['taylor'], $result[1]->value);
     }
 
-    public function testCallWithInjectedDependencyAndImplicitModelBinding()
+    /** @test */
+    public function bind_model_with_null_return()
+    {
+        $this->expectException(ModelNotFoundException::class);
+        $this->expectExceptionMessage('No query results for model [Tests\NullContainerTestModel]');
+
+        $container = new Container;
+        $result = ImplicitlyBoundMethod::call($container, ContainerTestCallStub::class.'@nullImplicit', ['foo', null, 'bar']);
+    }
+
+    /** @test */
+    public function call_with_injected_dependency_and_implicity_model_binding()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, ContainerTestCallStub::class.'@injectAndImplicit', ['injected', 'bar']);
@@ -137,7 +152,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame(3, count($result));
     }
 
-    public function testCallWithInjecteDependencyNotFirst()
+    /** @test */
+    public function call_with_injected_dependency_not_first()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, 'Tests\containerTestInjectSecond', ['foo', 'bar']);
@@ -146,7 +162,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame('bar', $result[2]);
     }
 
-    public function testCallImplicitWithGlobalMethodName()
+    /** @test */
+    public function call_implicitly_with_global_method_name()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, 'Tests\containerTestImplicit');
@@ -154,7 +171,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame('taylor', $result[1]);
     }
 
-    public function testCallImplicitWithStaticMethodNameString()
+    /** @test */
+    public function call_implicitly_with_static_method_name_string()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, 'Tests\ContainerStaticMethodStub::implicit');
@@ -162,7 +180,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame('taylor', $result[1]);
     }
 
-    public function testCallImplicitWithCallableObject()
+    /** @test */
+    public function call_implicitly_with_callable_object()
     {
         $container = new Container;
         $callable = new ContainerCallImplicitCallableStub;
@@ -176,7 +195,8 @@ class ImplicitlyBoundMethodTest extends TestCase
      * (tests/Container/ContainerCallTeset.php - with a few mods) to verify
      * ImplicitlyBoundMethod had no adverse impacts when extending BoundMethod.
      *************************************************************************/
-    public function testCallWithAtSignBasedClassReferencesWithoutMethodThrowsException()
+    /** @test */
+     public function call_with_at_sign_based_class_references_without_method_throws_exception()
     {
         $this->expectException(ReflectionException::class);
         $this->expectExceptionMessage('Function ContainerTestCallStub() does not exist');
@@ -185,7 +205,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         ImplicitlyBoundMethod::call($container, 'ContainerTestCallStub');
     }
 
-    public function testCallWithAtSignBasedClassReferences()
+    /** @test */
+    public function call_with_at_sign_based_class_references()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, ContainerTestCallStub::class.'@work', ['foo', 'bar']);
@@ -206,7 +227,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertEquals(['foo', 'bar'], $result);
     }
 
-    public function testCallWithCallableArray()
+    /** @test */
+    public function call_with_callable_array()
     {
         $container = new Container;
         $stub = new ContainerTestCallStub;
@@ -214,7 +236,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertEquals(['foo', 'bar'], $result);
     }
 
-    public function testCallWithStaticMethodNameString()
+    /** @test */
+    public function call_with_static_method_name_string()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, 'Tests\ContainerStaticMethodStub::inject');
@@ -222,7 +245,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame('taylor', $result[1]);
     }
 
-    public function testCallWithGlobalMethodName()
+    /** @test */
+    public function call_with_global_method_name()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, 'Tests\containerTestInject');
@@ -230,7 +254,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame('taylor', $result[1]);
     }
 
-    public function testCallWithBoundMethod()
+    /** @test */
+    public function call_with_bound_method()
     {
         $container = new Container;
         $container->bindMethod(ContainerTestCallStub::class.'@unresolvable', function ($stub) {
@@ -257,7 +282,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame('taylor', $result[1]);
     }
 
-    public function testBindMethodAcceptsAnArray()
+    /** @test */
+    public function bind_method_accepts_an_array()
     {
         $container = new Container;
         $container->bindMethod([ContainerTestCallStub::class, 'unresolvable'], function ($stub) {
@@ -274,7 +300,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertEquals(['foo', 'bar'], $result);
     }
 
-    public function testClosureCallWithInjectedDependency()
+    /** @test */
+    public function call_closure_with_injected_dependency()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, function (ContainerCallConcreteStub $stub) {
@@ -290,7 +317,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertEquals(['baz'], $result[0]->value);
     }
 
-    public function testCallWithDependencies()
+    /** @test */
+    public function call_withh_dependencies()
     {
         $container = new Container;
         $result = ImplicitlyBoundMethod::call($container, function (stdClass $foo, $bar = []) {
@@ -329,7 +357,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame('taylor', $result[1]);
     }
 
-    public function testCallWithCallableObject()
+    /** @test */
+    public function call_with_callable_object()
     {
         $container = new Container;
         $callable = new ContainerCallCallableStub;
@@ -338,7 +367,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         $this->assertSame('jeffrey', $result[1]);
     }
 
-    public function testCallWithoutRequiredParamsThrowsException()
+    /** @test */
+    public function call_without_required_parameters_throws_exception()
     {
         $this->expectException(BindingResolutionException::class);
         $this->expectExceptionMessage('Unable to resolve dependency [Parameter #0 [ <required> $foo ]] in class Tests\ContainerTestCallStub');
@@ -347,7 +377,8 @@ class ImplicitlyBoundMethodTest extends TestCase
         ImplicitlyBoundMethod::call($container, ContainerTestCallStub::class.'@unresolvable');
     }
 
-    public function testCallWithoutRequiredParamsOnClosureThrowsException()
+    /** @test */
+    public function call_without_required_parameters_on_closure_throws_exception()
     {
         $this->expectException(BindingResolutionException::class);
         $this->expectExceptionMessage('Unable to resolve dependency [Parameter #0 [ <required> $foo ]] in class Tests\ImplicitlyBoundMethodTest');
@@ -382,11 +413,16 @@ class ContainerTestCallStub
         return func_get_args();
     }
 
-    public function injectAndImplicit(ContainerCallConcreteStub $stub, ContainerTestModel $model, $bar = 'taylor')
+    // added for NullImplicitlyBoundMethod
+    public function nullImplicit($foo, NullContainerTestModel $model, $bar, ...$params)
     {
         return func_get_args();
     }
 
+    public function injectAndImplicit(ContainerCallConcreteStub $stub, ContainerTestModel $model, $bar = 'taylor')
+    {
+        return func_get_args();
+    }
 }
 
 class ImplicitlyBoundMethodTester extends ImplicitlyBoundMethod
@@ -407,10 +443,24 @@ class ContainerTestModel extends \Illuminate\Database\Eloquent\Model
     {
         $this->value = func_get_args();
     }
+
     public function resolveRouteBinding($value, $field = null)
     {
         $this->value = func_get_args();
         return $this;
+    }
+}
+
+class NullContainerTestModel extends \Illuminate\Database\Eloquent\Model
+{
+    public function __construct()
+    {
+        $this->value = func_get_args();
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return null;
     }
 }
 
