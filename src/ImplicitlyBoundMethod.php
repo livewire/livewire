@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Container\BoundMethod;
 use Illuminate\Container\Util;
 use Illuminate\Contracts\Routing\UrlRoutable as ImplicitlyBindable;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ImplicitlyBoundMethod extends BoundMethod
 {
@@ -112,6 +113,12 @@ class ImplicitlyBoundMethod extends BoundMethod
      */
     protected static function getImplicitBinding($container, $className, $value)
     {
-        return $container->make($className)->resolveRouteBinding($value);
+        $model = $container->make($className)->resolveRouteBinding($value);
+
+        if (! $model) {
+            throw (new ModelNotFoundException)->setModel($className, [$value]);
+        }
+
+        return $model;
     }
 }
