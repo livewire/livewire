@@ -320,7 +320,7 @@ HTML;
             throw new MountMethodMissingException($instance->getName());
         }
 
-        if (! method_exists($instance, 'mount')) return;    // dev didn't define mount for component
+        if (! method_exists($instance, 'mount')) return;
 
         ImplicitlyBoundMethod::call(app(), [$instance, 'mount'], $params);
     }
