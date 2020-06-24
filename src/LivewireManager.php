@@ -236,8 +236,8 @@ HTML;
         // because it will be minified in production.
         return <<<HTML
 {$assetWarning}
-<script src="{$fullAssetPath}" data-turbolinks-eval="false"{$nonce}></script>
-<script data-turbolinks-eval="false">
+<script src="{$fullAssetPath}" data-turbolinks-eval="false"></script>
+<script data-turbolinks-eval="false"{$nonce}>
     window.livewire = new Livewire({$jsonEncodedOptions});
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
