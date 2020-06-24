@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Illuminate\Contracts\Routing\UrlRoutable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
@@ -79,7 +79,7 @@ class ComponentRouteBindingsTest extends TestCase
     }
 
     /** @test */
-    public function component_without_bindings_can_mounted_for_route_with_parameters()
+    public function component_without_bindings_can_be_mounted_for_route_with_parameters()
     {
         Livewire::component('foo', ComponentWithoutBindings::class);
 
@@ -95,7 +95,7 @@ class ComponentRouteBindingsTest extends TestCase
     public function mount_method_can_simulate_route_bindings()
     {
         Livewire::test(ComponentWithModelBindings::class, [
-            'foo' => (new ModelToBeBound('from-injection'))
+            'foo' => (new RouteBindingsTestModel('from-injection'))
         ])->assertSeeText('from-injection')->assertSeeText('param-default');
 
         Livewire::test(ComponentWithClassBindings::class, [
@@ -103,8 +103,8 @@ class ComponentRouteBindingsTest extends TestCase
         ])->assertSeeText('from-injection')->assertSeeText('param-default');
 
         Livewire::test(ComponentWithModelRelationshipBindings::class, [
-            'parent' => (new ModelToBeBound('moms')),
-            'child' => (new ChildModel('first-born')),
+            'parent' => (new RouteBindingsTestModel('moms')),
+            'child' => (new RoutBindingsTestChildModel('first-born')),
         ])->assertSeeText('moms')->assertSeeText('first-born');
     }
 }
@@ -117,14 +117,12 @@ class ClassToBeBound
     }
 }
 
-class ModelToBeBound implements UrlRoutable
+class RouteBindingsTestModel extends Model
 {
     public function __construct($value = 'model-default')
     {
         $this->value = $value;
     }
-    public function getRouteKey() {}
-    public function getRouteKeyName() {}
     public function resolveRouteBinding($value, $field = null)
     {
         $this->value = $value;
@@ -132,17 +130,17 @@ class ModelToBeBound implements UrlRoutable
     }
     public function resolveChildRouteBinding($childType, $value, $field)
     {
-        return new ChildModel($childType.':'.$value);
+        return new RoutBindingsTestChildModel($childType.':'.$value);
     }
 }
 
-class ChildModel extends ModelToBeBound {}
+class RoutBindingsTestChildModel extends RouteBindingsTestModel {}
 
 class ComponentWithModelBindings extends Component
 {
     public $name;
 
-    public function mount(ModelToBeBound $foo, $param = 'param-default')
+    public function mount(RouteBindingsTestModel $foo, $param = 'param-default')
     {
         $this->name = $foo->value.':'.$param;
     }
@@ -172,7 +170,7 @@ class ComponentWithModelRelationshipBindings extends Component
 {
     public $name;
 
-    public function mount(ModelToBeBound $parent, $param = 'param-default', ChildModel $child)
+    public function mount(RouteBindingsTestModel $parent, $param = 'param-default', RoutBindingsTestChildModel $child)
     {
         $this->name = $parent->value.':'.$param.':'.$child->value;
     }
