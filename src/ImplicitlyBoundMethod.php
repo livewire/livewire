@@ -9,11 +9,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ImplicitlyBoundMethod extends BoundMethod
 {
-    /**
-     * Get all dependencies for a given method. Override the parent method
-     * to substitute implicit and name/value bindings for each expected
-     * parameter.
-     */
     protected static function getMethodDependencies($container, $callback, array $parameters = [])
     {
         $dependencies = [];
@@ -28,11 +23,6 @@ class ImplicitlyBoundMethod extends BoundMethod
         return array_merge($dependencies, $parameters);
     }
 
-    /**
-     * Ensure the given call parameter value is bound to the parameter by name.
-     * Handles cases where a simple list of parameters (having numeric keys)
-     * is provided and the sequence implies the binding.
-     */
     protected static function substituteNameBindingForCallParameter($parameter, array &$parameters, int &$paramIndex)
     {
         // check if we have a candidate for name/value binding
@@ -65,9 +55,6 @@ class ImplicitlyBoundMethod extends BoundMethod
         }
     }
 
-    /**
-     * Perform implicit binding for the given call parameter.
-     */
     protected static function substituteImplicitBindingForCallParameter($container, $parameter, array &$parameters)
     {
         $paramName = $parameter->getName();
@@ -86,9 +73,6 @@ class ImplicitlyBoundMethod extends BoundMethod
         }
     }
 
-    /**
-     * Get the dependency injectable class name for the given call parameter.
-     */
     protected static function getClassForDependencyInjection($parameter)
     {
         if (! is_null($className = Util::getParameterClassName($parameter)) && ! $parameter->getClass()->implementsInterface(ImplicitlyBindable::class)) {
@@ -96,9 +80,6 @@ class ImplicitlyBoundMethod extends BoundMethod
         }
     }
 
-    /**
-     * Get the implicitly bindable class name for the given call parameter.
-     */
     protected static function getClassForImplicitBinding($parameter)
     {
         if (! is_null($className = Util::getParameterClassName($parameter)) && $parameter->getClass()->implementsInterface(ImplicitlyBindable::class)) {
@@ -108,9 +89,6 @@ class ImplicitlyBoundMethod extends BoundMethod
         return null;
     }
 
-    /**
-     * Get the instance of the given class implied by the given value.
-     */
     protected static function getImplicitBinding($container, $className, $value)
     {
         $model = $container->make($className)->resolveRouteBinding($value);
