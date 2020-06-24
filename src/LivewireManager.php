@@ -238,6 +238,10 @@ HTML;
 {$assetWarning}
 <script src="{$fullAssetPath}" data-turbolinks-eval="false"></script>
 <script data-turbolinks-eval="false"{$nonce}>
+    if (window.livewire) {
+        console.warn('Livewire: It looks like Livewire\'s @livewireScripts JavaScript assets have already been loaded. Make sure you aren\'t loading them twice.')
+    }
+
     window.livewire = new Livewire({$jsonEncodedOptions});
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
