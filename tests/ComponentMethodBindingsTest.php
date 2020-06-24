@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use Illuminate\Contracts\Routing\UrlRoutable;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
@@ -104,6 +103,7 @@ class ComponentMethodBindingsTest extends TestCase
 class ModelToBeBound extends \Illuminate\Database\Eloquent\Model
 {
     public $value;
+
     public function __construct($value = 'model-default')
     {
         $this->value = $value;
