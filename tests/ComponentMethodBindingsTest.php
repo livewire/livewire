@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
@@ -100,7 +101,7 @@ class ComponentMethodBindingsTest extends TestCase
     }
 }
 
-class ModelToBeBound extends \Illuminate\Database\Eloquent\Model
+class ModelToBeBound extends Model
 {
     public $value;
 
