@@ -19,7 +19,7 @@ class GenerateSignedUploadUrl
     {
         $this->ensureEnvironmentVariablesAreAvailable();
 
-        $bucket = $_ENV['AWS_BUCKET'];
+        $bucket = $_ENV['AWS_' .$this->prefix() . 'BUCKET'];
 
         $fileType = $file->getMimeType();
 
@@ -27,10 +27,10 @@ class GenerateSignedUploadUrl
 
         $fileHashName = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
 
-        $path = FileUploadConfiguration::path($fileHashName);
+        $directory = FileUploadConfiguration::directory();
 
         $signedRequest = $client->createPresignedRequest(
-            $this->createCommand($client, $bucket, $path, $fileType, $visibility),
+            $this->createCommand($client, $bucket, ($directory.$fileHashName), $fileType, $visibility),
             '+5 minutes'
         );
 
@@ -68,10 +68,10 @@ class GenerateSignedUploadUrl
     protected function ensureEnvironmentVariablesAreAvailable()
     {
         $missing = array_diff_key(array_flip(array_filter([
-            'AWS_BUCKET',
-            'AWS_DEFAULT_REGION',
-            'AWS_ACCESS_KEY_ID',
-            'AWS_SECRET_ACCESS_KEY'
+            'AWS_' . $this->prefix() .'BUCKET',
+            'AWS_' . $this->prefix() .'DEFAULT_REGION',
+            'AWS_' . $this->prefix() .'ACCESS_KEY_ID',
+            'AWS_' . $this->prefix() .'SECRET_ACCESS_KEY'
         ])), $_ENV);
 
         if (empty($missing)) {
@@ -86,20 +86,25 @@ class GenerateSignedUploadUrl
     protected function storageClient()
     {
         $config = [
-            'region' => $_ENV['AWS_DEFAULT_REGION'],
+            'region' => $_ENV['AWS_' . $this->prefix() . 'DEFAULT_REGION'],
             'version' => 'latest',
             'signature_version' => 'v4',
         ];
 
         if (! isset($_ENV['AWS_LAMBDA_FUNCTION_VERSION'])) {
             $config['credentials'] = array_filter([
-                'key' => $_ENV['AWS_ACCESS_KEY_ID'] ?? null,
-                'secret' => $_ENV['AWS_SECRET_ACCESS_KEY'] ?? null,
-                'token' => $_ENV['AWS_SESSION_TOKEN'] ?? null,
-                'url' => $_ENV['AWS_URL'] ?? null,
+                'key' => $_ENV['AWS_' . $this->prefix() .'ACCESS_KEY_ID'] ?? null,
+                'secret' => $_ENV['AWS_' . $this->prefix() .'SECRET_ACCESS_KEY'] ?? null,
+                'token' => $_ENV['AWS_' . $this->prefix() .'SESSION_TOKEN'] ?? null,
+                'url' => $_ENV['AWS_' . $this->prefix() .'URL'] ?? null,
             ]);
         }
 
         return S3Client::factory($config);
+    }
+
+    private function prefix()
+    {
+        return $_ENV['S3_PREFIX'] ? $_ENV['S3_PREFIX'] .'_' : '';
     }
 }
