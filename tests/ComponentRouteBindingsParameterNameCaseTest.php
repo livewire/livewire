@@ -158,7 +158,7 @@ class ComponentWithMixedCaseMount extends Component
 
     public function mount($firstName, $last_name)
     {
-        $this->name = collect(func_get_args())->join(' ');
+        $this->name = implode(' ', func_get_args());
     }
 
     public function render()
@@ -173,7 +173,7 @@ class ComponentWithSnakeMount extends Component
 
     public function mount($first_name, $last_name)
     {
-        $this->name = collect(func_get_args())->join(' ');
+        $this->name = implode(' ', func_get_args());
     }
 
     public function render()
@@ -188,7 +188,7 @@ class ComponentWithCamelMountBinding extends Component
 
     public function mount(ParamterNameCaseTestModel $firstName, ParamterNameCaseTestModel2 $lastName)
     {
-        $this->name = collect(func_get_args())->map(function ($m) { return $m->value; })->join(' ');
+        $this->name = implode(' ', array_map(function ($m) { return $m->value; }, func_get_args()));
     }
 
     public function render()
@@ -203,7 +203,7 @@ class ComponentWithSnakeMountBinding extends Component
 
     public function mount(ParamterNameCaseTestModel $first_name, ParamterNameCaseTestModel2 $last_name)
     {
-        $this->name = collect(func_get_args())->map(function ($m) { return $m->value; })->join(' ');
+        $this->name = implode(' ', array_map(function ($m) { return $m->value; }, func_get_args()));
     }
 
     public function render()
