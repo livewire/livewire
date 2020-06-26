@@ -367,7 +367,9 @@ export default class Component {
                 return false
             }
 
-            callback(el)
+            if (callback(el) === false) {
+                return false
+            }
         })
     }
 

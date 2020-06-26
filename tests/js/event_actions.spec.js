@@ -191,6 +191,25 @@ test('elements are unmarked as read-only or disabled after form submissions that
     })
 })
 
+test('elements are not marked as read-only or disabled during form submissions if they are withing a wire:ignore', async () => {
+    var payload
+    mount(`
+        <form wire:submit.prevent="someMethod">
+            <input type="text">
+            <div wire:ignore>
+                <button type="submit"></button>
+            </div>
+        </form>
+    `, i => payload = i)
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toBeFalsy()
+        expect(document.querySelector('input[type=text]').readOnly).toBeTruthy()
+    })
+})
+
 test('action parameters without space around comma', async () => {
     var payload
     mount(`<button wire:click="callSomething('foo','bar')"></button>`, i => payload = i)

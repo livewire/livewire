@@ -17,6 +17,8 @@ export default function () {
 
                 if (! el.el.contains(node)) return
 
+                if (elem.hasAttribute('ignore')) return false
+
                 if (
                     // <button type="submit">
                     (node.tagName.toLowerCase() === 'button' && node.type === 'submit')
