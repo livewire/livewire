@@ -1,5 +1,5 @@
 import { fireEvent, wait } from 'dom-testing-library'
-import { mount, mountAsRoot, mountAsRootAndReturn } from './utils'
+import { mount, mountAsRoot, mountAsRootAndReturn, mountAndReturn, mountAndError } from './utils'
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 test('basic click', async () => {
@@ -139,6 +139,74 @@ test('elements are marked as read-only or disabled during form submissions', asy
         expect(document.querySelector('input[type=radio]').disabled).toBeTruthy()
         expect(document.querySelector('input[type=text]').readOnly).toBeTruthy()
         expect(document.querySelector('textarea').readOnly).toBeTruthy()
+    })
+})
+
+test('elements are unmarked as read-only or disabled after successful form submissions', async () => {
+    mountAndReturn(`
+        <form wire:submit.prevent="someMethod">
+            <input type="text">
+            <button type="submit"></button>
+        </form>
+    `, `
+        <form wire:submit.prevent="someMethod">
+            <input type="text">
+            <button type="submit"></button>
+        </form>
+    `, [], async () => new Promise(resolve => setTimeout(resolve, 5)))
+
+    expect(document.querySelector('input').readOnly).toEqual(false)
+    expect(document.querySelector('button').disabled).toEqual(false)
+
+    document.querySelector('button').click()
+
+    expect(document.querySelector('input').readOnly).toEqual(true)
+    expect(document.querySelector('button').disabled).toEqual(true)
+
+    await wait(() => {
+        expect(document.querySelector('input').readOnly).toEqual(false)
+        expect(document.querySelector('button').disabled).toEqual(false)
+    })
+})
+
+test('elements are unmarked as read-only or disabled after form submissions that throw an error', async () => {
+    mountAndError(`
+        <form wire:submit.prevent="someMethod">
+            <input type="text">
+            <button type="submit"></button>
+        </form>
+    `, async () => new Promise(resolve => setTimeout(resolve, 5)))
+
+    expect(document.querySelector('input').readOnly).toEqual(false)
+    expect(document.querySelector('button').disabled).toEqual(false)
+
+    document.querySelector('button').click()
+
+    expect(document.querySelector('input').readOnly).toEqual(true)
+    expect(document.querySelector('button').disabled).toEqual(true)
+
+    await wait(() => {
+        expect(document.querySelector('input').readOnly).toEqual(false)
+        expect(document.querySelector('button').disabled).toEqual(false)
+    })
+})
+
+test('elements are not marked as read-only or disabled during form submissions if they are withing a wire:ignore', async () => {
+    var payload
+    mount(`
+        <form wire:submit.prevent="someMethod">
+            <input type="text">
+            <div wire:ignore>
+                <button type="submit"></button>
+            </div>
+        </form>
+    `, i => payload = i)
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(document.querySelector('button').disabled).toBeFalsy()
+        expect(document.querySelector('input[type=text]').readOnly).toBeTruthy()
     })
 })
 
