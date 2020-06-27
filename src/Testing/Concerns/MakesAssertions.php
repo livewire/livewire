@@ -172,7 +172,7 @@ trait MakesAssertions
         $errors = new MessageBag($this->payload['errorBag'] ?: []);
 
         if (empty($keys)) {
-            PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors.');
+            PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors: "' . implode('", "', $errors->keys()) . '"');
 
             return $this;
         }
