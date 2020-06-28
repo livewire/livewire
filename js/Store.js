@@ -33,6 +33,12 @@ const store = {
         })
     },
 
+    getComponentsByKey(key) {
+        return this.components()
+            .filter(component => component.children && component.children[key])
+            .map(component => this.findComponent(component.children[key].id))
+    },
+
     hasComponent(id) {
         return !!this.componentsById[id]
     },
@@ -74,6 +80,8 @@ const store = {
 
     emitTo(componentName, event, ...params) {
         let components = this.getComponentsByName(componentName)
+
+        components = components.concat(this.getComponentsByKey(componentName))
 
         components.forEach(component => {
             if (component.events.includes(event)) {
