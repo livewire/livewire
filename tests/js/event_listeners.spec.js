@@ -227,6 +227,103 @@ test('receive event from action fired only to component name, and make sure glob
     })
 })
 
+test('receive event from action fired only to keyed component, and make sure global listener doesnt receive it', async () => {
+    let children = {'A': { id: '4' }, 'B': { id: '5' }, 'C': { id: '6' }}
+    let initialData = JSON.stringify({ events: ['foo'], children }).replace(/"/g, '&quot;')
+    let dom = `
+        <div wire:id="123" wire:initial-data="${initialData}">
+            <button wire:click="$emitTo('B', 'foo')"></button>
+            <div wire:id="4" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;]}">4</div>
+            <div wire:id="5" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;]}">5</div>
+            <div wire:id="6" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;]}">6</div>
+        </div>
+        <div wire:id="789" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }"></div>
+    `
+    document.body.innerHTML = dom
+
+    var payloadsThatSentARequest = []
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            payloadsThatSentARequest.push(payload)
+        },
+    }})
+
+    window.livewire.start()
+
+    var globalEventReceived = false
+    window.livewire.on('foo', () => { globalEventReceived = true })
+
+    document.querySelector('button').click()
+
+    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(1) })
+
+    await wait(() => {
+        expect(globalEventReceived).toEqual(false)
+        expect(payloadsThatSentARequest[0].id).toEqual('5')
+        expect(payloadsThatSentARequest[1]).toEqual(undefined)
+    })
+})
+
+test('receive event from component fired only to keyed component, and make sure global listener doesnt receive it', async () => {
+    let children = {'A': { id: '4' }, 'B': { id: '5' }, 'C': { id: '6' }}
+    let dom = `
+        <div wire:id="123" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }">
+            <button wire:click="$refresh"></button>
+            <div wire:id="4" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;]}">4</div>
+            <div wire:id="5" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;]}">5</div>
+            <div wire:id="6" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;]}">6</div>
+        </div>
+        <div wire:id="789" wire:initial-data="{&quot;events&quot;: [&quot;foo&quot;] }"></div>
+    `
+    document.body.innerHTML = dom
+
+    var payloadsThatSentARequest = []
+
+    window.livewire = new Livewire({ driver: {
+        onMessage: null,
+        init() {},
+        async sendMessage(payload) {
+            payloadsThatSentARequest.push(payload)
+
+            if (payloadsThatSentARequest.length > 1) return
+
+            setTimeout(() => {
+                this.onMessage({
+                    fromPrefetch: payload.fromPrefetch,
+                    id: payload.id,
+                    data: {},
+                    dom,
+                    children,
+                    eventQueue: [{
+                        to: 'B',
+                        event: 'foo',
+                        params: [],
+                    }],
+                })
+            }, 1)
+        },
+    }})
+
+    window.livewire.start()
+
+    var globalEventReceived = false
+    window.livewire.on('foo', () => { globalEventReceived = true })
+
+    document.querySelector('button').click()
+
+    await wait(() => { expect(payloadsThatSentARequest.length).toEqual(2) })
+
+    await wait(() => {
+        expect(globalEventReceived).toEqual(false)
+        expect(payloadsThatSentARequest[0].id).toEqual('123')
+        expect(payloadsThatSentARequest[1].id).toEqual('5')
+        expect(payloadsThatSentARequest[2]).toEqual(undefined)
+    })
+})
+
 describe('test Laravel Echo', () => {
     let mockEcho
 
