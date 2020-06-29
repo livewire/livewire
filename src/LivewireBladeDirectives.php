@@ -23,11 +23,11 @@ class LivewireBladeDirectives
 
     public static function livewire($expression)
     {
-        $lastArg = trim(last(explode(',', $expression)));
+        $args = explode(',', $expression);
+        $lastArg = trim(last($args));
 
         if (Str::startsWith($lastArg, 'key(') && Str::endsWith($lastArg, ')')) {
             $cachedKey = Str::replaceFirst('key(', '', Str::replaceLast(')', '', $lastArg));
-            $args = explode(',', $expression);
             array_pop($args);
             $expression = implode(',', $args);
         } else {
