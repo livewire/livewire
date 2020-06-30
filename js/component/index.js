@@ -24,6 +24,7 @@ export default class Component {
         this.events = initialData.events || []
         this.children = initialData.children || {}
         this.checksum = initialData.checksum || ''
+        this.locale = initialData.locale || null
         this.name = initialData.name || ''
         this.errorBag = initialData.errorBag || {}
         this.redirectTo = initialData.redirectTo || false
