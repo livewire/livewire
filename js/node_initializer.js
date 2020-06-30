@@ -91,7 +91,7 @@ export default {
                 const el = new DOMElement(e.target)
                 // We have to check for typeof e.detail here for IE 11.
                 const value =
-                    e instanceof CustomEvent && typeof e.detail != 'undefined'
+                    e instanceof CustomEvent && typeof e.detail != 'undefined' && window.document.documentMode == 'undefined'
                         ? e.detail
                         : el.valueFromInput(component)
 
