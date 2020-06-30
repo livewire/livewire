@@ -24,16 +24,19 @@ export default {
             },
         }).then(response => {
             if (response.ok) {
-                response.text().then(response => {
-                    if (this.isOutputFromDump(response)) {
-                        this.onError(payload)
-                        this.showHtmlModal(response)
+                response.text().then(text => {
+                    if (this.isOutputFromDump(text)) {
+                        let { ok, status, statusText } = response
+                        if (this.onError(payload, { ok, status, statusText }) === false) return
+
+                        this.showHtmlModal(text)
                     } else {
-                        this.onMessage.call(this, JSON.parse(response))
+                        this.onMessage.call(this, JSON.parse(text))
                     }
                 })
             } else {
-                if (this.onError(payload, response.status) === false) return
+                let { ok, status, statusText } = response
+                if (this.onError(payload, { ok, status, statusText }) === false) return
 
                 if (response.status === 419) {
                     confirm("This page has expired due to inactivity.\nWould you like to refresh the page?")
@@ -44,8 +47,8 @@ export default {
                     })
                 }
             }
-        }).catch(() => {
-            this.onError(payload)
+        }).catch((error) => {
+            this.onError(payload, error)
         })
     },
 
