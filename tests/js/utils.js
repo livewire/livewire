@@ -165,6 +165,10 @@ export function mountAndError(dom, requestInterceptor = async () => { }) {
             setTimeout(() => {
                 this.onError({
                     id: payload.id,
+                }, {
+                    ok: false,
+                    status: 404,
+                    statusText: 'Not Found',
                 })
             }, 1)
         },
