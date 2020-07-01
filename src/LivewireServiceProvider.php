@@ -35,6 +35,7 @@ use Livewire\Commands\{
     MakeLivewireCommand
 };
 use Livewire\HydrationMiddleware\{
+    PersistLocale,
     ForwardPrefetch,
     PersistErrorBag,
     UpdateQueryString,
@@ -259,6 +260,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
         /* v */ RegisterEventsBeingListenedFor::class,              /* ^ */
         /* v */ RegisterEmittedEvents::class,                       /* ^ */
+        /* v */ PersistLocale::class,                               /* ^ */
         /* v */ PersistErrorBag::class,                             /* ^ */
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
@@ -290,6 +292,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* ^ */ [RegisterEmittedEvents::class, 'dehydrate'],
         /* ^ */ [RegisterEventsBeingListenedFor::class, 'dehydrate'],
         /* ^ */ [PersistErrorBag::class, 'dehydrate'],
+        /* ^ */ [PersistLocale::class, 'dehydrate'],
         /* ^ */ [InterceptRedirects::class, 'dehydrate'],
         ]);
     }
