@@ -58,6 +58,8 @@ class LivewireServiceProvider extends ServiceProvider
 {
     public function register()
     {
+        $this->registerTestMacros();
+        $this->registerRouteMacros();
         $this->registerLivewireSingleton();
         $this->registerComponentAutoDiscovery();
     }
@@ -67,8 +69,6 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerViews();
         $this->registerRoutes();
         $this->registerCommands();
-        $this->registerTestMacros();
-        $this->registerRouteMacros();
         $this->registerTagCompiler();
         $this->registerPublishables();
         $this->registerBladeDirectives();
