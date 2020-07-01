@@ -318,6 +318,17 @@ export default class Component {
 
                 const fromEl = new DOMElement(from)
 
+                // Set the value of wire:model on select elements in the
+                // "to" node before doing the diff, so that the options
+                // have the proper in-memory .selected value set.
+                if (
+                    fromEl.hasAttribute('model') &&
+                    fromEl.rawNode().tagName.toUpperCase() === 'SELECT'
+                ) {
+                    const toEl = new DOMElement(to)
+                    toEl.setInputValueFromModel(this)
+                }
+
                 // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
                 if (
                     fromEl.directives.has('ignore') ||

@@ -1,4 +1,4 @@
-import ElementDirectives from "./directive_manager"
+import ElementDirectives from './directive_manager'
 import get from 'get-value'
 import store from '@/Store'
 
@@ -14,8 +14,8 @@ export default class DOMElement {
 
     nextFrame(fn) {
         requestAnimationFrame(() => {
-            requestAnimationFrame(fn.bind(this));
-        });
+            requestAnimationFrame(fn.bind(this))
+        })
     }
 
     rawNode() {
@@ -29,7 +29,7 @@ export default class DOMElement {
     closestByAttribute(attribute) {
         const closestEl = this.el.closest(`[wire\\:${attribute}]`)
 
-        if (! closestEl) {
+        if (!closestEl) {
             throw `
 Livewire Error:\n
 Cannot find parent element in DOM tree containing attribute: [wire:${attribute}].\n
@@ -72,31 +72,39 @@ ${this.el.outerHTML}
     }
 
     isInput() {
-        return ['INPUT', 'TEXTAREA', 'SELECT'].includes(this.el.tagName.toUpperCase())
+        return ['INPUT', 'TEXTAREA', 'SELECT'].includes(
+            this.el.tagName.toUpperCase()
+        )
     }
 
     isTextInput() {
-        return ['INPUT', 'TEXTAREA'].includes(this.el.tagName.toUpperCase())
-            && ! ['checkbox', 'radio'].includes(this.el.type)
+        return (
+            ['INPUT', 'TEXTAREA'].includes(this.el.tagName.toUpperCase()) &&
+            !['checkbox', 'radio'].includes(this.el.type)
+        )
     }
 
     valueFromInput(component) {
         if (this.el.type === 'checkbox') {
-            const modelName =  this.directives.get('model').value
+            const modelName = this.directives.get('model').value
             var modelValue = get(component.data, modelName)
 
             if (Array.isArray(modelValue)) {
                 if (this.el.checked) {
-                    modelValue = modelValue.includes(this.el.value) ? modelValue : modelValue.concat(this.el.value)
+                    modelValue = modelValue.includes(this.el.value)
+                        ? modelValue
+                        : modelValue.concat(this.el.value)
                 } else {
-                    modelValue = modelValue.filter(item => item !== this.el.value)
+                    modelValue = modelValue.filter(
+                        item => item !== this.el.value
+                    )
                 }
 
                 return modelValue
             }
 
             if (this.el.checked) {
-                return this.el.getAttribute('value') || true;
+                return this.el.getAttribute('value') || true
             } else {
                 return false
             }
@@ -112,7 +120,11 @@ ${this.el.outerHTML}
         const modelValue = get(component.data, modelString)
         if (modelValue === undefined) return
         // Don't manually set file input's values.
-        if (this.el.tagName.toLowerCase() === 'input' && this.el.type === 'file') return
+        if (
+            this.el.tagName.toLowerCase() === 'input' &&
+            this.el.type === 'file'
+        )
+            return
 
         this.setInputValue(modelValue)
     }
@@ -136,7 +148,7 @@ ${this.el.outerHTML}
 
                 this.el.checked = valueFound
             } else {
-                this.el.checked = !! value
+                this.el.checked = !!value
             }
         } else if (this.el.tagName === 'SELECT') {
             this.updateSelect(value)
@@ -148,11 +160,19 @@ ${this.el.outerHTML}
     getSelectValues() {
         return Array.from(this.el.options)
             .filter(option => option.selected)
-            .map(option => { return option.value || option.text })
+            .map(option => {
+                return option.value || option.text
+            })
     }
 
     updateSelect(value) {
-        const arrayWrappedValue = [].concat(value).map(value => { return value +'' })
+        const arrayWrappedValue = [].concat(value).map(value => {
+            return value + ''
+        })
+
+        // We need to reset .selectedIndex, otherwise, setting .selected to "false"
+        // won't "deselect" an option. This fixes lots of little <select> bugs.
+        this.el.selectedIndex = -1
 
         Array.from(this.el.options).forEach(option => {
             option.selected = arrayWrappedValue.includes(option.value)

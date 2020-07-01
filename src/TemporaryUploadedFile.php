@@ -31,9 +31,9 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getSize()
     {
-        if (app()->environment('testing') && str::contains($this->getfilename(), '-size:')) {
+        if (app()->environment('testing') && str::contains($this->getfilename(), '-size=')) {
             // This head/explode/last/explode nonsense is the equivelant of Str::between().
-            [$beginning, $end] = ['-size:', '.'];
+            [$beginning, $end] = ['-size=', '.'];
             return (int) head(explode($end, last(explode($beginning, $this->getFilename()))));
         }
 
