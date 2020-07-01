@@ -277,6 +277,7 @@ HTML;
                 events: component.events,
                 children: component.children,
                 checksum: component.checksum,
+                locale: component.locale,
                 name: component.name,
                 errorBag: component.errorBag,
                 redirectTo: component.redirectTo,
