@@ -73,6 +73,7 @@ class TestableLivewire
             'dispatchQueue' => $output->dispatchQueue,
             'errorBag' => $output->errorBag,
             'checksum' => $output->checksum,
+            'locale' => $output->locale,
             'redirectTo' => $output->redirectTo,
             'dirtyInputs' => $output->dirtyInputs,
             'updatesQueryString' => $output->updatesQueryString,
@@ -132,6 +133,7 @@ class TestableLivewire
             'data' => $this->payload['data'],
             'children' => $this->payload['children'],
             'checksum' => $this->payload['checksum'],
+            'locale' => $this->payload['locale'],
             'errorBag' => $this->payload['errorBag'],
             'actionQueue' => [['type' => $message, 'payload' => $payload]],
         ]);
