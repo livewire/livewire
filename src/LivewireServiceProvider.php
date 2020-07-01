@@ -88,7 +88,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerLivewireSingleton()
     {
-        $this->app->singleton('livewire', LivewireManager::class);
+        $this->app->singleton('livewire', function ($app) {
+            return (new LivewireManager)->setContainer($app);
+        });
     }
 
     protected function registerComponentAutoDiscovery()

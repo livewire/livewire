@@ -23,6 +23,8 @@ abstract class Component
         ComponentConcerns\TracksRenderedChildren,
         ComponentConcerns\InteractsWithProperties;
 
+    use InteractsWithContainerTrait;
+
     public $id;
 
     protected $updatesQueryString = [];

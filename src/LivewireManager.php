@@ -2,32 +2,27 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Fluent;
-use Illuminate\Foundation\Application;
-use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Container\Container;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Fluent;
+use Illuminate\Support\Str;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Exceptions\MountMethodMissingException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
+use Livewire\Testing\TestableLivewire;
 
 class LivewireManager
 {
     use DependencyResolverTrait,
+        InteractsWithContainerTrait,
         RegistersHydrationMiddleware;
 
-    protected $container;
     protected $componentAliases = [];
     protected $customComponentResolver;
     protected $listeners = [];
 
     public static $isLivewireRequestTestingOverride;
-
-    public function __construct()
-    {
-        // This property only exists to make the "DependencyResolverTrait" work.
-        $this->container = app();
-    }
 
     public function component($alias, $viewClass)
     {
@@ -78,7 +73,7 @@ class LivewireManager
             "Component [{$component}] class not found: [{$componentClass}]"
         ));
 
-        return new $componentClass($id);
+        return (new $componentClass($id))->setContainer($this->container);
     }
 
     public function mount($name, $params = [])
@@ -90,7 +85,7 @@ class LivewireManager
 
         // Allow instantiating Livewire components directly from classes.
         if (class_exists($name)) {
-            $instance = new $name($id);
+            $instance = (new $name($id))->setContainer($this->container);
             // Set the name to the computed name, so that the full namespace
             // isn't leaked to the front-end.
             $name = $instance->getName();
