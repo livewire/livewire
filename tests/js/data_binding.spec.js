@@ -44,6 +44,129 @@ test('properties are lazy synced when action is fired', async () => {
     })
 })
 
+test('properties are passively synced', async () => {
+    let payload
+    let requestCount = 0
+    mount('<input id="passive" wire:model.passive="passive" /><button wire:click="onClick">', i => {
+        payload = i
+        requestCount++
+    })
+
+    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
+
+    expect(requestCount).toEqual(0)
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(requestCount).toEqual(1)
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[0].payload.name).toEqual('passive')
+        expect(payload.actionQueue[0].payload.value).toEqual('passiveData')
+
+        expect(payload.actionQueue[1].type).toEqual('callMethod')
+        expect(payload.actionQueue[1].payload.method).toEqual('onClick')
+    })
+})
+
+test('passive models only appear once in the action queue', async () => {
+    let payload
+    mount('<input id="passive" wire:model.passive="passive" /><button wire:click="onClick">', i => {
+        payload = i
+    })
+
+    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
+    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData2' }})
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue.length).toEqual(2)
+
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[0].payload.name).toEqual('passive')
+        expect(payload.actionQueue[0].payload.value).toEqual('passiveData2')
+
+        expect(payload.actionQueue[1].type).toEqual('callMethod')
+        expect(payload.actionQueue[1].payload.method).toEqual('onClick')
+    })
+})
+
+test('passive models always have default debounce', async () => {
+    let payload
+    mount('<input id="passive" wire:model.passive.debounce.100s="passive" /><button wire:click="onClick">', i => {
+        payload = i
+    })
+
+    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
+    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData2' }})
+
+    fireEvent.click(document.querySelector('button'))
+
+    await wait(() => {
+        expect(payload.actionQueue.length).toEqual(2)
+
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[0].payload.name).toEqual('passive')
+        expect(payload.actionQueue[0].payload.value).toEqual('passiveData2')
+
+        expect(payload.actionQueue[1].type).toEqual('callMethod')
+        expect(payload.actionQueue[1].payload.method).toEqual('onClick')
+    })
+})
+
+test('passive models appear before active', async () => {
+    let payload
+    mount('<input id="passive" wire:model.passive="passive" /><input id="passive2" wire:model.passive="passive2" /><input id="active" wire:model="active" />', i => {
+        payload = i
+    })
+
+    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
+    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData2' }})
+
+    fireEvent.input(document.querySelector('#passive2'), { target: { value: 'passive2Data' }})
+    fireEvent.input(document.querySelector('#passive2'), { target: { value: 'passive2Data2' }})
+
+    fireEvent.input(document.querySelector('#active'), { target: { value: 'activeData' }})
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[0].payload.name).toEqual('passive')
+        expect(payload.actionQueue[0].payload.value).toEqual('passiveData2')
+
+        expect(payload.actionQueue[1].type).toEqual('syncInput')
+        expect(payload.actionQueue[1].payload.name).toEqual('passive2')
+        expect(payload.actionQueue[1].payload.value).toEqual('passive2Data2')
+
+        expect(payload.actionQueue[2].type).toEqual('syncInput')
+        expect(payload.actionQueue[2].payload.name).toEqual('active')
+        expect(payload.actionQueue[2].payload.value).toEqual('activeData')
+    })
+})
+
+test('passive models work on form submits', async () => {
+    let payload
+    mount('<form wire:submit.prevent="submit"><input id="passive" wire:model.passive="passive" /></form>', i => {
+        payload = i
+    })
+
+    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
+    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData2' }})
+
+    fireEvent.submit(document.querySelector('form'))
+
+    await wait(() => {
+        expect(payload.actionQueue.length).toEqual(2)
+
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[0].payload.name).toEqual('passive')
+        expect(payload.actionQueue[0].payload.value).toEqual('passiveData2')
+
+        expect(payload.actionQueue[1].type).toEqual('callMethod')
+        expect(payload.actionQueue[1].payload.method).toEqual('submit')
+    })
+})
+
 test('textarea data binding with class change works as expected and doesn\'t wipe its value', async () => {
     mountAndReturn(
         '<textarea wire:model="foo" class="foo"></textarea>',
