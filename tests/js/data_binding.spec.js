@@ -44,15 +44,15 @@ test('properties are lazy synced when action is fired', async () => {
     })
 })
 
-test('properties are passively synced', async () => {
+test('properties are deferred', async () => {
     let payload
     let requestCount = 0
-    mount('<input id="passive" wire:model.passive="passive" /><button wire:click="onClick">', i => {
+    mount('<input id="defer" wire:model.defer="defer" /><button wire:click="onClick">', i => {
         payload = i
         requestCount++
     })
 
-    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
+    fireEvent.input(document.querySelector('#defer'), { target: { value: 'deferData' }})
 
     expect(requestCount).toEqual(0)
 
@@ -61,22 +61,22 @@ test('properties are passively synced', async () => {
     await wait(() => {
         expect(requestCount).toEqual(1)
         expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('passive')
-        expect(payload.actionQueue[0].payload.value).toEqual('passiveData')
+        expect(payload.actionQueue[0].payload.name).toEqual('defer')
+        expect(payload.actionQueue[0].payload.value).toEqual('deferData')
 
         expect(payload.actionQueue[1].type).toEqual('callMethod')
         expect(payload.actionQueue[1].payload.method).toEqual('onClick')
     })
 })
 
-test('passive models only appear once in the action queue', async () => {
+test('deferred models only appear once in the action queue', async () => {
     let payload
-    mount('<input id="passive" wire:model.passive="passive" /><button wire:click="onClick">', i => {
+    mount('<input id="defer" wire:model.defer="defer" /><button wire:click="onClick">', i => {
         payload = i
     })
 
-    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
-    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData2' }})
+    fireEvent.input(document.querySelector('#defer'), { target: { value: 'deferData' }})
+    fireEvent.input(document.querySelector('#defer'), { target: { value: 'deferData2' }})
 
     fireEvent.click(document.querySelector('button'))
 
@@ -84,22 +84,22 @@ test('passive models only appear once in the action queue', async () => {
         expect(payload.actionQueue.length).toEqual(2)
 
         expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('passive')
-        expect(payload.actionQueue[0].payload.value).toEqual('passiveData2')
+        expect(payload.actionQueue[0].payload.name).toEqual('defer')
+        expect(payload.actionQueue[0].payload.value).toEqual('deferData2')
 
         expect(payload.actionQueue[1].type).toEqual('callMethod')
         expect(payload.actionQueue[1].payload.method).toEqual('onClick')
     })
 })
 
-test('passive models always have default debounce', async () => {
+test('deferred models always have default debounce', async () => {
     let payload
-    mount('<input id="passive" wire:model.passive.debounce.100s="passive" /><button wire:click="onClick">', i => {
+    mount('<input id="defer" wire:model.defer.debounce.100s="defer" /><button wire:click="onClick">', i => {
         payload = i
     })
 
-    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
-    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData2' }})
+    fireEvent.input(document.querySelector('#defer'), { target: { value: 'deferData' }})
+    fireEvent.input(document.querySelector('#defer'), { target: { value: 'deferData2' }})
 
     fireEvent.click(document.querySelector('button'))
 
@@ -107,36 +107,36 @@ test('passive models always have default debounce', async () => {
         expect(payload.actionQueue.length).toEqual(2)
 
         expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('passive')
-        expect(payload.actionQueue[0].payload.value).toEqual('passiveData2')
+        expect(payload.actionQueue[0].payload.name).toEqual('defer')
+        expect(payload.actionQueue[0].payload.value).toEqual('deferData2')
 
         expect(payload.actionQueue[1].type).toEqual('callMethod')
         expect(payload.actionQueue[1].payload.method).toEqual('onClick')
     })
 })
 
-test('passive models appear before active', async () => {
+test('deferred models appear before active', async () => {
     let payload
-    mount('<input id="passive" wire:model.passive="passive" /><input id="passive2" wire:model.passive="passive2" /><input id="active" wire:model="active" />', i => {
+    mount('<input id="defer" wire:model.defer="defer" /><input id="defer2" wire:model.defer="defer2" /><input id="active" wire:model="active" />', i => {
         payload = i
     })
 
-    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
-    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData2' }})
+    fireEvent.input(document.querySelector('#defer'), { target: { value: 'deferData' }})
+    fireEvent.input(document.querySelector('#defer'), { target: { value: 'deferData2' }})
 
-    fireEvent.input(document.querySelector('#passive2'), { target: { value: 'passive2Data' }})
-    fireEvent.input(document.querySelector('#passive2'), { target: { value: 'passive2Data2' }})
+    fireEvent.input(document.querySelector('#defer2'), { target: { value: 'defer2Data' }})
+    fireEvent.input(document.querySelector('#defer2'), { target: { value: 'defer2Data2' }})
 
     fireEvent.input(document.querySelector('#active'), { target: { value: 'activeData' }})
 
     await wait(() => {
         expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('passive')
-        expect(payload.actionQueue[0].payload.value).toEqual('passiveData2')
+        expect(payload.actionQueue[0].payload.name).toEqual('defer')
+        expect(payload.actionQueue[0].payload.value).toEqual('deferData2')
 
         expect(payload.actionQueue[1].type).toEqual('syncInput')
-        expect(payload.actionQueue[1].payload.name).toEqual('passive2')
-        expect(payload.actionQueue[1].payload.value).toEqual('passive2Data2')
+        expect(payload.actionQueue[1].payload.name).toEqual('defer2')
+        expect(payload.actionQueue[1].payload.value).toEqual('defer2Data2')
 
         expect(payload.actionQueue[2].type).toEqual('syncInput')
         expect(payload.actionQueue[2].payload.name).toEqual('active')
@@ -144,14 +144,14 @@ test('passive models appear before active', async () => {
     })
 })
 
-test('passive models work on form submits', async () => {
+test('deferred models work on form submits', async () => {
     let payload
-    mount('<form wire:submit.prevent="submit"><input id="passive" wire:model.passive="passive" /></form>', i => {
+    mount('<form wire:submit.prevent="submit"><input id="defer" wire:model.defer="defer" /></form>', i => {
         payload = i
     })
 
-    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData' }})
-    fireEvent.input(document.querySelector('#passive'), { target: { value: 'passiveData2' }})
+    fireEvent.input(document.querySelector('#defer'), { target: { value: 'deferData' }})
+    fireEvent.input(document.querySelector('#defer'), { target: { value: 'deferData2' }})
 
     fireEvent.submit(document.querySelector('form'))
 
@@ -159,8 +159,8 @@ test('passive models work on form submits', async () => {
         expect(payload.actionQueue.length).toEqual(2)
 
         expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('passive')
-        expect(payload.actionQueue[0].payload.value).toEqual('passiveData2')
+        expect(payload.actionQueue[0].payload.name).toEqual('defer')
+        expect(payload.actionQueue[0].payload.value).toEqual('deferData2')
 
         expect(payload.actionQueue[1].type).toEqual('callMethod')
         expect(payload.actionQueue[1].payload.method).toEqual('submit')

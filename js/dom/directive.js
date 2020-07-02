@@ -28,13 +28,13 @@ export default class {
         return params
     }
 
-    get passive() {
-        return this.modifiers.includes('passive')
+    get defer() {
+        return this.modifiers.includes('defer')
     }
 
     durationOr(defaultDuration) {
         // Always default debounce on passive
-        if (this.passive) {
+        if (this.defer) {
             return defaultDuration
         }
 

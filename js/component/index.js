@@ -119,7 +119,7 @@ export default class Component {
             return
         }
 
-        if (action.isPassive) {
+        if (action.isDefer) {
             // Remove all previous actions that sync the same property
             this.actionQueue = this.actionQueue.filter((an) => an.payload.name !== action.payload.name)
 
@@ -130,8 +130,6 @@ export default class Component {
         }
 
         this.actionQueue.push(action)
-
-        // If action is passive, just store it in the actionQueue
 
         // This debounce is here in-case two events fire at the "same" time:
         // For example: if you are listening for a click on element A,

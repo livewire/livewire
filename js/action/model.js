@@ -4,7 +4,7 @@ export default class extends Action {
     constructor(name, value, el) {
         super(el)
 
-        this.isPassive = false
+        this.isDefer = false
         this.type = 'syncInput'
         this.payload = {
             name,
@@ -12,8 +12,8 @@ export default class extends Action {
         }
     }
 
-    passive(condition = true) {
-        this.isPassive = condition;
+    defer(condition = true) {
+        this.isDefer = condition;
 
         return this
     }

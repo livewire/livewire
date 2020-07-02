@@ -54,7 +54,7 @@ export default {
         el.el.isLivewireModel = true
 
         const isLazy = directive.modifiers.includes('lazy')
-        const isPassive = directive.modifiers.includes('passive')
+        const isDefer = directive.modifiers.includes('defer')
 
         const debounceIf = (condition, callback, time) => {
             return condition
@@ -97,7 +97,7 @@ export default {
                         ? e.detail
                         : el.valueFromInput(component)
 
-                const action = new ModelAction(model, value, el).passive(isPassive)
+                const action = new ModelAction(model, value, el).defer(isDefer)
 
                 component.addAction(action)
             },
