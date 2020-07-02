@@ -9,6 +9,7 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\View;
 use Livewire\GenerateSignedUploadUrl;
 use Illuminate\Routing\RouteCollection;
+use Illuminate\Support\Traits\Macroable;
 use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
 
 class TestableLivewire
@@ -19,6 +20,8 @@ class TestableLivewire
     public $lastRenderedView;
     public $lastResponse;
     public $rawMountedResponse;
+
+    use Macroable { __call as macroCall; }
 
     use Concerns\MakesAssertions,
         Concerns\MakesCallsToComponent,
@@ -179,6 +182,10 @@ class TestableLivewire
 
     public function __call($method, $params)
     {
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $params);
+        }
+
         return $this->lastResponse->$method(...$params);
     }
 }
