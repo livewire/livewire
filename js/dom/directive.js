@@ -28,7 +28,16 @@ export default class {
         return params
     }
 
+    get passive() {
+        return this.modifiers.includes('passive')
+    }
+
     durationOr(defaultDuration) {
+        // Always default debounce on passive
+        if (this.passive) {
+            return defaultDuration
+        }
+
         let durationInMilliSeconds
         const durationInMilliSecondsString = this.modifiers.find(mod => mod.match(/([0-9]+)ms/))
         const durationInSecondsString = this.modifiers.find(mod => mod.match(/([0-9]+)s/))
