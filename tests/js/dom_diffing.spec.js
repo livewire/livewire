@@ -110,3 +110,46 @@ test('elements added with keys are recognized in the custom lookahead', async ()
         expect(changes.removed.length).toEqual(0)
     })
 })
+
+test('elements that have directive added have directive listener added', async () => {
+    let requestHappened = 0;
+    mountAsRootAndReturn(
+        '<div wire:id="123" wire:initial-data="{}"><button disabled class="previous">previous</button><button wire:click="$refresh" class="next">next</button></div>',
+        '<div wire:id="123"><button wire:click="$refresh" class="previous">previous</button><button wire:click="$refresh" class="next">next</button></div>',
+        [],
+        () => { requestHappened = requestHappened + 1 }
+    )
+
+    fireEvent.click(document.querySelector('.next'))
+
+    await wait(() => {
+        expect(requestHappened).toEqual(1);
+    })
+
+    fireEvent.click(document.querySelector('.previous'))
+
+    await wait(() => {
+        expect(requestHappened).toEqual(2);
+    })
+})
+
+test('elements that have directive removed have directive listener removed', async () => {
+    let requestHappened = 0;
+    mountAsRootAndReturn(
+        '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh" class="previous" wire:key="foo">previous</button><button wire:click="$refresh" class="next">next</button></div>',
+        '<div wire:id="123"><button class="previous" wire:key="foo">previous</button><button wire:click="$refresh" class="next">next</button></div>',
+        [],
+        () => { requestHappened = requestHappened + 1 }
+    )
+
+    fireEvent.click(document.querySelector('.next'))
+
+    await wait(() => {
+        expect(requestHappened).toEqual(1);
+    })
+
+    fireEvent.click(document.querySelector('.previous'))
+
+    await timeout(25)
+    expect(requestHappened).toEqual(1)
+})
