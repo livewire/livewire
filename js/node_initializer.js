@@ -184,6 +184,9 @@ export default {
 
         const event = directive.type
         const handler = e => {
+            // check if directive still valid (e.g. not removed)
+            if (! directive.value) return
+
             if (callback && callback(e) === false) {
                 return
             }
