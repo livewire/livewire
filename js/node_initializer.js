@@ -15,32 +15,36 @@ export default {
         }
 
         el.directives.all().forEach(directive => {
-            switch (directive.type) {
-                case 'init':
-                    this.fireActionRightAway(el, directive, component)
-                    break
-
-                case 'model':
-                    el.setInputValueFromModel(component)
-                    this.attachModelListener(el, directive, component)
-                    break
-
-                default:
-                    if (store.directives.has(directive.type)) {
-                        store.directives.call(
-                            directive.type,
-                            el.el,
-                            directive,
-                            component
-                        )
-                    }
-
-                    this.attachDomListener(el, directive, component)
-                    break
-            }
+            this.initializeDirective(el, component, directive)
         })
 
         store.callHook('elementInitialized', el, component)
+    },
+
+    initializeDirective(el, component, directive) {
+        switch (directive.type) {
+            case 'init':
+                this.fireActionRightAway(el, directive, component)
+                break
+
+            case 'model':
+                el.setInputValueFromModel(component)
+                this.attachModelListener(el, directive, component)
+                break
+
+            default:
+                if (store.directives.has(directive.type)) {
+                    store.directives.call(
+                        directive.type,
+                        el.el,
+                        directive,
+                        component
+                    )
+                }
+
+                this.attachDomListener(el, directive, component)
+                break
+        }
     },
 
     fireActionRightAway(el, directive, component) {

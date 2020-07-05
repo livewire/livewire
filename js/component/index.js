@@ -317,6 +317,7 @@ export default class Component {
                 store.callHook('beforeElementUpdate', from, to, this)
 
                 const fromEl = new DOMElement(from)
+                this.beforeElUpdatedDirectives = fromEl.directives
 
                 // Set the value of wire:model on select elements in the
                 // "to" node before doing the diff, so that the options
@@ -366,6 +367,14 @@ export default class Component {
 
             onElUpdated: node => {
                 this.morphChanges.changed.push(node)
+
+                if (this.beforeElUpdatedDirectives) {
+                    let el = new DOMElement(node)
+                    el.directives
+                        .all()
+                        .filter(d => this.beforeElUpdatedDirectives.missing(d.type))
+                        .forEach(d => nodeInitializer.initializeDirective(el, this, d))
+                }
 
                 store.callHook('afterElementUpdate', node, this)
             },
