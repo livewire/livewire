@@ -188,6 +188,10 @@ class LivewireManager
         display: none;
     }
 
+    [wire\:loading\.display] {
+        display: none;
+    }
+
     [wire\:offline] {
         display: none;
     }
