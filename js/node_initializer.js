@@ -1,5 +1,6 @@
 import { kebabCase, debounce } from '@/util'
 import ModelAction from '@/action/model'
+import DeferredModelAction from '@/action/deferred-model'
 import MethodAction from '@/action/method'
 import DOMElement from '@/dom/dom_element'
 import store from '@/Store'
@@ -22,6 +23,7 @@ export default {
 
                 case 'model':
                     el.setInputValueFromModel(component)
+
                     this.attachModelListener(el, directive, component)
                     break
 
@@ -95,7 +97,12 @@ export default {
                         ? e.detail
                         : el.valueFromInput(component)
 
-                component.addAction(new ModelAction(model, value, el))
+                if (directive.modifiers.includes('defer')) {
+                    component.addAction(new DeferredModelAction(model, value, el))
+
+                } else {
+                    component.addAction(new ModelAction(model, value, el))
+                }
             },
             directive.durationOr(150)
         )
