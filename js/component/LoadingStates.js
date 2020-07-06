@@ -157,7 +157,11 @@ function startLoading(els) {
             if (directive.modifiers.includes('remove')) {
                 el.style.display = 'none'
             } else {
-                el.style.display = 'inline-block'
+                if (directive.modifiers.includes('display')) {
+                    el.style.display = directive.value
+                } else {
+                    el.style.display = 'inline-block'
+                }
             }
         }
     })

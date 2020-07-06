@@ -25,6 +25,29 @@ test('show element while loading and hide after', async () => {
     })
 })
 
+test('show element while loading using custom display', async () => {
+    mountAndReturn(
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading.display="flex"></span>`,
+        `<button wire:click="onClick"></button><span style="display: none" wire:loading.display="flex"></span>`,
+        [], async () => {
+            // Make the loading last for 50ms.
+            await timeout(50)
+        }
+    )
+
+    expect(document.querySelector('span').style.display).toEqual('none')
+
+    document.querySelector('button').click()
+
+    await wait(async () => {
+        expect(document.querySelector('span').style.display).toEqual('flex')
+
+        await wait(async () => {
+            expect(document.querySelector('span').style.display).toEqual('none')
+        })
+    })
+})
+
 test('hide element while loading and show after', async () => {
     mountAndReturn(
         `<button wire:click="onClick"></button><span style="display: inline-block" wire:loading.remove></span>`,
