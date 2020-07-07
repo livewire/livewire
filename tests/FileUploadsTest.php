@@ -113,6 +113,8 @@ class FileUploadsTest extends TestCase
             ->set('photosArray', $file1)
             ->set('photosArray', $file2)
             ->set('name', 'somename');
+        
+        $tmpFiles = $component->viewData('photosArray');
 
         $this->assertEquals('avatar1.jpg', $tmpFiles[0]->getClientOriginalName());
         $this->assertEquals('avatar2.jpg', $tmpFiles[1]->getClientOriginalName());
