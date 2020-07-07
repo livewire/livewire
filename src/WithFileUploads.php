@@ -125,8 +125,6 @@ trait WithFileUploads
         }
 
         return $value;
-
-        return $value;
     }
 
     protected function cleanupOldUploads()
