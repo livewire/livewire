@@ -102,6 +102,23 @@ class FileUploadsTest extends TestCase
         Storage::disk('avatars')->assertExists('uploaded-avatar1.png');
         Storage::disk('avatars')->assertExists('uploaded-avatar2.png');
     }
+    
+    /** @test */
+    public function if_the_file_property_is_an_array_the_uploaded_file_will_append_to_the_array_and_persist_after_hydration()
+    {
+        Storage::fake('avatars');
+
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
+
+        $component = Livewire::test(FileUploadComponentWithNameProperty::class)
+            ->set('photosArray', $file1)
+            ->set('photosArray', $file2)
+            ->set('name', 'somename')
+
+        $this->assertEquals('avatar1.jpg', $tmpFiles[0]->getClientOriginalName());
+        $this->assertEquals('avatar2.jpg', $tmpFiles[1]->getClientOriginalName());
+    }
 
     /** @test */
     public function storing_a_file_returns_its_filename()
@@ -563,4 +580,9 @@ class FileUploadComponent extends Component
     }
 
     public function render() { return app('view')->make('null-view'); }
+}
+
+class FileUploadComponentWithNameProperty extends FileUploadComponent
+{
+    public $name;
 }
