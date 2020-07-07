@@ -3,7 +3,6 @@
 namespace Livewire;
 
 use Illuminate\Container\BoundMethod;
-use Illuminate\Container\Util;
 use Illuminate\Contracts\Routing\UrlRoutable as ImplicitlyBindable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -75,14 +74,14 @@ class ImplicitlyBoundMethod extends BoundMethod
 
     protected static function getClassForDependencyInjection($parameter)
     {
-        if (! is_null($className = Util::getParameterClassName($parameter)) && ! $parameter->getClass()->implementsInterface(ImplicitlyBindable::class)) {
+        if (! is_null($className = static::getParameterClassName($parameter)) && ! $parameter->getClass()->implementsInterface(ImplicitlyBindable::class)) {
             return $className;
         }
     }
 
     protected static function getClassForImplicitBinding($parameter)
     {
-        if (! is_null($className = Util::getParameterClassName($parameter)) && $parameter->getClass()->implementsInterface(ImplicitlyBindable::class)) {
+        if (! is_null($className = static::getParameterClassName($parameter)) && $parameter->getClass()->implementsInterface(ImplicitlyBindable::class)) {
             return $className;
         }
 
@@ -98,5 +97,12 @@ class ImplicitlyBoundMethod extends BoundMethod
         }
 
         return $model;
+    }
+
+    public static function getParameterClassName($parameter)
+    {
+        $type = $parameter->getType();
+
+        return ($type && ! $type->isBuiltin()) ? $type->getName() : null;
     }
 }
