@@ -588,7 +588,7 @@ class FileUploadComponent extends Component
     public function render() { return app('view')->make('null-view'); }
 }
 
-class NestedFileUploadComponentWithNameProperty extends Component
+class NestedFileUploadComponentWithNameProperty extends FileUploadComponent
 {
     public $obj = [
         'name' => null,
