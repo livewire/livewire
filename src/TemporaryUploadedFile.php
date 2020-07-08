@@ -149,15 +149,7 @@ class TemporaryUploadedFile extends UploadedFile
             return collect($subject)->filter(function ($key) {
                 return ! empty($key);
             })->contains(function ($value) {
-                if (is_string($value)) {
-                    return Str::startsWith($value, 'livewire-file:')
-                    || Str::startsWith($value, 'livewire-files:');
-                } elseif (is_array($value)) {
-                    return collect($value)->contains(function ($value) {
-                        return Str::startsWith($value, 'livewire-file:')
-                        || Str::startsWith($value, 'livewire-files:');
-                    });
-                }
+                return static::canUnserialize($value);
             });
         }
 
@@ -176,13 +168,7 @@ class TemporaryUploadedFile extends UploadedFile
             }
         } elseif (is_array($subject)) {
             collect(array_keys($subject))->map(function ($key) use (&$subject) {
-                if (Str::startsWith($subject[$key], 'livewire-file:')) {
-                    $subject[$key] = static::createFromLivewire(Str::after($subject[$key], 'livewire-file:'));
-                } elseif (Str::startsWith($subject[$key], 'livewire-files:')) {
-                    $paths = json_decode(Str::after($subject[$key], 'livewire-files:'), true);
-
-                    $subject[$key] = collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
-                }
+                    static::unserializeFromLivewireRequest($subject[$key]);
             });
 
             return $subject;
