@@ -110,6 +110,14 @@ class ComponentDependencyInjectionTest extends TestCase
         $this->assertEquals('http://localhost/some-url', $component->foo);
         $this->assertNull($component->bar);
     }
+
+    /** @test */
+    public function it_can_inject_dependency_via_render_method()
+    {
+        $component = app(LivewireManager::class)->test(CustomComponent::class);
+
+        $component->assertSee('Results from the service');
+    }
 }
 
 class ComponentWithDependencyInjection extends Component
@@ -165,5 +173,23 @@ class ComponentWithDependencyInjection extends Component
     public function render()
     {
         return view('null-view');
+    }
+}
+
+class CustomComponent extends Component
+{
+    public function render(CustomService $service)
+    {
+        return view('show-property-value', [
+            'message' => $service->results()
+        ]);
+    }
+}
+
+class CustomService
+{
+    public function results()
+    {
+        return 'Results from the service';
     }
 }
