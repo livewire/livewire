@@ -102,9 +102,7 @@ trait WithFileUploads
     {
         if ($value instanceof TemporaryUploadedFile) {
             return $value->serializeForLivewireResponse();
-        } elseif (is_array($value) && isset(array_values($value)[0]) && array_values($value)[0] instanceof TemporaryUploadedFile) {
-            return array_values($value)[0]::serializeMultipleForLivewireResponse($value);
-        } elseif (is_array($value) && !empty($value) && array_keys($value) !== range(0, count($value) - 1)) {
+        } elseif (is_array($value)) {
             collect(array_keys($value))->map(function ($key) use ($value) {
                 if ($value[$key] instanceof TemporaryUploadedFile) {
                     return [$key, 'singleUpload'];
