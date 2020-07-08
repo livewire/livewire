@@ -106,11 +106,7 @@ trait WithFileUploads
             return $value[0]::serializeMultipleForLivewireResponse($value);
         } elseif (is_array($value)) {
             foreach (array_keys($value) as $key) {
-                if ($value[$key] instanceof TemporaryUploadedFile) {
-                    $value[$key] = $value[$key]->serializeForLivewireResponse();
-                } elseif (is_array($value[$key]) && isset($value[$key][0]) && $value[$key][0] instanceof TemporaryUploadedFile) {
-                    $value[$key] = $value[$key][0]::serializeMultipleForLivewireResponse($value[$key]);
-                }
+                $value[$key] = $this->dehydratePropertyFromWithFileUploads(null, $value[$key]);
             }
         }
 
