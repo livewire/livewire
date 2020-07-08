@@ -33,7 +33,7 @@ class StubParser extends ComponentParser
         return $this->component.'.stub';
     }
 
-    public function classContents()
+    public function classContents($inline = false)
     {
         return file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'Component.stub');
     }
