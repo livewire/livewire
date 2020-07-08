@@ -481,7 +481,7 @@ class FileUploadsTest extends TestCase
          $file3 = UploadedFile::fake()->image('avatar3.jpg');
          $file4 = UploadedFile::fake()->image('avatar4.jpg');
 
-         $component = Livewire::test(FileUploadComponentWithObjectProperty::class)
+         $component = Livewire::test(NestedFileUploadComponentWithNameProperty::class)
                               ->set('obj.photos', [$file1, $file2, $file3, $file4]);
 
          $this->assertStringStartsWith('livewire-files:', $component->get('obj.photos'));
@@ -588,73 +588,15 @@ class FileUploadComponent extends Component
     public function render() { return app('view')->make('null-view'); }
 }
 
-class FileUploadComponentWithObjectProperty extends FileUploadComponent
+class NestedFileUploadComponentWithNameProperty extends Component
 {
-    public $obj;
-
-    public function updatedPhoto()
-    {
-        $this->validate(['obj.photo' => 'image|max:300']);
-    }
-
-    public function updatedPhotos()
-    {
-        $this->validate(['obj.photos.*' => 'image|max:300']);
-    }
-
-    public function upload($name)
-    {
-        $this->obj->photo->storeAs('/', $name, $disk = 'avatars');
-    }
-
-    public function uploadMultiple($baseName)
-    {
-        $number = 1;
-
-        foreach ($this->obj->photos as $photo) {
-            $photo->storeAs('/', $baseName.$number++.'.png', $disk = 'avatars');
-        }
-    }
-
-    public function uploadPhotosArray($baseName)
-    {
-        $number = 1;
-
-        foreach ($this->obj->photosArray as $photo) {
-            $photo->storeAs('/', $baseName.$number++.'.png', $disk = 'avatars');
-        }
-    }
-
-    public function uploadAndSetStoredFilename()
-    {
-        $this->storedFilename = $this->obj->photo->store('/', $disk = 'avatars');
-    }
-
-    public function uploadDangerous()
-    {
-        $this->obj->photo->store();
-    }
-
-    public function validateUpload()
-    {
-        $this->validate(['obj.photo' => 'file|max:100']);
-    }
-
-    public function validateMultipleUploads()
-    {
-        $this->validate(['obj.photos.*' => 'file|max:100']);
-    }
-
-    public function validateUploadWithDimensions()
-    {
-        $this->validate([
-            'obj.photo' => Rule::dimensions()->maxWidth(100)->maxHeight(100),
-        ]);
-    }
+    public $obj = [
+        'name' => null,
+        'photos' => null
+    ];
 
     public function removePhoto($key) {
         unset($this->obj->photos[$key]);
     }
 
-    public function render() { return app('view')->make('null-view'); }
 }
