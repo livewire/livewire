@@ -486,10 +486,10 @@ class FileUploadsTest extends TestCase
 
          $this->assertStringStartsWith('livewire-files:', $component->get('obj.photos'));
 
-         $component->call('removePhoto', [3]);
+         $component->call('removePhoto', 3);
          $this->assertStringStartsWith('livewire-files:', $component->get('obj.photos'));
 
-         $component->call('removePhoto', ['obj'][3]);
+         $component->call('removePhoto', 0);
          $this->assertStringStartsWith('livewire-files:', $component->get('obj.photos'));
 
          $component->set('obj.name', 'Caleb');
