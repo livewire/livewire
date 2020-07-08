@@ -18,6 +18,7 @@ export default class {
         let payload = {
             id: this.component.id,
             data: this.component.data,
+            meta: this.component.meta,
             name: this.component.name,
             checksum: this.component.checksum,
             locale: this.component.locale,
@@ -50,6 +51,7 @@ export default class {
             dispatchQueue: payload.dispatchQueue,
             events: payload.events,
             data: payload.data,
+            meta: payload.meta,
             redirectTo: payload.redirectTo,
             errorBag: payload.errorBag || {},
             updatesQueryString: payload.updatesQueryString,

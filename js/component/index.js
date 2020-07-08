@@ -22,6 +22,7 @@ export default class Component {
             this.extractLivewireAttribute('initial-data')
         )
         this.data = initialData.data || {}
+        this.meta = initialData.meta || {}
         this.events = initialData.events || []
         this.children = initialData.children || {}
         this.checksum = initialData.checksum || ''
