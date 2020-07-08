@@ -592,7 +592,8 @@ class NestedFileUploadComponentWithNameProperty extends FileUploadComponent
 {
     public $obj = [
         'name' => null,
-        'photos' => []
+        'photos' => [].
+        'photosArray' = []
     ];
 
     public function removePhoto($key) {
