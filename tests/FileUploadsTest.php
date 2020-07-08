@@ -472,6 +472,26 @@ class FileUploadsTest extends TestCase
         $component->call('removePhoto', 0);
         $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
     }
+
+     /** @test */
+     public function removing_first_item_from_nested_array_of_temporary_uploaded_files_serializes_correctly()
+     {
+         $file1 = UploadedFile::fake()->image('avatar1.jpg');
+         $file2 = UploadedFile::fake()->image('avatar2.jpg');
+         $file3 = UploadedFile::fake()->image('avatar3.jpg');
+         $file4 = UploadedFile::fake()->image('avatar4.jpg');
+
+         $component = Livewire::test(FileUploadComponent::class)
+                              ->set('photos.file_uploads', [$file1, $file2, $file3, $file4]);
+
+         $this->assertStringStartsWith('livewire-files:', $component->get('photos.file_uploads'));
+
+         $component->call('removePhoto', 3);
+         $this->assertStringStartsWith('livewire-files:', $component->get('photos.file_uploads'));
+
+         $component->call('removePhoto', 0);
+         $this->assertStringStartsWith('livewire-files:', $component->get('photos.file_uploads'));
+     }
 }
 
 class DummyMiddleware
