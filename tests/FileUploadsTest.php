@@ -473,28 +473,6 @@ class FileUploadsTest extends TestCase
         $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
     }
 
-     /** @test */
-     public function removing_first_item_from_nested_array_of_temporary_uploaded_files_serializes_correctly()
-     {
-         $file1 = UploadedFile::fake()->image('avatar1.jpg');
-         $file2 = UploadedFile::fake()->image('avatar2.jpg');
-         $file3 = UploadedFile::fake()->image('avatar3.jpg');
-         $file4 = UploadedFile::fake()->image('avatar4.jpg');
-
-         $component = Livewire::test(NestedFileUploadComponentWithNameProperty::class)
-                              ->set('obj.photos', [$file1, $file2, $file3, $file4]);
-
-         $this->assertStringStartsWith('livewire-files:', $component->get('obj.photos'));
-
-         $component->call('removePhoto', 3);
-         $this->assertStringStartsWith('livewire-files:', $component->get('obj.photos'));
-
-         $component->call('removePhoto', 0);
-         $this->assertStringStartsWith('livewire-files:', $component->get('obj.photos'));
-
-         $component->set('obj.name', 'Caleb');
-         $this->assertEquals($component->get('obj.name'), 'Caleb');
-     }
 }
 
 class DummyMiddleware
@@ -586,17 +564,4 @@ class FileUploadComponent extends Component
     }
 
     public function render() { return app('view')->make('null-view'); }
-}
-
-class NestedFileUploadComponentWithNameProperty extends FileUploadComponent
-{
-    public $obj = [
-        'name' => null,
-        'photos' => []
-    ];
-
-    public function removePhoto($key) {
-        unset($this->obj->photos[$key]);
-    }
-
 }
