@@ -2,6 +2,8 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Livewire\Event;
+
 trait ReceivesEvents
 {
     protected $eventQueue = [];
@@ -14,37 +16,7 @@ trait ReceivesEvents
 
     public function emit($event, ...$params)
     {
-        $this->eventQueue[] = [
-            'event' => $event,
-            'params' => $params,
-        ];
-    }
-
-    public function emitUp($event, ...$params)
-    {
-        $this->eventQueue[] = [
-            'event' => $event,
-            'params' => $params,
-            'ancestorsOnly' => true,
-        ];
-    }
-
-    public function emitSelf($event, ...$params)
-    {
-        $this->eventQueue[] = [
-            'event' => $event,
-            'params' => $params,
-            'selfOnly' => true,
-        ];
-    }
-
-    public function emitTo($name, $event, ...$params)
-    {
-        $this->eventQueue[] = [
-            'event' => $event,
-            'params' => $params,
-            'to' => $name,
-        ];
+        return $this->eventQueue[] = new Event($event, $params);
     }
 
     public function dispatchBrowserEvent($event, $data = null)
@@ -57,7 +29,7 @@ trait ReceivesEvents
 
     public function getEventQueue()
     {
-        return $this->eventQueue;
+        return collect($this->eventQueue)->map->serialize()->toArray();
     }
 
     public function getDispatchQueue()
