@@ -142,20 +142,51 @@ class TemporaryUploadedFile extends UploadedFile
 
     public static function canUnserialize($subject)
     {
-        if (! is_string($subject)) return false;
+        if (is_string($subject)) {
+            return Str::startsWith($subject, 'livewire-file:')
+                || Str::startsWith($subject, 'livewire-files:');
+        } elseif (is_array($subject)) {
+            return collect($subject)->filter(function ($key) {
+                return ! empty($key);
+            })->contains(function ($value) {
+                if (is_string($value)) {
+                    return Str::startsWith($value, 'livewire-file:')
+                    || Str::startsWith($value, 'livewire-files:');
 
-        return Str::startsWith($subject, 'livewire-file:')
-            || Str::startsWith($subject, 'livewire-files:');
+                } elseif (is_array($value)) {
+                    return collect($value)->contains(function ($value) {
+                        return Str::startsWith($value, 'livewire-file:')
+                        || Str::startsWith($value, 'livewire-files:');
+                    });
+                }
+            });
+        }
+
+        return false;
     }
 
     public static function unserializeFromLivewireRequest($subject)
     {
-        if (Str::startsWith($subject, 'livewire-file:')) {
-            return static::createFromLivewire(Str::after($subject, 'livewire-file:'));
-        } elseif (Str::startsWith($subject, 'livewire-files:')) {
-            $paths = json_decode(Str::after($subject, 'livewire-files:'), true);
+        if (is_string($subject)) {
+            if (Str::startsWith($subject, 'livewire-file:')) {
+                return static::createFromLivewire(Str::after($subject, 'livewire-file:'));
+            } elseif (Str::startsWith($subject, 'livewire-files:')) {
+                $paths = json_decode(Str::after($subject, 'livewire-files:'), true);
 
-            return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
+                return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
+            }
+        } elseif (is_array($subject)) {
+            collect(array_keys($subject))->map(function ($key) use (&$subject) {
+                if (Str::startsWith($subject[$key], 'livewire-file:')) {
+                    $subject[$key] = static::createFromLivewire(Str::after($subject[$key], 'livewire-file:'));
+                } elseif (Str::startsWith($subject[$key], 'livewire-files:')) {
+                    $paths = json_decode(Str::after($subject[$key], 'livewire-files:'), true);
+
+                    $subject[$key] = collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
+                }
+            });
+
+            return $subject;
         }
     }
 
