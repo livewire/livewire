@@ -14,16 +14,26 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
 
     public static function hydrate($unHydratedInstance, $request)
     {
-        $publicProperties = $unHydratedInstance->getPublicPropertiesDefinedBySubClass();
+        if (! isset($request['meta']['models'])) return;
 
-        foreach ($publicProperties as $property => $value) {
-            if (is_array($value) && array_keys($value) === ['class', 'id', 'relations', 'connection']) {
-                $unHydratedInstance->lockPropertyFromSync($property);
+        foreach ($request['meta']['models'] as $property => $value) {
+            $model = (new static)->getRestoredPropertyValue(
+                new ModelIdentifier($value['class'], $value['id'], $value['relations'], $value['connection'])
+            );
 
-                $unHydratedInstance->$property = (new static)->getRestoredPropertyValue(
-                    new ModelIdentifier($value['class'], $value['id'], $value['relations'], $value['connection'])
-                );
+            $dirtyModelData = $request['data'][$property];
+
+            if ($rules = $unHydratedInstance->rulesForModel($property)) {
+                $keys = $rules->keys()->map(function ($key) use ($unHydratedInstance) {
+                    return $unHydratedInstance->afterFirstDot($key);
+                });
+
+                foreach ($keys as $key) {
+                    data_set($model, $key, data_get($dirtyModelData, $key));
+                }
             }
+
+            $unHydratedInstance->$property = $model;
         }
     }
 
@@ -33,7 +43,29 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
 
         foreach ($publicProperties as $property => $value) {
             if (($serializedModel = (new static)->getSerializedPropertyValue($value)) instanceof ModelIdentifier) {
-                $instance->$property = (array) $serializedModel;
+                $meta = $response->meta;
+
+                if (! isset($meta['models'])) $meta['models'] = [];
+
+                if ($rules = $instance->rulesForModel($property)) {
+                    $keys = $rules->keys()->map(function ($key) use ($instance) {
+                        return $instance->afterFirstDot($key);
+                    });
+
+                    $explodedModelData = [];
+
+                    foreach ($keys as $key) {
+                        data_set($explodedModelData, $key, data_get($instance->$property, $key));
+                    }
+
+                    $instance->$property = $explodedModelData;
+                } else {
+                    $instance->$property = [];
+                }
+
+                // Deserialize the models into the "meta" bag.
+                $meta['models'][$property] = (array) $serializedModel;
+                $response->meta = $meta;
             }
         }
     }

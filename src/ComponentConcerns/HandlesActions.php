@@ -4,26 +4,23 @@ namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
 use Livewire\ImplicitlyBoundMethod;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
-use Livewire\Exceptions\CannotBindDataToEloquentModelException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
+use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 
 trait HandlesActions
 {
-    protected $lockedModelProperties = [];
-
-    public function lockPropertyFromSync($property)
-    {
-        $this->lockedModelProperties[] = $property;
-    }
-
     public function syncInput($name, $value)
     {
         $propertyName = $this->beforeFirstDot($name);
 
-        throw_if(in_array($propertyName, $this->lockedModelProperties), new CannotBindDataToEloquentModelException($name));
+        throw_if(
+            $this->{$propertyName} instanceof Model && $this->missingRuleFor($name),
+            new CannotBindToModelDataWithoutValidationRuleException($name, $this->getName())
+        );
 
         $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName) {
             // @todo: this is fired even if a property isn't present at all which is confusing.

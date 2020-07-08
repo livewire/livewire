@@ -14,6 +14,7 @@ class HttpConnectionHandler extends ConnectionHandler
                 'name',
                 'children',
                 'data',
+                'meta',
                 'id',
                 'checksum',
                 'locale',

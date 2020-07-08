@@ -100,6 +100,7 @@ class LivewireManager
             'id' => $id,
             'name' => $name,
             'dom' => $dom,
+            'meta' => [],
         ]);
 
         $this->initialDehydrate($instance, $response);
