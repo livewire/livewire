@@ -481,7 +481,7 @@ class FileUploadsTest extends TestCase
          $file3 = UploadedFile::fake()->image('avatar3.jpg');
          $file4 = UploadedFile::fake()->image('avatar4.jpg');
 
-         $component = Livewire::test(FileUploadComponentWithNameProperty::class)
+         $component = Livewire::test(FileUploadComponentWithObjectProperty::class)
                               ->set('obj.photos', [$file1, $file2, $file3, $file4]);
 
          $this->assertStringStartsWith('livewire-files:', $component->get('obj.photos'));
