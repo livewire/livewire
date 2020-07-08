@@ -148,9 +148,16 @@ class TemporaryUploadedFile extends UploadedFile
         } elseif (is_array($subject)) {
             return collect($subject)->filter(function ($key) {
                 return ! empty($key);
-            })->contains(function ($value, $key) {
-                return Str::startsWith($value, 'livewire-file:')
-                || Str::startsWith($value, 'livewire-files:');
+            })->contains(function ($value) {
+                if (is_string($value)) {
+                    return Str::startsWith($value, 'livewire-file:')
+                    || Str::startsWith($value, 'livewire-files:');
+                } elseif (is_array($value)) {
+                    return collect($value)->contains(function ($value) {
+                        return Str::startsWith($value, 'livewire-file:')
+                        || Str::startsWith($value, 'livewire-files:');
+                    });
+                }
             });
         }
 
@@ -168,15 +175,17 @@ class TemporaryUploadedFile extends UploadedFile
                 return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
             }
         } elseif (is_array($subject)) {
-            return collect($subject)->map(function ($item) {
-                if (Str::startsWith($item, 'livewire-file:')) {
-                    return static::createFromLivewire(Str::after($item, 'livewire-file:'));
-                } elseif (Str::startsWith($item, 'livewire-files:')) {
-                    $paths = json_decode(Str::after($item, 'livewire-files:'), true);
+            collect(array_keys($subject))->map(function ($key) use (&$subject) {
+                if (Str::startsWith($subject[$key], 'livewire-file:')) {
+                    $subject[$key] = static::createFromLivewire(Str::after($subject[$key], 'livewire-file:'));
+                } elseif (Str::startsWith($subject[$key], 'livewire-files:')) {
+                    $paths = json_decode(Str::after($subject[$key], 'livewire-files:'), true);
 
-                    return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
+                    $subject[$key] = collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
                 }
-            })->toArray();
+            });
+
+            return $subject;
         }
     }
 
