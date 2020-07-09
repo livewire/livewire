@@ -154,12 +154,9 @@ trait MakesAssertions
             } else {
                 $failed = optional($this->lastValidator)->failed() ?: [];
                 $rules = array_keys(Arr::get($failed, $key, []));
-                $snakeCaseRules = array_map(function ($rule) {
-                    return Str::snake($rule);
-                }, $rules);
 
                 foreach ((array)$value as $rule) {
-                    PHPUnit::assertContains($rule, $snakeCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
+                    PHPUnit::assertContains(Str::studly($rule), $rules, "Component has no [{$rule}] errors for [{$key}] attribute.");
                 }
             }
         }
@@ -185,12 +182,9 @@ trait MakesAssertions
             } else {
                 $failed = optional($this->lastValidator)->failed() ?: [];
                 $rules = array_keys(Arr::get($failed, $key, []));
-                $snakeCaseRules = array_map(function ($rule) {
-                    return Str::snake($rule);
-                }, $rules);
 
                 foreach ((array) $value as $rule) {
-                    PHPUnit::assertNotContains($rule, $snakeCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
+                    PHPUnit::assertNotContains(Str::studly($rule), $rules, "Component has [{$rule}] errors for [{$key}] attribute.");
                 }
             }
         }
