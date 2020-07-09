@@ -172,7 +172,7 @@ ${this.el.outerHTML}
 
         // We need to reset .selectedIndex, otherwise, setting .selected to "false"
         // won't "deselect" an option. This fixes lots of little <select> bugs.
-        this.el.selectedIndex = -1
+        this.el.selectedIndex = 0
 
         Array.from(this.el.options).forEach(option => {
             option.selected = arrayWrappedValue.includes(option.value)
