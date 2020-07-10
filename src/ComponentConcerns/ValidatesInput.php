@@ -15,19 +15,39 @@ trait ValidatesInput
 
     public function getErrorBag()
     {
-        return $this->errorBag ?? new MessageBag;
+        if (! $this->errorBag) {
+            $this->errorBag = new MessageBag;
+        }
+
+        return $this->errorBag;
     }
 
     public function addError($name, $message)
     {
-        return $this->getErrorBag()->add($name, $message);
+        return $this->mergeErrorBag([$name => $message]);
+    }
+
+    public function mergeErrorBag($bag)
+    {
+        if (! $bag instanceof MessageBag) {
+            $bag = new MessageBag($bag);
+        }
+
+        // only track/persist component property errors (for validateOnly)
+        foreach ($bag->messages() as $key => $value) {
+            if ($this->hasProperty($key)) {
+                $this->getErrorBag()->merge([$key => $value]);
+            }
+        }
+
+        return $this->getErrorBag();
     }
 
     public function setErrorBag($bag)
     {
-        return $this->errorBag = $bag instanceof MessageBag
-            ? $bag
-            : new MessageBag($bag);
+        $this->errorBag = new MessageBag;
+
+        return $this->mergeErrorBag($bag);
     }
 
     public function resetErrorBag($field = null)
