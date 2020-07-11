@@ -163,17 +163,17 @@ abstract class Component
         $normalizedData = $value;
 
         // Make sure string keys are last (but not ordered). JSON.parse will do this.
-        uksort($normalizedData, function ($a, $b) {
-            return is_string($a) && is_numeric($b)
-                ? 1
-                : 0;
-        });
-
         // Order numeric indexes.
         uksort($normalizedData, function ($a, $b) {
-            return is_numeric($a) && is_numeric($b)
-                ? $a > $b
-                : 0;
+            if(is_numeric($a) && is_numeric($b)){
+                return $a > $b;
+            }
+            if(!is_numeric($a) && !is_numeric($b)){
+                return 0;
+            }
+            if(!is_numeric($a)){
+                return 1;
+            }
         });
 
         return array_map(function ($value) {
