@@ -120,6 +120,18 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function component_only_tracks_property_errors()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class)->instance();
+
+        $component->addError('foo', 'foo error');
+        $this->assertTrue($component->getErrorBag()->has('foo'));
+
+        $component->addError('foobar', 'foobar error');
+        $this->assertFalse($component->getErrorBag()->has('foobar'));
+    }
+
+    /** @test */
     public function custom_validation_messages_are_cleared_between_validate_only_validations()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
