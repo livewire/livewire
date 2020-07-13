@@ -472,6 +472,73 @@ class FileUploadsTest extends TestCase
         $component->call('removePhoto', 0);
         $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
     }
+
+    /** @test */
+    public function removing_first_item_from_array_of_temporary_uploaded_files_serializes_correctly_with_in_array_public_property()
+    {
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
+        $file3 = UploadedFile::fake()->image('avatar3.jpg');
+        $file4 = UploadedFile::fake()->image('avatar4.jpg');
+
+        $component = Livewire::test(FileUploadInArrayComponent::class)
+                             ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
+                             ->set('obj.first_name', 'john')
+                             ->set('obj.last_name', 'doe');
+
+        $this->assertSame($component->get('obj.first_name'), 'john');
+
+        $this->assertSame($component->get('obj.last_name'), 'doe');
+
+        $this->assertStringStartsWith('livewire-files:', $component->get('obj.file_uploads'));
+
+        $component->call('removePhoto', 3);
+        $this->assertStringStartsWith('livewire-files:', $component->get('obj.file_uploads'));
+
+        $component->call('removePhoto', 0);
+        $this->assertStringStartsWith('livewire-files:', $component->get('obj.file_uploads'));
+    }
+
+    /** @test */
+    public function it_can_upload_multiple_file_with_in_array_public_property()
+    {
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
+        $file3 = UploadedFile::fake()->image('avatar3.jpg');
+        $file4 = UploadedFile::fake()->image('avatar4.jpg');
+
+        $component = Livewire::test(FileUploadInArrayComponent::class)
+                             ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
+                             ->set('obj.first_name', 'john')
+                             ->set('obj.last_name', 'doe');
+
+        $tmpFiles = $component->viewData('obj')['file_uploads'];
+
+        $this->assertSame($component->get('obj.first_name'), 'john');
+
+        $this->assertSame($component->get('obj.last_name'), 'doe');
+
+        $this->assertStringStartsWith('livewire-files:', $component->get('obj.file_uploads'));
+
+        $this->assertCount(4, $tmpFiles);
+    }
+
+    /** @test */
+    public function it_can_upload_single_file_with_in_array_public_property()
+    {
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+
+        $component = Livewire::test(FileUploadInArrayComponent::class)
+                             ->set('obj.file_uploads', $file1)
+                             ->set('obj.first_name', 'john')
+                             ->set('obj.last_name', 'doe');
+
+        $this->assertSame($component->get('obj.first_name'), 'john');
+
+        $this->assertSame($component->get('obj.last_name'), 'doe');
+
+        $this->assertStringStartsWith('livewire-file:', $component->get('obj.file_uploads'));
+    }
 }
 
 class DummyMiddleware
@@ -563,4 +630,17 @@ class FileUploadComponent extends Component
     }
 
     public function render() { return app('view')->make('null-view'); }
+}
+
+class FileUploadInArrayComponent extends FileUploadComponent
+{
+    public $obj = [
+        'fist_name' => null,
+        'last_name' => null,
+        'file_uploads' => null
+    ];
+
+    public function removePhoto($key) {
+        unset($this->obj['file_uploads'][$key]);
+    }
 }
