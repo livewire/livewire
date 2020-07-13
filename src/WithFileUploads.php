@@ -109,8 +109,8 @@ trait WithFileUploads
         }
         
         if (is_array($value)) {
-            foreach (array_keys($value) as $key) {
-                $value[$key] = $this->dehydratePropertyFromWithFileUploads(null, $value[$key]);
+            foreach ($value as $key => $item) {
+                $value[$key] = $this->dehydratePropertyFromWithFileUploads(null, $item);
             }
         }
 

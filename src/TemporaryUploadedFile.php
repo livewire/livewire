@@ -172,8 +172,8 @@ class TemporaryUploadedFile extends UploadedFile
         }
         
         if (is_array($subject)) {
-            foreach (array_keys($subject) as $key) {
-                $subject[$key] =  static::unserializeFromLivewireRequest($subject[$key]);
+            foreach ($subject as $key => $value) {
+                $subject[$key] =  static::unserializeFromLivewireRequest($value);
             }
 
             return $subject;
