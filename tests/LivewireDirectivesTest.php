@@ -47,6 +47,25 @@ class LivewireDirectivesTest extends TestCase
     }
 
     /** @test */
+    public function can_assert_dont_see_livewire_on_standard_blade_view()
+    {
+        $fakeClass = new class {
+            public function getContent()
+            {
+                return view('null-view')->render();
+            }
+        };
+
+        if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=')) {
+            $testResponse = new Laravel7TestResponse($fakeClass);
+        } else {
+            $testResponse = new TestResponse($fakeClass);
+        }
+
+        $testResponse->assertDontSeeLivewire('foo');
+    }
+
+    /** @test */
     public function component_is_loaded_with_blade_directive_by_classname()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);

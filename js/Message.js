@@ -18,8 +18,10 @@ export default class {
         let payload = {
             id: this.component.id,
             data: this.component.data,
+            meta: this.component.meta,
             name: this.component.name,
             checksum: this.component.checksum,
+            locale: this.component.locale,
             children: this.component.children,
             actionQueue: this.actionQueue.map(action => {
                 // This ensures only the type & payload properties only get sent over.
@@ -42,12 +44,14 @@ export default class {
             id: payload.id,
             dom: payload.dom,
             checksum: payload.checksum,
+            locale: payload.locale,
             children: payload.children,
             dirtyInputs: payload.dirtyInputs,
             eventQueue: payload.eventQueue,
             dispatchQueue: payload.dispatchQueue,
             events: payload.events,
             data: payload.data,
+            meta: payload.meta,
             redirectTo: payload.redirectTo,
             errorBag: payload.errorBag || {},
             updatesQueryString: payload.updatesQueryString,

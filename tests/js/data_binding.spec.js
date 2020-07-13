@@ -44,6 +44,22 @@ test('properties are lazy synced when action is fired', async () => {
     })
 })
 
+test('properties are deferred synced when action is fired', async () => {
+    var payload
+    mount('<input wire:model.defer="foo" id="a"><input wire:model.defer="bob" id="b"><button wire:click="onClick"></button>', i => payload = i)
+
+    fireEvent.input(document.querySelector('#a'), { target: { value: 'bar' }})
+    fireEvent.input(document.querySelector('#b'), { target: { value: 'lob' }})
+
+    document.querySelector('button').click()
+
+    await wait(() => {
+        expect(payload.actionQueue[0].type).toEqual('syncInput')
+        expect(payload.actionQueue[1].type).toEqual('syncInput')
+        expect(payload.actionQueue[2].type).toEqual('callMethod')
+    })
+})
+
 test('textarea data binding with class change works as expected and doesn\'t wipe its value', async () => {
     mountAndReturn(
         '<textarea wire:model="foo" class="foo"></textarea>',

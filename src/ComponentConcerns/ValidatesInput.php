@@ -2,12 +2,14 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Illuminate\Database\Eloquent\Model;
 use Livewire\ObjectPrybar;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Exceptions\MissingRulesPropertyException;
 
 trait ValidatesInput
 {
@@ -56,8 +58,37 @@ trait ValidatesInput
         return new MessageBag(Arr::except($this->errorBag->toArray(), $field));
     }
 
-    public function validate($rules, $messages = [], $attributes = [])
+    public function rules()
     {
+        throw_unless(
+            property_exists($this, 'rules'),
+            new MissingRulesPropertyException($this->getName())
+        );
+
+        return $this->rules;
+    }
+
+    public function rulesForModel($name)
+    {
+        if (empty($this->rules)) return collect();
+
+        return collect($this->rules)
+            ->filter(function ($value, $key) use ($name) {
+                return $this->beforeFirstDot($key) === $name;
+            });
+    }
+
+    public function missingRuleFor($key)
+    {
+        if (! property_exists($this, 'rules')) return true;
+
+        return ! in_array($key, array_keys($this->rules));
+    }
+
+    public function validate($rules = null, $messages = [], $attributes = [])
+    {
+        $rules = is_null($rules) ? $this->rules() : $rules;
+
         $fields = array_keys($rules);
 
         $result = $this->getPublicPropertiesDefinedBySubClass();
@@ -70,8 +101,11 @@ trait ValidatesInput
 
             $propertyNameFromValidationField = $this->beforeFirstDot($field);
 
-            $result[$propertyNameFromValidationField]
-                = $this->getPropertyValue($propertyNameFromValidationField);
+            $value = $this->getPropertyValue($propertyNameFromValidationField);
+
+            $result[$propertyNameFromValidationField] = $value instanceof Model
+                ? $value->toArray() : $value;
+
         }
 
         $result = Validator::make($result, Arr::only($rules, $fields), $messages, $attributes)
@@ -83,8 +117,10 @@ trait ValidatesInput
         return $result;
     }
 
-    public function validateOnly($field, $rules, $messages = [], $attributes = [])
+    public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
     {
+        $rules = is_null($rules) ? $this->rules() : $rules;
+
         $result = $this->getPublicPropertiesDefinedBySubClass();
 
         throw_unless(

@@ -35,6 +35,7 @@ use Livewire\Commands\{
     MakeLivewireCommand
 };
 use Livewire\HydrationMiddleware\{
+    PersistLocale,
     ForwardPrefetch,
     PersistErrorBag,
     UpdateQueryString,
@@ -181,6 +182,26 @@ class LivewireServiceProvider extends ServiceProvider
         } else {
             TestResponse::macro('assertSeeLivewire', $macro);
         }
+
+        // Usage: $this->assertDontSeeLivewire('counter');
+        $macro = function ($component) {
+            $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+            \PHPUnit\Framework\Assert::assertStringNotContainsString(
+                (string) $escapedComponentName, $this->getContent(),
+                'Found Livewire component ['.$component.'] rendered on page.'
+            );
+
+            return $this;
+        };
+
+        if (class_exists(Laravel7TestResponse::class)) {
+            // TestResponse was moved from illuminate/foundation
+            // and moved to illuminate/testing for Laravel 7.
+            Laravel7TestResponse::macro('assertDontSeeLivewire', $macro);
+        } else {
+            TestResponse::macro('assertDontSeeLivewire', $macro);
+        }
     }
 
     protected function registerRouteMacros()
@@ -239,6 +260,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
         /* v */ RegisterEventsBeingListenedFor::class,              /* ^ */
         /* v */ RegisterEmittedEvents::class,                       /* ^ */
+        /* v */ PersistLocale::class,                               /* ^ */
         /* v */ PersistErrorBag::class,                             /* ^ */
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
@@ -270,6 +292,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* ^ */ [RegisterEmittedEvents::class, 'dehydrate'],
         /* ^ */ [RegisterEventsBeingListenedFor::class, 'dehydrate'],
         /* ^ */ [PersistErrorBag::class, 'dehydrate'],
+        /* ^ */ [PersistLocale::class, 'dehydrate'],
         /* ^ */ [InterceptRedirects::class, 'dehydrate'],
         ]);
     }

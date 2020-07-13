@@ -33,10 +33,16 @@ export default {
                     }
                 })
             } else {
-                response.text().then(response => {
-                    this.onError(payload)
-                    this.showHtmlModal(response)
-                })
+                if (this.onError(payload, response.status) === false) return
+
+                if (response.status === 419) {
+                    confirm("This page has expired due to inactivity.\nWould you like to refresh the page?")
+                        && window.location.reload()
+                } else {
+                    response.text().then(response => {
+                        this.showHtmlModal(response)
+                    })
+                }
             }
         }).catch(() => {
             this.onError(payload)

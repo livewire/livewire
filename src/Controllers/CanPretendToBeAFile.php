@@ -11,7 +11,7 @@ trait CanPretendToBeAFile
         $cacheControl = 'public, max-age=31536000';
 
         if ($this->matchesCache($lastModified)) {
-            return response()->noContent(304, [
+            return response()->make('', 304, [
                 'Expires' => $this->httpDate($expires),
                 'Cache-Control' => $cacheControl,
             ]);

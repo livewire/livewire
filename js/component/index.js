@@ -11,23 +11,29 @@ import EchoManager from './EchoManager'
 import UploadManager from './UploadManager'
 import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
+import DeferredModelAction from '@/action/deferred-model'
 import MessageBus from '../MessageBus'
 
 export default class Component {
     constructor(el, connection) {
         el.rawNode().__livewire = this
         this.id = el.getAttribute('id')
-        const initialData = JSON.parse(this.extractLivewireAttribute('initial-data'))
+        const initialData = JSON.parse(
+            this.extractLivewireAttribute('initial-data')
+        )
         this.data = initialData.data || {}
+        this.meta = initialData.meta || {}
         this.events = initialData.events || []
         this.children = initialData.children || {}
         this.checksum = initialData.checksum || ''
+        this.locale = initialData.locale || null
         this.name = initialData.name || ''
         this.errorBag = initialData.errorBag || {}
         this.redirectTo = initialData.redirectTo || false
-        this.scopedListeners = new MessageBus,
-        this.connection = connection
+        ;(this.scopedListeners = new MessageBus()),
+            (this.connection = connection)
         this.actionQueue = []
+        this.deferredActions = {}
         this.messageInTransit = null
         this.modelTimeout = null
         this.tearDownCallbacks = []
@@ -66,19 +72,26 @@ export default class Component {
     }
 
     initialize() {
-        this.walk(el => {
-            // Will run for every node in the component tree (not child component nodes).
-            nodeInitializer.initialize(el, this)
-        }, el => {
-            // When new component is encountered in the tree, add it.
-            store.addComponent(
-                new Component(el, this.connection)
-            )
-        })
+        this.walk(
+            el => {
+                // Will run for every node in the component tree (not child component nodes).
+                nodeInitializer.initialize(el, this)
+            },
+            el => {
+                // When new component is encountered in the tree, add it.
+                store.addComponent(new Component(el, this.connection))
+            }
+        )
     }
 
     get(name) {
-        return this.data[name]
+        // The .split() stuff is to support dot-notation.
+        return name
+            .split('.')
+            .reduce(
+                (carry, dotSeperatedSegment) => carry[dotSeperatedSegment],
+                this.data
+            )
     }
 
     set(name, value) {
@@ -94,8 +107,19 @@ export default class Component {
     }
 
     addAction(action) {
-        if (this.prefetchManager.actionHasPrefetch(action) && this.prefetchManager.actionPrefetchResponseHasBeenReceived(action)) {
-            const message = this.prefetchManager.getPrefetchMessageByAction(action)
+        if (action instanceof DeferredModelAction) {
+            this.deferredActions[action.name] = action
+
+            return
+        }
+
+        if (
+            this.prefetchManager.actionHasPrefetch(action) &&
+            this.prefetchManager.actionPrefetchResponseHasBeenReceived(action)
+        ) {
+            const message = this.prefetchManager.getPrefetchMessageByAction(
+                action
+            )
 
             this.handleResponse(message.response)
 
@@ -122,10 +146,12 @@ export default class Component {
     fireMessage() {
         if (this.messageInTransit) return
 
-        this.messageInTransit = new Message(
-            this,
-            this.actionQueue
-        )
+        Object.entries(this.deferredActions).forEach(([modelName, action]) => {
+            this.actionQueue.unshift(action)
+        })
+        this.deferredActions = {}
+
+        this.messageInTransit = new Message(this, this.actionQueue)
 
         this.connection.sendMessage(this.messageInTransit)
 
@@ -192,7 +218,10 @@ export default class Component {
         if (response.dispatchQueue && response.dispatchQueue.length > 0) {
             response.dispatchQueue.forEach(event => {
                 const data = event.data ? event.data : {}
-                const e = new CustomEvent(event.event, { bubbles: true, detail: data});
+                const e = new CustomEvent(event.event, {
+                    bubbles: true,
+                    detail: data,
+                })
                 this.el.el.dispatchEvent(e)
             })
         }
@@ -212,17 +241,25 @@ export default class Component {
 
             const modelValue = el.directives.get('model').value
 
-            if (el.isFocused() && ! dirtyInputs.includes(modelValue)) return
+            if (el.isFocused() && !dirtyInputs.includes(modelValue)) return
 
             el.setInputValueFromModel(this)
         })
     }
 
     replaceDom(rawDom) {
-        let objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook = { html: rawDom }
-        store.callHook('beforeDomUpdate', this, objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook)
+        let objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook = {
+            html: rawDom,
+        }
+        store.callHook(
+            'beforeDomUpdate',
+            this,
+            objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook
+        )
 
-        this.handleMorph(objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook.html.trim())
+        this.handleMorph(
+            objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook.html.trim()
+        )
 
         store.callHook('afterDomUpdate', this)
     }
@@ -232,10 +269,7 @@ export default class Component {
             return
         }
 
-        const message = new PrefetchMessage(
-            this,
-            action,
-        )
+        const message = new PrefetchMessage(this, action)
 
         this.prefetchManager.addMessage(message)
 
@@ -256,10 +290,10 @@ export default class Component {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
                 return node.hasAttribute(`wire:key`)
                     ? node.getAttribute(`wire:key`)
-                    // If no "key", then first check for "wire:id", then "id"
-                    : (node.hasAttribute(`wire:id`)
-                        ? node.getAttribute(`wire:id`)
-                        : node.id)
+                    : // If no "key", then first check for "wire:id", then "id"
+                    node.hasAttribute(`wire:id`)
+                    ? node.getAttribute(`wire:id`)
+                    : node.id
             },
 
             onBeforeNodeAdded: node => {
@@ -298,18 +332,43 @@ export default class Component {
 
                 const fromEl = new DOMElement(from)
 
+                // Set the value of wire:model on select elements in the
+                // "to" node before doing the diff, so that the options
+                // have the proper in-memory .selected value set.
+                if (
+                    fromEl.hasAttribute('model') &&
+                    fromEl.rawNode().tagName.toUpperCase() === 'SELECT'
+                ) {
+                    const toEl = new DOMElement(to)
+                    toEl.setInputValueFromModel(this)
+                }
+
                 // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
-                if (fromEl.directives.has('ignore') || from.__livewire_ignore === true || from.__livewire_ignore_self === true) {
-                    if ((fromEl.directives.has('ignore') && fromEl.directives.get('ignore').modifiers.includes('self')) || from.__livewire_ignore_self === true) {
+                if (
+                    fromEl.directives.has('ignore') ||
+                    from.__livewire_ignore === true ||
+                    from.__livewire_ignore_self === true
+                ) {
+                    if (
+                        (fromEl.directives.has('ignore') &&
+                            fromEl.directives
+                                .get('ignore')
+                                .modifiers.includes('self')) ||
+                        from.__livewire_ignore_self === true
+                    ) {
                         // Don't update children of "wire:ingore.self" attribute.
                         from.skipElUpdatingButStillUpdateChildren = true
                     } else {
-                        return false;
+                        return false
                     }
                 }
 
                 // Children will update themselves.
-                if (fromEl.isComponentRootEl() && fromEl.getAttribute('id') !== this.id) return false
+                if (
+                    fromEl.isComponentRootEl() &&
+                    fromEl.getAttribute('id') !== this.id
+                )
+                    return false
 
                 // If the element we are updating is an Alpine component...
                 if (from.__x) {
@@ -319,28 +378,23 @@ export default class Component {
                 }
             },
 
-            onElUpdated: (node) => {
+            onElUpdated: node => {
                 this.morphChanges.changed.push(node)
 
                 store.callHook('afterElementUpdate', node, this)
             },
 
-            onNodeAdded: (node) => {
-                if (node.tagName.toLowerCase() === 'script') {
-                    eval(node.innerHTML)
-                    return false
-                }
-
+            onNodeAdded: node => {
                 const el = new DOMElement(node)
 
                 const closestComponentId = el.closestRoot().getAttribute('id')
 
                 if (closestComponentId === this.id) {
-                    nodeInitializer.initialize(el, this)
+                    if (nodeInitializer.initialize(el, this) === false) {
+                        return false
+                    }
                 } else if (el.isComponentRootEl()) {
-                    store.addComponent(
-                        new Component(el, this.connection)
-                    )
+                    store.addComponent(new Component(el, this.connection))
 
                     // We don't need to initialize children, the
                     // new Component constructor will do that for us.
@@ -353,11 +407,14 @@ export default class Component {
     }
 
     walk(callback, callbackWhenNewComponentIsEncountered = el => {}) {
-        walk(this.el.rawNode(), (node) => {
+        walk(this.el.rawNode(), node => {
             const el = new DOMElement(node)
 
             // Skip the root component element.
-            if (el.isSameNode(this.el)) { callback(el); return; }
+            if (el.isSameNode(this.el)) {
+                callback(el)
+                return
+            }
 
             // If we encounter a nested component, skip walking that tree.
             if (el.isComponentRootEl()) {
@@ -366,7 +423,9 @@ export default class Component {
                 return false
             }
 
-            callback(el)
+            if (callback(el) === false) {
+                return false
+            }
         })
     }
 
@@ -378,7 +437,7 @@ export default class Component {
         // This is a modified debounce function that acts just like a debounce, except it stores
         // the pending callbacks in a global property so we can "clear them" on command instead
         // of waiting for their setTimeouts to expire. I know.
-        if (! this.modelDebounceCallbacks) this.modelDebounceCallbacks = []
+        if (!this.modelDebounceCallbacks) this.modelDebounceCallbacks = []
 
         // This is a "null" callback. Each wire:model will resister one of these upon initialization.
         let callbackRegister = { callback: () => {} }
@@ -387,7 +446,7 @@ export default class Component {
         // This is a normal "timeout" for a debounce function.
         var timeout
 
-        return (e) => {
+        return e => {
             clearTimeout(timeout)
 
             timeout = setTimeout(() => {
@@ -400,7 +459,10 @@ export default class Component {
             }, time)
 
             // Register the current callback in the register as a kind-of "escape-hatch".
-            callbackRegister.callback = () => { clearTimeout(timeout); callback(e); }
+            callbackRegister.callback = () => {
+                clearTimeout(timeout)
+                callback(e)
+            }
         }
     }
 
@@ -429,15 +491,49 @@ export default class Component {
         this.tearDownCallbacks.forEach(callback => callback())
     }
 
-    upload(name, file, finishCallback = () => {}, errorCallback = () => {}, progressCallback = () => {}) {
-        this.uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback)
+    upload(
+        name,
+        file,
+        finishCallback = () => {},
+        errorCallback = () => {},
+        progressCallback = () => {}
+    ) {
+        this.uploadManager.upload(
+            name,
+            file,
+            finishCallback,
+            errorCallback,
+            progressCallback
+        )
     }
 
-    uploadMultiple(name, files, finishCallback = () => {}, errorCallback = () => {}, progressCallback = () => {}) {
-        this.uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback)
+    uploadMultiple(
+        name,
+        files,
+        finishCallback = () => {},
+        errorCallback = () => {},
+        progressCallback = () => {}
+    ) {
+        this.uploadManager.uploadMultiple(
+            name,
+            files,
+            finishCallback,
+            errorCallback,
+            progressCallback
+        )
     }
 
-    removeUpload(name, tmpFilename, finishCallback = () => {}, errorCallback = () => {}) {
-        this.uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback)
+    removeUpload(
+        name,
+        tmpFilename,
+        finishCallback = () => {},
+        errorCallback = () => {}
+    ) {
+        this.uploadManager.removeUpload(
+            name,
+            tmpFilename,
+            finishCallback,
+            errorCallback
+        )
     }
 }

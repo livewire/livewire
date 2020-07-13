@@ -13,13 +13,13 @@ class SecureHydrationWithChecksum implements HydrationMiddleware
         $checksumManager = new ComponentChecksumManager;
 
         throw_unless(
-            $checksumManager->check($request['checksum'], $request['name'], $request['id'], $request['data']),
+            $checksumManager->check($request['checksum'], $request['name'], $request['id'], $request['data'], $request['meta']),
             new CorruptComponentPayloadException($request['name'])
         );
     }
 
     public static function dehydrate($instance, $response)
     {
-        $response->checksum = (new ComponentChecksumManager)->generate($response->name, $response->id, $response->data);
+        $response->checksum = (new ComponentChecksumManager)->generate($response->name, $response->id, $response->data, $response->meta);
     }
 }

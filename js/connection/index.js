@@ -9,8 +9,8 @@ export default class Connection {
             this.onMessage(payload)
         }
 
-        this.driver.onError = (payload) => {
-            this.onError(payload)
+        this.driver.onError = (payload, status) => {
+            return this.onError(payload, status)
         }
 
         this.driver.init()
@@ -33,8 +33,10 @@ export default class Connection {
         }
     }
 
-    onError(payloadThatFailedSending) {
+    onError(payloadThatFailedSending, status) {
         componentStore.findComponent(payloadThatFailedSending.id).messageSendFailed()
+
+        return componentStore.onErrorCallback(status)
     }
 
     sendMessage(message) {

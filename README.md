@@ -25,8 +25,7 @@ Livewire uses semantic versioning and will use the following release schedule st
 * Add a `$formData` magic property to pass into submit handler actions: `wire:submit="save($formData)"`
 * Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
 * Remove `wire:poll` setIntervals an element is removed, or when the attribute is removed. #563
-* Implement `wire:model.passive`
-* Add `wire:eval` for latent script tag evaluation
+* Implement `wire:model.defer`
 * Add `wire:append` for appending DOM changes rather than replacing them
 * Allow traits to hook into all lifecycle hooks
 

@@ -102,8 +102,8 @@ trait WithFileUploads
     {
         if ($value instanceof TemporaryUploadedFile) {
             return $value->serializeForLivewireResponse();
-        } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof TemporaryUploadedFile) {
-            return $value[0]::serializeMultipleForLivewireResponse($value);
+        } elseif (is_array($value) && isset(array_values($value)[0]) && array_values($value)[0] instanceof TemporaryUploadedFile) {
+            return array_values($value)[0]::serializeMultipleForLivewireResponse($value);
         }
 
         return $value;
@@ -115,7 +115,7 @@ trait WithFileUploads
 
         $storage = FileUploadConfiguration::storage();
 
-        foreach ($storage->allFiles(FileUploadConfiguration::directory()) as $filePathname) {
+        foreach ($storage->allFiles(FileUploadConfiguration::path()) as $filePathname) {
             $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);

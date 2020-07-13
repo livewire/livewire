@@ -2,12 +2,12 @@
 
 namespace Tests;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
-use Livewire\Component;
-use Livewire\Exceptions\CannotBindDataToEloquentModelException;
-use Livewire\Exceptions\CorruptComponentPayloadException;
 use Livewire\Livewire;
+use Livewire\Component;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Eloquent\Model;
+use Livewire\Exceptions\CorruptComponentPayloadException;
+use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 
 class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
 {
@@ -36,16 +36,13 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
     /** @test */
     public function an_eloquent_model_cannot_be_hijacked_by_binding_to_id_data()
     {
-        $this->expectException(CannotBindDataToEloquentModelException::class);
+        $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
 
         $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
         ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
 
         Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model])
-            ->set('model.id', 2)
-            ->call('refresh')
-            ->assertSee('foo')
-            ->assertSee('bar');
+            ->set('model.id', 2);
     }
 
     /** @test */
@@ -77,6 +74,23 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
             ->call('refresh')
             ->assertSee('foo')
             ->assertSee('bar');
+    }
+
+    /** @test */
+    public function a_sorted_eloquent_model_collection_can_be_set_as_a_public_property()
+    {
+        ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
+        ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
+
+        $models = ModelForSerialization::all()->sortKeysDesc();
+
+        $component = Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models]);
+
+        $this->assertEquals([2, 1], $component->payload['meta']['models']['models']['id']);
+
+        $component ->call('refresh');
+
+        $this->assertEquals([2, 1], $component->payload['meta']['models']['models']['id']);
     }
 }
 

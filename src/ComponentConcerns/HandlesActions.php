@@ -3,26 +3,24 @@
 namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
+use Livewire\ImplicitlyBoundMethod;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
-use Livewire\Exceptions\CannotBindDataToEloquentModelException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
+use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 
 trait HandlesActions
 {
-    protected $lockedModelProperties = [];
-
-    public function lockPropertyFromSync($property)
-    {
-        $this->lockedModelProperties[] = $property;
-    }
-
     public function syncInput($name, $value)
     {
         $propertyName = $this->beforeFirstDot($name);
 
-        throw_if(in_array($propertyName, $this->lockedModelProperties), new CannotBindDataToEloquentModelException($name));
+        throw_if(
+            $this->{$propertyName} instanceof Model && $this->missingRuleFor($name),
+            new CannotBindToModelDataWithoutValidationRuleException($name, $this->getName())
+        );
 
         $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName) {
             // @todo: this is fired even if a property isn't present at all which is confusing.
@@ -95,31 +93,10 @@ trait HandlesActions
 
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
-                $this->{$method}(
-                    ...$this->resolveActionParameters($method, $params)
-                );
+                ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
 
                 break;
         }
-    }
-
-    protected function resolveActionParameters($method, $params)
-    {
-        return collect((new \ReflectionMethod($this, $method))->getParameters())->map(function ($parameter) use (&$params) {
-            return rescue(function () use ($parameter) {
-                if ($class = $parameter->getClass()) {
-                    return app($class->name);
-                }
-
-                throw new \Exception;
-            }, function () use (&$params, $parameter) {
-                if (count($params) === 0 && $parameter->isDefaultValueAvailable()) {
-                    return $parameter->getDefaultValue();
-                }
-
-                return array_shift($params);
-            }, false);
-        })->concat($params);
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)
