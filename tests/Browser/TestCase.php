@@ -2,12 +2,16 @@
 
 namespace Tests\Browser;
 
+use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
 use Illuminate\Support\Facades\Artisan;
-use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
 use PHPUnit\Framework\Assert as PHPUnit;
+use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
+use Tests\Browser\Loading\Component;
 
 class TestCase extends BaseTestCase
 {
@@ -30,13 +34,14 @@ class TestCase extends BaseTestCase
         $this->tweakApplication(function () {
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
+            app('config')->set('view.paths', [
+                __DIR__.'/views',
+                resource_path('views'),
+            ]);
+
+            app('livewire')->component(Component::class);
+
             config()->set('app.debug', true);
-
-            Livewire::component('component', Component::class);
-
-            Route::get('/', function () {
-                return View::file(__DIR__.'/layout.blade.php');
-            });
         });
     }
 

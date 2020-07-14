@@ -4,7 +4,7 @@
     @livewireStyles
 </head>
 <body>
-    @livewire('component')
+    {{ $slot }}
 
     @livewireScripts
 </body>
