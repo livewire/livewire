@@ -87,6 +87,8 @@ class LivewireManager
 
         // Allow instantiating Livewire components directly from classes.
         if ($name instanceof Component) {
+            $id = $name->id;
+
             $instance = $name;
 
             $name = $instance->getName();
@@ -131,6 +133,11 @@ class LivewireManager
     public function test($name, $params = [])
     {
         return new TestableLivewire($name, $params);
+    }
+
+    public function visit($browser, $class, $params = [])
+    {
+        return $browser->visit('/livewire-dusk/'.urlencode($class));
     }
 
     public function actingAs(Authenticatable $user, $driver = null)

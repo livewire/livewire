@@ -2,52 +2,6 @@ import { wait } from 'dom-testing-library'
 import { mount, mountAndReturn, mountAndError } from './utils'
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-test('show element while loading and hide after', async () => {
-    mountAndReturn(
-        `<button wire:click="onClick"></button><span style="display: none" wire:loading></span>`,
-        `<button wire:click="onClick"></button><span style="display: none" wire:loading></span>`,
-        [], async () => {
-            // Make the loading last for 50ms.
-            await timeout(50)
-        }
-    )
-
-    expect(document.querySelector('span').style.display).toEqual('none')
-
-    document.querySelector('button').click()
-
-    await wait(async () => {
-        expect(document.querySelector('span').style.display).toEqual('inline-block')
-
-        await wait(async () => {
-            expect(document.querySelector('span').style.display).toEqual('none')
-        })
-    })
-})
-
-test('hide element while loading and show after', async () => {
-    mountAndReturn(
-        `<button wire:click="onClick"></button><span style="display: inline-block" wire:loading.remove></span>`,
-        `<button wire:click="onClick"></button><span style="display: inline-block" wire:loading.remove></span>`,
-        [], async () => {
-            // Make the loading last for 50ms.
-            await timeout(50)
-        }
-    )
-
-    expect(document.querySelector('span').style.display).toEqual('inline-block')
-
-    document.querySelector('button').click()
-
-    await wait(async () => {
-        expect(document.querySelector('span').style.display).toEqual('none')
-
-        await wait(async () => {
-            expect(document.querySelector('span').style.display).toEqual('inline-block')
-        })
-    })
-})
-
 test('loading is scoped to current element if it fires an action', async () => {
     mountAndReturn(
         `<button wire:click="foo" wire:loading.attr="disabled"><span wire:click="bar" wire:loading.class="baz"></span>`,

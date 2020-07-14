@@ -106,6 +106,10 @@ class Livewire {
         callable(this)
     }
 
+    requestIsOut() {
+        return this.components.requestIsOut
+    }
+
     setupAlpineCompatibility()
     {
         if (! window.Alpine) return

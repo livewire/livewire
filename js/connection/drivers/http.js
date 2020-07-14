@@ -51,7 +51,11 @@ export default {
             }
         }).catch(() => {
             this.onError(payload)
+        }).finally(() => {
+            store.requestIsOut = false
         })
+
+        store.requestIsOut = true
     },
 
     isOutputFromDump(output) {
