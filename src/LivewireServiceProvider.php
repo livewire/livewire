@@ -278,6 +278,7 @@ class LivewireServiceProvider extends ServiceProvider
         Livewire::registerInitialHydrationMiddleware([
         /* Initial Request */
         /* v */ [InterceptRedirects::class, 'hydrate'],
+        /* v */ [UpdateQueryString::class, 'hydrate'],
         ]);
 
         Livewire::registerInitialDehydrationMiddleware([
@@ -294,6 +295,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* ^ */ [PersistErrorBag::class, 'dehydrate'],
         /* ^ */ [PersistLocale::class, 'dehydrate'],
         /* ^ */ [InterceptRedirects::class, 'dehydrate'],
+        /* ^ */ [UpdateQueryString::class, 'dehydrate'],
         ]);
     }
 
