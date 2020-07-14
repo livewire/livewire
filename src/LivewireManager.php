@@ -21,8 +21,13 @@ class LivewireManager
 
     public static $isLivewireRequestTestingOverride;
 
-    public function component($alias, $viewClass)
+    public function component($alias, $viewClass = null)
     {
+        if (is_null($viewClass)) {
+            $viewClass = $alias;
+            $alias = (new $viewClass('fake-id'))->getName();
+        }
+
         $this->componentAliases[$alias] = $viewClass;
     }
 
@@ -81,7 +86,11 @@ class LivewireManager
         $id = Str::random(20);
 
         // Allow instantiating Livewire components directly from classes.
-        if (class_exists($name)) {
+        if ($name instanceof Component) {
+            $instance = $name;
+
+            $name = $instance->getName();
+        } elseif (class_exists($name)) {
             $instance = new $name($id);
             // Set the name to the computed name, so that the full namespace
             // isn't leaked to the front-end.

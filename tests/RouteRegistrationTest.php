@@ -11,13 +11,11 @@ class RouteRegistrationTest extends TestCase
     /** @test */
     public function can_pass_parameters_to_a_layout_file()
     {
-        Livewire::component('foo', ComponentForRouteRegistration::class);
+        Livewire::component(ComponentForRouteRegistration::class);
 
-        Route::livewire('/foo', 'foo')->layout('layouts.app-with-bar', [
-            'bar' => 'baz',
-        ]);
+        Route::get('/foo', ComponentForRouteRegistration::class);
 
-        $this->get('/foo')->assertSee('baz');
+        $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 }
 
@@ -27,6 +25,8 @@ class ComponentForRouteRegistration extends Component
 
     public function render()
     {
-        return view('show-name');
+        return view('show-name')->extends('layouts.app-with-bar', [
+            'bar' => 'baz',
+        ]);
     }
 }

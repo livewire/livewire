@@ -8,6 +8,7 @@ use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
+use Livewire\Macros\PretendClassMethodIsControllerMethod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
@@ -27,14 +28,39 @@ abstract class Component
 
     protected $updatesQueryString = [];
     protected $computedPropertyCache = [];
+    protected $initialLayoutConfiguration = [];
 
-    public function __construct($id)
+    public function __construct($id = null)
     {
+        if (is_null($id)) $id = Str::random(20);
+
         $this->id = $id;
 
         $this->ensureIdPropertyIsntOverridden();
 
         $this->initializeTraits();
+    }
+
+    public function __invoke()
+    {
+        $reflected = new \ReflectionClass($this);
+
+        $componentParams = $reflected->hasMethod('mount')
+            ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), app('router')))->retrieveBindings()
+            : [];
+
+        $contents = Livewire::mount($this, $componentParams)->dom;
+
+        $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
+
+        return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
+            'view' => $this->initialLayoutConfiguration['view'] ?? 'layouts.app',
+            'params' => $this->initialLayoutConfiguration['params'] ?? [],
+            'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
+                'extends' => 'content', 'component' => 'default',
+            ][$layoutType],
+            'contents' => $contents,
+        ]);
     }
 
     protected function ensureIdPropertyIsntOverridden()
@@ -100,6 +126,11 @@ abstract class Component
 
         if (is_string($view) && Livewire::isLaravel7()) {
             $view = app('view')->make((new CreateBladeViewFromString)($view));
+        }
+
+        // Get the layout config from the view.
+        if ($view->livewireLayout) {
+            $this->initialLayoutConfiguration = $view->livewireLayout;
         }
 
         $this->normalizePublicPropertiesForJavaScript();
