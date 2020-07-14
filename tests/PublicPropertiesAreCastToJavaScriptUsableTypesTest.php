@@ -6,7 +6,6 @@ use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\View;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
