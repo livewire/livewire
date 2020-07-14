@@ -124,6 +124,12 @@ class LivewireManager
         return new TestableLivewire($name, $params);
     }
 
+    public function visit($browser, $params = [])
+    {
+        return $browser->visit();
+        return new TestableLivewire($name, $params);
+    }
+
     public function actingAs(Authenticatable $user, $driver = null)
     {
         if (isset($user->wasRecentlyCreated) && $user->wasRecentlyCreated) {

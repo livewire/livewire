@@ -9,6 +9,7 @@ const store = {
     initialRenderIsFinished: false,
     livewireIsInBackground: false,
     livewireIsOffline: false,
+    requestIsOut: false,
     hooks: HookManager,
     directives: DirectiveManager,
     onErrorCallback: () => {},

@@ -1,4 +1,5 @@
 import { getCsrfToken } from '@/util'
+import store from '@/Store'
 
 export default {
     onError: null,
@@ -46,7 +47,11 @@ export default {
             }
         }).catch(() => {
             this.onError(payload)
+        }).finally(() => {
+            store.requestIsOut = false
         })
+
+        store.requestIsOut = true
     },
 
     isOutputFromDump(output) {
