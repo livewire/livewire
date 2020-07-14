@@ -13,12 +13,59 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
-                ->assertNotVisible('@indicator')
+                ->tap(function ($browser) {
+                    $browser->assertNotVisible('@show');
+                    $browser->assertVisible('@hide');
+
+                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
+                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
+
+                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
+                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+
+                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
+                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+
+                    $browser->assertNotVisible('@targeting');
+                })
                 ->click('@button')
                 ->waitForLivewireRequest()
-                ->assertVisible('@indicator')
+                ->tap(function ($browser) {
+                    $browser->assertVisible('@show');
+                    $browser->assertNotVisible('@hide');
+
+                    $this->assertEquals('foo', $browser->resolver->find('@add-class')->getAttribute('class'));
+                    $this->assertEquals('', $browser->resolver->find('@remove-class')->getAttribute('class'));
+
+                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
+                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+
+                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
+                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+
+                    $browser->assertNotVisible('@targeting');
+                })
                 ->waitForLivewireResponse()
-                ->assertNotVisible('@indicator');
+                ->tap(function ($browser) {
+                    $browser->assertNotVisible('@show');
+                    $browser->assertVisible('@hide');
+
+                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
+                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
+
+                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
+                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+
+                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
+                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+
+                    $browser->assertNotVisible('@targeting');
+                })
+                ->click('@target-button')
+                ->waitForLivewireRequest()
+                ->tap(function ($browser) {
+                    $browser->assertVisible('@targeting');
+                });
         });
     }
 }

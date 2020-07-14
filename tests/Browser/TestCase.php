@@ -2,22 +2,19 @@
 
 namespace Tests\Browser;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Loading\Component;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
 use Illuminate\Support\Facades\Artisan;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
-use Tests\Browser\Loading\Component;
 
 class TestCase extends BaseTestCase
 {
     public function setUp(): void
     {
-        \Orchestra\Testbench\Dusk\Options::withUI();
+        \Orchestra\Testbench\Dusk\Options::withoutUI();
 
         $this->registerMacros();
 
@@ -32,14 +29,14 @@ class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->tweakApplication(function () {
+            app('livewire')->component(Component::class);
+
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
             app('config')->set('view.paths', [
                 __DIR__.'/views',
                 resource_path('views'),
             ]);
-
-            app('livewire')->component(Component::class);
 
             config()->set('app.debug', true);
         });
@@ -123,6 +120,16 @@ class TestCase extends BaseTestCase
             return $this->waitUsing(5, 25, function () {
                 return $this->driver->executeScript('return window.livewire.requestIsOut() === false');
             }, 'Livewire response was never received');
+        });
+
+        Browser::macro('assertScript', function () {
+            PHPUnit::assertTrue(
+                $this->driver->executeScript('return window.livewire.requestIsOut() === false'),
+                'Something this'
+            );
+
+            return $this;
+
         });
     }
 }
