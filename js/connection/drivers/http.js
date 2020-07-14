@@ -1,4 +1,5 @@
 import { getCsrfToken } from '@/util'
+import store from '@/Store'
 
 export default {
     onError: null,
@@ -36,6 +37,10 @@ export default {
                 if (this.onError(payload, response.status) === false) return
 
                 if (response.status === 419) {
+                    if (store.sessionHasExpired) return
+
+                    store.sessionHasExpired = true
+
                     confirm("This page has expired due to inactivity.\nWould you like to refresh the page?")
                         && window.location.reload()
                 } else {
@@ -46,7 +51,11 @@ export default {
             }
         }).catch(() => {
             this.onError(payload)
+        }).finally(() => {
+            store.requestIsOut = false
         })
+
+        store.requestIsOut = true
     },
 
     isOutputFromDump(output) {

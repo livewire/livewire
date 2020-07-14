@@ -49,14 +49,14 @@ class ComponentMethodBindingsTest extends TestCase
     /** @test */
     public function mount_method_receives_route_and_implicit_binding_and_dependency_injection()
     {
-        Livewire::component('foo', ComponentWithMountInjections::class);
-
-        Livewire::test('foo', [
+        Livewire::test(ComponentWithMountInjections::class, [
             'foo',
             'model' => 'new model',
         ])->assertSeeText('http://localhost/some-url:new model:foo');
 
-        Route::livewire('/foo/{model}', 'foo');
+        Livewire::component(ComponentWithMountInjections::class);
+
+        Route::get('/foo/{model}', ComponentWithMountInjections::class);
 
         $this->get('/foo/route-model')->assertSeeText('http://localhost/some-url:route-model:param-default');
     }

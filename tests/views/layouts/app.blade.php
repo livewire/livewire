@@ -1,1 +1,3 @@
 @yield('content')
+
+{{ $slot }}

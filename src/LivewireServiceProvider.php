@@ -2,10 +2,6 @@
 
 namespace Livewire;
 
-use Illuminate\Routing\Route;
-use Illuminate\Routing\Router;
-use Livewire\Macros\RouteMacros;
-use Livewire\Macros\RouterMacros;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +15,7 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Testing\TestResponse as Laravel7TestResponse;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\View\View;
 use Livewire\Commands\{
     CpCommand,
     MvCommand,
@@ -54,6 +51,7 @@ use Livewire\HydrationMiddleware\{
     PerformPublicPropertyFromDataBindingUpdates,
     HydratePropertiesWithCustomRuntimeHydrators
 };
+use Livewire\Macros\ViewMacros;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -69,7 +67,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerCommands();
         $this->registerTestMacros();
-        $this->registerRouteMacros();
+        $this->registerViewMacros();
         $this->registerTagCompiler();
         $this->registerPublishables();
         $this->registerBladeDirectives();
@@ -126,6 +124,14 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
+        if (! $this->app->environment('production')) {
+            RouteFacade::get('/livewire-dusk/{component}', function ($component) {
+                $class = urldecode($component);
+
+                return (new $class)();
+            });
+        }
+
         RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
         RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
 
@@ -204,10 +210,9 @@ class LivewireServiceProvider extends ServiceProvider
         }
     }
 
-    protected function registerRouteMacros()
+    protected function registerViewMacros()
     {
-        Route::mixin(new RouteMacros);
-        Router::mixin(new RouterMacros);
+        View::mixin(new ViewMacros);
     }
 
     protected function registerTagCompiler()
