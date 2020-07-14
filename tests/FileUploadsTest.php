@@ -635,7 +635,7 @@ class FileUploadComponent extends Component
 class FileUploadInArrayComponent extends FileUploadComponent
 {
     public $obj = [
-        'fist_name' => null,
+        'first_name' => null,
         'last_name' => null,
         'file_uploads' => null
     ];
