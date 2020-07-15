@@ -47,7 +47,33 @@ class Test extends TestCase
                 ->type('@bar-input', 'except-value')
                 ->waitForLivewireRequest()
                 ->waitForLivewireResponse()
-                ->assertQueryStringMissing('bar');
+                ->assertQueryStringMissing('bar')
+
+                /**
+                 * Add a nested component on the page and make sure
+                 * both components play nice with each other.
+                 */
+                ->assertQueryStringMissing('baz')
+                ->click('@show-nested')
+                ->waitForLivewireRequest()
+                ->waitForLivewireResponse()
+                ->assertQueryStringHas('baz', 'bop')
+                ->assertSeeIn('@baz-output', 'bop')
+                ->type('@baz-input', 'lop')
+                ->waitForLivewireRequest()
+                ->waitForLivewireResponse()
+                ->assertQueryStringHas('baz', 'lop')
+                ->type('@input', 'plop')
+                ->waitForLivewireRequest()
+                ->waitForLivewireResponse()
+                ->type('@baz-input', 'ploop')
+                ->waitForLivewireRequest()
+                ->waitForLivewireResponse()
+                ->assertQueryStringHas('foo', 'plop')
+                ->assertQueryStringHas('baz', 'ploop')
+                ->back()
+                ->back()
+                ->assertQueryStringHas('baz', 'lop');
         });
     }
 }

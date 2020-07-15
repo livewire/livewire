@@ -10,6 +10,8 @@ class Component extends BaseComponent
     public $foo = 'bar';
     public $bar = 'baz';
 
+    public $showNestedComponent = false;
+
     protected $fromQueryString = [
         'foo',
         'bar' => ['except' => 'except-value']

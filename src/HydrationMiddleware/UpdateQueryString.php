@@ -24,7 +24,10 @@ class UpdateQueryString implements HydrationMiddleware
 
         $meta = $response->meta;
 
-        $meta['fromQueryString'] = $properties;
+        $meta['fromQueryString'] = [
+            'properties' => $instance->getFromQueryStringProperties(),
+            'excepts' => $instance->getFromQueryStringExcepts(),
+        ];
 
         $response->meta = $meta;
     }

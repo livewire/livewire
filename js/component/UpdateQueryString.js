@@ -3,9 +3,11 @@ import queryString from '@/util/query-string'
 
 export default function () {
     store.registerHook('componentInitialized', (component) => {
-        if (! component.meta.fromQueryString) return
+        if (! component.meta.fromQueryString) return;
 
-        replaceState(component, component.meta.fromQueryString)
+        let { properties, excepts } = component.meta.fromQueryString
+
+        replaceState(component, properties, excepts)
     })
 
     window.addEventListener('popstate', (event) => {
@@ -13,11 +15,13 @@ export default function () {
             Object.keys(event.state.livewire.updates).forEach(name => {
                 let component = store.getComponentsByName(name)[0]
 
+                if (! component.meta.fromQueryString) return;
+
                 if (component) {
                     let updates = event.state.livewire.updates[name].data
 
-                    Object.keys(updates).forEach(dataKey => {
-                        component.set(dataKey, updates[dataKey])
+                    component.meta.fromQueryString.properties.forEach(property => {
+                        component.set(property, updates[property])
                     })
 
                     // This is so that when component.set() triggers a roundtrip,
@@ -33,26 +37,28 @@ export default function () {
     store.registerHook('responseReceived', (component, response) => {
         if (component.meta.fromQueryString === undefined) return
 
+        let { properties, excepts } = component.meta.fromQueryString
+
         if (component.useReplaceState === true) {
             component.useReplaceState = false
 
-            replaceState(component, component.meta.fromQueryString)
+            replaceState(component, properties, excepts)
         } else {
-            pushState(component, component.meta.fromQueryString)
+            pushState(component, properties, excepts)
         }
     })
 }
 
-function replaceState(component, queryStringUpdateObject) {
-    updateState('replace', component, queryStringUpdateObject)
+function replaceState(component, properties, excepts) {
+    updateState('replace', component, properties, excepts)
 }
 
-function pushState(component, queryStringUpdateObject) {
-    updateState('push', component, queryStringUpdateObject)
+function pushState(component, properties, excepts) {
+    updateState('push', component, properties, excepts)
 }
 
-function updateState(type, component, queryStringUpdateObject) {
-    var dataForQueryString = dataDestinedForQueryString(queryStringUpdateObject, component)
+function updateState(type, component, properties, excepts) {
+    var dataForQueryString = dataDestinedForQueryString(component, properties, excepts)
 
     var stringifiedQueryString = queryString.stringify(dataForQueryString)
 
@@ -65,37 +71,17 @@ function updateState(type, component, queryStringUpdateObject) {
     }
 }
 
-function dataDestinedForQueryString(queryStringUpdateObject, component) {
-    var excepts = []
+function dataDestinedForQueryString(component, properties, excepts) {
     var dataForQueryString = {}
 
-    if (Array.isArray(queryStringUpdateObject)) {
-        // User passed in a plain array to `$fromQueryString`
-        queryStringUpdateObject.forEach(i => dataForQueryString[i] = component.data[i])
-    } else {
-        // User specified an "except", and therefore made this an object.
-        Object.keys(queryStringUpdateObject).forEach(key => {
-            if (isNaN(key)) {
-                // If the key is non-numeric (presumably has an "except" key)
-                dataForQueryString[key] = component.get(key)
-
-                if (queryStringUpdateObject[key].except !== undefined) {
-                    excepts.push({key: key, value: queryStringUpdateObject[key].except})
-                }
-            } else {
-                // If key is numeric.
-                const dataKey = queryStringUpdateObject[key]
-                dataForQueryString[dataKey] = component.get(dataKey)
-            }
-        })
-    }
+    properties.forEach(i => dataForQueryString[i] = component.get(i))
 
     var queryData = window.location.search
         ? {...queryString.parse(window.location.search), ...dataForQueryString}
         : dataForQueryString
 
     // Remove data items that are specified in the "except" key option.
-    excepts.forEach(({ key, value }) => {
+    Object.entries(excepts).forEach(([key, value]) => {
         if (queryData[key] == value) {
             delete queryData[key]
         }
