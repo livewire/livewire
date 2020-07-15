@@ -221,11 +221,11 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerPublishables()
     {
-        $this->publishesToGroups([
+        $this->publishes([
             __DIR__.'/../dist' => public_path('vendor/livewire'),
         ], ['livewire', 'livewire:assets']);
 
-        $this->publishesToGroups([
+        $this->publishes([
             __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
         ], ['livewire', 'livewire:config']);
     }
@@ -308,18 +308,5 @@ class LivewireServiceProvider extends ServiceProvider
         $middleware = $openKernel->getProperty('middleware');
 
         $openKernel->setProperty('middleware', array_diff($middleware, $middlewareToExclude));
-    }
-
-    protected function publishesToGroups(array $paths, $groups = null)
-    {
-        if (is_null($groups)) {
-            $this->publishes($paths);
-
-            return;
-        }
-
-        foreach ((array) $groups as $group) {
-            $this->publishes($paths, $group);
-        }
     }
 }
