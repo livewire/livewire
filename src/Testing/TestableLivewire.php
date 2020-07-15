@@ -80,7 +80,6 @@ class TestableLivewire
             'locale' => $output->locale,
             'redirectTo' => $output->redirectTo,
             'dirtyInputs' => $output->dirtyInputs,
-            'updatesQueryString' => $output->updatesQueryString,
         ];
     }
 

@@ -54,7 +54,6 @@ export default class {
             meta: payload.meta,
             redirectTo: payload.redirectTo,
             errorBag: payload.errorBag || {},
-            updatesQueryString: payload.updatesQueryString,
         }
     }
 }

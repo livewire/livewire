@@ -26,7 +26,7 @@ abstract class Component
 
     public $id;
 
-    protected $updatesQueryString = [];
+    protected $fromQueryString = [];
     protected $computedPropertyCache = [];
     protected $initialLayoutConfiguration = [];
 
@@ -97,9 +97,17 @@ abstract class Component
         return $fullName;
     }
 
-    public function getUpdatesQueryString()
+    public function getFromQueryString()
     {
-        return $this->updatesQueryString;
+        return $this->fromQueryString;
+    }
+
+    public function getFromQueryStringProperties()
+    {
+        return collect($this->fromQueryString)
+            ->map(function ($value, $key) {
+                return is_string($key) ? $key : $value;
+            })->toArray();
     }
 
     public function getCasts()

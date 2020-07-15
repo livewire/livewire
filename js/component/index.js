@@ -30,9 +30,8 @@ export default class Component {
         this.name = initialData.name || ''
         this.errorBag = initialData.errorBag || {}
         this.redirectTo = initialData.redirectTo || false
-        this.updatesQueryString = initialData.updatesQueryString || null
-        ;(this.scopedListeners = new MessageBus()),
-            (this.connection = connection)
+        this.scopedListeners = new MessageBus()
+        this.connection = connection
         this.actionQueue = []
         this.deferredActions = {}
         this.messageInTransit = null

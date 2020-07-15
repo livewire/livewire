@@ -7,6 +7,7 @@ use Illuminate\Support\Fluent;
 use Illuminate\Foundation\Application;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Laravel\Dusk\Browser;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Exceptions\MountMethodMissingException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
@@ -135,9 +136,11 @@ class LivewireManager
         return new TestableLivewire($name, $params);
     }
 
-    public function visit($browser, $class, $params = [])
+    public function visit($browser, $class, $queryString = '')
     {
-        return $browser->visit('/livewire-dusk/'.urlencode($class));
+        $url = '/livewire-dusk/'.urlencode($class).$queryString;
+
+        return $browser->visit($url);
     }
 
     public function actingAs(Authenticatable $user, $driver = null)

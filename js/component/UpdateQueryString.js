@@ -3,7 +3,9 @@ import queryString from '@/util/query-string'
 
 export default function () {
     store.registerHook('componentInitialized', (component) => {
-        replaceState(component, component.updatesQueryString)
+        if (! component.meta.fromQueryString) return
+
+        replaceState(component, component.meta.fromQueryString)
     })
 
     window.addEventListener('popstate', (event) => {
@@ -29,14 +31,14 @@ export default function () {
     })
 
     store.registerHook('responseReceived', (component, response) => {
-        if (response.updatesQueryString === undefined) return
+        if (component.meta.fromQueryString === undefined) return
 
         if (component.useReplaceState === true) {
             component.useReplaceState = false
 
-            replaceState(component, response.updatesQueryString)
+            replaceState(component, component.meta.fromQueryString)
         } else {
-            pushState(component, response.updatesQueryString)
+            pushState(component, component.meta.fromQueryString)
         }
     })
 }
@@ -68,14 +70,14 @@ function dataDestinedForQueryString(queryStringUpdateObject, component) {
     var dataForQueryString = {}
 
     if (Array.isArray(queryStringUpdateObject)) {
-        // User passed in a plain array to `$updatesQueryString`
+        // User passed in a plain array to `$fromQueryString`
         queryStringUpdateObject.forEach(i => dataForQueryString[i] = component.data[i])
     } else {
         // User specified an "except", and therefore made this an object.
         Object.keys(queryStringUpdateObject).forEach(key => {
             if (isNaN(key)) {
                 // If the key is non-numeric (presumably has an "except" key)
-                dataForQueryString[key] = component.data[key]
+                dataForQueryString[key] = component.get(key)
 
                 if (queryStringUpdateObject[key].except !== undefined) {
                     excepts.push({key: key, value: queryStringUpdateObject[key].except})
@@ -83,7 +85,7 @@ function dataDestinedForQueryString(queryStringUpdateObject, component) {
             } else {
                 // If key is numeric.
                 const dataKey = queryStringUpdateObject[key]
-                dataForQueryString[dataKey] = component.data[dataKey]
+                dataForQueryString[dataKey] = component.get(dataKey)
             }
         })
     }
