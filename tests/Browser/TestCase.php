@@ -13,7 +13,7 @@ class TestCase extends BaseTestCase
 {
     public function setUp(): void
     {
-        // \Orchestra\Testbench\Dusk\Options::withoutUI();
+        \Orchestra\Testbench\Dusk\Options::withoutUI();
 
         $this->registerMacros();
 
