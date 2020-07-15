@@ -14,6 +14,7 @@ class LivewireComponentsFinder
     protected $files;
     protected $manifest;
     protected $manifestPath;
+    protected $externalManifest;
 
     public function __construct(Filesystem $files, $manifestPath, $path)
     {
@@ -45,11 +46,18 @@ class LivewireComponentsFinder
         $this->manifest = $this->getClassNames()
             ->mapWithKeys(function ($class) {
                 return [(new $class('dummy-id'))->getName() => $class];
-            })->toArray();
+            })
+            ->merge($this->externalManifest)
+            ->toArray();
 
         $this->write($this->manifest);
 
         return $this;
+    }
+
+    public function registerExternal($name, $class)
+    {
+        $this->externalManifest[$name] = $class;
     }
 
     protected function write(array $manifest)
@@ -71,6 +79,7 @@ class LivewireComponentsFinder
                     Str::after($file->getPathname(), app_path().'/')
                 );
             })
+            ->merge($this->externalManifest)
             ->filter(function (string $class) {
                 return is_subclass_of($class, Component::class) &&
                     ! (new ReflectionClass($class))->isAbstract();
