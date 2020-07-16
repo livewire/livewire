@@ -13,7 +13,7 @@ class TestCase extends BaseTestCase
 {
     public function setUp(): void
     {
-        \Orchestra\Testbench\Dusk\Options::withoutUI();
+        // \Orchestra\Testbench\Dusk\Options::withoutUI();
 
         $this->registerMacros();
 
@@ -31,6 +31,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Loading\Component::class);
             app('livewire')->component(\Tests\Browser\PushState\Component::class);
             app('livewire')->component(\Tests\Browser\PushState\NestedComponent::class);
+            app('livewire')->component(\Tests\Browser\InputSelect\Component::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -109,6 +110,10 @@ class TestCase extends BaseTestCase
             );
 
             return $this;
+        });
+
+        Browser::macro('waitForLivewire', function () {
+            return $this->waitForLivewireRequest()->waitForLivewireResponse();
         });
 
         Browser::macro('waitForLivewireRequest', function () {
