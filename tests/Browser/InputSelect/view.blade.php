@@ -5,4 +5,19 @@
         <option>bar</option>
         <option>baz</option>
     </select>
+
+    <h1 dusk="placeholder.output">{{ $placeholder }}</h1>
+    <select wire:model="placeholder" dusk="placeholder.input">
+        <option value="" disabled>Placeholder</option>
+        <option>foo</option>
+        <option>bar</option>
+        <option>baz</option>
+    </select>
+
+    <h1 dusk="multiple.output">@json($multiple)</h1>
+    <select wire:model="multiple" multiple dusk="multiple.input">
+        <option>foo</option>
+        <option>bar</option>
+        <option>baz</option>
+    </select>
 </div>

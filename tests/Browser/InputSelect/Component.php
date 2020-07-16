@@ -8,6 +8,8 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $single;
+    public $placeholder = '';
+    public $multiple = [];
 
     public function render()
     {
