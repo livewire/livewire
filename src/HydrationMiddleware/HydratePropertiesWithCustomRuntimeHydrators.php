@@ -19,6 +19,8 @@ class HydratePropertiesWithCustomRuntimeHydrators implements HydrationMiddleware
                 $unHydratedInstance->{$property} = $newValue;
             }
         }
+
+        Livewire::dispatch('component.hydrate', $unHydratedInstance, $request);
     }
 
     public static function dehydrate($instance, $response)
@@ -34,5 +36,7 @@ class HydratePropertiesWithCustomRuntimeHydrators implements HydrationMiddleware
                 $instance->{$property} = $newValue;
             }
         }
+
+        Livewire::dispatch('component.dehydrate', $instance, $response);
     }
 }

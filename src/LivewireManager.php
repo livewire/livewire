@@ -117,9 +117,11 @@ class LivewireManager
 
         $this->initialDehydrate($instance, $response);
 
-        $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
-            'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
-        ], $instance);
+        if ($response->dom) {
+            $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
+                'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
+            ], $instance);
+        }
 
         $this->dispatch('mounted', $response);
 

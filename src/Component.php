@@ -29,6 +29,7 @@ abstract class Component
     protected $fromQueryString = [];
     protected $computedPropertyCache = [];
     protected $initialLayoutConfiguration = [];
+    protected $shouldSkipRender = false;
 
     public function __construct($id = null)
     {
@@ -133,8 +134,15 @@ abstract class Component
         return view("livewire.{$this->getName()}");
     }
 
+    public function skipRender()
+    {
+        $this->shouldSkipRender = true;
+    }
+
     public function output($errors = null)
     {
+        if ($this->shouldSkipRender) return null;
+
         // In the service provider, we hijack Laravel's Blade engine
         // with our own. However, we only want Livewire hijackings,
         // while we're rendering Livewire components. So we'll

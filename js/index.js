@@ -6,6 +6,7 @@ import Connection from '@/connection'
 import drivers from '@/connection/drivers'
 import { dispatch } from './util'
 import FileUploads from '@/component/FileUploads'
+import FileDownloads from '@/component/FileDownloads'
 import LoadingStates from '@/component/LoadingStates'
 import DisableForms from '@/component/DisableForms'
 import DirtyStates from '@/component/DirtyStates'
@@ -177,6 +178,7 @@ OfflineStates()
 LoadingStates()
 DisableForms()
 FileUploads()
+FileDownloads()
 DirtyStates()
 Polling()
 

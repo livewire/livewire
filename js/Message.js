@@ -49,6 +49,7 @@ export default class {
             dirtyInputs: payload.dirtyInputs,
             eventQueue: payload.eventQueue,
             dispatchQueue: payload.dispatchQueue,
+            download: payload.download,
             events: payload.events,
             data: payload.data,
             meta: payload.meta,

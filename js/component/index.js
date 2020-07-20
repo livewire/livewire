@@ -193,9 +193,11 @@ export default class Component {
 
         store.callHook('responseReceived', this, response)
 
-        this.replaceDom(response.dom, response.dirtyInputs)
+        if (response.dom) {
+            this.replaceDom(response.dom, response.dirtyInputs)
 
-        this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
+            this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
+        }
 
         this.messageInTransit = null
 

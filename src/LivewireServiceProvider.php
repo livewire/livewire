@@ -66,6 +66,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerViews();
         $this->registerRoutes();
         $this->registerCommands();
+        $this->registerFeatures();
         $this->registerTestMacros();
         $this->registerViewMacros();
         $this->registerTagCompiler();
@@ -165,6 +166,11 @@ class LivewireServiceProvider extends ServiceProvider
             DiscoverCommand::class,     // livewire:discover
             S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
         ]);
+    }
+
+    protected function registerFeatures()
+    {
+        SupportFileDownloads::init();
     }
 
     protected function registerTestMacros()

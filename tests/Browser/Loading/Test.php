@@ -12,8 +12,6 @@ class Test extends TestCase
     public function loading_indicator()
     {
         $this->browse(function ($browser) {
-
-
             Livewire::visit($browser, Component::class)
                 ->tap(function ($browser) {
                     $browser->assertNotVisible('@show');
