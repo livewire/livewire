@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SupportFileDownloads
@@ -17,7 +18,7 @@ class SupportFileDownloads
     function __construct()
     {
         Livewire::listen('action.returned', function ($component, $action, $returned) {
-            if ($this->valueIsntAStreamedResponse($returned)) return;
+            if ($this->valueIsntAFileResponse($returned)) return;
 
             $response = $returned;
 
@@ -44,9 +45,10 @@ class SupportFileDownloads
         });
     }
 
-    function valueIsntAStreamedResponse($value)
+    function valueIsntAFileResponse($value)
     {
-        return ! $value instanceof StreamedResponse;
+        return ! $value instanceof StreamedResponse
+            && ! $value instanceof BinaryFileResponse;
     }
 
     function captureOutput($callback)

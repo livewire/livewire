@@ -2,6 +2,10 @@
 
 namespace Tests\Browser;
 
+use Closure;
+use Exception;
+use Psy\Shell;
+use Throwable;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Facades\File;
 use Livewire\LivewireServiceProvider;
@@ -17,7 +21,7 @@ class TestCase extends BaseTestCase
 {
     public function setUp(): void
     {
-        // \Orchestra\Testbench\Dusk\Options::withoutUI();
+        // Options::withoutUI();
 
         $this->registerMacros();
 
@@ -165,5 +169,41 @@ class TestCase extends BaseTestCase
                 $options
             )
         );
+    }
+
+    public function browse(Closure $callback)
+    {
+        parent::browse(function (...$browsers) use ($callback) {
+            try {
+                $callback(...$browsers);
+            } catch (Exception $e) {
+                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+
+                throw $e;
+            } catch (Throwable $e) {
+                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+
+                throw $e;
+            }
+        });
+    }
+
+    public function breakIntoATinkerShell($browsers, $e)
+    {
+        $sh = new Shell();
+
+        $sh->add(new DuskCommand($this, $e));
+
+        $sh->setScopeVariables([
+            'browsers' => $browsers,
+        ]);
+
+        $sh->addInput('dusk');
+
+        $sh->setBoundObject($this);
+
+        $sh->run();
+
+        return $sh->getScopeVariables(false);
     }
 }
