@@ -171,6 +171,7 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerFeatures()
     {
         SupportFileDownloads::init();
+        SupportViewOptimizations::init();
     }
 
     protected function registerTestMacros()

@@ -30,6 +30,8 @@ trait RegistersHydrationMiddleware
         foreach ($this->hydrationMiddleware as $class) {
             $class::hydrate($instance, $request);
         }
+
+        Livewire::dispatch('component.hydrate.subsequent', $instance, $request);
     }
 
     public function initialHydrate($instance, $request)
@@ -37,6 +39,8 @@ trait RegistersHydrationMiddleware
         foreach ($this->initialHydrationMiddleware as $callable) {
             $callable($instance, $request);
         }
+
+        Livewire::dispatch('component.hydrate.initial', $instance, $request);
     }
 
     public function initialDehydrate($instance, $response)
@@ -44,6 +48,8 @@ trait RegistersHydrationMiddleware
         foreach (array_reverse($this->initialDehydrationMiddleware) as $callable) {
             $callable($instance, $response);
         }
+
+        Livewire::dispatch('component.dehydrate.initial', $instance, $response);
     }
 
     public function dehydrate($instance, $response)
@@ -53,6 +59,8 @@ trait RegistersHydrationMiddleware
         foreach (array_reverse($this->hydrationMiddleware) as $class) {
             $class::dehydrate($instance, $response);
         }
+
+        Livewire::dispatch('component.dehydrate.subsequent', $instance, $response);
     }
 
     public function hydrateProperty($callback)

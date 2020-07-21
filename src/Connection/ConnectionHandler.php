@@ -33,6 +33,7 @@ abstract class ConnectionHandler
             'name' => $payload['name'],
             'dom' => $dom,
             'meta' => [],
+            'memo' => [],
         ]);
 
         Livewire::dehydrate($instance, $response);

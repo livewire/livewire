@@ -19,6 +19,7 @@ export default class {
             id: this.component.id,
             data: this.component.data,
             meta: this.component.meta,
+            memo: this.component.memo,
             name: this.component.name,
             checksum: this.component.checksum,
             locale: this.component.locale,
@@ -53,6 +54,7 @@ export default class {
             events: payload.events,
             data: payload.data,
             meta: payload.meta,
+            memo: payload.memo,
             redirectTo: payload.redirectTo,
             errorBag: payload.errorBag || {},
         }

@@ -38,7 +38,7 @@ class SupportFileDownloads
             $component->skipRender();
         });
 
-        Livewire::listen('component.dehydrate', function ($component, $response) {
+        Livewire::listen('component.dehydrate.subsequent', function ($component, $response) {
             if (! $download = $this->downloadsById[$component->id] ?? false) return;
 
             $response->download = $download;

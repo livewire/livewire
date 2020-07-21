@@ -23,6 +23,7 @@ export default class Component {
         )
         this.data = initialData.data || {}
         this.meta = initialData.meta || {}
+        this.memo = initialData.memo || {}
         this.events = initialData.events || []
         this.children = initialData.children || {}
         this.checksum = initialData.checksum || ''
@@ -180,6 +181,7 @@ export default class Component {
 
     handleResponse(response) {
         this.data = response.data
+        this.memo = response.memo
         this.checksum = response.checksum
         this.children = response.children
         this.errorBag = response.errorBag
