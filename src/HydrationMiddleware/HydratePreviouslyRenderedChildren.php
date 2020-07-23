@@ -6,11 +6,11 @@ class HydratePreviouslyRenderedChildren implements HydrationMiddleware
 {
     public static function hydrate($unHydratedInstance, $request)
     {
-        $unHydratedInstance->setPreviouslyRenderedChildren($request['children']);
+        $unHydratedInstance->setPreviouslyRenderedChildren($request->memo['children']);
     }
 
     public static function dehydrate($instance, $response)
     {
-        $response->children = $instance->getRenderedChildren();
+        $response->memo['children'] = $instance->getRenderedChildren();
     }
 }

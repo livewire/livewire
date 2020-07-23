@@ -102,31 +102,31 @@ class LivewireManager
             $instance = $this->activate($name, $id);
         }
 
-        $this->initialHydrate($instance, []);
-
-        $this->performMount($instance, $params);
-
-        $dom = $instance->output();
-
-        $response = new Fluent([
-            'id' => $id,
-            'name' => $name,
-            'dom' => $dom,
-            'meta' => [],
+        $request = new Request([
+            'fingerprint' => [
+                'id' => $id,
+                'name' => $name,
+                'locale' => app()->getLocale(),
+            ],
+            'updates' => [],
             'memo' => [],
         ]);
 
+        $this->initialHydrate($instance, $request);
+
+        $this->performMount($instance, $params);
+
+        $html = $instance->output();
+
+        $response = Response::fromRequest($request, $html);
+
         $this->initialDehydrate($instance, $response);
 
-        if ($response->dom) {
-            $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
-                'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
-            ], $instance);
-        }
+        $response->embedThyselfInHtml();
 
         $this->dispatch('mounted', $response);
 
-        return $response;
+        return $response->toInitialResonse();
     }
 
     public function dummyMount($id, $tagName)

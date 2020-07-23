@@ -144,20 +144,28 @@ function startLoading(els) {
 
             if (directive.modifiers.includes('remove')) {
                 el.classList.remove(...classes)
+                el.__livewire_on_finish_loading = () => el.classList.add(...classes)
             } else {
                 el.classList.add(...classes)
+                el.__livewire_on_finish_loading = () => el.classList.remove(...classes)
             }
         } else if (directive.modifiers.includes('attr')) {
             if (directive.modifiers.includes('remove')) {
                 el.removeAttribute(directive.value)
+                el.__livewire_on_finish_loading = () => el.setAttribute(directive.value, true)
             } else {
                 el.setAttribute(directive.value, true)
+                el.__livewire_on_finish_loading = () => el.removeAttribute(directive.value)
             }
         } else {
             if (directive.modifiers.includes('remove')) {
+                let cache = el.style.display
                 el.style.display = 'none'
+                el.__livewire_on_finish_loading = () => el.style.display = cache
             } else {
+                let cache = el.style.display
                 el.style.display = 'inline-block'
+                el.__livewire_on_finish_loading = () => el.style.display = cache
             }
         }
     })
@@ -165,24 +173,12 @@ function startLoading(els) {
 
 function endLoading(els) {
     els.forEach(({ el, directive }) => {
-        el = el.el // I'm so sorry @todo
+        el = el.el // I'm so sorry.
 
-        if (directive.modifiers.includes('class')) {
-            const classes = directive.value.split(' ').filter(Boolean)
+        if (el.__livewire_on_finish_loading) {
+            el.__livewire_on_finish_loading()
 
-            if (directive.modifiers.includes('remove')) {
-                el.classList.add(...classes)
-            } else {
-                el.classList.remove(...classes)
-            }
-        } else if (directive.modifiers.includes('attr')) {
-            if (directive.modifiers.includes('remove')) {
-                el.setAttribute(directive.value, true)
-            } else {
-                el.removeAttribute(directive.value)
-            }
-        } else {
-            el.style.display = 'none'
+            delete el.__livewire_on_finish_loading
         }
     })
 }

@@ -2,23 +2,26 @@
 
 namespace Livewire\Connection;
 
+use Livewire\Request;
 use Livewire\Livewire;
-use Illuminate\Support\Fluent;
+use Livewire\Response;
 use Illuminate\Validation\ValidationException;
 
 abstract class ConnectionHandler
 {
     public function handle($payload)
     {
-        $instance = app('livewire')->activate($payload['name'], $payload['id']);
+        $request = new Request($payload);
+
+        $instance = app('livewire')->activate($request->name(), $request->id());
 
         try {
-            Livewire::hydrate($instance, $payload);
+            Livewire::hydrate($instance, $request);
 
             $instance->hydrate();
 
-            foreach ($payload['actionQueue'] as $action) {
-                $this->processMessage($action['type'], $action['payload'], $instance);
+            foreach ($request->updates as $update) {
+                $this->processMessage($update['type'], $update['payload'], $instance);
             }
         } catch (ValidationException $e) {
             Livewire::dispatch('failed-validation', $e->validator);
@@ -26,19 +29,13 @@ abstract class ConnectionHandler
             $errors = $e->validator->errors();
         }
 
-        $dom = $instance->output($errors ?? null);
+        $html = $instance->output($errors ?? null);
 
-        $response = new Fluent([
-            'id' => $payload['id'],
-            'name' => $payload['name'],
-            'dom' => $dom,
-            'meta' => [],
-            'memo' => [],
-        ]);
+        $response = Response::fromRequest($request, $html);
 
         Livewire::dehydrate($instance, $response);
 
-        return $response;
+        return $response->toSusequentLaravelResponse();
     }
 
     public function processMessage($type, $data, $instance)

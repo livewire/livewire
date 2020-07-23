@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\View\View;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -15,7 +16,6 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Testing\TestResponse as Laravel7TestResponse;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Illuminate\View\View;
 use Livewire\Commands\{
     CpCommand,
     MvCommand,
@@ -32,20 +32,12 @@ use Livewire\Commands\{
     MakeLivewireCommand
 };
 use Livewire\HydrationMiddleware\{
-    PersistLocale,
-    ForwardPrefetch,
     PersistErrorBag,
-    UpdateQueryString,
-    InterceptRedirects,
     CastPublicProperties,
-    RegisterEmittedEvents,
     HydratePublicProperties,
     SecureHydrationWithChecksum,
-    IncludeIdAsRootTagAttribute,
-    RegisterEventsBeingListenedFor,
     HashPropertiesForDirtyDetection,
     HydratePreviouslyRenderedChildren,
-    ClearFlashMessagesIfNotRedirectingAway,
     PrioritizeDataUpdatesBeforeActionCalls,
     HydrateEloquentModelsAsPublicProperties,
     PerformPublicPropertyFromDataBindingUpdates,
@@ -66,7 +58,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerViews();
         $this->registerRoutes();
         $this->registerCommands();
-        $this->registerFeatures();
+        $this->registerRenameMes();
         $this->registerTestMacros();
         $this->registerViewMacros();
         $this->registerTagCompiler();
@@ -130,7 +122,7 @@ class LivewireServiceProvider extends ServiceProvider
                 $class = urldecode($component);
 
                 return (new $class)();
-            });
+            })->middleware('web');
         }
 
         RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
@@ -166,12 +158,6 @@ class LivewireServiceProvider extends ServiceProvider
             DiscoverCommand::class,     // livewire:discover
             S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
         ]);
-    }
-
-    protected function registerFeatures()
-    {
-        SupportFileDownloads::init();
-        SupportViewOptimizations::init();
     }
 
     protected function registerTestMacros()
@@ -259,6 +245,17 @@ class LivewireServiceProvider extends ServiceProvider
         });
     }
 
+    protected function registerRenameMes()
+    {
+        RenameMe\SupportEvents::init();
+        RenameMe\SupportLocales::init();
+        RenameMe\SupportRedirects::init();
+        RenameMe\SupportPrefetches::init();
+        RenameMe\SupportQueryString::init();
+        RenameMe\OptimizeRenderedDom::init();
+        RenameMe\SupportFileDownloads::init();
+    }
+
     protected function registerHydrationMiddleware()
     {
         Livewire::registerHydrationMiddleware([
@@ -267,47 +264,27 @@ class LivewireServiceProvider extends ServiceProvider
         /* order it is listed in this array, and is reversed on response */
         /*                                                               */
         /* Incoming Request                            Outgoing Response */
-        /* v */ IncludeIdAsRootTagAttribute::class,                 /* ^ */
-        /* v */ ClearFlashMessagesIfNotRedirectingAway::class,      /* ^ */
         /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
-        /* v */ RegisterEventsBeingListenedFor::class,              /* ^ */
-        /* v */ RegisterEmittedEvents::class,                       /* ^ */
-        /* v */ PersistLocale::class,                               /* ^ */
-        /* v */ PersistErrorBag::class,                             /* ^ */
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
         /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
+        /* v */ PersistErrorBag::class,                             /* ^ */
         /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
         /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
         /* v */ CastPublicProperties::class,                        /* ^ */
         /* v */ HydratePreviouslyRenderedChildren::class,           /* ^ */
-        /* v */ InterceptRedirects::class,                          /* ^ */
         /* v */ PrioritizeDataUpdatesBeforeActionCalls::class,      /* ^ */
-        /* v */ ForwardPrefetch::class,                             /* ^ */
-        /* v */ UpdateQueryString::class,                           /* ^ */
-        ]);
-
-        Livewire::registerInitialHydrationMiddleware([
-        /* Initial Request */
-        /* v */ [InterceptRedirects::class, 'hydrate'],
-        /* v */ [UpdateQueryString::class, 'hydrate'],
         ]);
 
         Livewire::registerInitialDehydrationMiddleware([
         /* Initial Response */
-        /* ^ */ [IncludeIdAsRootTagAttribute::class, 'dehydrate'],
         /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
         /* ^ */ [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
         /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
         /* ^ */ [HydrateEloquentModelsAsPublicProperties::class, 'dehydrate'],
         /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
-        /* ^ */ [CastPublicProperties::class, 'dehydrate'],
-        /* ^ */ [RegisterEmittedEvents::class, 'dehydrate'],
-        /* ^ */ [RegisterEventsBeingListenedFor::class, 'dehydrate'],
         /* ^ */ [PersistErrorBag::class, 'dehydrate'],
-        /* ^ */ [PersistLocale::class, 'dehydrate'],
-        /* ^ */ [InterceptRedirects::class, 'dehydrate'],
-        /* ^ */ [UpdateQueryString::class, 'dehydrate'],
+        /* ^ */ [CastPublicProperties::class, 'dehydrate'],
         ]);
     }
 

@@ -3,7 +3,6 @@ import componentStore from '@/Store'
 import DOM from '@/dom/dom'
 import Component from '@/component/index'
 import Connection from '@/connection'
-import drivers from '@/connection/drivers'
 import { dispatch } from './util'
 import FileUploads from '@/component/FileUploads'
 import FileDownloads from '@/component/FileDownloads'
@@ -20,14 +19,7 @@ class Livewire {
             driver: 'http',
         }
 
-        options = Object.assign({}, defaults, options)
-
-        const driver =
-            typeof options.driver === 'object'
-                ? options.driver
-                : drivers[options.driver]
-
-        this.connection = new Connection(driver)
+        this.connection = new Connection
         this.components = componentStore
         this.onLoadCallback = () => {}
     }

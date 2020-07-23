@@ -2,17 +2,17 @@ import store from '@/Store'
 
 export default function () {
     store.registerHook('responseReceived', (component, response) => {
-        if (! response.download) return
+        if (! response.effects.download) return
 
         let url = window.URL.createObjectURL(
-            base64toBlob(response.download.content)
+            base64toBlob(response.effects.download.content)
         )
 
         let invisibleLink = document.createElement('a')
 
         invisibleLink.style.display = 'none'
         invisibleLink.href = url
-        invisibleLink.download = response.download.name
+        invisibleLink.download = response.effects.download.name
 
         document.body.appendChild(invisibleLink)
 

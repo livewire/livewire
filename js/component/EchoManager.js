@@ -6,8 +6,8 @@ class EchoManager {
     }
 
     registerListeners() {
-        if (Array.isArray(this.component.events)) {
-            this.component.events.forEach(event => {
+        if (Array.isArray(this.component.listeners)) {
+            this.component.listeners.forEach(event => {
                 if (event.startsWith('echo')) {
                     if (typeof Echo === 'undefined') {
                         console.warn('Laravel Echo cannot be found')

@@ -41,6 +41,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\PushState\NestedComponent::class);
             app('livewire')->component(\Tests\Browser\InputSelect\Component::class);
             app('livewire')->component(\Tests\Browser\FileDownloads\Component::class);
+            app('livewire')->component(\Tests\Browser\Redirects\Component::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -122,6 +123,17 @@ class TestCase extends BaseTestCase
             PHPUnit::assertFalse(
                 $this->resolver->findOrFail($selector)->isDisplayed(),
                 "Element [{$fullSelector}] is visible."
+            );
+
+            return $this;
+        });
+
+        Browser::macro('assertNotPresent', function ($selector) {
+            $fullSelector = $this->resolver->format($selector);
+
+            PHPUnit::assertTrue(
+                is_null($this->resolver->find($selector)),
+                "Element [{$fullSelector}] is present."
             );
 
             return $this;

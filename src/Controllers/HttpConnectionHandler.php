@@ -10,17 +10,9 @@ class HttpConnectionHandler extends ConnectionHandler
     {
         return $this->handle(
             request([
-                'actionQueue',
-                'name',
-                'children',
-                'data',
-                'meta',
+                'fingerprint',
                 'memo',
-                'id',
-                'checksum',
-                'locale',
-                'fromPrefetch',
-                'errorBag',
+                'updates',
             ])
         );
     }

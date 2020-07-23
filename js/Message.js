@@ -16,25 +16,15 @@ export default class {
 
     payload() {
         let payload = {
-            id: this.component.id,
-            data: this.component.data,
-            meta: this.component.meta,
+            fingerprint: this.component.fingerprint,
             memo: this.component.memo,
-            name: this.component.name,
-            checksum: this.component.checksum,
-            locale: this.component.locale,
-            children: this.component.children,
-            actionQueue: this.actionQueue.map(action => {
+            updates: this.actionQueue.map(update => {
                 // This ensures only the type & payload properties only get sent over.
                 return {
-                    type: action.type,
-                    payload: action.payload,
+                    type: update.type,
+                    payload: update.payload,
                 }
             }),
-        }
-
-        if (Object.keys(this.component.errorBag).length > 0) {
-            payload.errorBag = this.component.errorBag
         }
 
         return payload
@@ -42,21 +32,8 @@ export default class {
 
     storeResponse(payload) {
         return this.response = {
-            id: payload.id,
-            dom: payload.dom,
-            checksum: payload.checksum,
-            locale: payload.locale,
-            children: payload.children,
-            dirtyInputs: payload.dirtyInputs,
-            eventQueue: payload.eventQueue,
-            dispatchQueue: payload.dispatchQueue,
-            download: payload.download,
-            events: payload.events,
-            data: payload.data,
-            meta: payload.meta,
             memo: payload.memo,
-            redirectTo: payload.redirectTo,
-            errorBag: payload.errorBag || {},
+            effects: payload.effects,
         }
     }
 }

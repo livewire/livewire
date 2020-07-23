@@ -50,7 +50,7 @@ abstract class Component
             ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), app('router')))->retrieveBindings()
             : [];
 
-        $contents = Livewire::mount($this, $componentParams)->dom;
+        $contents = Livewire::mount($this, $componentParams)->effects['html'];
 
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
