@@ -40,6 +40,7 @@ export default class Component {
         this.prefetchManager = new PrefetchManager(this)
         this.echoManager = new EchoManager(this)
         this.uploadManager = new UploadManager(this)
+        this.watchers = {}
 
         store.callHook('componentInitialized', this)
 
@@ -92,6 +93,26 @@ export default class Component {
                 (carry, dotSeperatedSegment) => carry[dotSeperatedSegment],
                 this.data
             )
+    }
+
+    updateData(newData) {
+        Object.entries(newData).forEach(([key, value]) => {
+            let oldValue = this.data[key]
+
+            if (oldValue !== undefined && oldValue !== value) {
+                this.data[key] = value
+
+                let watchers = this.watchers[key] || []
+
+                watchers.forEach(watcher => watcher(value))
+            }
+        })
+    }
+
+    watch(name, callback) {
+        if (! this.watchers[name]) this.watchers[name] = []
+
+        this.watchers[name].push(callback)
     }
 
     set(name, value) {
@@ -179,7 +200,7 @@ export default class Component {
     }
 
     handleResponse(response) {
-        this.data = response.data
+        this.updateData(response.data)
         this.checksum = response.checksum
         this.children = response.children
         this.errorBag = response.errorBag
@@ -301,7 +322,10 @@ export default class Component {
             },
 
             onBeforeNodeDiscarded: node => {
-                //
+                // If the node is from x-if with a transition.
+                if (node.__x_inserted_me && Array.from(node.attributes).some(attr => /x-transition/.test(attr.name))) {
+                    return false
+                }
             },
 
             onNodeDiscarded: node => {
@@ -340,6 +364,13 @@ export default class Component {
                     fromEl.rawNode().tagName.toUpperCase() === 'SELECT'
                 ) {
                     to.selectedIndex = -1
+                }
+
+                // If the element is x-show.transition.
+                if (Array.from(from.attributes).map(attr => attr.name).some(
+                    name => /x-show.transition/.test(name) || /x-transition/.test(name)
+                )) {
+                    from.__livewire_transition = true
                 }
 
                 // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.

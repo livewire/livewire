@@ -114,6 +114,44 @@ class Livewire {
     {
         if (! window.Alpine) return
 
+        if (window.Alpine.onBeforeComponentInitialized) {
+            window.Alpine.onBeforeComponentInitialized(component => {
+                let livewireEl = component.$el.closest('[wire\\:id]')
+
+                if (livewireEl && livewireEl.__livewire) {
+                    Object.entries(component.unobservedData).forEach(([key, value]) => {
+                        if (value.livewireEntangle) {
+                            let livewireProperty = value.livewireEntangle
+                            let livewireComponent = livewireEl.__livewire
+
+                            component.unobservedData[key] = livewireEl.__livewire.get(livewireProperty)
+
+                            let preventSelfReaction = false
+
+                            component.unobservedData.$watch(key, value => {
+                                if (preventSelfReaction) { preventSelfReaction = false; return }
+
+                                preventSelfReaction = true
+
+                                // This prevents a "blip" when using x-model to set a Livewire property.
+                                Alpine.ignoreFocusedForValueBinding = true
+
+                                livewireComponent.set(livewireProperty, value)
+                            })
+
+                            livewireComponent.watch(livewireProperty, value => {
+                                if (preventSelfReaction) { preventSelfReaction = false; return }
+
+                                preventSelfReaction = true
+
+                                component.$data[key] = value
+                            })
+                        }
+                    })
+                }
+            })
+        }
+
         if (window.Alpine.onComponentInitialized) {
             window.Alpine.onComponentInitialized(component => {
                 let livewireEl = component.$el.closest('[wire\\:id]')
@@ -122,6 +160,10 @@ class Livewire {
                     this.hook('afterDomUpdate', (livewireComponent) => {
                         if (livewireComponent === livewireEl.__livewire) {
                             component.updateElements(component.$el)
+
+                            // This was set to true in the $wire Proxy's setter,
+                            // Now we can re-set it to false.
+                            Alpine.ignoreFocusedForValueBinding = false
                         }
                     })
                 }
@@ -137,6 +179,10 @@ class Livewire {
 
                 return new Proxy(refObj, {
                     get (object, property) {
+                        if (property === 'entangle') {
+                           return name => ({ livewireEntangle: name })
+                        }
+
                         // Forward public API methods right away.
                         if (['get', 'set', 'call', 'on'].includes(property)) {
                             return function(...args) {
@@ -158,6 +204,9 @@ class Livewire {
                     },
 
                     set: function(obj, prop, value) {
+                        // This prevents a "blip" when using x-model to set a Livewire property.
+                        Alpine.ignoreFocusedForValueBinding = true
+
                         wireEl.__livewire.set(prop, value)
 
                         return true
