@@ -104,7 +104,7 @@ export default class Component {
     }
 
     updateDataAndMemo(newData, newMemo) {
-        Object.entries(newData).forEach(([key, value]) => {
+        Object.entries(newData || {}).forEach(([key, value]) => {
             let oldValue = this.memo.data[key]
 
             if (oldValue !== undefined && oldValue !== value) {
@@ -135,7 +135,14 @@ export default class Component {
     }
 
     call(method, ...params) {
-        this.addAction(new MethodAction(method, params, this.el))
+        return new Promise((resolve, reject) => {
+            let action = new MethodAction(method, params, this.el)
+
+            this.addAction(action)
+
+            action.onResolve((thing) => resolve(thing))
+            action.onReject((thing) => reject(thing))
+        })
     }
 
     on(event, callback) {
@@ -189,15 +196,27 @@ export default class Component {
 
         this.messageInTransit = new Message(this, this.actionQueue)
 
-        this.connection.sendMessage(this.messageInTransit)
+        let sendMessage = () => {
+            this.connection.sendMessage(this.messageInTransit)
 
-        store.callHook('messageSent', this, this.messageInTransit)
 
-        this.actionQueue = []
+            store.callHook('messageSent', this, this.messageInTransit)
+
+            this.actionQueue = []
+        }
+
+        if (window.capturedRequestsForDusk) {
+            window.capturedRequestsForDusk.push(sendMessage)
+        } else {
+            sendMessage()
+        }
+
     }
 
     messageSendFailed() {
         store.callHook('messageFailed', this)
+
+        this.messageInTransit.reject()
 
         this.messageInTransit = null
     }
@@ -233,6 +252,8 @@ export default class Component {
         if (response.effects.dirty) {
             this.forceRefreshDataBoundElementsMarkedAsDirty(response.effects.dirty)
         }
+
+        this.messageInTransit.resolve()
 
         this.messageInTransit = null
 
@@ -581,5 +602,49 @@ export default class Component {
             finishCallback,
             errorCallback
         )
+    }
+
+    get $wire() {
+        if (this.dollarWireProxy) return this.dollarWireProxy
+
+        let refObj = {}
+
+        let component = this
+
+        return this.dollarWireProxy = new Proxy(refObj, {
+            get (object, property) {
+                if (property === 'entangle') {
+                   return name => ({ livewireEntangle: name })
+                }
+
+                // Forward public API methods right away.
+                if (['get', 'set', 'call', 'on'].includes(property)) {
+                    return function(...args) {
+                        return component[property].apply(component, args)
+                    }
+                }
+
+                // If the property exists on the data, return it.
+                let getResult = component.get(property)
+
+                // If the property does not exist, try calling the method on the class.
+                if (getResult === undefined) {
+                    return function(...args) {
+                        return component.call.apply(component, [property, ...args])
+                    }
+                }
+
+                return getResult
+            },
+
+            set: function(obj, prop, value) {
+                // This prevents a "blip" when using x-model to set a Livewire property.
+                Alpine.ignoreFocusedForValueBinding = true
+
+                component.set(prop, value)
+
+                return true
+            }
+        })
     }
 }

@@ -6,7 +6,7 @@ export default class extends Message {
     }
 
     get prefetchId() {
-        return this.actionQueue[0].toId()
+        return this.updates[0].toId()
     }
 
     payload() {

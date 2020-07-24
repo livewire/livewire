@@ -42,6 +42,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\InputSelect\Component::class);
             app('livewire')->component(\Tests\Browser\FileDownloads\Component::class);
             app('livewire')->component(\Tests\Browser\Redirects\Component::class);
+            app('livewire')->component(\Tests\Browser\Alpine\Component::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -144,7 +145,7 @@ class TestCase extends BaseTestCase
         });
 
         Browser::macro('waitForLivewireRequest', function () {
-            return $this->waitUsing(2, 25, function () {
+            return $this->waitUsing(5, 25, function () {
                 return $this->driver->executeScript('return window.livewire.requestIsOut() === true');
             }, 'Livewire request was never triggered');
         });
@@ -153,6 +154,18 @@ class TestCase extends BaseTestCase
             return $this->waitUsing(5, 25, function () {
                 return $this->driver->executeScript('return window.livewire.requestIsOut() === false');
             }, 'Livewire response was never received');
+        });
+
+        Browser::macro('captureLivewireRequest', function () {
+            $this->driver->executeScript('window.capturedRequestsForDusk = []');
+
+            return $this;
+        });
+
+        Browser::macro('replayLivewireRequest', function () {
+            $this->driver->executeScript('window.capturedRequestsForDusk.forEach(callback => callback()); delete window.capturedRequestsForDusk;');
+
+            return $this;
         });
 
         Browser::macro('assertScript', function () {

@@ -5,6 +5,7 @@ export default class extends Action {
         super(el)
 
         this.type = 'callMethod'
+        this.method = method
         this.payload = {
             method,
             params,

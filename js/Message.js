@@ -1,13 +1,13 @@
 import store from '@/Store'
 
 export default class {
-    constructor(component, actionQueue) {
+    constructor(component, updates) {
         this.component = component
-        this.actionQueue = actionQueue
+        this.updates = updates
     }
 
     get refs() {
-        return this.actionQueue
+        return this.updates
             .map(action => {
                 return action.ref
             })
@@ -18,7 +18,7 @@ export default class {
         let payload = {
             fingerprint: this.component.fingerprint,
             memo: this.component.memo,
-            updates: this.actionQueue.map(update => {
+            updates: this.updates.map(update => {
                 // This ensures only the type & payload properties only get sent over.
                 return {
                     type: update.type,
@@ -35,5 +35,21 @@ export default class {
             memo: payload.memo,
             effects: payload.effects,
         }
+    }
+
+    resolve() {
+        let returns = this.response.effects.returns || []
+
+        this.updates.forEach(update => {
+            if (update.type !== 'callMethod') return
+
+            update.resolve(returns[update.method] !== undefined ? returns[update.method] : null)
+        })
+    }
+
+    reject() {
+        this.updates.forEach(update => {
+            update.reject()
+        })
     }
 }

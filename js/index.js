@@ -14,18 +14,22 @@ import Polling from '@/component/Polling'
 import UpdateQueryString from '@/component/UpdateQueryString'
 
 class Livewire {
-    constructor(options = {}) {
-        const defaults = {
-            driver: 'http',
-        }
-
+    constructor() {
         this.connection = new Connection
         this.components = componentStore
         this.onLoadCallback = () => {}
     }
 
+    first() {
+        return Object.values(this.components.componentsById)[0].$wire
+    }
+
     find(componentId) {
-        return this.components.componentsById[componentId]
+        return this.components.componentsById[componentId].$wire
+    }
+
+    all() {
+        return Object.values(this.components.componentsById).map(component => component.$wire)
     }
 
     directive(name, callback) {
@@ -113,7 +117,7 @@ class Livewire {
 
                 if (livewireEl && livewireEl.__livewire) {
                     Object.entries(component.unobservedData).forEach(([key, value]) => {
-                        if (value.livewireEntangle) {
+                        if (!! value && typeof value === 'object' && value.livewireEntangle) {
                             let livewireProperty = value.livewireEntangle
                             let livewireComponent = livewireEl.__livewire
 
@@ -166,45 +170,12 @@ class Livewire {
         if (window.Alpine.addMagicProperty) {
             window.Alpine.addMagicProperty('wire', function (componentEl) {
                 let wireEl = componentEl.closest('[wire\\:id]')
+
                 if (! wireEl) console.warn('Alpine: Cannot reference "\$wire" outside a Livewire component.')
 
-                var refObj = {}
+                let component = wireEl.__livewire
 
-                return new Proxy(refObj, {
-                    get (object, property) {
-                        if (property === 'entangle') {
-                           return name => ({ livewireEntangle: name })
-                        }
-
-                        // Forward public API methods right away.
-                        if (['get', 'set', 'call', 'on'].includes(property)) {
-                            return function(...args) {
-                                return wireEl.__livewire[property].apply(wireEl.__livewire, args)
-                            }
-                        }
-
-                        // If the property exists on the data, return it.
-                        let getResult = wireEl.__livewire.get(property)
-
-                        // If the property does not exist, try calling the method on the class.
-                        if (getResult === undefined) {
-                            return function(...args) {
-                                return wireEl.__livewire.call.apply(wireEl.__livewire, [property, ...args])
-                            }
-                        }
-
-                        return getResult
-                    },
-
-                    set: function(obj, prop, value) {
-                        // This prevents a "blip" when using x-model to set a Livewire property.
-                        Alpine.ignoreFocusedForValueBinding = true
-
-                        wireEl.__livewire.set(prop, value)
-
-                        return true
-                    }
-                })
+                return component.$wire
             })
         }
     }
