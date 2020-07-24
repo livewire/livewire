@@ -2,6 +2,7 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Livewire\Livewire;
 use Illuminate\Support\Str;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Database\Eloquent\Model;
@@ -93,7 +94,9 @@ trait HandlesActions
 
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
-                ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
+                $returned = ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
+
+                Livewire::dispatch('action.returned', $this, $method, $returned);
 
                 break;
         }

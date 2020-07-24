@@ -30,6 +30,9 @@ trait RegistersHydrationMiddleware
         foreach ($this->hydrationMiddleware as $class) {
             $class::hydrate($instance, $request);
         }
+
+        Livewire::dispatch('component.hydrate', $instance, $request);
+        Livewire::dispatch('component.hydrate.subsequent', $instance, $request);
     }
 
     public function initialHydrate($instance, $request)
@@ -37,10 +40,16 @@ trait RegistersHydrationMiddleware
         foreach ($this->initialHydrationMiddleware as $callable) {
             $callable($instance, $request);
         }
+
+        Livewire::dispatch('component.hydrate', $instance, $request);
+        Livewire::dispatch('component.hydrate.initial', $instance, $request);
     }
 
     public function initialDehydrate($instance, $response)
     {
+        Livewire::dispatch('component.dehydrate', $instance, $response);
+        Livewire::dispatch('component.dehydrate.initial', $instance, $response);
+
         foreach (array_reverse($this->initialDehydrationMiddleware) as $callable) {
             $callable($instance, $response);
         }
@@ -48,6 +57,10 @@ trait RegistersHydrationMiddleware
 
     public function dehydrate($instance, $response)
     {
+
+        Livewire::dispatch('component.dehydrate', $instance, $response);
+        Livewire::dispatch('component.dehydrate.subsequent', $instance, $response);
+
         // The array is being reversed here, so the middleware dehydrate phase order of execution is
         // the inverse of hydrate. This makes the middlewares behave like layers in a shell.
         foreach (array_reverse($this->hydrationMiddleware) as $class) {

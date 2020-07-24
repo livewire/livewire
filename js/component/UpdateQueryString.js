@@ -3,9 +3,9 @@ import queryString from '@/util/query-string'
 
 export default function () {
     store.registerHook('componentInitialized', (component) => {
-        if (! component.meta.fromQueryString) return;
+        if (! component.effects['query']) return;
 
-        let { properties, excepts } = component.meta.fromQueryString
+        let { properties, excepts } = component.effects['query']
 
         replaceState(component, properties, excepts)
     })
@@ -15,12 +15,12 @@ export default function () {
             Object.keys(event.state.livewire.updates).forEach(name => {
                 let component = store.getComponentsByName(name)[0]
 
-                if (! component.meta.fromQueryString) return;
+                if (! component.effects['query']) return;
 
                 if (component) {
                     let updates = event.state.livewire.updates[name].data
 
-                    component.meta.fromQueryString.properties.forEach(property => {
+                    component.effects['query'].properties.forEach(property => {
                         component.set(property, updates[property])
                     })
 
@@ -35,9 +35,9 @@ export default function () {
     })
 
     store.registerHook('responseReceived', (component, response) => {
-        if (component.meta.fromQueryString === undefined) return
+        if (component.effects['query'] === undefined) return
 
-        let { properties, excepts } = component.meta.fromQueryString
+        let { properties, excepts } = component.effects['query']
 
         if (component.useReplaceState === true) {
             component.useReplaceState = false

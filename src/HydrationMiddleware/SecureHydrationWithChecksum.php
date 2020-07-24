@@ -12,14 +12,18 @@ class SecureHydrationWithChecksum implements HydrationMiddleware
         // Make sure the data coming back to hydrate a component hasn't been tampered with.
         $checksumManager = new ComponentChecksumManager;
 
+        $checksum = $request->memo['checksum'];
+
+        unset($request->memo['checksum']);
+
         throw_unless(
-            $checksumManager->check($request['checksum'], $request['name'], $request['id'], $request['data'], $request['meta']),
-            new CorruptComponentPayloadException($request['name'])
+            $checksumManager->check($checksum, $request->fingerprint, $request->memo),
+            new CorruptComponentPayloadException($unHydratedInstance->getName())
         );
     }
 
     public static function dehydrate($instance, $response)
     {
-        $response->checksum = (new ComponentChecksumManager)->generate($response->name, $response->id, $response->data, $response->meta);
+        $response->memo['checksum'] = (new ComponentChecksumManager)->generate($response->fingerprint, $response->memo);
     }
 }

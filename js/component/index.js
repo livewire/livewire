@@ -17,26 +17,26 @@ import MessageBus from '../MessageBus'
 export default class Component {
     constructor(el, connection) {
         el.rawNode().__livewire = this
+
+
         this.id = el.getAttribute('id')
+
         const initialData = JSON.parse(
             this.extractLivewireAttribute('initial-data')
         )
-        this.data = initialData.data || {}
-        this.meta = initialData.meta || {}
-        this.events = initialData.events || []
-        this.children = initialData.children || {}
-        this.checksum = initialData.checksum || ''
-        this.locale = initialData.locale || null
-        this.name = initialData.name || ''
-        this.errorBag = initialData.errorBag || {}
-        this.redirectTo = initialData.redirectTo || false
-        this.scopedListeners = new MessageBus()
-        this.connection = connection
+
+        this.fingerprint = initialData.fingerprint
+        this.memo = initialData.memo
+        this.effects = initialData.effects
+
+        this.listeners = this.memo.listeners
         this.actionQueue = []
+        this.connection = connection
         this.deferredActions = {}
         this.messageInTransit = null
         this.modelTimeout = null
         this.tearDownCallbacks = []
+        this.scopedListeners = new MessageBus()
         this.prefetchManager = new PrefetchManager(this)
         this.echoManager = new EchoManager(this)
         this.uploadManager = new UploadManager(this)
@@ -49,8 +49,8 @@ export default class Component {
         this.echoManager.registerListeners()
         this.uploadManager.registerListeners()
 
-        if (this.redirectTo) {
-            this.redirect(this.redirectTo)
+        if (this.effects.redirect) {
+            this.redirect(this.effects.redirect)
 
             return
         }
@@ -60,8 +60,16 @@ export default class Component {
         return DOM.getByAttributeAndValue('id', this.id)
     }
 
+    get name() {
+        return this.fingerprint.name
+    }
+
     get root() {
         return this.el
+    }
+
+    get data() {
+        return this.memo.data
     }
 
     extractLivewireAttribute(name) {
@@ -95,12 +103,26 @@ export default class Component {
             )
     }
 
-    updateData(newData) {
+    updateDataAndMemo(newData, newMemo) {
         Object.entries(newData).forEach(([key, value]) => {
-            let oldValue = this.data[key]
+            let oldValue = this.memo.data[key]
 
             if (oldValue !== undefined && oldValue !== value) {
-                this.data[key] = value
+                this.memo.data[key] = value
+
+                let watchers = this.watchers[key] || []
+
+                watchers.forEach(watcher => watcher(value))
+            }
+        })
+
+        Object.entries(newMemo).forEach(([key, value]) => {
+            if (key === 'data') return
+
+            let oldValue = this.memo[key]
+
+            if (oldValue !== undefined && oldValue !== value) {
+                this.memo[key] = value
 
                 let watchers = this.watchers[key] || []
 
@@ -200,28 +222,29 @@ export default class Component {
     }
 
     handleResponse(response) {
-        this.updateData(response.data)
-        this.checksum = response.checksum
-        this.children = response.children
-        this.errorBag = response.errorBag
+        this.updateDataAndMemo(response.memo.data, response.memo)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
-        if (response.redirectTo) {
-            this.redirect(response.redirectTo)
+        if (response.effects.redirect) {
+            this.redirect(response.effects.redirect)
 
             return
         }
 
         store.callHook('responseReceived', this, response)
 
-        this.replaceDom(response.dom, response.dirtyInputs)
+        if (response.effects.html) {
+            this.replaceDom(response.effects.html)
+        }
 
-        this.forceRefreshDataBoundElementsMarkedAsDirty(response.dirtyInputs)
+        if (response.effects.dirty) {
+            this.forceRefreshDataBoundElementsMarkedAsDirty(response.effects.dirty)
+        }
 
         this.messageInTransit = null
 
-        if (response.eventQueue && response.eventQueue.length > 0) {
-            response.eventQueue.forEach(event => {
+        if (response.effects.emits && response.effects.emits.length > 0) {
+            response.effects.emits.forEach(event => {
                 this.scopedListeners.call(event.event, ...event.params)
 
                 if (event.selfOnly) {
@@ -236,8 +259,8 @@ export default class Component {
             })
         }
 
-        if (response.dispatchQueue && response.dispatchQueue.length > 0) {
-            response.dispatchQueue.forEach(event => {
+        if (response.effects.dispatches && response.effects.dispatches.length > 0) {
+            response.effects.dispatches.forEach(event => {
                 const data = event.data ? event.data : {}
                 const e = new CustomEvent(event.event, {
                     bubbles: true,

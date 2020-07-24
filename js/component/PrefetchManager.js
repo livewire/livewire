@@ -10,7 +10,7 @@ class PrefetchManager {
     }
 
     storeResponseInMessageForPayload(payload) {
-        const message = this.prefetchMessagesByActionId[payload.fromPrefetch]
+        const message = this.prefetchMessagesByActionId[payload.memo.prefectch]
 
         if (message) message.storeResponse(payload)
     }
