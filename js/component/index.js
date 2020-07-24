@@ -116,18 +116,11 @@ export default class Component {
             }
         })
 
+        // Only update the memo properties that exist in the returning payload.
         Object.entries(newMemo).forEach(([key, value]) => {
             if (key === 'data') return
 
-            let oldValue = this.memo[key]
-
-            if (oldValue !== undefined && oldValue !== value) {
-                this.memo[key] = value
-
-                let watchers = this.watchers[key] || []
-
-                watchers.forEach(watcher => watcher(value))
-            }
+            this.memo[key] = value
         })
     }
 
