@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Testing\Constraints\SeeInOrder;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MakesAssertions
@@ -59,6 +60,26 @@ trait MakesAssertions
         PHPUnit::assertStringNotContainsString(
             $value,
             $this->stripOutInitialData($this->payload['dom'])
+        );
+
+        return $this;
+    }
+
+    public function assertSeeHtmlInOrder(array $values)
+    {
+        PHPUnit::assertThat(
+            $values,
+            new SeeInOrder($this->stripOutInitialData($this->payload['dom']))
+        );
+
+        return $this;
+    }
+
+    public function assertSeeInOrder(array $values)
+    {
+        PHPUnit::assertThat(
+            array_map('e', ($values)),
+            new SeeInOrder($this->stripOutInitialData($this->payload['dom']))
         );
 
         return $this;
