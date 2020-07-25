@@ -4,6 +4,7 @@ namespace Tests;
 
 use Livewire\Component;
 use Livewire\LivewireManager;
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\Route;
 
 class LivewireTestingTest extends TestCase
@@ -170,6 +171,24 @@ class LivewireTestingTest extends TestCase
             ->set('bar', '')
             ->assertHasErrors(['foo', 'bar']);
     }
+
+    /** @test */
+    public function assert_has_error_with_custom_validation_rule()
+    {
+        app(LivewireManager::class)
+            ->test(ValidatesDataWithCustomRuleStub::class)
+            ->set('foo', 'fail')
+            ->set('bar', 'pass')
+            ->call('submit')
+            ->assertHasErrors('foo')
+            ->assertHasNoErrors('bar')
+            ->assertHasErrors([
+                'foo' => [CustomRule::class],
+            ])
+            ->assertHasNoErrors([
+                'bar' => [CustomRule::class],
+            ]);
+    }
 }
 
 class HasMountArguments extends Component
@@ -281,5 +300,37 @@ class ValidatesDataWithRealTimeStub extends Component
     public function render()
     {
         return app('view')->make('null-view');
+    }
+}
+
+class ValidatesDataWithCustomRuleStub extends Component
+{
+    public $foo;
+    public $bar;
+
+    public function submit()
+    {
+        $this->validate([
+            'foo' => new CustomRule(),
+            'bar' => new CustomRule(),
+        ]);
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class CustomRule implements Rule
+{
+    public function passes($attribute, $value)
+    {
+        return $value === 'pass';
+    }
+
+    public function message()
+    {
+        return 'The :attribute must be valid.';
     }
 }
