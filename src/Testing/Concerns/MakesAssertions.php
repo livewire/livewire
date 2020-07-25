@@ -155,7 +155,7 @@ trait MakesAssertions
                 $failed = optional($this->lastValidator)->failed() ?: [];
                 $rules = array_keys(Arr::get($failed, $key, []));
                 $snakeCaseRules = array_map(function ($rule) {
-                    return Str::snake($rule);
+                    return class_exists($rule) ? $rule : Str::snake($rule);
                 }, $rules);
 
                 foreach ((array)$value as $rule) {
@@ -186,7 +186,7 @@ trait MakesAssertions
                 $failed = optional($this->lastValidator)->failed() ?: [];
                 $rules = array_keys(Arr::get($failed, $key, []));
                 $snakeCaseRules = array_map(function ($rule) {
-                    return Str::snake($rule);
+                    return class_exists($rule) ? $rule : Str::snake($rule);
                 }, $rules);
 
                 foreach ((array) $value as $rule) {
