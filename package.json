@@ -1,6 +1,7 @@
 {
     "main": "dist/livewire.js",
     "name": "laravel-livewire",
+    "version": "1.0",
     "scripts": {
         "build": "npx rollup -c",
         "watch": "npx rollup -c -w",
