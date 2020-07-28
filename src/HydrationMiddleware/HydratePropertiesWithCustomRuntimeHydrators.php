@@ -11,7 +11,7 @@ class HydratePropertiesWithCustomRuntimeHydrators implements HydrationMiddleware
         $publicProperties = $unHydratedInstance->getPublicPropertiesDefinedBySubClass();
 
         foreach ($publicProperties as $property => $value) {
-            $newValue = Livewire::performHydrateProperty($value, $property, $unHydratedInstance);
+            $newValue = Livewire::performHydrateProperty($value, $property, $unHydratedInstance, $request);
 
             $newValue = $unHydratedInstance->handleHydrateProperty($property, $newValue);
 
@@ -26,7 +26,7 @@ class HydratePropertiesWithCustomRuntimeHydrators implements HydrationMiddleware
         $publicProperties = $instance->getPublicPropertiesDefinedBySubClass();
 
         foreach ($publicProperties as $property => $value) {
-            $newValue = Livewire::performDehydrateProperty($value, $property, $instance);
+            $newValue = Livewire::performDehydrateProperty($value, $property, $instance, $response);
 
             $newValue = $instance->handleDehydrateProperty($property, $newValue);
 
