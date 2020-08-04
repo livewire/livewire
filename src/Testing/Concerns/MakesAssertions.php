@@ -3,9 +3,11 @@
 namespace Livewire\Testing\Concerns;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\FileUploadConfiguration;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MakesAssertions
@@ -223,6 +225,22 @@ trait MakesAssertions
         } else {
             PHPUnit::assertEquals($value, $this->lastRenderedView->gatherData()[$key]);
         }
+
+        return $this;
+    }
+
+    public function assertExists($path)
+    {
+        FileUploadConfiguration::storage()
+            ->assertExists($path);
+
+        return $this;
+    }
+
+    public function assertNotExists($path)
+    {
+        FileUploadConfiguration::storage()
+            ->assertMissing($path);
 
         return $this;
     }

@@ -53,6 +53,18 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function can_test_a_file_was_uploaded_in_the_default_driver()
+    {
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->assertNotExists('uploaded-avatar.png')
+            ->call('uploadInDefaultDriver', 'uploaded-avatar.png')
+            ->assertExists('uploaded-avatar.png');
+    }
+
+    /** @test */
     public function can_remove_a_file_property()
     {
         $file = UploadedFile::fake()->image('avatar.jpg');
@@ -534,6 +546,11 @@ class FileUploadComponent extends Component
     public function uploadAndSetStoredFilename()
     {
         $this->storedFilename = $this->photo->store('/', $disk = 'avatars');
+    }
+
+    public function uploadInDefaultDriver($name)
+    {
+        $this->photo->storeAs('/', $name);
     }
 
     public function uploadDangerous()
