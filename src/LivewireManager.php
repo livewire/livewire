@@ -154,7 +154,7 @@ class LivewireManager
     {
         $debug = config('app.debug');
 
-        $styles = $this->cssAssets();
+        $styles = $this->cssAssets($options);
 
         // HTML Label.
         $html = $debug ? ['<!-- Livewire Styles -->'] : [];
@@ -180,10 +180,11 @@ class LivewireManager
         return implode("\n", $html);
     }
 
-    protected function cssAssets()
+    protected function cssAssets($options)
     {
+        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
         return <<<HTML
-<style>
+<style{$nonce}>
     [wire\:loading] {
         display: none;
     }

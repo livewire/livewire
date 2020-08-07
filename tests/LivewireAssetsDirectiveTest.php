@@ -95,4 +95,14 @@ class LivewireAssetsDirectiveTest extends TestCase
             $output
         );
     }
+
+    /** @test */
+    public function nonce_passed_into_directive_gets_added_as_style_tag_attribute()
+    {
+        $output = View::make('assets-directive-styles', [
+            'options' => ['nonce' => 'hastalavista'],
+        ])->render();
+
+        $this->assertStringContainsString('nonce="hastalavista"', $output);
+    }
 }
