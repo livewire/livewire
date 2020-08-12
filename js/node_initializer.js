@@ -143,9 +143,8 @@ export default {
                     // Strip 'debounce' modifier and time modifiers from modifiers list
                     let modifiers = directive.modifiers.filter(modifier => {
                         return (
-                            !modifier.match(/debounce/) &&
-                            !modifier.match(/[0-9ms]/) &&
-                            !modifier.match(/[0-9s]/)
+                            !modifier.match(/^debounce$/) &&
+                            !modifier.match(/^[0-9]+m?s$/)
                         )
                     })
 
@@ -187,7 +186,7 @@ export default {
             if (callback && callback(e) === false) {
                 return
             }
-
+            
             component.callAfterModelDebounce(() => {
                 const el = new DOMElement(e.target)
 
