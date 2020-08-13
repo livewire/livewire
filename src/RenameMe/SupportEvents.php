@@ -14,9 +14,11 @@ class SupportEvents
             //
         });
 
-        Livewire::listen('component.dehydrate', function ($component, $response) {
-            $response->memo['listeners'] = $component->getEventsBeingListenedFor();
+        Livewire::listen('component.dehydrate.initial', function ($component, $response) {
+            $response->effects['listeners'] = $component->getEventsBeingListenedFor();
+        });
 
+        Livewire::listen('component.dehydrate', function ($component, $response) {
             $emits = $component->getEventQueue();
             $dispatches = $component->getDispatchQueue();
 

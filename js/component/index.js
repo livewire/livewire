@@ -29,7 +29,7 @@ export default class Component {
         this.memo = initialData.memo
         this.effects = initialData.effects
 
-        this.listeners = this.memo.listeners
+        this.listeners = this.effects.listeners
         this.actionQueue = []
         this.connection = connection
         this.deferredActions = {}
