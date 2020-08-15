@@ -24,7 +24,6 @@ Livewire uses semantic versioning and will use the following release schedule st
 ## Roadmap
 * Add a `$formData` magic property to pass into submit handler actions: `wire:submit="save($formData)"`
 * Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
-* Remove `wire:poll` setIntervals an element is removed, or when the attribute is removed. #563
 * Implement `wire:model.passive`
 * Add `wire:append` for appending DOM changes rather than replacing them
 * Allow traits to hook into all lifecycle hooks
@@ -123,7 +122,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/dododedodonl"><img src="https://avatars2.githubusercontent.com/u/100052?v=4" width="100px;" alt=""/><br /><sub><b>Tom Janssen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=dododedodonl" title="Code">💻</a></td>
     <td align="center"><a href="https://DanHarrin.com"><img src="https://avatars2.githubusercontent.com/u/41773797?v=4" width="100px;" alt=""/><br /><sub><b>Dan Harrin</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=DanHarrin" title="Code">💻</a></td>
     <td align="center"><a href="https://www.codeboutique.com"><img src="https://avatars0.githubusercontent.com/u/247048?v=4" width="100px;" alt=""/><br /><sub><b>Michael Bøcker-Larsen</b></sub></a><br /><a href="#maintenance-mblarsen" title="Maintenance">🚧</a></td>
-    <td align="center"><a href="https://github.com/DavideMoney"><img src="https://avatars0.githubusercontent.com/u/39701809?v=4" width="100px;" alt=""/><br /><sub><b>DavideMoney</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=DavideMoney" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/davideperfetto"><img src="https://avatars0.githubusercontent.com/u/39701809?v=4" width="100px;" alt=""/><br /><sub><b>Davide Perfetto</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=davideperfetto" title="Code">💻</a></td>
   </tr>
   <tr>
     <td align="center"><a href="http://www.dennisvandalen.com"><img src="https://avatars3.githubusercontent.com/u/4375758?v=4" width="100px;" alt=""/><br /><sub><b>Dennis van Dalen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=dennisvandalen" title="Code">💻</a></td>

@@ -1,13 +1,15 @@
-import EventAction from "@/action/event";
-import HookManager from "@/HookManager";
-import DirectiveManager from "@/DirectiveManager";
-import MessageBus from "./MessageBus";
+import EventAction from '@/action/event'
+import HookManager from '@/HookManager'
+import DirectiveManager from '@/DirectiveManager'
+import MessageBus from './MessageBus'
 
 const store = {
     componentsById: {},
-    listeners: new MessageBus,
+    listeners: new MessageBus(),
+    initialRenderIsFinished: false,
     livewireIsInBackground: false,
     livewireIsOffline: false,
+    sessionHasExpired: false,
     hooks: HookManager,
     directives: DirectiveManager,
     onErrorCallback: () => {},
@@ -19,7 +21,7 @@ const store = {
     },
 
     addComponent(component) {
-        return this.componentsById[component.id] = component
+        return (this.componentsById[component.id] = component)
     },
 
     findComponent(id) {
@@ -27,14 +29,13 @@ const store = {
     },
 
     getComponentsByName(name) {
-        return this.components()
-            .filter(component => {
-                return component.name === name
-            })
+        return this.components().filter(component => {
+            return component.name === name
+        })
     },
 
     hasComponent(id) {
-        return !! this.componentsById[id]
+        return !!this.componentsById[id]
     },
 
     tearDownComponents() {
@@ -50,18 +51,17 @@ const store = {
     emit(event, ...params) {
         this.listeners.call(event, ...params)
 
-        this.componentsListeningForEvent(event).forEach(
-            component => component.addAction(new EventAction(
-                event, params
-            ))
+        this.componentsListeningForEvent(event).forEach(component =>
+            component.addAction(new EventAction(event, params))
         )
     },
 
     emitUp(el, event, ...params) {
-        this.componentsListeningForEventThatAreTreeAncestors(el, event).forEach(
-            component => component.addAction(new EventAction(
-                event, params
-            ))
+        this.componentsListeningForEventThatAreTreeAncestors(
+            el,
+            event
+        ).forEach(component =>
+            component.addAction(new EventAction(event, params))
         )
     },
 
@@ -69,9 +69,7 @@ const store = {
         let component = this.findComponent(componentId)
 
         if (component.events.includes(event)) {
-            component.addAction(new EventAction(
-                event, params
-            ))
+            component.addAction(new EventAction(event, params))
         }
     },
 
@@ -80,9 +78,7 @@ const store = {
 
         components.forEach(component => {
             if (component.events.includes(event)) {
-                component.addAction(new EventAction(
-                    event, params
-                ))
+                component.addAction(new EventAction(event, params))
             }
         })
     },
@@ -99,8 +95,10 @@ const store = {
         }
 
         return this.components().filter(component => {
-            return component.events.includes(event)
-                && parentIds.includes(component.id)
+            return (
+                component.events.includes(event) &&
+                parentIds.includes(component.id)
+            )
         })
     },
 
@@ -131,7 +129,7 @@ const store = {
 
     onError(callback) {
         this.onErrorCallback = callback
-    }
+    },
 }
 
 export default store
