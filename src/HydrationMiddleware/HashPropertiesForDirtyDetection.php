@@ -11,6 +11,8 @@ class HashPropertiesForDirtyDetection implements HydrationMiddleware
 
     public static function dehydrate($instance, $response)
     {
-        $response->dirtyInputs = $instance->getDirtyProperties();
+        if ($dirty = $instance->getDirtyProperties()) {
+            $response->effects['dirty'] = $dirty;
+        }
     }
 }

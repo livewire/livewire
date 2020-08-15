@@ -14,14 +14,16 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
 
     public static function hydrate($unHydratedInstance, $request)
     {
-        if (! isset($request['meta']['models'])) return;
+        if (! isset($request->memo['dataMeta']['models'])) return;
 
-        foreach ($request['meta']['models'] as $property => $value) {
+        $models = $request->memo['dataMeta']['models'];
+
+        foreach ($models as $property => $value) {
             $model = (new static)->getRestoredPropertyValue(
                 new ModelIdentifier($value['class'], $value['id'], $value['relations'], $value['connection'])
             );
 
-            $dirtyModelData = $request['data'][$property];
+            $dirtyModelData = $request->memo['data'][$property];
 
             if ($rules = $unHydratedInstance->rulesForModel($property)) {
                 $keys = $rules->keys()->map(function ($key) use ($unHydratedInstance) {
@@ -43,7 +45,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
 
         foreach ($publicProperties as $property => $value) {
             if (($serializedModel = (new static)->getSerializedPropertyValue($value)) instanceof ModelIdentifier) {
-                $meta = $response->meta;
+                $meta = $response->memo['dataMeta'] ?? [];
 
                 if (! isset($meta['models'])) $meta['models'] = [];
 
@@ -65,7 +67,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
 
                 // Deserialize the models into the "meta" bag.
                 $meta['models'][$property] = (array) $serializedModel;
-                $response->meta = $meta;
+                $response->memo['dataMeta'] = $meta;
             }
         }
     }

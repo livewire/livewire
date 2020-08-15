@@ -6,7 +6,7 @@ use Livewire\Exceptions\RootTagMissingFromViewException;
 
 class AddAttributesToRootTagOfHtml
 {
-    public function __invoke($dom, $data, $instance)
+    public function __invoke($dom, $data)
     {
         $attributesFormattedForHtmlElement = collect($data)
             ->mapWithKeys(function ($value, $key) {
@@ -19,7 +19,7 @@ class AddAttributesToRootTagOfHtml
 
         throw_unless(
             count($matches),
-            new RootTagMissingFromViewException($instance->getName())
+            new RootTagMissingFromViewException
         );
 
         $tagName = $matches[1][0];

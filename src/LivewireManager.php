@@ -7,6 +7,7 @@ use Illuminate\Support\Fluent;
 use Illuminate\Foundation\Application;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Laravel\Dusk\Browser;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Exceptions\MountMethodMissingException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
@@ -21,8 +22,13 @@ class LivewireManager
 
     public static $isLivewireRequestTestingOverride;
 
-    public function component($alias, $viewClass)
+    public function component($alias, $viewClass = null)
     {
+        if (is_null($viewClass)) {
+            $viewClass = $alias;
+            $alias = (new $viewClass('fake-id'))->getName();
+        }
+
         $this->componentAliases[$alias] = $viewClass;
     }
 
@@ -81,7 +87,13 @@ class LivewireManager
         $id = Str::random(20);
 
         // Allow instantiating Livewire components directly from classes.
-        if (class_exists($name)) {
+        if ($name instanceof Component) {
+            $id = $name->id;
+
+            $instance = $name;
+
+            $name = $instance->getName();
+        } elseif (class_exists($name)) {
             $instance = new $name($id);
             // Set the name to the computed name, so that the full namespace
             // isn't leaked to the front-end.
@@ -90,28 +102,31 @@ class LivewireManager
             $instance = $this->activate($name, $id);
         }
 
-        $this->initialHydrate($instance, []);
+        $request = new Request([
+            'fingerprint' => [
+                'id' => $id,
+                'name' => $name,
+                'locale' => app()->getLocale(),
+            ],
+            'updates' => [],
+            'memo' => [],
+        ]);
+
+        $this->initialHydrate($instance, $request);
 
         $this->performMount($instance, $params);
 
-        $dom = $instance->output();
+        $html = $instance->output();
 
-        $response = new Fluent([
-            'id' => $id,
-            'name' => $name,
-            'dom' => $dom,
-            'meta' => [],
-        ]);
+        $response = Response::fromRequest($request, $html);
 
         $this->initialDehydrate($instance, $response);
 
-        $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
-            'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
-        ], $instance);
+        $response->embedThyselfInHtml();
 
         $this->dispatch('mounted', $response);
 
-        return $response;
+        return $response->toInitialResonse();
     }
 
     public function dummyMount($id, $tagName)
@@ -122,6 +137,13 @@ class LivewireManager
     public function test($name, $params = [])
     {
         return new TestableLivewire($name, $params);
+    }
+
+    public function visit($browser, $class, $queryString = '')
+    {
+        $url = '/livewire-dusk/'.urlencode($class).$queryString;
+
+        return $browser->visit($url);
     }
 
     public function actingAs(Authenticatable $user, $driver = null)
@@ -236,44 +258,6 @@ HTML;
     /* Make Alpine wait until Livewire is finished rendering to do its thing. */
     window.deferLoadingAlpine = function (callback) {
         window.addEventListener('livewire:load', function () {
-            if (window.Alpine) {
-                window.Alpine.addMagicProperty('wire', function (componentEl) {
-                    let wireEl = componentEl.closest('[wire\\\\:id]')
-                    if (! wireEl) console.warn('Alpine: Cannot reference "\$wire" outside a Livewire component.')
-
-                    var refObj = {}
-
-                    return new Proxy(refObj, {
-                        get (object, property) {
-                            // Forward public API methods right away.
-                            if (['get', 'set', 'call', 'on'].includes(property)) {
-                                return function(...args) {
-                                    return wireEl.__livewire[property].apply(wireEl.__livewire, args)
-                                }
-                            }
-
-                            // If the property exists on the data, return it.
-                            let getResult = wireEl.__livewire.get(property)
-
-                            // If the property does not exist, try calling the method on the class.
-                            if (getResult === undefined) {
-                                return function(...args) {
-                                    return wireEl.__livewire.call.apply(wireEl.__livewire, [property, ...args])
-                                }
-                            }
-
-                            return getResult
-                        },
-
-                        set: function(obj, prop, value) {
-                            wireEl.__livewire.set(prop, value)
-
-                            return true
-                        }
-                    })
-                })
-            }
-
             callback();
         });
     };
@@ -299,7 +283,7 @@ HTML;
 
             const dataObject = {
                 data: component.data,
-                events: component.events,
+                events: component.listeners,
                 children: component.children,
                 checksum: component.checksum,
                 locale: component.locale,

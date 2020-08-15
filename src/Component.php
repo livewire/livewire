@@ -8,6 +8,7 @@ use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
+use Livewire\Macros\PretendClassMethodIsControllerMethod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
@@ -25,16 +26,42 @@ abstract class Component
 
     public $id;
 
-    protected $updatesQueryString = [];
+    protected $fromQueryString = [];
     protected $computedPropertyCache = [];
+    protected $initialLayoutConfiguration = [];
+    protected $shouldSkipRender = false;
 
-    public function __construct($id)
+    public function __construct($id = null)
     {
+        if (is_null($id)) $id = Str::random(20);
+
         $this->id = $id;
 
         $this->ensureIdPropertyIsntOverridden();
 
         $this->initializeTraits();
+    }
+
+    public function __invoke()
+    {
+        $reflected = new \ReflectionClass($this);
+
+        $componentParams = $reflected->hasMethod('mount')
+            ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), app('router')))->retrieveBindings()
+            : [];
+
+        $contents = Livewire::mount($this, $componentParams)->effects['html'];
+
+        $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
+
+        return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
+            'view' => $this->initialLayoutConfiguration['view'] ?? 'layouts.app',
+            'params' => $this->initialLayoutConfiguration['params'] ?? [],
+            'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
+                'extends' => 'content', 'component' => 'default',
+            ][$layoutType],
+            'contents' => $contents,
+        ]);
     }
 
     protected function ensureIdPropertyIsntOverridden()
@@ -71,9 +98,30 @@ abstract class Component
         return $fullName;
     }
 
-    public function getUpdatesQueryString()
+    public function getFromQueryString()
     {
-        return $this->updatesQueryString;
+        return $this->fromQueryString;
+    }
+
+    public function getFromQueryStringProperties()
+    {
+        return collect($this->getFromQueryString())
+            ->map(function ($value, $key) {
+                return is_string($key) ? $key : $value;
+            })
+            ->values()
+            ->toArray();
+    }
+
+    public function getFromQueryStringExcepts()
+    {
+        return collect($this->getFromQueryString())
+            ->filter(function ($value, $key) {
+                return is_array($value) && $value['except'];
+            })
+            ->mapWithKeys(function ($value, $key) {
+                return [$key => $value['except']];
+            })->toArray();
     }
 
     public function getCasts()
@@ -86,8 +134,15 @@ abstract class Component
         return view("livewire.{$this->getName()}");
     }
 
+    public function skipRender()
+    {
+        $this->shouldSkipRender = true;
+    }
+
     public function output($errors = null)
     {
+        if ($this->shouldSkipRender) return null;
+
         // In the service provider, we hijack Laravel's Blade engine
         // with our own. However, we only want Livewire hijackings,
         // while we're rendering Livewire components. So we'll
@@ -100,6 +155,11 @@ abstract class Component
 
         if (is_string($view) && Livewire::isLaravel7()) {
             $view = app('view')->make((new CreateBladeViewFromString)($view));
+        }
+
+        // Get the layout config from the view.
+        if ($view->livewireLayout) {
+            $this->initialLayoutConfiguration = $view->livewireLayout;
         }
 
         $this->normalizePublicPropertiesForJavaScript();
@@ -162,18 +222,14 @@ abstract class Component
 
         $normalizedData = $value;
 
-        // Make sure string keys are last (but not ordered). JSON.parse will do this.
+        // Make sure string keys are last (but not ordered) and numeric keys are ordered.
+        // JSON.parse will do this on the frontend, so we'll get ahead of it.
         uksort($normalizedData, function ($a, $b) {
-            return is_string($a) && is_numeric($b)
-                ? 1
-                : 0;
-        });
+            if (is_numeric($a) && is_numeric($b)) return $a > $b;
 
-        // Order numeric indexes.
-        uksort($normalizedData, function ($a, $b) {
-            return is_numeric($a) && is_numeric($b)
-                ? $a > $b
-                : 0;
+            if (! is_numeric($a) && ! is_numeric($b)) return 0;
+
+            if (! is_numeric($a)) return 1;
         });
 
         return array_map(function ($value) {

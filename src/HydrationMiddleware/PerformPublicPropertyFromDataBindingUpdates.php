@@ -6,10 +6,10 @@ class PerformPublicPropertyFromDataBindingUpdates implements HydrationMiddleware
 {
     public static function hydrate($unHydratedInstance, $request)
     {
-        foreach ($request['actionQueue'] as $action) {
-            if ($action['type'] !== 'syncInput') return;
+        foreach ($request->updates as $update) {
+            if ($update['type'] !== 'syncInput') return;
 
-            $data = $action['payload'];
+            $data = $update['payload'];
 
             $unHydratedInstance->syncInput($data['name'], $data['value']);
         }
