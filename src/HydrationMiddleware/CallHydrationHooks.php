@@ -24,9 +24,9 @@ class CallHydrationHooks implements HydrationMiddleware
         Livewire::dispatch('component.dehydrate.initial', $instance, $response);
     }
 
-    public static function initialHydrate($instance, $response)
+    public static function initialHydrate($instance, $request)
     {
-        Livewire::dispatch('component.hydrate', $instance, $response);
-        Livewire::dispatch('component.hydrate.initial', $instance, $response);
+        Livewire::dispatch('component.hydrate', $instance, $request);
+        Livewire::dispatch('component.hydrate.initial', $instance, $request);
     }
 }

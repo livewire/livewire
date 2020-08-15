@@ -41,7 +41,6 @@ trait RegistersHydrationMiddleware
 
     public function initialDehydrate($instance, $response)
     {
-
         foreach (array_reverse($this->initialDehydrationMiddleware) as $callable) {
             $callable($instance, $response);
         }
