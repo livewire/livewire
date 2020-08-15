@@ -5,7 +5,7 @@ namespace Tests;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\View;
 
-class LivewireUsesProperAppAndAssetsPathTest extends TestCase
+class LivewireAssetsDirectiveTest extends TestCase
 {
     /** @test */
     public function livewire_js_is_unminified_when_app_is_in_debug_mode()
@@ -79,6 +79,19 @@ class LivewireUsesProperAppAndAssetsPathTest extends TestCase
 
         $this->assertStringContainsString(
             "window.livewire_app_url = 'https://foo.com/assets';",
+            $output
+        );
+    }
+
+    /** @test */
+    public function nonce_passed_into_directive_gets_added_as_script_tag_attribute()
+    {
+        $output = View::make('assets-directive', [
+            'options' => ['nonce' => 'foobarnonce'],
+        ])->render();
+
+        $this->assertStringContainsString(
+            'nonce="foobarnonce">',
             $output
         );
     }

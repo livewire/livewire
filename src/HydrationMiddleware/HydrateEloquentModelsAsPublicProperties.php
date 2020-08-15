@@ -39,10 +39,9 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
     }
 
     /**
-     * This method is here to overide the method includeded in the "SerializesAndRestoresModelIdentifiers" trait.
-     * This method contains a fix that exists in Laravel 5.8 and greater and brings it to Laravel 5.6-7
-     * because this version of Livewire supports down to those.
-     * https://github.com/laravel/framework/blob/7.x/src/Illuminate/Queue/SerializesAndRestoresModelIdentifiers.php
+     * This method overrides the one included in the "SerializesAndRestoresModelIdentifiers" trait.
+     * It adopts a Laravel 5.8+ fix to provide better support for 5.6+.
+     * https://github.com/laravel/framework/blob/5.8/src/Illuminate/Queue/SerializesAndRestoresModelIdentifiers.php#L60-L90
      */
     protected function restoreCollection($value)
     {
