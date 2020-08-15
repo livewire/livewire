@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\App;
 use Livewire\Livewire;
 use Livewire\Component;
 
-class ComponentLocaleIsPersisted extends TestCase
+class ComponentLocaleIsPersistedTest extends TestCase
 {
     /** @test */
     public function a_livewire_component_can_persist_its_locale()
