@@ -1,16 +1,23 @@
 import { fireEvent, wait, waitForDomChange } from 'dom-testing-library'
-import { mount, mountWithData, mountAndReturn, mountAndReturnWithData } from './utils'
+import {
+    mount,
+    mountWithData,
+    mountAndReturn,
+    mountAndReturnWithData,
+} from './utils'
 
 test('properties sync on input change', async () => {
     var payload
-    mount('<input wire:model="foo">', i => payload = i)
+    mount('<input wire:model="foo">', i => (payload = i))
 
-    fireEvent.input(document.querySelector('input'), { target: { value: 'bar' }})
+    fireEvent.input(document.querySelector('input'), {
+        target: { value: 'bar' },
+    })
 
     await wait(() => {
-        expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('foo')
-        expect(payload.actionQueue[0].payload.value).toEqual('bar')
+        expect(payload.updateQueue[0].type).toEqual('syncInput')
+        expect(payload.updateQueue[0].payload.name).toEqual('foo')
+        expect(payload.updateQueue[0].payload.value).toEqual('bar')
     })
 })
 
@@ -19,59 +26,73 @@ test('nested properties sync on input change', async () => {
     mountWithData(
         '<input wire:model="foo.one.two">',
         { foo: [] },
-        i => payload = i
+        i => (payload = i)
     )
 
-    fireEvent.input(document.querySelector('input'), { target: { value: 'bar' }})
+    fireEvent.input(document.querySelector('input'), {
+        target: { value: 'bar' },
+    })
 
     await wait(() => {
-        expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('foo.one.two')
-        expect(payload.actionQueue[0].payload.value).toEqual('bar')
+        expect(payload.updateQueue[0].type).toEqual('syncInput')
+        expect(payload.updateQueue[0].payload.name).toEqual('foo.one.two')
+        expect(payload.updateQueue[0].payload.value).toEqual('bar')
     })
 })
 
 test('properties are lazy synced when action is fired', async () => {
     var payload
-    mount('<input wire:model.lazy="foo"><button wire:click="onClick"></button>', i => payload = i)
+    mount(
+        '<input wire:model.lazy="foo"><button wire:click="onClick"></button>',
+        i => (payload = i)
+    )
 
-    fireEvent.change(document.querySelector('input'), { target: { value: 'bar' }})
+    fireEvent.change(document.querySelector('input'), {
+        target: { value: 'bar' },
+    })
 
     await wait(() => {
-        expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('foo')
-        expect(payload.actionQueue[0].payload.value).toEqual('bar')
+        expect(payload.updateQueue[0].type).toEqual('syncInput')
+        expect(payload.updateQueue[0].payload.name).toEqual('foo')
+        expect(payload.updateQueue[0].payload.value).toEqual('bar')
     })
 })
 
 test('properties are deferred synced when action is fired', async () => {
     var payload
-    mount('<input wire:model.defer="foo" id="a"><input wire:model.defer="bob" id="b"><button wire:click="onClick"></button>', i => payload = i)
+    mount(
+        '<input wire:model.defer="foo" id="a"><input wire:model.defer="bob" id="b"><button wire:click="onClick"></button>',
+        i => (payload = i)
+    )
 
-    fireEvent.input(document.querySelector('#a'), { target: { value: 'bar' }})
-    fireEvent.input(document.querySelector('#b'), { target: { value: 'lob' }})
+    fireEvent.input(document.querySelector('#a'), { target: { value: 'bar' } })
+    fireEvent.input(document.querySelector('#b'), { target: { value: 'lob' } })
 
     document.querySelector('button').click()
 
     await wait(() => {
-        expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[1].type).toEqual('syncInput')
-        expect(payload.actionQueue[2].type).toEqual('callMethod')
+        expect(payload.updateQueue[0].type).toEqual('syncInput')
+        expect(payload.updateQueue[1].type).toEqual('syncInput')
+        expect(payload.updateQueue[2].type).toEqual('callMethod')
     })
 })
 
-test('textarea data binding with class change works as expected and doesn\'t wipe its value', async () => {
+test("textarea data binding with class change works as expected and doesn't wipe its value", async () => {
     mountAndReturn(
         '<textarea wire:model="foo" class="foo"></textarea>',
         '<textarea wire:model="foo" class="foo bar"></textarea>',
         []
     )
 
-    fireEvent.input(document.querySelector('textarea'), { target: { value: 'bar' }})
+    fireEvent.input(document.querySelector('textarea'), {
+        target: { value: 'bar' },
+    })
 
     await wait(() => {
         expect(document.querySelector('textarea').value).toEqual('bar')
-        expect(document.querySelector('textarea').classList.contains('bar')).toBeTruthy()
+        expect(
+            document.querySelector('textarea').classList.contains('bar')
+        ).toBeTruthy()
     })
 })
 
@@ -82,7 +103,9 @@ test('input element value doesnt change unless property is marked as dirty', asy
         []
     )
 
-    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
+    fireEvent.input(document.querySelector('input'), {
+        target: { value: 'baz' },
+    })
 
     await waitForDomChange(document.body, () => {
         expect(document.querySelector('input').value).toEqual('baz')
@@ -94,7 +117,9 @@ test('input element value doesnt change unless property is marked as dirty', asy
         ['foo']
     )
 
-    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
+    fireEvent.input(document.querySelector('input'), {
+        target: { value: 'baz' },
+    })
 
     await waitForDomChange(document.body, () => {
         expect(document.querySelector('input').value).toEqual('bar')
@@ -109,11 +134,15 @@ test('input element value doesnt change, but other attributes do when not marked
     )
 
     document.querySelector('input').focus()
-    fireEvent.input(document.querySelector('input'), { target: { value: 'baz' }})
+    fireEvent.input(document.querySelector('input'), {
+        target: { value: 'baz' },
+    })
 
     await wait(() => {
         expect(document.querySelector('input').value).toEqual('baz')
-        expect(document.querySelector('input').classList.contains('bar')).toBeTruthy()
+        expect(
+            document.querySelector('input').classList.contains('bar')
+        ).toBeTruthy()
     })
 })
 
@@ -121,7 +150,8 @@ test('input element value attribute is automatically updated if present in retur
     mountAndReturnWithData(
         '<input wire:model="foo"><button wire:click="onClick"></button>',
         '<input wire:model="foo"><button wire:click="onClick"></button>',
-        { foo: 'bar' }, ['foo']
+        { foo: 'bar' },
+        ['foo']
     )
 
     document.querySelector('button').click()
@@ -132,10 +162,7 @@ test('input element value attribute is automatically updated if present in retur
 })
 
 test('input element value is automatically updated', async () => {
-    mountWithData(
-        '<input wire:model="foo">',
-        { foo: 'bar' }
-    )
+    mountWithData('<input wire:model="foo">', { foo: 'bar' })
 
     await wait(() => {
         expect(document.querySelector('input').value).toBe('bar')
@@ -143,10 +170,7 @@ test('input element value is automatically updated', async () => {
 })
 
 test('textarea element value is automatically updated', async () => {
-    mountWithData(
-        '<textarea wire:model="foo"></textarea>',
-        { foo: 'bar' }
-    )
+    mountWithData('<textarea wire:model="foo"></textarea>', { foo: 'bar' })
 
     await wait(() => {
         expect(document.querySelector('textarea').value).toBe('bar')
@@ -154,10 +178,7 @@ test('textarea element value is automatically updated', async () => {
 })
 
 test('checkbox element value attribute is automatically added if not present in the initial dom', async () => {
-    mountWithData(
-        '<input type="checkbox" wire:model="foo">',
-        { foo: true }
-    )
+    mountWithData('<input type="checkbox" wire:model="foo">', { foo: true })
 
     await wait(() => {
         expect(document.querySelector('input').checked).toBeTruthy()
@@ -165,34 +186,30 @@ test('checkbox element value attribute is automatically added if not present in 
 })
 
 test('checkboxes bound to empty array arent checked', async () => {
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
-        { foo: [] },
-    )
+    mountWithData(`<input id="a" type="checkbox" wire:model="foo" value="a">`, {
+        foo: [],
+    })
     expect(document.querySelector('#a').checked).toBeFalsy()
 })
 
 test('checkboxes bound to an array containing value are checked', async () => {
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
-        { foo: ['a'] },
-    )
+    mountWithData(`<input id="a" type="checkbox" wire:model="foo" value="a">`, {
+        foo: ['a'],
+    })
     expect(document.querySelector('#a').checked).toBeTruthy()
 })
 
 test('checkboxes bound to an array containing a numeric value are checked', async () => {
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="2">`,
-        { foo: [2] },
-    )
+    mountWithData(`<input id="a" type="checkbox" wire:model="foo" value="2">`, {
+        foo: [2],
+    })
     expect(document.querySelector('#a').checked).toBeTruthy()
 })
 
 test('checkboxes bound to an array containing a different value are not', async () => {
-    mountWithData(
-        `<input id="a" type="checkbox" wire:model="foo" value="a">`,
-        { foo: ['b'] },
-    )
+    mountWithData(`<input id="a" type="checkbox" wire:model="foo" value="a">`, {
+        foo: ['b'],
+    })
     expect(document.querySelector('#a').checked).toBeFalsy()
 })
 
@@ -201,30 +218,30 @@ test('checking a checkbox bound to an array will toggle its value inside the arr
     mountWithData(
         `<input id="a" type="checkbox" wire:model="foo" value="a">`,
         { foo: [] },
-        i => payload = i
+        i => (payload = i)
     )
 
     fireEvent.click(document.querySelector('#a'))
 
     await wait(() => {
-        expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('foo')
-        expect(payload.actionQueue[0].payload.value).toEqual(['a'])
+        expect(payload.updateQueue[0].type).toEqual('syncInput')
+        expect(payload.updateQueue[0].payload.name).toEqual('foo')
+        expect(payload.updateQueue[0].payload.value).toEqual(['a'])
     })
 
     var payload
     mountWithData(
         `<input id="a" type="checkbox" wire:model="foo" value="a">`,
         { foo: ['a'] },
-        i => payload = i
+        i => (payload = i)
     )
 
     fireEvent.click(document.querySelector('#a'))
 
     await wait(() => {
-        expect(payload.actionQueue[0].type).toEqual('syncInput')
-        expect(payload.actionQueue[0].payload.name).toEqual('foo')
-        expect(payload.actionQueue[0].payload.value).toEqual([])
+        expect(payload.updateQueue[0].type).toEqual('syncInput')
+        expect(payload.updateQueue[0].payload.name).toEqual('foo')
+        expect(payload.updateQueue[0].payload.value).toEqual([])
     })
 })
 

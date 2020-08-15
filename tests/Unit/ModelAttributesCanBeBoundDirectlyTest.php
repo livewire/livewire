@@ -64,7 +64,7 @@ class ModelAttributesCanBeBoundDirectlyTest extends TestCase
 
         $component = Livewire::test(ComponentWithModelProperty::class, ['model' => $model]);
 
-        $component->payload['memo']['dataMeta']['models']['model']['id'] = 2;
+        $component->payload['serverMemo']['dataMeta']['models']['model']['id'] = 2;
 
         $component->call('$refresh');
     }

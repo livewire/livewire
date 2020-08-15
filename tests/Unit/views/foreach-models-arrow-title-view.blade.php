@@ -1,5 +1,5 @@
 <div>
-    @foreach ($this->models as $model)
+    @foreach ($models as $model)
         {{ $model->title }}
     @endforeach
 </div>

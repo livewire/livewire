@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\Browser\SupportCollections;
+namespace Tests\Browser\Prefetch;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\SupportCollections\Component;
+use Tests\Browser\Prefetch\Component;
 
 class Test extends TestCase
 {
@@ -13,13 +13,12 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
-                ->assertSee('foo')
-                ->assertDontSee('bar')
-                ->click('@add-bar')
+                ->assertSeeIn('@count', '1')
+                ->mouseover('@button')
                 ->waitForLivewire()
-                ->assertSee('foo')
-                ->pause(25)
-                ->assertSee('bar');
+                ->assertSeeIn('@count', '1')
+                ->click('@button')
+                ->assertSeeIn('@count', '2');
         });
     }
 }

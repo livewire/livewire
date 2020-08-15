@@ -7,7 +7,6 @@ import DOMElement from '@/dom/dom_element'
 import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
 import PrefetchManager from './PrefetchManager'
-import EchoManager from './EchoManager'
 import UploadManager from './UploadManager'
 import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
@@ -18,41 +17,34 @@ export default class Component {
     constructor(el, connection) {
         el.rawNode().__livewire = this
 
-
         this.id = el.getAttribute('id')
 
-        const initialData = JSON.parse(
-            this.extractLivewireAttribute('initial-data')
-        )
+        this.connection = connection
+
+        const initialData = JSON.parse(this.el.getAttribute('initial-data'))
+        this.el.removeAttribute(name)
 
         this.fingerprint = initialData.fingerprint
-        this.memo = initialData.memo
+        this.serverMemo = initialData.serverMemo
         this.effects = initialData.effects
 
         this.listeners = this.effects.listeners
-        this.actionQueue = []
-        this.connection = connection
+        this.updateQueue = []
         this.deferredActions = {}
-        this.messageInTransit = null
-        this.modelTimeout = null
         this.tearDownCallbacks = []
+        this.messageInTransit = undefined
+
         this.scopedListeners = new MessageBus()
         this.prefetchManager = new PrefetchManager(this)
-        this.echoManager = new EchoManager(this)
         this.uploadManager = new UploadManager(this)
 
         store.callHook('componentInitialized', this)
 
         this.initialize()
 
-        this.echoManager.registerListeners()
         this.uploadManager.registerListeners()
 
-        if (this.effects.redirect) {
-            this.redirect(this.effects.redirect)
-
-            return
-        }
+        if (this.effects.redirect) return this.redirect(this.effects.redirect)
     }
 
     get el() {
@@ -63,20 +55,8 @@ export default class Component {
         return this.fingerprint.name
     }
 
-    get root() {
-        return this.el
-    }
-
     get data() {
-        return this.memo.data
-    }
-
-    extractLivewireAttribute(name) {
-        const value = this.el.getAttribute(name)
-
-        this.el.removeAttribute(name)
-
-        return value
+        return this.serverMemo.data
     }
 
     initialize() {
@@ -136,7 +116,7 @@ export default class Component {
             return
         }
 
-        this.actionQueue.push(action)
+        this.updateQueue.push(action)
 
         // This debounce is here in-case two events fire at the "same" time:
         // For example: if you are listening for a click on element A,
@@ -155,17 +135,17 @@ export default class Component {
         if (this.messageInTransit) return
 
         Object.entries(this.deferredActions).forEach(([modelName, action]) => {
-            this.actionQueue.unshift(action)
+            this.updateQueue.unshift(action)
         })
         this.deferredActions = {}
 
-        this.messageInTransit = new Message(this, this.actionQueue)
+        this.messageInTransit = new Message(this, this.updateQueue)
 
         this.connection.sendMessage(this.messageInTransit)
 
         store.callHook('messageSent', this, this.messageInTransit)
 
-        this.actionQueue = []
+        this.updateQueue = []
     }
 
     messageSendFailed() {
@@ -174,22 +154,26 @@ export default class Component {
         this.messageInTransit = null
     }
 
-    receiveMessage(payload) {
-        var response = this.messageInTransit.storeResponse(payload)
+    receiveMessage(message, payload) {
+        var response = message.storeResponse(payload)
+
+        if (message instanceof PrefetchMessage) return
 
         this.handleResponse(response)
 
         // This bit of logic ensures that if actions were queued while a request was
         // out to the server, they are sent when the request comes back.
-        if (this.actionQueue.length > 0) {
+        if (this.updateQueue.length > 0) {
             this.fireMessage()
         }
+
+        dispatch('livewire:update')
     }
 
     handleResponse(response) {
         // Only update the memo properties that exist in the returning payload.
-        Object.entries(response.memo).forEach(([key, value]) => {
-            this.memo[key] = value
+        Object.entries(response.serverMemo).forEach(([key, value]) => {
+            this.serverMemo[key] = value
         })
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
@@ -206,7 +190,9 @@ export default class Component {
         }
 
         if (response.effects.dirty) {
-            this.forceRefreshDataBoundElementsMarkedAsDirty(response.effects.dirty)
+            this.forceRefreshDataBoundElementsMarkedAsDirty(
+                response.effects.dirty
+            )
         }
 
         this.messageInTransit = null
@@ -227,7 +213,10 @@ export default class Component {
             })
         }
 
-        if (response.effects.dispatches && response.effects.dispatches.length > 0) {
+        if (
+            response.effects.dispatches &&
+            response.effects.dispatches.length > 0
+        ) {
             response.effects.dispatches.forEach(event => {
                 const data = event.data ? event.data : {}
                 const e = new CustomEvent(event.event, {
@@ -286,10 +275,6 @@ export default class Component {
         this.prefetchManager.addMessage(message)
 
         this.connection.sendMessage(message)
-    }
-
-    receivePrefetchMessage(payload) {
-        this.prefetchManager.storeResponseInMessageForPayload(payload)
     }
 
     handleMorph(dom) {

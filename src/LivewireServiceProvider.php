@@ -33,6 +33,7 @@ use Livewire\Commands\{
 };
 use Livewire\HydrationMiddleware\{
     PersistErrorBag,
+    CallHydrationHooks,
     CastPublicProperties,
     HydratePublicProperties,
     SecureHydrationWithChecksum,
@@ -250,7 +251,6 @@ class LivewireServiceProvider extends ServiceProvider
         RenameMe\SupportEvents::init();
         RenameMe\SupportLocales::init();
         RenameMe\SupportRedirects::init();
-        RenameMe\SupportPrefetches::init();
         RenameMe\SupportQueryString::init();
         RenameMe\SupportCollections::init();
         RenameMe\OptimizeRenderedDom::init();
@@ -268,6 +268,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
+        /* v */ CallHydrationHooks::class,                          /* ^ */
         /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
         /* v */ PersistErrorBag::class,                             /* ^ */
         /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
@@ -282,10 +283,15 @@ class LivewireServiceProvider extends ServiceProvider
         /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
         /* ^ */ [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
         /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
+        /* ^ */ [CallHydrationHooks::class, 'initialDehydrate'],
         /* ^ */ [HydrateEloquentModelsAsPublicProperties::class, 'dehydrate'],
         /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
         /* ^ */ [PersistErrorBag::class, 'dehydrate'],
         /* ^ */ [CastPublicProperties::class, 'dehydrate'],
+        ]);
+
+        Livewire::registerInitialHydrationMiddleware([
+            [CallHydrationHooks::class, 'initialHydrate'],
         ]);
     }
 

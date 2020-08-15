@@ -63,7 +63,7 @@ class ComponentsAreSecureTest extends TestCase
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
 
-        $component->payload['memo']['data']['publicProperty'] = 'different-property';
+        $component->payload['serverMemo']['data']['publicProperty'] = 'different-property';
 
         $component->call('$refresh');
     }

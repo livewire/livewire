@@ -11,7 +11,7 @@ class HttpConnectionHandler extends ConnectionHandler
         return $this->handle(
             request([
                 'fingerprint',
-                'memo',
+                'serverMemo',
                 'updates',
             ])
         );

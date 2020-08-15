@@ -109,7 +109,7 @@ class LivewireManager
                 'locale' => app()->getLocale(),
             ],
             'updates' => [],
-            'memo' => [],
+            'serverMemo' => [],
         ]);
 
         $this->initialHydrate($instance, $request);

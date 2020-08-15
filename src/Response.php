@@ -58,7 +58,7 @@ class Response
         return [
             'fingerprint' => $this->fingerprint,
             'effects' => array_diff_key($this->effects, ['html' => null]),
-            'memo' => $this->memo,
+            'serverMemo' => $this->memo,
         ];
     }
 
@@ -88,7 +88,7 @@ class Response
 
         return [
             'effects' => $this->effects,
-            'memo' => $dirtyMemo,
+            'serverMemo' => $dirtyMemo,
         ];
     }
 }

@@ -1,17 +1,10 @@
 import store from '@/Store'
-import { dispatch } from '../util'
-import componentStore from '../Store';
+import componentStore from '../Store'
 import { getCsrfToken } from '@/util'
 
 export default class Connection {
     onMessage(message, payload) {
-        if (payload.memo.prefetch) {
-            message.component.receivePrefetchMessage(payload)
-        } else {
-            message.component.receiveMessage(payload)
-
-            dispatch('livewire:update')
-        }
+        message.component.receiveMessage(message, payload)
     }
 
     onError(message, status) {
@@ -24,60 +17,67 @@ export default class Connection {
         let payload = message.payload()
 
         // Forward the query string for the ajax requests.
-        fetch(`${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}${window.location.search}`, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            // This enables "cookies".
-            credentials: "same-origin",
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'text/html, application/xhtml+xml',
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Socket-ID': this.getSocketId(),
-                'X-Livewire': true,
-            },
-        }).then(response => {
-            if (response.ok) {
-                response.text().then(response => {
-                    if (this.isOutputFromDump(response)) {
-                        this.onError(message)
-                        this.showHtmlModal(response)
-                    } else {
-                        this.onMessage(message, JSON.parse(response))
-                    }
-                })
-            } else {
-                if (this.onError(message, response.status) === false) return
-
-                if (response.status === 419) {
-                    if (store.sessionHasExpired) return
-
-                    store.sessionHasExpired = true
-
-                    confirm("This page has expired due to inactivity.\nWould you like to refresh the page?")
-                        && window.location.reload()
-                } else {
-                    response.text().then(response => {
-                        this.showHtmlModal(response)
-                    })
-                }
+        fetch(
+            `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}${window.location.search}`,
+            {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                // This enables "cookies".
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'text/html, application/xhtml+xml',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Socket-ID': this.getSocketId(),
+                    'X-Livewire': true,
+                },
             }
-        }).catch(() => {
-            this.onError(payload)
-        }).finally(() => {
-            store.requestIsOut = false
-        })
+        )
+            .then(response => {
+                if (response.ok) {
+                    response.text().then(response => {
+                        if (this.isOutputFromDump(response)) {
+                            this.onError(message)
+                            this.showHtmlModal(response)
+                        } else {
+                            this.onMessage(message, JSON.parse(response))
+                        }
+                    })
+                } else {
+                    if (this.onError(message, response.status) === false) return
+
+                    if (response.status === 419) {
+                        if (store.sessionHasExpired) return
+
+                        store.sessionHasExpired = true
+
+                        confirm(
+                            'This page has expired due to inactivity.\nWould you like to refresh the page?'
+                        ) && window.location.reload()
+                    } else {
+                        response.text().then(response => {
+                            this.showHtmlModal(response)
+                        })
+                    }
+                }
+            })
+            .catch(() => {
+                this.onError(payload)
+            })
+            .finally(() => {
+                store.requestIsOut = false
+            })
 
         store.requestIsOut = true
     }
 
     isOutputFromDump(output) {
-        return !! output.match(/<script>Sfdump\(".+"\)<\/script>/)
+        return !!output.match(/<script>Sfdump\(".+"\)<\/script>/)
     }
 
     getSocketId() {
         if (typeof Echo !== 'undefined') {
-            return Echo.socketId();
+            return Echo.socketId()
         }
     }
 
@@ -85,11 +85,13 @@ export default class Connection {
     showHtmlModal(html) {
         let page = document.createElement('html')
         page.innerHTML = html
-        page.querySelectorAll('a').forEach(a => a.setAttribute('target', '_top'))
+        page.querySelectorAll('a').forEach(a =>
+            a.setAttribute('target', '_top')
+        )
 
-        let modal = document.getElementById('burst-error');
+        let modal = document.getElementById('burst-error')
 
-        if(typeof(modal) != 'undefined' && modal != null){
+        if (typeof modal != 'undefined' && modal != null) {
             // Modal already exists.
             modal.innerHTML = ''
         } else {
@@ -121,7 +123,9 @@ export default class Connection {
 
         // Close on escape key press.
         modal.setAttribute('tabindex', 0)
-        modal.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.hideHtmlModal(modal) })
+        modal.addEventListener('keydown', e => {
+            if (e.key === 'Escape') this.hideHtmlModal(modal)
+        })
         modal.focus()
     }
 

@@ -62,7 +62,7 @@ class TestableLivewire
         if (! $this->lastResponse->exception) {
             $this->updateComponent([
                 'fingerprint' => $this->rawMountedResponse->fingerprint,
-                'memo' => $this->rawMountedResponse->memo,
+                'serverMemo' => $this->rawMountedResponse->memo,
                 'effects' => $this->rawMountedResponse->effects,
             ]);
         }
@@ -82,12 +82,12 @@ class TestableLivewire
             $this->payload['fingerprint'] = $output['fingerprint'];
         }
 
-        foreach ($output['memo'] as $key => $newValue) {
+        foreach ($output['serverMemo'] as $key => $newValue) {
             if (
-                ! isset($this->payload['memo'][$key])
-                || $this->payload['memo'][$key] !== $newValue
+                ! isset($this->payload['serverMemo'][$key])
+                || $this->payload['serverMemo'][$key] !== $newValue
             ) {
-                $this->payload['memo'][$key] = $newValue;
+                $this->payload['serverMemo'][$key] = $newValue;
             }
         }
 
@@ -143,7 +143,7 @@ class TestableLivewire
     {
         return $this->callEndpoint('POST', '/livewire/message/'.$this->componentName, [
             'fingerprint' => $this->payload['fingerprint'],
-            'memo' => $this->payload['memo'],
+            'serverMemo' => $this->payload['serverMemo'],
             'updates' => [['type' => $message, 'payload' => $payload]],
         ]);
     }
@@ -178,7 +178,7 @@ class TestableLivewire
 
     public function get($property)
     {
-        return data_get($this->payload['memo']['data'], $property);
+        return data_get($this->payload['serverMemo']['data'], $property);
     }
 
     public function __get($property)

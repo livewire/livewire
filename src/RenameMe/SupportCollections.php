@@ -2,6 +2,7 @@
 
 namespace Livewire\RenameMe;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Livewire\Livewire;
 
@@ -12,7 +13,7 @@ class SupportCollections
     function __construct()
     {
         Livewire::listen('property.dehydrate', function ($name, $value, $component, $response) {
-            if (! $value instanceof Collection) return;
+            if (! $value instanceof Collection || $value instanceof EloquentCollection) return;
 
             $component->{$name} = $value->toArray();
 

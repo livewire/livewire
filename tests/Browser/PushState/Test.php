@@ -53,6 +53,7 @@ class Test extends TestCase
                 ->assertQueryStringMissing('baz')
                 ->click('@show-nested')
                 ->waitForLivewire()
+                ->pause(25)
                 ->assertQueryStringHas('baz', 'bop')
                 ->assertSeeIn('@baz-output', 'bop')
                 ->type('@baz-input', 'lop')

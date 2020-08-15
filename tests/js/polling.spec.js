@@ -4,7 +4,9 @@ const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 test('polling is disabled if livewire is offline', async () => {
     var pollHappened = false
-    mount('<div wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
+    mount('<div wire:poll.50ms="someMethod"></div>', () => {
+        pollHappened = true
+    })
     window.livewire.components.livewireIsOffline = true
 
     await timeout(59)
@@ -16,8 +18,10 @@ test('polling is disabled if livewire is offline', async () => {
 })
 
 test('polling without specifying method refreshes by default', async () => {
-    var pollPayload;
-    mount('<div wire:poll.50ms></div>', (i) => { pollPayload = i })
+    var pollPayload
+    mount('<div wire:poll.50ms></div>', i => {
+        pollPayload = i
+    })
 
     await timeout(49)
 
@@ -25,7 +29,7 @@ test('polling without specifying method refreshes by default', async () => {
 
     await timeout(10)
 
-    expect(pollPayload.actionQueue[0].payload.method).toEqual('$refresh')
+    expect(pollPayload.updateQueue[0].payload.method).toEqual('$refresh')
 })
 
 test('polling will stop if component is conditionally removed', async () => {
@@ -41,7 +45,9 @@ test('polling will stop if directive is removed', async () => {
         '<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"></div>',
         '<div wire:id="123" wire:initial-data="{}"></div>',
         null,
-        () => { pollCount++ }
+        () => {
+            pollCount++
+        }
     )
 
     await timeout(49) // 49ms
@@ -62,7 +68,9 @@ test('polling will start if directive is added', async () => {
         '<div wire:id="123" wire:initial-data="{}"><button wire:click="$refresh"></button></div>',
         '<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"><button wire:click="$refresh"></button></div>',
         null,
-        () => { pollCount++ }
+        () => {
+            pollCount++
+        }
     )
 
     document.querySelector('button').click()
@@ -76,7 +84,12 @@ test('polling will start if directive is added', async () => {
 
 test('polling on root div', async () => {
     var pollHappened = false
-    mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
+    mountAsRoot(
+        '<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"></div>',
+        () => {
+            pollHappened = true
+        }
+    )
 
     await timeout(49)
 
@@ -89,7 +102,12 @@ test('polling on root div', async () => {
 
 test('polling is disabled if ', async () => {
     var pollHappened = false
-    mountAsRoot('<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"></div>', () => { pollHappened = true })
+    mountAsRoot(
+        '<div wire:id="123" wire:initial-data="{}" wire:poll.50ms="someMethod"></div>',
+        () => {
+            pollHappened = true
+        }
+    )
 
     await timeout(49)
 

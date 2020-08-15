@@ -21,7 +21,7 @@ class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends Te
         // $component = app(LivewireManager::class)->test(ComponentWithStringPropertiesStub::class);
 
         // $this->withHeader('X-Livewire', 'true')->post("/livewire/message/{$component->componentName}", [
-        //     'actionQueue' => [],
+        //     'updateQueue' => [],
         //     'name' => $component->componentName,
         //     'children' => $component->payload['children'],
         //     'data' => $component->payload['data'],
@@ -51,7 +51,7 @@ class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends Te
         // $component = app(LivewireManager::class)->test(ComponentWithStringPropertiesStub::class);
 
         // $this->withMiddleware()->post("/livewire/message/{$component->componentName}", [
-        //     'actionQueue' => [],
+        //     'updateQueue' => [],
         //     'name' => $component->componentName,
         //     'children' => $component->payload['children'],
         //     'data' => $component->payload['data'],

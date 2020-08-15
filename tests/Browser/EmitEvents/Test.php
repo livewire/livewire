@@ -14,7 +14,7 @@ class Test extends TestCase
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
                 ->tap(function ($browser) { $browser->script('window.livewire.emit("foo", "bar")'); })
-                ->pause(300)
+                ->pause(350)
                 ->assertSeeIn('@lastEventForParent', 'bar')
                 ->assertSeeIn('@lastEventForChildA', 'bar')
                 ->assertSeeIn('@lastEventForChildB', 'bar');

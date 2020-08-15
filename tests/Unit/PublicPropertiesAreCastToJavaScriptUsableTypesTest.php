@@ -11,24 +11,12 @@ use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
 {
     /** @test */
-    public function collection_properties_are_not_cast_to_array()
-    {
-        $this->expectException(PublicPropertyTypeNotAllowedException::class);
-
-        Livewire::test(ComponentWithPropertiesStub::class, ['foo' => collect(['foo' => 'bar'])])
-            ->assertDontSee('class Illuminate\Support\Collection')
-            ->assertSee('array(1)')
-            ->assertSee('foo')
-            ->assertSee('bar');
-    }
-
-    /** @test */
     public function exception_is_thrown_and_not_caught_by_view_error_handler()
     {
         $this->expectException(PublicPropertyTypeNotAllowedException::class);
         Livewire::component('foo', ComponentWithPropertiesStub::class);
 
-        View::make('render-component', ['component' => 'foo', 'params' => ['foo' => collect()]])->render();
+        View::make('render-component', ['component' => 'foo', 'params' => ['foo' => new \StdClass]])->render();
     }
 
     /** @test */

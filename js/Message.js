@@ -1,39 +1,22 @@
-import store from '@/Store'
-
 export default class {
-    constructor(component, actionQueue) {
+    constructor(component, updateQueue) {
         this.component = component
-        this.actionQueue = actionQueue
-    }
-
-    get refs() {
-        return this.actionQueue
-            .map(action => {
-                return action.ref
-            })
-            .filter(ref => ref)
+        this.updateQueue = updateQueue
     }
 
     payload() {
-        let payload = {
+        return {
             fingerprint: this.component.fingerprint,
-            memo: this.component.memo,
-            updates: this.actionQueue.map(update => {
-                // This ensures only the type & payload properties only get sent over.
-                return {
-                    type: update.type,
-                    payload: update.payload,
-                }
-            }),
+            serverMemo: this.component.serverMemo,
+            // This ensures only the type & payload properties only get sent over.
+            updates: this.updateQueue.map(update => ({
+                type: update.type,
+                payload: update.payload,
+            })),
         }
-
-        return payload
     }
 
-    storeResponse(payload) {
-        return this.response = {
-            memo: payload.memo,
-            effects: payload.effects,
-        }
+    storeResponse(response) {
+        return (this.response = response)
     }
 }

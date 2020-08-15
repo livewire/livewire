@@ -12,7 +12,7 @@ class Request
     {
         $this->fingerprint = $payload['fingerprint'];
         $this->updates = $payload['updates'];
-        $this->memo = $payload['memo'];
+        $this->memo = $payload['serverMemo'];
     }
 
     public function id() { return $this->fingerprint['id']; }

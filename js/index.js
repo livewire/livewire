@@ -7,6 +7,7 @@ import { dispatch } from './util'
 import FileUploads from '@/component/FileUploads'
 import FileDownloads from '@/component/FileDownloads'
 import LoadingStates from '@/component/LoadingStates'
+import LaravelEcho from '@/component/LaravelEcho'
 import DisableForms from '@/component/DisableForms'
 import DirtyStates from '@/component/DirtyStates'
 import OfflineStates from '@/component/OfflineStates'
@@ -178,6 +179,7 @@ OfflineStates()
 LoadingStates()
 DisableForms()
 FileUploads()
+LaravelEcho()
 FileDownloads()
 DirtyStates()
 Polling()
