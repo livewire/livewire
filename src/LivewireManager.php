@@ -283,7 +283,7 @@ HTML;
 
             const dataObject = {
                 data: component.data,
-                events: component.events,
+                events: component.listeners,
                 children: component.children,
                 checksum: component.checksum,
                 locale: component.locale,

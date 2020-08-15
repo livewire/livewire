@@ -19,7 +19,7 @@ class Livewire {
             driver: 'http',
         }
 
-        this.connection = new Connection
+        this.connection = new Connection()
         this.components = componentStore
         this.onLoadCallback = () => {}
     }
@@ -103,16 +103,15 @@ class Livewire {
         return this.components.requestIsOut
     }
 
-    setupAlpineCompatibility()
-    {
-        if (! window.Alpine) return
+    setupAlpineCompatibility() {
+        if (!window.Alpine) return
 
         if (window.Alpine.onComponentInitialized) {
             window.Alpine.onComponentInitialized(component => {
                 let livewireEl = component.$el.closest('[wire\\:id]')
 
                 if (livewireEl && livewireEl.__livewire) {
-                    this.hook('afterDomUpdate', (livewireComponent) => {
+                    this.hook('afterDomUpdate', livewireComponent => {
                         if (livewireComponent === livewireEl.__livewire) {
                             component.updateElements(component.$el)
                         }
@@ -124,16 +123,22 @@ class Livewire {
         if (window.Alpine.addMagicProperty) {
             window.Alpine.addMagicProperty('wire', function (componentEl) {
                 let wireEl = componentEl.closest('[wire\\:id]')
-                if (! wireEl) console.warn('Alpine: Cannot reference "\$wire" outside a Livewire component.')
+                if (!wireEl)
+                    console.warn(
+                        'Alpine: Cannot reference "$wire" outside a Livewire component.'
+                    )
 
                 var refObj = {}
 
                 return new Proxy(refObj, {
-                    get (object, property) {
+                    get(object, property) {
                         // Forward public API methods right away.
                         if (['get', 'set', 'call', 'on'].includes(property)) {
-                            return function(...args) {
-                                return wireEl.__livewire[property].apply(wireEl.__livewire, args)
+                            return function (...args) {
+                                return wireEl.__livewire[property].apply(
+                                    wireEl.__livewire,
+                                    args
+                                )
                             }
                         }
 
@@ -142,19 +147,22 @@ class Livewire {
 
                         // If the property does not exist, try calling the method on the class.
                         if (getResult === undefined) {
-                            return function(...args) {
-                                return wireEl.__livewire.call.apply(wireEl.__livewire, [property, ...args])
+                            return function (...args) {
+                                return wireEl.__livewire.call.apply(
+                                    wireEl.__livewire,
+                                    [property, ...args]
+                                )
                             }
                         }
 
                         return getResult
                     },
 
-                    set: function(obj, prop, value) {
+                    set: function (obj, prop, value) {
                         wireEl.__livewire.set(prop, value)
 
                         return true
-                    }
+                    },
                 })
             })
         }
