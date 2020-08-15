@@ -4,7 +4,6 @@ namespace Livewire;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Fluent;
-use Illuminate\Foundation\Application;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
@@ -314,11 +313,6 @@ HTML;
     public function isOnVapor()
     {
         return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
-    }
-
-    public function isLaravel7()
-    {
-        return Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=');
     }
 
     private function performMount($instance, $params)

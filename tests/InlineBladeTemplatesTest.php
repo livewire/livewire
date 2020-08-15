@@ -10,10 +10,6 @@ class InlineBladeTemplatesTest extends TestCase
     /** @test */
     public function renders_inline_blade_template()
     {
-        if (! Livewire::isLaravel7()) {
-            $this->expectException(\Exception::class);
-        }
-
         Livewire::test(ComponentWithInlineBladeTemplate::class)
             ->assertSee('foo');
     }
