@@ -3,6 +3,7 @@
 namespace Livewire\ComponentConcerns;
 
 use Illuminate\Support\Str;
+use Livewire\ImplicitlyBoundMethod;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
@@ -95,31 +96,10 @@ trait HandlesActions
 
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
-                $this->{$method}(
-                    ...$this->resolveActionParameters($method, $params)
-                );
+                ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
 
                 break;
         }
-    }
-
-    protected function resolveActionParameters($method, $params)
-    {
-        return collect((new \ReflectionMethod($this, $method))->getParameters())->map(function ($parameter) use (&$params) {
-            return rescue(function () use ($parameter) {
-                if ($class = $parameter->getClass()) {
-                    return app($class->name);
-                }
-
-                throw new \Exception;
-            }, function () use (&$params, $parameter) {
-                if (count($params) === 0 && $parameter->isDefaultValueAvailable()) {
-                    return $parameter->getDefaultValue();
-                }
-
-                return array_shift($params);
-            }, false);
-        })->concat($params);
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)

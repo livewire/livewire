@@ -24,6 +24,7 @@ class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends Te
             'data' => $component->payload['data'],
             'id' => $component->payload['id'],
             'checksum' => $component->payload['checksum'],
+            'locale' => $component->payload['locale'],
             'fromPrefetch' => [],
         ])->assertJson(['data' => [
             'emptyString' => '',
@@ -49,6 +50,7 @@ class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends Te
             'data' => $component->payload['data'],
             'id' => $component->payload['id'],
             'checksum' => $component->payload['checksum'],
+            'locale' => $component->payload['locale'],
             'fromPrefetch' => [],
         ])->assertJson(['data' => [
             'emptyString' => null,

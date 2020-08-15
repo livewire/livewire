@@ -34,6 +34,7 @@ use Livewire\Commands\{
     MakeLivewireCommand
 };
 use Livewire\HydrationMiddleware\{
+    PersistLocale,
     ForwardPrefetch,
     PersistErrorBag,
     UpdateQueryString,
@@ -173,7 +174,23 @@ class LivewireServiceProvider extends ServiceProvider
             return $this;
         };
 
+
         TestResponse::macro('assertSeeLivewire', $macro);
+
+        // Usage: $this->assertDontSeeLivewire('counter');
+        $macro = function ($component) {
+            $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+            \PHPUnit\Framework\Assert::assertStringNotContainsString(
+                (string) $escapedComponentName, $this->getContent(),
+                'Found Livewire component ['.$component.'] rendered on page.'
+            );
+
+            return $this;
+        };
+
+   
+        TestResponse::macro('assertDontSeeLivewire', $macro);
     }
 
     protected function registerRouteMacros()
@@ -232,6 +249,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
         /* v */ RegisterEventsBeingListenedFor::class,              /* ^ */
         /* v */ RegisterEmittedEvents::class,                       /* ^ */
+        /* v */ PersistLocale::class,                               /* ^ */
         /* v */ PersistErrorBag::class,                             /* ^ */
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
@@ -263,6 +281,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* ^ */ [RegisterEmittedEvents::class, 'dehydrate'],
         /* ^ */ [RegisterEventsBeingListenedFor::class, 'dehydrate'],
         /* ^ */ [PersistErrorBag::class, 'dehydrate'],
+        /* ^ */ [PersistLocale::class, 'dehydrate'],
         /* ^ */ [InterceptRedirects::class, 'dehydrate'],
         ]);
     }

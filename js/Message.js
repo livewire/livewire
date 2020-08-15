@@ -20,6 +20,7 @@ export default class {
             data: this.component.data,
             name: this.component.name,
             checksum: this.component.checksum,
+            locale: this.component.locale,
             children: this.component.children,
             actionQueue: this.actionQueue.map(action => {
                 // This ensures only the type & payload properties only get sent over.
@@ -42,6 +43,7 @@ export default class {
             id: payload.id,
             dom: payload.dom,
             checksum: payload.checksum,
+            locale: payload.locale,
             children: payload.children,
             dirtyInputs: payload.dirtyInputs,
             eventQueue: payload.eventQueue,

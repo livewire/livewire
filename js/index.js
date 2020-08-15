@@ -1,10 +1,10 @@
-import '@/dom/polyfills/index';
+import '@/dom/polyfills/index'
 import componentStore from '@/Store'
-import DOM from "@/dom/dom";
-import Component from "@/component/index";
+import DOM from '@/dom/dom'
+import Component from '@/component/index'
 import Connection from '@/connection'
 import drivers from '@/connection/drivers'
-import { dispatch } from './util';
+import { dispatch } from './util'
 import FileUploads from '@/component/FileUploads'
 import LoadingStates from '@/component/LoadingStates'
 import DisableForms from '@/component/DisableForms'
@@ -16,18 +16,19 @@ import UpdateQueryString from '@/component/UpdateQueryString'
 class Livewire {
     constructor(options = {}) {
         const defaults = {
-            driver: 'http'
+            driver: 'http',
         }
 
-        options = Object.assign({}, defaults, options);
+        options = Object.assign({}, defaults, options)
 
-        const driver = typeof options.driver === 'object'
-            ? options.driver
-            : drivers[options.driver]
+        const driver =
+            typeof options.driver === 'object'
+                ? options.driver
+                : drivers[options.driver]
 
         this.connection = new Connection(driver)
         this.components = componentStore
-        this.onLoadCallback = () => {};
+        this.onLoadCallback = () => {}
     }
 
     find(componentId) {
@@ -44,6 +45,10 @@ class Livewire {
 
     onLoad(callback) {
         this.onLoadCallback = callback
+    }
+
+    onError(callback) {
+        this.components.onErrorCallback = callback
     }
 
     emit(event, ...params) {
@@ -69,17 +74,21 @@ class Livewire {
 
     start() {
         DOM.rootComponentElementsWithNoParents().forEach(el => {
-            this.components.addComponent(
-                new Component(el, this.connection)
-            )
+            this.components.addComponent(new Component(el, this.connection))
         })
 
         this.onLoadCallback()
         dispatch('livewire:load')
 
-        document.addEventListener('visibilitychange', () => {
-            this.components.livewireIsInBackground = document.hidden
-        }, false);
+        document.addEventListener(
+            'visibilitychange',
+            () => {
+                this.components.livewireIsInBackground = document.hidden
+            },
+            false
+        )
+
+        this.components.initialRenderIsFinished = true
     }
 
     rescan() {
@@ -87,9 +96,7 @@ class Livewire {
             const componentId = el.getAttribute('id')
             if (this.components.hasComponent(componentId)) return
 
-            this.components.addComponent(
-                new Component(el, this.connection)
-            )
+            this.components.addComponent(new Component(el, this.connection))
         })
     }
 
@@ -98,7 +105,7 @@ class Livewire {
     }
 }
 
-if (! window.Livewire) {
+if (!window.Livewire) {
     window.Livewire = Livewire
 }
 

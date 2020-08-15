@@ -16,6 +16,7 @@ class HttpConnectionHandler extends ConnectionHandler
                 'data',
                 'id',
                 'checksum',
+                'locale',
                 'fromPrefetch',
                 'errorBag',
             ])

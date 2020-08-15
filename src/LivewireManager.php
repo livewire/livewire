@@ -12,21 +12,13 @@ use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
 class LivewireManager
 {
-    use DependencyResolverTrait,
-        RegistersHydrationMiddleware;
+    use RegistersHydrationMiddleware;
 
-    protected $container;
     protected $componentAliases = [];
     protected $customComponentResolver;
     protected $listeners = [];
 
     public static $isLivewireRequestTestingOverride;
-
-    public function __construct()
-    {
-        // This property only exists to make the "DependencyResolverTrait" work.
-        $this->container = app();
-    }
 
     public function component($alias, $viewClass)
     {
@@ -99,13 +91,7 @@ class LivewireManager
 
         $this->initialHydrate($instance, []);
 
-        $resolvedParameters = $this->resolveClassMethodDependencies(
-            $params, $instance, 'mount'
-        );
-
-        $this->ensureComponentHasMountMethod($instance, $resolvedParameters);
-
-        $instance->mount(...$resolvedParameters);
+        $this->performMount($instance, $params);
 
         $dom = $instance->output();
 
@@ -229,12 +215,18 @@ HTML;
             }
         }
 
+        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
+
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
         return <<<HTML
 {$assetWarning}
 <script src="{$fullAssetPath}" data-turbolinks-eval="false"></script>
-<script data-turbolinks-eval="false">
+<script data-turbolinks-eval="false"{$nonce}>
+    if (window.livewire) {
+        console.warn('Livewire: It looks like Livewire\'s @livewireScripts JavaScript assets have already been loaded. Make sure you aren\'t loading them twice.')
+    }
+
     window.livewire = new Livewire({$jsonEncodedOptions});
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
@@ -270,6 +262,7 @@ HTML;
                 events: component.events,
                 children: component.children,
                 checksum: component.checksum,
+                locale: component.locale,
                 name: component.name,
                 errorBag: component.errorBag,
                 redirectTo: component.redirectTo,
@@ -322,15 +315,14 @@ HTML;
         return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
     }
 
-    private function ensureComponentHasMountMethod($instance, $resolvedParameters)
+    private function performMount($instance, $params)
     {
-        if (count($resolvedParameters) === 0) return;
+        if (! method_exists($instance, 'mount') && count($params) > 0) {
+            throw new MountMethodMissingException($instance->getName());
+        }
 
-        if (is_numeric(key($resolvedParameters))) return;
+        if (! method_exists($instance, 'mount')) return;
 
-        throw_unless(
-            method_exists($instance, 'mount'),
-            new MountMethodMissingException($instance->getName())
-        );
+        ImplicitlyBoundMethod::call(app(), [$instance, 'mount'], $params);
     }
 }
