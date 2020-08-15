@@ -19,6 +19,21 @@ trait ReceivesEvents
         return $this->eventQueue[] = new Event($event, $params);
     }
 
+    public function emitUp($event, ...$params)
+    {
+        $this->emit($event, ...$params)->up();
+    }
+
+    public function emitSelf($event, ...$params)
+    {
+        $this->emit($event, ...$params)->self();
+    }
+
+    public function emitTo($name, $event, ...$params)
+    {
+        $this->emit($event, ...$params)->to($name);
+    }
+
     public function dispatchBrowserEvent($event, $data = null)
     {
         $this->dispatchQueue[] = [
