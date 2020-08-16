@@ -61,14 +61,10 @@ export default class Component {
 
     initialize() {
         this.walk(
-            el => {
-                // Will run for every node in the component tree (not child component nodes).
-                nodeInitializer.initialize(el, this)
-            },
-            el => {
-                // When new component is encountered in the tree, add it.
-                store.addComponent(new Component(el, this.connection))
-            }
+            // Will run for every node in the component tree (not child component nodes).
+            el => nodeInitializer.initialize(el, this),
+            // When new component is encountered in the tree, add it.
+            el => store.addComponent(new Component(el, this.connection))
         )
     }
 
@@ -76,10 +72,7 @@ export default class Component {
         // The .split() stuff is to support dot-notation.
         return name
             .split('.')
-            .reduce(
-                (carry, dotSeperatedSegment) => carry[dotSeperatedSegment],
-                this.data
-            )
+            .reduce((carry, segment) => carry[segment], this.data)
     }
 
     set(name, value) {
