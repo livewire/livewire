@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
@@ -113,10 +112,6 @@ class CopyCommandTest extends TestCase
     /** @test */
     public function cannot_copy_component_to_a_name_that_already_exists()
     {
-        if (version_compare(Application::VERSION, '5.7', '<')) {
-            $this->markTestSkipped('Console testing not available prior to Laravel 5.7');
-        }
-
         Artisan::call('make:livewire', ['name' => 'BobLob.BobLob']);
         Artisan::call('make:livewire', ['name' => 'BobLob.LobLaw']);
 
@@ -132,10 +127,6 @@ class CopyCommandTest extends TestCase
     /** @test */
     public function can_copy_component_to_a_name_that_already_exists_if_forced()
     {
-        if (version_compare(Application::VERSION, '5.7', '<')) {
-            $this->markTestSkipped('Console testing not available prior to Laravel 5.7');
-        }
-
         Artisan::call('make:livewire', ['name' => 'BobLob.BobLob']);
         Artisan::call('make:livewire', ['name' => 'BobLob.LobLaw']);
 

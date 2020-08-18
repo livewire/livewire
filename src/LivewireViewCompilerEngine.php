@@ -51,11 +51,7 @@ class LivewireViewCompilerEngine extends CompilerEngine
         } catch (Exception $e) {
             $this->handleViewException($e, $obLevel);
         } catch (Throwable $e) {
-            if (Application::VERSION === '7.x-dev' || version_compare(Application::VERSION, '7.0', '>=')) {
-                $this->handleViewException($e, $obLevel);
-            } else {
-                $this->handleViewException(new FatalThrowableError($e), $obLevel);
-            }
+            $this->handleViewException($e, $obLevel);
         }
 
         return ltrim(ob_get_clean());
