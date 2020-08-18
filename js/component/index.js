@@ -37,6 +37,7 @@ export default class Component {
         this.scopedListeners = new MessageBus()
         this.prefetchManager = new PrefetchManager(this)
         this.uploadManager = new UploadManager(this)
+        this.watchers = {}
 
         store.callHook('componentInitialized', this)
 
@@ -75,6 +76,33 @@ export default class Component {
             .reduce((carry, segment) => carry[segment], this.data)
     }
 
+    updateDataAndMemo(newData, newMemo) {
+        Object.entries(newData || {}).forEach(([key, value]) => {
+            let oldValue = this.memo.data[key]
+
+            if (oldValue !== undefined && oldValue !== value) {
+                this.memo.data[key] = value
+
+                let watchers = this.watchers[key] || []
+
+                watchers.forEach(watcher => watcher(value))
+            }
+        })
+
+        // Only update the memo properties that exist in the returning payload.
+        Object.entries(newMemo).forEach(([key, value]) => {
+            if (key === 'data') return
+
+            this.memo[key] = value
+        })
+    }
+
+    watch(name, callback) {
+        if (!this.watchers[name]) this.watchers[name] = []
+
+        this.watchers[name].push(callback)
+    }
+
     set(name, value) {
         this.addAction(new MethodAction('$set', [name, value], this.el))
     }
@@ -84,7 +112,14 @@ export default class Component {
     }
 
     call(method, ...params) {
-        this.addAction(new MethodAction(method, params, this.el))
+        return new Promise((resolve, reject) => {
+            let action = new MethodAction(method, params, this.el)
+
+            this.addAction(action)
+
+            action.onResolve(thing => resolve(thing))
+            action.onReject(thing => reject(thing))
+        })
     }
 
     on(event, callback) {
@@ -138,15 +173,25 @@ export default class Component {
 
         this.messageInTransit = new Message(this, this.updateQueue)
 
-        this.connection.sendMessage(this.messageInTransit)
+        let sendMessage = () => {
+            this.connection.sendMessage(this.messageInTransit)
 
-        store.callHook('messageSent', this, this.messageInTransit)
+            store.callHook('messageSent', this, this.messageInTransit)
 
-        this.updateQueue = []
+            this.updateQueue = []
+        }
+
+        if (window.capturedRequestsForDusk) {
+            window.capturedRequestsForDusk.push(sendMessage)
+        } else {
+            sendMessage()
+        }
     }
 
     messageSendFailed() {
         store.callHook('messageFailed', this)
+
+        this.messageInTransit.reject()
 
         this.messageInTransit = null
     }
@@ -168,10 +213,7 @@ export default class Component {
     }
 
     handleResponse(response) {
-        // Only update the memo properties that exist in the returning payload.
-        Object.entries(response.serverMemo).forEach(([key, value]) => {
-            this.serverMemo[key] = value
-        })
+        this.updateDataAndMemo(response.memo.data, response.memo)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.effects.redirect) {
@@ -191,6 +233,8 @@ export default class Component {
                 response.effects.dirty
             )
         }
+
+        this.messageInTransit.resolve()
 
         this.messageInTransit = null
 
@@ -295,7 +339,15 @@ export default class Component {
             },
 
             onBeforeNodeDiscarded: node => {
-                //
+                // If the node is from x-if with a transition.
+                if (
+                    node.__x_inserted_me &&
+                    Array.from(node.attributes).some(attr =>
+                        /x-transition/.test(attr.name)
+                    )
+                ) {
+                    return false
+                }
             },
 
             onNodeDiscarded: node => {
@@ -334,6 +386,19 @@ export default class Component {
                     fromEl.rawNode().tagName.toUpperCase() === 'SELECT'
                 ) {
                     to.selectedIndex = -1
+                }
+
+                // If the element is x-show.transition.
+                if (
+                    Array.from(from.attributes)
+                        .map(attr => attr.name)
+                        .some(
+                            name =>
+                                /x-show.transition/.test(name) ||
+                                /x-transition/.test(name)
+                        )
+                ) {
+                    from.__livewire_transition = true
                 }
 
                 // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
@@ -528,5 +593,52 @@ export default class Component {
             finishCallback,
             errorCallback
         )
+    }
+
+    get $wire() {
+        if (this.dollarWireProxy) return this.dollarWireProxy
+
+        let refObj = {}
+
+        let component = this
+
+        return (this.dollarWireProxy = new Proxy(refObj, {
+            get(object, property) {
+                if (property === 'entangle') {
+                    return name => ({ livewireEntangle: name })
+                }
+
+                // Forward public API methods right away.
+                if (['get', 'set', 'call', 'on'].includes(property)) {
+                    return function (...args) {
+                        return component[property].apply(component, args)
+                    }
+                }
+
+                // If the property exists on the data, return it.
+                let getResult = component.get(property)
+
+                // If the property does not exist, try calling the method on the class.
+                if (getResult === undefined) {
+                    return function (...args) {
+                        return component.call.apply(component, [
+                            property,
+                            ...args,
+                        ])
+                    }
+                }
+
+                return getResult
+            },
+
+            set: function (obj, prop, value) {
+                // This prevents a "blip" when using x-model to set a Livewire property.
+                Alpine.ignoreFocusedForValueBinding = true
+
+                component.set(prop, value)
+
+                return true
+            },
+        }))
     }
 }

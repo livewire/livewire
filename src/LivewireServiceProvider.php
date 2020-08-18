@@ -256,6 +256,7 @@ class LivewireServiceProvider extends ServiceProvider
         RenameMe\SupportCollections::init();
         RenameMe\OptimizeRenderedDom::init();
         RenameMe\SupportFileDownloads::init();
+        RenameMe\SupportActionReturns::init();
     }
 
     protected function registerHydrationMiddleware()

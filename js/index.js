@@ -15,22 +15,24 @@ import Polling from '@/component/Polling'
 import UpdateQueryString from '@/component/UpdateQueryString'
 
 class Livewire {
-    constructor(options = {}) {
-        const defaults = {
-            driver: 'http',
-        }
-
+    constructor() {
         this.connection = new Connection()
         this.components = componentStore
         this.onLoadCallback = () => {}
     }
 
     first() {
-        return this.components.components()[0]
+        return Object.values(this.components.componentsById)[0].$wire
     }
 
     find(componentId) {
-        return this.components.componentsById[componentId]
+        return this.components.componentsById[componentId].$wire
+    }
+
+    all() {
+        return Object.values(this.components.componentsById).map(
+            component => component.$wire
+        )
     }
 
     directive(name, callback) {
@@ -111,6 +113,64 @@ class Livewire {
     setupAlpineCompatibility() {
         if (!window.Alpine) return
 
+        if (window.Alpine.onBeforeComponentInitialized) {
+            window.Alpine.onBeforeComponentInitialized(component => {
+                let livewireEl = component.$el.closest('[wire\\:id]')
+
+                if (livewireEl && livewireEl.__livewire) {
+                    Object.entries(component.unobservedData).forEach(
+                        ([key, value]) => {
+                            if (
+                                !!value &&
+                                typeof value === 'object' &&
+                                value.livewireEntangle
+                            ) {
+                                let livewireProperty = value.livewireEntangle
+                                let livewireComponent = livewireEl.__livewire
+
+                                component.unobservedData[
+                                    key
+                                ] = livewireEl.__livewire.get(livewireProperty)
+
+                                let preventSelfReaction = false
+
+                                component.unobservedData.$watch(key, value => {
+                                    if (preventSelfReaction) {
+                                        preventSelfReaction = false
+                                        return
+                                    }
+
+                                    preventSelfReaction = true
+
+                                    // This prevents a "blip" when using x-model to set a Livewire property.
+                                    Alpine.ignoreFocusedForValueBinding = true
+
+                                    livewireComponent.set(
+                                        livewireProperty,
+                                        value
+                                    )
+                                })
+
+                                livewireComponent.watch(
+                                    livewireProperty,
+                                    value => {
+                                        if (preventSelfReaction) {
+                                            preventSelfReaction = false
+                                            return
+                                        }
+
+                                        preventSelfReaction = true
+
+                                        component.$data[key] = value
+                                    }
+                                )
+                            }
+                        }
+                    )
+                }
+            })
+        }
+
         if (window.Alpine.onComponentInitialized) {
             window.Alpine.onComponentInitialized(component => {
                 let livewireEl = component.$el.closest('[wire\\:id]')
@@ -119,6 +179,10 @@ class Livewire {
                     this.hook('afterDomUpdate', livewireComponent => {
                         if (livewireComponent === livewireEl.__livewire) {
                             component.updateElements(component.$el)
+
+                            // This was set to true in the $wire Proxy's setter,
+                            // Now we can re-set it to false.
+                            Alpine.ignoreFocusedForValueBinding = false
                         }
                     })
                 }
@@ -128,47 +192,15 @@ class Livewire {
         if (window.Alpine.addMagicProperty) {
             window.Alpine.addMagicProperty('wire', function (componentEl) {
                 let wireEl = componentEl.closest('[wire\\:id]')
+
                 if (!wireEl)
                     console.warn(
                         'Alpine: Cannot reference "$wire" outside a Livewire component.'
                     )
 
-                var refObj = {}
+                let component = wireEl.__livewire
 
-                return new Proxy(refObj, {
-                    get(object, property) {
-                        // Forward public API methods right away.
-                        if (['get', 'set', 'call', 'on'].includes(property)) {
-                            return function (...args) {
-                                return wireEl.__livewire[property].apply(
-                                    wireEl.__livewire,
-                                    args
-                                )
-                            }
-                        }
-
-                        // If the property exists on the data, return it.
-                        let getResult = wireEl.__livewire.get(property)
-
-                        // If the property does not exist, try calling the method on the class.
-                        if (getResult === undefined) {
-                            return function (...args) {
-                                return wireEl.__livewire.call.apply(
-                                    wireEl.__livewire,
-                                    [property, ...args]
-                                )
-                            }
-                        }
-
-                        return getResult
-                    },
-
-                    set: function (obj, prop, value) {
-                        wireEl.__livewire.set(prop, value)
-
-                        return true
-                    },
-                })
+                return component.$wire
             })
         }
     }

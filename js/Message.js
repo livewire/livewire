@@ -19,4 +19,24 @@ export default class {
     storeResponse(payload) {
         return (this.response = payload)
     }
+
+    resolve() {
+        let returns = this.response.effects.returns || []
+
+        this.updates.forEach(update => {
+            if (update.type !== 'callMethod') return
+
+            update.resolve(
+                returns[update.method] !== undefined
+                    ? returns[update.method]
+                    : null
+            )
+        })
+    }
+
+    reject() {
+        this.updates.forEach(update => {
+            update.reject()
+        })
+    }
 }
