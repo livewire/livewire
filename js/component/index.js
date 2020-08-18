@@ -78,10 +78,10 @@ export default class Component {
 
     updateDataAndMemo(newData, newMemo) {
         Object.entries(newData || {}).forEach(([key, value]) => {
-            let oldValue = this.memo.data[key]
+            let oldValue = this.serverMemo.data[key]
 
             if (oldValue !== undefined && oldValue !== value) {
-                this.memo.data[key] = value
+                this.serverMemo.data[key] = value
 
                 let watchers = this.watchers[key] || []
 
@@ -93,7 +93,7 @@ export default class Component {
         Object.entries(newMemo).forEach(([key, value]) => {
             if (key === 'data') return
 
-            this.memo[key] = value
+            this.serverMemo[key] = value
         })
     }
 
@@ -213,7 +213,7 @@ export default class Component {
     }
 
     handleResponse(response) {
-        this.updateDataAndMemo(response.memo.data, response.memo)
+        this.updateDataAndMemo(response.serverMemo.data, response.serverMemo)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.effects.redirect) {

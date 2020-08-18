@@ -23,7 +23,7 @@ export default class {
     resolve() {
         let returns = this.response.effects.returns || []
 
-        this.updates.forEach(update => {
+        this.updateQueue.forEach(update => {
             if (update.type !== 'callMethod') return
 
             update.resolve(
