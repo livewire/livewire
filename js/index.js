@@ -25,6 +25,10 @@ class Livewire {
         this.onLoadCallback = () => {}
     }
 
+    first() {
+        return this.components.components()[0]
+    }
+
     find(componentId) {
         return this.components.componentsById[componentId]
     }

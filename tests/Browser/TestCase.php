@@ -21,7 +21,7 @@ class TestCase extends BaseTestCase
 {
     public function setUp(): void
     {
-        // Options::withoutUI();
+        // DuskOptions::withoutUI();
 
         $this->registerMacros();
 
@@ -39,15 +39,22 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Loading\Component::class);
             app('livewire')->component(\Tests\Browser\PushState\Component::class);
             app('livewire')->component(\Tests\Browser\PushState\NestedComponent::class);
-            app('livewire')->component(\Tests\Browser\InputSelect\Component::class);
+            app('livewire')->component(\Tests\Browser\DataBinding\InputSelect\Component::class);
             app('livewire')->component(\Tests\Browser\FileDownloads\Component::class);
             app('livewire')->component(\Tests\Browser\Redirects\Component::class);
             app('livewire')->component(\Tests\Browser\SupportCollections\Component::class);
-            app('livewire')->component(\Tests\Browser\EmitEvents\Component::class);
-            app('livewire')->component(\Tests\Browser\EmitEvents\NestedComponentA::class);
-            app('livewire')->component(\Tests\Browser\EmitEvents\NestedComponentB::class);
+            app('livewire')->component(\Tests\Browser\Events\Component::class);
+            app('livewire')->component(\Tests\Browser\Events\NestedComponentA::class);
+            app('livewire')->component(\Tests\Browser\Events\NestedComponentB::class);
             app('livewire')->component(\Tests\Browser\Prefetch\Component::class);
             app('livewire')->component(\Tests\Browser\SupportDateTimes\Component::class);
+            app('livewire')->component(\Tests\Browser\DataBinding\InputText\Component::class);
+            app('livewire')->component(\Tests\Browser\DataBinding\InputTextarea\Component::class);
+            app('livewire')->component(\Tests\Browser\DataBinding\InputCheckboxRadio\Component::class);
+            app('livewire')->component(\Tests\Browser\Actions\Component::class);
+            app('livewire')->component(\Tests\Browser\Init\Component::class);
+            app('livewire')->component(\Tests\Browser\Dirty\Component::class);
+            app('livewire')->component(\Tests\Browser\Alpine\Component::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 

@@ -16,6 +16,10 @@ export default class Connection {
     sendMessage(message) {
         let payload = message.payload()
 
+        if (window.__testing_request_interceptor) {
+            return window.__testing_request_interceptor(payload, this)
+        }
+
         // Forward the query string for the ajax requests.
         fetch(
             `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}${window.location.search}`,
@@ -89,14 +93,14 @@ export default class Connection {
             a.setAttribute('target', '_top')
         )
 
-        let modal = document.getElementById('burst-error')
+        let modal = document.getElementById('livewire-error')
 
         if (typeof modal != 'undefined' && modal != null) {
             // Modal already exists.
             modal.innerHTML = ''
         } else {
             modal = document.createElement('div')
-            modal.id = 'burst-error'
+            modal.id = 'livewire-error'
             modal.style.position = 'fixed'
             modal.style.width = '100vw'
             modal.style.height = '100vh'

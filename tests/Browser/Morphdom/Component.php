@@ -1,19 +1,15 @@
 <?php
 
-namespace Tests\Browser\EmitEvents;
+namespace Tests\Browser\Morphdom;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    protected $listeners = ['foo'];
-
-    public $lastEvent = '';
-
-    public function foo($value)
+    public function hydrate()
     {
-        $this->lastEvent = $value;
+        usleep(1000 * 50);
     }
 
     public function render()

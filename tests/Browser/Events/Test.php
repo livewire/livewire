@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\Browser\EmitEvents;
+namespace Tests\Browser\Events;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\EmitEvents\Component;
+use Tests\Browser\Events\Component;
 
 class Test extends TestCase
 {

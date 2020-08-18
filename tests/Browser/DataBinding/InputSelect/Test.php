@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Browser\InputSelect;
+namespace Tests\Browser\DataBinding\InputSelect;
 
 use Livewire\Livewire;
 use Laravel\Dusk\Browser;
@@ -20,6 +20,25 @@ class Test extends TestCase
                 ->waitForLivewire()
                 ->assertSelected('@single.input', 'bar')
                 ->assertSeeIn('@single.output', 'bar')
+
+                /**
+                 * Standard select with value attributes.
+                 */
+                ->assertDontSeeIn('@single-value.output', 'par')
+                ->select('@single-value.input', 'par')
+                ->waitForLivewire()
+                ->assertSelected('@single-value.input', 'par')
+                ->assertSeeIn('@single-value.output', 'par')
+
+                /**
+                 * Standard select with value attributes.
+                 */
+                ->assertSeeIn('@single-number.output', '3')
+                ->assertSelected('@single-number.input', '3')
+                ->select('@single-number.input', '4')
+                ->waitForLivewire()
+                ->assertSeeIn('@single-number.output', '4')
+                ->assertSelected('@single-number.input', '4')
 
                 /**
                  * Select with placeholder default.

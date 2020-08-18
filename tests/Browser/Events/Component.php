@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\Browser\EmitEvents;
+namespace Tests\Browser\Events;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
-class NestedComponentA extends BaseComponent
+class Component extends BaseComponent
 {
     protected $listeners = ['foo'];
 
@@ -18,6 +18,6 @@ class NestedComponentA extends BaseComponent
 
     public function render()
     {
-        return View::file(__DIR__.'/nested-a.blade.php');
+        return View::file(__DIR__.'/view.blade.php');
     }
 }

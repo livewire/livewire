@@ -1,6 +1,6 @@
 import Message from '@/Message'
 import PrefetchMessage from '@/PrefetchMessage'
-import { debounce, walk } from '@/util'
+import { dispatch, debounce, walk } from '@/util'
 import morphdom from '@/dom/morphdom'
 import DOM from '@/dom/dom'
 import DOMElement from '@/dom/dom_element'
@@ -76,6 +76,10 @@ export default class Component {
     }
 
     set(name, value) {
+        this.addAction(new MethodAction('$set', [name, value], this.el))
+    }
+
+    sync(name, value) {
         this.addAction(new ModelAction(name, value, this.el))
     }
 

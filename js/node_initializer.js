@@ -93,13 +93,16 @@ export default {
                 const el = new DOMElement(e.target)
                 // We have to check for typeof e.detail here for IE 11.
                 const value =
-                    e instanceof CustomEvent && typeof e.detail != 'undefined' && typeof window.document.documentMode == 'undefined'
+                    e instanceof CustomEvent &&
+                    typeof e.detail != 'undefined' &&
+                    typeof window.document.documentMode == 'undefined'
                         ? e.detail
                         : el.valueFromInput(component)
 
                 if (directive.modifiers.includes('defer')) {
-                    component.addAction(new DeferredModelAction(model, value, el))
-
+                    component.addAction(
+                        new DeferredModelAction(model, value, el)
+                    )
                 } else {
                     component.addAction(new ModelAction(model, value, el))
                 }

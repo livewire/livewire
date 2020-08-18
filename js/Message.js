@@ -16,7 +16,7 @@ export default class {
         }
     }
 
-    storeResponse(response) {
-        return (this.response = response)
+    storeResponse(payload) {
+        return (this.response = payload)
     }
 }

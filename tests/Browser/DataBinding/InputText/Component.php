@@ -1,15 +1,21 @@
 <?php
 
-namespace Tests\Browser\InputSelect;
+namespace Tests\Browser\DataBinding\InputText;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    public $single;
-    public $placeholder = '';
-    public $multiple = [];
+    public $foo = 'initial';
+    public $bar = '';
+    public $baz = '';
+    public $bob = '';
+
+    public function updateFooTo($value)
+    {
+        $this->foo = $value;
+    }
 
     public function render()
     {
