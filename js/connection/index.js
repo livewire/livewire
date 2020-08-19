@@ -66,7 +66,7 @@ export default class Connection {
                 }
             })
             .catch(() => {
-                this.onError(payload)
+                this.onError(message)
             })
             .finally(() => {
                 store.requestIsOut = false

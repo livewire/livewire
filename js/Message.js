@@ -35,7 +35,7 @@ export default class {
     }
 
     reject() {
-        this.updates.forEach(update => {
+        this.updateQueue.forEach(update => {
             update.reject()
         })
     }

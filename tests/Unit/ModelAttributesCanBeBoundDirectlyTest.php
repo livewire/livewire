@@ -42,6 +42,22 @@ class ModelAttributesCanBeBoundDirectlyTest extends TestCase
             ->assertSet('model.title', 'bar');
     }
 
+
+    /** @test */
+    public function a_non_existant_eloquent_model_can_be_set()
+    {
+        $model = new ModelForAttributeBinding;
+
+        Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
+            ->assertNotSet('model.title', 'foo')
+            ->set('model.title', 'i-exist-now')
+            ->assertSet('model.title', 'i-exist-now')
+            ->call('save')
+            ->assertSet('model.title', 'i-exist-now');
+
+        $this->assertTrue(ModelForAttributeBinding::whereTitle('i-exist-now')->exists());
+    }
+
     /** @test */
     public function cant_set_a_model_attribute_that_isnt_present_in_rules_array()
     {

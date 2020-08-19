@@ -2,8 +2,10 @@
 
 namespace Livewire\HydrationMiddleware;
 
+use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Contracts\Database\ModelIdentifier;
+use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Database\Eloquent\Relations\Concerns\AsPivot;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -19,9 +21,13 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
         $models = $request->memo['dataMeta']['models'];
 
         foreach ($models as $property => $value) {
-            $model = (new static)->getRestoredPropertyValue(
-                new ModelIdentifier($value['class'], $value['id'], $value['relations'], $value['connection'])
-            );
+            if (isset($value['id'])) {
+                $model = (new static)->getRestoredPropertyValue(
+                    new ModelIdentifier($value['class'], $value['id'], $value['relations'], $value['connection'])
+                );
+            } else {
+                $model = new $value['class'];
+            }
 
             $dirtyModelData = $request->memo['data'][$property];
 
@@ -44,10 +50,10 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
         $publicProperties = $instance->getPublicPropertiesDefinedBySubClass();
 
         foreach ($publicProperties as $property => $value) {
-            if (($serializedModel = (new static)->getSerializedPropertyValue($value)) instanceof ModelIdentifier) {
-                $meta = $response->memo['dataMeta'] ?? [];
-
-                if (! isset($meta['models'])) $meta['models'] = [];
+            if ($value instanceof QueueableEntity || $value instanceof QueueableCollection) {
+                $serializedModel = $value instanceof QueueableEntity && ! $value->exists
+                    ? ['class' => get_class($value)]
+                    : (array) (new static)->getSerializedPropertyValue($value);
 
                 if ($rules = $instance->rulesForModel($property)) {
                     $keys = $rules->keys()->map(function ($key) use ($instance) {
@@ -66,8 +72,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                 }
 
                 // Deserialize the models into the "meta" bag.
-                $meta['models'][$property] = (array) $serializedModel;
-                $response->memo['dataMeta'] = $meta;
+                data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
             }
         }
     }
