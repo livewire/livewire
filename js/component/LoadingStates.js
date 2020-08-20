@@ -160,46 +160,55 @@ function unsetLoading(component) {
 
 function startLoading(els) {
     els.forEach(({ el, directive }) => {
-        el = el.el // I'm so sorry @todo
+        el = el.el // I'm so sorry.
 
         if (directive.modifiers.includes('class')) {
-            // This is because wire:loading.class="border border-red"
-            // wouldn't work with classList.add.
-            const classes = directive.value.split(' ').filter(Boolean)
+            let classes = directive.value.split(' ').filter(Boolean)
 
-            if (directive.modifiers.includes('remove')) {
-                el.classList.remove(...classes)
-                el.__livewire_on_finish_loading = () =>
-                    el.classList.add(...classes)
-            } else {
-                el.classList.add(...classes)
-                el.__livewire_on_finish_loading = () =>
-                    el.classList.remove(...classes)
-            }
+            doAndSetCallbackOnElToUndo(
+                el,
+                directive,
+                () => el.classList.add(...classes),
+                () => el.classList.remove(...classes)
+            )
         } else if (directive.modifiers.includes('attr')) {
-            if (directive.modifiers.includes('remove')) {
-                el.removeAttribute(directive.value)
-                el.__livewire_on_finish_loading = () =>
-                    el.setAttribute(directive.value, true)
-            } else {
-                el.setAttribute(directive.value, true)
-                el.__livewire_on_finish_loading = () =>
-                    el.removeAttribute(directive.value)
-            }
+            doAndSetCallbackOnElToUndo(
+                el,
+                directive,
+                () => el.setAttribute(directive.value, true),
+                () => el.removeAttribute(directive.value)
+            )
         } else {
-            if (directive.modifiers.includes('remove')) {
-                let cache = el.style.display
-                el.style.display = 'none'
-                el.__livewire_on_finish_loading = () =>
-                    (el.style.display = cache)
-            } else {
-                let cache = el.style.display
-                el.style.display = 'inline-block'
-                el.__livewire_on_finish_loading = () =>
-                    (el.style.display = cache)
-            }
+            let cache = el.style.display
+            let target = directive.modifiers.includes('remove')
+                ? 'none'
+                : 'inline-block'
+
+            doAndSetCallbackOnElToUndo(
+                el,
+                directive,
+                () => (el.style.display = target),
+                () => (el.style.display = cache)
+            )
         }
     })
+}
+
+function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
+    if (directive.modifiers.includes('remove'))
+        [doCallback, undoCallback] = [undoCallback, doCallback]
+
+    if (directive.modifiers.includes('delay')) {
+        let timeout = setTimeout(() => {
+            doCallback()
+            el.__livewire_on_finish_loading = () => undoCallback()
+        }, 200)
+
+        el.__livewire_on_finish_loading = () => clearTimeout(timeout)
+    } else {
+        doCallback()
+        el.__livewire_on_finish_loading = () => undoCallback()
+    }
 }
 
 function endLoading(els) {

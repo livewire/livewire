@@ -193,7 +193,7 @@ class LivewireManager
     {
         return <<<HTML
 <style>
-    [wire\:loading] {
+    [wire\:loading], [wire\:loading\.delay] {
         display: none;
     }
 

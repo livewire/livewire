@@ -14,7 +14,11 @@ class SupportQueryString
             if (empty($properties = $component->getFromQueryStringProperties())) return;
 
             foreach ($properties as $property) {
-                $component->$property = request()->query($property, $component->$property);
+                 $fromQueryString = request()->query($property);
+
+                 if ($fromQueryString !== null) {
+                    $component->$property = json_decode($fromQueryString);
+                 }
             }
         });
 
