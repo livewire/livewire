@@ -91,7 +91,9 @@ export default {
                 const el = new DOMElement(e.target)
                 // We have to check for typeof e.detail here for IE 11.
                 const value =
-                    e instanceof CustomEvent && typeof e.detail != 'undefined' && typeof window.document.documentMode == 'undefined'
+                    e instanceof CustomEvent &&
+                    typeof e.detail != 'undefined' &&
+                    typeof window.document.documentMode == 'undefined'
                         ? e.detail
                         : el.valueFromInput(component)
 
@@ -186,7 +188,7 @@ export default {
             if (callback && callback(e) === false) {
                 return
             }
-            
+
             component.callAfterModelDebounce(() => {
                 const el = new DOMElement(e.target)
 
