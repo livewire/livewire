@@ -1,0 +1,14 @@
+[
+    {
+        "level": "SEVERE",
+        "message": "http:\/\/127.0.0.1:8000\/favicon.ico - Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "source": "network",
+        "timestamp": 1597519907472
+    },
+    {
+        "level": "SEVERE",
+        "message": "http:\/\/127.0.0.1:8000\/livewire\/livewire.js?id=5eb6554395d2962d2064 0:110647 Uncaught ReferenceError: dispatch is not defined",
+        "source": "javascript",
+        "timestamp": 1597519907736
+    }
+]

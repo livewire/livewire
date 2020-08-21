@@ -57,8 +57,8 @@ trait WithFileUploads
         }
 
         $errorsInJson = $isMultiple
-            ? str_replace('files', $name, $errorsInJson)
-            : str_replace('files.0', $name, $errorsInJson);
+            ? str_ireplace('files', $name, $errorsInJson)
+            : str_ireplace('files.0', $name, $errorsInJson);
 
         $errors = json_decode($errorsInJson, true)['errors'];
 
@@ -102,8 +102,16 @@ trait WithFileUploads
     {
         if ($value instanceof TemporaryUploadedFile) {
             return $value->serializeForLivewireResponse();
-        } elseif (is_array($value) && isset(array_values($value)[0]) && array_values($value)[0] instanceof TemporaryUploadedFile) {
+        }
+
+        if (is_array($value) && isset(array_values($value)[0]) && array_values($value)[0] instanceof TemporaryUploadedFile && is_numeric(key($value))) {
             return array_values($value)[0]::serializeMultipleForLivewireResponse($value);
+        }
+        
+        if (is_array($value)) {
+            foreach ($value as $key => $item) {
+                $value[$key] = $this->dehydratePropertyFromWithFileUploads(null, $item);
+            }
         }
 
         return $value;

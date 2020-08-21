@@ -37,7 +37,7 @@ trait ValidatesInput
         }
 
         $this->setErrorBag(
-            Arr::except($this->errorBag->toArray(), $field)
+            Arr::except($this->getErrorBag()->toArray(), $field)
         );
     }
 
@@ -53,7 +53,7 @@ trait ValidatesInput
 
     public function errorBagExcept($field)
     {
-        return new MessageBag(Arr::except($this->errorBag->toArray(), $field));
+        return new MessageBag(Arr::except($this->getErrorBag()->toArray(), $field));
     }
 
     public function validate($rules, $messages = [], $attributes = [])
@@ -73,6 +73,8 @@ trait ValidatesInput
             $result[$propertyNameFromValidationField]
                 = $this->getPropertyValue($propertyNameFromValidationField);
         }
+
+        $result = $this->prepareForValidation($result);
 
         $result = Validator::make($result, Arr::only($rules, $fields), $messages, $attributes)
             ->validate();
@@ -123,5 +125,10 @@ trait ValidatesInput
         $this->resetErrorBag($field);
 
         return $result;
+    }
+
+    protected function prepareForValidation(array $attributes)
+    {
+        return $attributes;
     }
 }

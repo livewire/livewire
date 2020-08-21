@@ -170,14 +170,14 @@ export default class Component {
         this.children = response.children
         this.errorBag = response.errorBag
 
+        store.callHook('responseReceived', this, response)
+
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.redirectTo) {
             this.redirect(response.redirectTo)
 
             return
         }
-
-        store.callHook('responseReceived', this, response)
 
         this.replaceDom(response.dom, response.dirtyInputs)
 
