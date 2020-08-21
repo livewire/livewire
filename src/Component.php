@@ -81,11 +81,6 @@ abstract class Component
         return $this->casts;
     }
 
-    public function render()
-    {
-        return view("livewire.{$this->getName()}");
-    }
-
     public function output($errors = null)
     {
         // In the service provider, we hijack Laravel's Blade engine
@@ -96,7 +91,9 @@ abstract class Component
         $engine = app('view.engine.resolver')->resolve('blade');
         $engine->startLivewireRendering($this);
 
-        $view = $this->render();
+        $view = method_exists($this, 'render')
+            ? app()->call([$this, 'render'])
+            : view("livewire.{$this->getName()}");
 
         if (is_string($view)) {
             $view = app('view')->make((new CreateBladeViewFromString)($view));
