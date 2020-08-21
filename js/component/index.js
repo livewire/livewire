@@ -215,6 +215,8 @@ export default class Component {
     handleResponse(response) {
         this.updateDataAndMemo(response.serverMemo.data, response.serverMemo)
 
+        store.callHook('responseReceived', this, response)
+
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.effects.redirect) {
             this.redirect(response.effects.redirect)

@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Testing\Constraints\SeeInOrder;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MakesAssertions
@@ -59,6 +60,26 @@ trait MakesAssertions
         PHPUnit::assertStringNotContainsString(
             $value,
             $this->stripOutInitialData($this->lastRenderedDom)
+        );
+
+        return $this;
+    }
+
+    public function assertSeeHtmlInOrder(array $values)
+    {
+        PHPUnit::assertThat(
+            $values,
+            new SeeInOrder($this->stripOutInitialData($this->payload['dom']))
+        );
+
+        return $this;
+    }
+
+    public function assertSeeInOrder(array $values)
+    {
+        PHPUnit::assertThat(
+            array_map('e', ($values)),
+            new SeeInOrder($this->stripOutInitialData($this->payload['dom']))
         );
 
         return $this;
@@ -154,12 +175,9 @@ trait MakesAssertions
             } else {
                 $failed = optional($this->lastValidator)->failed() ?: [];
                 $rules = array_keys(Arr::get($failed, $key, []));
-                $snakeCaseRules = array_map(function ($rule) {
-                    return Str::snake($rule);
-                }, $rules);
 
                 foreach ((array)$value as $rule) {
-                    PHPUnit::assertContains($rule, $snakeCaseRules, "Component has no [{$rule}] errors for [{$key}] attribute.");
+                    PHPUnit::assertContains(Str::studly($rule), $rules, "Component has no [{$rule}] errors for [{$key}] attribute.");
                 }
             }
         }
@@ -172,7 +190,7 @@ trait MakesAssertions
         $errors = new MessageBag($this->payload['serverMemo']['errors'] ?? []);
 
         if (empty($keys)) {
-            PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors.');
+            PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors: "' . implode('", "', $errors->keys()) . '"');
 
             return $this;
         }
@@ -185,12 +203,9 @@ trait MakesAssertions
             } else {
                 $failed = optional($this->lastValidator)->failed() ?: [];
                 $rules = array_keys(Arr::get($failed, $key, []));
-                $snakeCaseRules = array_map(function ($rule) {
-                    return Str::snake($rule);
-                }, $rules);
 
                 foreach ((array) $value as $rule) {
-                    PHPUnit::assertNotContains($rule, $snakeCaseRules, "Component has [{$rule}] errors for [{$key}] attribute.");
+                    PHPUnit::assertNotContains(Str::studly($rule), $rules, "Component has [{$rule}] errors for [{$key}] attribute.");
                 }
             }
         }

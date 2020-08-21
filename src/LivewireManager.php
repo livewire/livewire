@@ -4,6 +4,8 @@ namespace Livewire;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Fluent;
+use Illuminate\Foundation\Application;
+use Illuminate\Validation\ValidationException;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Dusk\Browser;
@@ -113,9 +115,15 @@ class LivewireManager
 
         $this->initialHydrate($instance, $request);
 
-        $this->performMount($instance, $params);
+        try {
+            $this->performMount($instance, $params);
+        } catch (ValidationException $e) {
+            Livewire::dispatch('failed-validation', $e->validator);
 
-        $html = $instance->output();
+            $errors = $e->validator->errors();
+        }
+
+        $html = $instance->output($errors ?? null);
 
         $response = Response::fromRequest($request, $html);
 

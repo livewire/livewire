@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
 use Livewire\LivewireManager;
@@ -146,7 +147,7 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    public function multi_word_validation_rules_are_assertable()
+    public function multi_word_validation_rules_failing_are_assertable()
     {
         $component = app(LivewireManager::class)->test(ForValidation::class);
 
@@ -154,6 +155,17 @@ class ValidationTest extends TestCase
             ->set('foo', 'bar123&*(O)')
             ->call('runValidationWithMultiWordRule')
             ->assertHasErrors(['foo' => 'alpha_dash']);
+    }
+
+    /** @test */
+    public function class_based_validation_rules_failing_are_assertable()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->set('foo', 'barbaz')
+            ->call('runValidationWithClassBasedRule')
+            ->assertHasErrors(['foo' => ValueEqualsFoobar::class]);
     }
 
     /** @test */
@@ -166,6 +178,28 @@ class ValidationTest extends TestCase
             ->set('bar', 'bar')
             ->call('runValidation')
             ->assertHasNoErrors(['foo' => 'required']);
+    }
+
+    /** @test */
+    public function multi_word_validation_rules_passing_are_assertable()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->set('foo', 'foo-bar-baz')
+            ->call('runValidationWithMultiWordRule')
+            ->assertHasNoErrors(['foo' => 'alpha_dash']);
+    }
+
+    /** @test */
+    public function class_based_validation_rules_are_assertable()
+    {
+        $component = app(LivewireManager::class)->test(ForValidation::class);
+
+        $component
+            ->set('foo', 'foobar')
+            ->call('runValidationWithClassBasedRule')
+            ->assertHasNoErrors(['foo' => ValueEqualsFoobar::class]);
     }
 }
 
@@ -191,6 +225,13 @@ class ForValidation extends Component
     {
         $this->validate([
             'foo' => 'alpha_dash',
+        ]);
+    }
+
+    public function runValidationWithClassBasedRule()
+    {
+        $this->validate([
+            'foo' => [new ValueEqualsFoobar],
         ]);
     }
 
@@ -246,5 +287,18 @@ class ForValidation extends Component
     public function render()
     {
         return app('view')->make('dump-errors');
+    }
+}
+
+class ValueEqualsFoobar implements Rule
+{
+    public function passes($attribute, $value)
+    {
+        return $value === 'foobar';
+    }
+
+    public function message()
+    {
+        return '';
     }
 }

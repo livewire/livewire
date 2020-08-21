@@ -49,6 +49,8 @@ class LivewireServiceProvider extends ServiceProvider
 {
     public function register()
     {
+        $this->registerTestMacros();
+        $this->registerRouteMacros();
         $this->registerLivewireSingleton();
         $this->registerComponentAutoDiscovery();
     }
@@ -189,7 +191,7 @@ class LivewireServiceProvider extends ServiceProvider
             return $this;
         };
 
-   
+
         TestResponse::macro('assertDontSeeLivewire', $macro);
     }
 

@@ -108,6 +108,8 @@ trait ValidatesInput
 
         }
 
+        $result = $this->prepareForValidation($result);
+
         $result = Validator::make($result, Arr::only($rules, $fields), $messages, $attributes)
             ->validate();
 
@@ -159,5 +161,10 @@ trait ValidatesInput
         $this->resetErrorBag($field);
 
         return $result;
+    }
+
+    protected function prepareForValidation(array $attributes)
+    {
+        return $attributes;
     }
 }
