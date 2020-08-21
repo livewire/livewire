@@ -26,9 +26,10 @@ abstract class Component
 
     public $id;
 
-    protected $updatesQueryString = [];
+    protected $queryString = [];
     protected $computedPropertyCache = [];
     protected $initialLayoutConfiguration = [];
+    protected $shouldSkipRender = false;
 
     public function __construct($id = null)
     {
@@ -49,7 +50,7 @@ abstract class Component
             ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), app('router')))->retrieveBindings()
             : [];
 
-        $contents = Livewire::mount($this, $componentParams)->dom;
+        $contents = Livewire::mount($this, $componentParams)->effects['html'];
 
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
@@ -97,9 +98,30 @@ abstract class Component
         return $fullName;
     }
 
-    public function getUpdatesQueryString()
+    public function getFromQueryString()
     {
-        return $this->updatesQueryString;
+        return $this->queryString;
+    }
+
+    public function getFromQueryStringProperties()
+    {
+        return collect($this->getFromQueryString())
+            ->map(function ($value, $key) {
+                return is_string($key) ? $key : $value;
+            })
+            ->values()
+            ->toArray();
+    }
+
+    public function getFromQueryStringExcepts()
+    {
+        return collect($this->getFromQueryString())
+            ->filter(function ($value, $key) {
+                return is_array($value) && $value['except'];
+            })
+            ->mapWithKeys(function ($value, $key) {
+                return [$key => $value['except']];
+            })->toArray();
     }
 
     public function getCasts()
@@ -107,8 +129,15 @@ abstract class Component
         return $this->casts;
     }
 
+    public function skipRender()
+    {
+        $this->shouldSkipRender = true;
+    }
+
     public function output($errors = null)
     {
+        if ($this->shouldSkipRender) return null;
+
         // In the service provider, we hijack Laravel's Blade engine
         // with our own. However, we only want Livewire hijackings,
         // while we're rendering Livewire components. So we'll

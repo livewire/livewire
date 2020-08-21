@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Fluent;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Laravel\Dusk\Browser;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Exceptions\MountMethodMissingException;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
@@ -100,28 +101,31 @@ class LivewireManager
             $instance = $this->activate($name, $id);
         }
 
-        $this->initialHydrate($instance, []);
+        $request = new Request([
+            'fingerprint' => [
+                'id' => $id,
+                'name' => $name,
+                'locale' => app()->getLocale(),
+            ],
+            'updates' => [],
+            'serverMemo' => [],
+        ]);
+
+        $this->initialHydrate($instance, $request);
 
         $this->performMount($instance, $params);
 
-        $dom = $instance->output();
+        $html = $instance->output();
 
-        $response = new Fluent([
-            'id' => $id,
-            'name' => $name,
-            'dom' => $dom,
-            'meta' => [],
-        ]);
+        $response = Response::fromRequest($request, $html);
 
         $this->initialDehydrate($instance, $response);
 
-        $response->dom = (new AddAttributesToRootTagOfHtml)($response->dom, [
-            'initial-data' => array_diff_key($response->toArray(), array_flip(['dom'])),
-        ], $instance);
+        $response->embedThyselfInHtml();
 
         $this->dispatch('mounted', $response);
 
-        return $response;
+        return $response->toInitialResonse();
     }
 
     public function dummyMount($id, $tagName)
@@ -134,9 +138,11 @@ class LivewireManager
         return new TestableLivewire($name, $params);
     }
 
-    public function visit($browser, $class, $params = [])
+    public function visit($browser, $class, $queryString = '')
     {
-        return $browser->visit('/livewire-dusk/'.urlencode($class));
+        $url = '/livewire-dusk/'.urlencode($class).$queryString;
+
+        return $browser->visit($url);
     }
 
     public function actingAs(Authenticatable $user, $driver = null)
@@ -186,7 +192,7 @@ class LivewireManager
     {
         return <<<HTML
 <style>
-    [wire\:loading] {
+    [wire\:loading], [wire\:loading\.delay] {
         display: none;
     }
 
@@ -245,6 +251,7 @@ HTML;
     }
 
     window.livewire = new Livewire({$jsonEncodedOptions});
+    window.Livewire = window.livewire
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
 
@@ -276,7 +283,7 @@ HTML;
 
             const dataObject = {
                 data: component.data,
-                events: component.events,
+                events: component.listeners,
                 children: component.children,
                 checksum: component.checksum,
                 locale: component.locale,

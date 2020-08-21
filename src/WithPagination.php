@@ -8,9 +8,9 @@ trait WithPagination
 {
     public $page = 1;
 
-    public function getUpdatesQueryString()
+    public function getFromQueryString()
     {
-        return array_merge(['page' => ['except' => 1]], $this->updatesQueryString);
+        return array_merge(['page' => ['except' => 1]], $this->queryString);
     }
 
     public function initializeWithPagination()

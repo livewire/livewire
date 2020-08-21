@@ -9,17 +9,24 @@ test('can add custom directives', async () => {
     `
 
     var payload
-    window.livewire = new Livewire({ driver: {
-        onMessage: null,
-        init() {},
-        sendMessage(i) {
-            payload = i
+    window.livewire = new Livewire({
+        driver: {
+            onMessage: null,
+            init() {},
+            sendMessage(i) {
+                payload = i
+            },
         },
-    }})
+    })
 
     window.livewire.directive('foo', (el, directive, component) => {
         el.addEventListener('click', () => {
-            component.call('foo', directive.modifiers[0], directive.method, directive.params)
+            component.call(
+                'foo',
+                directive.modifiers[0],
+                directive.method,
+                directive.params
+            )
         })
     })
 
@@ -28,9 +35,9 @@ test('can add custom directives', async () => {
     document.querySelector('button').click()
 
     await wait(() => {
-        expect(payload.actionQueue[0].type).toEqual('callMethod')
-        expect(payload.actionQueue[0].payload.method).toEqual('foo')
-        expect(payload.actionQueue[0].payload.params).toEqual([
+        expect(payload.updateQueue[0].type).toEqual('callMethod')
+        expect(payload.updateQueue[0].payload.method).toEqual('foo')
+        expect(payload.updateQueue[0].payload.params).toEqual([
             'bar',
             'baz',
             ['bob', 'lob'],

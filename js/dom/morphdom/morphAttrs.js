@@ -34,6 +34,17 @@ export default function morphAttrs(fromNode, toNode) {
             fromValue = fromNode.getAttribute(attrName);
 
             if (fromValue !== attrValue) {
+                // @livewireModification: This is the case where we don't want morphdom to pre-emptively add
+                // a "display:none" if it's going to be transitioned out by Alpine.
+                if (
+                    attrName === 'style'
+                    && fromNode.__livewire_transition
+                    && /display: none;/.test(attrValue)
+                ) {
+                    delete fromNode.__livewire_transition
+                    attrValue = attrValue.replace('display: none;', '')
+                }
+
                 fromNode.setAttribute(attrName, attrValue);
             }
         }
@@ -57,6 +68,17 @@ export default function morphAttrs(fromNode, toNode) {
                 }
             } else {
                 if (!toNode.hasAttribute(attrName)) {
+                    // @livewireModification: This is the case where we don't want morphdom to pre-emptively remove
+                    // a "display:none" if it's going to be transitioned in by Alpine.
+                    if (
+                        attrName === 'style'
+                        && fromNode.__livewire_transition
+                        && /display: none;/.test(attr.value)
+                    ) {
+                        delete fromNode.__livewire_transition
+                        continue
+                    }
+
                     fromNode.removeAttribute(attrName);
                 }
             }

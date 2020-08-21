@@ -28,7 +28,7 @@ trait MakesAssertions
     {
         PHPUnit::assertStringContainsString(
             e($value),
-            $this->stripOutInitialData($this->payload['dom'])
+            $this->stripOutInitialData($this->lastRenderedDom)
         );
 
         return $this;
@@ -38,7 +38,7 @@ trait MakesAssertions
     {
         PHPUnit::assertStringNotContainsString(
             e($value),
-            $this->stripOutInitialData($this->payload['dom'])
+            $this->stripOutInitialData($this->lastRenderedDom)
         );
 
         return $this;
@@ -48,7 +48,7 @@ trait MakesAssertions
     {
         PHPUnit::assertStringContainsString(
             $value,
-            $this->stripOutInitialData($this->payload['dom'])
+            $this->stripOutInitialData($this->lastRenderedDom)
         );
 
         return $this;
@@ -58,7 +58,7 @@ trait MakesAssertions
     {
         PHPUnit::assertStringNotContainsString(
             $value,
-            $this->stripOutInitialData($this->payload['dom'])
+            $this->stripOutInitialData($this->lastRenderedDom)
         );
 
         return $this;
@@ -92,15 +92,15 @@ trait MakesAssertions
         $assertionSuffix = '.';
 
         if (empty($params)) {
-            $test = collect($this->payload['eventQueue'])->contains('event', '=', $value);
+            $test = collect($this->payload['effects']['emits'])->contains('event', '=', $value);
         } elseif (is_callable($params[0])) {
-            $event = collect($this->payload['eventQueue'])->first(function ($item) use ($value) {
+            $event = collect($this->payload['effects']['emits'])->first(function ($item) use ($value) {
                 return $item['event'] === $value;
             });
 
             $test = $event && $params[0]($event['event'], $event['params']);
         } else {
-            $test = !! collect($this->payload['eventQueue'])->first(function ($item) use ($value, $params) {
+            $test = !! collect($this->payload['effects']['emits'])->first(function ($item) use ($value, $params) {
                 return $item['event'] === $value
                     && $item['params'] === $params;
             });
@@ -119,15 +119,15 @@ trait MakesAssertions
         $assertionSuffix = '.';
 
         if (is_null($data)) {
-            $test = collect($this->payload['dispatchQueue'])->contains('event', '=', $name);
+            $test = collect($this->payload['effects']['dispatches'])->contains('event', '=', $name);
         } elseif (is_callable($data)) {
-            $event = collect($this->payload['dispatchQueue'])->first(function ($item) use ($name) {
+            $event = collect($this->payload['effects']['dispatches'])->first(function ($item) use ($name) {
                 return $item['event'] === $name;
             });
 
             $test = $event && $data($event['event'], $event['data']);
         } else {
-            $test = !! collect($this->payload['dispatchQueue'])->first(function ($item) use ($name, $data) {
+            $test = !! collect($this->payload['effects']['dispatches'])->first(function ($item) use ($name, $data) {
                 return $item['event'] === $name
                     && $item['data'] === $data;
             });
@@ -142,7 +142,7 @@ trait MakesAssertions
 
     public function assertHasErrors($keys = [])
     {
-        $errors = new MessageBag($this->payload['errorBag'] ?: []);
+        $errors = new MessageBag($this->payload['serverMemo']['errors'] ?: []);
 
         PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
 
@@ -169,7 +169,7 @@ trait MakesAssertions
 
     public function assertHasNoErrors($keys = [])
     {
-        $errors = new MessageBag($this->payload['errorBag'] ?: []);
+        $errors = new MessageBag($this->payload['serverMemo']['errors'] ?? []);
 
         if (empty($keys)) {
             PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors.');
@@ -201,12 +201,12 @@ trait MakesAssertions
     public function assertRedirect($uri = null)
     {
         PHPUnit::assertIsString(
-            $this->payload['redirectTo'],
+            $this->payload['effects']['redirect'],
             'Component did not perform a redirect.'
         );
 
         if (! is_null($uri)) {
-            PHPUnit::assertSame(url($uri), url($this->payload['redirectTo']));
+            PHPUnit::assertSame(url($uri), url($this->payload['effects']['redirect']));
         }
 
         return $this;

@@ -4,17 +4,19 @@ namespace Livewire;
 
 class ComponentChecksumManager
 {
-    public function generate($name, $id, $data, $meta)
+    public function generate($fingerprint, $memo)
     {
         $hashKey = app('encrypter')->getKey();
 
-        $stringForHashing = $name.$id.json_encode($data).json_encode($meta);
+        $stringForHashing = ''
+            .json_encode($fingerprint)
+            .json_encode($memo);
 
         return hash_hmac('sha256', $stringForHashing, $hashKey);
     }
 
-    public function check($checksum, $name, $id, $data, $meta)
+    public function check($checksum, $fingerprint, $memo)
     {
-        return hash_equals($this->generate($name, $id, $data, $meta), $checksum);
+        return hash_equals($this->generate($fingerprint, $memo), $checksum);
     }
 }

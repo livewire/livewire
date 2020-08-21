@@ -2,6 +2,7 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Livewire\Livewire;
 use Illuminate\Support\Str;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 
 trait HandlesActions
 {
-    public function syncInput($name, $value)
+    public function syncInput($name, $value, $rehash = true)
     {
         $propertyName = $this->beforeFirstDot($name);
 
@@ -22,8 +23,7 @@ trait HandlesActions
             new CannotBindToModelDataWithoutValidationRuleException($name, $this->getName())
         );
 
-        $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName) {
-            // @todo: this is fired even if a property isn't present at all which is confusing.
+        $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName, $rehash) {
             throw_unless(
                 $this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName),
                 new PublicPropertyNotFoundException($propertyName, $this->getName())
@@ -35,7 +35,7 @@ trait HandlesActions
                 $this->{$name} = $value;
             }
 
-            $this->rehashProperty($name);
+            $rehash && $this->rehashProperty($name);
         });
     }
 
@@ -66,16 +66,23 @@ trait HandlesActions
     public function callMethod($method, $params = [])
     {
         switch ($method) {
-            case '$set':
+            case '$sync':
                 $prop = array_shift($params);
                 $this->syncInput($prop, head($params));
 
                 return;
                 break;
 
+            case '$set':
+                $prop = array_shift($params);
+                $this->syncInput($prop, head($params), $rehash = false);
+
+                return;
+                break;
+
             case '$toggle':
                 $prop = array_shift($params);
-                $this->syncInput($prop, ! $this->{$prop});
+                $this->syncInput($prop, ! $this->{$prop}, $rehash = false);
 
                 return;
                 break;
@@ -93,7 +100,9 @@ trait HandlesActions
 
                 throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
 
-                ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
+                $returned = ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
+
+                Livewire::dispatch('action.returned', $this, $method, $returned);
 
                 break;
         }

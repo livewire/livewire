@@ -69,21 +69,29 @@ trait RegistersHydrationMiddleware
         return $this;
     }
 
-    public function performHydrateProperty($value, $property, $instance)
+    public function performHydrateProperty($value, $property, $instance, $request)
     {
         $valueMemo = $value;
+
         foreach ($this->propertyHydrationMiddleware as $callable) {
             $valueMemo  = $callable($valueMemo, $property, $instance);
         }
+
+        Livewire::dispatch('property.hydrate', $property, $valueMemo, $instance, $request);
+
         return $valueMemo;
     }
 
-    public function performDehydrateProperty($value, $property, $instance)
+    public function performDehydrateProperty($value, $property, $instance, $response)
     {
         $valueMemo = $value;
+
         foreach ($this->propertyDehydrationMiddleware as $callable) {
             $valueMemo  = $callable($valueMemo, $property, $instance);
         }
+
+        Livewire::dispatch('property.dehydrate', $property, $valueMemo, $instance, $response);
+
         return $valueMemo;
     }
 }

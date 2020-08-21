@@ -16,12 +16,12 @@ trait WithFileUploads
 
             $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
 
-            $this->emitSelf('upload:generatedSignedUrlForS3', $name, GenerateSignedUploadUrl::forS3($file));
+            $this->emit('upload:generatedSignedUrlForS3', $name, GenerateSignedUploadUrl::forS3($file))->self();
 
             return;
         }
 
-        $this->emitSelf('upload:generatedSignedUrl', $name, GenerateSignedUploadUrl::forLocal());
+        $this->emit('upload:generatedSignedUrl', $name, GenerateSignedUploadUrl::forLocal())->self();
     }
 
     public function finishUpload($name, $tmpPath, $isMultiple)
@@ -32,10 +32,10 @@ trait WithFileUploads
             $file = collect($tmpPath)->map(function ($i) {
                 return TemporaryUploadedFile::createFromLivewire($i);
             })->toArray();
-            $this->emitSelf('upload:finished', $name, collect($file)->map->getFilename()->toArray());
+            $this->emit('upload:finished', $name, collect($file)->map->getFilename()->toArray())->self();
         } else {
             $file = TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
-            $this->emitSelf('upload:finished', $name, [$file->getFilename()]);
+            $this->emit('upload:finished', $name, [$file->getFilename()])->self();
 
             // If the property is an array, but the upload ISNT set to "multiple"
             // then APPEND the upload to the array, rather than replacing it.
@@ -48,7 +48,7 @@ trait WithFileUploads
     }
 
     public function uploadErrored($name, $errorsInJson, $isMultiple) {
-        $this->emitSelf('upload:errored', $name);
+        $this->emit('upload:errored', $name)->self();
 
         if (is_null($errorsInJson)) {
             $genericValidationMessage = trans('validation.uploaded', ['attribute' => $name]);
@@ -70,7 +70,7 @@ trait WithFileUploads
         $uploads = $this->getPropertyValue($name);
 
         if (is_array($uploads) && isset($uploads[0]) && $uploads[0] instanceof TemporaryUploadedFile) {
-            $this->emitSelf('upload:removed', $name, $tmpFilename);
+            $this->emit('upload:removed', $name, $tmpFilename)->self();
 
             $this->syncInput($name, array_values(array_filter($uploads, function ($upload) use ($tmpFilename) {
                 if ($upload->getFilename() === $tmpFilename) {
@@ -83,7 +83,7 @@ trait WithFileUploads
         } elseif ($uploads instanceof TemporaryUploadedFile) {
             $uploads->delete();
 
-            $this->emitSelf('upload:removed', $name, $tmpFilename);
+            $this->emit('upload:removed', $name, $tmpFilename)->self();
 
             if ($uploads->getFilename() === $tmpFilename) $this->syncInput($name, null);
         }

@@ -18,6 +18,7 @@ class TestableLivewire
     public $componentName;
     public $lastValidator;
     public $lastRenderedView;
+    public $lastRenderedDom;
     public $lastResponse;
     public $rawMountedResponse;
 
@@ -59,29 +60,38 @@ class TestableLivewire
         $this->lastResponse = $this->pretendWereMountingAComponentOnAPage($name, $params);
 
         if (! $this->lastResponse->exception) {
-            $this->updateComponent($this->rawMountedResponse);
+            $this->updateComponent([
+                'fingerprint' => $this->rawMountedResponse->fingerprint,
+                'serverMemo' => $this->rawMountedResponse->memo,
+                'effects' => $this->rawMountedResponse->effects,
+            ]);
         }
     }
 
     public function updateComponent($output)
     {
-        $this->payload = [
-            'id' => $output->id,
-            'name' => $output->name,
-            'dom' => $output->dom,
-            'data' => $output->data,
-            'meta' => $output->meta,
-            'children' => $output->children,
-            'events' => $output->events,
-            'eventQueue' => $output->eventQueue,
-            'dispatchQueue' => $output->dispatchQueue,
-            'errorBag' => $output->errorBag,
-            'checksum' => $output->checksum,
-            'locale' => $output->locale,
-            'redirectTo' => $output->redirectTo,
-            'dirtyInputs' => $output->dirtyInputs,
-            'updatesQueryString' => $output->updatesQueryString,
-        ];
+        // Sometimes Livewire will skip rendering the DOM.
+        // We still want to be able to make assertions on
+        // the currently rendered DOM. So we will store
+        // the last known one.
+        if ($output['effects']['html'] ?? false) {
+            $this->lastRenderedDom = $output['effects']['html'];
+        }
+
+        if ($output['fingerprint'] ?? false) {
+            $this->payload['fingerprint'] = $output['fingerprint'];
+        }
+
+        foreach ($output['serverMemo'] as $key => $newValue) {
+            if (
+                ! isset($this->payload['serverMemo'][$key])
+                || $this->payload['serverMemo'][$key] !== $newValue
+            ) {
+                $this->payload['serverMemo'][$key] = $newValue;
+            }
+        }
+
+        $this->payload['effects'] = $output['effects'];
     }
 
     public function pretendWereMountingAComponentOnAPage($name, $params)
@@ -132,15 +142,9 @@ class TestableLivewire
     public function pretendWereSendingAComponentUpdateRequest($message, $payload)
     {
         return $this->callEndpoint('POST', '/livewire/message/'.$this->componentName, [
-            'id' => $this->payload['id'],
-            'name' => $this->payload['name'],
-            'data' => $this->payload['data'],
-            'meta' => $this->payload['meta'],
-            'children' => $this->payload['children'],
-            'checksum' => $this->payload['checksum'],
-            'locale' => $this->payload['locale'],
-            'errorBag' => $this->payload['errorBag'],
-            'actionQueue' => [['type' => $message, 'payload' => $payload]],
+            'fingerprint' => $this->payload['fingerprint'],
+            'serverMemo' => $this->payload['serverMemo'],
+            'updates' => [['type' => $message, 'payload' => $payload]],
         ]);
     }
 
@@ -159,7 +163,7 @@ class TestableLivewire
 
     public function id()
     {
-        return $this->payload['id'];
+        return $this->payload['fingerprint']['id'];
     }
 
     public function instance()
@@ -174,7 +178,7 @@ class TestableLivewire
 
     public function get($property)
     {
-        return data_get($this->payload['data'], $property);
+        return data_get($this->payload['serverMemo']['data'], $property);
     }
 
     public function __get($property)

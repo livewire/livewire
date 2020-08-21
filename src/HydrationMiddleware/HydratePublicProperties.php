@@ -8,7 +8,7 @@ class HydratePublicProperties implements HydrationMiddleware
 {
     public static function hydrate($unHydratedInstance, $request)
     {
-        $publicProperties = $request['data'];
+        $publicProperties = $request->memo['data'];
 
         foreach ($publicProperties as $property => $value) {
             $unHydratedInstance->$property = $value;
@@ -26,6 +26,6 @@ class HydratePublicProperties implements HydrationMiddleware
             );
         });
 
-        $response->data = json_decode(json_encode($publicData), true);
+        $response->memo['data'] = json_decode(json_encode($publicData), true);
     }
 }

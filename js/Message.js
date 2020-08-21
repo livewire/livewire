@@ -1,60 +1,42 @@
-import store from '@/Store'
-
 export default class {
-    constructor(component, actionQueue) {
+    constructor(component, updateQueue) {
         this.component = component
-        this.actionQueue = actionQueue
-    }
-
-    get refs() {
-        return this.actionQueue
-            .map(action => {
-                return action.ref
-            })
-            .filter(ref => ref)
+        this.updateQueue = updateQueue
     }
 
     payload() {
-        let payload = {
-            id: this.component.id,
-            data: this.component.data,
-            meta: this.component.meta,
-            name: this.component.name,
-            checksum: this.component.checksum,
-            locale: this.component.locale,
-            children: this.component.children,
-            actionQueue: this.actionQueue.map(action => {
-                // This ensures only the type & payload properties only get sent over.
-                return {
-                    type: action.type,
-                    payload: action.payload,
-                }
-            }),
+        return {
+            fingerprint: this.component.fingerprint,
+            serverMemo: this.component.serverMemo,
+            // This ensures only the type & payload properties only get sent over.
+            updates: this.updateQueue.map(update => ({
+                type: update.type,
+                payload: update.payload,
+            })),
         }
-
-        if (Object.keys(this.component.errorBag).length > 0) {
-            payload.errorBag = this.component.errorBag
-        }
-
-        return payload
     }
 
     storeResponse(payload) {
-        return this.response = {
-            id: payload.id,
-            dom: payload.dom,
-            checksum: payload.checksum,
-            locale: payload.locale,
-            children: payload.children,
-            dirtyInputs: payload.dirtyInputs,
-            eventQueue: payload.eventQueue,
-            dispatchQueue: payload.dispatchQueue,
-            events: payload.events,
-            data: payload.data,
-            meta: payload.meta,
-            redirectTo: payload.redirectTo,
-            errorBag: payload.errorBag || {},
-            updatesQueryString: payload.updatesQueryString,
-        }
+        return (this.response = payload)
+    }
+
+    resolve() {
+        let returns = this.response.effects.returns || []
+
+        this.updateQueue.forEach(update => {
+            if (update.type !== 'callMethod') return
+
+            update.resolve(
+                returns[update.method] !== undefined
+                    ? returns[update.method]
+                    : null
+            )
+        })
+    }
+
+    reject() {
+        this.updateQueue.forEach(update => {
+            update.reject()
+        })
     }
 }

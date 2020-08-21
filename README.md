@@ -22,16 +22,10 @@ Livewire uses semantic versioning and will use the following release schedule st
 > Important Note: All "major" versions will be tagged alongside Laravel's major version release schedule (every 6 months). That does not mean Livewire will release a major version every 6 months, just that when it DOES release a major version, it will coincide with a Laravel release.
 
 ## Roadmap
-* Add a `$formData` magic property to pass into submit handler actions: `wire:submit="save($formData)"`
 * Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
-* Remove `wire:poll` setIntervals an element is removed, or when the attribute is removed. #563
-* Implement `wire:model.defer`
 * Add `wire:append` for appending DOM changes rather than replacing them
-* Allow traits to hook into all lifecycle hooks
 
 ## V2 Roadmap
-* Change all in-code references of `livewire` to `wire`? `@wire('foo')`, `artisan wire:make`, `<wire:foo>`
-* Change `window.livewire` to `window.Livewire` (And update Alpine to adapt)
 * Make `->getName()` in `src/Component.php` a static method
 * Use camel-cased accessors for snake-cased properties ($this->foo_bar -> $this->getFooBarProperty) (PR ready here: #690)
 * Maybe remove base `render()` method to allow for DI in method params (PR here: #893)
