@@ -19,7 +19,7 @@ class GenerateSignedUploadUrl
     {
         $this->ensureEnvironmentVariablesAreAvailable();
 
-        $bucket = $_ENV['AWS_BUCKET'];
+        $bucket = env('AWS_BUCKET');
 
         $fileType = $file->getMimeType();
 
@@ -67,14 +67,16 @@ class GenerateSignedUploadUrl
 
     protected function ensureEnvironmentVariablesAreAvailable()
     {
-        $missing = array_diff_key(array_flip(array_filter([
+        $unavailableVariables = array_filter([
             'AWS_BUCKET',
             'AWS_DEFAULT_REGION',
             'AWS_ACCESS_KEY_ID',
-            'AWS_SECRET_ACCESS_KEY'
-        ])), $_ENV);
+            'AWS_SECRET_ACCESS_KEY',
+        ], function ($variable) {
+            return (bool) ! env($variable);
+        });
 
-        if (empty($missing)) {
+        if (empty($unavailableVariables)) {
             return;
         }
 
@@ -86,17 +88,17 @@ class GenerateSignedUploadUrl
     protected function storageClient()
     {
         $config = [
-            'region' => $_ENV['AWS_DEFAULT_REGION'],
+            'region' => env('AWS_DEFAULT_REGION'),
             'version' => 'latest',
             'signature_version' => 'v4',
         ];
 
-        if (! isset($_ENV['AWS_LAMBDA_FUNCTION_VERSION'])) {
+        if (! env('AWS_LAMBDA_FUNCTION_VERSION')) {
             $config['credentials'] = array_filter([
-                'key' => $_ENV['AWS_ACCESS_KEY_ID'] ?? null,
-                'secret' => $_ENV['AWS_SECRET_ACCESS_KEY'] ?? null,
-                'token' => $_ENV['AWS_SESSION_TOKEN'] ?? null,
-                'url' => $_ENV['AWS_URL'] ?? null,
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'token' => env('AWS_SESSION_TOKEN'),
+                'url' => env('AWS_URL'),
             ]);
         }
 

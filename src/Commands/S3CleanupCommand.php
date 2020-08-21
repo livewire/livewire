@@ -55,7 +55,7 @@ class S3CleanupCommand extends Command
         $config['credentials'] = array_filter([
             'key' => $diskConfig['key'] ?? null,
             'secret' => $diskConfig['secret'] ?? null,
-            'token' => $_ENV['AWS_SESSION_TOKEN'] ?? null,
+            'token' => env('AWS_SESSION_TOKEN'),
             'url' => $diskConfig['url'] ?? null,
         ]);
 
