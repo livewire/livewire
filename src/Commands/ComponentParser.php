@@ -127,16 +127,14 @@ class ComponentParser
 
     public function viewContents()
     {
-        if(File::exists($stubPath = base_path('stubs/livewire.view.stub'))) {
-            $template = file_get_contents($stubPath);
-        } else {
-            $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'livewire.view.stub');
+        if( ! File::exists($stubPath = base_path('stubs/livewire.view.stub'))) {
+            $stubPath = __DIR__.DIRECTORY_SEPARATOR.'livewire.view.stub';
         }
 
         return preg_replace(
             '/\[quote\]/',
             $this->wisdomOfTheTao(),
-            $template
+            file_get_contents($stubPath)
         );
     }
 
