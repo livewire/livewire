@@ -26,7 +26,7 @@ abstract class Component
 
     public $id;
 
-    protected $fromQueryString = [];
+    protected $queryString = [];
     protected $computedPropertyCache = [];
     protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
@@ -100,7 +100,7 @@ abstract class Component
 
     public function getFromQueryString()
     {
-        return $this->fromQueryString;
+        return $this->queryString;
     }
 
     public function getFromQueryStringProperties()
