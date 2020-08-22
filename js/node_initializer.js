@@ -230,6 +230,27 @@ export default {
                     return
                 }
 
+                if (method === '$emitLater') {
+                    component.scopedListeners.call(...params)
+                    store.emitLater(...params)
+                    return
+                }
+
+                if (method === '$emitUpLater') {
+                    store.emitUpLater(el, ...params)
+                    return
+                }
+
+                if (method === '$emitSelfLater') {
+                    store.emitSelfLater(component.id, ...params)
+                    return
+                }
+
+                if (method === '$emitToLater') {
+                    store.emitToLater(...params)
+                    return
+                }
+
                 if (directive.value) {
                     component.addAction(new MethodAction(method, params, el))
                 }

@@ -83,6 +83,22 @@ const store = {
         })
     },
 
+    emitLater(event, delay, ...params) {
+        setTimeout(() => this.emit(event, ...params), delay)
+    },
+
+    emitUpLater(el, event, delay, ...params) {
+        setTimeout(() => this.emitUp(el, event, ...params), delay)
+    },
+
+    emitSelfLater(componentId, event, delay, ...params) {
+        setTimeout(() => this.emitSelf(componentId, event, ...params), delay)
+    },
+
+    emitToLater(componentName, event, delay, ...params) {
+        setTimeout(() => this.emitTo(componentName, event, ...params), delay)
+    },
+
     componentsListeningForEventThatAreTreeAncestors(el, event) {
         var parentIds = []
 

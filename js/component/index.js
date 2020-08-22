@@ -190,13 +190,29 @@ export default class Component {
                 this.scopedListeners.call(event.event, ...event.params)
 
                 if (event.selfOnly) {
-                    store.emitSelf(this.id, event.event, ...event.params)
+                    if (event.delay) {
+                        store.emitSelfLater(this.id, event.event, event.delay, ...event.params)
+                    } else {
+                        store.emitSelf(this.id, event.event, ...event.params)
+                    }
                 } else if (event.to) {
-                    store.emitTo(event.to, event.event, ...event.params)
+                    if (event.delay) {
+                        store.emitToLater(event.to, event.event, event.delay, ...event.params)
+                    } else {
+                        store.emitTo(event.to, event.event, ...event.params)
+                    }
                 } else if (event.ancestorsOnly) {
-                    store.emitUp(this.el, event.event, ...event.params)
+                    if (event.delay) {
+                        store.emitUpLater(this.el, event.event, event.delay, ...event.params)
+                    } else {
+                        store.emitUp(this.el, event.event, ...event.params)
+                    }
                 } else {
-                    store.emit(event.event, ...event.params)
+                    if (event.delay) {
+                        store.emitLater(event.event, event.delay, ...event.params)
+                    } else {
+                        store.emit(event.event, ...event.params)
+                    }
                 }
             })
         }

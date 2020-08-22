@@ -8,7 +8,8 @@ trait ReceivesEvents
     protected $dispatchQueue = [];
     protected $listeners = [];
 
-    protected function getListeners() {
+    protected function getListeners()
+    {
         return $this->listeners;
     }
 
@@ -44,6 +45,45 @@ trait ReceivesEvents
             'event' => $event,
             'params' => $params,
             'to' => $name,
+        ];
+    }
+
+    public function emitLater($event, $delay, ...$params)
+    {
+        $this->eventQueue[] = [
+            'event' => $event,
+            'params' => $params,
+            'delay' => $delay,
+        ];
+    }
+
+    public function emitUpLater($event, $delay, ...$params)
+    {
+        $this->eventQueue[] = [
+            'event' => $event,
+            'params' => $params,
+            'ancestorsOnly' => true,
+            'delay' => $delay,
+        ];
+    }
+
+    public function emitSelfLater($event, $delay, ...$params)
+    {
+        $this->eventQueue[] = [
+            'event' => $event,
+            'params' => $params,
+            'selfOnly' => true,
+            'delay' => $delay,
+        ];
+    }
+
+    public function emitToLater($name, $event, $delay, ...$params)
+    {
+        $this->eventQueue[] = [
+            'event' => $event,
+            'params' => $params,
+            'to' => $name,
+            'delay' => $delay,
         ];
     }
 

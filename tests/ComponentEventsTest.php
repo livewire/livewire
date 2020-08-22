@@ -54,6 +54,10 @@ class ComponentEventsTest extends TestCase
         $component->runAction('emitGoo');
 
         $this->assertTrue(in_array(['event' => 'goo', 'params' => ['car']], $component->payload['eventQueue']));
+
+        $component->runAction('emitGooLater');
+
+        $this->assertTrue(in_array(['event' => 'goo', 'params' => ['car'], 'delay' => 100], $component->payload['eventQueue']));
     }
 
     /** @test */
@@ -64,6 +68,10 @@ class ComponentEventsTest extends TestCase
         $component->runAction('emitUpGoo');
 
         $this->assertTrue(in_array(['ancestorsOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->payload['eventQueue']));
+
+        $component->runAction('emitUpGooLater');
+
+        $this->assertTrue(in_array(['ancestorsOnly' => true, 'event' => 'goo', 'params' => ['car'], 'delay' => 100], $component->payload['eventQueue']));
     }
 
     /** @test */
@@ -74,6 +82,10 @@ class ComponentEventsTest extends TestCase
         $component->runAction('emitSelfGoo');
 
         $this->assertTrue(in_array(['selfOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->payload['eventQueue']));
+
+        $component->runAction('emitSelfGooLater');
+
+        $this->assertTrue(in_array(['selfOnly' => true, 'event' => 'goo', 'params' => ['car'], 'delay' => 100], $component->payload['eventQueue']));
     }
 
     /** @test */
@@ -84,6 +96,10 @@ class ComponentEventsTest extends TestCase
         $component->runAction('emitToGooGone');
 
         $this->assertTrue(in_array(['to' => 'goo', 'event' => 'gone', 'params' => ['car']], $component->payload['eventQueue']));
+
+        $component->runAction('emitToGooGoneLater');
+
+        $this->assertTrue(in_array(['to' => 'goo', 'event' => 'gone', 'params' => ['car'], 'delay' => 100], $component->payload['eventQueue']));
     }
 
     /** @test */
@@ -135,6 +151,26 @@ class ReceivesEvents extends Component
     public function emitToGooGone()
     {
         $this->emitTo('goo', 'gone', 'car');
+    }
+
+    public function emitGooLater()
+    {
+        $this->emitLater('goo', 100, 'car');
+    }
+
+    public function emitUpGooLater()
+    {
+        $this->emitUpLater('goo', 100, 'car');
+    }
+
+    public function emitSelfGooLater()
+    {
+        $this->emitSelfLater('goo', 100, 'car');
+    }
+
+    public function emitToGooGoneLater()
+    {
+        $this->emitToLater('goo', 'gone', 100, 'car');
     }
 
     public function render()
