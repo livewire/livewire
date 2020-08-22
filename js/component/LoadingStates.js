@@ -182,7 +182,11 @@ function endLoading(els) {
                 el.removeAttribute(directive.value)
             }
         } else {
-            el.style.display = 'none'
+            if (directive.modifiers.includes('remove')) {
+                el.style.display = 'inline-block'
+            } else {
+                el.style.display = 'none'
+            }
         }
     })
 }
