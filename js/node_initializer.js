@@ -95,7 +95,9 @@ export default {
                 const el = new DOMElement(e.target)
                 // We have to check for typeof e.detail here for IE 11.
                 const value =
-                    e instanceof CustomEvent && typeof e.detail != 'undefined' && window.document.documentMode == 'undefined'
+                    e instanceof CustomEvent &&
+                    typeof e.detail != 'undefined' &&
+                    typeof window.document.documentMode == 'undefined'
                         ? e.detail
                         : el.valueFromInput(component)
 
@@ -147,9 +149,8 @@ export default {
                     // Strip 'debounce' modifier and time modifiers from modifiers list
                     let modifiers = directive.modifiers.filter(modifier => {
                         return (
-                            !modifier.match(/debounce/) &&
-                            !modifier.match(/[0-9ms]/) &&
-                            !modifier.match(/[0-9s]/)
+                            !modifier.match(/^debounce$/) &&
+                            !modifier.match(/^[0-9]+m?s$/)
                         )
                     })
 

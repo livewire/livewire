@@ -52,7 +52,12 @@ export default class {
             const $event = this.eventContext
             method = methodAndParamString[1]
             // use a function that returns it's arguments to parse and eval all params
-            params = eval('((...params) => [...params])(' + methodAndParamString[2] + ')')
+            params = eval(`(function () {
+                for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
+                    p[k] = arguments[k];
+                }
+                return [].concat(p);
+            })(${methodAndParamString[2]})`)
         }
 
         return { method, params }

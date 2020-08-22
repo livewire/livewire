@@ -6,7 +6,6 @@ use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\View;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
@@ -56,7 +55,6 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
             'bob' => 'lob',
             0 => 'bar',
             'abob' => 'lob',
-            2 => 'baz',
         ];
 
         $foo = Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])
@@ -65,7 +63,6 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
         $this->assertSame([
             0 => 'bar',
             1 => 'foo',
-            2 => 'baz',
             'bob' => 'lob',
             'abob' => 'lob',
         ], $foo);

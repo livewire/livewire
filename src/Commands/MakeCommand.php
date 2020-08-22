@@ -30,22 +30,21 @@ class MakeCommand extends FileManipulationCommand
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
 
         $class = $this->createClass($force, $inline);
-
-        if (! $inline) {
-            $view = $this->createView($force);
-        }
+        $view = $this->createView($force, $inline);
 
         $this->refreshComponentAutodiscovery();
 
-        $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
-        $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");
+        if($class || $view) {
+            $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
+            $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");
 
-        if (! $inline) {
-            $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
-        }
+            if (! $inline) {
+                $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
+            }
 
-        if ($showWelcomeMessage && ! app()->environment('testing')) {
-            $this->writeWelcomeMessage();
+            if ($showWelcomeMessage && ! app()->environment('testing')) {
+                $this->writeWelcomeMessage();
+            }
         }
     }
 
@@ -67,8 +66,11 @@ class MakeCommand extends FileManipulationCommand
         return $classPath;
     }
 
-    protected function createView($force = false)
+    protected function createView($force = false, $inline = false)
     {
+        if ($inline) {
+            return false;
+        }
         $viewPath = $this->parser->viewPath();
 
         if (File::exists($viewPath) && ! $force) {

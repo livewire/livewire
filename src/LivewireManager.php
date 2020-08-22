@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Support\Str;
 use Illuminate\Support\Fluent;
 use Illuminate\Foundation\Application;
+use Illuminate\Validation\ValidationException;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
@@ -106,9 +107,15 @@ class LivewireManager
 
         $this->ensureComponentHasMountMethod($instance, $resolvedParameters);
 
-        $instance->mount(...$resolvedParameters);
+        try {
+            $instance->mount(...$resolvedParameters);
+        } catch (ValidationException $e) {
+            Livewire::dispatch('failed-validation', $e->validator);
 
-        $dom = $instance->output();
+            $errors = $e->validator->errors();
+        }
+
+        $dom = $instance->output($errors ?? null);
 
         $response = new Fluent([
             'id' => $id,

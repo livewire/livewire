@@ -170,14 +170,14 @@ export default class Component {
         this.children = response.children
         this.errorBag = response.errorBag
 
+        store.callHook('responseReceived', this, response)
+
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.redirectTo) {
             this.redirect(response.redirectTo)
 
             return
         }
-
-        store.callHook('responseReceived', this, response)
 
         this.replaceDom(response.dom, response.dirtyInputs)
 
@@ -319,15 +319,14 @@ export default class Component {
                 const fromEl = new DOMElement(from)
                 this.beforeElUpdatedDirectives = fromEl.directives
 
-                // Set the value of wire:model on select elements in the
+                // Reset the index of wire:modeled select elements in the
                 // "to" node before doing the diff, so that the options
                 // have the proper in-memory .selected value set.
                 if (
                     fromEl.hasAttribute('model') &&
                     fromEl.rawNode().tagName.toUpperCase() === 'SELECT'
                 ) {
-                    const toEl = new DOMElement(to)
-                    toEl.setInputValueFromModel(this)
+                    to.selectedIndex = -1
                 }
 
                 // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
