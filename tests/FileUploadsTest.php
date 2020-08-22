@@ -246,7 +246,7 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function a_file_can_be_valited_in_real_time()
+    public function a_file_can_be_validated_in_real_time()
     {
         Storage::fake('avatars');
 
@@ -258,7 +258,7 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function multiple_files_can_be_valited_in_real_time()
+    public function multiple_files_can_be_validated_in_real_time()
     {
         Storage::fake('avatars');
 
@@ -417,6 +417,26 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function can_preview_a_temporary_file_while_there_are_validation_errors_on_other_properties()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->set('storedFilename', null)
+            ->assertHasErrors(['storedFilename' => 'required'])
+            ->viewData('photo');
+
+        ob_start();
+        $this->get($photo->temporaryUrl())->sendContent();
+        $rawFileContents = ob_get_clean();
+
+        $this->assertEquals($file->get(), $rawFileContents);
+    }
+
+    /** @test */
     public function file_paths_cant_include_slashes_which_would_allow_them_to_access_other_private_directories()
     {
         $this->expectException(LogicException::class);
@@ -506,6 +526,11 @@ class FileUploadComponent extends Component
     public function updatedPhotos()
     {
         $this->validate(['photos.*' => 'image|max:300']);
+    }
+
+    public function updatedStoredFilename()
+    {
+        $this->validate(['storedFilename' => 'required']);
     }
 
     public function upload($name)
