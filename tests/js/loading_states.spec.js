@@ -305,7 +305,7 @@ test('do nothing when the loading class is empty when adding classes', async () 
 })
 
 test('do nothing when the loading class is empty when removing classes', async () => {
-    mount('<button wire:click="onClick"></button><span class="foo" wire:loading.remove.class=""></span>')
+    mount('<button wire:click="onClick"></button><span class="foo" wire:loading.class.remove=""></span>')
 
     document.querySelector('button').click()
 
