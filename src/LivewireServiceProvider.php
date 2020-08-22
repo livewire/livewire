@@ -261,12 +261,12 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ RegisterEventsBeingListenedFor::class,              /* ^ */
         /* v */ RegisterEmittedEvents::class,                       /* ^ */
         /* v */ PersistLocale::class,                               /* ^ */
-        /* v */ PersistErrorBag::class,                             /* ^ */
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
         /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
-        /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
         /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
+        /* v */ PersistErrorBag::class,                             /* ^ */
+        /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
         /* v */ CastPublicProperties::class,                        /* ^ */
         /* v */ HydratePreviouslyRenderedChildren::class,           /* ^ */
         /* v */ InterceptRedirects::class,                          /* ^ */
