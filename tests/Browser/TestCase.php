@@ -55,6 +55,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Init\Component::class);
             app('livewire')->component(\Tests\Browser\Dirty\Component::class);
             app('livewire')->component(\Tests\Browser\Alpine\Component::class);
+            app('livewire')->component(\Tests\Browser\Hooks\Component::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
