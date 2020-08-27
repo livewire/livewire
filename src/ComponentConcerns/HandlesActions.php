@@ -91,6 +91,10 @@ trait HandlesActions
                 return;
                 break;
 
+            case '$reset':
+                $this->reset();
+                break;
+
             default:
                 if (! method_exists($this, $method)) {
                     throw_if($method === 'startUpload', new MissingFileUploadsTraitException($this));
