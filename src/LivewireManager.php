@@ -259,7 +259,7 @@ HTML;
     }
 
     window.livewire = new Livewire({$jsonEncodedOptions});
-    window.Livewire = window.livewire
+    window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
 
