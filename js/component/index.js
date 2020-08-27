@@ -611,7 +611,7 @@ export default class Component {
                 }
 
                 // Forward public API methods right away.
-                if (['get', 'set', 'call', 'on'].includes(property)) {
+                if (['get', 'set', 'call', 'on', 'upload', 'uploadMultiple', 'removeUpload'].includes(property)) {
                     return function (...args) {
                         return component[property].apply(component, args)
                     }
