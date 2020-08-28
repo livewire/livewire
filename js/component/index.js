@@ -634,8 +634,10 @@ export default class Component {
             },
 
             set: function (obj, prop, value) {
-                // This prevents a "blip" when using x-model to set a Livewire property.
-                Alpine.ignoreFocusedForValueBinding = true
+                if (window.Alpine) {
+                    // This prevents a "blip" when using x-model to set a Livewire property.
+                    Alpine.ignoreFocusedForValueBinding = true
+                }
 
                 component.set(prop, value)
 
