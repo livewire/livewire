@@ -53,6 +53,7 @@ export default class {
             redirectTo: payload.redirectTo,
             errorBag: payload.errorBag || {},
             updatesQueryString: payload.updatesQueryString,
+            historyPath: payload.historyPath,
         }
     }
 }
