@@ -70,19 +70,23 @@ trait ValidatesInput
 
     public function rulesForModel($name)
     {
-        if (empty($this->rules)) return collect();
-
-        return collect($this->rules)
-            ->filter(function ($value, $key) use ($name) {
-                return $this->beforeFirstDot($key) === $name;
-            });
+        try {
+            return collect($this->rules())
+                ->filter(function ($value, $key) use ($name) {
+                    return $this->beforeFirstDot($key) === $name;
+                });
+        } catch (MissingRulesPropertyException $ex) {
+            return collect();
+        }
     }
 
     public function missingRuleFor($key)
     {
-        if (! property_exists($this, 'rules')) return true;
-
-        return ! in_array($key, array_keys($this->rules));
+        try {
+            return ! in_array($key, array_keys($this->rules()));
+        } catch (MissingRulesPropertyException $ex) {
+            return true;
+        }
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])
@@ -105,7 +109,6 @@ trait ValidatesInput
 
             $result[$propertyNameFromValidationField] = $value instanceof Model
                 ? $value->toArray() : $value;
-
         }
 
         $result = $this->prepareForValidation($result);
