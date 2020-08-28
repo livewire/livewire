@@ -80,6 +80,7 @@ class TestableLivewire
             'redirectTo' => $output->redirectTo,
             'dirtyInputs' => $output->dirtyInputs,
             'updatesQueryString' => $output->updatesQueryString,
+            'historyPath' => $output->historyPath,
         ];
     }
 

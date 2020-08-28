@@ -75,6 +75,11 @@ abstract class Component
     {
         return $this->updatesQueryString;
     }
+    
+    public function mapStateToUrl()
+    {
+    	return null;
+    }
 
     public function getCasts()
     {

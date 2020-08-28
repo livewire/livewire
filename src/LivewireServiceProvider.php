@@ -39,6 +39,7 @@ use Livewire\HydrationMiddleware\{
     ForwardPrefetch,
     PersistErrorBag,
     UpdateQueryString,
+    UpdateHistoryPath,
     InterceptRedirects,
     CastPublicProperties,
     RegisterEmittedEvents,
@@ -273,6 +274,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ PrioritizeDataUpdatesBeforeActionCalls::class,      /* ^ */
         /* v */ ForwardPrefetch::class,                             /* ^ */
         /* v */ UpdateQueryString::class,                           /* ^ */
+        /* v */ UpdateHistoryPath::class,                           /* ^ */
         ]);
 
         Livewire::registerInitialHydrationMiddleware([
