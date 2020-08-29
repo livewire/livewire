@@ -12,7 +12,8 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
-                ->assertTrue();
+                //
+            ;
         });
     }
 }
