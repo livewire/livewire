@@ -179,16 +179,21 @@ function startLoading(els) {
                 () => el.removeAttribute(directive.value)
             )
         } else {
-            let cache = el.style.display
-            let target = directive.modifiers.includes('remove')
-                ? 'none'
-                : 'inline-block'
+            let cache = window
+                .getComputedStyle(el, null)
+                .getPropertyValue('display')
 
             doAndSetCallbackOnElToUndo(
                 el,
                 directive,
-                () => (el.style.display = target),
-                () => (el.style.display = cache)
+                () => {
+                    el.style.display = directive.modifiers.includes('remove')
+                        ? cache
+                        : 'inline-block'
+                },
+                () => {
+                    el.style.display = 'none'
+                }
             )
         }
     })

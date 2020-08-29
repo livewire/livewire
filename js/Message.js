@@ -16,6 +16,10 @@ export default class {
         }
     }
 
+    shouldSkipWatcher() {
+        return this.updateQueue.every(update => update.skipWatcher)
+    }
+
     storeResponse(payload) {
         return (this.response = payload)
     }

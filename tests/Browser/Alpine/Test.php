@@ -67,6 +67,18 @@ class Test extends TestCase
                 ->click('@bob.button.promise')
                 ->waitForLivewire()
                 ->assertSeeIn('@bob.output', '2')
+
+                /**
+                 * $wire.entangle
+                 */
+                ->assertSeeIn('@lob.output', '6')
+                ->click('@lob.increment')
+                ->assertSeeIn('@lob.output', '6')
+                ->waitForLivewire()
+                ->assertSeeIn('@lob.output', '7')
+                ->click('@lob.decrement')
+                ->waitForLivewire()
+                ->assertSeeIn('@lob.output', '6')
                 ;
         });
     }

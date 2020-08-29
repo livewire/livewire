@@ -12,7 +12,7 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class, '?foo=baz')
-                /**
+                /*
                  * Check that the intial property value is set from the query string.
                  */
                 ->assertSeeIn('@output', 'baz')

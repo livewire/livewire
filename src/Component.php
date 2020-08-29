@@ -117,7 +117,7 @@ abstract class Component
     {
         return collect($this->getFromQueryString())
             ->filter(function ($value, $key) {
-                return is_array($value) && $value['except'];
+                return is_array($value) && isset($value['except']);
             })
             ->mapWithKeys(function ($value, $key) {
                 return [$key => $value['except']];

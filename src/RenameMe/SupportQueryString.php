@@ -17,7 +17,7 @@ class SupportQueryString
                  $fromQueryString = request()->query($property);
 
                  if ($fromQueryString !== null) {
-                    $component->$property = json_decode($fromQueryString);
+                    $component->$property = ($decoded = json_decode($fromQueryString)) === null ? $fromQueryString : $decoded;
                  }
             }
         });
