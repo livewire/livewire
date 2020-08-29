@@ -2,9 +2,9 @@
 
 namespace Tests\Browser\Loading;
 
+use Laravel\Dusk\Browser;
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Loading\Component;
 
 class Test extends TestCase
 {
@@ -12,58 +12,44 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
-                ->tap(function ($browser) {
-                    $browser->assertNotVisible('@show');
-                    $browser->assertVisible('@hide');
-
-                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
-                })
-                ->waitForLivewire(function ($browser) {
+                ->tap($this->initialState())
+                ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@button');
 
                     $browser->assertVisible('@show');
                     $browser->assertNotVisible('@hide');
 
-                    $this->assertEquals('foo', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-class')->getAttribute('class'));
+                    $browser->assertHasClass('@add-class', 'foo');
+                    $browser->assertMissingClass('@remove-class', 'hidden');
 
-                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+                    $browser->assertAttribute('@add-attr', 'disabled', 'true');
+                    $browser->assertAttributeMissing('@remove-attr', 'disabled');
 
                     $browser->assertNotVisible('@targeting');
                 })
-                ->tap(function ($browser) {
-                    $browser->assertNotVisible('@show');
-                    $browser->assertVisible('@hide');
-
-                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
-                })
-                ->waitForLivewire(function ($browser) {
+                ->tap($this->initialState())
+                ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@target-button');
 
                     $browser->assertVisible('@targeting');
-                });
+                })
+            ;
         });
+    }
+
+    protected function initialState()
+    {
+        return function (Browser $browser) {
+            $browser->assertNotVisible('@show');
+            $browser->assertVisible('@hide');
+
+            $browser->assertAttribute('@add-class', 'class', '');
+            $browser->assertAttribute('@remove-class', 'class', 'foo');
+
+            $browser->assertAttributeMissing('@add-attr', 'disabled');
+            $browser->assertAttribute('@remove-attr', 'disabled', 'true');
+
+            $browser->assertNotVisible('@targeting');
+        };
     }
 }
