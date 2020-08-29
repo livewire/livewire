@@ -1,11 +1,5 @@
-import { mount, mountAsRoot, mountAsRootAndReturn } from './utils'
+import { mountAsRoot, mountAsRootAndReturn } from './utils'
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-test('polling will stop if component is conditionally removed', async () => {
-    // @todo: This assertion is hard to make given the current testing utilities.
-    // Leaving this here so that we're aware of the need for it.
-    expect(true).toBeTruthy()
-})
 
 test('polling will stop if directive is removed', async () => {
     var pollCount = 0

@@ -15,22 +15,33 @@ class Test extends TestCase
                 /**
                  * polling is disabled if livewire is offline
                  */
-                ->assertSeeIn('@output', '1')->tap(function (Browser $browser) {
+                ->assertSeeIn('@output', '1')
+                ->tap(function (Browser $browser) {
                     $browser->offline();
-                    usleep(85 * 1000);
+                    $browser->pause(85);
                     $browser->assertSeeIn('@output', '1');
+                    $browser->online();
                 })
 
                 /**
                  * polling without specifying method refreshes by default
                  */
                 ->tap(function (Browser $browser) {
-                    $browser->assertSeeIn('@output', 1);
-                    $browser->online();
-                    usleep(85 * 1000);
-                    $browser->offline();
+                    $browser->assertSeeIn('@output', '1');
+                    $browser->pause(85);
                     $browser->assertSeeIn('@output', '2');
-            });
+                })
+
+                /**
+                 * polling will stop if directive is removed
+                 */
+                ->tap(function (Browser $browser) {
+                    $browser->pause(85);
+                    $browser->assertSeeIn('@output', '3');
+                    $browser->pause(85);
+                    $browser->assertSeeIn('@output', '3');
+                })
+            ;
         });
     }
 }
