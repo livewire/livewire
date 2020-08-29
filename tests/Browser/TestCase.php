@@ -223,8 +223,7 @@ class TestCase extends BaseTestCase
         });
 
         Browser::macro('waitForLivewire', function ($callback = null) {
-            /** @var \Laravel\Dusk\Browser $this */
-            $id = random_int(100, 1000);
+            $id = rand(100, 1000);
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
@@ -235,18 +234,18 @@ class TestCase extends BaseTestCase
             if ($callback) {
                 $callback($this);
 
-                return $this->waitUsing(5, 25, function (Browser $browser) use ($id) {
-                    return $browser->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === undefined");
+                return $this->waitUsing(5, 25, function () use ($id) {
+                    return $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === undefined");
                 }, 'Livewire request was never triggered');
             }
 
             // If no callback is passed, make ->waitForLivewire a higher-order method.
             return new class($this, $id) {
-                public function __construct(Browser $browser, int $id) { $this->browser = $browser; $this->id = $id; }
+                public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
 
                 public function __call($method, $params)
                 {
-                    return tap($this->browser->{$method}(...$params), function (Browser $browser) {
+                    return tap($this->browser->{$method}(...$params), function ($browser) {
                         $browser->waitUsing(5, 25, function () use ($browser) {
                             return $browser->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$this->id} === undefined");
                         }, 'Livewire request was never triggered');
@@ -264,11 +263,25 @@ class TestCase extends BaseTestCase
         });
 
         Browser::macro('captureLivewireRequest', function () {
-            return tap($this)->script('window.capturedRequestsForDusk = []');
+            $this->driver->executeScript('window.capturedRequestsForDusk = []');
+
+            return $this;
         });
 
         Browser::macro('replayLivewireRequest', function () {
-            return tap($this)->script('window.capturedRequestsForDusk.forEach(callback => callback()); delete window.capturedRequestsForDusk;');
+            $this->driver->executeScript('window.capturedRequestsForDusk.forEach(callback => callback()); delete window.capturedRequestsForDusk;');
+
+            return $this;
+        });
+
+        Browser::macro('assertScript', function () {
+            PHPUnit::assertTrue(
+                $this->driver->executeScript('return window.livewire.requestIsOut() === false'),
+                'Something this'
+            );
+
+            return $this;
+
         });
     }
 
