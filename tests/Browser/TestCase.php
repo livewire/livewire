@@ -59,6 +59,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Dirty\Component::class);
             app('livewire')->component(\Tests\Browser\Alpine\Component::class);
             app('livewire')->component(\Tests\Browser\Hooks\Component::class);
+            app('livewire')->component(\Tests\Browser\Ignore\Component::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -138,6 +139,19 @@ class TestCase extends BaseTestCase
 
     protected function registerMacros()
     {
+        Browser::macro('assertAttributeMissing', function ($selector, $attribute) {
+            $fullSelector = $this->resolver->format($selector);
+
+            $actual = $this->resolver->findOrFail($selector)->getAttribute($attribute);
+
+            PHPUnit::assertNull(
+                $actual,
+                "Did not see expected attribute [{$attribute}] within element [{$fullSelector}]."
+            );
+
+            return $this;
+        });
+
         Browser::macro('assertNotVisible', function ($selector) {
             $fullSelector = $this->resolver->format($selector);
 
