@@ -62,6 +62,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Ignore\Component::class);
             app('livewire')->component(\Tests\Browser\Morphdom\Component::class);
             app('livewire')->component(\Tests\Browser\ScriptTag\Component::class);
+            app('livewire')->component(\Tests\Browser\Polling\Component::class);
             app('livewire')->component(\Tests\Browser\GlobalLivewire\Component::class);
             app('livewire')->component(\Tests\Browser\Nesting\Component::class);
             app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
