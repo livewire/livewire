@@ -60,7 +60,7 @@ jobs:
           composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest
 
       - name: Setup dusk/chrome
-        run: vendor/bin/dusk-updater detect -q
+        run: vendor/bin/dusk-updater detect --no-interaction
 
       - name: Run tests
         run: vendor/bin/phpunit
