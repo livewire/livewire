@@ -4,7 +4,6 @@ namespace Tests\Browser\Hooks;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Hooks\Component;
 use Laravel\Dusk\Browser;
 
 class Test extends TestCase
@@ -14,19 +13,16 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
-                ->tap(function (\Laravel\Dusk\Browser $browser) {
+                ->tap(function (Browser $browser) {
                     $browser->script(["window.livewire.hook('beforeDomUpdate', () => {
-                        document.getElementById('output-before').value = 'bar';
+                        document.getElementById('output').value = 'before';
                     })",
                     "window.livewire.hook('afterDomUpdate', () => {
-                        document.getElementById('output-after').value = 'baz';
+                        document.getElementById('output').value += '_after';
                     })"]);
-                    $this->assertEquals('', $browser->value('@output.before'));
-                    $this->assertEquals('', $browser->value('@output.after'));
-                    $browser->click('@button');
-                    $browser->pause(35);
-                    $this->assertEquals('bar', $browser->value('@output.before'));
-                    $this->assertEquals('baz', $browser->value('@output.after'));
+                    $this->assertEquals('', $browser->value('@output'));
+                    $browser->click('@button')->waitForLivewire();
+                    $this->assertEquals('before_after', $browser->value('@output'));
                 });
         });
     }

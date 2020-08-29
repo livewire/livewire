@@ -1,7 +1,6 @@
 <div>
     <button wire:click="showFoo" dusk="button">show</button>
-    <input id="output-before" dusk="output.before" />
-    <input id="output-after" dusk="output.after" />
+    <input id="output" dusk="output" />
     @if($foo)
         <div dusk="foo"></div>
     @endif
