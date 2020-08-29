@@ -69,10 +69,10 @@ export default class Connection {
                 this.onError(message)
             })
             .finally(() => {
-                store.requestIsOut = false
+                store.requestIsDone = true
             })
 
-        store.requestIsOut = true
+        store.requestIsInProgress = true
     }
 
     isOutputFromDump(output) {

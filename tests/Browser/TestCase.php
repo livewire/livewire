@@ -161,13 +161,13 @@ class TestCase extends BaseTestCase
 
         Browser::macro('waitForLivewireRequest', function () {
             return $this->waitUsing(5, 25, function () {
-                return $this->driver->executeScript('return window.livewire.requestIsOut() === true');
+                return $this->driver->executeScript('return window.livewire.requestIsInProgress() === true');
             }, 'Livewire request was never triggered');
         });
 
         Browser::macro('waitForLivewireResponse', function () {
             return $this->waitUsing(5, 25, function () {
-                return $this->driver->executeScript('return window.livewire.requestIsOut() === false');
+                return $this->driver->executeScript('return window.livewire.requestIsDone() === true');
             }, 'Livewire response was never received');
         });
 

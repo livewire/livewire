@@ -106,8 +106,23 @@ class Livewire {
         callable(this)
     }
 
-    requestIsOut() {
-        return this.components.requestIsOut
+    requestIsInProgress() {
+        if (this.components.requestIsInProgress) {
+            this.components.requestIsInProgress = false
+            return true
+        }
+
+        return false;
+    }
+
+    requestIsDone() {
+        if (this.components.requestIsDone) {
+            this.components.requestIsInProgress = false
+            this.components.requestIsDone = false
+            return true
+        }
+
+        return false;
     }
 
     setupAlpineCompatibility() {
