@@ -82,14 +82,6 @@ class LivewireDirectivesTest extends TestCase
             ->assertDontSee('@this')
             ->assertSee('window.livewire.find(');
     }
-
-    /** @test */
-    public function this_directive_isnt_registered_outside_of_livewire_component()
-    {
-        $output = view('this-directive')->render();
-
-        $this->assertStringContainsString('@this', $output);
-    }
 }
 
 class ComponentForTestingDirectives extends Component
