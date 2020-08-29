@@ -1,36 +1,5 @@
-import { fireEvent, wait } from 'dom-testing-library'
 import { mount, mountAsRoot, mountAsRootAndReturn } from './utils'
 const timeout = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-test('polling is disabled if livewire is offline', async () => {
-    var pollHappened = false
-    mount('<div wire:poll.50ms="someMethod"></div>', () => {
-        pollHappened = true
-    })
-    window.livewire.components.livewireIsOffline = true
-
-    await timeout(59)
-
-    expect(pollHappened).toBeFalsy()
-
-    // Reset state for other tests.
-    window.livewire.components.livewireIsOffline = false
-})
-
-test('polling without specifying method refreshes by default', async () => {
-    var pollPayload
-    mount('<div wire:poll.50ms></div>', i => {
-        pollPayload = i
-    })
-
-    await timeout(49)
-
-    expect(pollPayload).toBeUndefined()
-
-    await timeout(10)
-
-    expect(pollPayload.updateQueue[0].payload.method).toEqual('$refresh')
-})
 
 test('polling will stop if component is conditionally removed', async () => {
     // @todo: This assertion is hard to make given the current testing utilities.
