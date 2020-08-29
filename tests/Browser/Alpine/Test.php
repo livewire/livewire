@@ -8,8 +8,7 @@ use Tests\Browser\Alpine\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function happy_path()
+    public function test()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
@@ -17,8 +16,7 @@ class Test extends TestCase
                  * ->dispatchBrowserEvent()
                  */
                 ->assertDontSeeIn('@foo.output', 'bar')
-                ->click('@foo.button')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@foo.button')
                 ->assertSeeIn('@foo.output', 'bar')
 
                 /**
@@ -27,8 +25,7 @@ class Test extends TestCase
                 ->assertSeeIn('@bar.output', '0')
                 ->click('@bar.button')
                 ->assertSeeIn('@bar.output', '1')
-                ->click('@bar.refresh')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@bar.refresh')
                 ->assertSeeIn('@bar.output', '1')
 
                 /**
@@ -38,46 +35,38 @@ class Test extends TestCase
                 ->assertSeeIn('@baz.get', '0')
                 ->assertSeeIn('@baz.get.proxy', '0')
                 ->assertSeeIn('@baz.get.proxy.magic', '0')
-                ->click('@baz.set')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@baz.set')
                 ->assertSeeIn('@baz.output', '1')
-                ->click('@baz.set.proxy')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@baz.set.proxy')
                 ->assertSeeIn('@baz.output', '2')
-                ->click('@baz.set.proxy.magic')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@baz.set.proxy.magic')
                 ->assertSeeIn('@baz.output', '3')
-                ->click('@baz.call')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@baz.call')
                 ->assertSeeIn('@baz.output', '4')
-                ->click('@baz.call.proxy')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@baz.call.proxy')
                 ->assertSeeIn('@baz.output', '5')
-                ->click('@baz.call.proxy.magic')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@baz.call.proxy.magic')
                 ->assertSeeIn('@baz.output', '6')
 
                 /**
                  * .call() return value
                  */
                 ->assertDontSeeIn('@bob.output', '1')
-                ->click('@bob.button.await')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@bob.button.await')
                 ->assertSeeIn('@bob.output', '1')
-                ->click('@bob.button.promise')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@bob.button.promise')
                 ->assertSeeIn('@bob.output', '2')
 
                 /**
                  * $wire.entangle
                  */
                 ->assertSeeIn('@lob.output', '6')
-                ->click('@lob.increment')
-                ->assertSeeIn('@lob.output', '6')
-                ->waitForLivewire()
+                ->waitForLivewire(function ($b) {
+                    $b->click('@lob.increment');
+                    $b->assertSeeIn('@lob.output', '6');
+                })
                 ->assertSeeIn('@lob.output', '7')
-                ->click('@lob.decrement')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@lob.decrement')
                 ->assertSeeIn('@lob.output', '6')
                 ;
         });

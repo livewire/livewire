@@ -8,8 +8,7 @@ use Tests\Unit\TestCase;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function happy_path()
+    public function test()
     {
         Livewire::test(Component::class)
             ->assertSee('native-01/01/2001')

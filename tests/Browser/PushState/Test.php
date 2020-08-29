@@ -21,8 +21,7 @@ class Test extends TestCase
                 /**
                  * Change a property and see it reflected in the query string.
                  */
-                ->type('@input', 'bob')
-                ->waitForLivewire()
+                ->waitForLivewire()->type('@input', 'bob')
                 ->assertSeeIn('@output', 'bob')
                 ->assertInputValue('@input', 'bob')
                 ->assertQueryStringHas('foo', 'bob')
@@ -31,8 +30,7 @@ class Test extends TestCase
                  * Hit the back button and see the change reflected in both
                  * the query string AND the actual property value.
                  */
-                ->back()
-                ->waitForLivewire()
+                ->waitForLivewire()->back()
                 ->assertSeeIn('@output', 'baz')
                 ->assertQueryStringHas('foo', 'baz')
 
@@ -42,8 +40,7 @@ class Test extends TestCase
                  */
                 ->assertSeeIn('@bar-output', 'baz')
                 ->assertQueryStringHas('bar')
-                ->type('@bar-input', 'except-value')
-                ->waitForLivewire()
+                ->waitForLivewire()->type('@bar-input', 'except-value')
                 ->assertQueryStringMissing('bar')
 
                 /**
@@ -51,18 +48,14 @@ class Test extends TestCase
                  * both components play nice with each other.
                  */
                 ->assertQueryStringMissing('baz')
-                ->click('@show-nested')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@show-nested')
                 ->pause(25)
                 ->assertQueryStringHas('baz', 'bop')
                 ->assertSeeIn('@baz-output', 'bop')
-                ->type('@baz-input', 'lop')
-                ->waitForLivewire()
+                ->waitForLivewire()->type('@baz-input', 'lop')
                 ->assertQueryStringHas('baz', 'lop')
-                ->type('@input', 'plop')
-                ->waitForLivewire()
-                ->type('@baz-input', 'ploop')
-                ->waitForLivewire()
+                ->waitForLivewire()->type('@input', 'plop')
+                ->waitForLivewire()->type('@baz-input', 'ploop')
                 ->assertQueryStringHas('foo', 'plop')
                 ->assertQueryStringHas('baz', 'ploop')
                 ->back()

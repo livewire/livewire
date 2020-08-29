@@ -18,8 +18,7 @@ class Test extends TestCase
                 ->type('@foo', 'bar')
                 ->assertSourceHas(' class="foo-dirty"')
                 ->pause(150)
-                ->click('@dummy')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@dummy')
                 ->assertSourceMissing(' class="foo-dirty"')
 
                 /**
@@ -29,8 +28,7 @@ class Test extends TestCase
                 ->type('@bar', 'baz')
                 ->assertSourceMissing(' class="bar-dirty"')
                 ->pause(150)
-                ->click('@dummy')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@dummy')
                 ->pause(25)
                 ->assertSourceHas(' class="bar-dirty"')
 
@@ -41,8 +39,7 @@ class Test extends TestCase
                 ->type('@baz.input', 'baz')
                 ->assertSourceHas(' class="baz-dirty"')
                 ->pause(150)
-                ->click('@dummy')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@dummy')
                 ->pause(25)
                 ->assertSourceMissing(' class="baz-dirty"')
 
@@ -53,8 +50,7 @@ class Test extends TestCase
                 ->type('@bob.input', 'baz')
                 ->assertVisible('@bob.target')
                 ->pause(150)
-                ->click('@dummy')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@dummy')
                 ->pause(25)
                 ->assertMissing('@bob.target')
             ;

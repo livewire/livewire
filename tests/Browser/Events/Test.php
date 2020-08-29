@@ -8,8 +8,7 @@ use Tests\Browser\Events\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function happy_path()
+    public function test()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)

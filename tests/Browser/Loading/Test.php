@@ -8,8 +8,7 @@ use Tests\Browser\Loading\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function loading_indicator()
+    public function test()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
