@@ -63,6 +63,8 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Morphdom\Component::class);
             app('livewire')->component(\Tests\Browser\ScriptTag\Component::class);
             app('livewire')->component(\Tests\Browser\GlobalLivewire\Component::class);
+            app('livewire')->component(\Tests\Browser\Nesting\Component::class);
+            app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
