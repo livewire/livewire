@@ -10,10 +10,7 @@
     <h1 wire:loading.attr="disabled" dusk="add-attr">Loading...</h1>
     <h1 wire:loading.attr.remove="disabled" dusk="remove-attr" disabled>Loading...</h1>
 
-    <h1 wire:loading.attr="disabled" dusk="add-attr">Loading...</h1>
-    <h1 wire:loading.attr.remove="disabled" dusk="remove-attr" disabled>Loading...</h1>
-
     <h1 wire:loading wire:target="foo" dusk="targeting">Loading...</h1>
 
-    <button wire:click="foo" dusk="target-button">targeted buttong</button>
+    <button wire:click="foo" dusk="target-button">targeted button</button>
 </div>
