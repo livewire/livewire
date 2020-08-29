@@ -174,6 +174,54 @@ class TestCase extends BaseTestCase
             return $this;
         });
 
+        Browser::macro('assertHasClass', function ($selector, $className) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            PHPUnit::assertContains(
+                $className,
+                explode(' ', $this->attribute($selector, 'class')),
+                "Element [{$fullSelector}] missing class [{$className}]."
+            );
+
+            return $this;
+        });
+
+        Browser::macro('assertMissingClass', function ($selector, $className) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            PHPUnit::assertNotContains(
+                $className,
+                explode(' ', $this->attribute($selector, 'class')),
+                "Element [{$fullSelector}] has class [{$className}]."
+            );
+
+            return $this;
+        });
+
+        Browser::macro('assertMissingAttribute', function ($selector, $attribute, $value = null) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            $actual = $this->resolver->findOrFail($selector)->getAttribute($attribute);
+
+            if ($value === null) {
+                PHPUnit::assertNull(
+                    $actual,
+                    "Did see unexpected attribute [{$attribute}] within element [{$fullSelector}]."
+                );
+            } else {
+                PHPUnit::assertNotEquals(
+                    $value,
+                    $actual,
+                    "Did see unexpected value [{$value}] in attribute [{$attribute}] within element [{$fullSelector}]."
+                );
+            }
+
+            return $this;
+        });
+
         Browser::macro('waitForLivewire', function ($callback = null) {
             $id = rand(100, 1000);
 
