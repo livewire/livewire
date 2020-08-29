@@ -191,6 +191,14 @@ class TestCase extends BaseTestCase
             };
         });
 
+        Browser::macro('online', function () {
+            return tap($this)->script("window.dispatchEvent(new Event('online'))");
+        });
+
+        Browser::macro('offline', function () {
+            return tap($this)->script("window.dispatchEvent(new Event('offline'))");
+        });
+
         Browser::macro('captureLivewireRequest', function () {
             $this->driver->executeScript('window.capturedRequestsForDusk = []');
 
