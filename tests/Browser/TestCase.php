@@ -74,6 +74,10 @@ class TestCase extends BaseTestCase
         parent::tearDown();
     }
 
+    // We don't want to deal with screenshots or console logs.
+    protected function storeConsoleLogsFor($browsers) {}
+    protected function captureFailuresFor($browsers) {}
+
     public function makeACleanSlate()
     {
         Artisan::call('view:clear');
