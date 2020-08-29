@@ -59,5 +59,8 @@ jobs:
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
           composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest
 
+      - name: Setup dusk/chrome
+        run: vendor/bin/dusk-updater detect -q
+
       - name: Run tests
         run: vendor/bin/phpunit
