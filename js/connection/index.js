@@ -68,11 +68,6 @@ export default class Connection {
             .catch(() => {
                 this.onError(message)
             })
-            .finally(() => {
-                store.requestIsOut = false
-            })
-
-        store.requestIsOut = true
     }
 
     isOutputFromDump(output) {

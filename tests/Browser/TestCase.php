@@ -156,20 +156,36 @@ class TestCase extends BaseTestCase
             return $this;
         });
 
-        Browser::macro('waitForLivewire', function () {
-            return $this->waitForLivewireRequest()->waitForLivewireResponse();
-        });
+        Browser::macro('waitForLivewire', function ($callback = null) {
+            $id = rand(100, 1000);
 
-        Browser::macro('waitForLivewireRequest', function () {
-            return $this->waitUsing(5, 25, function () {
-                return $this->driver->executeScript('return window.livewire.requestIsOut() === true');
-            }, 'Livewire request was never triggered');
-        });
+            $this->script([
+                "window.duskIsWaitingForLivewireRequest{$id} = true",
+                "window.Livewire.hook('responseReceived', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+                "window.Livewire.hook('messageFailed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+            ]);
 
-        Browser::macro('waitForLivewireResponse', function () {
-            return $this->waitUsing(5, 25, function () {
-                return $this->driver->executeScript('return window.livewire.requestIsOut() === false');
-            }, 'Livewire response was never received');
+            if ($callback) {
+                $callback($this);
+
+                return $this->waitUsing(5, 25, function () use ($id) {
+                    return $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === undefined");
+                }, 'Livewire request was never triggered');
+            }
+
+            // If no callback is passed, make ->waitForLivewire a higher-order method.
+            return new class($this, $id) {
+                public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
+
+                public function __call($method, $params)
+                {
+                    return tap($this->browser->{$method}(...$params), function ($browser) {
+                        $browser->waitUsing(5, 25, function () use ($browser) {
+                            return $browser->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$this->id} === undefined");
+                        }, 'Livewire request was never triggered');
+                    });
+                }
+            };
         });
 
         Browser::macro('captureLivewireRequest', function () {

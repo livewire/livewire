@@ -28,9 +28,9 @@ class Test extends TestCase
 
                     $browser->assertNotVisible('@targeting');
                 })
-                ->click('@button')
-                ->waitForLivewireRequest()
-                ->tap(function ($browser) {
+                ->waitForLivewire(function ($browser) {
+                    $browser->click('@button');
+
                     $browser->assertVisible('@show');
                     $browser->assertNotVisible('@hide');
 
@@ -45,7 +45,6 @@ class Test extends TestCase
 
                     $browser->assertNotVisible('@targeting');
                 })
-                ->waitForLivewireResponse()
                 ->tap(function ($browser) {
                     $browser->assertNotVisible('@show');
                     $browser->assertVisible('@hide');
@@ -61,9 +60,9 @@ class Test extends TestCase
 
                     $browser->assertNotVisible('@targeting');
                 })
-                ->click('@target-button')
-                ->waitForLivewireRequest()
-                ->tap(function ($browser) {
+                ->waitForLivewire(function ($browser) {
+                    $browser->click('@target-button');
+
                     $browser->assertVisible('@targeting');
                 });
         });
