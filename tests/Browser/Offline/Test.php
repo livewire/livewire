@@ -12,7 +12,7 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
-                ->assertMissing('@output.offline')
+                ->assertMissing('@whileOffline')
                 ->tap(function (Browser $browser) {
                     $this->assertTrue($browser->driver->executeScript('return window.livewire.components.livewireIsOffline === false'), 'Livewire is offline');
                 })
@@ -20,9 +20,41 @@ class Test extends TestCase
                 ->tap(function (Browser $browser) {
                     $this->assertTrue($browser->driver->executeScript('return window.livewire.components.livewireIsOffline === true'), 'Livewire is online');
                 })
-                ->assertSeeIn('@output.offline', 'Offline')
+                ->assertSeeIn('@whileOffline', 'Offline')
                 ->online()
-                ->assertMissing('@output.offline')
+                ->assertMissing('@whileOffline')
+
+                /**
+                 * add element class while offline
+                 */
+                ->online()
+                ->assertMissingClass('@addClass', 'foo')
+                ->offline()
+                ->assertHasClass('@addClass', 'foo')
+
+                /**
+                 * add element class while offline
+                 */
+                ->online()
+                ->assertHasClass('@removeClass', 'hidden')
+                ->offline()
+                ->assertMissingClass('@removeClass', 'hidden')
+
+                /**
+                 * add element attribute while offline
+                 */
+                ->online()
+                ->assertAttributeMissing('@withAttribute', 'disabled')
+                ->offline()
+                ->assertAttribute('@withAttribute', 'disabled', 'true')
+
+                /**
+                 * remove element attribute while offline
+                 */
+                ->online()
+                ->assertAttribute('@withoutAttribute', 'disabled', 'true')
+                ->offline()
+                ->assertAttributeMissing('@withoutAttribute', 'disabled')
             ;
         });
     }

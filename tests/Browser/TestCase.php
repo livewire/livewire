@@ -61,6 +61,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Hooks\Component::class);
             app('livewire')->component(\Tests\Browser\Ignore\Component::class);
             app('livewire')->component(\Tests\Browser\Morphdom\Component::class);
+            app('livewire')->component(\Tests\Browser\ScriptTag\Component::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -170,6 +171,32 @@ class TestCase extends BaseTestCase
             PHPUnit::assertTrue(
                 is_null($this->resolver->find($selector)),
                 "Element [{$fullSelector}] is present."
+            );
+
+            return $this;
+        });
+
+        Browser::macro('assertHasClass', function ($selector, $className) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            PHPUnit::assertContains(
+                $className,
+                explode(' ', $this->attribute($selector, 'class')),
+                "Element [{$fullSelector}] missing class [{$className}]."
+            );
+
+            return $this;
+        });
+
+        Browser::macro('assertMissingClass', function ($selector, $className) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            PHPUnit::assertNotContains(
+                $className,
+                explode(' ', $this->attribute($selector, 'class')),
+                "Element [{$fullSelector}] has class [{$className}]."
             );
 
             return $this;
