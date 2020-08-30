@@ -68,8 +68,8 @@ abstract class Component
     protected function ensureIdPropertyIsntOverridden()
     {
         throw_if(
-            in_array('id', array_keys($this->getPublicPropertiesDefinedBySubClass())),
             new CannotUseReservedLivewireComponentProperties('id', $this->getName())
+            array_key_exists('id', $this->getPublicPropertiesDefinedBySubClass()),
         );
     }
 
