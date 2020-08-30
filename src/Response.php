@@ -62,9 +62,7 @@ class Response
 
     public function toInitialResponse()
     {
-        $this->embedIdInHtml();
-
-        return $this;
+        return tap($this)->embedIdInHtml();
     }
 
     public function toSubsequentResponse()
