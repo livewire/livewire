@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 
 class DataBindingTest extends TestCase
@@ -10,7 +11,7 @@ class DataBindingTest extends TestCase
     /** @test */
     public function update_component_data()
     {
-        $component = app(LivewireManager::class)->test(DataBindingStub::class);
+        $component = Livewire::test(DataBindingStub::class);
 
         $component->updateProperty('foo', 'bar');
 
@@ -20,7 +21,7 @@ class DataBindingTest extends TestCase
     /** @test */
     public function update_nested_component_data_inside_array()
     {
-        $component = app(LivewireManager::class)->test(DataBindingStub::class);
+        $component = Livewire::test(DataBindingStub::class);
 
         $component->updateProperty('foo', []);
         $component->updateProperty('foo.0', 'bar');
@@ -32,7 +33,7 @@ class DataBindingTest extends TestCase
     /** @test */
     public function property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action()
     {
-        $component = app(LivewireManager::class)->test(DataBindingStub::class);
+        $component = Livewire::test(DataBindingStub::class);
 
         $component->updateProperty('foo', 'bar');
 
@@ -48,7 +49,7 @@ class DataBindingTest extends TestCase
     /** @test */
     public function nested_property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action()
     {
-        $component = app(LivewireManager::class)->test(DataBindingStub::class);
+        $component = Livewire::test(DataBindingStub::class);
 
         $component->updateProperty('arrayProperty.1', 'baz');
 
@@ -64,7 +65,7 @@ class DataBindingTest extends TestCase
     /** @test */
     public function nested_property_is_marked_as_dirty_if_removed_as_side_effect_of_an_action()
     {
-        $component = app(LivewireManager::class)->test(DataBindingStub::class);
+        $component = Livewire::test(DataBindingStub::class);
 
         $component->runAction('removeArrayPropertyOne');
 
@@ -75,7 +76,7 @@ class DataBindingTest extends TestCase
     /** @test */
     public function property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action_even_if_the_action_is_data_binding_for_that_specific_property()
     {
-        $component = app(LivewireManager::class)->test(DataBindingStub::class);
+        $component = Livewire::test(DataBindingStub::class);
 
         $component->set('propertyWithHook', 'something');
 

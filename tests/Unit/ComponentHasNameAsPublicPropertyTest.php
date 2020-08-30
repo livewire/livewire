@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 
 class ComponentHasNameAsPublicPropertyTest extends TestCase
@@ -10,7 +11,7 @@ class ComponentHasNameAsPublicPropertyTest extends TestCase
     /** @test */
     public function public_name_property_is_set()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithNameProperty::class);
+        $component = Livewire::test(ComponentWithNameProperty::class);
 
         $component->set('name', 'Caleb');
 
@@ -20,7 +21,7 @@ class ComponentHasNameAsPublicPropertyTest extends TestCase
     /** @test */
     public function public_name_property_is_filled()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithNameProperty::class);
+        $component = Livewire::test(ComponentWithNameProperty::class);
 
         $component->fill(['name' => 'Caleb']);
 

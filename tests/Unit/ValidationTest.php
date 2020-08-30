@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 
 class ValidationTest extends TestCase
@@ -12,7 +13,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function validate_component_properties()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component->runAction('runValidation');
 
@@ -23,7 +24,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function validate_component_properties_with_custom_message()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component->runAction('runValidationWithCustomMessage');
 
@@ -33,7 +34,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function validate_component_properties_with_custom_attribute()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component->runAction('runValidationWithCustomAttribute');
 
@@ -43,7 +44,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function validate_nested_component_properties()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component->runAction('runNestedValidation');
 
@@ -53,7 +54,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function validate_deeply_nested_component_properties()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component->runAction('runDeeplyNestedValidation');
 
@@ -64,7 +65,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function validation_errors_persist_across_requests()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component->call('runValidation')
             ->assertSee('The bar field is required')
@@ -75,7 +76,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function old_validation_errors_are_overwritten_if_new_request_has_errors()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component->call('runValidation')
             ->set('foo', '')
@@ -87,7 +88,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function old_validation_is_cleared_if_new_validation_passes()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component
             ->set('foo', '')
@@ -105,7 +106,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function can_validate_only_a_specific_field_and_preserve_other_validation_messages()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component
             ->set('foo', 'foo')
@@ -122,7 +123,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function can_validate_only_a_specific_field_with_deeply_nested_array()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component
             ->runAction('runDeeplyNestedValidationOnly', 'items.0.baz')
@@ -134,7 +135,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function validation_errors_are_shared_for_all_views()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         app('view')->share('errors', $errors = new ViewErrorBag);
 
@@ -149,7 +150,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function multi_word_validation_rules_failing_are_assertable()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component
             ->set('foo', 'bar123&*(O)')
@@ -160,7 +161,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function class_based_validation_rules_failing_are_assertable()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component
             ->set('foo', 'barbaz')
@@ -171,7 +172,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function can_assert_has_no_errors_when_no_validation_has_faile_and_specific_keys_are_supplied()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component
             ->set('foo', 'foo')
@@ -183,7 +184,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function multi_word_validation_rules_passing_are_assertable()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component
             ->set('foo', 'foo-bar-baz')
@@ -194,7 +195,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function class_based_validation_rules_are_assertable()
     {
-        $component = app(LivewireManager::class)->test(ForValidation::class);
+        $component = Livewire::test(ForValidation::class);
 
         $component
             ->set('foo', 'foobar')

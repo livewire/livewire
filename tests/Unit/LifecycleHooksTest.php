@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 use PHPUnit\Framework\Assert as PHPUnit;
 
@@ -11,7 +12,7 @@ class LifecycleHooksTest extends TestCase
     /** @test */
     public function mount_hook()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
+        $component = Livewire::test(ForLifecycleHooks::class);
 
         $this->assertEquals([
             'mount' => true,
@@ -28,7 +29,7 @@ class LifecycleHooksTest extends TestCase
     /** @test */
     public function refresh_magic_method()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
+        $component = Livewire::test(ForLifecycleHooks::class);
 
         $component->call('$refresh');
 
@@ -47,7 +48,7 @@ class LifecycleHooksTest extends TestCase
     /** @test */
     public function update_property()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class, [
+        $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
                 'updating' => [[
                     'foo' => 'bar',
@@ -76,7 +77,7 @@ class LifecycleHooksTest extends TestCase
     /** @test */
     public function update_nested_properties()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class, [
+        $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
                 'updating' => [
                     ['bar.foo' => 'baz',],
@@ -122,7 +123,7 @@ class LifecycleHooksTest extends TestCase
     /** @test */
     public function set_magic_method()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class, [
+        $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
                 'updating' => [[
                     'foo' => 'bar',

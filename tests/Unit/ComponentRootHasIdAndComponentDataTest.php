@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Exceptions\RootTagMissingFromViewException;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 
 class ComponentRootHasIdAndComponentDataTest extends TestCase
@@ -12,7 +13,7 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
     /** @test */
     public function root_element_has_id_and_component_data()
     {
-        $component = app(LivewireManager::class)->test(ComponentRootHasIdAndDataStub::class);
+        $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
         $this->assertTrue(Str::contains(
             $component->payload['effects']['html'],
@@ -25,13 +26,13 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
     {
         $this->expectException(RootTagMissingFromViewException::class);
 
-        $component = app(LivewireManager::class)->test(ComponentRootExists::class);
+        $component = Livewire::test(ComponentRootExists::class);
     }
 
     /** @test */
     public function component_data_stored_in_html_is_escaped()
     {
-        $component = app(LivewireManager::class)->test(ComponentRootHasIdAndDataStub::class);
+        $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
         $this->assertStringContainsString(
             <<<EOT
@@ -44,7 +45,7 @@ EOT
     /** @test */
     public function on_subsequent_renders_root_element_has_id_but_not_component_id()
     {
-        $component = app(LivewireManager::class)->test(ComponentRootHasIdAndDataStub::class);
+        $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
         $component->call('$refresh');
 

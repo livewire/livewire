@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 use Illuminate\Support\Facades\Route;
 
@@ -15,7 +16,7 @@ class LivewireTestingTest extends TestCase
             throw new \Exception('I shouldn\'t get executed!');
         });
 
-        app(LivewireManager::class)->test(HasMountArguments::class, ['name' => 'foo']);
+        Livewire::test(HasMountArguments::class, ['name' => 'foo']);
     }
 
     /** @test */
