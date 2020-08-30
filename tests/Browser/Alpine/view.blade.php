@@ -32,4 +32,11 @@
 
         <span dusk="bob.output" x-text="count"></span>
     </div>
+
+    <div x-data="{ count: @entangle('count') }">
+        <button type="button" dusk="lob.increment" x-on:click="count++"></button>
+        <button type="button" dusk="lob.decrement" x-on:click="$wire.count--"></button>
+
+        <span dusk="lob.output" x-text="$wire.count"></span>
+    </div>
 </div>

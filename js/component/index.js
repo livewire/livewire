@@ -76,12 +76,14 @@ export default class Component {
             .reduce((carry, segment) => carry[segment], this.data)
     }
 
-    updateDataAndMemo(newData, newMemo) {
+    updateDataAndMemo(newData, newMemo, shouldSkipWatchers = false) {
         Object.entries(newData || {}).forEach(([key, value]) => {
             let oldValue = this.serverMemo.data[key]
 
             if (oldValue !== undefined && oldValue !== value) {
                 this.serverMemo.data[key] = value
+
+                if (shouldSkipWatchers) return
 
                 let watchers = this.watchers[key] || []
 
@@ -103,12 +105,24 @@ export default class Component {
         this.watchers[name].push(callback)
     }
 
-    set(name, value) {
-        this.addAction(new MethodAction('$set', [name, value], this.el))
+    set(name, value, defer = false, skipWatcher = false) {
+        if (defer) {
+            this.addAction(
+                new DeferredModelAction(name, value, this.el, skipWatcher)
+            )
+        } else {
+            this.addAction(
+                new MethodAction('$set', [name, value], this.el, skipWatcher)
+            )
+        }
     }
 
-    sync(name, value) {
-        this.addAction(new ModelAction(name, value, this.el))
+    sync(name, value, defer = false) {
+        if (defer) {
+            this.addAction(new DeferredModelAction(name, value, this.el))
+        } else {
+            this.addAction(new ModelAction(name, value, this.el))
+        }
     }
 
     call(method, ...params) {
@@ -141,7 +155,7 @@ export default class Component {
                 action
             )
 
-            this.handleResponse(message.response)
+            this.handleResponse(message)
 
             this.prefetchManager.clearPrefetches()
 
@@ -197,11 +211,11 @@ export default class Component {
     }
 
     receiveMessage(message, payload) {
-        var response = message.storeResponse(payload)
+        message.storeResponse(payload)
 
         if (message instanceof PrefetchMessage) return
 
-        this.handleResponse(response)
+        this.handleResponse(message)
 
         // This bit of logic ensures that if actions were queued while a request was
         // out to the server, they are sent when the request comes back.
@@ -212,8 +226,14 @@ export default class Component {
         dispatch('livewire:update')
     }
 
-    handleResponse(response) {
-        this.updateDataAndMemo(response.serverMemo.data, response.serverMemo)
+    handleResponse(message) {
+        let response = message.response
+
+        this.updateDataAndMemo(
+            response.serverMemo.data,
+            response.serverMemo,
+            message.shouldSkipWatcher()
+        )
 
         store.callHook('responseReceived', this, response)
 
@@ -223,8 +243,6 @@ export default class Component {
 
             return
         }
-
-        store.callHook('responseReceived', this, response)
 
         if (response.effects.html) {
             this.replaceDom(response.effects.html)
@@ -236,7 +254,7 @@ export default class Component {
             )
         }
 
-        this.messageInTransit.resolve()
+        this.messageInTransit && this.messageInTransit.resolve()
 
         this.messageInTransit = null
 
@@ -607,11 +625,18 @@ export default class Component {
         return (this.dollarWireProxy = new Proxy(refObj, {
             get(object, property) {
                 if (property === 'entangle') {
-                    return name => ({ livewireEntangle: name })
+                    return (name, defer = false) => ({
+                        isDeferred: defer,
+                        livewireEntangle: name,
+                        get defer() {
+                            this.isDeferred = true
+                            return this
+                        },
+                    })
                 }
 
                 // Forward public API methods right away.
-                if (['get', 'set', 'call', 'on', 'upload', 'uploadMultiple', 'removeUpload'].includes(property)) {
+                if (['get', 'set', 'sync', 'call', 'on', 'upload', 'uploadMultiple', 'removeUpload'].includes(property)) {
                     return function (...args) {
                         return component[property].apply(component, args)
                     }
@@ -634,9 +659,6 @@ export default class Component {
             },
 
             set: function (obj, prop, value) {
-                // This prevents a "blip" when using x-model to set a Livewire property.
-                Alpine.ignoreFocusedForValueBinding = true
-
                 component.set(prop, value)
 
                 return true

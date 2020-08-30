@@ -8,8 +8,7 @@ use Tests\Browser\Redirects\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function redirects()
+    public function test()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
@@ -19,13 +18,13 @@ class Test extends TestCase
                  * page right after.
                  */
                 ->assertNotPresent('@flash.message')
-                ->click('@flash')->waitForLivewire()
+                ->waitForLivewire()->click('@flash')
                 ->assertPresent('@flash.message')
-                ->click('@refresh')->waitForLivewire()
+                ->waitForLivewire()->click('@refresh')
                 ->assertNotPresent('@flash.message')
                 ->click('@redirect-with-flash')->waitForReload()
                 ->assertPresent('@flash.message')
-                ->click('@refresh')->waitForLivewire()
+                ->waitForLivewire()->click('@refresh')
                 ->assertNotPresent('@flash.message');
         });
     }

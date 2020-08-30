@@ -2,70 +2,60 @@
 
 namespace Tests\Browser\Offline;
 
+use Laravel\Dusk\Browser;
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Loading\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function loading_indicator()
+    public function test()
     {
-        $this->browse(function ($browser) {
+        $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
-                ->tap(function ($browser) {
-                    $browser->assertNotVisible('@show');
-                    $browser->assertVisible('@hide');
-
-                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
+                ->assertMissing('@whileOffline')
+                ->tap(function (Browser $browser) {
+                    $this->assertTrue($browser->driver->executeScript('return window.livewire.components.livewireIsOffline === false'), 'Livewire is offline');
                 })
-                ->click('@button')
-                ->waitForLivewireRequest()
-                ->tap(function ($browser) {
-                    $browser->assertVisible('@show');
-                    $browser->assertNotVisible('@hide');
-
-                    $this->assertEquals('foo', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-class')->getAttribute('class'));
-
-                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
+                ->offline()
+                ->tap(function (Browser $browser) {
+                    $this->assertTrue($browser->driver->executeScript('return window.livewire.components.livewireIsOffline === true'), 'Livewire is online');
                 })
-                ->waitForLivewireResponse()
-                ->tap(function ($browser) {
-                    $browser->assertNotVisible('@show');
-                    $browser->assertVisible('@hide');
+                ->assertSeeIn('@whileOffline', 'Offline')
+                ->online()
+                ->assertMissing('@whileOffline')
 
-                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
+                /**
+                 * add element class while offline
+                 */
+                ->online()
+                ->assertMissingClass('@addClass', 'foo')
+                ->offline()
+                ->assertHasClass('@addClass', 'foo')
 
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+                /**
+                 * add element class while offline
+                 */
+                ->online()
+                ->assertHasClass('@removeClass', 'hidden')
+                ->offline()
+                ->assertMissingClass('@removeClass', 'hidden')
 
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+                /**
+                 * add element attribute while offline
+                 */
+                ->online()
+                ->assertAttributeMissing('@withAttribute', 'disabled')
+                ->offline()
+                ->assertAttribute('@withAttribute', 'disabled', 'true')
 
-                    $browser->assertNotVisible('@targeting');
-                })
-                ->click('@target-button')
-                ->waitForLivewireRequest()
-                ->tap(function ($browser) {
-                    $browser->assertVisible('@targeting');
-                });
+                /**
+                 * remove element attribute while offline
+                 */
+                ->online()
+                ->assertAttribute('@withoutAttribute', 'disabled', 'true')
+                ->offline()
+                ->assertAttributeMissing('@withoutAttribute', 'disabled')
+            ;
         });
     }
 }

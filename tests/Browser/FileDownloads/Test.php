@@ -13,8 +13,7 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
-                ->click('@download')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@download')
                 // Wait for download to be triggered.
                 ->pause(500);
 
@@ -31,8 +30,7 @@ class Test extends TestCase
              * Trigger download with a response return.
              */
             Livewire::visit($browser, Component::class)
-                ->click('@download-from-response')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@download-from-response')
                 // Wait for download to be triggered.
                 ->pause(500);
 

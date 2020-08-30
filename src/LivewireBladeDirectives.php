@@ -11,6 +11,11 @@ class LivewireBladeDirectives
         return "window.livewire.find('{{ \$_instance->id }}')";
     }
 
+    public static function entangle($expression)
+    {
+        return "window.livewire.find('{{ \$_instance->id }}').entangle('{{ $expression }}')";
+    }
+
     public static function livewireStyles($expression)
     {
         return '{!! \Livewire\Livewire::styles('.$expression.') !!}';

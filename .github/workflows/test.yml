@@ -40,6 +40,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
+          tools: composer:v2
           coverage: none
 
       - name: Get composer cache directory
@@ -57,6 +58,9 @@ jobs:
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
           composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest
+
+      - name: Setup dusk/chrome
+        run: vendor/bin/dusk-updater detect --no-interaction
 
       - name: Run tests
         run: vendor/bin/phpunit

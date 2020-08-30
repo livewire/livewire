@@ -22,6 +22,9 @@ class TestCase extends BaseTestCase
     public function setUp(): void
     {
         // DuskOptions::withoutUI();
+        if (isset($_SERVER['CI'])) {
+            DuskOptions::withoutUI();
+        }
 
         $this->registerMacros();
 
@@ -55,6 +58,14 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Init\Component::class);
             app('livewire')->component(\Tests\Browser\Dirty\Component::class);
             app('livewire')->component(\Tests\Browser\Alpine\Component::class);
+            app('livewire')->component(\Tests\Browser\Hooks\Component::class);
+            app('livewire')->component(\Tests\Browser\Ignore\Component::class);
+            app('livewire')->component(\Tests\Browser\Morphdom\Component::class);
+            app('livewire')->component(\Tests\Browser\ScriptTag\Component::class);
+            app('livewire')->component(\Tests\Browser\Polling\Component::class);
+            app('livewire')->component(\Tests\Browser\GlobalLivewire\Component::class);
+            app('livewire')->component(\Tests\Browser\Nesting\Component::class);
+            app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -73,6 +84,10 @@ class TestCase extends BaseTestCase
 
         parent::tearDown();
     }
+
+    // We don't want to deal with screenshots or console logs.
+    protected function storeConsoleLogsFor($browsers) {}
+    protected function captureFailuresFor($browsers) {}
 
     public function makeACleanSlate()
     {
@@ -130,6 +145,19 @@ class TestCase extends BaseTestCase
 
     protected function registerMacros()
     {
+        Browser::macro('assertAttributeMissing', function ($selector, $attribute) {
+            $fullSelector = $this->resolver->format($selector);
+
+            $actual = $this->resolver->findOrFail($selector)->getAttribute($attribute);
+
+            PHPUnit::assertNull(
+                $actual,
+                "Did not see expected attribute [{$attribute}] within element [{$fullSelector}]."
+            );
+
+            return $this;
+        });
+
         Browser::macro('assertNotVisible', function ($selector) {
             $fullSelector = $this->resolver->format($selector);
 
@@ -152,20 +180,70 @@ class TestCase extends BaseTestCase
             return $this;
         });
 
-        Browser::macro('waitForLivewire', function () {
-            return $this->waitForLivewireRequest()->waitForLivewireResponse();
+        Browser::macro('assertHasClass', function ($selector, $className) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            PHPUnit::assertContains(
+                $className,
+                explode(' ', $this->attribute($selector, 'class')),
+                "Element [{$fullSelector}] missing class [{$className}]."
+            );
+
+            return $this;
         });
 
-        Browser::macro('waitForLivewireRequest', function () {
-            return $this->waitUsing(5, 25, function () {
-                return $this->driver->executeScript('return window.livewire.requestIsOut() === true');
-            }, 'Livewire request was never triggered');
+        Browser::macro('assertMissingClass', function ($selector, $className) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            PHPUnit::assertNotContains(
+                $className,
+                explode(' ', $this->attribute($selector, 'class')),
+                "Element [{$fullSelector}] has class [{$className}]."
+            );
+
+            return $this;
         });
 
-        Browser::macro('waitForLivewireResponse', function () {
-            return $this->waitUsing(5, 25, function () {
-                return $this->driver->executeScript('return window.livewire.requestIsOut() === false');
-            }, 'Livewire response was never received');
+        Browser::macro('waitForLivewire', function ($callback = null) {
+            $id = rand(100, 1000);
+
+            $this->script([
+                "window.duskIsWaitingForLivewireRequest{$id} = true",
+                "window.Livewire.hook('responseReceived', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+                "window.Livewire.hook('messageFailed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+            ]);
+
+            if ($callback) {
+                $callback($this);
+
+                return $this->waitUsing(5, 25, function () use ($id) {
+                    return $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === undefined");
+                }, 'Livewire request was never triggered');
+            }
+
+            // If no callback is passed, make ->waitForLivewire a higher-order method.
+            return new class($this, $id) {
+                public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
+
+                public function __call($method, $params)
+                {
+                    return tap($this->browser->{$method}(...$params), function ($browser) {
+                        $browser->waitUsing(5, 25, function () use ($browser) {
+                            return $browser->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$this->id} === undefined");
+                        }, 'Livewire request was never triggered');
+                    });
+                }
+            };
+        });
+
+        Browser::macro('online', function () {
+            return tap($this)->script("window.dispatchEvent(new Event('online'))");
+        });
+
+        Browser::macro('offline', function () {
+            return tap($this)->script("window.dispatchEvent(new Event('offline'))");
         });
 
         Browser::macro('captureLivewireRequest', function () {
@@ -178,16 +256,6 @@ class TestCase extends BaseTestCase
             $this->driver->executeScript('window.capturedRequestsForDusk.forEach(callback => callback()); delete window.capturedRequestsForDusk;');
 
             return $this;
-        });
-
-        Browser::macro('assertScript', function () {
-            PHPUnit::assertTrue(
-                $this->driver->executeScript('return window.livewire.requestIsOut() === false'),
-                'Something this'
-            );
-
-            return $this;
-
         });
     }
 

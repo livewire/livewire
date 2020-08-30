@@ -8,15 +8,13 @@ use Tests\Browser\SupportCollections\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function happy_path()
+    public function test()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
                 ->assertSee('foo')
                 ->assertDontSee('bar')
-                ->click('@add-bar')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@add-bar')
                 ->assertSee('bar');
         });
     }

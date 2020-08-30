@@ -106,10 +106,6 @@ class Livewire {
         callable(this)
     }
 
-    requestIsOut() {
-        return this.components.requestIsOut
-    }
-
     setupAlpineCompatibility() {
         if (!window.Alpine) return
 
@@ -125,42 +121,44 @@ class Livewire {
                                 typeof value === 'object' &&
                                 value.livewireEntangle
                             ) {
+                                // Ok, it looks like someone set an Alpine property to $wire.entangle or @entangle.
                                 let livewireProperty = value.livewireEntangle
+                                let isDeferred = value.isDeferred
                                 let livewireComponent = livewireEl.__livewire
 
+                                // Let's set the initial value of the Alpine prop to the Livewire prop's value.
                                 component.unobservedData[
                                     key
                                 ] = livewireEl.__livewire.get(livewireProperty)
 
-                                let preventSelfReaction = false
-
+                                // Now, we'll watch for changes to the Alpine prop, and fire the update to Livewire.
                                 component.unobservedData.$watch(key, value => {
-                                    if (preventSelfReaction) {
-                                        preventSelfReaction = false
+                                    // If the Alpine value is the same as the Livewire value, we'll skip the update for 2 reasons:
+                                    // - It's just more efficient, why send needless requests.
+                                    // - This prevents a circular dependancy with the other watcher below.
+                                    if (
+                                        value ===
+                                        livewireEl.__livewire.get(
+                                            livewireProperty
+                                        )
+                                    )
                                         return
-                                    }
 
-                                    preventSelfReaction = true
-
-                                    // This prevents a "blip" when using x-model to set a Livewire property.
-                                    Alpine.ignoreFocusedForValueBinding = true
-
+                                    // We'll tell Livewire to update the property, but we'll also tell Livewire
+                                    // to not call the normal property watchers on the way back to prevent another
+                                    // circular dependancy.
                                     livewireComponent.set(
                                         livewireProperty,
-                                        value
+                                        value,
+                                        isDeferred,
+                                        true // Skip firing Livewire watchers when the request comes back.
                                     )
                                 })
 
+                                // We'll also listen for changes to the Livewire prop, and set them in Alpine.
                                 livewireComponent.watch(
                                     livewireProperty,
                                     value => {
-                                        if (preventSelfReaction) {
-                                            preventSelfReaction = false
-                                            return
-                                        }
-
-                                        preventSelfReaction = true
-
                                         component.$data[key] = value
                                     }
                                 )
@@ -179,10 +177,6 @@ class Livewire {
                     this.hook('afterDomUpdate', livewireComponent => {
                         if (livewireComponent === livewireEl.__livewire) {
                             component.updateElements(component.$el)
-
-                            // This was set to true in the $wire Proxy's setter,
-                            // Now we can re-set it to false.
-                            Alpine.ignoreFocusedForValueBinding = false
                         }
                     })
                 }

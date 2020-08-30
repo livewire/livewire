@@ -1,7 +1,7 @@
-
 export default class {
-    constructor(el) {
+    constructor(el, skipWatcher = false) {
         this.el = el
+        this.skipWatcher = skipWatcher
         this.resolveCallback = () => {}
         this.rejectCallback = () => {}
     }

@@ -2,70 +2,46 @@
 
 namespace Tests\Browser\Polling;
 
+use Laravel\Dusk\Browser;
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Loading\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function loading_indicator()
+    public function test()
     {
-        $this->browse(function ($browser) {
+        $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
-                ->tap(function ($browser) {
-                    $browser->assertNotVisible('@show');
-                    $browser->assertVisible('@hide');
-
-                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
+                /**
+                 * polling is disabled if livewire is offline
+                 */
+                ->assertSeeIn('@output', '1')
+                ->tap(function (Browser $browser) {
+                    $browser->offline();
+                    $browser->pause(85);
+                    $browser->assertSeeIn('@output', '1');
+                    $browser->online();
                 })
-                ->click('@button')
-                ->waitForLivewireRequest()
-                ->tap(function ($browser) {
-                    $browser->assertVisible('@show');
-                    $browser->assertNotVisible('@hide');
 
-                    $this->assertEquals('foo', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-class')->getAttribute('class'));
-
-                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
+                /**
+                 * polling without specifying method refreshes by default
+                 */
+                ->tap(function (Browser $browser) {
+                    $browser->assertSeeIn('@output', '1');
+                    $browser->pause(85);
+                    $browser->assertSeeIn('@output', '2');
                 })
-                ->waitForLivewireResponse()
-                ->tap(function ($browser) {
-                    $browser->assertNotVisible('@show');
-                    $browser->assertVisible('@hide');
 
-                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
+                /**
+                 * polling will stop if directive is removed
+                 */
+                ->tap(function (Browser $browser) {
+                    $browser->pause(85);
+                    $browser->assertSeeIn('@output', '3');
+                    $browser->pause(85);
+                    $browser->assertSeeIn('@output', '3');
                 })
-                ->click('@target-button')
-                ->waitForLivewireRequest()
-                ->tap(function ($browser) {
-                    $browser->assertVisible('@targeting');
-                });
+            ;
         });
     }
 }

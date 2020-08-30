@@ -1,26 +1,30 @@
 import store from '@/Store'
 import queryString from '@/util/query-string'
 
-export default function () {
-    store.registerHook('componentInitialized', (component) => {
-        if (! component.effects['query']) return;
+export default function() {
+    store.registerHook('componentInitialized', component => {
+        if (!component.effects['query']) return
 
         let { properties, excepts } = component.effects['query']
 
         replaceState(component, properties, excepts)
     })
 
-    window.addEventListener('popstate', (event) => {
+    window.addEventListener('popstate', event => {
         if (event && event.state && event.state.livewire) {
             Object.keys(event.state.livewire.updates).forEach(name => {
                 let component = store.getComponentsByName(name)[0]
 
-                if (! component.effects['query']) return;
+                if (!component.effects['query']) return
+
+                let { properties, excepts } = component.effects['query']
 
                 if (component) {
                     let updates = event.state.livewire.updates[name].data
 
-                    component.effects['query'].properties.forEach(property => {
+                    properties.forEach(property => {
+                        if (updates[property] === undefined) return
+
                         component.set(property, updates[property])
                     })
 
@@ -58,36 +62,60 @@ function pushState(component, properties, excepts) {
 }
 
 function updateState(type, component, properties, excepts) {
-    var dataForQueryString = dataDestinedForQueryString(component, properties, excepts)
+    var dataForQueryString = dataDestinedForQueryString(component, properties)
 
-    var stringifiedQueryString = queryString.stringify(dataForQueryString)
+    let dataForQueryStringWithExcepts = exceptCertainData(
+        dataForQueryString,
+        excepts
+    )
+
+    var stringifiedQueryString = queryString.stringify(
+        dataForQueryStringWithExcepts
+    )
 
     var state = generateStateObject(dataForQueryString, component)
 
     if (type === 'replace') {
-        history.replaceState(state, "", [window.location.pathname, stringifiedQueryString].filter(Boolean).join('?'))
+        history.replaceState(
+            state,
+            '',
+            [window.location.pathname, stringifiedQueryString]
+                .filter(Boolean)
+                .join('?')
+        )
     } else {
-        history.pushState(state, "", [window.location.pathname, stringifiedQueryString].filter(Boolean).join('?'))
+        history.pushState(
+            state,
+            '',
+            [window.location.pathname, stringifiedQueryString]
+                .filter(Boolean)
+                .join('?')
+        )
     }
 }
 
-function dataDestinedForQueryString(component, properties, excepts) {
+function dataDestinedForQueryString(component, properties) {
     var dataForQueryString = {}
 
-    properties.forEach(i => dataForQueryString[i] = component.get(i))
+    properties.forEach(i => (dataForQueryString[i] = component.get(i)))
 
-    var queryData = window.location.search
-        ? {...queryString.parse(window.location.search), ...dataForQueryString}
+    return window.location.search
+        ? {
+              ...queryString.parse(window.location.search),
+              ...dataForQueryString
+          }
         : dataForQueryString
+}
+
+function exceptCertainData(data, excepts) {
+    let thing = {}
 
     // Remove data items that are specified in the "except" key option.
-    Object.entries(excepts).forEach(([key, value]) => {
-        if (queryData[key] == value) {
-            delete queryData[key]
-        }
+    Object.entries(data).forEach(([key, value]) => {
+        if (excepts[key] != value) thing[key] = value
     })
 
-    return queryData
+    return thing
 }
 
 function generateStateObject(dataDestinedForQueryString, component) {
@@ -99,7 +127,7 @@ function generateStateObject(dataDestinedForQueryString, component) {
     // point in time to the Livewire components.
     state.livewire = { updates: {} }
     state.livewire.updates[component.name] = {
-        data: dataDestinedForQueryString,
+        data: dataDestinedForQueryString
     }
 
     return state
