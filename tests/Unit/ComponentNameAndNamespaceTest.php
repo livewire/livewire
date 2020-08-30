@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 use Illuminate\Support\Facades\File;
 use Illuminate\Filesystem\Filesystem;
@@ -43,7 +44,7 @@ EOT
 EOT
         );
 
-        $component = app(LivewireManager::class)->test('App\Http\Livewire\App\DefaultNamespace');
+        $component = Livewire::test('App\Http\Livewire\App\DefaultNamespace');
 
         $this->assertEquals('app.default-namespace', $component->instance()->getName());
     }
@@ -83,7 +84,7 @@ EOT
         );
 
         require(app_path('Custom/Controllers/Http') . '/CustomNamespace.php');
-        $component = app(LivewireManager::class)->test('Custom\Controllers\Http\CustomNamespace');
+        $component = Livewire::test('Custom\Controllers\Http\CustomNamespace');
 
         $this->assertEquals('custom-namespace', $component->instance()->getName());
     }

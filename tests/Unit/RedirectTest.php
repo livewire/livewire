@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
@@ -12,7 +13,7 @@ class RedirectTest extends TestCase
     /** @test */
     public function standard_redirect()
     {
-        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+        $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirect');
 
@@ -22,7 +23,7 @@ class RedirectTest extends TestCase
     /** @test */
     public function standard_redirect_on_mount()
     {
-        $component = app(LivewireManager::class)->test(TriggersRedirectOnMountStub::class);
+        $component = Livewire::test(TriggersRedirectOnMountStub::class);
 
         $this->assertEquals('/local', $component->payload['effects']['redirect']);
     }
@@ -32,7 +33,7 @@ class RedirectTest extends TestCase
     {
         $this->registerNamedRoute();
 
-        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+        $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectRoute');
 
@@ -44,7 +45,7 @@ class RedirectTest extends TestCase
     {
         $this->registerAction();
 
-        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+        $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectAction');
 
@@ -54,7 +55,7 @@ class RedirectTest extends TestCase
     /** @test */
     public function redirect_helper()
     {
-        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+        $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectHelper');
 
@@ -64,7 +65,7 @@ class RedirectTest extends TestCase
     /** @test */
     public function redirect_facade_with_to_method()
     {
-        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+        $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectFacadeUsingTo');
 
@@ -76,7 +77,7 @@ class RedirectTest extends TestCase
     {
         $this->registerNamedRoute();
 
-        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+        $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectFacadeUsingRoute');
 
@@ -88,7 +89,7 @@ class RedirectTest extends TestCase
     {
         $this->registerNamedRoute();
 
-        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+        $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectHelperUsingRoute');
 
@@ -100,7 +101,7 @@ class RedirectTest extends TestCase
     {
         $this->registerNamedRoute();
 
-        $component = app(LivewireManager::class)->test(TriggersRedirectStub::class);
+        $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirectHelperUsingAway');
 

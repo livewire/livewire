@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Exceptions\MountMethodMissingException;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 
 class MountComponentTest extends TestCase
@@ -11,23 +12,23 @@ class MountComponentTest extends TestCase
     /** @test */
     public function it_resolves_the_mount_parameters()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class);
+        $component = Livewire::test(ComponentWithOptionalParameters::class);
         $this->assertSame(null, $component->foo);
         $this->assertSame([], $component->bar);
 
-        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, ['foo' => 'caleb']);
+        $component = Livewire::test(ComponentWithOptionalParameters::class, ['foo' => 'caleb']);
         $this->assertSame('caleb', $component->foo);
         $this->assertSame([], $component->bar);
 
-        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, ['bar' => 'porzio']);
+        $component = Livewire::test(ComponentWithOptionalParameters::class, ['bar' => 'porzio']);
         $this->assertSame(null, $component->foo);
         $this->assertSame('porzio', $component->bar);
 
-        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, ['foo' => 'caleb', 'bar' => 'porzio']);
+        $component = Livewire::test(ComponentWithOptionalParameters::class, ['foo' => 'caleb', 'bar' => 'porzio']);
         $this->assertSame('caleb', $component->foo);
         $this->assertSame('porzio', $component->bar);
 
-        $component = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, ['foo' => null, 'bar' => null]);
+        $component = Livewire::test(ComponentWithOptionalParameters::class, ['foo' => null, 'bar' => null]);
         $this->assertSame(null, $component->foo);
         $this->assertSame(null, $component->bar);
     }
@@ -37,15 +38,15 @@ class MountComponentTest extends TestCase
     {
         $this->expectException(MountMethodMissingException::class);
 
-        app(LivewireManager::class)->test(ComponentWithoutMount::class, ['foo' => 10]);
+        Livewire::test(ComponentWithoutMount::class, ['foo' => 10]);
     }
 
     /** @test */
     public function it_sets_missing_dynamically_passed_in_parameters_to_null()
     {
         $fooBar = ['foo' => 10, 'bar' => 5];
-        $componentWithFooBar = app(LivewireManager::class)->test(ComponentWithOptionalParameters::class, $fooBar);
-        $componentWithOnlyFoo = app(LivewireManager::class)->test(ComponentWithOnlyFooParameter::class, $fooBar);
+        $componentWithFooBar = Livewire::test(ComponentWithOptionalParameters::class, $fooBar);
+        $componentWithOnlyFoo = Livewire::test(ComponentWithOnlyFooParameter::class, $fooBar);
 
         $this->assertSame(10, $componentWithFooBar->foo);
         $this->assertSame(10, $componentWithOnlyFoo->foo);

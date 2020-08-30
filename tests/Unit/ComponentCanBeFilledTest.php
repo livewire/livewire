@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,7 +12,7 @@ class ComponentCanBeFilledTest extends TestCase
     /** @test */
     public function can_fill_from_an_array()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithFillableProperties::class);
+        $component = Livewire::test(ComponentWithFillableProperties::class);
 
         $component->assertSee('public');
         $component->assertSee('protected');
@@ -31,7 +32,7 @@ class ComponentCanBeFilledTest extends TestCase
     /** @test */
     public function can_fill_from_an_object()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithFillableProperties::class);
+        $component = Livewire::test(ComponentWithFillableProperties::class);
 
         $component->assertSee('public');
         $component->assertSee('protected');
@@ -47,7 +48,7 @@ class ComponentCanBeFilledTest extends TestCase
     /** @test */
     public function can_fill_from_an_eloquent_model()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithFillableProperties::class);
+        $component = Livewire::test(ComponentWithFillableProperties::class);
 
         $component->assertSee('public');
         $component->assertSee('protected');
