@@ -7,11 +7,9 @@ use Livewire\Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
-use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Validation\ValidationException;
-use Livewire\Macros\PretendClassMethodIsControllerMethod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
@@ -46,13 +44,16 @@ abstract class Component
         $this->initializeTraits();
     }
 
-    public function __invoke()
+    public function __invoke(Route $route)
     {
-        $reflected = new \ReflectionClass($this);
+        // FIXME: Does this need to support validation?
+        (new ImplicitRouteBinding(app()))->resolveComponentProps($route, $this);
 
-        $componentParams = $reflected->hasMethod('mount')
-            ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), app('router')))->retrieveBindings()
-            : [];
+        $componentParams = $this->getPublicPropertyTypes()
+            ->map(function ($type, $name) {
+                return $this->{$name} ?? null;
+            })
+            ->toArray();
 
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
