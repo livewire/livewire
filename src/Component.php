@@ -33,9 +33,7 @@ abstract class Component
 
     public function __construct($id = null)
     {
-        if (is_null($id)) $id = Str::random(20);
-
-        $this->id = $id;
+        $this->id = $id ?? Str::random(20);
 
         $this->ensureIdPropertyIsntOverridden();
 
