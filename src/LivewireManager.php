@@ -28,7 +28,7 @@ class LivewireManager
 
     public function getClass($alias)
     {
-        $finder = app()->make(LivewireComponentsFinder::class);
+        $finder = app(LivewireComponentsFinder::class);
 
         $class = false;
 
