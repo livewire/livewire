@@ -262,10 +262,10 @@ class LivewireServiceProvider extends ServiceProvider
         /*                                                               */
         /* Incoming Request                            Outgoing Response */
         /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
+        /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
         /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
         /* v */ CallHydrationHooks::class,                          /* ^ */
-        /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
         /* v */ PersistErrorBag::class,                             /* ^ */
         /* v */ PerformDataBindingUpdates::class,                   /* ^ */
         /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
@@ -280,9 +280,9 @@ class LivewireServiceProvider extends ServiceProvider
         /* Initial Response */
         /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
         /* ^ */ [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
+        /* ^ */ [HydrateEloquentModelsAsPublicProperties::class, 'dehydrate'],
         /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
         /* ^ */ [CallHydrationHooks::class, 'initialDehydrate'],
-        /* ^ */ [HydrateEloquentModelsAsPublicProperties::class, 'dehydrate'],
         /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
         /* ^ */ [PersistErrorBag::class, 'dehydrate'],
         /* ^ */ [CastPublicProperties::class, 'dehydrate'],

@@ -40,7 +40,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                     data_set($model, $key, data_get($dirtyModelData, $key));
                 }
             }
-
+            
             $unHydratedInstance->$property = $model;
         }
     }
@@ -54,22 +54,20 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                 $serializedModel = $value instanceof QueueableEntity && ! $value->exists
                     ? ['class' => get_class($value)]
                     : (array) (new static)->getSerializedPropertyValue($value);
-
+	
+	            $modelData = [];
                 if ($rules = $instance->rulesForModel($property)) {
                     $keys = $rules->keys()->map(function ($key) use ($instance) {
                         return $instance->afterFirstDot($key);
                     });
 
-                    $explodedModelData = [];
-
                     foreach ($keys as $key) {
-                        data_set($explodedModelData, $key, data_get($instance->$property, $key));
+                        data_set($modelData, $key, data_get($instance->$property, $key));
                     }
-
-                    $instance->$property = $explodedModelData;
-                } else {
-                    $instance->$property = [];
                 }
+
+                // Only include the allowed data (defined by rules) in the response payload
+	            data_set($response, 'memo.data.'.$property, $modelData);
 
                 // Deserialize the models into the "meta" bag.
                 data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
