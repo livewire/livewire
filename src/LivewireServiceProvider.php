@@ -6,7 +6,6 @@ use Illuminate\View\View;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Livewire\LivewireViewCompilerEngine;
 use Livewire\Controllers\FileUploadHandler;
 use Livewire\Controllers\FilePreviewHandler;
 use Livewire\Controllers\HttpConnectionHandler;
