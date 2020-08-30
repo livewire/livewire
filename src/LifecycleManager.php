@@ -108,7 +108,7 @@ class LifecycleManager
     {
         $this->response->embedThyselfInHtml();
 
-        app('livewire')->dispatch('mounted', $this->response);
+        Livewire::dispatch('mounted', $this->response);
 
         return $this->response->toInitialResponse();
     }
