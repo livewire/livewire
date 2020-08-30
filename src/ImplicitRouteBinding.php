@@ -6,6 +6,7 @@ use Illuminate\Contracts\Routing\UrlRoutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Str;
+use ReflectionMethod;
 
 class ImplicitRouteBinding
 {
@@ -28,6 +29,27 @@ class ImplicitRouteBinding
     public function __construct($container)
     {
         $this->container = $container;
+    }
+
+    public function resolveMountParameters(Route $route, Component $component)
+    {
+        // Cache the current route action (this callback actually), just to be safe.
+        $cache = $route->getAction('uses');
+
+        // We'll set the route action to be the "mount" method from the chosen
+        // Livewire component, to get the proper implicit bindings.
+        $route->uses(get_class($component).'@mount');
+
+        // This is normally handled in the "SubstituteBindings" middleware, but
+        // because that middleware has already ran, we need to run them again.
+        $this->container['router']->substituteImplicitBindings($route);
+
+        $options = $route->resolveMethodDependencies($route->parameters(), new ReflectionMethod($component, 'mount'));
+
+        // Restore the original route action.
+        $route->uses($cache);
+
+        return $options;
     }
 
     public function resolveComponentProps(Route $route, Component $component)

@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Illuminate\Contracts\Container\Container;
+use Illuminate\Routing\Route;
 use Livewire\Request;
 use Livewire\Livewire;
 use Illuminate\View\View;
@@ -44,16 +46,13 @@ abstract class Component
         $this->initializeTraits();
     }
 
-    public function __invoke(Route $route)
+    public function __invoke(Container $container, Route $route)
     {
-        // FIXME: Does this need to support validation?
-        (new ImplicitRouteBinding(app()))->resolveComponentProps($route, $this);
+        $binding = new ImplicitRouteBinding($container);
 
-        $componentParams = $this->getPublicPropertyTypes()
-            ->map(function ($type, $name) {
-                return $this->{$name} ?? null;
-            })
-            ->toArray();
+        // FIXME: Does this need to support validation?
+        $binding->resolveComponentProps($route, $this);
+        $componentParams = method_exists($this, 'mount') ? $binding->resolveMountParameters($route, $this) : [];
 
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()

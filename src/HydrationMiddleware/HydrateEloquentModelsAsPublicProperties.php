@@ -40,8 +40,11 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                     data_set($model, $key, data_get($dirtyModelData, $key));
                 }
             }
-            
+
             $unHydratedInstance->$property = $model;
+
+            // Remove the data from the request so that HydratePublicProperties doesn't try to run again
+            unset($request->memo['data'][$property]);
         }
     }
 
@@ -54,7 +57,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                 $serializedModel = $value instanceof QueueableEntity && ! $value->exists
                     ? ['class' => get_class($value)]
                     : (array) (new static)->getSerializedPropertyValue($value);
-	
+
 	            $modelData = [];
                 if ($rules = $instance->rulesForModel($property)) {
                     $keys = $rules->keys()->map(function ($key) use ($instance) {
