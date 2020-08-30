@@ -37,7 +37,7 @@ class LifecycleManager
         return tap(new static, function ($instance) use ($component) {
             $instance->instance = $component;
             $instance->request = new Request([
-                'fingerprint' => ['id' => $component->id, 'name' => $component->getName(), 'locale' => app()->getLocale()],
+                'fingerprint' => ['id' => $component->id, 'name' => $component::getName(), 'locale' => app()->getLocale()],
                 'updates' => [],
                 'serverMemo' => [],
             ]);
@@ -64,7 +64,7 @@ class LifecycleManager
     {
         try {
             if (! method_exists($this->instance, 'mount') && count($params) > 0) {
-                throw new MountMethodMissingException($this->instance->getName());
+                throw new MountMethodMissingException($this->instance::getName());
             }
 
             if (! method_exists($this->instance, 'mount')) return $this;

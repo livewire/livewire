@@ -68,8 +68,8 @@ abstract class Component
     protected function ensureIdPropertyIsntOverridden()
     {
         throw_if(
-            new CannotUseReservedLivewireComponentProperties('id', $this->getName())
             array_key_exists('id', $this->getPublicPropertiesDefinedBySubClass()),
+            new CannotUseReservedLivewireComponentProperties('id', $this::getName())
         );
     }
 
@@ -82,7 +82,7 @@ abstract class Component
         }
     }
 
-    public function getName()
+    public static function getName()
     {
         $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace', 'App\\Http\\Livewire'))))
             ->map([Str::class, 'kebab'])
@@ -139,7 +139,7 @@ abstract class Component
     {
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
-            : view("livewire.{$this->getName()}");
+            : view("livewire.{$this::getName()}");
 
         if (is_string($view)) {
             $view = app('view')->make(CreateBladeView::fromString($view));
@@ -268,7 +268,7 @@ abstract class Component
             return $this->computedPropertyCache[$property] = $this->$computedMethodName();
         }
 
-        throw new \Exception("Property [{$property}] does not exist on the {$this->getName()} component.");
+        throw new \Exception("Property [{$property}] does not exist on the {$this::getName()} component.");
     }
 
     public function __call($method, $params)

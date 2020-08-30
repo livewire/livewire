@@ -62,7 +62,7 @@ trait ValidatesInput
     {
         throw_unless(
             property_exists($this, 'rules'),
-            new MissingRulesPropertyException($this->getName())
+            new MissingRulesPropertyException($this::getName())
         );
 
         return $this->rules;

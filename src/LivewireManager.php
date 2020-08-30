@@ -20,7 +20,7 @@ class LivewireManager
     {
         if (is_null($viewClass)) {
             $viewClass = $alias;
-            $alias = (new $viewClass('fake-id'))->getName();
+            $alias = $viewClass::getName();
         }
 
         $this->componentAliases[$alias] = $viewClass;

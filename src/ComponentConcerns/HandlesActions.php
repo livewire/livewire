@@ -20,13 +20,13 @@ trait HandlesActions
 
         throw_if(
             $this->{$propertyName} instanceof Model && $this->missingRuleFor($name),
-            new CannotBindToModelDataWithoutValidationRuleException($name, $this->getName())
+            new CannotBindToModelDataWithoutValidationRuleException($name, $this::getName())
         );
 
         $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName, $rehash) {
             throw_unless(
                 $this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName),
-                new PublicPropertyNotFoundException($propertyName, $this->getName())
+                new PublicPropertyNotFoundException($propertyName, $this::getName())
             );
 
             if ($this->containsDots($name)) {
@@ -91,7 +91,7 @@ trait HandlesActions
         if (! method_exists($this, $method)) {
             throw_if($method === 'startUpload', new MissingFileUploadsTraitException($this));
 
-            throw new MethodNotFoundException($method, $this->getName());
+            throw new MethodNotFoundException($method, $this::getName());
         }
 
         throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
