@@ -263,9 +263,9 @@ abstract class Component
         if (method_exists($this, $computedMethodName = 'get'.ucfirst($property).'Property')) {
             if (isset($this->computedPropertyCache[$property])) {
                 return $this->computedPropertyCache[$property];
-            } else {
-                return $this->computedPropertyCache[$property] = $this->$computedMethodName();
             }
+
+            return $this->computedPropertyCache[$property] = $this->$computedMethodName();
         }
 
         throw new \Exception("Property [{$property}] does not exist on the {$this->getName()} component.");
