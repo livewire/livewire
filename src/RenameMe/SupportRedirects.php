@@ -24,7 +24,7 @@ class SupportRedirects
                     $redirector->setSession(app('session.store'));
                 }
 
-                return $redirector;;
+                return $redirector;
             });
         });
 

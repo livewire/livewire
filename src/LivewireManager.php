@@ -92,7 +92,6 @@ class LivewireManager
         return "<{$tagName} wire:id=\"{$id}\"></{$tagName}>";
     }
 
-
     public function test($name, $params = [])
     {
         return new TestableLivewire($name, $params);
