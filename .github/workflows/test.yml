@@ -62,5 +62,8 @@ jobs:
       - name: Setup dusk/chrome
         run: vendor/bin/dusk-updater detect --no-interaction
 
-      - name: Run tests
-        run: vendor/bin/phpunit
+      - name: Run Unit tests
+        run: vendor/bin/phpunit --testsuite Unit
+
+      - name: Run Browser tests
+        run: vendor/bin/phpunit --testsuite Browser
