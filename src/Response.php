@@ -77,7 +77,9 @@ class Response
                 $dirtyMemo[$key] = $newValue;
 
                 continue;
-            } else if ($this->request->memo[$key] !== $newValue) {
+            }
+
+            if ($this->request->memo[$key] !== $newValue) {
                 $dirtyMemo[$key] = $newValue;
             }
         }
