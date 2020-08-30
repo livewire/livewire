@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 
 class TestableLivewireCanAssertRedirectTest extends TestCase
@@ -10,7 +11,7 @@ class TestableLivewireCanAssertRedirectTest extends TestCase
     /** @test */
     public function can_assert_a_redirect_without_a_uri()
     {
-        $component = app(LivewireManager::class)->test(RedirectComponent::class);
+        $component = Livewire::test(RedirectComponent::class);
 
         $component->call('performRedirect');
 
@@ -20,7 +21,7 @@ class TestableLivewireCanAssertRedirectTest extends TestCase
     /** @test */
     public function can_assert_a_redirect_with_a_uri()
     {
-        $component = app(LivewireManager::class)->test(RedirectComponent::class);
+        $component = Livewire::test(RedirectComponent::class);
 
         $component->call('performRedirect');
 
