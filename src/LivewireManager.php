@@ -290,8 +290,6 @@ HTML;
 
     public function listen($event, $callback)
     {
-        $this->listeners[$event] ?? $this->listeners[$event] = [];
-
         $this->listeners[$event][] = $callback;
     }
 
