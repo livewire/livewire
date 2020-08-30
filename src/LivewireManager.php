@@ -71,12 +71,7 @@ class LivewireManager
         $id = Str::random(20);
 
         if (class_exists($name)) {
-            $instance = new $name($id);
-            // Set the name to the computed name, so that the full namespace
-            // isn't leaked to the front-end.
-            $name = $instance->getName();
-        } else {
-            $instance = $this->getInstance($name, $id);
+            $name = $name::getName();
         }
 
         return LifecycleManager::fromInitialRequest($name, $id)
