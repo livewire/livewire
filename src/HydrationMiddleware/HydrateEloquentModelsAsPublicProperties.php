@@ -70,7 +70,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                 }
 
                 // Only include the allowed data (defined by rules) in the response payload
-	            data_set($response, 'memo.data.'.$property, $modelData);
+                data_set($response, 'memo.data.'.$property, $modelData);
 
                 // Deserialize the models into the "meta" bag.
                 data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);

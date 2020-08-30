@@ -50,7 +50,6 @@ abstract class Component
     {
         $binding = new ImplicitRouteBinding($container);
 
-        // FIXME: Does this need to support validation?
         $binding->resolveComponentProps($route, $this);
         $componentParams = method_exists($this, 'mount') ? $binding->resolveMountParameters($route, $this) : [];
 
