@@ -144,7 +144,7 @@ abstract class Component
             : view("livewire.{$this->getName()}");
 
         if (is_string($view)) {
-            $view = app('view')->make((new CreateBladeViewFromString)($view));
+            $view = app('view')->make(CreateBladeView::fromString($view));
         }
 
         throw_unless($view instanceof View,
