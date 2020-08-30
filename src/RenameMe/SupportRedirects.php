@@ -15,7 +15,7 @@ class SupportRedirects
     {
         Livewire::listen('component.hydrate', function ($component, $request) {
             // Put Laravel's redirector aside and replace it with our own custom one.
-            array_push(static::$redirectorCacheStack, app('redirect'));
+            static::$redirectorCacheStack[] = app('redirect');
 
             app()->bind('redirect', function () use ($component) {
                 $redirector = app(Redirector::class)->component($component);
