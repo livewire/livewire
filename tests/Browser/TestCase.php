@@ -193,7 +193,7 @@ class TestCase extends BaseTestCase
             return $this;
         });
 
-        Browser::macro('assertMissingClass', function ($selector, $className) {
+        Browser::macro('assertClassMissing', function ($selector, $className) {
             /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 

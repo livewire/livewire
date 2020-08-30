@@ -40,6 +40,14 @@ class Test extends TestCase
                 ->tap(function ($b) { $b->script("livewire.rescan()"); })
                 ->waitForLivewire()->click('@foo')
                 ->assertSeeIn('@output', 'foo')
+                ->refresh()
+
+                /**
+                 * window.livewire.onLoad callback is called when Livewire is initialized
+                 */
+                ->waitUsing(5, 25, function () use ($browser) {
+                    return $browser->driver->executeScript("return window.isLoaded === true");
+                })
             ;
         });
     }

@@ -2,12 +2,15 @@
 
 namespace Livewire;
 
+use Livewire\Request;
 use Livewire\Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
+use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
+use Illuminate\Validation\ValidationException;
 use Livewire\Macros\PretendClassMethodIsControllerMethod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
@@ -30,6 +33,7 @@ abstract class Component
     protected $computedPropertyCache = [];
     protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
+    protected $preRenderedView;
 
     public function __construct($id = null)
     {
@@ -50,7 +54,10 @@ abstract class Component
             ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), app('router')))->retrieveBindings()
             : [];
 
-        $contents = Livewire::mount($this, $componentParams)->effects['html'];
+        $manager = LifecycleManager::fromInitialInstance($this)
+            ->initialHydrate()
+            ->mount($componentParams)
+            ->renderToView();
 
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
@@ -60,7 +67,7 @@ abstract class Component
             'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
                 'extends' => 'content', 'component' => 'default',
             ][$layoutType],
-            'contents' => $contents,
+            'manager' => $manager,
         ]);
     }
 
@@ -134,9 +141,32 @@ abstract class Component
         $this->shouldSkipRender = true;
     }
 
+    public function renderToView()
+    {
+        $view = method_exists($this, 'render')
+            ? app()->call([$this, 'render'])
+            : view("livewire.{$this->getName()}");
+
+        if (is_string($view)) {
+            $view = app('view')->make((new CreateBladeViewFromString)($view));
+        }
+
+        throw_unless($view instanceof View,
+            new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
+
+        // Get the layout config from the view.
+        if ($view->livewireLayout) {
+            $this->initialLayoutConfiguration = $view->livewireLayout;
+        }
+
+        return $this->preRenderedView = $view;
+    }
+
     public function output($errors = null)
     {
         if ($this->shouldSkipRender) return null;
+
+        $view = $this->preRenderedView;
 
         // In the service provider, we hijack Laravel's Blade engine
         // with our own. However, we only want Livewire hijackings,
@@ -146,23 +176,7 @@ abstract class Component
         $engine = app('view.engine.resolver')->resolve('blade');
         $engine->startLivewireRendering($this);
 
-        $view = method_exists($this, 'render')
-            ? app()->call([$this, 'render'])
-            : view("livewire.{$this->getName()}");
-
-        if (is_string($view)) {
-            $view = app('view')->make((new CreateBladeViewFromString)($view));
-        }
-
-        // Get the layout config from the view.
-        if ($view->livewireLayout) {
-            $this->initialLayoutConfiguration = $view->livewireLayout;
-        }
-
         $this->normalizePublicPropertiesForJavaScript();
-
-        throw_unless($view instanceof View,
-            new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
         $this->setErrorBag(
             $errorBag = $errors ?: ($view->getData()['errors'] ?? $this->getErrorBag())
@@ -177,13 +191,13 @@ abstract class Component
             $previouslySharedErrors->getBag('default')
         );
 
-        app('view')->share('errors', $errors);
-        app('view')->share('_instance', $this);
-
         $view->with([
             'errors' => $errors,
             '_instance' => $this,
         ] + $this->getPublicPropertiesDefinedBySubClass());
+
+        app('view')->share('errors', $errors);
+        app('view')->share('_instance', $this);
 
         $output = $view->render();
 

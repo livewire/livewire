@@ -168,7 +168,7 @@ class TestableLivewire
 
     public function instance()
     {
-        return Livewire::activate($this->componentName, $this->id());
+        return Livewire::getInstance($this->componentName, $this->id());
     }
 
     public function viewData($key)

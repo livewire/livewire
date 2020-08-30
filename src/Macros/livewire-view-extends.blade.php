@@ -1,5 +1,5 @@
 @extends($view, $params)
 
 @section($slotOrSection)
-    {!! $contents !!}
+    {!! $manager->initialDehydrate()->toInitialResponse()->effects['html']; !!}
 @endsection

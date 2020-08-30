@@ -50,6 +50,11 @@ export default function () {
 }
 
 function processLoadingDirective(component, el, directive) {
+    // If this element is going to be dealing with loading states.
+    // We will initialize an "undo" stack upfront, so we don't
+    // have to deal with isset() type conditionals later.
+    el.el.__livewire_on_finish_loading = []
+
     var actionNames = false
 
     if (el.directives.get('target')) {
@@ -206,13 +211,13 @@ function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
     if (directive.modifiers.includes('delay')) {
         let timeout = setTimeout(() => {
             doCallback()
-            el.__livewire_on_finish_loading = () => undoCallback()
+            el.__livewire_on_finish_loading.push(() => undoCallback())
         }, 200)
 
-        el.__livewire_on_finish_loading = () => clearTimeout(timeout)
+        el.__livewire_on_finish_loading.push(() => clearTimeout(timeout))
     } else {
         doCallback()
-        el.__livewire_on_finish_loading = () => undoCallback()
+        el.__livewire_on_finish_loading.push(() => undoCallback())
     }
 }
 
@@ -220,10 +225,8 @@ function endLoading(els) {
     els.forEach(({ el, directive }) => {
         el = el.el // I'm so sorry.
 
-        if (el.__livewire_on_finish_loading) {
-            el.__livewire_on_finish_loading()
-
-            delete el.__livewire_on_finish_loading
+        while (el.__livewire_on_finish_loading.length > 0) {
+            el.__livewire_on_finish_loading.shift()()
         }
     })
 }

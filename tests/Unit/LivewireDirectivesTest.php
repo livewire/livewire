@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use Illuminate\Testing\TestResponse;
 use Livewire\Livewire;
 use Livewire\Component;
+use Illuminate\Testing\TestResponse;
 use Illuminate\Support\Facades\Artisan;
 
 class LivewireDirectivesTest extends TestCase

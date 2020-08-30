@@ -28,7 +28,7 @@ class Test extends TestCase
                  * add element class while offline
                  */
                 ->online()
-                ->assertMissingClass('@addClass', 'foo')
+                ->assertClassMissing('@addClass', 'foo')
                 ->offline()
                 ->assertHasClass('@addClass', 'foo')
 
@@ -38,7 +38,7 @@ class Test extends TestCase
                 ->online()
                 ->assertHasClass('@removeClass', 'hidden')
                 ->offline()
-                ->assertMissingClass('@removeClass', 'hidden')
+                ->assertClassMissing('@removeClass', 'hidden')
 
                 /**
                  * add element attribute while offline

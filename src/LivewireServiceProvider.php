@@ -31,16 +31,18 @@ use Livewire\Commands\{
     MakeLivewireCommand
 };
 use Livewire\HydrationMiddleware\{
+    RenderView,
     PersistErrorBag,
+    PerformActionCalls,
     CallHydrationHooks,
     CastPublicProperties,
+    PerformEventEmissions,
     HydratePublicProperties,
+    PerformDataBindingUpdates,
     SecureHydrationWithChecksum,
     HashPropertiesForDirtyDetection,
     HydratePreviouslyRenderedChildren,
-    PrioritizeDataUpdatesBeforeActionCalls,
     HydrateEloquentModelsAsPublicProperties,
-    PerformPublicPropertyFromDataBindingUpdates,
     HydratePropertiesWithCustomRuntimeHydrators
 };
 use Livewire\Macros\ViewMacros;
@@ -265,11 +267,13 @@ class LivewireServiceProvider extends ServiceProvider
         /* v */ CallHydrationHooks::class,                          /* ^ */
         /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
         /* v */ PersistErrorBag::class,                             /* ^ */
-        /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
+        /* v */ PerformDataBindingUpdates::class,                   /* ^ */
         /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
         /* v */ CastPublicProperties::class,                        /* ^ */
         /* v */ HydratePreviouslyRenderedChildren::class,           /* ^ */
-        /* v */ PrioritizeDataUpdatesBeforeActionCalls::class,      /* ^ */
+        /* v */ PerformActionCalls::class,                          /* ^ */
+        /* v */ PerformEventEmissions::class,                       /* ^ */
+        /* v */ RenderView::class,                                  /* ^ */
         ]);
 
         Livewire::registerInitialDehydrationMiddleware([
@@ -282,6 +286,7 @@ class LivewireServiceProvider extends ServiceProvider
         /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
         /* ^ */ [PersistErrorBag::class, 'dehydrate'],
         /* ^ */ [CastPublicProperties::class, 'dehydrate'],
+        /* ^ */ [RenderView::class, 'dehydrate'],
         ]);
 
         Livewire::registerInitialHydrationMiddleware([

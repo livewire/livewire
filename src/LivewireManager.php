@@ -3,23 +3,16 @@
 namespace Livewire;
 
 use Illuminate\Support\Str;
-use Illuminate\Support\Fluent;
-use Illuminate\Foundation\Application;
-use Illuminate\Validation\ValidationException;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Laravel\Dusk\Browser;
 use Livewire\Exceptions\ComponentNotFoundException;
-use Livewire\Exceptions\MountMethodMissingException;
-use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
 class LivewireManager
 {
     use RegistersHydrationMiddleware;
 
-    protected $componentAliases = [];
-    protected $customComponentResolver;
     protected $listeners = [];
+    protected $componentAliases = [];
 
     public static $isLivewireRequestTestingOverride;
 
@@ -33,21 +26,11 @@ class LivewireManager
         $this->componentAliases[$alias] = $viewClass;
     }
 
-    public function componentResolver($callback)
-    {
-        $this->customComponentResolver = $callback;
-    }
-
-    public function getComponentClass($alias)
+    public function getClass($alias)
     {
         $finder = app()->make(LivewireComponentsFinder::class);
 
         $class = false;
-
-        if ($this->customComponentResolver) {
-            // A developer can hijack the way Livewire finds components using Livewire::componentResolver();
-            $class = call_user_func($this->customComponentResolver, $alias);
-        }
 
         $class = $class ?: (
             // Let's first check if the user registered the component using:
@@ -69,9 +52,9 @@ class LivewireManager
         return $class;
     }
 
-    public function activate($component, $id)
+    public function getInstance($component, $id)
     {
-        $componentClass = $this->getComponentClass($component);
+        $componentClass = $this->getClass($component);
 
         throw_unless(class_exists($componentClass), new ComponentNotFoundException(
             "Component [{$component}] class not found: [{$componentClass}]"
@@ -87,59 +70,28 @@ class LivewireManager
 
         $id = Str::random(20);
 
-        // Allow instantiating Livewire components directly from classes.
-        if ($name instanceof Component) {
-            $id = $name->id;
-
-            $instance = $name;
-
-            $name = $instance->getName();
-        } elseif (class_exists($name)) {
+        if (class_exists($name)) {
             $instance = new $name($id);
             // Set the name to the computed name, so that the full namespace
             // isn't leaked to the front-end.
             $name = $instance->getName();
         } else {
-            $instance = $this->activate($name, $id);
+            $instance = $this->getInstance($name, $id);
         }
 
-        $request = new Request([
-            'fingerprint' => [
-                'id' => $id,
-                'name' => $name,
-                'locale' => app()->getLocale(),
-            ],
-            'updates' => [],
-            'serverMemo' => [],
-        ]);
-
-        $this->initialHydrate($instance, $request);
-
-        try {
-            $this->performMount($instance, $params);
-        } catch (ValidationException $e) {
-            Livewire::dispatch('failed-validation', $e->validator);
-
-            $errors = $e->validator->errors();
-        }
-
-        $html = $instance->output($errors ?? null);
-
-        $response = Response::fromRequest($request, $html);
-
-        $this->initialDehydrate($instance, $response);
-
-        $response->embedThyselfInHtml();
-
-        $this->dispatch('mounted', $response);
-
-        return $response->toInitialResonse();
+        return LifecycleManager::fromInitialRequest($name, $id)
+            ->initialHydrate()
+            ->mount($params)
+            ->renderToView()
+            ->initialDehydrate()
+            ->toInitialResponse();
     }
 
     public function dummyMount($id, $tagName)
     {
         return "<{$tagName} wire:id=\"{$id}\"></{$tagName}>";
     }
+
 
     public function test($name, $params = [])
     {
@@ -155,6 +107,8 @@ class LivewireManager
 
     public function actingAs(Authenticatable $user, $driver = null)
     {
+        // This is a helper to be used during testing.
+
         if (isset($user->wasRecentlyCreated) && $user->wasRecentlyCreated) {
             $user->wasRecentlyCreated = false;
         }
@@ -345,16 +299,5 @@ HTML;
     public function isOnVapor()
     {
         return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
-    }
-
-    private function performMount($instance, $params)
-    {
-        if (! method_exists($instance, 'mount') && count($params) > 0) {
-            throw new MountMethodMissingException($instance->getName());
-        }
-
-        if (! method_exists($instance, 'mount')) return;
-
-        ImplicitlyBoundMethod::call(app(), [$instance, 'mount'], $params);
     }
 }

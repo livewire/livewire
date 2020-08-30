@@ -12,20 +12,18 @@ class Response
     public $effects;
     public $memo;
 
-    public static function fromRequest($request, $html)
+    public static function fromRequest($request)
     {
-        return new static($request, $html);
+        return new static($request);
    }
 
-    public function __construct($request, $html)
+    public function __construct($request)
     {
         $this->request = $request;
 
         $this->fingerprint = $request->fingerprint;
         $this->memo = $request->memo;
-        $this->effects = [
-            'html' => $html,
-        ];
+        $this->effects = [];
     }
 
     public function id() { return $this->fingerprint['id']; }
@@ -62,14 +60,14 @@ class Response
         ];
     }
 
-    public function toInitialResonse()
+    public function toInitialResponse()
     {
         $this->embedIdInHtml();
 
         return $this;
     }
 
-    public function toSusequentLaravelResponse()
+    public function toSubsequentResponse()
     {
         $this->embedIdInHtml();
 
