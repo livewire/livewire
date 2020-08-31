@@ -10,22 +10,8 @@ use ReflectionMethod;
 
 class ImplicitRouteBinding
 {
-    // Can be removed if Laravel #34064 is merged
     protected $container;
 
-    // Can be removed if Laravel #34064 is merged
-    protected static function getParameterName($name, $parameters)
-    {
-        if (array_key_exists($name, $parameters)) {
-            return $name;
-        }
-
-        if (array_key_exists($snakedName = Str::snake($name), $parameters)) {
-            return $snakedName;
-        }
-    }
-
-    // Can be removed if Laravel #34064 is merged
     public function __construct($container)
     {
         $this->container = $container;
@@ -63,12 +49,12 @@ class ImplicitRouteBinding
         }
 
         $routeProps = $component->getPublicPropertyTypes()->intersectByKeys($route->parametersWithoutNulls());
+
         foreach ($routeProps as $propName => $className) {
             $component->{$propName} = $this->resolveParameter($route, $propName, $className);
         }
     }
 
-    // Can be removed if Laravel #34064 is merged
     protected function resolveParameter($route, $parameterName, $parameterClassName)
     {
         $parameterValue = $route->parameter($parameterName);

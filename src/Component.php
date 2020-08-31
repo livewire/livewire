@@ -54,7 +54,7 @@ abstract class Component
 
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
-            ->mount($binding->resolveMountParameters($route, $this))
+            ->mount($binding->resolveMountParameters($route, $this), false)
             ->renderToView();
 
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';

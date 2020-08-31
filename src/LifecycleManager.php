@@ -2,9 +2,11 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Reflector;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MountMethodMissingException;
+use ReflectionProperty;
 
 class LifecycleManager
 {
@@ -60,8 +62,26 @@ class LifecycleManager
         return $this;
     }
 
-    public function mount($params = [])
+    public function mount($params = [], $passParamsToProps = true)
     {
+        if ($passParamsToProps) {
+            $matchingProps = array_intersect_key($params, $this->instance->getPublicPropertiesDefinedBySubClass());
+
+            foreach ($matchingProps as $property => $mountValue) {
+                $reflected = new ReflectionProperty($this->instance, $property);
+                $typeHint = Reflector::getParameterClassName($reflected);
+
+                if (! $typeHint || is_a($mountValue, $typeHint)) {
+                    $this->instance->{$property} = $mountValue;
+                }
+            }
+
+            // If we don't have a mount method, and all the params matched props, just stop
+            if (! method_exists($this->instance, 'mount') && count($params) === count($matchingProps)) {
+                return $this;
+            }
+        }
+
         try {
             if (! method_exists($this->instance, 'mount') && count($params) > 0) {
                 throw new MountMethodMissingException($this->instance->getName());

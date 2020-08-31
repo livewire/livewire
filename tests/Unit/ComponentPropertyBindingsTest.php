@@ -34,6 +34,16 @@ class ComponentPropertyBindingsTest extends TestCase
     }
 
     /** @test */
+    public function props_are_set_via_mount()
+    {
+        Livewire::component(ComponentWithPropBindings::class);
+
+        Livewire::test(ComponentWithPropBindings::class, [
+            'model' => new PropBoundModel('new model'),
+        ])->assertSeeText('prop:new model');
+    }
+
+    /** @test */
     public function props_and_mount_work_together()
     {
         Livewire::component(ComponentWithPropBindingsAndMountMethod::class);
