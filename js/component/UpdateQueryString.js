@@ -3,132 +3,83 @@ import queryString from '@/util/query-string'
 
 export default function() {
     store.registerHook('componentInitialized', component => {
-        if (!component.effects['query']) return
+        let state = {
+            fingerprint: component.fingerprint,
+            data: component.serverMemo.data,
+            dataMeta: component.serverMemo.dataMeta,
+        }
 
-        let { properties, excepts } = component.effects['query']
-
-        replaceState(component, properties, excepts)
+        // FIXME
+        // replaceState(state, window.location.href)
     })
 
     window.addEventListener('popstate', event => {
+        // console.warn(event)
         if (event && event.state && event.state.livewire) {
-            Object.keys(event.state.livewire.updates).forEach(name => {
-                let component = store.getComponentsByName(name)[0]
+            // let component = store.getComponentsByName(event.state.livewire.component)[0];
+            // store.callHook('responseReceived', component, event.state.livewire.response)
 
-                if (!component.effects['query']) return
-
-                let { properties, excepts } = component.effects['query']
-
-                if (component) {
-                    let updates = event.state.livewire.updates[name].data
-
-                    properties.forEach(property => {
-                        if (updates[property] === undefined) return
-
-                        component.set(property, updates[property])
-                    })
-
-                    // This is so that when component.set() triggers a roundtrip,
-                    // the response received from that roundtrip uses "replaceState"
-                    // to update the query string so that it doesn't wipe out future state
-                    // (disabling the "forward button") by using pushState.
-                    component.useReplaceState = true
-                }
-            })
+            // Object.keys(event.state.livewire.updates).forEach(name => {
+            //     let component = store.getComponentsByName(name)[0]
+            //
+            //     if (!component.effects['query']) return
+            //
+            //     let { properties, excepts } = component.effects['query']
+            //
+            //     if (component) {
+            //         let updates = event.state.livewire.updates[name].data
+            //
+            //         properties.forEach(property => {
+            //             if (updates[property] === undefined) return
+            //
+            //             component.set(property, updates[property])
+            //         })
+            //
+            //         // This is so that when component.set() triggers a roundtrip,
+            //         // the response received from that roundtrip uses "replaceState"
+            //         // to update the query string so that it doesn't wipe out future state
+            //         // (disabling the "forward button") by using pushState.
+            //         component.useReplaceState = true
+            //     }
+            // })
         }
     })
 
     store.registerHook('responseReceived', (component, response) => {
-        if (component.effects['query'] === undefined) return
+        if (response.effects['routePath'] === undefined) return
 
-        let { properties, excepts } = component.effects['query']
+        // FIXME: component.effects vs. response.effects
+        let routePath = response.effects['routePath']
+        console.warn(response);
 
-        if (component.useReplaceState === true) {
-            component.useReplaceState = false
+        let state = generateStateObject(component, response)
 
-            replaceState(component, properties, excepts)
-        } else {
-            pushState(component, properties, excepts)
-        }
+        // if (component.useReplaceState === true) {
+        //     component.useReplaceState = false
+        //
+        //     replaceState(component.name, response, routePath)
+        // } else {
+        //    pushState(component.name, response, routePath)
+        // }
     })
 }
 
-function replaceState(component, properties, excepts) {
-    updateState('replace', component, properties, excepts)
+function replaceState(state, path) {
+    history.replaceState(state, '', path)
 }
 
-function pushState(component, properties, excepts) {
-    updateState('push', component, properties, excepts)
+function pushState(state, path) {
+    history.pushState(state, '', path)
 }
 
-function updateState(type, component, properties, excepts) {
-    var dataForQueryString = dataDestinedForQueryString(component, properties)
-
-    let dataForQueryStringWithExcepts = exceptCertainData(
-        dataForQueryString,
-        excepts
-    )
-
-    var stringifiedQueryString = queryString.stringify(
-        dataForQueryStringWithExcepts
-    )
-
-    var state = generateStateObject(dataForQueryString, component)
-
-    if (type === 'replace') {
-        history.replaceState(
-            state,
-            '',
-            [window.location.pathname, stringifiedQueryString]
-                .filter(Boolean)
-                .join('?')
-        )
-    } else {
-        history.pushState(
-            state,
-            '',
-            [window.location.pathname, stringifiedQueryString]
-                .filter(Boolean)
-                .join('?')
-        )
-    }
-}
-
-function dataDestinedForQueryString(component, properties) {
-    var dataForQueryString = {}
-
-    properties.forEach(i => (dataForQueryString[i] = component.get(i)))
-
-    return window.location.search
-        ? {
-              ...queryString.parse(window.location.search),
-              ...dataForQueryString
-          }
-        : dataForQueryString
-}
-
-function exceptCertainData(data, excepts) {
-    let thing = {}
-
-    // Remove data items that are specified in the "except" key option.
-    Object.entries(data).forEach(([key, value]) => {
-        if (excepts[key] != value) thing[key] = value
-    })
-
-    return thing
-}
-
-function generateStateObject(dataDestinedForQueryString, component) {
+function generateStateObject(component, response) {
     // This makes it so that Turbolinks doesn't break Livewire on the back button.
     let state = { turbolinks: {} }
 
     // Store the current Livewire state in the history stack, so that
     // when a user hits a back button, we can re-apply the state from this
     // point in time to the Livewire components.
-    state.livewire = { updates: {} }
-    state.livewire.updates[component.name] = {
-        data: dataDestinedForQueryString
-    }
+    state.livewire = { component, response }
 
     return state
 }
