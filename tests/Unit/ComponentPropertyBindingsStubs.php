@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\UrlGenerator;
 use Livewire\Component;
 
-class ModelToBeBound extends Model
+class PropBoundModel extends Model
 {
     public $value;
 
@@ -26,13 +26,13 @@ class ModelToBeBound extends Model
 
     public function resolveChildRouteBinding($childType, $value, $field)
     {
-        return new ModelToBeBound($value);
+        return new PropBoundModel($value);
     }
 }
 
 class ComponentWithPropBindings extends Component
 {
-    public ModelToBeBound $model;
+    public PropBoundModel $model;
 
     public $name;
 
@@ -46,11 +46,11 @@ class ComponentWithPropBindings extends Component
 
 class ComponentWithPropBindingsAndMountMethod extends Component
 {
-    public ModelToBeBound $child;
+    public PropBoundModel $child;
 
     public $parent;
 
-    public function mount(ModelToBeBound $parent)
+    public function mount(PropBoundModel $parent)
     {
         $this->parent = $parent;
     }
