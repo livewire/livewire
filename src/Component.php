@@ -51,11 +51,10 @@ abstract class Component
         $binding = new ImplicitRouteBinding($container);
 
         $binding->resolveComponentProps($route, $this);
-        $componentParams = method_exists($this, 'mount') ? $binding->resolveMountParameters($route, $this) : [];
 
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
-            ->mount($componentParams)
+            ->mount($binding->resolveMountParameters($route, $this))
             ->renderToView();
 
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';

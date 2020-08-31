@@ -42,9 +42,6 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
             }
 
             $unHydratedInstance->$property = $model;
-
-            // Remove the data from the request so that HydratePublicProperties doesn't try to run again
-            unset($request->memo['data'][$property]);
         }
     }
 

@@ -33,6 +33,10 @@ class ImplicitRouteBinding
 
     public function resolveMountParameters(Route $route, Component $component)
     {
+        if (! method_exists($component, 'mount')) {
+            return [];
+        }
+
         // Cache the current route action (this callback actually), just to be safe.
         $cache = $route->getAction('uses');
 
