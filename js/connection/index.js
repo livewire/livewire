@@ -22,7 +22,7 @@ export default class Connection {
 
         // Forward the query string for the ajax requests.
         fetch(
-            `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}${window.location.search}`,
+            `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}`,
             {
                 method: 'POST',
                 body: JSON.stringify(payload),
@@ -34,6 +34,7 @@ export default class Connection {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Socket-ID': this.getSocketId(),
                     'X-Livewire': true,
+                    'Referrer': window.location.href,
                 },
             }
         )

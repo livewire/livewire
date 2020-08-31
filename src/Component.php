@@ -108,25 +108,22 @@ abstract class Component
         return $this->queryString;
     }
 
-    public function getFromQueryStringProperties()
+    public function getQueryStringProperties()
     {
         return collect($this->getFromQueryString())
-            ->map(function ($value, $key) {
-                return is_string($key) ? $key : $value;
-            })
-            ->values()
-            ->toArray();
-    }
-
-    public function getFromQueryStringExcepts()
-    {
-        return collect($this->getFromQueryString())
-            ->filter(function ($value, $key) {
-                return is_array($value) && isset($value['except']);
-            })
             ->mapWithKeys(function ($value, $key) {
-                return [$key => $value['except']];
-            })->toArray();
+                $key = is_string($key) ? $key : $value;
+                $config = is_string($key) ? $value : [];
+                return [$key => $config];
+            })
+            ->reject(function($config, $property) {
+                return isset($config['except'])
+                    && $this->{$property} === $config['except'];
+            })
+            ->map(function($config, $property) {
+                return $this->{$property}; // FIXME: Serialization?
+            })
+            ->toArray();
     }
 
     public function getCasts()
