@@ -20,13 +20,13 @@ trait HandlesActions
 
         throw_if(
             $this->{$propertyName} instanceof Model && $this->missingRuleFor($name),
-            new CannotBindToModelDataWithoutValidationRuleException($name, $this->getName())
+            new CannotBindToModelDataWithoutValidationRuleException($name, $this::getName())
         );
 
         $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName, $rehash) {
             throw_unless(
                 $this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName),
-                new PublicPropertyNotFoundException($propertyName, $this->getName())
+                new PublicPropertyNotFoundException($propertyName, $this::getName())
             );
 
             if ($this->containsDots($name)) {
@@ -71,41 +71,34 @@ trait HandlesActions
                 $this->syncInput($prop, head($params));
 
                 return;
-                break;
 
             case '$set':
                 $prop = array_shift($params);
                 $this->syncInput($prop, head($params), $rehash = false);
 
                 return;
-                break;
 
             case '$toggle':
                 $prop = array_shift($params);
                 $this->syncInput($prop, ! $this->{$prop}, $rehash = false);
 
                 return;
-                break;
 
             case '$refresh':
                 return;
-                break;
-
-            default:
-                if (! method_exists($this, $method)) {
-                    throw_if($method === 'startUpload', new MissingFileUploadsTraitException($this));
-
-                    throw new MethodNotFoundException($method, $this->getName());
-                }
-
-                throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
-
-                $returned = ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
-
-                Livewire::dispatch('action.returned', $this, $method, $returned);
-
-                break;
         }
+
+        if (! method_exists($this, $method)) {
+            throw_if($method === 'startUpload', new MissingFileUploadsTraitException($this));
+
+            throw new MethodNotFoundException($method, $this::getName());
+        }
+
+        throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
+
+        $returned = ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
+
+        Livewire::dispatch('action.returned', $this, $method, $returned);
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)
