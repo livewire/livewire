@@ -1,4 +1,4 @@
-import MessageBus from "./MessageBus"
+import MessageBus from './MessageBus'
 
 export default {
     availableHooks: [
@@ -16,10 +16,10 @@ export default {
         'interceptWireModelAttachListener',
     ],
 
-    bus: new MessageBus,
+    bus: new MessageBus(),
 
     register(name, callback) {
-        if (! this.availableHooks.includes(name)) {
+        if (!this.availableHooks.includes(name)) {
             throw `Livewire: Referencing unknown hook: [${name}]`
         }
 
@@ -28,5 +28,5 @@ export default {
 
     call(name, ...params) {
         this.bus.call(name, ...params)
-    }
+    },
 }

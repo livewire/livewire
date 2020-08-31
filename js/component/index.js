@@ -635,8 +635,21 @@ export default class Component {
                     })
                 }
 
-                // Forward public API methods right away.
-                if (['get', 'set', 'sync', 'call', 'on', 'upload', 'uploadMultiple', 'removeUpload'].includes(property)) {
+                if (property === '__instance') return component
+
+                if (
+                    [
+                        'get',
+                        'set',
+                        'sync',
+                        'call',
+                        'on',
+                        'upload',
+                        'uploadMultiple',
+                        'removeUpload',
+                    ].includes(property)
+                ) {
+                    // Forward public API methods right away.
                     return function (...args) {
                         return component[property].apply(component, args)
                     }
