@@ -124,7 +124,7 @@ class LivewireServiceProvider extends ServiceProvider
             RouteFacade::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
 
-                return (new $class)();
+                return app()->call(new $class);
             })->middleware('web');
         }
 
@@ -263,9 +263,9 @@ class LivewireServiceProvider extends ServiceProvider
         /* Incoming Request                            Outgoing Response */
         /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
         /* v */ HydratePublicProperties::class,                     /* ^ */
+        /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
         /* v */ CallHydrationHooks::class,                          /* ^ */
-        /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
         /* v */ PersistErrorBag::class,                             /* ^ */
         /* v */ PerformDataBindingUpdates::class,                   /* ^ */
         /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
