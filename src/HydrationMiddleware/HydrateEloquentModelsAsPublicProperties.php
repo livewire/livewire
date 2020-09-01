@@ -55,19 +55,16 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                     ? ['class' => get_class($value)]
                     : (array) (new static)->getSerializedPropertyValue($value);
 
-	            $modelData = [];
+                // Only include the allowed data (defined by rules) in the response payload
                 if ($rules = $instance->rulesForModel($property)) {
                     $keys = $rules->keys()->map(function ($key) use ($instance) {
                         return $instance->afterFirstDot($key);
                     });
 
                     foreach ($keys as $key) {
-                        data_set($modelData, $key, data_get($instance->$property, $key));
+                        data_set($response, "memo.data.{$property}.{$key}", data_get($instance->$property, $key));
                     }
                 }
-
-                // Only include the allowed data (defined by rules) in the response payload
-                data_set($response, 'memo.data.'.$property, $modelData);
 
                 // Deserialize the models into the "meta" bag.
                 data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
