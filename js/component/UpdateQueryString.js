@@ -4,12 +4,12 @@ import Message from '../Message';
 export default function() {
     store.registerHook('component.initialized', component => {
         let message = {
-            fingerprint: component.fingerprint,
-            serverMemo: component.serverMemo,
-            effects: { html: component.el.outerHTML } // FIXME: initialData
+            fingerprint: { ...component.fingerprint },
+            serverMemo: { ...component.serverMemo },
+            effects: { html: component.el.outerHTML }
         }
 
-        replaceState(component, message, window.location.href)
+        replaceState(component, message, component.effects['routePath'] ?? window.location.href)
     })
 
     store.registerHook('message.received', ({ response }, component) => {
@@ -29,12 +29,15 @@ export default function() {
     })
 
     window.addEventListener('popstate', event => {
-        console.warn(event)
         if (event && event.state && event.state.livewire) {
             let component = store.getComponentsByName(event.state.livewire.component)[0];
 
             let message = new Message(component, component.updateQueue)
-            message.storeResponse(event.state.livewire.message)
+
+            let response = event.state.livewire.message;
+            response.effects['routePath'] = undefined
+
+            message.storeResponse(response)
 
             component.handleResponse(message);
             component.call('$refresh')
@@ -75,11 +78,15 @@ function pushState(component, message, path) {
 }
 
 function generateStateObject(component, message) {
-    return {
+    let state = {
         turbolinks: {},
         livewire: {
             component: component.name,
             message
         }
     }
+
+    console.log(state);
+
+    return state;
 }

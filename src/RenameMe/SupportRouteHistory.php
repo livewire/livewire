@@ -32,11 +32,8 @@ class SupportRouteHistory
         });
 
         Livewire::listen('component.dehydrate', function (Component $component, Response $response) {
-            if (! $referrer = request()->header('Referrer')) {
-                return;
-            }
+            $referrer = request()->header('Referrer', url()->current());
 
-            // FIXME: Should we support non-GET routes?
             $route = app('router')->getRoutes()->match(
                 Request::create($referrer, 'GET')
             );
