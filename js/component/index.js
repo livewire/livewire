@@ -1,9 +1,8 @@
 import Message from '@/Message'
 import PrefetchMessage from '@/PrefetchMessage'
-import { dispatch, debounce, walk } from '@/util'
+import { dispatch, debounce, wireDirectives, walk } from '@/util'
 import morphdom from '@/dom/morphdom'
 import DOM from '@/dom/dom'
-import DOMElement from '@/dom/dom_element'
 import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
 import PrefetchManager from './PrefetchManager'
@@ -15,14 +14,16 @@ import MessageBus from '../MessageBus'
 
 export default class Component {
     constructor(el, connection) {
-        el.rawNode().__livewire = this
+        el.__livewire = this
 
-        this.id = el.getAttribute('id')
+        this.el = el
+
+        this.id = this.el.getAttribute('wire:id')
 
         this.connection = connection
 
-        const initialData = JSON.parse(this.el.getAttribute('initial-data'))
-        this.el.removeAttribute(name)
+        const initialData = JSON.parse(this.el.getAttribute('wire:initial-data'))
+        this.el.removeAttribute('wire:initial-data')
 
         this.fingerprint = initialData.fingerprint
         this.serverMemo = initialData.serverMemo
@@ -39,17 +40,13 @@ export default class Component {
         this.uploadManager = new UploadManager(this)
         this.watchers = {}
 
-        store.callHook('componentInitialized', this)
+        store.callHook('component.initialized', this)
 
         this.initialize()
 
         this.uploadManager.registerListeners()
 
         if (this.effects.redirect) return this.redirect(this.effects.redirect)
-    }
-
-    get el() {
-        return DOM.getByAttributeAndValue('id', this.id)
     }
 
     get name() {
@@ -190,7 +187,7 @@ export default class Component {
         let sendMessage = () => {
             this.connection.sendMessage(this.messageInTransit)
 
-            store.callHook('messageSent', this, this.messageInTransit)
+            store.callHook('message.sent', this.messageInTransit, this)
 
             this.updateQueue = []
         }
@@ -203,7 +200,7 @@ export default class Component {
     }
 
     messageSendFailed() {
-        store.callHook('messageFailed', this)
+        store.callHook('message.failed', this.messageInTransit, this)
 
         this.messageInTransit.reject()
 
@@ -235,7 +232,7 @@ export default class Component {
             message.shouldSkipWatcher()
         )
 
-        store.callHook('responseReceived', this, response)
+        store.callHook('message.received', message, this)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.effects.redirect) {
@@ -245,7 +242,7 @@ export default class Component {
         }
 
         if (response.effects.html) {
-            this.replaceDom(response.effects.html)
+            this.handleMorph(response.effects.html.trim())
         }
 
         if (response.effects.dirty) {
@@ -284,9 +281,11 @@ export default class Component {
                     bubbles: true,
                     detail: data,
                 })
-                this.el.el.dispatchEvent(e)
+                this.el.dispatchEvent(e)
             })
         }
+
+        store.callHook('message.processed', message, this)
     }
 
     redirect(url) {
@@ -299,31 +298,15 @@ export default class Component {
 
     forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
         this.walk(el => {
-            if (el.directives.missing('model')) return
+            let directives = wireDirectives(el)
+            if (directives.missing('model')) return
 
-            const modelValue = el.directives.get('model').value
+            const modelValue = directives.get('model').value
 
-            if (el.isFocused() && !dirtyInputs.includes(modelValue)) return
+            if (DOM.hasFocus(el) && ! dirtyInputs.includes(modelValue)) return
 
-            el.setInputValueFromModel(this)
+            DOM.setInputValueFromModel(el, this)
         })
-    }
-
-    replaceDom(rawDom) {
-        let objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook = {
-            html: rawDom,
-        }
-        store.callHook(
-            'beforeDomUpdate',
-            this,
-            objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook
-        )
-
-        this.handleMorph(
-            objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook.html.trim()
-        )
-
-        store.callHook('afterDomUpdate', this)
     }
 
     addPrefetchAction(action) {
@@ -341,7 +324,7 @@ export default class Component {
     handleMorph(dom) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
-        morphdom(this.el.rawNode(), dom, {
+        morphdom(this.el, dom, {
             childrenOnly: false,
 
             getNodeKey: node => {
@@ -350,8 +333,8 @@ export default class Component {
                     ? node.getAttribute(`wire:key`)
                     : // If no "key", then first check for "wire:id", then "id"
                     node.hasAttribute(`wire:id`)
-                    ? node.getAttribute(`wire:id`)
-                    : node.id
+                        ? node.getAttribute(`wire:id`)
+                        : node.id
             },
 
             onBeforeNodeAdded: node => {
@@ -371,9 +354,7 @@ export default class Component {
             },
 
             onNodeDiscarded: node => {
-                const el = new DOMElement(node)
-
-                store.callHook('elementRemoved', el, this)
+                store.callHook('element.removed', node, this)
 
                 if (node.__livewire) {
                     store.removeComponent(node.__livewire)
@@ -394,16 +375,14 @@ export default class Component {
                     return false
                 }
 
-                store.callHook('beforeElementUpdate', from, to, this)
-
-                const fromEl = new DOMElement(from)
+                store.callHook('element.updating', from, to, this)
 
                 // Reset the index of wire:modeled select elements in the
                 // "to" node before doing the diff, so that the options
                 // have the proper in-memory .selected value set.
                 if (
-                    fromEl.hasAttribute('model') &&
-                    fromEl.rawNode().tagName.toUpperCase() === 'SELECT'
+                    from.hasAttribute('wire:model') &&
+                    from.tagName.toUpperCase() === 'SELECT'
                 ) {
                     to.selectedIndex = -1
                 }
@@ -421,15 +400,17 @@ export default class Component {
                     from.__livewire_transition = true
                 }
 
+                let fromDirectives = wireDirectives(from)
+
                 // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
                 if (
-                    fromEl.directives.has('ignore') ||
+                    fromDirectives.has('ignore') ||
                     from.__livewire_ignore === true ||
                     from.__livewire_ignore_self === true
                 ) {
                     if (
-                        (fromEl.directives.has('ignore') &&
-                            fromEl.directives
+                        (fromDirectives.has('ignore') &&
+                            fromDirectives
                                 .get('ignore')
                                 .modifiers.includes('self')) ||
                         from.__livewire_ignore_self === true
@@ -443,8 +424,8 @@ export default class Component {
 
                 // Children will update themselves.
                 if (
-                    fromEl.isComponentRootEl() &&
-                    fromEl.getAttribute('id') !== this.id
+                    DOM.isComponentRootEl(from) &&
+                    from.getAttribute('wire:id') !== this.id
                 )
                     return false
 
@@ -459,20 +440,18 @@ export default class Component {
             onElUpdated: node => {
                 this.morphChanges.changed.push(node)
 
-                store.callHook('afterElementUpdate', node, this)
+                store.callHook('element.updated', node, this)
             },
 
             onNodeAdded: node => {
-                const el = new DOMElement(node)
-
-                const closestComponentId = el.closestRoot().getAttribute('id')
+                const closestComponentId = DOM.closestRoot(node).getAttribute('wire:id')
 
                 if (closestComponentId === this.id) {
-                    if (nodeInitializer.initialize(el, this) === false) {
+                    if (nodeInitializer.initialize(node, this) === false) {
                         return false
                     }
-                } else if (el.isComponentRootEl()) {
-                    store.addComponent(new Component(el, this.connection))
+                } else if (DOM.isComponentRootEl(node)) {
+                    store.addComponent(new Component(node, this.connection))
 
                     // We don't need to initialize children, the
                     // new Component constructor will do that for us.
@@ -484,10 +463,8 @@ export default class Component {
         })
     }
 
-    walk(callback, callbackWhenNewComponentIsEncountered = el => {}) {
-        walk(this.el.rawNode(), node => {
-            const el = new DOMElement(node)
-
+    walk(callback, callbackWhenNewComponentIsEncountered = el => { }) {
+        walk(this.el, el => {
             // Skip the root component element.
             if (el.isSameNode(this.el)) {
                 callback(el)
@@ -495,7 +472,7 @@ export default class Component {
             }
 
             // If we encounter a nested component, skip walking that tree.
-            if (el.isComponentRootEl()) {
+            if (el.hasAttribute('wire:id')) {
                 callbackWhenNewComponentIsEncountered(el)
 
                 return false
@@ -518,7 +495,7 @@ export default class Component {
         if (!this.modelDebounceCallbacks) this.modelDebounceCallbacks = []
 
         // This is a "null" callback. Each wire:model will resister one of these upon initialization.
-        let callbackRegister = { callback: () => {} }
+        let callbackRegister = { callback: () => { } }
         this.modelDebounceCallbacks.push(callbackRegister)
 
         // This is a normal "timeout" for a debounce function.
@@ -533,7 +510,7 @@ export default class Component {
 
                 // Because we just called the callback, let's return the
                 // callback register to it's normal "null" state.
-                callbackRegister.callback = () => {}
+                callbackRegister.callback = () => { }
             }, time)
 
             // Register the current callback in the register as a kind-of "escape-hatch".
@@ -554,7 +531,7 @@ export default class Component {
         if (this.modelDebounceCallbacks) {
             this.modelDebounceCallbacks.forEach(callbackRegister => {
                 callbackRegister.callback()
-                callbackRegister = () => {}
+                callbackRegister = () => { }
             })
         }
 
@@ -572,9 +549,9 @@ export default class Component {
     upload(
         name,
         file,
-        finishCallback = () => {},
-        errorCallback = () => {},
-        progressCallback = () => {}
+        finishCallback = () => { },
+        errorCallback = () => { },
+        progressCallback = () => { }
     ) {
         this.uploadManager.upload(
             name,
@@ -588,9 +565,9 @@ export default class Component {
     uploadMultiple(
         name,
         files,
-        finishCallback = () => {},
-        errorCallback = () => {},
-        progressCallback = () => {}
+        finishCallback = () => { },
+        errorCallback = () => { },
+        progressCallback = () => { }
     ) {
         this.uploadManager.uploadMultiple(
             name,
@@ -604,8 +581,8 @@ export default class Component {
     removeUpload(
         name,
         tmpFilename,
-        finishCallback = () => {},
-        errorCallback = () => {}
+        finishCallback = () => { },
+        errorCallback = () => { }
     ) {
         this.uploadManager.removeUpload(
             name,

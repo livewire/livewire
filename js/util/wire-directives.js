@@ -1,5 +1,43 @@
+export function wireDirectives(el) {
+    return new DirectiveManager(el)
+}
 
-export default class {
+class DirectiveManager {
+    constructor(el) {
+        this.el = el
+        this.directives = this.extractTypeModifiersAndValue()
+    }
+
+    all() {
+        return this.directives
+    }
+
+    has(type) {
+        return this.directives.map(directive => directive.type).includes(type)
+    }
+
+    missing(type) {
+        return !this.has(type)
+    }
+
+    get(type) {
+        return this.directives.find(directive => directive.type === type)
+    }
+
+    extractTypeModifiersAndValue() {
+        return Array.from(this.el.getAttributeNames()
+            // Filter only the livewire directives.
+            .filter(name => name.match(new RegExp('wire:')))
+            // Parse out the type, modifiers, and value from it.
+            .map(name => {
+                const [type, ...modifiers] = name.replace(new RegExp('wire:'), '').split('.')
+
+                return new Directive(type, modifiers, name, this.el)
+            }))
+    }
+}
+
+class Directive {
     constructor(type, modifiers, rawName, el) {
         this.type = type
         this.modifiers = modifiers
@@ -17,13 +55,13 @@ export default class {
     }
 
     get method() {
-        const { method } =  this.parseOutMethodAndParams(this.value)
+        const { method } = this.parseOutMethodAndParams(this.value)
 
         return method
     }
 
     get params() {
-        const { params } =  this.parseOutMethodAndParams(this.value)
+        const { params } = this.parseOutMethodAndParams(this.value)
 
         return params
     }
@@ -35,7 +73,7 @@ export default class {
 
         if (durationInMilliSecondsString) {
             durationInMilliSeconds = Number(durationInMilliSecondsString.replace('ms', ''))
-        } else if (durationInSecondsString){
+        } else if (durationInSecondsString) {
             durationInMilliSeconds = Number(durationInSecondsString.replace('s', '')) * 1000
         }
 

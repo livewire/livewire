@@ -1,24 +1,24 @@
-import '@/dom/polyfills/index'
-import componentStore from '@/Store'
 import DOM from '@/dom/dom'
-import Component from '@/component/index'
+import '@/dom/polyfills/index'
+import store from '@/Store'
 import Connection from '@/connection'
-import { dispatch } from './util'
+import Polling from '@/component/Polling'
+import Component from '@/component/index'
+import { dispatch, wireDirectives } from '@/util'
 import FileUploads from '@/component/FileUploads'
+import LaravelEcho from '@/component/LaravelEcho'
+import DirtyStates from '@/component/DirtyStates'
+import DisableForms from '@/component/DisableForms'
 import FileDownloads from '@/component/FileDownloads'
 import LoadingStates from '@/component/LoadingStates'
-import LaravelEcho from '@/component/LaravelEcho'
-import DisableForms from '@/component/DisableForms'
-import DirtyStates from '@/component/DirtyStates'
 import OfflineStates from '@/component/OfflineStates'
-import Polling from '@/component/Polling'
 import UpdateQueryString from '@/component/UpdateQueryString'
 
 class Livewire {
     constructor() {
         this.connection = new Connection()
-        this.components = componentStore
-        this.onLoadCallback = () => {}
+        this.components = store
+        this.onLoadCallback = () => { }
     }
 
     first() {
@@ -95,15 +95,12 @@ class Livewire {
 
     rescan() {
         DOM.rootComponentElementsWithNoParents().forEach(el => {
-            const componentId = el.getAttribute('id')
+            const componentId = wireDirectives(el).get('id').value
+
             if (this.components.hasComponent(componentId)) return
 
             this.components.addComponent(new Component(el, this.connection))
         })
-    }
-
-    plugin(callable) {
-        callable(this)
     }
 
     setupAlpineCompatibility() {
@@ -174,7 +171,7 @@ class Livewire {
                 let livewireEl = component.$el.closest('[wire\\:id]')
 
                 if (livewireEl && livewireEl.__livewire) {
-                    this.hook('afterDomUpdate', livewireComponent => {
+                    this.hook('message.processed', livewireComponent => {
                         if (livewireComponent === livewireEl.__livewire) {
                             component.updateElements(component.$el)
                         }
@@ -205,12 +202,12 @@ if (!window.Livewire) {
 }
 
 UpdateQueryString()
+FileDownloads()
 OfflineStates()
 LoadingStates()
 DisableForms()
 FileUploads()
 LaravelEcho()
-FileDownloads()
 DirtyStates()
 Polling()
 

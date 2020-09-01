@@ -23,7 +23,7 @@ class Test extends TestCase
                  */
                 ->tap(function ($b) { $b->script([
                     "window.elementWasRemoved = false",
-                    "Livewire.hook('elementRemoved', () => { window.elementWasRemoved = true })",
+                    "Livewire.hook('element.removed', () => { window.elementWasRemoved = true })",
                 ]);})
                 ->waitForLivewire()->click('@bar')
                 ->tap(function ($b) {
@@ -35,11 +35,11 @@ class Test extends TestCase
                  */
                 ->tap(function ($b) { $b->script([
                     "window.lastAddedElement = false",
-                    "Livewire.hook('elementInitialized', el => { window.lastAddedElement = el })",
+                    "Livewire.hook('element.initialized', el => { window.lastAddedElement = el })",
                 ]);})
                 ->waitForLivewire()->click('@baz')
                 ->tap(function ($b) {
-                    $this->assertEquals(['second'], $b->script('return window.lastAddedElement.el.innerText'));
+                    $this->assertEquals(['second'], $b->script('return window.lastAddedElement.innerText'));
                 })
 
                 /**

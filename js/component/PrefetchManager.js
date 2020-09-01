@@ -15,7 +15,7 @@ class PrefetchManager {
     }
 
     actionPrefetchResponseHasBeenReceived(action) {
-        return !!this.getPrefetchMessageByAction(action).response
+        return !! this.getPrefetchMessageByAction(action).response
     }
 
     getPrefetchMessageByAction(action) {
