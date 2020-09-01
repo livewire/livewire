@@ -78,7 +78,10 @@ trait ValidatesInput
 
     public function missingRuleFor($key)
     {
-        return ! in_array($key, array_keys($this->getRules()));
+        return ! collect(array_keys($this->getRules()))->map(function ($rule) {
+            return Str::of($rule)->before('*')->rtrim('.');
+        })->contains($key);
+
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])

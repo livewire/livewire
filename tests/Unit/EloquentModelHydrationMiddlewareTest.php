@@ -28,8 +28,8 @@ class EloquentModelHydrationMiddlewareTest extends TestCase
         $component = Livewire::test(ComponentForEloquentModelHydrationMiddleware::class);
         $this->assertEqualsCanonicalizing(testArray(), $component->get('foo'));
         $component->set('foo.name', 'Adrian');
-        $component->set('foo.aliases', ['name' => 'Tester']);
-        $this->assertEqualsCanonicalizing(array_merge(testArray(), ['name' => 'Adrian']), $component->get('foo'));
+        $component->set('foo.aliases', [['name' => 'Tester']]);
+        $this->assertEqualsCanonicalizing(array_merge(testArray(), ['name' => 'Adrian', 'aliases' => [['name' => 'Tester']]]), $component->get('foo'));
     }
 }
 
