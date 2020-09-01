@@ -92,10 +92,10 @@ trait InteractsWithProperties
         return $data;
     }
 
-    public function getInitializedPropertyValue(ReflectionProperty $property) {
+    public function getInitializedPropertyValue(\ReflectionProperty $property) {
         // Ensures typed property is initialized in PHP >=7.4, if so, return its value,
         // if not initialized, return null (as expected in earlier PHP Versions)
-        if (method_exists($property, 'isInitialized') && ! $property->isInitialized($this)) {
+        if (method_exists($property, 'isInitialized') && !$property->isInitialized($this)) {
             return null;
         }
 
