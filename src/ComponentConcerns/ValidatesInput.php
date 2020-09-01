@@ -70,9 +70,9 @@ trait ValidatesInput
 
     public function rulesForModel($name)
     {
-        if (empty($this->rules)) return collect();
+        if (empty($this->rules())) return collect();
 
-        return collect($this->rules)
+        return collect($this->rules())
             ->filter(function ($value, $key) use ($name) {
                 return $this->beforeFirstDot($key) === $name;
             });
@@ -82,7 +82,7 @@ trait ValidatesInput
     {
         if (! property_exists($this, 'rules')) return true;
 
-        return ! in_array($key, array_keys($this->rules));
+        return ! in_array($key, array_keys($this->rules()));
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])
