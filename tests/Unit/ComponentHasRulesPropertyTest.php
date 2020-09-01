@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use Livewire\Livewire;
 use Livewire\Component;
-use Livewire\Exceptions\MissingRulesPropertyException;
+use Livewire\Exceptions\MissingRulesException;
 
 class ComponentHasRulesPropertyTest extends TestCase
 {
@@ -28,7 +28,7 @@ class ComponentHasRulesPropertyTest extends TestCase
     /** @test */
     public function validate_without_rules_property_and_no_args_throws_exception()
     {
-        $this->expectException(MissingRulesPropertyException::class);
+        $this->expectException(MissingRulesException::class);
 
         Livewire::test(ComponentWithoutRulesProperty::class)->call('save');
     }
