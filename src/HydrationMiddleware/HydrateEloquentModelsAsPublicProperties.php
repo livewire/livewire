@@ -29,7 +29,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                 $model = new $value['class'];
             }
 
-            $dirtyModelData = $request->memo['data'][$property] ?? [];
+            $dirtyModelData = $request->memo['data'][$property];
 
             if ($rules = $unHydratedInstance->rulesForModel($property)) {
                 $keys = $rules->keys()->map(function ($key) use ($unHydratedInstance) {

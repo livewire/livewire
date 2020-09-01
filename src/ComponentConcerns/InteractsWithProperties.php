@@ -69,7 +69,7 @@ trait InteractsWithProperties
             return new Collection();
         }
 
-        return Collection::make($this->getPublicPropertiesDefinedBySubClass())
+        return collect($this->getPublicPropertiesDefinedBySubClass())
             ->map(function ($value, $name) {
                 return Reflector::getParameterClassName(new \ReflectionProperty($this, $name));
             })
