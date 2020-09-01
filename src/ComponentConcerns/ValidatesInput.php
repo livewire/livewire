@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Livewire\Exceptions\MissingRulesPropertyException;
+use Livewire\Exceptions\MissingRulesException;
 
 trait ValidatesInput
 {
@@ -84,7 +84,7 @@ trait ValidatesInput
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
-        throw_if(empty($rules), new MissingRulesPropertyException($this::getName()));
+        throw_if(empty($rules), new MissingRulesException($this::getName()));
 
         $result = $this->getPublicPropertiesDefinedBySubClass();
 
@@ -119,7 +119,7 @@ trait ValidatesInput
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
-        throw_if(empty($rules), new MissingRulesPropertyException($this::getName()));
+        throw_if(empty($rules), new MissingRulesException($this::getName()));
 
         $result = $this->getPublicPropertiesDefinedBySubClass();
 
