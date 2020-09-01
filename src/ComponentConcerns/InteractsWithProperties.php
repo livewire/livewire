@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Reflector;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
+use ReflectionProperty;
 
 trait InteractsWithProperties
 {
@@ -62,18 +63,16 @@ trait InteractsWithProperties
 
         return $data;
     }
-    
+
     public function getPublicPropertyTypes()
     {
 	    if (PHP_VERSION_ID < 70400) {
 		    return new Collection();
 	    }
-    	
-    	$reflected = new \ReflectionClass($this);
-    	
+
     	return Collection::make($this->getPublicPropertiesDefinedBySubClass())
-		    ->map(function($value, $name) use ($reflected) {
-			    return Reflector::getParameterClassName($reflected->getProperty($name));
+		    ->map(function ($value, $name) {
+			    return Reflector::getParameterClassName(new ReflectionProperty($this, $name));
 		    })
 		    ->filter();
     }
