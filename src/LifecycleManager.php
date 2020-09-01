@@ -62,38 +62,30 @@ class LifecycleManager
         return $this;
     }
 
-    public function mount($params = [], $passParamsToProps = true)
+    public function mount($params = [])
     {
-        if ($passParamsToProps) {
-            $matchingProps = array_intersect_key($params, $this->instance->getPublicPropertiesDefinedBySubClass());
+        $matchingProps = collect(array_intersect_key($params, $this->instance->getPublicPropertiesDefinedBySubClass()))
+            ->filter(function ($mountValue, $property) {
+                $typeHint = Reflector::getParameterClassName(
+                    new ReflectionProperty($this->instance, $property)
+                );
 
-            foreach ($matchingProps as $property => $mountValue) {
-                $reflected = new ReflectionProperty($this->instance, $property);
-                $typeHint = Reflector::getParameterClassName($reflected);
+                return ! $typeHint || is_a($mountValue, $typeHint);
+            })
+            ->each(function ($mountValue, $property) {
+                $this->instance->{$property} = $mountValue;
+            });
 
-                if (! $typeHint || is_a($mountValue, $typeHint)) {
-                    $this->instance->{$property} = $mountValue;
-                }
+        if (method_exists($this->instance, 'mount')) {
+            try {
+                ImplicitlyBoundMethod::call(app(), [$this->instance, 'mount'], $params);
+            } catch (ValidationException $e) {
+                Livewire::dispatch('failed-validation', $e->validator);
+
+                $this->instance->setErrorBag($e->validator->errors());
             }
-
-            // If we don't have a mount method, and all the params matched props, just stop
-            if (! method_exists($this->instance, 'mount') && count($params) === count($matchingProps)) {
-                return $this;
-            }
-        }
-
-        try {
-            if (! method_exists($this->instance, 'mount') && count($params) > 0) {
-                throw new MountMethodMissingException($this->instance->getName());
-            }
-
-            if (! method_exists($this->instance, 'mount')) return $this;
-
-            ImplicitlyBoundMethod::call(app(), [$this->instance, 'mount'], $params);
-        } catch (ValidationException $e) {
-            Livewire::dispatch('failed-validation', $e->validator);
-
-            $this->instance->setErrorBag($e->validator->errors());
+        } elseif ($matchingProps->count() !== count($params)) {
+            throw new MountMethodMissingException($this->instance->getName());
         }
 
         return $this;

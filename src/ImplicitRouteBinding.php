@@ -5,6 +5,7 @@ namespace Livewire;
 use Illuminate\Contracts\Routing\UrlRoutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionMethod;
 
@@ -17,10 +18,18 @@ class ImplicitRouteBinding
         $this->container = $container;
     }
 
+    public function resolveAllParameters(Route $route, Component $component)
+    {
+        $params = $this->resolveMountParameters($route, $component);
+        $props = $this->resolveComponentProps($route, $component);
+
+        return $params->merge($props)->all();
+    }
+
     public function resolveMountParameters(Route $route, Component $component)
     {
         if (! method_exists($component, 'mount')) {
-            return [];
+            return new Collection();
         }
 
         // Cache the current route action (this callback actually), just to be safe.
@@ -34,12 +43,12 @@ class ImplicitRouteBinding
         // because that middleware has already ran, we need to run them again.
         $this->container['router']->substituteImplicitBindings($route);
 
-        $options = $route->resolveMethodDependencies($route->parameters(), new ReflectionMethod($component, 'mount'));
+        $parameters = $route->resolveMethodDependencies($route->parameters(), new ReflectionMethod($component, 'mount'));
 
         // Restore the original route action.
         $route->uses($cache);
 
-        return $options;
+        return new Collection($parameters);
     }
 
     public function resolveComponentProps(Route $route, Component $component)
@@ -48,11 +57,11 @@ class ImplicitRouteBinding
             return;
         }
 
-        $routeProps = $component->getPublicPropertyTypes()->intersectByKeys($route->parametersWithoutNulls());
-
-        foreach ($routeProps as $propName => $className) {
-            $component->{$propName} = $this->resolveParameter($route, $propName, $className);
-        }
+        return $component->getPublicPropertyTypes()
+            ->intersectByKeys($route->parametersWithoutNulls())
+            ->map(function($className, $propName) use ($route) {
+                return $this->resolveParameter($route, $propName, $className);
+            });
     }
 
     protected function resolveParameter($route, $parameterName, $parameterClassName)

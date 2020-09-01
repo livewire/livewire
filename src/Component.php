@@ -48,13 +48,12 @@ abstract class Component
 
     public function __invoke(Container $container, Route $route)
     {
-        $binding = new ImplicitRouteBinding($container);
-
-        $binding->resolveComponentProps($route, $this);
+        $params = (new ImplicitRouteBinding($container))
+            ->resolveAllParameters($route, $this);
 
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
-            ->mount($binding->resolveMountParameters($route, $this), false)
+            ->mount($params)
             ->renderToView();
 
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
