@@ -23,18 +23,6 @@ class Test extends TestCase
                 ->refresh()
 
                 /**
-                 * New components are discovered in the dom with rescan.
-                 **/
-                ->tap(function ($b) { $this->assertEquals([1], $b->script("return livewire.components.components().length")); })
-                ->tap(function ($b) { $b->script("window.node = document.querySelector('div')"); })
-                ->tap(function ($b) { $b->script("window.newNode = window.node.cloneNode()"); })
-                ->tap(function ($b) { $b->script("window.newNode.setAttribute('wire:id', 'foo')"); })
-                ->tap(function ($b) { $b->script("window.node.parentElement.appendChild(window.newNode)"); })
-                ->tap(function ($b) { $b->script("livewire.rescan()"); })
-                ->tap(function ($b) { $this->assertEquals([2], $b->script("return livewire.components.components().length")); })
-                ->refresh()
-
-                /**
                  * Rescanned components dont register twice.
                  **/
                 ->tap(function ($b) { $b->script("livewire.rescan()"); })

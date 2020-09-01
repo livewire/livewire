@@ -1,8 +1,8 @@
 import store from '@/Store'
 import queryString from '@/util/query-string'
 
-export default function() {
-    store.registerHook('componentInitialized', component => {
+export default function () {
+    store.registerHook('component.initialized', component => {
         if (!component.effects['query']) return
 
         let { properties, excepts } = component.effects['query']
@@ -38,7 +38,7 @@ export default function() {
         }
     })
 
-    store.registerHook('responseReceived', (component, response) => {
+    store.registerHook('message.received', (message, component) => {
         if (component.effects['query'] === undefined) return
 
         let { properties, excepts } = component.effects['query']
@@ -102,7 +102,7 @@ function dataDestinedForQueryString(component, properties) {
     return window.location.search
         ? {
               ...queryString.parse(window.location.search),
-              ...dataForQueryString
+              ...dataForQueryString,
           }
         : dataForQueryString
 }
@@ -127,7 +127,7 @@ function generateStateObject(dataDestinedForQueryString, component) {
     // point in time to the Livewire components.
     state.livewire = { updates: {} }
     state.livewire.updates[component.name] = {
-        data: dataDestinedForQueryString
+        data: dataDestinedForQueryString,
     }
 
     return state

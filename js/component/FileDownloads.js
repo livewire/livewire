@@ -1,7 +1,9 @@
 import store from '@/Store'
 
 export default function () {
-    store.registerHook('responseReceived', (component, response) => {
+    store.registerHook('message.received', (message, component) => {
+        let response = message.response
+
         if (! response.effects.download) return
 
         let url = window.URL.createObjectURL(

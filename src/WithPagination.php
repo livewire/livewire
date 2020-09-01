@@ -22,11 +22,17 @@ trait WithPagination
         });
 
         Paginator::defaultView($this->paginationView());
+        Paginator::defaultSimpleView($this->paginationView());
     }
 
     public function paginationView()
     {
-        return 'livewire::pagination-links';
+        return 'livewire::' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
+    }
+
+    public function paginationSimpleView()
+    {
+        return 'livewire::simple-' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
     }
 
     public function previousPage()

@@ -11,7 +11,7 @@ class PerformActionCalls implements HydrationMiddleware
     {
         try {
             foreach ($request->updates as $update) {
-                if ($update['type'] !== 'callMethod') return;
+                if ($update['type'] !== 'callMethod') continue;
 
                 $method = $update['payload']['method'];
                 $params = $update['payload']['params'];
