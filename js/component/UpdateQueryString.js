@@ -2,7 +2,7 @@ import store from '@/Store'
 import queryString from '@/util/query-string'
 
 export default function() {
-    store.registerHook('componentInitialized', component => {
+    store.registerHook('component.initialized', component => {
         let state = {
             fingerprint: component.fingerprint,
             data: component.serverMemo.data,
@@ -45,7 +45,7 @@ export default function() {
         }
     })
 
-    store.registerHook('responseReceived', (component, response) => {
+    store.registerHook('message.received', (component, response) => {
         if (response.effects['routePath'] === undefined) return
 
         // FIXME: component.effects vs. response.effects

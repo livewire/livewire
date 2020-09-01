@@ -62,9 +62,7 @@ class Response
 
     public function toInitialResponse()
     {
-        $this->embedIdInHtml();
-
-        return $this;
+        return tap($this)->embedIdInHtml();
     }
 
     public function toSubsequentResponse()
@@ -79,7 +77,9 @@ class Response
                 $dirtyMemo[$key] = $newValue;
 
                 continue;
-            } else if ($this->request->memo[$key] !== $newValue) {
+            }
+
+            if ($this->request->memo[$key] !== $newValue) {
                 $dirtyMemo[$key] = $newValue;
             }
         }

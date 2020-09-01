@@ -1,16 +1,16 @@
 import store from '@/Store'
 
 export default function () {
-    store.registerHook('interceptWireModelAttachListener', (el, directive, component) => {
-        if (! (el.rawNode().tagName.toLowerCase() === 'input' && el.rawNode().type === 'file')) return
+    store.registerHook('interceptWireModelAttachListener', (directive, el, component) => {
+        if (! (el.tagName.toLowerCase() === 'input' && el.type === 'file')) return
 
-        let start = () => el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true }))
-        let finish = () => el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true }))
-        let error = () => el.rawNode().dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
+        let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true }))
+        let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true }))
+        let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
         let progress = (progressEvent) => {
             var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
 
-            el.rawNode().dispatchEvent(
+            el.dispatchEvent(
                 new CustomEvent('livewire-upload-progress', {
                     bubbles: true, detail: { progress: percentCompleted }
                 })

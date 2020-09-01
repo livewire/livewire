@@ -5,36 +5,31 @@ namespace Livewire;
 use Illuminate\Contracts\Routing\UrlRoutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionMethod;
 
 class ImplicitRouteBinding
 {
-    // Can be removed if Laravel #34064 is merged
     protected $container;
 
-    // Can be removed if Laravel #34064 is merged
-    protected static function getParameterName($name, $parameters)
-    {
-        if (array_key_exists($name, $parameters)) {
-            return $name;
-        }
-
-        if (array_key_exists($snakedName = Str::snake($name), $parameters)) {
-            return $snakedName;
-        }
-    }
-
-    // Can be removed if Laravel #34064 is merged
     public function __construct($container)
     {
         $this->container = $container;
     }
 
+    public function resolveAllParameters(Route $route, Component $component)
+    {
+        $params = $this->resolveMountParameters($route, $component);
+        $props = $this->resolveComponentProps($route, $component);
+
+        return $params->merge($props)->all();
+    }
+
     public function resolveMountParameters(Route $route, Component $component)
     {
         if (! method_exists($component, 'mount')) {
-            return [];
+            return new Collection();
         }
 
         // Cache the current route action (this callback actually), just to be safe.
@@ -48,12 +43,12 @@ class ImplicitRouteBinding
         // because that middleware has already ran, we need to run them again.
         $this->container['router']->substituteImplicitBindings($route);
 
-        $options = $route->resolveMethodDependencies($route->parameters(), new ReflectionMethod($component, 'mount'));
+        $parameters = $route->resolveMethodDependencies($route->parameters(), new ReflectionMethod($component, 'mount'));
 
         // Restore the original route action.
         $route->uses($cache);
 
-        return $options;
+        return new Collection($parameters);
     }
 
     public function resolveComponentProps(Route $route, Component $component)
@@ -62,13 +57,19 @@ class ImplicitRouteBinding
             return;
         }
 
-        $routeProps = $component->getPublicPropertyTypes()->intersectByKeys($route->parametersWithoutNulls());
-        foreach ($routeProps as $propName => $className) {
-            $component->{$propName} = $this->resolveParameter($route, $propName, $className);
-        }
+        return $component->getPublicPropertyTypes()
+            ->intersectByKeys($route->parametersWithoutNulls())
+            ->map(function ($className, $propName) use ($route) {
+                $resolved = $this->resolveParameter($route, $propName, $className);
+
+                // We'll also pass the resolved model back to the route
+                // so that it can be used for any depending bindings
+                $route->setParameter($propName, $resolved);
+
+                return $resolved;
+            });
     }
 
-    // Can be removed if Laravel #34064 is merged
     protected function resolveParameter($route, $parameterName, $parameterClassName)
     {
         $parameterValue = $route->parameter($parameterName);

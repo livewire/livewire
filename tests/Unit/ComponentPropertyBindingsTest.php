@@ -30,7 +30,37 @@ class ComponentPropertyBindingsTest extends TestCase
 
         Route::get('/foo/{model}', ComponentWithPropBindings::class);
 
-        $this->get('/foo/route-model')->assertSeeText('prop:route-model');
+        $this->get('/foo/route-model')->assertSeeText('prop:via-route:route-model');
+    }
+
+    /** @test */
+    public function dependent_props_are_set_via_implicit_binding()
+    {
+        Livewire::component(ComponentWithDependentPropBindings::class);
+
+        Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentPropBindings::class);
+
+        $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
+    }
+
+    /** @test */
+    public function props_are_set_via_mount()
+    {
+        Livewire::component(ComponentWithPropBindings::class);
+
+        Livewire::test(ComponentWithPropBindings::class, [
+            'model' => new PropBoundModel('mount-model'),
+        ])->assertSeeText('prop:mount-model');
+    }
+
+    /** @test */
+    public function dependent_props_are_set_via_mount()
+    {
+        Livewire::component(ComponentWithDependentMountBindings::class);
+
+        Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentMountBindings::class);
+
+        $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
     }
 
     /** @test */
@@ -40,6 +70,8 @@ class ComponentPropertyBindingsTest extends TestCase
 
         Route::get('/foo/{parent}/child/{child}', ComponentWithPropBindingsAndMountMethod::class);
 
-        $this->get('/foo/parent-model/child/child-model')->assertSeeText('parent-model:child-model');
+        // In the case that a parent is a public property, and a child is injected via mount(),
+        // the result will *not* resolve via the relationship (it's super edge-case and makes everything terrible)
+        $this->get('/foo/parent-model/child/child-model')->assertSeeText('via-route:parent-model:via-route:child-model');
     }
 }

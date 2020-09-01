@@ -211,8 +211,8 @@ class TestCase extends BaseTestCase
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('responseReceived', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
-                "window.Livewire.hook('messageFailed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+                "window.Livewire.hook('message.received', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+                "window.Livewire.hook('message.failed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
             ]);
 
             if ($callback) {

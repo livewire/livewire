@@ -1,5 +1,6 @@
 
 export * from './debounce'
+export * from './wire-directives'
 export * from './walk'
 export * from './dispatch'
 export * from './getCsrfToken'

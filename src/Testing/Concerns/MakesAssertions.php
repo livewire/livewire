@@ -121,7 +121,7 @@ trait MakesAssertions
 
             $test = $event && $params[0]($event['event'], $event['params']);
         } else {
-            $test = !! collect($this->payload['effects']['emits'])->first(function ($item) use ($value, $params) {
+            $test = (bool) collect($this->payload['effects']['emits'])->first(function ($item) use ($value, $params) {
                 return $item['event'] === $value
                     && $item['params'] === $params;
             });
@@ -148,7 +148,7 @@ trait MakesAssertions
 
             $test = $event && $data($event['event'], $event['data']);
         } else {
-            $test = !! collect($this->payload['effects']['dispatches'])->first(function ($item) use ($name, $data) {
+            $test = (bool) collect($this->payload['effects']['dispatches'])->first(function ($item) use ($name, $data) {
                 return $item['event'] === $name
                     && $item['data'] === $data;
             });

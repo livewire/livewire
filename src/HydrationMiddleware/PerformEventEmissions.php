@@ -11,7 +11,7 @@ class PerformEventEmissions implements HydrationMiddleware
     {
         try {
             foreach ($request->updates as $update) {
-                if ($update['type'] !== 'fireEvent') return;
+                if ($update['type'] !== 'fireEvent') continue;
 
                 $event = $update['payload']['event'];
                 $params = $update['payload']['params'];

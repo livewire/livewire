@@ -38,7 +38,7 @@ class MountComponentTest extends TestCase
     {
         $this->expectException(MountMethodMissingException::class);
 
-        Livewire::test(ComponentWithoutMount::class, ['foo' => 10]);
+        Livewire::test(ComponentWithoutMount::class, ['bar' => 10]);
     }
 
     /** @test */

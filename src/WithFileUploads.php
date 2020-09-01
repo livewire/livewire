@@ -107,7 +107,7 @@ trait WithFileUploads
         if (is_array($value) && isset(array_values($value)[0]) && array_values($value)[0] instanceof TemporaryUploadedFile && is_numeric(key($value))) {
             return array_values($value)[0]::serializeMultipleForLivewireResponse($value);
         }
-        
+
         if (is_array($value)) {
             foreach ($value as $key => $item) {
                 $value[$key] = $this->dehydratePropertyFromWithFileUploads(null, $item);

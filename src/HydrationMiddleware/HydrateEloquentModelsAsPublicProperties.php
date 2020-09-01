@@ -29,7 +29,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                 $model = new $value['class'];
             }
 
-            $dirtyModelData = $request->memo['data'][$property] ?? [];
+            $dirtyModelData = $request->memo['data'][$property];
 
             if ($rules = $unHydratedInstance->rulesForModel($property)) {
                 $keys = $rules->keys()->map(function ($key) use ($unHydratedInstance) {
@@ -42,6 +42,10 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
             }
 
             $unHydratedInstance->$property = $model;
+
+            // Now that we've applied the data to the model, we'll unset it
+            // so that it isn't re-applied in later middleware
+            unset($request->memo['data'][$property]);
         }
     }
 
@@ -55,7 +59,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                     ? ['class' => get_class($value)]
                     : (array) (new static)->getSerializedPropertyValue($value);
 
-	            $modelData = [];
+                $modelData = [];
                 if ($rules = $instance->rulesForModel($property)) {
                     $keys = $rules->keys()->map(function ($key) use ($instance) {
                         return $instance->afterFirstDot($key);

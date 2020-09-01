@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Reflector;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MountMethodMissingException;
@@ -37,7 +38,7 @@ class LifecycleManager
         return tap(new static, function ($instance) use ($component) {
             $instance->instance = $component;
             $instance->request = new Request([
-                'fingerprint' => ['id' => $component->id, 'name' => $component->getName(), 'locale' => app()->getLocale()],
+                'fingerprint' => ['id' => $component->id, 'name' => $component::getName(), 'locale' => app()->getLocale()],
                 'updates' => [],
                 'serverMemo' => [],
             ]);
@@ -62,18 +63,28 @@ class LifecycleManager
 
     public function mount($params = [])
     {
-        try {
-            if (! method_exists($this->instance, 'mount') && count($params) > 0) {
-                throw new MountMethodMissingException($this->instance->getName());
+        $matchingProps = collect(array_intersect_key($params, $this->instance->getPublicPropertiesDefinedBySubClass()))
+            ->filter(function ($mountValue, $property) {
+                $typeHint = PHP_VERSION_ID < 70400
+                    ? null
+                    : Reflector::getParameterClassName(new \ReflectionProperty($this->instance, $property));
+
+                return ! $typeHint || is_a($mountValue, $typeHint);
+            })
+            ->each(function ($mountValue, $property) {
+                $this->instance->{$property} = $mountValue;
+            });
+
+        if (method_exists($this->instance, 'mount')) {
+            try {
+                ImplicitlyBoundMethod::call(app(), [$this->instance, 'mount'], $params);
+            } catch (ValidationException $e) {
+                Livewire::dispatch('failed-validation', $e->validator);
+
+                $this->instance->setErrorBag($e->validator->errors());
             }
-
-            if (! method_exists($this->instance, 'mount')) return $this;
-
-            ImplicitlyBoundMethod::call(app(), [$this->instance, 'mount'], $params);
-        } catch (ValidationException $e) {
-            Livewire::dispatch('failed-validation', $e->validator);
-
-            $this->instance->setErrorBag($e->validator->errors());
+        } elseif ($matchingProps->count() < count($params)) {
+            throw new MountMethodMissingException($this->instance::getName());
         }
 
         return $this;
@@ -108,7 +119,7 @@ class LifecycleManager
     {
         $this->response->embedThyselfInHtml();
 
-        app('livewire')->dispatch('mounted', $this->response);
+        Livewire::dispatch('mounted', $this->response);
 
         return $this->response->toInitialResponse();
     }

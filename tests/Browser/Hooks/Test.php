@@ -15,10 +15,10 @@ class Test extends TestCase
             Livewire::visit($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('beforeDomUpdate', () => {
+                        "window.livewire.hook('message.received', () => {
                             document.querySelector('[dusk=\"output\"]').value = 'before';
                         })",
-                        "window.livewire.hook('afterDomUpdate', () => {
+                        "window.livewire.hook('message.processed', () => {
                             document.querySelector('[dusk=\"output\"]').value += '_after';
                         })",
                     ]);

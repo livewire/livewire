@@ -20,7 +20,7 @@ class LivewireManager
     {
         if (is_null($viewClass)) {
             $viewClass = $alias;
-            $alias = (new $viewClass('fake-id'))->getName();
+            $alias = $viewClass::getName();
         }
 
         $this->componentAliases[$alias] = $viewClass;
@@ -28,7 +28,7 @@ class LivewireManager
 
     public function getClass($alias)
     {
-        $finder = app()->make(LivewireComponentsFinder::class);
+        $finder = app(LivewireComponentsFinder::class);
 
         $class = false;
 
@@ -71,12 +71,7 @@ class LivewireManager
         $id = Str::random(20);
 
         if (class_exists($name)) {
-            $instance = new $name($id);
-            // Set the name to the computed name, so that the full namespace
-            // isn't leaked to the front-end.
-            $name = $instance->getName();
-        } else {
-            $instance = $this->getInstance($name, $id);
+            $name = $name::getName();
         }
 
         return LifecycleManager::fromInitialRequest($name, $id)
@@ -91,7 +86,6 @@ class LivewireManager
     {
         return "<{$tagName} wire:id=\"{$id}\"></{$tagName}>";
     }
-
 
     public function test($name, $params = [])
     {
@@ -291,8 +285,6 @@ HTML;
 
     public function listen($event, $callback)
     {
-        $this->listeners[$event] ?? $this->listeners[$event] = [];
-
         $this->listeners[$event][] = $callback;
     }
 

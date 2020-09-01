@@ -62,20 +62,18 @@ trait InteractsWithProperties
 
         return $data;
     }
-    
+
     public function getPublicPropertyTypes()
     {
-	    if (PHP_VERSION_ID < 70400) {
-		    return new Collection();
-	    }
-    	
-    	$reflected = new \ReflectionClass($this);
-    	
-    	return Collection::make($this->getPublicPropertiesDefinedBySubClass())
-		    ->map(function($value, $name) use ($reflected) {
-			    return Reflector::getParameterClassName($reflected->getProperty($name));
-		    })
-		    ->filter();
+        if (PHP_VERSION_ID < 70400) {
+            return new Collection();
+        }
+
+        return collect($this->getPublicPropertiesDefinedBySubClass())
+            ->map(function ($value, $name) {
+                return Reflector::getParameterClassName(new \ReflectionProperty($this, $name));
+            })
+            ->filter();
     }
 
     public function getProtectedOrPrivatePropertiesDefinedBySubClass()

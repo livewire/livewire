@@ -1,22 +1,28 @@
-import MessageBus from "./MessageBus"
+import MessageBus from './MessageBus'
 
 export default {
     availableHooks: [
-        'componentInitialized',
-        'elementInitialized',
-        'elementRemoved',
-        'messageSent',
-        'messageFailed',
-        'responseReceived',
-        'beforeDomUpdate',
-        'beforeElementUpdate',
-        'afterElementUpdate',
-        'afterDomUpdate',
+        /**
+         * Public Hooks
+         */
+        'component.initialized',
+        'element.initialized',
+        'element.updating',
+        'element.updated',
+        'element.removed',
+        'message.sent',
+        'message.failed',
+        'message.received',
+        'message.processed',
+
+        /**
+         * Private Hooks
+         */
         'interceptWireModelSetValue',
         'interceptWireModelAttachListener',
     ],
 
-    bus: new MessageBus,
+    bus: new MessageBus(),
 
     register(name, callback) {
         if (! this.availableHooks.includes(name)) {
@@ -28,5 +34,5 @@ export default {
 
     call(name, ...params) {
         this.bus.call(name, ...params)
-    }
+    },
 }

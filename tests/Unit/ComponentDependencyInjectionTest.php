@@ -113,7 +113,7 @@ class ComponentDependencyInjectionTest extends TestCase
     }
 
     /** @test */
-    public function it_can_inject_dependency_via_render_method()
+    public function component_render_method_with_dependency()
     {
         $component = Livewire::test(CustomComponent::class);
 
