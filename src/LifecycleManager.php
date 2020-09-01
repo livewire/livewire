@@ -39,7 +39,7 @@ class LifecycleManager
         return tap(new static, function ($instance) use ($component) {
             $instance->instance = $component;
             $instance->request = new Request([
-                'fingerprint' => ['id' => $component->id, 'name' => $component->getName(), 'locale' => app()->getLocale()],
+                'fingerprint' => ['id' => $component->id, 'name' => $component::getName(), 'locale' => app()->getLocale()],
                 'updates' => [],
                 'serverMemo' => [],
             ]);
@@ -85,7 +85,7 @@ class LifecycleManager
                 $this->instance->setErrorBag($e->validator->errors());
             }
         } elseif ($matchingProps->count() !== count($params)) {
-            throw new MountMethodMissingException($this->instance->getName());
+            throw new MountMethodMissingException($this->instance::getName());
         }
 
         return $this;
@@ -120,7 +120,7 @@ class LifecycleManager
     {
         $this->response->embedThyselfInHtml();
 
-        app('livewire')->dispatch('mounted', $this->response);
+        Livewire::dispatch('mounted', $this->response);
 
         return $this->response->toInitialResponse();
     }

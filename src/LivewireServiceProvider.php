@@ -6,7 +6,6 @@ use Illuminate\View\View;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Livewire\LivewireViewCompilerEngine;
 use Livewire\Controllers\FileUploadHandler;
 use Livewire\Controllers\FilePreviewHandler;
 use Livewire\Controllers\HttpConnectionHandler;
@@ -166,34 +165,30 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerTestMacros()
     {
         // Usage: $this->assertSeeLivewire('counter');
-        $macro = function ($component) {
+        TestResponse::macro('assertSeeLivewire', function ($component) {
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringContainsString(
-                (string) $escapedComponentName, $this->getContent(),
+                $escapedComponentName,
+                $this->getContent(),
                 'Cannot find Livewire component ['.$component.'] rendered on page.'
             );
 
             return $this;
-        };
-
-
-        TestResponse::macro('assertSeeLivewire', $macro);
+        });
 
         // Usage: $this->assertDontSeeLivewire('counter');
-        $macro = function ($component) {
+        TestResponse::macro('assertDontSeeLivewire', function ($component) {
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringNotContainsString(
-                (string) $escapedComponentName, $this->getContent(),
+                $escapedComponentName,
+                $this->getContent(),
                 'Found Livewire component ['.$component.'] rendered on page.'
             );
 
             return $this;
-        };
-
-
-        TestResponse::macro('assertDontSeeLivewire', $macro);
+        });
     }
 
     protected function registerViewMacros()

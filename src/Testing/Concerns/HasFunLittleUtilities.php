@@ -6,7 +6,7 @@ trait HasFunLittleUtilities
 {
     public function dump()
     {
-        echo $this->dom;
+        echo $this->lastRenderedDom;
 
         return $this;
     }

@@ -2,16 +2,14 @@
 
 namespace Livewire;
 
-use Illuminate\Contracts\Container\Container;
-use Illuminate\Routing\Route;
-use Livewire\Request;
-use Livewire\Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
+use Illuminate\Routing\Route;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Contracts\Container\Container;
+use Livewire\Macros\PretendClassMethodIsControllerMethod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
@@ -37,9 +35,7 @@ abstract class Component
 
     public function __construct($id = null)
     {
-        if (is_null($id)) $id = Str::random(20);
-
-        $this->id = $id;
+        $this->id = $id ?? Str::random(20);
 
         $this->ensureIdPropertyIsntOverridden();
 
@@ -48,12 +44,12 @@ abstract class Component
 
     public function __invoke(Container $container, Route $route)
     {
-        $params = (new ImplicitRouteBinding($container))
+        $componentParams = (new ImplicitRouteBinding($container))
             ->resolveAllParameters($route, $this);
 
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
-            ->mount($params)
+            ->mount($componentParams)
             ->renderToView();
 
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
@@ -71,8 +67,8 @@ abstract class Component
     protected function ensureIdPropertyIsntOverridden()
     {
         throw_if(
-            in_array('id', array_keys($this->getPublicPropertiesDefinedBySubClass())),
-            new CannotUseReservedLivewireComponentProperties('id', $this->getName())
+            array_key_exists('id', $this->getPublicPropertiesDefinedBySubClass()),
+            new CannotUseReservedLivewireComponentProperties('id', $this::getName())
         );
     }
 
@@ -85,7 +81,7 @@ abstract class Component
         }
     }
 
-    public function getName()
+    public static function getName()
     {
         $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace', 'App\\Http\\Livewire'))))
             ->map([Str::class, 'kebab'])
@@ -142,10 +138,10 @@ abstract class Component
     {
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
-            : view("livewire.{$this->getName()}");
+            : view("livewire.{$this::getName()}");
 
         if (is_string($view)) {
-            $view = app('view')->make((new CreateBladeViewFromString)($view));
+            $view = app('view')->make(CreateBladeView::fromString($view));
         }
 
         throw_unless($view instanceof View,
@@ -263,15 +259,17 @@ abstract class Component
 
     public function __get($property)
     {
-        if (method_exists($this, $computedMethodName = 'get'.ucfirst($property).'Property')) {
+        $studlyProperty = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
+
+        if (method_exists($this, $computedMethodName = 'get'.$studlyProperty.'Property')) {
             if (isset($this->computedPropertyCache[$property])) {
                 return $this->computedPropertyCache[$property];
-            } else {
-                return $this->computedPropertyCache[$property] = $this->$computedMethodName();
             }
+
+            return $this->computedPropertyCache[$property] = $this->$computedMethodName();
         }
 
-        throw new \Exception("Property [{$property}] does not exist on the {$this->getName()} component.");
+        throw new \Exception("Property [{$property}] does not exist on the {$this::getName()} component.");
     }
 
     public function __call($method, $params)

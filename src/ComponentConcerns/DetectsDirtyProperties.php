@@ -13,10 +13,10 @@ trait DetectsDirtyProperties
         foreach ($this->getPublicPropertiesDefinedBySubClass() as $property => $value) {
             if (is_array($value)) {
                 foreach (Arr::dot($value, $property.'.') as $key => $value) {
-                    $this->propertyHashes[$key] = $this->hashProperty($key);
+                    $this->rehashProperty($key);
                 }
             } else {
-                $this->propertyHashes[$property] = $this->hashProperty($property);
+                $this->rehashProperty($property);
             }
         }
     }
