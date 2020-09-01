@@ -1,7 +1,7 @@
 import EventAction from '@/action/event'
 import HookManager from '@/HookManager'
-import DirectiveManager from '@/DirectiveManager'
 import MessageBus from './MessageBus'
+import DirectiveManager from './DirectiveManager'
 
 const store = {
     componentsById: {},
@@ -10,9 +10,9 @@ const store = {
     livewireIsInBackground: false,
     livewireIsOffline: false,
     sessionHasExpired: false,
-    hooks: HookManager,
     directives: DirectiveManager,
-    onErrorCallback: () => {},
+    hooks: HookManager,
+    onErrorCallback: () => { },
 
     components() {
         return Object.keys(this.componentsById).map(key => {
@@ -86,7 +86,7 @@ const store = {
     componentsListeningForEventThatAreTreeAncestors(el, event) {
         var parentIds = []
 
-        var parent = el.rawNode().parentElement.closest('[wire\\:id]')
+        var parent = el.parentElement.closest('[wire\\:id]')
 
         while (parent) {
             parentIds.push(parent.getAttribute('wire:id'))

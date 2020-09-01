@@ -1,7 +1,7 @@
 import store from '@/Store'
 
 export default function () {
-    store.registerHook('componentInitialized', component => {
+    store.registerHook('component.initialized', component => {
         if (Array.isArray(component.listeners)) {
             component.listeners.forEach(event => {
                 if (event.startsWith('echo')) {

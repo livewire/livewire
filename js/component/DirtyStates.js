@@ -1,37 +1,38 @@
 import store from '@/Store'
+import DOM from '../dom/dom'
+import { wireDirectives } from '../util'
 
 export default function () {
-    store.registerHook('componentInitialized', component => {
+    store.registerHook('component.initialized', component => {
         component.dirtyEls = []
     })
 
-    store.registerHook('elementInitialized', (el, component) => {
-        if (el.directives.missing('dirty')) return
+    store.registerHook('element.initialized', (el, component) => {
+        if (wireDirectives(el).missing('dirty')) return
 
         component.dirtyEls.push(el)
     })
 
     store.registerHook(
         'interceptWireModelAttachListener',
-        (el, directive, component) => {
+        (directive, el, component) => {
             let property = directive.value
 
-            el.el.addEventListener('input', () => {
+            el.addEventListener('input', () => {
                 component.dirtyEls.forEach(dirtyEl => {
+                    let directives = wireDirectives(dirtyEl)
                     if (
-                        (dirtyEl.directives.has('model') &&
-                            dirtyEl.directives.get('model').value ===
+                        (directives.has('model') &&
+                            directives.get('model').value ===
                                 property) ||
-                        (dirtyEl.directives.has('target') &&
-                            dirtyEl.directives
+                        (directives.has('target') &&
+                            directives
                                 .get('target')
                                 .value.split(',')
                                 .map(s => s.trim())
                                 .includes(property))
                     ) {
-                        let isDirty =
-                            el.valueFromInput(component) !=
-                            component.get(property)
+                        let isDirty = DOM.valueFromInput(el, component) != component.get(property)
 
                         setDirtyState(dirtyEl, isDirty)
                     }
@@ -40,7 +41,7 @@ export default function () {
         }
     )
 
-    store.registerHook('responseReceived', component => {
+    store.registerHook('message.received', (message, component) => {
         component.dirtyEls.forEach(element => {
             if (element.__livewire_dirty_cleanup) {
                 element.__livewire_dirty_cleanup()
@@ -49,7 +50,7 @@ export default function () {
         })
     })
 
-    store.registerHook('elementRemoved', (el, component) => {
+    store.registerHook('element.removed', (el, component) => {
         component.dirtyEls.forEach((element, index) => {
             if (element.isSameNode(el)) {
                 component.dirtyEls.splice(index, 1)
@@ -59,7 +60,7 @@ export default function () {
 }
 
 function setDirtyState(el, isDirty) {
-    const directive = el.directives.get('dirty')
+    const directive = wireDirectives(el).get('dirty')
 
     if (directive.modifiers.includes('class')) {
         const classes = directive.value.split(' ')
@@ -80,9 +81,9 @@ function setDirtyState(el, isDirty) {
             el.__livewire_dirty_cleanup = () =>
                 el.setAttribute(directive.value, true)
         }
-    } else if (!el.directives.get('model')) {
-        el.el.style.display = isDirty ? 'inline-block' : 'none'
+    } else if (! wireDirectives(el).get('model')) {
+        el.style.display = isDirty ? 'inline-block' : 'none'
         el.__livewire_dirty_cleanup = () =>
-            (el.el.style.display = isDirty ? 'none' : 'inline-block')
+            (el.style.display = isDirty ? 'none' : 'inline-block')
     }
 }

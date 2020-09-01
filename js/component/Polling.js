@@ -1,29 +1,28 @@
 import MethodAction from '@/action/method'
-import DOMElement from '@/dom/dom_element'
+import { wireDirectives} from '@/util'
 import store from '@/Store'
 
 export default function () {
-    store.registerHook('elementInitialized', (el, component) => {
-        if (el.directives.missing('poll')) return
+    store.registerHook('element.initialized', (el, component) => {
+        let directives = wireDirectives(el)
 
-        let intervalId = fireActionOnInterval(el.el, component)
+        if (directives.missing('poll')) return
+
+        let intervalId = fireActionOnInterval(el, component)
 
         component.addListenerForTeardown(() => {
             clearInterval(intervalId)
         })
 
-        el.el.__livewire_polling_interval = intervalId
+        el.__livewire_polling_interval = intervalId
     })
 
-    store.registerHook('beforeElementUpdate', (from, to, component) => {
+    store.registerHook('element.updating', (from, to, component) => {
         if (from.__livewire_polling_interval !== undefined) return
 
-        let fromEl = new DOMElement(from)
-        let toEl = new DOMElement(to)
-
-        if (fromEl.directives.missing('poll') && toEl.directives.has('poll')) {
+        if (wireDirectives(from).missing('poll') && wireDirectives(to).has('poll')) {
             setTimeout(() => {
-                let intervalId = fireActionOnInterval(fromEl.el, component)
+                let intervalId = fireActionOnInterval(from, component)
 
                 component.addListenerForTeardown(() => {
                     clearInterval(intervalId)
@@ -36,17 +35,17 @@ export default function () {
 }
 
 function fireActionOnInterval(node, component) {
-    let interval = (new DOMElement(node)).directives.get('poll').durationOr(2000);
+    let interval = wireDirectives(node).get('poll').durationOr(2000);
 
     return setInterval(() => {
         if (node.isConnected === false) return
 
-        let el = new DOMElement(node);
+        let directives = wireDirectives(node)
 
         // Don't poll when directive is removed from element.
-        if (el.directives.missing('poll')) return
+        if (directives.missing('poll')) return
 
-        const directive = el.directives.get('poll')
+        const directive = directives.get('poll')
         const method = directive.method || '$refresh'
 
         // Don't poll when the tab is in the background.
@@ -57,6 +56,6 @@ function fireActionOnInterval(node, component) {
         // Don't poll if livewire is offline as well.
         if (store.livewireIsOffline) return
 
-        component.addAction(new MethodAction(method, directive.params, el))
+        component.addAction(new MethodAction(method, directive.params, node))
     }, interval);
 }

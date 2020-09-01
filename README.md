@@ -25,9 +25,6 @@ Livewire uses semantic versioning and will use the following release schedule st
 * Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
 * Add `wire:append` for appending DOM changes rather than replacing them
 
-## V2 Roadmap
-* Use camel-cased accessors for snake-cased properties ($this->foo_bar -> $this->getFooBarProperty) (PR ready here: #690)
-
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):

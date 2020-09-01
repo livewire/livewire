@@ -260,7 +260,9 @@ abstract class Component
 
     public function __get($property)
     {
-        if (method_exists($this, $computedMethodName = 'get'.ucfirst($property).'Property')) {
+        $studlyProperty = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
+
+        if (method_exists($this, $computedMethodName = 'get'.$studlyProperty.'Property')) {
             if (isset($this->computedPropertyCache[$property])) {
                 return $this->computedPropertyCache[$property];
             }
