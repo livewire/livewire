@@ -80,8 +80,7 @@ trait ValidatesInput
     {
         return ! collect(array_keys($this->getRules()))->map(function ($rule) {
             return Str::of($rule)->before('*')->rtrim('.');
-        })->contains($key);
-
+        })->contains(Str::of($key)->replaceMatches('/\.\d+\./','.*.')->before('*')->rtrim('.'));
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])

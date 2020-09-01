@@ -11,8 +11,8 @@ function testArray()
     return [
         'name' => 'Caleb',
         'aliases' => [
-            ['name' => 'Treehugger'],
-            ['name' => 'something else'],
+            0 => ['name' => 'Treehugger'],
+            1 => ['name' => 'something else'],
         ],
         'bar' => [
             'baz' => 'bob'
@@ -28,8 +28,12 @@ class EloquentModelHydrationMiddlewareTest extends TestCase
         $component = Livewire::test(ComponentForEloquentModelHydrationMiddleware::class);
         $this->assertEqualsCanonicalizing(testArray(), $component->get('foo'));
         $component->set('foo.name', 'Adrian');
-        $component->set('foo.aliases', [['name' => 'Tester']]);
-        $this->assertEqualsCanonicalizing(array_merge(testArray(), ['name' => 'Adrian', 'aliases' => [['name' => 'Tester']]]), $component->get('foo'));
+        $component->set('foo.aliases.1.name', 'Tester');
+        $component->set('foo.aliases.2.name', 'Role model');
+        $this->assertEqualsCanonicalizing(array_merge(testArray(), ['name' => 'Adrian', 'aliases' => [['name' => 'Treehugger'], ['name' => 'Tester'], ['name' => 'Role model']]]), $component->get('foo'));
+
+        $component->set('foo.aliases', [['name' => 'foo'], ['name' => 'bar'], ['name' => 'baz']]);
+        $this->assertEqualsCanonicalizing(array_merge(testArray(), ['name' => 'Adrian', 'aliases' => [['name' => 'foo'], ['name' => 'bar'], ['name' => 'baz']]]), $component->get('foo'));
     }
 }
 

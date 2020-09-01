@@ -30,13 +30,42 @@ trait HandlesActions
             );
 
             if ($this->containsDots($name)) {
-                data_set($this->{$propertyName}, $this->afterFirstDot($name), $value);
+                //$name = foo.aliases.0.name
+                $keyName = $this->afterFirstDot($name);
+
+                $targetKey = $this->beforeFirstDot($keyName);
+                $results[$targetKey] = data_get($this->{$propertyName}, $targetKey, []);
+                data_set($results, $keyName, $value);
+                $results = $this->replacePlaceholders($results);
+
+                data_set($this->{$propertyName}, $targetKey, head($results));
             } else {
                 $this->{$name} = $value;
             }
 
             $rehash && $this->rehashProperty($name);
         });
+    }
+
+    protected function replacePlaceholders($data)
+    {
+        $originalData = [];
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $value = $this->replacePlaceholders($value);
+            }
+
+            $key = str_replace(
+                ['__dot__', '__asterisk__'],
+                ['.', '*'],
+                $key
+            );
+
+            $originalData[$key] = $value;
+        }
+
+        return $originalData;
     }
 
     protected function callBeforeAndAfterSyncHooks($name, $value, $callback)
