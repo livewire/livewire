@@ -66,9 +66,9 @@ class LifecycleManager
     {
         $matchingProps = collect(array_intersect_key($params, $this->instance->getPublicPropertiesDefinedBySubClass()))
             ->filter(function ($mountValue, $property) {
-                $typeHint = Reflector::getParameterClassName(
-                    new ReflectionProperty($this->instance, $property)
-                );
+                $typeHint = PHP_VERSION_ID < 70400
+                    ? null
+                    : Reflector::getParameterClassName(new ReflectionProperty($this->instance, $property));
 
                 return ! $typeHint || is_a($mountValue, $typeHint);
             })

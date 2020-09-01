@@ -66,15 +66,15 @@ trait InteractsWithProperties
 
     public function getPublicPropertyTypes()
     {
-	    if (PHP_VERSION_ID < 70400) {
-		    return new Collection();
-	    }
+        if (PHP_VERSION_ID < 70400) {
+            return new Collection();
+        }
 
-    	return Collection::make($this->getPublicPropertiesDefinedBySubClass())
-		    ->map(function ($value, $name) {
-			    return Reflector::getParameterClassName(new ReflectionProperty($this, $name));
-		    })
-		    ->filter();
+        return Collection::make($this->getPublicPropertiesDefinedBySubClass())
+            ->map(function ($value, $name) {
+                return Reflector::getParameterClassName(new ReflectionProperty($this, $name));
+            })
+            ->filter();
     }
 
     public function getProtectedOrPrivatePropertiesDefinedBySubClass()
@@ -92,10 +92,10 @@ trait InteractsWithProperties
         return $data;
     }
 
-    public function getInitializedPropertyValue(\ReflectionProperty $property) {
+    public function getInitializedPropertyValue(ReflectionProperty $property) {
         // Ensures typed property is initialized in PHP >=7.4, if so, return its value,
         // if not initialized, return null (as expected in earlier PHP Versions)
-        if (method_exists($property, 'isInitialized') && !$property->isInitialized($this)) {
+        if (method_exists($property, 'isInitialized') && ! $property->isInitialized($this)) {
             return null;
         }
 

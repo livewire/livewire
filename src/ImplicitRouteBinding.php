@@ -59,7 +59,7 @@ class ImplicitRouteBinding
 
         return $component->getPublicPropertyTypes()
             ->intersectByKeys($route->parametersWithoutNulls())
-            ->map(function($className, $propName) use ($route) {
+            ->map(function ($className, $propName) use ($route) {
                 return $this->resolveParameter($route, $propName, $className);
             });
     }
