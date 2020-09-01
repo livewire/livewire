@@ -33,7 +33,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
 
             if ($rules = $unHydratedInstance->rulesForModel($property)) {
                 $keys = $rules->keys()->map(function ($key) use ($unHydratedInstance) {
-                    return $unHydratedInstance->beforeFirstDot($unHydratedInstance->afterFirstDot($key));
+                    return $unHydratedInstance->beforeFirstDot($key);
                 });
 
                 foreach ($keys as $key) {
