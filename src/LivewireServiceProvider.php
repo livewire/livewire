@@ -257,8 +257,8 @@ class LivewireServiceProvider extends ServiceProvider
         /*                                                               */
         /* Incoming Request                            Outgoing Response */
         /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
-        /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
+        /* v */ HydratePublicProperties::class,                     /* ^ */
         /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
         /* v */ CallHydrationHooks::class,                          /* ^ */
         /* v */ PersistErrorBag::class,                             /* ^ */
