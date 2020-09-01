@@ -11,12 +11,12 @@ class HydratePublicProperties implements HydrationMiddleware
     public static function hydrate($unHydratedInstance, $request)
     {
         $publicProperties = static::removeTypedProperties(
-        	$unHydratedInstance, $request->memo['data']
+            $unHydratedInstance, $request->memo['data']
         );
 
-	    foreach ($publicProperties as $property => $value) {
-		    $unHydratedInstance->$property = $value;
-	    }
+        foreach ($publicProperties as $property => $value) {
+            $unHydratedInstance->$property = $value;
+        }
     }
 
     public static function dehydrate($instance, $response)
@@ -37,11 +37,11 @@ class HydratePublicProperties implements HydrationMiddleware
 
     protected static function removeTypedProperties($instance, $properties)
     {
-    	// Property types were introduced in 7.4.0
-	    if (PHP_VERSION_ID < 70400) {
-	    	return $properties;
-	    }
+        // Property types were introduced in 7.4.0
+        if (PHP_VERSION_ID < 70400) {
+            return $properties;
+        }
 
-	    return array_diff_key($properties, $instance->getPublicPropertyTypes()->toArray());
+        return array_diff_key($properties, $instance->getPublicPropertyTypes()->toArray());
     }
 }
