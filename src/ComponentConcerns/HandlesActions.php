@@ -10,6 +10,7 @@ use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
+use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
 use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 
 trait HandlesActions
@@ -35,7 +36,7 @@ trait HandlesActions
                 $this->{$name} = $value;
             }
 
-            $rehash && $this->rehashProperty($name);
+            HashDataPropertiesForDirtyDetection::rehashProperty($name, $value, $this);
         });
     }
 

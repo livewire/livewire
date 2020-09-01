@@ -2,13 +2,16 @@
 
 namespace Livewire;
 
+use ReflectionMethod;
+use Illuminate\Routing\Route;
+use Illuminate\Support\Reflector;
+use Illuminate\Support\Collection;
 use Illuminate\Contracts\Routing\UrlRoutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Routing\Route;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
-use ReflectionMethod;
 
+/**
+ * This class mirrors the functionality of Laravel's Illuminate\Routing\ImplicitRouteBinding class.
+ */
 class ImplicitRouteBinding
 {
     protected $container;
@@ -57,7 +60,7 @@ class ImplicitRouteBinding
             return;
         }
 
-        return $component->getPublicPropertyTypes()
+        return $this->getPublicPropertyTypes($component)
             ->intersectByKeys($route->parametersWithoutNulls())
             ->map(function ($className, $propName) use ($route) {
                 $resolved = $this->resolveParameter($route, $propName, $className);
@@ -68,6 +71,19 @@ class ImplicitRouteBinding
 
                 return $resolved;
             });
+    }
+
+    public function getPublicPropertyTypes($component)
+    {
+        if (PHP_VERSION_ID < 70400) {
+            return new Collection();
+        }
+
+        return collect($component->getPublicPropertiesDefinedBySubClass())
+            ->map(function ($value, $name) use ($component) {
+                return Reflector::getParameterClassName(new \ReflectionProperty($component, $name));
+            })
+            ->filter();
     }
 
     protected function resolveParameter($route, $parameterName, $parameterClassName)
