@@ -6,7 +6,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Reflector;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
-use ReflectionProperty;
 
 trait InteractsWithProperties
 {
@@ -72,7 +71,7 @@ trait InteractsWithProperties
 
         return Collection::make($this->getPublicPropertiesDefinedBySubClass())
             ->map(function ($value, $name) {
-                return Reflector::getParameterClassName(new ReflectionProperty($this, $name));
+                return Reflector::getParameterClassName(new \ReflectionProperty($this, $name));
             })
             ->filter();
     }
