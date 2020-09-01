@@ -1,23 +1,43 @@
 import store from '@/Store'
-import queryString from '@/util/query-string'
+import Message from '../Message';
 
 export default function() {
     store.registerHook('component.initialized', component => {
-        let state = {
+        let message = {
             fingerprint: component.fingerprint,
-            data: component.serverMemo.data,
-            dataMeta: component.serverMemo.dataMeta,
+            serverMemo: component.serverMemo,
+            effects: { html: component.el.outerHTML } // FIXME: initialData
         }
 
-        // FIXME
-        // replaceState(state, window.location.href)
+        replaceState(component, message, window.location.href)
+    })
+
+    store.registerHook('message.received', ({ response }, component) => {
+        if (response.effects['routePath'] === undefined) return
+
+        let routePath = response.effects['routePath']
+
+        pushState(component, response, routePath)
+
+        // if (component.useReplaceState === true) {
+        //     component.useReplaceState = false
+        //
+        //     replaceState(component, response, routePath)
+        // } else {
+        //     pushState(component, response, routePath)
+        // }
     })
 
     window.addEventListener('popstate', event => {
-        // console.warn(event)
+        console.warn(event)
         if (event && event.state && event.state.livewire) {
-            // let component = store.getComponentsByName(event.state.livewire.component)[0];
-            // store.callHook('responseReceived', component, event.state.livewire.response)
+            let component = store.getComponentsByName(event.state.livewire.component)[0];
+
+            let message = new Message(component, component.updateQueue)
+            message.storeResponse(event.state.livewire.message)
+
+            component.handleResponse(message);
+            component.call('$refresh')
 
             // Object.keys(event.state.livewire.updates).forEach(name => {
             //     let component = store.getComponentsByName(name)[0]
@@ -44,43 +64,22 @@ export default function() {
             // })
         }
     })
-
-    store.registerHook('message.received', ({response}, component) => {
-        if (response.effects['routePath'] === undefined) return
-
-        // FIXME: component.effects vs. response.effects
-        let routePath = response.effects['routePath']
-        console.warn(response);
-        history.replaceState({}, '', routePath);
-
-        let state = generateStateObject(component, response)
-
-        // if (component.useReplaceState === true) {
-        //     component.useReplaceState = false
-        //
-        //     replaceState(component.name, response, routePath)
-        // } else {
-        //    pushState(component.name, response, routePath)
-        // }
-    })
 }
 
-function replaceState(state, path) {
-    history.replaceState(state, '', path)
+function replaceState(component, message, path) {
+    history.replaceState(generateStateObject(component, message), '', path)
 }
 
-function pushState(state, path) {
-    history.pushState(state, '', path)
+function pushState(component, message, path) {
+    history.pushState(generateStateObject(component, message), '', path)
 }
 
-function generateStateObject(component, response) {
-    // This makes it so that Turbolinks doesn't break Livewire on the back button.
-    let state = { turbolinks: {} }
-
-    // Store the current Livewire state in the history stack, so that
-    // when a user hits a back button, we can re-apply the state from this
-    // point in time to the Livewire components.
-    state.livewire = { component, response }
-
-    return state
+function generateStateObject(component, message) {
+    return {
+        turbolinks: {},
+        livewire: {
+            component: component.name,
+            message
+        }
+    }
 }
