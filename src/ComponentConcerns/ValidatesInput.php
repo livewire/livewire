@@ -86,11 +86,11 @@ trait ValidatesInput
         $rules = is_null($rules) ? $this->getRules() : $rules;
         throw_if(empty($rules), new MissingRulesPropertyException($this::getName()));
 
-        $fields = array_keys($rules);
-
         $result = $this->getPublicPropertiesDefinedBySubClass();
 
-        foreach ((array) $fields as $field) {
+        $fields = array_keys($rules);
+
+        foreach ($fields as $field) {
             throw_unless(
                 $this->hasProperty($field),
                 new \Exception('No property found for validation: ['.$field.']')
