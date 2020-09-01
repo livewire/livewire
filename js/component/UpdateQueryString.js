@@ -45,12 +45,13 @@ export default function() {
         }
     })
 
-    store.registerHook('message.received', (component, response) => {
+    store.registerHook('message.received', ({response}, component) => {
         if (response.effects['routePath'] === undefined) return
 
         // FIXME: component.effects vs. response.effects
         let routePath = response.effects['routePath']
         console.warn(response);
+        history.replaceState({}, '', routePath);
 
         let state = generateStateObject(component, response)
 
