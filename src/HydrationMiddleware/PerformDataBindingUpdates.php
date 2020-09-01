@@ -11,7 +11,7 @@ class PerformDataBindingUpdates implements HydrationMiddleware
     {
         try {
             foreach ($request->updates as $update) {
-                if ($update['type'] !== 'syncInput') return;
+                if ($update['type'] !== 'syncInput') continue;
 
                 $data = $update['payload'];
 
