@@ -117,7 +117,7 @@ function addLoadingEl(component, el, directive, actionsNames) {
 function removeLoadingEl(component, el) {
     // Look through the global/generic elements for the element to remove.
     component.genericLoadingEls.forEach((element, index) => {
-        if (element.isSameNode(el)) {
+        if (element.el.isSameNode(el)) {
             component.genericLoadingEls.splice(index, 1)
         }
     })
@@ -127,7 +127,7 @@ function removeLoadingEl(component, el) {
         component.targetedLoadingElsByAction[
             key
         ] = component.targetedLoadingElsByAction[key].filter(element => {
-            return ! element.isSameNode(el)
+            return ! element.el.isSameNode(el)
         })
     })
 }
