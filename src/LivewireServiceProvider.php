@@ -6,6 +6,7 @@ use Illuminate\View\View;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\View\ComponentAttributeBag;
 use Livewire\Controllers\FileUploadHandler;
 use Livewire\Controllers\FilePreviewHandler;
 use Livewire\Controllers\HttpConnectionHandler;
@@ -61,7 +62,6 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerCommands();
         $this->registerRenameMes();
-        $this->registerTestMacros();
         $this->registerViewMacros();
         $this->registerTagCompiler();
         $this->registerPublishables();
@@ -193,6 +193,15 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerViewMacros()
     {
+        ComponentAttributeBag::macro('wire', function ($name) {
+            $entries = head($this->whereStartsWith('wire:'.$name));
+
+            $directive = head(array_keys($entries));
+            $value = head(array_values($entries));
+
+            return new WireDirective($name, $directive, $value);
+        });
+
         View::mixin(new ViewMacros);
     }
 

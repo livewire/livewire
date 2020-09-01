@@ -28,7 +28,7 @@ export default {
                     if (store.directives.has(directive.type)) {
                         store.directives.call(
                             directive.type,
-                            el.el,
+                            el,
                             directive,
                             component
                         )
@@ -143,10 +143,8 @@ export default {
                     })
 
                     // Only handle listener if no, or matching key modifiers are passed.
-                    return (
-                        modifiers.length === 0 ||
-                        modifiers.includes(kebabCase(e.key))
-                    )
+                    // It's important to check that e.key exists - OnePassword's extension does weird things.
+                    return Boolean(modifiers.length === 0 || (e.key && modifiers.includes(kebabCase(e.key))))
                 })
                 break
             case 'click':
