@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Livewire\Exceptions\MissingRulesPropertyException;
+use Livewire\Exceptions\MissingRulesException;
 
 trait ValidatesInput
 {
@@ -63,7 +63,7 @@ trait ValidatesInput
         if (method_exists($this, 'rules')) return $this->rules();
         if (property_exists($this, 'rules')) return $this->rules;
 
-        throw new MissingRulesPropertyException($this::getName());
+        return [];
     }
 
     public function rulesForModel($name)
@@ -84,12 +84,13 @@ trait ValidatesInput
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
-
-        $fields = array_keys($rules);
+        throw_if(empty($rules), new MissingRulesException($this::getName()));
 
         $result = $this->getPublicPropertiesDefinedBySubClass();
 
-        foreach ((array) $fields as $field) {
+        $fields = array_keys($rules);
+
+        foreach ($fields as $field) {
             throw_unless(
                 $this->hasProperty($field),
                 new \Exception('No property found for validation: ['.$field.']')
@@ -118,6 +119,7 @@ trait ValidatesInput
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
+        throw_if(empty($rules), new MissingRulesException($this::getName()));
 
         $result = $this->getPublicPropertiesDefinedBySubClass();
 
