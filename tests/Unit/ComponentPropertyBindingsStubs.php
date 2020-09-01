@@ -20,13 +20,13 @@ class PropBoundModel extends Model
 
     public function resolveRouteBinding($value, $field = null)
     {
-        $this->value = $value;
+        $this->value = "via-route:$value";
         return $this;
     }
 
     public function resolveChildRouteBinding($childType, $value, $field)
     {
-        return new PropBoundModel($value);
+        return new static("via-parent:$value");
     }
 }
 
@@ -39,6 +39,22 @@ class ComponentWithPropBindings extends Component
     public function render()
     {
         $this->name = 'prop:'.$this->model->value;
+
+        return app('view')->make('show-name-with-this');
+    }
+}
+
+class ComponentWithDependentPropBindings extends Component
+{
+    public PropBoundModel $parent;
+
+    public PropBoundModel $child;
+
+    public $name;
+
+    public function render()
+    {
+        $this->name = collect(['prop', $this->parent->value, $this->child->value])->implode(':');
 
         return app('view')->make('show-name-with-this');
     }
@@ -58,6 +74,26 @@ class ComponentWithPropBindingsAndMountMethod extends Component
     public function render()
     {
         $this->name = "{$this->parent->value}:{$this->child->value}";
+
+        return app('view')->make('show-name-with-this');
+    }
+}
+
+class ComponentWithDependentMountBindings extends Component
+{
+    public $parent;
+    public $child;
+    public $name;
+
+    public function mount(PropBoundModel $parent, PropBoundModel $child)
+    {
+        $this->parent = $parent;
+        $this->child = $child;
+    }
+
+    public function render()
+    {
+        $this->name = collect(['prop', $this->parent->value, $this->child->value])->implode(':');
 
         return app('view')->make('show-name-with-this');
     }

@@ -6,7 +6,6 @@ use Illuminate\Support\Reflector;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MountMethodMissingException;
-use ReflectionProperty;
 
 class LifecycleManager
 {
@@ -68,7 +67,7 @@ class LifecycleManager
             ->filter(function ($mountValue, $property) {
                 $typeHint = PHP_VERSION_ID < 70400
                     ? null
-                    : Reflector::getParameterClassName(new ReflectionProperty($this->instance, $property));
+                    : Reflector::getParameterClassName(new \ReflectionProperty($this->instance, $property));
 
                 return ! $typeHint || is_a($mountValue, $typeHint);
             })
@@ -84,7 +83,7 @@ class LifecycleManager
 
                 $this->instance->setErrorBag($e->validator->errors());
             }
-        } elseif ($matchingProps->count() !== count($params)) {
+        } elseif ($matchingProps->count() < count($params)) {
             throw new MountMethodMissingException($this->instance::getName());
         }
 
