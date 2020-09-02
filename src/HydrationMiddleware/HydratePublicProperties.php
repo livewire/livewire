@@ -48,7 +48,7 @@ class HydratePublicProperties implements HydrationMiddleware
 
                 if ($rules = $instance->rulesForModel($property)) {
                     $keys = $rules->keys()->map(function ($key) use ($instance) {
-                        return $instance->afterFirstDot($key);
+                        return $instance->beforeFirstDot($instance->afterFirstDot($key));
                     });
 
                     foreach ($keys as $key) {
@@ -107,7 +107,7 @@ class HydratePublicProperties implements HydrationMiddleware
         $modelData = [];
         if ($rules = $instance->rulesForModel($property)) {
             $keys = $rules->keys()->map(function ($key) use ($instance) {
-                return $instance->afterFirstDot($key);
+                return $instance->beforeFirstDot($instance->afterFirstDot($key));
             });
 
             foreach ($keys as $key) {

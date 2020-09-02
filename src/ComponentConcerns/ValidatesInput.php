@@ -76,16 +76,23 @@ trait ValidatesInput
             });
     }
 
-    public function missingRuleFor($key)
+    public function missingRuleFor($dotNotatedProperty)
     {
-        return ! collect(array_keys($this->getRules()))->map(function ($rule) {
-            return Str::of($rule)->before('*')->rtrim('.');
-        })->contains(Str::of($key)->replaceMatches('/\.\d+\./','.*.')->before('*')->rtrim('.'));
+        return ! collect($this->getRules())
+            ->keys()
+            ->map(function ($key) {
+                return Str::of($key)->before('.*');
+            })
+            ->contains($dotNotatedProperty);
+        //     ->map(function ($rule) {
+        //     return Str::of($rule)->before('*')->rtrim('.');
+        // })->contains(Str::of($key)->replaceMatches('/\.\d+\./','.*.')->before('*')->rtrim('.'));
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
+
         throw_if(empty($rules), new MissingRulesException($this::getName()));
 
         $result = $this->getPublicPropertiesDefinedBySubClass();
