@@ -280,11 +280,11 @@ class LivewireServiceProvider extends ServiceProvider
         Livewire::registerInitialDehydrationMiddleware([
 
             /* Initial Response */
-            /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
-            /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
-            /* ^ */ [CallHydrationHooks::class, 'initialDehydrate'],
-            /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
-            /* ^ */ [RenderView::class, 'dehydrate'],
+            /* ↑ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
+            /* ↑ */ [HydratePublicProperties::class, 'dehydrate'],
+            /* ↑ */ [CallHydrationHooks::class, 'initialDehydrate'],
+            /* ↑ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
+            /* ↑ */ [RenderView::class, 'dehydrate'],
 
         ]);
 

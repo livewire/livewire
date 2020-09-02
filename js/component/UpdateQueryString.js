@@ -78,15 +78,11 @@ function pushState(component, message, path) {
 }
 
 function generateStateObject(component, message) {
-    let state = {
+    return {
         turbolinks: {},
         livewire: {
             component: component.name,
             message
         }
     }
-
-    console.log(state);
-
-    return state;
 }
