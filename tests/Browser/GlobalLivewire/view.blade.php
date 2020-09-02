@@ -7,7 +7,11 @@
 
 @push('scripts')
     <script>
-        window.livewire.isLoaded = false
+        window.isLoaded = false
+        window.loadEventWasFired = false
         window.livewire.onLoad(() => { window.isLoaded = true })
+        document.addEventListener("livewire:load", function(event) {
+            window.loadEventWasFired = true
+        });
     </script>
 @endpush

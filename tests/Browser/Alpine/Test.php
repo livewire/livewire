@@ -4,7 +4,6 @@ namespace Tests\Browser\Alpine;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Alpine\Component;
 
 class Test extends TestCase
 {

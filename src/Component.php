@@ -5,8 +5,10 @@ namespace Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
+use Illuminate\Routing\Route;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
+use Illuminate\Contracts\Container\Container;
 use Livewire\Macros\PretendClassMethodIsControllerMethod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
@@ -19,7 +21,6 @@ abstract class Component
         ComponentConcerns\HandlesActions,
         ComponentConcerns\ReceivesEvents,
         ComponentConcerns\PerformsRedirects,
-        ComponentConcerns\DetectsDirtyProperties,
         ComponentConcerns\TracksRenderedChildren,
         ComponentConcerns\InteractsWithProperties;
 
@@ -40,13 +41,10 @@ abstract class Component
         $this->initializeTraits();
     }
 
-    public function __invoke()
+    public function __invoke(Container $container, Route $route)
     {
-        $reflected = new \ReflectionClass($this);
-
-        $componentParams = $reflected->hasMethod('mount')
-            ? (new PretendClassMethodIsControllerMethod($reflected->getMethod('mount'), app('router')))->retrieveBindings()
-            : [];
+        $componentParams = (new ImplicitRouteBinding($container))
+            ->resolveAllParameters($route, $this);
 
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
