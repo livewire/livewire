@@ -44,8 +44,6 @@ class SupportRouteHistory
                     $route->parametersWithoutNulls()
                 );
 
-                // FIXME: Do we need to make sure that the routePath is part of the checksum?
-
                 // Get the query string from the client
                 parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
 
