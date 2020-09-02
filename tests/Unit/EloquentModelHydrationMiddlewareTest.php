@@ -31,9 +31,16 @@ class EloquentModelHydrationMiddlewareTest extends TestCase
         $component->set('foo.aliases.1.name', 'Tester');
         $component->set('foo.aliases.2.name', 'Role model');
         $this->assertEqualsCanonicalizing(array_merge(testArray(), ['name' => 'Adrian', 'aliases' => [['name' => 'Treehugger'], ['name' => 'Tester'], ['name' => 'Role model']]]), $component->get('foo'));
+        $component->call('runValidation')->assertHasNoErrors();
 
         $component->set('foo.aliases', [['name' => 'foo'], ['name' => 'bar'], ['name' => 'baz']]);
         $this->assertEqualsCanonicalizing(array_merge(testArray(), ['name' => 'Adrian', 'aliases' => [['name' => 'foo'], ['name' => 'bar'], ['name' => 'baz']]]), $component->get('foo'));
+        $component->call('runValidation')->assertHasNoErrors();
+
+        $component->set('foo.name', '')->call('runValidation')->assertHasErrors(['foo.name' => 'required']);
+        $component->set('foo.name', 'Adrian')->call('runValidation')->assertHasNoErrors();
+
+        $component->set('foo.aliases', [['bad' => 'name']])->call('runValidation')->assertHasErrors(['foo.aliases.0.name' => 'required']);
     }
 }
 
@@ -55,6 +62,11 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
     public function mount()
     {
         $this->foo = new FooModel(testArray());
+    }
+
+    public function runValidation()
+    {
+        $this->validate();
     }
 
     public function render()
