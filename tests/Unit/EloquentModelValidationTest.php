@@ -68,21 +68,6 @@ class EloquentModelValidationTest extends TestCase
 
         $this->assertEquals(['law' => [['blog' => 'globbbbb']]], $foo->fresh()->lob);
     }
-
-    /** @test */
-    public function array_wildcard_key_with_key_after_model_property_validation()
-    {
-        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
-            'foo' => $foo = Foo::first(),
-        ])  ->set('foo.lob.law', [['blog' => 'glob']])
-            ->call('save')
-            ->assertHasErrors('foo.lob.law.*.blog')
-            ->set('foo.lob.law', [['blog' => 'globbbbb']])
-            ->call('save')
-            ->assertHasNoErrors();
-
-        $this->assertEquals(['law' => [['blog' => 'globbbbb']]], $foo->fresh()->lob);
-    }
 }
 
 class Foo extends Model
