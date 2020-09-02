@@ -4,7 +4,6 @@ namespace Tests\Browser\Nesting;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Nesting\Component;
 
 class Test extends TestCase
 {

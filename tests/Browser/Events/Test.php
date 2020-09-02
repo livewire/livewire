@@ -4,7 +4,6 @@ namespace Tests\Browser\Events;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Events\Component;
 
 class Test extends TestCase
 {

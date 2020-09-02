@@ -3,7 +3,6 @@
 namespace Tests\Browser\SupportDateTimes;
 
 use Livewire\Livewire;
-use Tests\Browser\SupportDateTimes\Component;
 use Tests\Unit\TestCase;
 
 class Test extends TestCase

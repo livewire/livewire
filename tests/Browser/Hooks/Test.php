@@ -5,7 +5,6 @@ namespace Tests\Browser\Hooks;
 use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use Tests\Browser\TestCase;
-use Tests\Browser\Hooks\Component;
 
 class Test extends TestCase
 {

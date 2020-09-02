@@ -4,7 +4,6 @@ namespace Tests\Browser\Redirects;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Redirects\Component;
 
 class Test extends TestCase
 {
