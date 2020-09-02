@@ -2,9 +2,9 @@
 
 namespace Tests\Browser\GlobalLivewire;
 
+use Laravel\Dusk\Browser;
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\GlobalLivewire\Component;
 
 class Test extends TestCase
 {
@@ -33,8 +33,15 @@ class Test extends TestCase
                 /**
                  * window.livewire.onLoad callback is called when Livewire is initialized
                  */
-                ->waitUsing(5, 25, function () use ($browser) {
-                    return $browser->driver->executeScript("return window.isLoaded === true");
+                ->tap(function (Browser $browser) {
+                    $this->assertTrue($browser->driver->executeScript('return window.isLoaded === true'), "livewire.onLoad wasn't called");
+                })
+
+                /**
+                 * livewire:load DOM event is fired after start
+                 */
+                ->tap(function (Browser $browser) {
+                    $this->assertTrue($browser->driver->executeScript('return window.loadEventWasFired === true'), "livewire:load wasn't triggered");
                 })
             ;
         });

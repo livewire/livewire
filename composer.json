@@ -21,7 +21,8 @@
         "phpunit/phpunit": "^8.4|^9.0",
         "laravel/framework": "^7.0|^8.0",
         "orchestra/testbench": "^5.0",
-        "orchestra/testbench-dusk": "^5.2"
+        "orchestra/testbench-dusk": "^5.2",
+        "calebporzio/sushi": "^2.0"
     },
     "autoload": {
         "psr-4": {

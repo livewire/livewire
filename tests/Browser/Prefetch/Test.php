@@ -4,7 +4,6 @@ namespace Tests\Browser\Prefetch;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Prefetch\Component;
 
 class Test extends TestCase
 {
