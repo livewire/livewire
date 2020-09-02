@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
 {
-    use SerializesAndRestoresModelIdentifiers;
 
     public static function hydrate($unHydratedInstance, $request)
     {
@@ -42,6 +41,10 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
             }
 
             $unHydratedInstance->$property = $model;
+
+            // Now that we've applied the data to the model, we'll unset it
+            // so that it isn't re-applied in later middleware
+            unset($request->memo['data'][$property]);
         }
     }
 
@@ -71,8 +74,6 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
                     $instance->$property = [];
                 }
 
-                // Deserialize the models into the "meta" bag.
-                data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
             }
         }
     }
