@@ -31,24 +31,25 @@ trait HandlesActions
             );
 
             if ($this->containsDots($name)) {
-                //strip model variable name
+                // Strip away model name.
                 $keyName = $this->afterFirstDot($name);
-                // get model attribute to be filled
+                // Get model attribute to be filled.
                 $targetKey = $this->beforeFirstDot($keyName);
 
+                // Get existing data from model property.
                 $results = [];
-                //get existing data
                 $results[$targetKey] = data_get($this->{$propertyName}, $targetKey, []);
-                //merge new data
+
+                // Merge in new data.
                 data_set($results, $keyName, $value);
 
-                //assign data
+                // Re-assign data to model.
                 data_set($this->{$propertyName}, $targetKey, $results[$targetKey]);
             } else {
                 $this->{$name} = $value;
             }
 
-            HashDataPropertiesForDirtyDetection::rehashProperty($name, $value, $this);
+            $rehash && HashDataPropertiesForDirtyDetection::rehashProperty($name, $value, $this);
         });
     }
 
