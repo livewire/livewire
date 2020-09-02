@@ -1,12 +1,8 @@
 <?php
 
-/** @noinspection PhpIllegalPsrClassPathInspection */
-/** @noinspection PhpLanguageLevelInspection */
-
 namespace Tests\Unit;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Routing\UrlGenerator;
 use Livewire\Component;
 
 class PropBoundModel extends Model

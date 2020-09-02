@@ -15,11 +15,7 @@ class SupportCollections
         Livewire::listen('property.dehydrate', function ($name, $value, $component, $response) {
             if (! $value instanceof Collection || $value instanceof EloquentCollection) return;
 
-            $component->{$name} = $value->toArray();
 
-            data_fill($response->memo, 'dataMeta.collections', []);
-
-            $response->memo['dataMeta']['collections'][] = $name;
         });
 
         Livewire::listen('property.hydrate', function ($name, $value, $component, $request) {

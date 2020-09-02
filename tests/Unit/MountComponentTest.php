@@ -3,9 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
-use Livewire\Exceptions\MountMethodMissingException;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 
 class MountComponentTest extends TestCase
 {
@@ -31,14 +29,6 @@ class MountComponentTest extends TestCase
         $component = Livewire::test(ComponentWithOptionalParameters::class, ['foo' => null, 'bar' => null]);
         $this->assertSame(null, $component->foo);
         $this->assertSame(null, $component->bar);
-    }
-
-    /** @test */
-    public function it_throws_an_exception_when_mount_is_missing()
-    {
-        $this->expectException(MountMethodMissingException::class);
-
-        Livewire::test(ComponentWithoutMount::class, ['bar' => 10]);
     }
 
     /** @test */

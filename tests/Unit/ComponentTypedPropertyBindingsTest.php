@@ -2,13 +2,10 @@
 
 namespace Tests\Unit;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Route;
-use Livewire\Component;
 use Livewire\Livewire;
 
-class ComponentPropertyBindingsTest extends TestCase
+class ComponentTypedPropertyBindingsTest extends TestCase
 {
     public function setUp(): void
     {
@@ -24,10 +21,16 @@ class ComponentPropertyBindingsTest extends TestCase
     }
 
     /** @test */
+    public function props_are_set_via_mount()
+    {
+        Livewire::test(ComponentWithPropBindings::class, [
+            'model' => new PropBoundModel('mount-model'),
+        ])->assertSeeText('prop:mount-model');
+    }
+
+    /** @test */
     public function props_are_set_via_implicit_binding()
     {
-        Livewire::component(ComponentWithPropBindings::class);
-
         Route::get('/foo/{model}', ComponentWithPropBindings::class);
 
         $this->get('/foo/route-model')->assertSeeText('prop:via-route:route-model');
@@ -36,28 +39,14 @@ class ComponentPropertyBindingsTest extends TestCase
     /** @test */
     public function dependent_props_are_set_via_implicit_binding()
     {
-        Livewire::component(ComponentWithDependentPropBindings::class);
-
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentPropBindings::class);
 
         $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
     }
 
     /** @test */
-    public function props_are_set_via_mount()
-    {
-        Livewire::component(ComponentWithPropBindings::class);
-
-        Livewire::test(ComponentWithPropBindings::class, [
-            'model' => new PropBoundModel('mount-model'),
-        ])->assertSeeText('prop:mount-model');
-    }
-
-    /** @test */
     public function dependent_props_are_set_via_mount()
     {
-        Livewire::component(ComponentWithDependentMountBindings::class);
-
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentMountBindings::class);
 
         $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
@@ -66,8 +55,6 @@ class ComponentPropertyBindingsTest extends TestCase
     /** @test */
     public function props_and_mount_work_together()
     {
-        Livewire::component(ComponentWithPropBindingsAndMountMethod::class);
-
         Route::get('/foo/{parent}/child/{child}', ComponentWithPropBindingsAndMountMethod::class);
 
         // In the case that a parent is a public property, and a child is injected via mount(),
