@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
 {
-    use SerializesAndRestoresModelIdentifiers;
 
     public static function hydrate($unHydratedInstance, $request)
     {
@@ -42,6 +41,10 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
             }
 
             $unHydratedInstance->$property = $model;
+
+            // Now that we've applied the data to the model, we'll unset it
+            // so that it isn't re-applied in later middleware
+            unset($request->memo['data'][$property]);
         }
     }
 
@@ -51,28 +54,7 @@ class HydrateEloquentModelsAsPublicProperties implements HydrationMiddleware
 
         foreach ($publicProperties as $property => $value) {
             if ($value instanceof QueueableEntity || $value instanceof QueueableCollection) {
-                $serializedModel = $value instanceof QueueableEntity && ! $value->exists
-                    ? ['class' => get_class($value)]
-                    : (array) (new static)->getSerializedPropertyValue($value);
 
-                if ($rules = $instance->rulesForModel($property)) {
-                    $keys = $rules->keys()->map(function ($key) use ($instance) {
-                        return $instance->beforeFirstDot($instance->afterFirstDot($key));
-                    });
-
-                    $explodedModelData = [];
-
-                    foreach ($keys as $key) {
-                        data_set($explodedModelData, $key, data_get($instance->$property, $key));
-                    }
-
-                    $instance->$property = $explodedModelData;
-                } else {
-                    $instance->$property = [];
-                }
-
-                // Deserialize the models into the "meta" bag.
-                data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
             }
         }
     }

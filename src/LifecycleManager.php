@@ -4,7 +4,6 @@ namespace Livewire;
 
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Validation\ValidationException;
-use Livewire\Exceptions\MountMethodMissingException;
 
 class LifecycleManager
 {
@@ -62,18 +61,20 @@ class LifecycleManager
 
     public function mount($params = [])
     {
-        try {
-            if (! method_exists($this->instance, 'mount') && count($params) > 0) {
-                throw new MountMethodMissingException($this->instance::getName());
+        // Assign all public component properties that have matching parameters.
+        collect(array_intersect_key($params, $this->instance->getPublicPropertiesDefinedBySubClass()))
+            ->each(function ($value, $property) {
+                $this->instance->{$property} = $value;
+            });
+
+        if (method_exists($this->instance, 'mount')) {
+            try {
+                ImplicitlyBoundMethod::call(app(), [$this->instance, 'mount'], $params);
+            } catch (ValidationException $e) {
+                Livewire::dispatch('failed-validation', $e->validator);
+
+                $this->instance->setErrorBag($e->validator->errors());
             }
-
-            if (! method_exists($this->instance, 'mount')) return $this;
-
-            ImplicitlyBoundMethod::call(app(), [$this->instance, 'mount'], $params);
-        } catch (ValidationException $e) {
-            Livewire::dispatch('failed-validation', $e->validator);
-
-            $this->instance->setErrorBag($e->validator->errors());
         }
 
         return $this;

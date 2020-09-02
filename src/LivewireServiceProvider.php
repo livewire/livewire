@@ -39,7 +39,7 @@ use Livewire\HydrationMiddleware\{
     HydratePublicProperties,
     PerformDataBindingUpdates,
     SecureHydrationWithChecksum,
-    HashPropertiesForDirtyDetection,
+    HashDataPropertiesForDirtyDetection,
     HydratePreviouslyRenderedChildren,
     HydrateEloquentModelsAsPublicProperties,
     HydratePropertiesWithCustomRuntimeHydrators
@@ -123,7 +123,7 @@ class LivewireServiceProvider extends ServiceProvider
             RouteFacade::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
 
-                return (new $class)();
+                return app()->call(new $class);
             })->middleware('web');
         }
 
@@ -239,10 +239,10 @@ class LivewireServiceProvider extends ServiceProvider
     {
         RenameMe\SupportEvents::init();
         RenameMe\SupportLocales::init();
-        RenameMe\SupportDateTimes::init();
+        RenameMe\SupportChildren::init();
         RenameMe\SupportRedirects::init();
+        RenameMe\SupportValidation::init();
         RenameMe\SupportQueryString::init();
-        RenameMe\SupportCollections::init();
         RenameMe\OptimizeRenderedDom::init();
         RenameMe\SupportFileDownloads::init();
         RenameMe\SupportActionReturns::init();
@@ -251,41 +251,47 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerHydrationMiddleware()
     {
         Livewire::registerHydrationMiddleware([
-        /* This is the core middleware stack of Livewire. It's important */
-        /* to understand that the request goes through each class by the */
-        /* order it is listed in this array, and is reversed on response */
-        /*                                                               */
-        /* Incoming Request                            Outgoing Response */
-        /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
-        /* v */ HydratePublicProperties::class,                     /* ^ */
-        /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
-        /* v */ CallHydrationHooks::class,                          /* ^ */
-        /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
-        /* v */ PersistErrorBag::class,                             /* ^ */
-        /* v */ PerformDataBindingUpdates::class,                   /* ^ */
-        /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
-        /* v */ CastPublicProperties::class,                        /* ^ */
-        /* v */ HydratePreviouslyRenderedChildren::class,           /* ^ */
-        /* v */ PerformActionCalls::class,                          /* ^ */
-        /* v */ PerformEventEmissions::class,                       /* ^ */
-        /* v */ RenderView::class,                                  /* ^ */
+
+            /* This is the core middleware stack of Livewire. It's important */
+            /* to understand that the request goes through each class by the */
+            /* order it is listed in this array, and is reversed on response */
+            /*                                                               */
+            /* ↓    Incoming Request                  Outgoing Response    ↑ */
+            /* ↓                                                           ↑ */
+            /* ↓    Secure Stuff                                           ↑ */
+            /* ↓ */ SecureHydrationWithChecksum::class, /* --------------- ↑ */
+            /* ↓ */ HashDataPropertiesForDirtyDetection::class, /* ------- ↑ */
+            /* ↓                                                           ↑ */
+            /* ↓     Hydrate Stuff                                         ↑ */
+            /* ↓ */ HydratePublicProperties::class, /* ------------------- ↑ */
+            /* ↓ */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ↑ */
+            /* ↓ */ CallHydrationHooks::class, /* ------------------------ ↑ */
+            /* ↓                                                           ↑ */
+            /* ↓    Update Stuff                                           ↑ */
+            /* ↓ */ PerformDataBindingUpdates::class, /* ----------------- ↑ */
+            /* ↓ */ PerformActionCalls::class, /* ------------------------ ↑ */
+            /* ↓ */ PerformEventEmissions::class, /* --------------------- ↑ */
+            /* ↓                                                           ↑ */
+            /* ↓    Output Stuff                                           ↑ */
+            /* ↓ */ RenderView::class, /* -------------------------------- ↑ */
+
         ]);
 
         Livewire::registerInitialDehydrationMiddleware([
-        /* Initial Response */
-        /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
-        /* ^ */ [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
-        /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
-        /* ^ */ [CallHydrationHooks::class, 'initialDehydrate'],
-        /* ^ */ [HydrateEloquentModelsAsPublicProperties::class, 'dehydrate'],
-        /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
-        /* ^ */ [PersistErrorBag::class, 'dehydrate'],
-        /* ^ */ [CastPublicProperties::class, 'dehydrate'],
-        /* ^ */ [RenderView::class, 'dehydrate'],
+
+            /* Initial Response */
+            /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
+            /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
+            /* ^ */ [CallHydrationHooks::class, 'initialDehydrate'],
+            /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
+            /* ^ */ [RenderView::class, 'dehydrate'],
+
         ]);
 
         Livewire::registerInitialHydrationMiddleware([
-            [CallHydrationHooks::class, 'initialHydrate'],
+
+                [CallHydrationHooks::class, 'initialHydrate'],
+
         ]);
     }
 
