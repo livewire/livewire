@@ -84,9 +84,6 @@ trait ValidatesInput
                 return Str::of($key)->before('.*');
             })
             ->contains($dotNotatedProperty);
-        //     ->map(function ($rule) {
-        //     return Str::of($rule)->before('*')->rtrim('.');
-        // })->contains(Str::of($key)->replaceMatches('/\.\d+\./','.*.')->before('*')->rtrim('.'));
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])
