@@ -2,7 +2,11 @@ import store from '@/Store'
 import Message from '@/Message';
 
 export default function() {
+    let initialized = false
+
     store.registerHook('component.initialized', component => {
+        if (initialized) return
+
         let fauxResponse = {
             fingerprint: { ...component.fingerprint },
             serverMemo: { ...component.serverMemo },
@@ -10,6 +14,8 @@ export default function() {
         }
 
         replaceState(component, fauxResponse, component.effects['routePath'] ?? window.location.href)
+
+        initialized = true
     })
 
     store.registerHook('message.received', ({ response }, component) => {
@@ -20,16 +26,16 @@ export default function() {
 
     window.addEventListener('popstate', event => {
         if (event && event.state && event.state.livewire) {
-            let { name, response } = event.state.livewire;
-            let component = store.getComponentsByName(name)[0];
+            let { name, response } = event.state.livewire
+            let component = store.getComponentsByName(name)[0]
 
             // We don't want to trigger a new pushState, so we'll remove the routePath
             response.effects['routePath'] = undefined
 
             // Now we'll replay that response immediately so that we render without delay
-            let message = new Message(component, component.updateQueue)
+            let message = new Message(component, component.updateQueue) // FIXME: Discuss?
             message.storeResponse(response)
-            component.handleResponse(message);
+            component.handleResponse(message)
 
             // Finally, we'll refresh the component so that if anything has changed on
             // the server, we'll get those updates (similar to stale-while-revalidate)
@@ -47,11 +53,15 @@ function pushState(component, message, path) {
 }
 
 function generateStateObject(component, response) {
-    return {
+    let state = {
         turbolinks: {},
         livewire: {
             name: component.name,
             response
         }
     }
+
+    console.warn(component.name, state.livewire.response.effects)
+
+    return state
 }

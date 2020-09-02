@@ -12,7 +12,7 @@ import DisableForms from '@/component/DisableForms'
 import FileDownloads from '@/component/FileDownloads'
 import LoadingStates from '@/component/LoadingStates'
 import OfflineStates from '@/component/OfflineStates'
-import UpdateQueryString from '@/component/UpdateQueryString'
+import SyncBrowserHistory from '@/component/SyncBrowserHistory'
 
 class Livewire {
     constructor() {
@@ -201,7 +201,7 @@ if (!window.Livewire) {
     window.Livewire = Livewire
 }
 
-UpdateQueryString()
+SyncBrowserHistory()
 FileDownloads()
 OfflineStates()
 LoadingStates()

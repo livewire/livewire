@@ -34,7 +34,9 @@ export default class Connection {
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Socket-ID': this.getSocketId(),
                     'X-Livewire': true,
-                    'Referrer': window.location.href,
+
+                    // We'll set this explicitly to mitigate potential interference from ad-blockers/etc
+                    Referrer: window.location.href,
                 },
             }
         )
