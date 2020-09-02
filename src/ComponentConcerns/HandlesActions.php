@@ -31,42 +31,25 @@ trait HandlesActions
             );
 
             if ($this->containsDots($name)) {
-                //$name = foo.aliases.0.name
+                //strip model variable name
                 $keyName = $this->afterFirstDot($name);
-
+                // get model attribute to be filled
                 $targetKey = $this->beforeFirstDot($keyName);
-                $results[$targetKey] = data_get($this->{$propertyName}, $targetKey, []);
-                data_set($results, $keyName, $value);
-                $results = $this->replacePlaceholders($results);
 
-                data_set($this->{$propertyName}, $targetKey, head($results));
+                $results = [];
+                //get existing data
+                $results[$targetKey] = data_get($this->{$propertyName}, $targetKey, []);
+                //merge new data
+                data_set($results, $keyName, $value);
+
+                //assign data
+                data_set($this->{$propertyName}, $targetKey, $results[$targetKey]);
             } else {
                 $this->{$name} = $value;
             }
 
             HashDataPropertiesForDirtyDetection::rehashProperty($name, $value, $this);
         });
-    }
-
-    protected function replacePlaceholders($data)
-    {
-        $originalData = [];
-
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                $value = $this->replacePlaceholders($value);
-            }
-
-            $key = str_replace(
-                ['__dot__', '__asterisk__'],
-                ['.', '*'],
-                $key
-            );
-
-            $originalData[$key] = $value;
-        }
-
-        return $originalData;
     }
 
     protected function callBeforeAndAfterSyncHooks($name, $value, $callback)
