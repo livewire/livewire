@@ -1,70 +1,39 @@
 import store from '@/Store'
-import Message from '../Message';
+import Message from '@/Message';
 
 export default function() {
     store.registerHook('component.initialized', component => {
-        let message = {
+        let fauxResponse = {
             fingerprint: { ...component.fingerprint },
             serverMemo: { ...component.serverMemo },
             effects: { html: component.el.outerHTML }
         }
 
-        replaceState(component, message, component.effects['routePath'] ?? window.location.href)
+        replaceState(component, fauxResponse, component.effects['routePath'] ?? window.location.href)
     })
 
     store.registerHook('message.received', ({ response }, component) => {
         if (response.effects['routePath'] === undefined) return
 
-        let routePath = response.effects['routePath']
-
-        pushState(component, response, routePath)
-
-        // if (component.useReplaceState === true) {
-        //     component.useReplaceState = false
-        //
-        //     replaceState(component, response, routePath)
-        // } else {
-        //     pushState(component, response, routePath)
-        // }
+        pushState(component, response, response.effects['routePath'])
     })
 
     window.addEventListener('popstate', event => {
         if (event && event.state && event.state.livewire) {
-            let component = store.getComponentsByName(event.state.livewire.component)[0];
+            let { name, response } = event.state.livewire;
+            let component = store.getComponentsByName(name)[0];
 
-            let message = new Message(component, component.updateQueue)
-
-            let response = event.state.livewire.message;
+            // We don't want to trigger a new pushState, so we'll remove the routePath
             response.effects['routePath'] = undefined
 
+            // Now we'll replay that response immediately so that we render without delay
+            let message = new Message(component, component.updateQueue)
             message.storeResponse(response)
-
             component.handleResponse(message);
-            component.call('$refresh')
 
-            // Object.keys(event.state.livewire.updates).forEach(name => {
-            //     let component = store.getComponentsByName(name)[0]
-            //
-            //     if (!component.effects['query']) return
-            //
-            //     let { properties, excepts } = component.effects['query']
-            //
-            //     if (component) {
-            //         let updates = event.state.livewire.updates[name].data
-            //
-            //         properties.forEach(property => {
-            //             if (updates[property] === undefined) return
-            //
-            //             component.set(property, updates[property])
-            //         })
-            //
-            //         // This is so that when component.set() triggers a roundtrip,
-            //         // the response received from that roundtrip uses "replaceState"
-            //         // to update the query string so that it doesn't wipe out future state
-            //         // (disabling the "forward button") by using pushState.
-            //         component.useReplaceState = true
-            //     }
-            // })
+            // Finally, we'll refresh the component so that if anything has changed on
+            // the server, we'll get those updates (similar to stale-while-revalidate)
+            component.call('$refresh')
         }
     })
 }
@@ -77,12 +46,12 @@ function pushState(component, message, path) {
     history.pushState(generateStateObject(component, message), '', path)
 }
 
-function generateStateObject(component, message) {
+function generateStateObject(component, response) {
     return {
         turbolinks: {},
         livewire: {
-            component: component.name,
-            message
+            name: component.name,
+            response
         }
     }
 }
