@@ -14,17 +14,13 @@ class Test extends TestCase
             Livewire::visit($browser, Component::class)
                 ->tap(function (Browser $browser) {
                     $browser->script('window.renameMe = false');
-                    $browser->click('@button');
-                    $this->assertTrue($browser->driver->executeScript('return window.renameMe === false'));
                     $browser->script([
                         "window.livewire.directive('foo', (el, directive, component) => {
-                            el.addEventListener('click', () => {
-                                window.renameMe = true
-                            })
+                            window.renameMe = true
                         })",
-                        "window.livewire.restart()"
                     ]);
-                    $browser->click('@button');
+                    $this->assertTrue($browser->driver->executeScript('return window.renameMe === false'));
+                    $browser->waitForLivewire()->click('@refresh');
                     $this->assertTrue($browser->driver->executeScript('return window.renameMe === true'));
                 })
             ;
