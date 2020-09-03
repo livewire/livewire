@@ -2,16 +2,18 @@
 
 namespace Livewire\RenameMe;
 
-use Illuminate\Http\Request;
-use Illuminate\Routing\UrlGenerator;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
-use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Response;
+use Livewire\Component;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Routing\UrlGenerator;
 
 // FIXME: this needs to also include any data from sub-components
+// FIXME: the first request doesn't honor child component query params
+// FIXME: Handle the #fragment
 
 class SupportRouteHistory
 {
@@ -24,8 +26,7 @@ class SupportRouteHistory
         Livewire::listen('component.hydrate.initial', function ($component, $request) {
             if (empty($properties = $component->getQueryStringProperties())) return;
 
-            // Get the query string from the client
-            parse_str(parse_url(request()->header('Referrer', ''), PHP_URL_QUERY), $query);
+            $query = request()->query();
 
             foreach ($properties as $property => $currentValue) {
                 $fromQueryString = Arr::get($query, $property);
@@ -37,19 +38,14 @@ class SupportRouteHistory
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) use (&$initialized) {
-            $url = url()->current();
+            // $url = url()->current();
 
-            // Load the query string from the request and the expected query params from the component
-            parse_str(parse_url($url, PHP_URL_QUERY), $currentQueryString);
-            $componentsQueryString = $this->mergeAndGetQueryString($component->getQueryStringProperties());
+            $queryString = array_merge(
+                request()->query(),
+                $this->mergeAndGetQueryString($component->getQueryStringProperties())
+            );
 
-            // If there are missing parameters, add them to the URL
-            if (! empty($diff = array_diff_assoc($componentsQueryString, $currentQueryString))) {
-                $join = count($currentQueryString) ? '&' : '?';
-                $url = $url.$join.http_build_query($diff);
-            }
-
-            $response->effects['routePath'] = $url;
+            $response->effects['query'] = $queryString;
         });
 
         Livewire::listen('component.dehydrate.subsequent', function (Component $component, Response $response) {
@@ -58,65 +54,53 @@ class SupportRouteHistory
             }
 
             // Get the query string from the client
-            parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
+            // parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
 
             // Get all the merged query strings from all components that have rendered
             $currentComponentQueryString = $component->getQueryStringProperties();
-            $componentsQueryString = $this->mergeAndGetQueryString($currentComponentQueryString);
+            // $componentsQueryString = $this->mergeAndGetQueryString($currentComponentQueryString);
 
-            // Merge the two together
-            $queryString = array_merge(
-                $componentsQueryString,
-                $referrerQueryString,
-                $currentComponentQueryString
-            );
-            $response->effects['__debug'] = $queryString;
+            // Merge the them all together, giving the current component the final say
+            //$queryString = array_merge(
+            //    // $componentsQueryString,
+            //    // $referrerQueryString,
+            //    $currentComponentQueryString
+            //);
+
+            $queryString = $currentComponentQueryString;
+
+            // Sort by keys to keep it predictable
+            ksort($queryString);
+
+            if (count($queryString)) {
+                $response->effects['query'] = $queryString;
+            }
 
             $route = app('router')->getRoutes()->match(
                 Request::create($referrer, 'GET')
             );
 
-            $routePath = false !== strpos($route->getActionName(), get_class($component))
-                ? $this->buildPathFromRoute($queryString, $component, $route)
-                : $this->buildPathFromReferrer($queryString, $referrer);
-
-            if (url($routePath) !== $referrer) {
-                $response->effects['routePath'] = $routePath;
+            if (false !== strpos($route->getActionName(), get_class($component))) {
+                $response->effects['path'] = $this->buildPathFromRoute($component, $route);
             }
         });
     }
 
-    protected function buildPathFromRoute($queryString, $component, $route)
+    protected function buildPathFromRoute($component, $route)
     {
         $boundParameters = array_intersect_key(
             $component->getPublicPropertiesDefinedBySubClass(),
             $route->parametersWithoutNulls()
         );
 
-        $parameters = array_merge($queryString, $boundParameters);
-
-        // Sort parameters so that the URL is predictable
-        ksort($parameters);
-
-        return app(UrlGenerator::class)->toRoute($route, $parameters, false);
-    }
-
-    protected function buildPathFromReferrer($queryString, $referrer)
-    {
-        if (empty($queryString)) {
-            return $referrer;
-        }
-
-        ksort($queryString);
-
-        $url = Str::before($referrer, '?');
-
-        return $url.'?'.http_build_query($queryString);
+        return app(UrlGenerator::class)->toRoute($route, $boundParameters, false);
     }
 
     protected function mergeAndGetQueryString($params)
     {
         $this->allQueryStringProperties = array_merge($this->allQueryStringProperties, $params);
+
+        ksort($this->allQueryStringProperties);
 
         return $this->allQueryStringProperties;
     }

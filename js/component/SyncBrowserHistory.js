@@ -1,67 +1,77 @@
 import store from '@/Store'
+import qs from '@/util/query-string'
 import Message from '@/Message';
 
 export default function() {
-    let initialized = false
 
     store.registerHook('component.initialized', component => {
-        if (initialized) return
+        let state = generateNewState(component, generateFauxResponse(component))
+        let url = generateNewUrl(component.effects)
 
-        let fauxResponse = {
-            fingerprint: { ...component.fingerprint },
-            serverMemo: { ...component.serverMemo },
-            effects: { html: component.el.outerHTML }
-        }
-
-        replaceState(component, fauxResponse, component.effects['routePath'] ?? window.location.href)
-
-        initialized = true
+        history.replaceState(state, '', url)
+        console.log(`Initialized ${component.name}`)
     })
 
-    store.registerHook('message.received', ({ response }, component) => {
-        if (response.effects['routePath'] === undefined) return
+    store.registerHook('message.received', (message, component) => {
+        let { replaying, response } = message
+        if (replaying) return
 
-        pushState(component, response, response.effects['routePath'])
+        let { effects } = response
+
+        let state = generateNewState(component, response)
+        let url = generateNewUrl(effects)
+
+        if (url) history.pushState(state, '', url)
     })
 
     window.addEventListener('popstate', event => {
-        if (event && event.state && event.state.livewire) {
-            let { name, response } = event.state.livewire
-            let component = store.getComponentsByName(name)[0]
+        if (! (event && event.state && event.state.livewire)) return
 
-            // We don't want to trigger a new pushState, so we'll remove the routePath
-            response.effects['routePath'] = undefined
+        Object.entries(event.state.livewire).forEach(([id, response]) => {
+            let component = store.findComponent(id)
+            if (!component) return
 
-            // Now we'll replay that response immediately so that we render without delay
             let message = new Message(component, component.updateQueue) // FIXME: Discuss?
             message.storeResponse(response)
+            message.replaying = true
+
             component.handleResponse(message)
-
-            // Finally, we'll refresh the component so that if anything has changed on
-            // the server, we'll get those updates (similar to stale-while-revalidate)
-            component.call('$refresh')
-        }
+            setTimeout(() => component.call('$refresh'))
+        })
     })
-}
 
-function replaceState(component, message, path) {
-    history.replaceState(generateStateObject(component, message), '', path)
-}
+    function generateNewState(component, response) {
+        let state = (history.state && history.state.livewire) ? { ...history.state.livewire } : {}
 
-function pushState(component, message, path) {
-    history.pushState(generateStateObject(component, message), '', path)
-}
+        state[component.id] = response
 
-function generateStateObject(component, response) {
-    let state = {
-        turbolinks: {},
-        livewire: {
-            name: component.name,
-            response
+        return { turbolinks: {}, livewire: state }
+    }
+
+    function generateFauxResponse(component) {
+        let { fingerprint, serverMemo, effects, el } = component
+        return {
+            fingerprint: { ...fingerprint },
+            serverMemo: { ...serverMemo },
+            effects: { ...effects, html: el.outerHTML }
         }
     }
 
-    console.warn(component.name, state.livewire.response.effects)
+    // FIXME: Move to server
+    function generateNewUrl({ path, query }) {
+        if (path === undefined && query === undefined) return
 
-    return state
+        let currentPath = window.location.pathname
+        let currentQueryString = window.location.search.substr(1)
+        let currentQuery = qs.parse(currentQueryString)
+
+        if (path === undefined) path = currentPath
+        if (query === undefined) query = {}
+
+        let nextQueryString = qs.stringify({ ...currentQuery, ...query })
+
+        if (currentPath === path && currentQueryString === nextQueryString) return
+
+        return `${path}?${nextQueryString}`
+    }
 }
