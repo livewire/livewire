@@ -1,19 +1,17 @@
 <div>
-    <div>
-        Parent:
-        <span dusk="parent-output">{{ $parent->value }}</span>
-        <input wire:model="parent.value" type="text" dusk="parent-input">
-    </div>
+    <nav>
+        @foreach (Tests\Browser\SyncHistory\User::all() as $nav_user)
+            <button dusk="user-{{ $nav_user->id }}"
+                wire:click="setUser({{ $nav_user->id }})"
+                >
+                {{ $nav_user->username }}
+            </button>
+        @endforeach
 
-    <div>
-        Child:
-        <span dusk="child-output">{{ $child->value }}</span>
-        <input wire:model="child.value" type="text" dusk="child-input">
-    </div>
+        <h1>Current: {{ $user->username }}</h1>
 
-    <button wire:click="$set('showNestedComponent', true)" dusk="show-nested">Show Nested Component</button>
+        <hr />
 
-    @if ($showNestedComponent)
-        @livewire(\Tests\Browser\SyncHistory\NestedComponent::class)
-    @endif
+        <h2>{{ $liked ? 'liked' : 'not-liked' }}</h2>
+        <button dusk="toggle-like" wire:click="toggleLike">Toggle Like</button>
 </div>

@@ -7,17 +7,25 @@ use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    public Model $parent;
+    public User $user;
+    public bool $liked = false;
 
-    public Model $child;
+    protected $queryString = ['liked'];
 
-    public $toggle;
+    public function mount()
+    {
+        $this->liked = request()->query('liked', $this->liked);
+    }
 
-    public $showNestedComponent = false;
+    public function setUser($id)
+    {
+        $this->user = User::findOrFail($id);
+    }
 
-    protected $queryString = [
-        'toggle' => ['except' => null]
-    ];
+    public function toggleLike()
+    {
+        $this->liked = !$this->liked;
+    }
 
     public function render()
     {

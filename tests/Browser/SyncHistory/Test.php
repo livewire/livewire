@@ -7,67 +7,96 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public function test()
+    public function test_route_bound_properties_are_synced_with_browser_history()
+    {
+        $this->require74();
+
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history', ['user' => 1], false))
+                ->assertSeeIn('h1', 'Current: @danielcoulbourne');
+
+            $browser->click('@user-2')
+                ->waitForText('Current: @calebporzio')
+                ->assertRouteIs('sync-history', ['user' => 2]);
+
+            $browser->back()
+                ->waitForText('Current: @danielcoulbourne')
+                ->assertRouteIs('sync-history', ['user' => 1]);
+        });
+    }
+
+    public function test_that_query_bound_properties_are_synced_with_browser_history()
+    {
+        $this->require74();
+
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history', ['user' => 1], false))
+                ->waitForText('not-liked')
+                ->assertQueryStringHas('liked', 'false');
+
+            $browser->click('@toggle-like')
+                ->waitForText('liked')
+                ->assertQueryStringHas('liked', 'true');
+
+            $browser
+                ->click('@toggle-like')
+                ->waitForText('not-liked')
+                ->assertQueryStringHas('liked', 'false');
+
+            $browser->back()
+                ->waitForText('liked')
+                ->assertQueryStringHas('liked', 'true');
+
+            $browser->back()
+                ->waitForText('not-liked')
+                ->assertQueryStringHas('liked', 'false');
+        });
+    }
+
+    public function test_that_route_and_query_bound_properties_can_both_be_synced_with_browser_history()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history', ['user' => 1], false))
+                ->waitForText('Current: @danielcoulbourne')
+                ->waitForText('not-liked')
+                ->assertQueryStringHas('liked', 'false');
+
+            $browser->click('@toggle-like')
+                ->waitForText('liked')
+                ->assertQueryStringHas('liked', 'true');
+
+            $browser->click('@user-2')
+                ->waitForText('Current: @calebporzio')
+                ->assertRouteIs('sync-history', ['user' => 2])
+                ->assertQueryStringHas('liked', 'true');
+
+            $browser->click('@toggle-like')
+                ->waitForText('not-liked')
+                ->assertQueryStringHas('liked', 'false')
+                ->pause(50000);
+            // FIXME: something is causing livewire to get corrupt data after this. figue this out
+
+            $browser->back()
+                ->waitForText('liked')
+                ->assertQueryStringHas('liked', 'true');
+
+            $browser->back()
+                ->waitForText('Current: @danielcoulbourne')
+                ->assertRouteIs('sync-history', ['user' => 1]);
+
+            $browser->back()
+                ->waitForText('not-liked')
+                ->assertQueryStringHas('liked', 'false');
+        });
+    }
+
+    protected function require74()
     {
         // FIXME: We need a PHP 7.3 and below test
+
         if (PHP_VERSION_ID < 70400) {
             $this->markTestSkipped('Route-bound parameters are only supported in PHP 7.4 and above.');
             return;
         }
-
-        $this->browse(function (Browser $browser) {
-            $browser->visit('/livewire-dusk/tests/browser/sync-history/hera/aphrodite?foo=baz')
-                /*
-                 * Check that the intial property value is set from the query string.
-                 */
-                ->assertSeeIn('@parent-output', 'via-route:hera(column)')
-                ->assertSeeIn('@child-output', 'via-parent:aphrodite(column)')
-                ->assertInputValue('@parent-input', 'via-route:hera(column)')
-                ->assertInputValue('@child-input', 'via-parent:aphrodite(column)');
-
-                /**
-                 * Change a property and see it reflected in the query string.
-                 */
-                //->waitForLivewire()->type('@input', 'bob')
-                //->assertSeeIn('@output', 'bob')
-                //->assertInputValue('@input', 'bob')
-                //->assertQueryStringHas('foo', 'bob')
-
-                /**
-                 * Hit the back button and see the change reflected in both
-                 * the query string AND the actual property value.
-                 */
-                //->waitForLivewire()->back()
-                //->assertSeeIn('@output', 'baz')
-                //->assertQueryStringHas('foo', 'baz')
-
-                /**
-                 * Setting a property to a value marked as "except"
-                 * removes the property entirely from the query string.
-                 */
-                //->assertSeeIn('@bar-output', 'baz')
-                //->assertQueryStringHas('bar')
-                //->waitForLivewire()->type('@bar-input', 'except-value')
-                //->assertQueryStringMissing('bar')
-
-                /**
-                 * Add a nested component on the page and make sure
-                 * both components play nice with each other.
-                 */
-                //->assertQueryStringMissing('baz')
-                //->waitForLivewire()->click('@show-nested')
-                //->pause(25)
-                //->assertQueryStringHas('baz', 'bop')
-                //->assertSeeIn('@baz-output', 'bop')
-                //->waitForLivewire()->type('@baz-input', 'lop')
-                //->assertQueryStringHas('baz', 'lop')
-                //->waitForLivewire()->type('@input', 'plop')
-                //->waitForLivewire()->type('@baz-input', 'ploop')
-                //->assertQueryStringHas('foo', 'plop')
-                //->assertQueryStringHas('baz', 'ploop')
-                //->back()
-                //->back()
-                //->assertQueryStringHas('baz', 'lop');
-        });
     }
 }

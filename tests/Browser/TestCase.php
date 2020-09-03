@@ -66,6 +66,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\GlobalLivewire\Component::class);
             app('livewire')->component(\Tests\Browser\Nesting\Component::class);
             app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -86,8 +87,12 @@ class TestCase extends BaseTestCase
     }
 
     // We don't want to deal with screenshots or console logs.
-    protected function storeConsoleLogsFor($browsers) {}
-    protected function captureFailuresFor($browsers) {}
+    protected function storeConsoleLogsFor($browsers)
+    {
+    }
+    protected function captureFailuresFor($browsers)
+    {
+    }
 
     public function makeACleanSlate()
     {
@@ -225,7 +230,11 @@ class TestCase extends BaseTestCase
 
             // If no callback is passed, make ->waitForLivewire a higher-order method.
             return new class($this, $id) {
-                public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
+                public function __construct($browser, $id)
+                {
+                    $this->browser = $browser;
+                    $this->id = $id;
+                }
 
                 public function __call($method, $params)
                 {
@@ -282,11 +291,15 @@ class TestCase extends BaseTestCase
             try {
                 $callback(...$browsers);
             } catch (Exception $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+                if (DuskOptions::hasUI()) {
+                    $this->breakIntoATinkerShell($browsers, $e);
+                }
 
                 throw $e;
             } catch (Throwable $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+                if (DuskOptions::hasUI()) {
+                    $this->breakIntoATinkerShell($browsers, $e);
+                }
 
                 throw $e;
             }

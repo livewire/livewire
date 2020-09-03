@@ -14,36 +14,32 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Livewire\Commands\{
-    CpCommand,
-    MvCommand,
-    RmCommand,
-    CopyCommand,
-    MakeCommand,
-    MoveCommand,
-    StubsCommand,
-    TouchCommand,
-    DeleteCommand,
-    ComponentParser,
-    DiscoverCommand,
-    S3CleanupCommand,
-    MakeLivewireCommand
-};
-use Livewire\HydrationMiddleware\{
-    RenderView,
-    PersistErrorBag,
-    PerformActionCalls,
-    CallHydrationHooks,
-    CastPublicProperties,
-    PerformEventEmissions,
-    HydratePublicProperties,
-    PerformDataBindingUpdates,
-    SecureHydrationWithChecksum,
-    HashDataPropertiesForDirtyDetection,
-    HydratePreviouslyRenderedChildren,
-    HydrateEloquentModelsAsPublicProperties,
-    HydratePropertiesWithCustomRuntimeHydrators
-};
+use Livewire\Commands\CpCommand;
+use Livewire\Commands\MvCommand;
+use Livewire\Commands\RmCommand;
+use Livewire\Commands\CopyCommand;
+use Livewire\Commands\MakeCommand;
+use Livewire\Commands\MoveCommand;
+use Livewire\Commands\StubsCommand;
+use Livewire\Commands\TouchCommand;
+use Livewire\Commands\DeleteCommand;
+use Livewire\Commands\ComponentParser;
+use Livewire\Commands\DiscoverCommand;
+use Livewire\Commands\S3CleanupCommand;
+use Livewire\Commands\MakeLivewireCommand;
+use Livewire\HydrationMiddleware\RenderView;
+use Livewire\HydrationMiddleware\PersistErrorBag;
+use Livewire\HydrationMiddleware\PerformActionCalls;
+use Livewire\HydrationMiddleware\CallHydrationHooks;
+use Livewire\HydrationMiddleware\CastPublicProperties;
+use Livewire\HydrationMiddleware\PerformEventEmissions;
+use Livewire\HydrationMiddleware\HydratePublicProperties;
+use Livewire\HydrationMiddleware\PerformDataBindingUpdates;
+use Livewire\HydrationMiddleware\SecureHydrationWithChecksum;
+use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
+use Livewire\HydrationMiddleware\HydratePreviouslyRenderedChildren;
+use Livewire\HydrationMiddleware\HydrateEloquentModelsAsPublicProperties;
+use Livewire\HydrationMiddleware\HydratePropertiesWithCustomRuntimeHydrators;
 use Livewire\Macros\ViewMacros;
 
 class LivewireServiceProvider extends ServiceProvider
@@ -122,9 +118,9 @@ class LivewireServiceProvider extends ServiceProvider
         if ($this->app->runningUnitTests()) {
             // This needs to be registered for Dusk to test the route-parameter binding
             RouteFacade::get(
-                '/livewire-dusk/tests/browser/sync-history/{parent:column}/{child:column}',
+                '/livewire-dusk/tests/browser/sync-history/{user}',
                 \Tests\Browser\SyncHistory\Component::class
-            )->middleware('web');
+            )->middleware('web')->name('sync-history');
 
             RouteFacade::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
@@ -150,7 +146,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerCommands()
     {
-        if (! $this->app->runningInConsole()) return;
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
 
         $this->commands([
             MakeLivewireCommand::class, // make:livewire
@@ -303,7 +301,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function bypassTheseMiddlewaresDuringLivewireRequests(array $middlewareToExclude)
     {
-        if (! $this->app['livewire']->isLivewireRequest()) return;
+        if (! $this->app['livewire']->isLivewireRequest()) {
+            return;
+        }
 
         $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
 
