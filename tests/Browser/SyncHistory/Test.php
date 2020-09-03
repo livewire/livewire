@@ -56,6 +56,7 @@ class Test extends TestCase
     public function test_that_route_and_query_bound_properties_can_both_be_synced_with_browser_history()
     {
         $this->browse(function (Browser $browser) {
+            $browser->pause(10000);
             $browser->visit(route('sync-history', ['user' => 1], false))
                 ->waitForText('Current: @danielcoulbourne')
                 ->waitForText('not-liked')
@@ -78,7 +79,8 @@ class Test extends TestCase
 
             $browser->back()
                 ->waitForText('liked')
-                ->assertQueryStringHas('liked', 'true');
+                ->assertQueryStringHas('liked', 'true')
+                ->assertRouteIs('sync-history', ['user' => 2]);
 
             $browser->back()
                 ->waitForText('Current: @danielcoulbourne')

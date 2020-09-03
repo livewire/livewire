@@ -8,6 +8,9 @@ class ComponentChecksumManager
     {
         $hashKey = app('encrypter')->getKey();
 
+        ksort($fingerprint);
+        ksort($memo);
+
         $stringForHashing = ''
             .json_encode($fingerprint)
             .json_encode($memo);
@@ -17,6 +20,13 @@ class ComponentChecksumManager
 
     public function check($checksum, $fingerprint, $memo)
     {
+        if (!hash_equals($this->generate($fingerprint, $memo), $checksum)) {
+            // dump($fingerprint);
+            // dump($memo);
+
+            // dd($this->generate($fingerprint, $memo));
+        }
+
         return hash_equals($this->generate($fingerprint, $memo), $checksum);
     }
 }

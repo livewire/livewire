@@ -12,11 +12,6 @@ class Component extends BaseComponent
 
     protected $queryString = ['liked'];
 
-    public function mount()
-    {
-        $this->liked = request()->query('liked', $this->liked);
-    }
-
     public function setUser($id)
     {
         $this->user = User::findOrFail($id);
@@ -29,6 +24,6 @@ class Component extends BaseComponent
 
     public function render()
     {
-        return View::file(__DIR__.'/view.blade.php');
+        return View::file(__DIR__.'/view.blade.php')->with(['id' => $this->id]);
     }
 }

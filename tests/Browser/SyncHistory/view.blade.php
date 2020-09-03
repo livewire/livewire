@@ -1,4 +1,5 @@
 <div>
+    {{ $id }}
     <nav>
         @foreach (Tests\Browser\SyncHistory\User::all() as $nav_user)
             <button dusk="user-{{ $nav_user->id }}"
