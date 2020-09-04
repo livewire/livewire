@@ -110,13 +110,9 @@ class TemporaryUploadedFile extends UploadedFile
 
         $newPath = trim($path.'/'.$name, '/');
 
-        if ($disk === $this->disk) {
-            $this->storage->copy($this->path, $newPath);
-        } else {
-            Storage::disk($disk)->put(
-                $newPath, $this->storage->readStream($this->path), $options
-            );
-        }
+        Storage::disk($disk)->put(
+            $newPath, $this->storage->readStream($this->path), $options
+        );
 
         return $newPath;
     }
