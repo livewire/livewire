@@ -41,6 +41,17 @@ class Test extends TestCase
                     $browser->pause(85);
                     $browser->assertSeeIn('@output', '3');
                 })
+
+                /**
+                 * polling will start if directive is added
+                 * polling on root div
+                 */
+                ->tap(function (Browser $browser) {
+                    $browser->waitForLivewire()->click('@button');
+                    $browser->assertSeeIn('@output', '4');
+                    $browser->pause(100);
+                    $browser->assertSeeIn('@output', '5');
+                })
             ;
         });
     }

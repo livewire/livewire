@@ -3,22 +3,15 @@
     "name": "laravel-livewire",
     "scripts": {
         "build": "npx rollup -c",
-        "watch": "npx rollup -c -w",
-        "test": "jest",
-        "test:debug": "node --inspect node_modules/.bin/jest --runInBand"
+        "watch": "npx rollup -c -w"
     },
     "author": "Caleb Porzio",
     "license": "MIT",
     "devDependencies": {
-        "jest": "^24.9.0",
-        "jest-dom": "^3.5.0",
-        "babel-jest": "^24.9.0",
         "@babel/core": "^7.7.5",
         "@babel/plugin-proposal-object-rest-spread": "^7.8.3",
         "@babel/plugin-transform-runtime": "^7.8.3",
         "@babel/preset-env": "^7.7.6",
-        "jsdom-simulant": "^1.1.2",
-        "dom-testing-library": "^3.19.4",
         "md5": "^2.2.1",
         "false": "^0.0.4",
         "core-js": "^3.6.4",
