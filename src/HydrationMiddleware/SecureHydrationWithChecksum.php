@@ -16,16 +16,6 @@ class SecureHydrationWithChecksum implements HydrationMiddleware
 
         unset($request->memo['checksum']);
 
-        if (!$checksumManager->check($checksum, $request->fingerprint, $request->memo)) {
-            dd([
-                'Instance' => $unHydratedInstance->id,
-                'Expected checksum:' => $checksum,
-                'Actual checksum:' => $checksumManager->generate($request->fingerprint, $request->memo),
-                'Request fingerprint:' => $request->fingerprint,
-                'Request server memo:' => $request->memo,
-            ]);
-        }
-
         throw_unless(
             $checksumManager->check($checksum, $request->fingerprint, $request->memo),
             new CorruptComponentPayloadException($unHydratedInstance::getName())
