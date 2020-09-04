@@ -99,21 +99,15 @@ ${el.outerHTML}
 
     valueFromInput(el, component) {
         if (el.type === 'checkbox') {
-            const modelName = wireDirectives(el).get('model').value
-            var modelValue = get(component.data, modelName)
+            let modelName = wireDirectives(el).get('model').value
+            // If there is an update from wire:model.defer in the chamber,
+            // we need to pretend that is the actual data from the server.
+            let modelValue = component.deferredActions[modelName]
+                ? component.deferredActions[modelName].payload.value
+                : get(component.data, modelName)
 
             if (Array.isArray(modelValue)) {
-                if (el.checked) {
-                    modelValue = modelValue.includes(el.value)
-                        ? modelValue
-                        : modelValue.concat(el.value)
-                } else {
-                    modelValue = modelValue.filter(
-                        item => item !== el.value
-                    )
-                }
-
-                return modelValue
+                return this.mergeCheckboxValueIntoArray(el, modelValue)
             }
 
             if (el.checked) {
@@ -126,6 +120,16 @@ ${el.outerHTML}
         }
 
         return el.value
+    },
+
+    mergeCheckboxValueIntoArray(el, arrayValue) {
+        if (el.checked) {
+            return arrayValue.includes(el.value)
+                ? arrayValue
+                : arrayValue.concat(el.value)
+        }
+
+        return arrayValue.filter(item => item !== el.value)
     },
 
     setInputValueFromModel(el, component) {

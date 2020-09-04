@@ -13,7 +13,9 @@ class LivewireBladeDirectives
 
     public static function entangle($expression)
     {
-        return "window.livewire.find('{{ \$_instance->id }}').entangle('{{ $expression }}')";
+        return <<<EOT
+<?php if ((object) {$expression} instanceof \Livewire\WireDirective) : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression}->value() }}'){{ {$expression}->hasModifier('defer') ? '.defer' : '' }} <?php else : ?> window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression} }}') <?php endif; ?>
+EOT;
     }
 
     public static function livewireStyles($expression)
