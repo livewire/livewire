@@ -51,7 +51,7 @@ function fireActionOnInterval(node, component) {
         // Don't poll when the tab is in the background.
         // The "Math.random" business effectivlly prevents 95% of requests
         // from executing. We still want "some" requests to get through.
-        if (store.livewireIsInBackground && Math.random() < .95) return
+        if (!directive.modifiers.includes('persist') && store.livewireIsInBackground && Math.random() < .95) return
 
         // Don't poll if livewire is offline as well.
         if (store.livewireIsOffline) return
