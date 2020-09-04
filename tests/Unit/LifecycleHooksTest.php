@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 class LifecycleHooksTest extends TestCase
@@ -17,6 +16,9 @@ class LifecycleHooksTest extends TestCase
         $this->assertEquals([
             'mount' => true,
             'hydrate' => false,
+            'hydrateFoo' => false,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
@@ -36,6 +38,9 @@ class LifecycleHooksTest extends TestCase
         $this->assertEquals([
             'mount' => true,
             'hydrate' => true,
+            'hydrateFoo' => true,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
@@ -65,6 +70,9 @@ class LifecycleHooksTest extends TestCase
         $this->assertEquals([
             'mount' => true,
             'hydrate' => true,
+            'hydrateFoo' => true,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
@@ -111,6 +119,9 @@ class LifecycleHooksTest extends TestCase
         $this->assertEquals([
             'mount' => true,
             'hydrate' => true,
+            'hydrateFoo' => true,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => false,
@@ -141,6 +152,9 @@ class LifecycleHooksTest extends TestCase
         $this->assertEquals([
             'mount' => true,
             'hydrate' => true,
+            'hydrateFoo' => true,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
@@ -164,6 +178,9 @@ class ForLifecycleHooks extends Component
     public $lifecycles = [
         'mount' => false,
         'hydrate' => false,
+        'hydrateFoo' => false,
+        'dehydrate' => false,
+        'dehydrateFoo' => false,
         'updating' => false,
         'updated' => false,
         'updatingFoo' => false,
@@ -182,6 +199,21 @@ class ForLifecycleHooks extends Component
     public function hydrate()
     {
         $this->lifecycles['hydrate'] = true;
+    }
+
+    public function hydrateFoo()
+    {
+        $this->lifecycles['hydrateFoo'] = true;
+    }
+
+    public function dehydrate()
+    {
+        $this->lifecycles['dehydrate'] = true;
+    }
+
+    public function dehydrateFoo()
+    {
+        $this->lifecycles['dehydrateFoo'] = true;
     }
 
     public function updating($name, $value)

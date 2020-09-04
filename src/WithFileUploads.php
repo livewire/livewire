@@ -89,34 +89,6 @@ trait WithFileUploads
         }
     }
 
-    protected function hydratePropertyFromWithFileUploads($name, $value)
-    {
-        if (TemporaryUploadedFile::canUnserialize($value)) {
-            return TemporaryUploadedFile::unserializeFromLivewireRequest($value);
-        }
-
-        return $value;
-    }
-
-    protected function dehydratePropertyFromWithFileUploads($name, $value)
-    {
-        if ($value instanceof TemporaryUploadedFile) {
-            return $value->serializeForLivewireResponse();
-        }
-
-        if (is_array($value) && isset(array_values($value)[0]) && array_values($value)[0] instanceof TemporaryUploadedFile && is_numeric(key($value))) {
-            return array_values($value)[0]::serializeMultipleForLivewireResponse($value);
-        }
-
-        if (is_array($value)) {
-            foreach ($value as $key => $item) {
-                $value[$key] = $this->dehydratePropertyFromWithFileUploads(null, $item);
-            }
-        }
-
-        return $value;
-    }
-
     protected function cleanupOldUploads()
     {
         if (FileUploadConfiguration::isUsingS3()) return;

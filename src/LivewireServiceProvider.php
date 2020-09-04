@@ -32,18 +32,14 @@ use Livewire\Commands\{
 };
 use Livewire\HydrationMiddleware\{
     RenderView,
-    PersistErrorBag,
     PerformActionCalls,
     CallHydrationHooks,
-    CastPublicProperties,
     PerformEventEmissions,
     HydratePublicProperties,
     PerformDataBindingUpdates,
+    CallPropertyHydrationHooks,
     SecureHydrationWithChecksum,
     HashDataPropertiesForDirtyDetection,
-    HydratePreviouslyRenderedChildren,
-    HydrateEloquentModelsAsPublicProperties,
-    HydratePropertiesWithCustomRuntimeHydrators
 };
 use Livewire\Macros\ViewMacros;
 
@@ -252,6 +248,7 @@ class LivewireServiceProvider extends ServiceProvider
         RenameMe\SupportRedirects::init();
         RenameMe\SupportValidation::init();
         RenameMe\SupportQueryString::init();
+        RenameMe\SupportFileUploads::init();
         RenameMe\OptimizeRenderedDom::init();
         RenameMe\SupportFileDownloads::init();
         RenameMe\SupportActionReturns::init();
@@ -259,7 +256,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerHydrationMiddleware()
     {
-        Livewire::registerHydrationMiddleware([
+        LifecycleManager::registerHydrationMiddleware([
 
             /* This is the core middleware stack of Livewire. It's important */
             /* to understand that the request goes through each class by the */
@@ -271,9 +268,9 @@ class LivewireServiceProvider extends ServiceProvider
             /* ↓ */ SecureHydrationWithChecksum::class, /* --------------- ↑ */
             /* ↓ */ HashDataPropertiesForDirtyDetection::class, /* ------- ↑ */
             /* ↓                                                           ↑ */
-            /* ↓     Hydrate Stuff                                         ↑ */
+            /* ↓    Hydrate Stuff                                          ↑ */
             /* ↓ */ HydratePublicProperties::class, /* ------------------- ↑ */
-            /* ↓ */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ↑ */
+            /* ↓ */ CallPropertyHydrationHooks::class, /* ---------------- ↑ */
             /* ↓ */ CallHydrationHooks::class, /* ------------------------ ↑ */
             /* ↓                                                           ↑ */
             /* ↓    Update Stuff                                           ↑ */
@@ -286,18 +283,18 @@ class LivewireServiceProvider extends ServiceProvider
 
         ]);
 
-        Livewire::registerInitialDehydrationMiddleware([
+        LifecycleManager::registerInitialDehydrationMiddleware([
 
             /* Initial Response */
             /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
             /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
+            /* ^ */ [CallPropertyHydrationHooks::class, 'dehydrate'],
             /* ^ */ [CallHydrationHooks::class, 'initialDehydrate'],
-            /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
             /* ^ */ [RenderView::class, 'dehydrate'],
 
         ]);
 
-        Livewire::registerInitialHydrationMiddleware([
+        LifecycleManager::registerInitialHydrationMiddleware([
 
                 [CallHydrationHooks::class, 'initialHydrate'],
 
