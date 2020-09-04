@@ -13,12 +13,15 @@ export default function() {
     })
 
     store.registerHook('message.received', (message, component) => {
+        console.log('Received message:', message)
         let { replaying, response } = message
         if (replaying) return
 
         let { effects } = response
 
-        let state = generateNewState(component, response)
+        let newResponse = JSON.parse(JSON.stringify(response))
+
+        let state = generateNewState(component, newResponse)
         let url = generateNewUrl(effects)
 
         if (url) history.pushState(state, '', url)
@@ -32,8 +35,10 @@ export default function() {
             if (!component) return
 
             let message = new Message(component, component.updateQueue) // FIXME: Discuss?
-            message.storeResponse(response)
+            message.storeResponse(JSON.parse(JSON.stringify(response)))
             message.replaying = true
+
+            console.log('About to replay:', message)
 
             component.handleResponse(message)
             setTimeout(() => component.call('$refresh'))
@@ -50,11 +55,12 @@ export default function() {
 
     function generateFauxResponse(component) {
         let { fingerprint, serverMemo, effects, el } = component
-        return {
-            fingerprint: { ...fingerprint },
-            serverMemo: { ...serverMemo },
+        let response = JSON.parse(JSON.stringify({
+            fingerprint,
+            serverMemo,
             effects: { ...effects, html: el.outerHTML }
-        }
+        }));
+        return response;
     }
 
     // FIXME: Move to server

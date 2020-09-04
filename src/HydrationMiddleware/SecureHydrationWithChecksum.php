@@ -15,7 +15,16 @@ class SecureHydrationWithChecksum implements HydrationMiddleware
         $checksum = $request->memo['checksum'];
 
         unset($request->memo['checksum']);
-        header('X-hash: '. $request->memo['htmlHash']);
+
+        if (!$checksumManager->check($checksum, $request->fingerprint, $request->memo)) {
+            dd([
+                'Instance' => $unHydratedInstance->id,
+                'Expected checksum:' => $checksum,
+                'Actual checksum:' => $checksumManager->generate($request->fingerprint, $request->memo),
+                'Request fingerprint:' => $request->fingerprint,
+                'Request server memo:' => $request->memo,
+            ]);
+        }
 
         throw_unless(
             $checksumManager->check($checksum, $request->fingerprint, $request->memo),
@@ -25,7 +34,6 @@ class SecureHydrationWithChecksum implements HydrationMiddleware
 
     public static function dehydrate($instance, $response)
     {
-        header('X-hash: '. $response->memo['htmlHash']);
         $response->memo['checksum'] = (new ComponentChecksumManager)->generate($response->fingerprint, $response->memo);
     }
 }

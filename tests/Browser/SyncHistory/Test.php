@@ -56,8 +56,8 @@ class Test extends TestCase
     public function test_that_route_and_query_bound_properties_can_both_be_synced_with_browser_history()
     {
         $this->browse(function (Browser $browser) {
-            $browser->pause(10000);
             $browser->visit(route('sync-history', ['user' => 1], false))
+                ->pause(2000)
                 ->waitForText('Current: @danielcoulbourne')
                 ->waitForText('not-liked')
                 ->assertQueryStringHas('liked', 'false');
@@ -74,7 +74,7 @@ class Test extends TestCase
             $browser->click('@toggle-like')
                 ->waitForText('not-liked')
                 ->assertQueryStringHas('liked', 'false')
-                ->pause(50000);
+                ->tinker();
             // FIXME: something is causing livewire to get corrupt data after this. figue this out
 
             $browser->back()
