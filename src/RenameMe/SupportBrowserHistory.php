@@ -15,7 +15,7 @@ use Illuminate\Routing\UrlGenerator;
 // FIXME: the first request doesn't honor child component query params
 // FIXME: Handle the #fragment
 
-class SupportRouteHistory
+class SupportBrowserHistory
 {
     static function init() { return new static; }
 
@@ -37,7 +37,7 @@ class SupportRouteHistory
             }
         });
 
-        Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) use (&$initialized) {
+        Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
             // $url = url()->current();
 
             $queryString = array_merge(
@@ -45,7 +45,19 @@ class SupportRouteHistory
                 $this->mergeAndGetQueryString($component->getQueryStringProperties())
             );
 
-            $response->effects['query'] = $queryString;
+            // $response->effects['query'] = $queryString;
+            $response->effects['path'] = url()->current();
+
+            $queryString = array_merge(
+                request()->query(),
+                $this->mergeAndGetQueryString($component->getQueryStringProperties())
+            );
+
+            ksort($queryString);
+
+            if (!empty($queryString)) {
+                $response->effects['path'] .= '?'.http_build_query($queryString);
+            }
         });
 
         Livewire::listen('component.dehydrate.subsequent', function (Component $component, Response $response) {
@@ -54,46 +66,44 @@ class SupportRouteHistory
             }
 
             // Get the query string from the client
-            // parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
+            parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
 
             // Get all the merged query strings from all components that have rendered
             $currentComponentQueryString = $component->getQueryStringProperties();
-            // $componentsQueryString = $this->mergeAndGetQueryString($currentComponentQueryString);
+            $componentsQueryString = $this->mergeAndGetQueryString($currentComponentQueryString);
 
             // Merge the them all together, giving the current component the final say
-            //$queryString = array_merge(
-            //    // $componentsQueryString,
-            //    // $referrerQueryString,
-            //    $currentComponentQueryString
-            //);
-
-            $queryString = $currentComponentQueryString;
+            $queryString = array_merge(
+                // $componentsQueryString,
+                // $referrerQueryString,
+                $currentComponentQueryString
+            );
 
             // Sort by keys to keep it predictable
             ksort($queryString);
 
-            if (count($queryString)) {
-                $response->effects['query'] = $queryString;
-            }
+            //if (count($queryString)) {
+            //    $response->effects['query'] = $queryString;
+            //}
 
             $route = app('router')->getRoutes()->match(
                 Request::create($referrer, 'GET')
             );
 
             if (false !== strpos($route->getActionName(), get_class($component))) {
-                $response->effects['path'] = $this->buildPathFromRoute($component, $route);
+                $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryString);
             }
         });
     }
 
-    protected function buildPathFromRoute($component, $route)
+    protected function buildPathFromRoute($component, $route, $queryString)
     {
         $boundParameters = array_intersect_key(
             $component->getPublicPropertiesDefinedBySubClass(),
             $route->parametersWithoutNulls()
         );
 
-        return app(UrlGenerator::class)->toRoute($route, $boundParameters, false);
+        return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString, true); // FIXME
     }
 
     protected function mergeAndGetQueryString($params)

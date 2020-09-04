@@ -2,82 +2,98 @@ import store from '@/Store'
 import qs from '@/util/query-string'
 import Message from '@/Message';
 
-export default function() {
+function withDebug(group, callback) {
+    console.groupCollapsed(group);
+
+    try {
+        callback();
+    } catch (e) {
+        console.error(e);
+    }
+
+    console.groupEnd();
+}
+
+export default function () {
 
     store.registerHook('component.initialized', component => {
-        let state = generateNewState(component, generateFauxResponse(component))
-        let url = generateNewUrl(component.effects)
+        withDebug(`Initialized ${component.name}`, () => {
+            let state = generateNewState(component, generateFauxResponse(component))
+            let url = 'path' in component.effects ? component.effects.path : undefined
 
-        history.replaceState(state, '', url)
-        console.log(`Initialized ${component.name}`)
+            console.log('State', state)
+            console.log('URL', url)
+
+            history.replaceState(state, '', url)
+        })
     })
 
     store.registerHook('message.received', (message, component) => {
-        console.log('Received message:', message)
-        let { replaying, response } = message
-        if (replaying) return
+        withDebug(`Message received for ${component.name}`, () => {
+            let { replaying, response } = message
+            if (replaying) {
+                console.log('Replaying - skipping pushState')
+                return
+            }
 
-        let { effects } = response
+            let { effects } = response
 
-        let newResponse = JSON.parse(JSON.stringify(response))
+            if ('path' in effects && effects.path !== window.location.href) {
 
-        let state = generateNewState(component, newResponse)
-        let url = generateNewUrl(effects)
+                let state = generateNewState(component, response)
 
-        if (url) history.pushState(state, '', url)
+                console.warn('Pushing new state')
+                console.log('State', state);
+                console.log('Current URL', window.location.href);
+                console.log('New URL', effects.path);
+
+                history.pushState(state, '', effects.path)
+            } else {
+                console.log('No path effect, skipping')
+            }
+        })
     })
 
     window.addEventListener('popstate', event => {
-        if (! (event && event.state && event.state.livewire)) return
+        if (!(event && event.state && event.state.livewire)) return
 
-        Object.entries(event.state.livewire).forEach(([id, response]) => {
-            let component = store.findComponent(id)
-            if (!component) return
+        withDebug('"popstate" event', () => {
+            Object.entries(event.state.livewire).forEach(([id, response]) => {
+                withDebug(`Component "${id}"`, () => {
+                    let component = store.findComponent(id)
+                    if (!component) {
+                        console.log('Cannot find component - aborting')
+                        return
+                    }
 
-            let message = new Message(component, component.updateQueue) // FIXME: Discuss?
-            message.storeResponse(JSON.parse(JSON.stringify(response)))
-            message.replaying = true
+                    let message = new Message(component, [])
+                    message.storeResponse(response)
+                    message.replaying = true
 
-            console.log('About to replay:', message)
+                    console.log('About to replay:', message)
+                    component.handleResponse(message)
 
-            component.handleResponse(message)
-            setTimeout(() => component.call('$refresh'))
+                    console.log('Calling $refresh')
+                    component.call('$refresh')
+                })
+            })
         })
     })
 
     function generateNewState(component, response) {
         let state = (history.state && history.state.livewire) ? { ...history.state.livewire } : {}
 
-        state[component.id] = response
+        state[component.id] = JSON.parse(JSON.stringify(response))
 
         return { turbolinks: {}, livewire: state }
     }
 
     function generateFauxResponse(component) {
         let { fingerprint, serverMemo, effects, el } = component
-        let response = JSON.parse(JSON.stringify({
+        return {
             fingerprint,
             serverMemo,
             effects: { ...effects, html: el.outerHTML }
-        }));
-        return response;
-    }
-
-    // FIXME: Move to server
-    function generateNewUrl({ path, query }) {
-        if (path === undefined && query === undefined) return
-
-        let currentPath = window.location.pathname
-        let currentQueryString = window.location.search.substr(1)
-        let currentQuery = qs.parse(currentQueryString)
-
-        if (path === undefined) path = currentPath
-        if (query === undefined) query = {}
-
-        let nextQueryString = qs.stringify({ ...currentQuery, ...query })
-
-        if (currentPath === path && currentQueryString === nextQueryString) return
-
-        return `${path}?${nextQueryString}`
+        }
     }
 }

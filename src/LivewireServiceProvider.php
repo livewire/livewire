@@ -246,7 +246,7 @@ class LivewireServiceProvider extends ServiceProvider
         RenameMe\SupportChildren::init();
         RenameMe\SupportRedirects::init();
         RenameMe\SupportValidation::init();
-        RenameMe\SupportRouteHistory::init();
+        RenameMe\SupportBrowserHistory::init();
         RenameMe\OptimizeRenderedDom::init();
         RenameMe\SupportFileDownloads::init();
         RenameMe\SupportActionReturns::init();
