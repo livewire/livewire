@@ -224,6 +224,8 @@ export default class Component {
     }
 
     handleResponse(message) {
+        store.callHook('message.receiving', message, this)
+
         let response = message.response
 
         this.updateDataAndMemo(

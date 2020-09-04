@@ -4,22 +4,22 @@ namespace Tests\Browser\SyncHistory;
 
 use Illuminate\Database\Eloquent\Model;
 
-class User extends Model
+class Step extends Model
 {
     use \Sushi\Sushi;
 
     protected $rows = [
         [
             'id' => 1,
-            'username' => '@danielcoulbourne',
+            'title' => 'Step 1',
         ],
         [
             'id' => 2,
-            'username' => '@calebporzio',
+            'title' => 'Step 2',
         ],
         [
             'id' => 3,
-            'username' => '@inxilpro',
+            'title' => 'Step 3',
         ],
     ];
 }

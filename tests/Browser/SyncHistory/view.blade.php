@@ -1,18 +1,28 @@
 <div>
-    {{ $id }}
-    <nav>
-        @foreach (Tests\Browser\SyncHistory\User::all() as $nav_user)
-            <button dusk="user-{{ $nav_user->id }}"
-                wire:click="setUser({{ $nav_user->id }})"
-                >
-                {{ $nav_user->username }}
-            </button>
+    <dl>
+        <dt>Component ID</dt>
+        <dd>{{ $id }}</dd>
+
+        @foreach (Tests\Browser\SyncHistory\Step::all() as $each_step)
+            <dt>{{ $each_step->title }}</dt>
+            <dd>
+                @if($each_step->is($step))
+                    <button disabled>Active</button>
+                @else
+                    <button
+                        dusk="step-{{ $each_step->id }}"
+                        wire:click="setStep({{ $each_step->id }})"
+                    >
+                        Activate {{ $each_step->title }}
+                    </button>
+                @endif
+            </dd>
         @endforeach
 
-        <h1>Current: {{ $user->username }}</h1>
-
-        <hr />
-
-        <h2>{{ $liked ? 'liked' : 'not-liked' }}</h2>
-        <button dusk="toggle-like" wire:click="toggleLike">Toggle Like</button>
+        <dt>Help</dt>
+        <dd>
+            Help is currently {{ $showHelp ? 'enabled' : 'disabled' }}.
+            <button dusk="toggle-help" wire:click="toggleHelp">Toggle</button>
+        </dd>
+    </dl>
 </div>

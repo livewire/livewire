@@ -56,39 +56,39 @@ class Test extends TestCase
     public function test_that_route_and_query_bound_properties_can_both_be_synced_with_browser_history()
     {
         $this->browse(function (Browser $browser) {
-            $browser->visit(route('sync-history', ['user' => 1], false))
-                ->pause(2000)
-                ->waitForText('Current: @danielcoulbourne')
-                ->waitForText('not-liked')
-                ->assertQueryStringHas('liked', 'false');
-
-            $browser->click('@toggle-like')
-                ->waitForText('liked')
-                ->assertQueryStringHas('liked', 'true');
-
-            $browser->click('@user-2')
-                ->waitForText('Current: @calebporzio')
-                ->assertRouteIs('sync-history', ['user' => 2])
-                ->assertQueryStringHas('liked', 'true');
-
-            $browser->click('@toggle-like')
-                ->waitForText('not-liked')
-                ->assertQueryStringHas('liked', 'false')
+            $browser->visit(route('sync-history', ['step' => 1], false))
                 ->tinker();
-            // FIXME: something is causing livewire to get corrupt data after this. figue this out
-
-            $browser->back()
-                ->waitForText('liked')
-                ->assertQueryStringHas('liked', 'true')
-                ->assertRouteIs('sync-history', ['user' => 2]);
-
-            $browser->back()
-                ->waitForText('Current: @danielcoulbourne')
-                ->assertRouteIs('sync-history', ['user' => 1]);
-
-            $browser->back()
-                ->waitForText('not-liked')
-                ->assertQueryStringHas('liked', 'false');
+            //    ->waitForText('Current: @danielcoulbourne')
+            //    ->waitForText('not-liked')
+            //    ->assertQueryStringHas('liked', 'false');
+            //
+            //$browser->click('@toggle-like')
+            //    ->waitForText('liked')
+            //    ->assertQueryStringHas('liked', 'true');
+            //
+            //$browser->click('@user-2')
+            //    ->waitForText('Current: @calebporzio')
+            //    ->assertRouteIs('sync-history', ['user' => 2])
+            //    ->assertQueryStringHas('liked', 'true');
+            //
+            //$browser->click('@toggle-like')
+            //    ->waitForText('not-liked')
+            //    ->assertQueryStringHas('liked', 'false')
+            //    ->tinker();
+            //// FIXME: something is causing livewire to get corrupt data after this. figue this out
+            //
+            //$browser->back()
+            //    ->waitForText('liked')
+            //    ->assertQueryStringHas('liked', 'true')
+            //    ->assertRouteIs('sync-history', ['user' => 2]);
+            //
+            //$browser->back()
+            //    ->waitForText('Current: @danielcoulbourne')
+            //    ->assertRouteIs('sync-history', ['user' => 1]);
+            //
+            //$browser->back()
+            //    ->waitForText('not-liked')
+            //    ->assertQueryStringHas('liked', 'false');
         });
     }
 

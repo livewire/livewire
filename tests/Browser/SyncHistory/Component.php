@@ -7,19 +7,19 @@ use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    public User $user;
-    public bool $liked = false;
+    public Step $step;
+    public bool $showHelp = false;
 
-    protected $queryString = ['liked'];
+    protected $queryString = ['showHelp'];
 
-    public function setUser($id)
+    public function setStep($id)
     {
-        $this->user = User::findOrFail($id);
+        $this->step = Step::findOrFail($id);
     }
 
-    public function toggleLike()
+    public function toggleHelp()
     {
-        $this->liked = !$this->liked;
+        $this->showHelp = ! $this->showHelp;
     }
 
     public function render()
