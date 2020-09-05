@@ -74,8 +74,23 @@ class SupportBrowserHistory
 
             if (false !== strpos($route->getActionName(), get_class($component))) {
                 $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryString);
+            } else if (!empty($queryString)) {
+                $response->effects['path'] = $this->buildPathFromReferrer($referrer, $queryString);
             }
         });
+    }
+
+    protected function buildPathFromReferrer($referrer, $queryString)
+    {
+        if (empty($queryString)) {
+            return null;
+        }
+
+        ksort($queryString);
+
+        $url = Str::before($referrer, '?');
+
+        return $url.'?'.http_build_query($queryString);
     }
 
     protected function buildPathFromRoute($component, $route, $queryString)

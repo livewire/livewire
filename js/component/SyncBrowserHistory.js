@@ -1,18 +1,21 @@
 import store from '@/Store'
-import qs from '@/util/query-string'
 import Message from '@/Message';
 
 function withDebug(group, callback) {
+    console.groupCollapsed(group);
+
     try {
         callback();
     } catch (e) {
         console.error(e);
     }
+
+    console.groupEnd();
 }
 
 export default function () {
 
-    let cached = {}
+    let cachedComponentMemos = {}
     let initializedPath = false;
 
     store.registerHook('component.initialized', component => {
@@ -26,11 +29,12 @@ export default function () {
     })
 
     store.registerHook('message.receiving', (message, component) => {
-        cached = JSON.parse(JSON.stringify(component.serverMemo));
+        cachedComponentMemos[component.id] = JSON.parse(JSON.stringify(component.serverMemo));
     });
 
     store.registerHook('message.processed', (message, component) => {
         withDebug(`Message processed for ${ component.name }`, () => {
+            console.log(message)
             let { replaying, response } = message
             if (replaying) return
 
@@ -38,8 +42,12 @@ export default function () {
 
             if ('path' in effects && effects.path !== window.location.href) {
 
-                let state = generateNewState(component, response, cached)
-                cached = {}
+                let lastComponentServerMemo = component.id in cachedComponentMemos
+                    ? cachedComponentMemos[component.id]
+                    : {}
+
+                let state = generateNewState(component, response, lastComponentServerMemo)
+                cachedComponentMemos[component.id] = {}
 
                 history.pushState(state, '', effects.path)
             }
@@ -58,6 +66,7 @@ export default function () {
                     let message = new Message(component, [])
                     message.storeResponse(response)
                     message.replaying = true
+                    console.log(message)
 
                     component.handleResponse(message)
                     component.call('$refresh')

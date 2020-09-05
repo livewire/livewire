@@ -122,7 +122,7 @@ class Test extends TestCase
 
             $browser->back()
                ->waitForText('Dark mode is currently disabled')
-               ->assertQueryStringHas('showDarkmode', 'false');
+               ->assertQueryStringHas('darkmode', 'false');
         });
     }
 
