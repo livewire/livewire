@@ -6,6 +6,7 @@ use Illuminate\View\View;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\View\ComponentAttributeBag;
 use Livewire\Controllers\FileUploadHandler;
 use Livewire\Controllers\FilePreviewHandler;
 use Livewire\Controllers\HttpConnectionHandler;
@@ -31,18 +32,14 @@ use Livewire\Commands\{
 };
 use Livewire\HydrationMiddleware\{
     RenderView,
-    PersistErrorBag,
     PerformActionCalls,
     CallHydrationHooks,
-    CastPublicProperties,
     PerformEventEmissions,
     HydratePublicProperties,
     PerformDataBindingUpdates,
+    CallPropertyHydrationHooks,
     SecureHydrationWithChecksum,
     HashDataPropertiesForDirtyDetection,
-    HydratePreviouslyRenderedChildren,
-    HydrateEloquentModelsAsPublicProperties,
-    HydratePropertiesWithCustomRuntimeHydrators
 };
 use Livewire\Macros\ViewMacros;
 
@@ -61,7 +58,6 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerCommands();
         $this->registerRenameMes();
-        $this->registerTestMacros();
         $this->registerViewMacros();
         $this->registerTagCompiler();
         $this->registerPublishables();
@@ -199,6 +195,15 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerViewMacros()
     {
+        ComponentAttributeBag::macro('wire', function ($name) {
+            $entries = head($this->whereStartsWith('wire:'.$name));
+
+            $directive = head(array_keys($entries));
+            $value = head(array_values($entries));
+
+            return new WireDirective($name, $directive, $value);
+        });
+
         View::mixin(new ViewMacros);
     }
 
@@ -248,15 +253,16 @@ class LivewireServiceProvider extends ServiceProvider
         RenameMe\SupportChildren::init();
         RenameMe\SupportRedirects::init();
         RenameMe\SupportValidation::init();
-        RenameMe\SupportBrowserHistory::init();
+        RenameMe\SupportFileUploads::init();
         RenameMe\OptimizeRenderedDom::init();
         RenameMe\SupportFileDownloads::init();
+        RenameMe\SupportBrowserHistory::init();
         RenameMe\SupportActionReturns::init();
     }
 
     protected function registerHydrationMiddleware()
     {
-        Livewire::registerHydrationMiddleware([
+        LifecycleManager::registerHydrationMiddleware([
 
             /* This is the core middleware stack of Livewire. It's important */
             /* to understand that the request goes through each class by the */
@@ -268,9 +274,9 @@ class LivewireServiceProvider extends ServiceProvider
             /* ↓ */ SecureHydrationWithChecksum::class, /* --------------- ↑ */
             /* ↓ */ HashDataPropertiesForDirtyDetection::class, /* ------- ↑ */
             /* ↓                                                           ↑ */
-            /* ↓     Hydrate Stuff                                         ↑ */
+            /* ↓    Hydrate Stuff                                          ↑ */
             /* ↓ */ HydratePublicProperties::class, /* ------------------- ↑ */
-            /* ↓ */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ↑ */
+            /* ↓ */ CallPropertyHydrationHooks::class, /* ---------------- ↑ */
             /* ↓ */ CallHydrationHooks::class, /* ------------------------ ↑ */
             /* ↓                                                           ↑ */
             /* ↓    Update Stuff                                           ↑ */
@@ -283,18 +289,18 @@ class LivewireServiceProvider extends ServiceProvider
 
         ]);
 
-        Livewire::registerInitialDehydrationMiddleware([
+        LifecycleManager::registerInitialDehydrationMiddleware([
 
             /* Initial Response */
             /* ↑ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
             /* ↑ */ [HydratePublicProperties::class, 'dehydrate'],
+            /* ↑ */ [CallPropertyHydrationHooks::class, 'dehydrate'],
             /* ↑ */ [CallHydrationHooks::class, 'initialDehydrate'],
-            /* ↑ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
             /* ↑ */ [RenderView::class, 'dehydrate'],
 
         ]);
 
-        Livewire::registerInitialHydrationMiddleware([
+        LifecycleManager::registerInitialHydrationMiddleware([
 
                 [CallHydrationHooks::class, 'initialHydrate'],
 

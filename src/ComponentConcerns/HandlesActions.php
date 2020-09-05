@@ -61,7 +61,6 @@ trait HandlesActions
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
 
-
         $this->updating($name, $value);
 
         if (method_exists($this, $beforeMethod)) {

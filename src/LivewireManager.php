@@ -9,8 +9,6 @@ use Livewire\Exceptions\ComponentNotFoundException;
 
 class LivewireManager
 {
-    use RegistersHydrationMiddleware;
-
     protected $listeners = [];
     protected $componentAliases = [];
 

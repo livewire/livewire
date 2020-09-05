@@ -9,7 +9,6 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
-use Livewire\Macros\PretendClassMethodIsControllerMethod;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
@@ -271,8 +270,8 @@ abstract class Component
     public function __call($method, $params)
     {
         if (
-            in_array($method, ['mount', 'hydrate', 'updating', 'updated'])
-            || Str::startsWith($method, ['updating', 'updated'])
+            in_array($method, ['mount', 'hydrate', 'dehydrate', 'updating', 'updated'])
+            || Str::startsWith($method, ['updating', 'updated', 'hydrate', 'dehydrate'])
         ) {
             // Eat calls to the lifecycle hooks if the dev didn't define them.
             return;

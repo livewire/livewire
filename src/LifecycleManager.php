@@ -7,6 +7,10 @@ use Illuminate\Validation\ValidationException;
 
 class LifecycleManager
 {
+    protected static $hydrationMiddleware = [];
+    protected static $initialHydrationMiddleware = [];
+    protected static $initialDehydrationMiddleware = [];
+
     public $request;
     public $instance;
     public $response;
@@ -43,18 +47,35 @@ class LifecycleManager
         });
     }
 
+    public static function registerHydrationMiddleware(array $classes)
+    {
+        static::$hydrationMiddleware += $classes;
+    }
+
+    public static function registerInitialHydrationMiddleware(array $callables)
+    {
+        static::$initialHydrationMiddleware += $callables;
+    }
+
+    public static function registerInitialDehydrationMiddleware(array $callables)
+    {
+        static::$initialDehydrationMiddleware += $callables;
+    }
+
     public function hydrate()
     {
-        Livewire::hydrate($this->instance, $this->request);
-
-        $this->instance->hydrate();
+        foreach (static::$hydrationMiddleware as $class) {
+            $class::hydrate($this->instance, $this->request);
+        }
 
         return $this;
     }
 
     public function initialHydrate()
     {
-        Livewire::initialHydrate($this->instance, $this->request);
+        foreach (static::$initialHydrationMiddleware as $callable) {
+            $callable($this->instance, $this->request);
+        }
 
         return $this;
     }
@@ -91,7 +112,9 @@ class LifecycleManager
     {
         $this->response = Response::fromRequest($this->request);
 
-        Livewire::initialDehydrate($this->instance, $this->response);
+        foreach (array_reverse(static::$initialDehydrationMiddleware) as $callable) {
+            $callable($this->instance, $this->response);
+        }
 
         return $this;
     }
@@ -100,7 +123,11 @@ class LifecycleManager
     {
         $this->response = Response::fromRequest($this->request);
 
-        Livewire::dehydrate($this->instance, $this->response);
+        // The array is being reversed here, so the middleware dehydrate phase order of execution is
+        // the inverse of hydrate. This makes the middlewares behave like layers in a shell.
+        foreach (array_reverse(static::$hydrationMiddleware) as $class) {
+            $class::dehydrate($this->instance, $this->response);
+        }
 
         return $this;
     }
