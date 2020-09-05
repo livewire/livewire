@@ -10,8 +10,6 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
 
-// FIXME: Handle the #fragment
-
 class SupportBrowserHistory
 {
     static function init() { return new static; }
@@ -97,7 +95,7 @@ class SupportBrowserHistory
             $route->parametersWithoutNulls()
         );
 
-        return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString, true); 
+        return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString, true);
     }
 
     protected function mergeAndGetQueryString($params)

@@ -41,17 +41,15 @@ export default function () {
         if (!(event && event.state && event.state.livewire)) return
 
         Object.entries(event.state.livewire).forEach(([id, response]) => {
-            withDebug(`Component "${ id }"`, () => {
-                let component = store.findComponent(id)
-                if (!component) return
+            let component = store.findComponent(id)
+            if (!component) return
 
-                let message = new Message(component, [])
-                message.storeResponse(response)
-                message.replaying = true
+            let message = new Message(component, [])
+            message.storeResponse(response)
+            message.replaying = true
 
-                component.handleResponse(message)
-                component.call('$refresh')
-            })
+            component.handleResponse(message)
+            component.call('$refresh')
         })
     })
 
