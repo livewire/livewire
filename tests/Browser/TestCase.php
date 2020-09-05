@@ -8,6 +8,7 @@ use Psy\Shell;
 use Throwable;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
 use Illuminate\Support\Facades\Artisan;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -68,12 +69,19 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
             app('livewire')->component(\Tests\Browser\Extensions\Component::class);
             app('livewire')->component(\Tests\Browser\Defer\Component::class);
-            
+
             if (PHP_VERSION_ID > 70400) {
                 app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
                 app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
+
+                // This needs to be registered for Dusk to test the route-parameter binding
+                // See: \Tests\Browser\SyncHistory\Test.php
+                Route::get(
+                    '/livewire-dusk/tests/browser/sync-history/{step}',
+                    \Tests\Browser\SyncHistory\Component::class
+                )->middleware('web')->name('sync-history');
             }
-            
+
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
             app('config')->set('view.paths', [

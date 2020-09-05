@@ -116,14 +116,6 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerRoutes()
     {
         if ($this->app->runningUnitTests()) {
-            // This needs to be registered for Dusk to test the route-parameter binding
-            if (PHP_VERSION_ID > 70400) {
-                RouteFacade::get(
-                    '/livewire-dusk/tests/browser/sync-history/{step}',
-                    \Tests\Browser\SyncHistory\Component::class
-                )->middleware('web')->name('sync-history');
-            }
-
             RouteFacade::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
 
