@@ -59,25 +59,25 @@ class Test extends TestCase
                 ->waitForText('Step 1 Active')
                 ->waitForText('Help is currently disabled')
                 ->assertQueryStringHas('showHelp', 'false');
-            
+
             $browser->click('@toggle-help')
                 ->waitForText('Help is currently enabled')
                 ->assertQueryStringHas('showHelp', 'true');
-            
+
             $browser->click('@step-2')
                 ->waitForText('Step 2 Active')
                 ->assertRouteIs('sync-history', ['step' => 2])
                 ->assertQueryStringHas('showHelp', 'true');
-            
+
             $browser->click('@toggle-help')
                ->waitForText('Help is currently disabled')
                ->assertQueryStringHas('showHelp', 'false');
-            
+
             $browser->back()
                 ->waitForText('Help is currently enabled')
                 ->assertQueryStringHas('showHelp', 'true')
                 ->assertRouteIs('sync-history', ['step' => 2]);
-            
+
             $browser->back()
                 ->waitForText('Step 1 Active')
                 ->assertRouteIs('sync-history', ['step' => 1])
@@ -94,34 +94,34 @@ class Test extends TestCase
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active')
-                ->waitForText('Darkmode is currently disabled')
+                ->waitForText('Dark mode is currently disabled')
                 ->assertQueryStringHas('darkmode', 'false');
-            
+
             $browser->click('@toggle-darkmode')
-                ->waitForText('Darkmode is currently enabled')
+                ->waitForText('Dark mode is currently enabled')
                 ->assertQueryStringHas('darkmode', 'true');
-            
+
             $browser->click('@step-2')
                 ->waitForText('Step 2 Active')
                 ->assertRouteIs('sync-history', ['step' => 2])
                 ->assertQueryStringHas('darkmode', 'true');
-            
+
             $browser->click('@toggle-darkmode')
-               ->waitForText('Darkmode is currently disabled')
+               ->waitForText('Dark mode is currently disabled')
                ->assertQueryStringHas('darkmode', 'false');
-            
+
             $browser->back()
-                ->waitForText('Darkmode is currently enabled')
+                ->waitForText('Dark mode is currently enabled')
                 ->assertQueryStringHas('darkmode', 'true')
                 ->assertRouteIs('sync-history', ['step' => 2]);
-            
+
             $browser->back()
                 ->waitForText('Step 1 Active')
                 ->assertRouteIs('sync-history', ['step' => 1])
                 ->assertQueryStringHas('darkmode', 'true');
 
             $browser->back()
-               ->waitForText('Darkmode is currently disabled')
+               ->waitForText('Dark mode is currently disabled')
                ->assertQueryStringHas('showDarkmode', 'false');
         });
     }
