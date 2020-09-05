@@ -8,11 +8,8 @@ use Livewire\Component;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Routing\UrlGenerator;
 
-// FIXME: this needs to also include any data from sub-components
-// FIXME: the first request doesn't honor child component query params
 // FIXME: Handle the #fragment
 
 class SupportBrowserHistory
@@ -100,7 +97,7 @@ class SupportBrowserHistory
             $route->parametersWithoutNulls()
         );
 
-        return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString, true); // FIXME
+        return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString, true); 
     }
 
     protected function mergeAndGetQueryString($params)

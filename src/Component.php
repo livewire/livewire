@@ -114,7 +114,7 @@ abstract class Component
                     && $this->{$property} === $config['except'];
             })
             ->map(function($config, $property) {
-                return $this->{$property}; // FIXME: Serialization?
+                return $this->{$property};
             })
             ->toArray();
     }
