@@ -7,7 +7,7 @@
             <dt>{{ $each_step->title }}</dt>
             <dd>
                 @if($each_step->is($step))
-                    <button disabled>Active</button>
+                    <button disabled>Step {{ $each_step->title }} Active</button>
                 @else
                     <button
                         dusk="step-{{ $each_step->id }}"
@@ -24,5 +24,7 @@
             Help is currently {{ $showHelp ? 'enabled' : 'disabled' }}.
             <button dusk="toggle-help" wire:click="toggleHelp">Toggle</button>
         </dd>
+
+        @livewire(\Tests\Browser\SyncHistory\ChildComponent::class)
     </dl>
 </div>

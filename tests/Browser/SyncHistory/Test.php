@@ -12,16 +12,16 @@ class Test extends TestCase
         $this->require74();
 
         $this->browse(function (Browser $browser) {
-            $browser->visit(route('sync-history', ['user' => 1], false))
-                ->assertSeeIn('h1', 'Current: @danielcoulbourne');
+            $browser->visit(route('sync-history', ['step' => 1], false))
+                ->waitForText('Step 1 Active');
 
-            $browser->click('@user-2')
-                ->waitForText('Current: @calebporzio')
-                ->assertRouteIs('sync-history', ['user' => 2]);
+            $browser->click('@step-2')
+                ->waitForText('Step 2 Active')
+                ->assertRouteIs('sync-history', ['step' => 2]);
 
             $browser->back()
-                ->waitForText('Current: @danielcoulbourne')
-                ->assertRouteIs('sync-history', ['user' => 1]);
+                ->waitForText('Step 1 Active')
+                ->assertRouteIs('sync-history', ['step' => 1]);
         });
     }
 
@@ -30,26 +30,25 @@ class Test extends TestCase
         $this->require74();
 
         $this->browse(function (Browser $browser) {
-            $browser->visit(route('sync-history', ['user' => 1], false))
-                ->waitForText('not-liked')
-                ->assertQueryStringHas('liked', 'false');
+            $browser->visit(route('sync-history', ['step' => 1], false))
+                ->waitForText('Help is currently disabled')
+                ->assertQueryStringHas('showHelp', 'false');
 
-            $browser->click('@toggle-like')
-                ->waitForText('liked')
-                ->assertQueryStringHas('liked', 'true');
+            $browser->click('@toggle-help')
+                ->waitForText('Help is currently enabled')
+                ->assertQueryStringHas('showHelp', 'true');
 
-            $browser
-                ->click('@toggle-like')
-                ->waitForText('not-liked')
-                ->assertQueryStringHas('liked', 'false');
-
-            $browser->back()
-                ->waitForText('liked')
-                ->assertQueryStringHas('liked', 'true');
+            $browser->click('@toggle-help')
+                ->waitForText('Help is currently disabled')
+                ->assertQueryStringHas('showHelp', 'false');
 
             $browser->back()
-                ->waitForText('not-liked')
-                ->assertQueryStringHas('liked', 'false');
+                ->waitForText('Help is currently enabled')
+                ->assertQueryStringHas('showHelp', 'true');
+
+            $browser->back()
+                ->waitForText('Help is currently disabled')
+                ->assertQueryStringHas('showHelp', 'false');
         });
     }
 
@@ -57,38 +56,73 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
-                ->tinker();
-            //    ->waitForText('Current: @danielcoulbourne')
-            //    ->waitForText('not-liked')
-            //    ->assertQueryStringHas('liked', 'false');
-            //
-            //$browser->click('@toggle-like')
-            //    ->waitForText('liked')
-            //    ->assertQueryStringHas('liked', 'true');
-            //
-            //$browser->click('@user-2')
-            //    ->waitForText('Current: @calebporzio')
-            //    ->assertRouteIs('sync-history', ['user' => 2])
-            //    ->assertQueryStringHas('liked', 'true');
-            //
-            //$browser->click('@toggle-like')
-            //    ->waitForText('not-liked')
-            //    ->assertQueryStringHas('liked', 'false')
-            //    ->tinker();
-            //// FIXME: something is causing livewire to get corrupt data after this. figue this out
-            //
-            //$browser->back()
-            //    ->waitForText('liked')
-            //    ->assertQueryStringHas('liked', 'true')
-            //    ->assertRouteIs('sync-history', ['user' => 2]);
-            //
-            //$browser->back()
-            //    ->waitForText('Current: @danielcoulbourne')
-            //    ->assertRouteIs('sync-history', ['user' => 1]);
-            //
-            //$browser->back()
-            //    ->waitForText('not-liked')
-            //    ->assertQueryStringHas('liked', 'false');
+                ->waitForText('Step 1 Active')
+                ->waitForText('Help is currently disabled')
+                ->assertQueryStringHas('showHelp', 'false');
+            
+            $browser->click('@toggle-help')
+                ->waitForText('Help is currently enabled')
+                ->assertQueryStringHas('showHelp', 'true');
+            
+            $browser->click('@step-2')
+                ->waitForText('Step 2 Active')
+                ->assertRouteIs('sync-history', ['step' => 2])
+                ->assertQueryStringHas('showHelp', 'true');
+            
+            $browser->click('@toggle-help')
+               ->waitForText('Help is currently disabled')
+               ->assertQueryStringHas('showHelp', 'false');
+            
+            $browser->back()
+                ->waitForText('Help is currently enabled')
+                ->assertQueryStringHas('showHelp', 'true')
+                ->assertRouteIs('sync-history', ['step' => 2]);
+            
+            $browser->back()
+                ->waitForText('Step 1 Active')
+                ->assertRouteIs('sync-history', ['step' => 1])
+                ->assertQueryStringHas('showHelp', 'true');
+
+            $browser->back()
+               ->waitForText('Help is currently disabled')
+               ->assertQueryStringHas('showHelp', 'false');
+        });
+    }
+
+    public function test_that_query_updates_from_child_components_can_coexist()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history', ['step' => 1], false))
+                ->waitForText('Step 1 Active')
+                ->waitForText('Darkmode is currently disabled')
+                ->assertQueryStringHas('darkmode', 'false');
+            
+            $browser->click('@toggle-darkmode')
+                ->waitForText('Darkmode is currently enabled')
+                ->assertQueryStringHas('darkmode', 'true');
+            
+            $browser->click('@step-2')
+                ->waitForText('Step 2 Active')
+                ->assertRouteIs('sync-history', ['step' => 2])
+                ->assertQueryStringHas('darkmode', 'true');
+            
+            $browser->click('@toggle-darkmode')
+               ->waitForText('Darkmode is currently disabled')
+               ->assertQueryStringHas('darkmode', 'false');
+            
+            $browser->back()
+                ->waitForText('Darkmode is currently enabled')
+                ->assertQueryStringHas('darkmode', 'true')
+                ->assertRouteIs('sync-history', ['step' => 2]);
+            
+            $browser->back()
+                ->waitForText('Step 1 Active')
+                ->assertRouteIs('sync-history', ['step' => 1])
+                ->assertQueryStringHas('darkmode', 'true');
+
+            $browser->back()
+               ->waitForText('Darkmode is currently disabled')
+               ->assertQueryStringHas('showDarkmode', 'false');
         });
     }
 

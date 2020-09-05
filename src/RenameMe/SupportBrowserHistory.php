@@ -38,25 +38,17 @@ class SupportBrowserHistory
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
-            // $url = url()->current();
-
             $queryString = array_merge(
                 request()->query(),
                 $this->mergeAndGetQueryString($component->getQueryStringProperties())
             );
 
-            // $response->effects['query'] = $queryString;
             $response->effects['path'] = url()->current();
 
-            $queryString = array_merge(
-                request()->query(),
-                $this->mergeAndGetQueryString($component->getQueryStringProperties())
-            );
-
             ksort($queryString);
-
+ 
             if (!empty($queryString)) {
-                $response->effects['path'] .= '?'.http_build_query($queryString);
+                $response->effects['path'] = Str::before($response->effects['path'], '?') . '?' . http_build_query($queryString);
             }
         });
 
@@ -64,27 +56,16 @@ class SupportBrowserHistory
             if (empty($referrer = request()->header('Referrer'))) {
                 return;
             }
+            
 
-            // Get the query string from the client
-            parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
-
-            // Get all the merged query strings from all components that have rendered
-            $currentComponentQueryString = $component->getQueryStringProperties();
-            $componentsQueryString = $this->mergeAndGetQueryString($currentComponentQueryString);
-
-            // Merge the them all together, giving the current component the final say
             $queryString = array_merge(
-                // $componentsQueryString,
-                // $referrerQueryString,
-                $currentComponentQueryString
+                request()->query(),
+                $this->mergeAndGetQueryString($component->getQueryStringProperties())
             );
 
+            
             // Sort by keys to keep it predictable
             ksort($queryString);
-
-            //if (count($queryString)) {
-            //    $response->effects['query'] = $queryString;
-            //}
 
             $route = app('router')->getRoutes()->match(
                 Request::create($referrer, 'GET')
@@ -112,6 +93,8 @@ class SupportBrowserHistory
 
         ksort($this->allQueryStringProperties);
 
-        return $this->allQueryStringProperties;
+        return array_map(function ($property) {
+            return is_bool($property) ? json_encode($property) : $property;
+        }, $this->allQueryStringProperties);
     }
 }
