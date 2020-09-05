@@ -69,7 +69,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Extensions\Component::class);
             app('livewire')->component(\Tests\Browser\Defer\Component::class);
             
-            if (PHP_VERSION_ID < 70400) {
+            if (PHP_VERSION_ID > 70400) {
                 app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
                 app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
             }
