@@ -66,11 +66,14 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\GlobalLivewire\Component::class);
             app('livewire')->component(\Tests\Browser\Nesting\Component::class);
             app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
             app('livewire')->component(\Tests\Browser\Extensions\Component::class);
             app('livewire')->component(\Tests\Browser\Defer\Component::class);
-
+            
+            if (PHP_VERSION_ID < 70400) {
+                app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
+                app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
+            }
+            
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
             app('config')->set('view.paths', [
