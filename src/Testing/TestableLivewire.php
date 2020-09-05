@@ -83,6 +83,14 @@ class TestableLivewire
         }
 
         foreach ($output['serverMemo'] as $key => $newValue) {
+            if ($key === 'data') {
+                foreach ($newValue as $dataKey => $dataValue) {
+                    data_set($this->payload, 'serverMemo.data.'.$dataKey, $dataValue);
+                }
+
+                continue;
+            }
+
             if (
                 ! isset($this->payload['serverMemo'][$key])
                 || $this->payload['serverMemo'][$key] !== $newValue
