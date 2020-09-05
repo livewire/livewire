@@ -73,27 +73,31 @@ export default class Component {
             .reduce((carry, segment) => carry[segment], this.data)
     }
 
-    updateDataAndMemo(newData, newMemo, shouldSkipWatchers = false) {
-        Object.entries(newData || {}).forEach(([key, value]) => {
-            let oldValue = this.serverMemo.data[key]
+    updateServerMemoFromResponseAndMergeBackIntoResponse(message) {
+        let responseData = message.response.serverMemo.data || {}
 
-            if (oldValue !== undefined && oldValue !== value) {
-                this.serverMemo.data[key] = value
+        Object.entries(responseData).forEach(([key, value]) => {
+            if (message.shouldSkipWatcher()) return
 
-                if (shouldSkipWatchers) return
+            // Because Livewire (for payload reduction purposes) only returns the data that has changed,
+            // we can use all the data keys from the response as watcher triggers.
+            let watchers = this.watchers[key] || []
 
-                let watchers = this.watchers[key] || []
+            watchers.forEach(watcher => watcher(value))
+        })
 
-                watchers.forEach(watcher => watcher(value))
+        this.serverMemo = {
+            ...this.serverMemo,
+            ...message.response.serverMemo,
+            // We have to merge in data explicitly because we need "data" to be a "deep" merge.
+            data: {
+                ...this.serverMemo.data,
+                ...responseData,
             }
-        })
+        }
 
-        // Only update the memo properties that exist in the returning payload.
-        Object.entries(newMemo).forEach(([key, value]) => {
-            if (key === 'data') return
-
-            this.serverMemo[key] = value
-        })
+        // Merge back serverMemo changes so the response data is no longer incomplete.
+        message.response.serverMemo = { ...this.serverMemo }
     }
 
     watch(name, callback) {
@@ -224,15 +228,9 @@ export default class Component {
     }
 
     handleResponse(message) {
-        store.callHook('message.receiving', message, this)
-
         let response = message.response
 
-        this.updateDataAndMemo(
-            response.serverMemo.data,
-            response.serverMemo,
-            message.shouldSkipWatcher()
-        )
+        this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
 
         store.callHook('message.received', message, this)
 
@@ -253,39 +251,42 @@ export default class Component {
             )
         }
 
-        this.messageInTransit && this.messageInTransit.resolve()
+        if (! message.replaying) {
+            this.messageInTransit && this.messageInTransit.resolve()
 
-        this.messageInTransit = null
+            this.messageInTransit = null
 
-        if (response.effects.emits && response.effects.emits.length > 0) {
-            response.effects.emits.forEach(event => {
-                this.scopedListeners.call(event.event, ...event.params)
+            if (response.effects.emits && response.effects.emits.length > 0) {
+                response.effects.emits.forEach(event => {
+                    this.scopedListeners.call(event.event, ...event.params)
 
-                if (event.selfOnly) {
-                    store.emitSelf(this.id, event.event, ...event.params)
-                } else if (event.to) {
-                    store.emitTo(event.to, event.event, ...event.params)
-                } else if (event.ancestorsOnly) {
-                    store.emitUp(this.el, event.event, ...event.params)
-                } else {
-                    store.emit(event.event, ...event.params)
-                }
-            })
-        }
-
-        if (
-            response.effects.dispatches &&
-            response.effects.dispatches.length > 0
-        ) {
-            response.effects.dispatches.forEach(event => {
-                const data = event.data ? event.data : {}
-                const e = new CustomEvent(event.event, {
-                    bubbles: true,
-                    detail: data,
+                    if (event.selfOnly) {
+                        store.emitSelf(this.id, event.event, ...event.params)
+                    } else if (event.to) {
+                        store.emitTo(event.to, event.event, ...event.params)
+                    } else if (event.ancestorsOnly) {
+                        store.emitUp(this.el, event.event, ...event.params)
+                    } else {
+                        store.emit(event.event, ...event.params)
+                    }
                 })
-                this.el.dispatchEvent(e)
-            })
+            }
+
+            if (
+                response.effects.dispatches &&
+                response.effects.dispatches.length > 0
+            ) {
+                response.effects.dispatches.forEach(event => {
+                    const data = event.data ? event.data : {}
+                    const e = new CustomEvent(event.event, {
+                        bubbles: true,
+                        detail: data,
+                    })
+                    this.el.dispatchEvent(e)
+                })
+            }
         }
+
 
         store.callHook('message.processed', message, this)
     }

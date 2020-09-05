@@ -12,7 +12,6 @@ export default {
         'element.removed',
         'message.sent',
         'message.failed',
-        'message.receiving',
         'message.received',
         'message.processed',
 

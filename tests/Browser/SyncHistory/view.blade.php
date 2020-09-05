@@ -7,7 +7,13 @@
             <dt>{{ $each_step->title }}</dt>
             <dd>
                 @if($each_step->is($step))
-                    <button disabled>Step {{ $each_step->title }} Active</button>
+                    <button
+                        disabled
+                        dusk="step-{{ $each_step->id }}"
+                        wire:click="setStep({{ $each_step->id }})"
+                    >
+                        Step {{ $each_step->title }} Active
+                    </button>
                 @else
                     <button
                         dusk="step-{{ $each_step->id }}"

@@ -15,12 +15,11 @@ class Test extends TestCase
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active');
 
-            $browser->click('@step-2')
-                ->waitForText('Step 2 Active')
+            $browser->waitForLivewire()->click('@step-2')
                 ->assertRouteIs('sync-history', ['step' => 2]);
 
-            $browser->back()
-                ->waitForText('Step 1 Active')
+            $browser
+                ->back()
                 ->assertRouteIs('sync-history', ['step' => 1]);
         });
     }
@@ -34,11 +33,10 @@ class Test extends TestCase
                 ->waitForText('Help is currently disabled')
                 ->assertQueryStringHas('showHelp', 'false');
 
-            $browser->click('@toggle-help')
-                ->waitForText('Help is currently enabled')
+            $browser->waitForLivewire()->click('@toggle-help')
                 ->assertQueryStringHas('showHelp', 'true');
 
-            $browser->click('@toggle-help')
+            $browser->waitForLivewire()->click('@toggle-help')
                 ->waitForText('Help is currently disabled')
                 ->assertQueryStringHas('showHelp', 'false');
 
@@ -62,17 +60,14 @@ class Test extends TestCase
                 ->waitForText('Help is currently disabled')
                 ->assertQueryStringHas('showHelp', 'false');
 
-            $browser->click('@toggle-help')
-                ->waitForText('Help is currently enabled')
+            $browser->waitForLivewire()->click('@toggle-help')
                 ->assertQueryStringHas('showHelp', 'true');
 
-            $browser->click('@step-2')
-                ->waitForText('Step 2 Active')
+            $browser->waitForLivewire()->click('@step-2')
                 ->assertRouteIs('sync-history', ['step' => 2])
                 ->assertQueryStringHas('showHelp', 'true');
 
-            $browser->click('@toggle-help')
-               ->waitForText('Help is currently disabled')
+            $browser->waitForLivewire()->click('@toggle-help')
                ->assertQueryStringHas('showHelp', 'false');
 
             $browser->back()
@@ -101,17 +96,14 @@ class Test extends TestCase
                 ->waitForText('Dark mode is currently disabled')
                 ->assertQueryStringHas('darkmode', 'false');
 
-            $browser->click('@toggle-darkmode')
-                ->waitForText('Dark mode is currently enabled')
+            $browser->waitForLivewire()->click('@toggle-darkmode')
                 ->assertQueryStringHas('darkmode', 'true');
 
-            $browser->click('@step-2')
-                ->waitForText('Step 2 Active')
+            $browser->waitForLivewire()->click('@step-2')
                 ->assertRouteIs('sync-history', ['step' => 2])
                 ->assertQueryStringHas('darkmode', 'true');
 
-            $browser->click('@toggle-darkmode')
-                ->waitForText('Dark mode is currently disabled')
+            $browser->waitForLivewire()->click('@toggle-darkmode')
                 ->assertQueryStringHas('darkmode', 'false');
 
             $browser->back()
