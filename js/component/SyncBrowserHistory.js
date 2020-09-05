@@ -13,13 +13,15 @@ function withDebug(group, callback) {
 export default function () {
 
     let cached = {}
+    let initializedPath = false;
 
     store.registerHook('component.initialized', component => {
         withDebug(`Initialized ${ component.name }`, () => {
             let state = generateNewState(component, generateFauxResponse(component))
-            let url = 'path' in component.effects ? component.effects.path : undefined
+            let url = initializedPath ? undefined : component.effects.path
 
             history.replaceState(state, '', url)
+            initializedPath = true
         })
     })
 

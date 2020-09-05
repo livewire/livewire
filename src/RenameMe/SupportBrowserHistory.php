@@ -46,9 +46,9 @@ class SupportBrowserHistory
             $response->effects['path'] = url()->current();
 
             ksort($queryString);
- 
-            if (!empty($queryString)) {
-                $response->effects['path'] = Str::before($response->effects['path'], '?') . '?' . http_build_query($queryString);
+
+            if (! empty($queryString)) {
+                $response->effects['path'] = Str::before($response->effects['path'], '?').'?'.http_build_query($queryString);
             }
         });
 
@@ -56,14 +56,15 @@ class SupportBrowserHistory
             if (empty($referrer = request()->header('Referrer'))) {
                 return;
             }
-            
+
+            // Get the query string from the client
+            parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
 
             $queryString = array_merge(
-                request()->query(),
+                $referrerQueryString,
                 $this->mergeAndGetQueryString($component->getQueryStringProperties())
             );
 
-            
             // Sort by keys to keep it predictable
             ksort($queryString);
 
