@@ -54,6 +54,8 @@ class Test extends TestCase
 
     public function test_that_route_and_query_bound_properties_can_both_be_synced_with_browser_history()
     {
+        $this->require74();
+
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active')
@@ -91,6 +93,8 @@ class Test extends TestCase
 
     public function test_that_query_updates_from_child_components_can_coexist()
     {
+        $this->require74();
+
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active')
@@ -107,8 +111,8 @@ class Test extends TestCase
                 ->assertQueryStringHas('darkmode', 'true');
 
             $browser->click('@toggle-darkmode')
-               ->waitForText('Dark mode is currently disabled')
-               ->assertQueryStringHas('darkmode', 'false');
+                ->waitForText('Dark mode is currently disabled')
+                ->assertQueryStringHas('darkmode', 'false');
 
             $browser->back()
                 ->waitForText('Dark mode is currently enabled')
@@ -121,8 +125,9 @@ class Test extends TestCase
                 ->assertQueryStringHas('darkmode', 'true');
 
             $browser->back()
-               ->waitForText('Dark mode is currently disabled')
-               ->assertQueryStringHas('darkmode', 'false');
+                ->assertRouteIs('sync-history', ['step' => 1])
+                ->waitForText('Dark mode is currently disabled')
+                ->assertQueryStringHas('darkmode', 'false');
         });
     }
 
