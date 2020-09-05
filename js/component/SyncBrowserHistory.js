@@ -1,31 +1,17 @@
 import store from '@/Store'
 import Message from '@/Message';
 
-function withDebug(group, callback) {
-    console.groupCollapsed(group);
-
-    try {
-        callback();
-    } catch (e) {
-        console.error(e);
-    }
-
-    console.groupEnd();
-}
-
 export default function () {
 
     let cachedComponentMemos = {}
     let initializedPath = false;
 
     store.registerHook('component.initialized', component => {
-        withDebug(`Initialized ${ component.name }`, () => {
-            let state = generateNewState(component, generateFauxResponse(component))
-            let url = initializedPath ? undefined : component.effects.path
+        let state = generateNewState(component, generateFauxResponse(component))
+        let url = initializedPath ? undefined : component.effects.path
 
-            history.replaceState(state, '', url)
-            initializedPath = true
-        })
+        history.replaceState(state, '', url)
+        initializedPath = true
     })
 
     store.registerHook('message.receiving', (message, component) => {
@@ -33,44 +19,38 @@ export default function () {
     });
 
     store.registerHook('message.processed', (message, component) => {
-        withDebug(`Message processed for ${ component.name }`, () => {
-            console.log(message)
-            let { replaying, response } = message
-            if (replaying) return
+        let { replaying, response } = message
+        if (replaying) return
 
-            let { effects } = response
+        let { effects } = response
 
-            if ('path' in effects && effects.path !== window.location.href) {
+        if ('path' in effects && effects.path !== window.location.href) {
 
-                let lastComponentServerMemo = component.id in cachedComponentMemos
-                    ? cachedComponentMemos[component.id]
-                    : {}
+            let lastComponentServerMemo = component.id in cachedComponentMemos
+                ? cachedComponentMemos[component.id]
+                : {}
 
-                let state = generateNewState(component, response, lastComponentServerMemo)
-                cachedComponentMemos[component.id] = {}
+            let state = generateNewState(component, response, lastComponentServerMemo)
+            cachedComponentMemos[component.id] = {}
 
-                history.pushState(state, '', effects.path)
-            }
-        })
+            history.pushState(state, '', effects.path)
+        }
     })
 
     window.addEventListener('popstate', event => {
         if (!(event && event.state && event.state.livewire)) return
 
-        withDebug('"popstate" event', () => {
-            Object.entries(event.state.livewire).forEach(([id, response]) => {
-                withDebug(`Component "${ id }"`, () => {
-                    let component = store.findComponent(id)
-                    if (!component) return
+        Object.entries(event.state.livewire).forEach(([id, response]) => {
+            withDebug(`Component "${ id }"`, () => {
+                let component = store.findComponent(id)
+                if (!component) return
 
-                    let message = new Message(component, [])
-                    message.storeResponse(response)
-                    message.replaying = true
-                    console.log(message)
+                let message = new Message(component, [])
+                message.storeResponse(response)
+                message.replaying = true
 
-                    component.handleResponse(message)
-                    component.call('$refresh')
-                })
+                component.handleResponse(message)
+                component.call('$refresh')
             })
         })
     })
