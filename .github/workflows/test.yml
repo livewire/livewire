@@ -16,6 +16,9 @@ jobs:
         php: [7.2, 7.3, 7.4]
         laravel: [7.*, 8.x-dev]
         dependency-version: [prefer-stable]
+        exclude:
+          - php: 7.2
+            laravel: 7.*
         include:
           - laravel: 7.*
             testbench: 5.*
