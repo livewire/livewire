@@ -22,7 +22,7 @@ trait WithPagination
         });
 
         Paginator::defaultView($this->paginationView());
-        Paginator::defaultSimpleView($this->paginationView());
+        Paginator::defaultSimpleView($this->paginationSimpleView());
     }
 
     public function paginationView()
