@@ -17,7 +17,7 @@ class LivewireTagCompiler extends ComponentTagCompiler
         $pattern = "/
             <
                 \s*
-                live\:([\w\-\:\.]*)
+                livewire\:([\w\-\:\.]*)
                 \s*
                 (?<attributes>
                     (?:
