@@ -25,10 +25,11 @@ use Livewire\Commands\{
     StubsCommand,
     TouchCommand,
     DeleteCommand,
+    PublishCommand,
     ComponentParser,
     DiscoverCommand,
     S3CleanupCommand,
-    MakeLivewireCommand
+    MakeLivewireCommand,
 };
 use Livewire\HydrationMiddleware\{
     RenderView,
@@ -155,6 +156,7 @@ class LivewireServiceProvider extends ServiceProvider
             StubsCommand::class,        // livewire:stubs
             DiscoverCommand::class,     // livewire:discover
             S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
+            PublishCommand::class,      // livewire:publish
         ]);
     }
 
