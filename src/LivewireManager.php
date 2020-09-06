@@ -198,8 +198,8 @@ HTML;
         // because it will be minified in production.
         return <<<HTML
 {$assetWarning}
-<script src="{$fullAssetPath}" data-turbolinks-eval="false"></script>
-<script data-turbolinks-eval="false"{$nonce}>
+<script src="{$fullAssetPath}"></script>
+<script {$nonce}>
     if (window.livewire) {
         console.warn('Livewire: It looks like Livewire\'s @livewireScripts JavaScript assets have already been loaded. Make sure you aren\'t loading them twice.')
     }
@@ -218,36 +218,6 @@ HTML;
 
     document.addEventListener("DOMContentLoaded", function () {
         window.livewire.start();
-    });
-
-    var firstTime = true;
-    document.addEventListener("turbolinks:load", function() {
-        /* We only want this handler to run AFTER the first load. */
-        if  (firstTime) {
-            firstTime = false;
-            return;
-        }
-
-        window.livewire.restart();
-    });
-
-    document.addEventListener("turbolinks:before-cache", function() {
-        document.querySelectorAll('[wire\\\:id]').forEach(function(el) {
-            const component = el.__livewire;
-
-            const dataObject = {
-                data: component.data,
-                events: component.listeners,
-                children: component.children,
-                checksum: component.checksum,
-                locale: component.locale,
-                name: component.name,
-                errorBag: component.errorBag,
-                redirectTo: component.redirectTo,
-            };
-
-            el.setAttribute('wire:initial-data', JSON.stringify(dataObject));
-        });
     });
 </script>
 HTML;

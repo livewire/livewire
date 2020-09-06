@@ -119,9 +119,6 @@ function exceptCertainData(data, excepts) {
 }
 
 function generateStateObject(dataDestinedForQueryString, component) {
-    // This makes it so that Turbolinks doesn't break Livewire on the back button.
-    let state = { turbolinks: {} }
-
     // Store the current Livewire state in the history stack, so that
     // when a user hits a back button, we can re-apply the state from this
     // point in time to the Livewire components.

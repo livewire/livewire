@@ -289,11 +289,7 @@ export default class Component {
     }
 
     redirect(url) {
-        if (window.Turbolinks && window.Turbolinks.supported) {
-            window.Turbolinks.visit(url)
-        } else {
-            window.location.href = url
-        }
+        window.location.href = url
     }
 
     forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
@@ -613,6 +609,13 @@ export default class Component {
                 }
 
                 if (property === '__instance') return component
+
+                // Forward "emits" to base Livewire object.
+                if (property.match(/^emit.*/)) return function (...args) {
+                    if (property === 'emitSelf') return store.emitSelf(component.id, ...args)
+
+                    return store[property].apply(component, args)
+                }
 
                 if (
                     [
