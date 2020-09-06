@@ -67,7 +67,7 @@ class SupportBrowserHistory
     public function getQueryParamsFromReferrerHeader()
     {
         if (empty($referrer = request()->header('Referrer'))) return [];
-        
+
         parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
 
         return $referrerQueryString;
