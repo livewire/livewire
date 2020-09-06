@@ -128,6 +128,8 @@ class Livewire {
                                     key
                                 ] = livewireEl.__livewire.get(livewireProperty)
 
+                                let blockAlpineWatcher = false
+
                                 // Now, we'll watch for changes to the Alpine prop, and fire the update to Livewire.
                                 component.unobservedData.$watch(key, value => {
                                     // If the Alpine value is the same as the Livewire value, we'll skip the update for 2 reasons:
@@ -138,8 +140,14 @@ class Livewire {
                                         livewireEl.__livewire.get(
                                             livewireProperty
                                         )
-                                    )
+                                    ) return
+
+                                    // Let's also make sure that this watcher isn't a result of a Livewire response.
+                                    // If it is, we don't need to "re-update" Livewire. (sending an extra useless) request.
+                                    if (blockAlpineWatcher === true) {
+                                        blockAlpineWatcher = false
                                         return
+                                    }
 
                                     // We'll tell Livewire to update the property, but we'll also tell Livewire
                                     // to not call the normal property watchers on the way back to prevent another
@@ -156,6 +164,7 @@ class Livewire {
                                 livewireComponent.watch(
                                     livewireProperty,
                                     value => {
+                                        blockAlpineWatcher = true
                                         component.$data[key] = value
                                     }
                                 )

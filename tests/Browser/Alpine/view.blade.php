@@ -34,6 +34,7 @@
     </div>
 
     <div x-data="{ count: @entangle('count') }">
+        <button wire:click="$set('count', 100)" dusk="lob.reset">Reset</button>
         <button type="button" dusk="lob.increment" x-on:click="count++"></button>
         <button type="button" dusk="lob.decrement" x-on:click="$wire.count--"></button>
 

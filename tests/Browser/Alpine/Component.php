@@ -24,6 +24,11 @@ class Component extends BaseComponent
         return $value;
     }
 
+    public function updatingCount()
+    {
+        if ($this->count === 100) throw new \Exception('"count" shouldnt already be "100". This means @entangle made an extra request after Livewire set the data.');
+    }
+
     public function render()
     {
         return View::file(__DIR__.'/view.blade.php');

@@ -67,6 +67,18 @@ class Test extends TestCase
                 ->assertSeeIn('@lob.output', '7')
                 ->waitForLivewire()->click('@lob.decrement')
                 ->assertSeeIn('@lob.output', '6')
+
+                /**
+                 * Make sure property change from Livewire doesn't trigger an additional
+                 * request because of @entangle.
+                 */
+                ->waitForLivewire(function ($b) {
+                    $b->click('@lob.reset');
+                    $b->assertSeeIn('@lob.output', '6');
+                })
+                ->pause(500)
+                ->assertMissing('#livewire-error')
+                ->assertSeeIn('@lob.output', '100')
                 ;
         });
     }
