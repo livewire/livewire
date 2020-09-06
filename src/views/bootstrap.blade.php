@@ -4,11 +4,11 @@
             <ul class="pagination">
                 {{-- Previous Page Link --}}
                 @if ($paginator->onFirstPage())
-                    <li class="page-item disabled" aria-disabled="true" aria-label="@lang('pagination.previous')">
+                    <li wire:key="paginator-previous" class="page-item disabled" aria-disabled="true" aria-label="@lang('pagination.previous')">
                         <span class="page-link" aria-hidden="true">&lsaquo;</span>
                     </li>
                 @else
-                    <li class="page-item">
+                    <li wire:key="paginator-previous" class="page-item">
                         <button class="page-link" wire:click="previousPage" rel="prev" aria-label="@lang('pagination.previous')">&lsaquo;</button>
                     </li>
                 @endif
@@ -24,9 +24,9 @@
                     @if (is_array($element))
                         @foreach ($element as $page => $url)
                             @if ($page == $paginator->currentPage())
-                                <li class="page-item active" aria-current="page"><span class="page-link">{{ $page }}</span></li>
+                                <li class="page-item active" wire:key="paginator-page{{ $page }}" aria-current="page"><span class="page-link">{{ $page }}</span></li>
                             @else
-                                <li class="page-item"><button class="page-link" wire:click="gotoPage({{ $page }})">{{ $page }}</button></li>
+                                <li class="page-item" wire:key="paginator-page{{ $page }}"><button class="page-link" wire:click="gotoPage({{ $page }})">{{ $page }}</button></li>
                             @endif
                         @endforeach
                     @endif
@@ -34,11 +34,11 @@
 
                 {{-- Next Page Link --}}
                 @if ($paginator->hasMorePages())
-                    <li class="page-item">
+                    <li class="page-item" wire:key="paginator-next">
                         <button class="page-link" wire:click="nextPage" rel="next" aria-label="@lang('pagination.next')">&rsaquo;</button>
                     </li>
                 @else
-                    <li class="page-item disabled" aria-disabled="true" aria-label="@lang('pagination.next')">
+                    <li class="page-item disabled" wire:key="paginator-next" aria-disabled="true" aria-label="@lang('pagination.next')">
                         <span class="page-link" aria-hidden="true">&rsaquo;</span>
                     </li>
                 @endif
