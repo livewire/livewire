@@ -94,7 +94,7 @@ class LivewireManager
     {
         $url = '/livewire-dusk/'.urlencode($class).$queryString;
 
-        return $browser->visit($url);
+        return $browser->visit($url)->waitForLivewireToLoad();
     }
 
     public function actingAs(Authenticatable $user, $driver = null)

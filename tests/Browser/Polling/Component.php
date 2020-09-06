@@ -7,6 +7,7 @@ use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
+    public $enabled = false;
     public $count = 0;
 
     public function render()

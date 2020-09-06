@@ -69,18 +69,31 @@ class Response
     {
         $this->embedIdInHtml();
 
+        $requestMemo = $this->request->memo;
+        $responseMemo = $this->memo;
         $dirtyMemo = [];
 
         // Only send along the memos that have changed to not bloat the payload.
-        foreach ($this->memo as $key => $newValue) {
-            if (! isset($this->request->memo[$key])) {
+        foreach ($responseMemo as $key => $newValue) {
+            // If the memo key is not in the request, add it.
+            if (! isset($requestMemo[$key])) {
                 $dirtyMemo[$key] = $newValue;
 
                 continue;
             }
 
-            if ($this->request->memo[$key] !== $newValue) {
-                $dirtyMemo[$key] = $newValue;
+            // If the memo values are the same, skip adding them.
+            if ($requestMemo[$key] === $newValue) continue;
+
+            $dirtyMemo[$key] = $newValue;
+        }
+
+        // If 'data' is present in the response memo, diff it one level deep.
+        if (isset($dirtyMemo['data']) && isset($requestMemo['data'])) {
+            foreach ($dirtyMemo['data'] as $key => $value) {
+                if ($value === $requestMemo['data'][$key]) {
+                    unset($dirtyMemo['data'][$key]);
+                }
             }
         }
 

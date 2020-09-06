@@ -67,6 +67,8 @@ class HydratePublicProperties implements HydrationMiddleware
     {
         $publicData = $instance->getPublicPropertiesDefinedBySubClass();
 
+        data_set($response, 'memo.data', []);
+
         array_walk($publicData, function ($value, $key) use ($instance, $response) {
             if (
                 // The value is a supported type, set it in the data, if not, throw an exception for the user.

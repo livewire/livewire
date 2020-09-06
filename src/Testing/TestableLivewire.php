@@ -64,11 +64,11 @@ class TestableLivewire
                 'fingerprint' => $this->rawMountedResponse->fingerprint,
                 'serverMemo' => $this->rawMountedResponse->memo,
                 'effects' => $this->rawMountedResponse->effects,
-            ]);
+            ], $isInitial = true);
         }
     }
 
-    public function updateComponent($output)
+    public function updateComponent($output, $isInitial = false)
     {
         // Sometimes Livewire will skip rendering the DOM.
         // We still want to be able to make assertions on
@@ -83,6 +83,16 @@ class TestableLivewire
         }
 
         foreach ($output['serverMemo'] as $key => $newValue) {
+            if ($key === 'data') {
+                if ($isInitial) data_set($this->payload, 'serverMemo.data', []);
+
+                foreach ($newValue as $dataKey => $dataValue) {
+                    data_set($this->payload, 'serverMemo.data.'.$dataKey, $dataValue);
+                }
+
+                continue;
+            }
+
             if (
                 ! isset($this->payload['serverMemo'][$key])
                 || $this->payload['serverMemo'][$key] !== $newValue

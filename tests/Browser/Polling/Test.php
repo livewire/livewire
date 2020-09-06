@@ -13,45 +13,39 @@ class Test extends TestCase
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
                 /**
-                 * polling is disabled if livewire is offline
+                 * Enable polling by adding a wire:poll directive to an element.
                  */
                 ->assertSeeIn('@output', '1')
-                ->tap(function (Browser $browser) {
-                    $browser->offline();
-                    $browser->pause(85);
-                    $browser->assertSeeIn('@output', '1');
-                    $browser->online();
-                })
+                ->pause('500') // Wait the time for a wire:poll in the view.
+                ->assertSeeIn('@output', '1')
+                ->waitForLivewire()->click('@enable')
+                ->assertSeeIn('@output', '2')
+                ->waitForLivewire(function () {}) // Wait for the next Livewire roundtrip
+                ->assertSeeIn('@output', '3')
+                ->waitForLivewire(function () {})
+                ->assertSeeIn('@output', '4')
 
                 /**
-                 * polling without specifying method refreshes by default
+                 * Disable polling by removing wire:poll from an element.
                  */
-                ->tap(function (Browser $browser) {
-                    $browser->assertSeeIn('@output', '1');
-                    $browser->pause(85);
-                    $browser->assertSeeIn('@output', '2');
-                })
+                ->waitForLivewire()->click('@disable')
+                ->assertSeeIn('@output', '5')
+                ->pause('500')
+                ->assertSeeIn('@output', '5')
 
                 /**
-                 * polling will stop if directive is removed
+                 * Re-enable polling, then test that polling stops when offline and resumes when back online.
                  */
-                ->tap(function (Browser $browser) {
-                    $browser->pause(85);
-                    $browser->assertSeeIn('@output', '3');
-                    $browser->pause(85);
-                    $browser->assertSeeIn('@output', '3');
-                })
-
-                /**
-                 * polling will start if directive is added
-                 * polling on root div
-                 */
-                ->tap(function (Browser $browser) {
-                    $browser->waitForLivewire()->click('@button');
-                    $browser->assertSeeIn('@output', '4');
-                    $browser->pause(100);
-                    $browser->assertSeeIn('@output', '5');
-                })
+                ->waitForLivewire()->click('@enable')
+                ->assertSeeIn('@output', '6')
+                ->waitForLivewire(function () {})
+                ->assertSeeIn('@output', '7')
+                ->offline()
+                ->pause('500')
+                ->assertSeeIn('@output', '7')
+                ->online()
+                ->waitForLivewire(function () {})
+                ->assertSeeIn('@output', '8')
             ;
         });
     }

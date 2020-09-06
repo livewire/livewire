@@ -8,6 +8,7 @@ use Psy\Shell;
 use Throwable;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
 use Illuminate\Support\Facades\Artisan;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -21,7 +22,7 @@ class TestCase extends BaseTestCase
 {
     public function setUp(): void
     {
-        // DuskOptions::withoutUI();
+        DuskOptions::withoutUI();
         if (isset($_SERVER['CI'])) {
             DuskOptions::withoutUI();
         }
@@ -68,6 +69,18 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
             app('livewire')->component(\Tests\Browser\Extensions\Component::class);
             app('livewire')->component(\Tests\Browser\Defer\Component::class);
+
+            if (PHP_VERSION_ID > 70400) {
+                app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
+                app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
+
+                // This needs to be registered for Dusk to test the route-parameter binding
+                // See: \Tests\Browser\SyncHistory\Test.php
+                Route::get(
+                    '/livewire-dusk/tests/browser/sync-history/{step}',
+                    \Tests\Browser\SyncHistory\Component::class
+                )->middleware('web')->name('sync-history');
+            }
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -208,19 +221,29 @@ class TestCase extends BaseTestCase
             return $this;
         });
 
+        Browser::macro('waitForLivewireToLoad', function () {
+            return $this->waitUsing(5, 75, function () {
+                return $this->driver->executeScript("return !! window.Livewire.components.initialRenderIsFinished");
+            });
+        });
+
         Browser::macro('waitForLivewire', function ($callback = null) {
             $id = rand(100, 1000);
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('message.received', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+                "window.Livewire.hook('message.sent', () => { window.duskIsWaitingForLivewireRequest{$id} = true })",
+                "window.Livewire.hook('message.processed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
                 "window.Livewire.hook('message.failed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
             ]);
 
             if ($callback) {
                 $callback($this);
 
-                return $this->waitUsing(5, 25, function () use ($id) {
+                // Wait a quick sec for Livewire to hear a click and send a request.
+                $this->pause(25);
+
+                return $this->waitUsing(5, 50, function () use ($id) {
                     return $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === undefined");
                 }, 'Livewire request was never triggered');
             }

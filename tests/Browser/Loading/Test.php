@@ -38,14 +38,14 @@ class Test extends TestCase
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@target-button');
 
-                    $browser->assertVisible('@targeting');
+                    $browser->waitFor('@targeting');
                     $browser->assertVisible('@targeting-both');
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@target-button-w-param');
 
-                    $browser->assertVisible('@targeting');
+                    $browser->waitFor('@targeting');
                     $browser->assertVisible('@targeting-both');
                 })
                 ->tap($this->assertInitialState())

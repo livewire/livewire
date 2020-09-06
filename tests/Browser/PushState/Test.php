@@ -30,7 +30,7 @@ class Test extends TestCase
                  * Hit the back button and see the change reflected in both
                  * the query string AND the actual property value.
                  */
-                ->waitForLivewire()->back()
+                ->back()
                 ->assertSeeIn('@output', 'baz')
                 ->assertQueryStringHas('foo', 'baz')
 

@@ -14,8 +14,8 @@ class Test extends TestCase
                 /**
                  * wire:init runs on page load.
                  */
-                ->waitForLivewire(function () {})
-                ->assertSeeIn('@output', 'foo')
+                ->waitForText('foo')
+                ->assertSee('foo')
             ;
         });
     }

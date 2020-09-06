@@ -115,7 +115,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
-        if (! $this->app->environment('production')) {
+        if ($this->app->runningUnitTests()) {
             RouteFacade::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
 
@@ -247,10 +247,10 @@ class LivewireServiceProvider extends ServiceProvider
         RenameMe\SupportChildren::init();
         RenameMe\SupportRedirects::init();
         RenameMe\SupportValidation::init();
-        RenameMe\SupportQueryString::init();
         RenameMe\SupportFileUploads::init();
         RenameMe\OptimizeRenderedDom::init();
         RenameMe\SupportFileDownloads::init();
+        RenameMe\SupportBrowserHistory::init();
         RenameMe\SupportActionReturns::init();
     }
 
@@ -286,11 +286,11 @@ class LivewireServiceProvider extends ServiceProvider
         LifecycleManager::registerInitialDehydrationMiddleware([
 
             /* Initial Response */
-            /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
-            /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
-            /* ^ */ [CallPropertyHydrationHooks::class, 'dehydrate'],
-            /* ^ */ [CallHydrationHooks::class, 'initialDehydrate'],
-            /* ^ */ [RenderView::class, 'dehydrate'],
+            /* ↑ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
+            /* ↑ */ [HydratePublicProperties::class, 'dehydrate'],
+            /* ↑ */ [CallPropertyHydrationHooks::class, 'dehydrate'],
+            /* ↑ */ [CallHydrationHooks::class, 'initialDehydrate'],
+            /* ↑ */ [RenderView::class, 'dehydrate'],
 
         ]);
 
