@@ -96,14 +96,9 @@ abstract class Component
         return $fullName;
     }
 
-    public function getFromQueryString()
+    public function getQueryString()
     {
         return $this->queryString;
-    }
-
-    public function getCasts()
-    {
-        return $this->casts;
     }
 
     public function skipRender()

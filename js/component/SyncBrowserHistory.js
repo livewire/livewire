@@ -19,7 +19,7 @@ export default function () {
         let { response } = message
         let effects = response.effects || {}
 
-        if ('path' in response.effects && effects.path !== window.location.href) {
+        if ('path' in effects && effects.path !== window.location.href) {
             let state = generateNewState(component, response)
 
             history.pushState(state, '', effects.path)

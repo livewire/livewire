@@ -8,7 +8,7 @@ trait WithPagination
 {
     public $page = 1;
 
-    public function getFromQueryString()
+    public function getQueryString()
     {
         return array_merge(['page' => ['except' => 1]], $this->queryString);
     }

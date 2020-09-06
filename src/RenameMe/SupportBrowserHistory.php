@@ -14,18 +14,18 @@ class SupportBrowserHistory
 {
     static function init() { return new static; }
 
-    protected $mergedQueryParametersFromMultipleComponents = [];
+    protected $mergedQueryParamsFromDehydratedComponents;
 
     function __construct()
     {
-        $this->mergedQueryParametersFromMultipleComponents = $this->getExistingQueryParams();
+        $this->mergedQueryParamsFromDehydratedComponents = collect($this->getExistingQueryParams());
 
-        Livewire::listen('component.hydrate.initial', function ($component, $request) {
-            if (! $properties = $this->getQueryParamsFromComponentProperties($component)) return;
+        Livewire::listen('component.hydrate.initial', function ($component) {
+            if (! $properties = $this->getQueryParamsFromComponentProperties($component)->keys()) return;
 
             $queryParams = request()->query();
 
-            foreach ($properties as $property => $currentValue) {
+            foreach ($properties as $property) {
                 $fromQueryString = Arr::get($queryParams, $property);
 
                 if ($fromQueryString !== null) {
@@ -35,29 +35,23 @@ class SupportBrowserHistory
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
-            $queryStringParams = $this->mergeComponentDataWithExistingQueryString($component);
+            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParams($component);
 
-            $response->effects['path'] = url()->current();
-
-            if (! empty($queryStringParams)) {
-                $response->effects['path'] = Str::before($response->effects['path'], '?').'?'.http_build_query($queryStringParams);
-            }
+            $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
         });
 
         Livewire::listen('component.dehydrate.subsequent', function (Component $component, Response $response) {
-            $queryParams = $this->mergeComponentDataWithExistingQueryString($component);
-
-            $referrer = request()->header('Referrer');
-
-            if (! $referrer) return;
+            if (! $referrer = request()->header('Referrer')) return;
 
             $route = app('router')->getRoutes()->match(
                 Request::create($referrer, 'GET')
             );
 
+            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParams($component);
+
             if (false !== strpos($route->getActionName(), get_class($component))) {
                 $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
-            } else if (!empty($queryParams)) {
+            } else if ($queryParams->isNotEmpty()) {
                 $response->effects['path'] = $this->buildPathFromReferrer($referrer, $queryParams);
             }
         });
@@ -73,22 +67,15 @@ class SupportBrowserHistory
     public function getQueryParamsFromReferrerHeader()
     {
         if (empty($referrer = request()->header('Referrer'))) return [];
-
-        // Get the query string from the client
+        
         parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
 
         return $referrerQueryString;
     }
 
-    protected function buildPathFromReferrer($referrer, $queryString)
+    protected function buildPathFromReferrer($referrer, $queryParams)
     {
-        if (empty($queryString)) {
-            return null;
-        }
-
-        $url = Str::before($referrer, '?');
-
-        return $url.'?'.http_build_query($queryString);
+        return Str::before($referrer, '?').$this->stringifyQueryParams($queryParams);
     }
 
     protected function buildPathFromRoute($component, $route, $queryString)
@@ -98,14 +85,14 @@ class SupportBrowserHistory
             $route->parametersWithoutNulls()
         );
 
-        return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString, true);
+        return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString->toArray(), true);
     }
 
-    protected function mergeComponentDataWithExistingQueryString($component)
+    protected function mergeComponentPropertiesWithExistingQueryParams($component)
     {
         $excepts = $this->getExceptsFromComponent($component);
 
-        $this->mergedQueryParametersFromMultipleComponents = collect($this->mergedQueryParametersFromMultipleComponents)
+        $this->mergedQueryParamsFromDehydratedComponents = collect($this->mergedQueryParamsFromDehydratedComponents)
             ->merge($this->getQueryParamsFromComponentProperties($component))
             ->reject(function ($value, $key) use ($excepts) {
                 return isset($excepts[$key]) && $excepts[$key] === $value;
@@ -113,30 +100,34 @@ class SupportBrowserHistory
             ->map(function ($property) {
                 return is_bool($property) ? json_encode($property) : $property;
             })
-            ->toArray();
+            ->sortKeys();
 
-        return $this->mergedQueryParametersFromMultipleComponents;
+        return $this->mergedQueryParamsFromDehydratedComponents;
     }
 
     protected function getExceptsFromComponent($component)
     {
-        return collect($component->getFromQueryString())
+        return collect($component->getQueryString())
             ->filter(function ($value) {
                 return isset($value['except']);
             })
             ->mapWithKeys(function ($value, $key) {
                 return [$key => $value['except']];
-            })
-            ->toArray();
+            });
     }
 
     protected function getQueryParamsFromComponentProperties($component)
     {
-        return collect($component->getFromQueryString())
-            ->mapWithKeys(function ($value, $key) use ($component) {
+        return collect($component->getQueryString())
+            ->mapWithKeys(function($value, $key) use ($component) {
                 $key = is_string($key) ? $key : $value;
 
                 return [$key => $component->{$key}];
-            })->toArray();
+            });
+    }
+
+    protected function stringifyQueryParams($queryParams)
+    {
+        return $queryParams->isEmpty() ? '' : '?'.http_build_query($queryParams->toArray());
     }
 }
