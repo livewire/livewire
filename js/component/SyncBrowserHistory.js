@@ -46,7 +46,7 @@ export default function () {
 
         state[component.id] = response
 
-        return { turbolinks: {}, livewire: state }
+        return { livewire: state }
     }
 
     function generateInitialFauxResponse(component) {
