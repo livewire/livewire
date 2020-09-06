@@ -22,7 +22,7 @@ class TestCase extends BaseTestCase
 {
     public function setUp(): void
     {
-        // DuskOptions::withoutUI();
+        DuskOptions::withoutUI();
         if (isset($_SERVER['CI'])) {
             DuskOptions::withoutUI();
         }
@@ -221,19 +221,29 @@ class TestCase extends BaseTestCase
             return $this;
         });
 
+        Browser::macro('waitForLivewireToLoad', function () {
+            return $this->waitUsing(5, 75, function () {
+                return $this->driver->executeScript("return !! window.Livewire.components.initialRenderIsFinished");
+            });
+        });
+
         Browser::macro('waitForLivewire', function ($callback = null) {
             $id = rand(100, 1000);
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('message.processed', () => { setTimeout(() => { delete window.duskIsWaitingForLivewireRequest{$id} }) })",
+                "window.Livewire.hook('message.sent', () => { window.duskIsWaitingForLivewireRequest{$id} = true })",
+                "window.Livewire.hook('message.processed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
                 "window.Livewire.hook('message.failed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
             ]);
 
             if ($callback) {
                 $callback($this);
 
-                return $this->waitUsing(5, 25, function () use ($id) {
+                // Wait a quick sec for Livewire to hear a click and send a request.
+                $this->pause(25);
+
+                return $this->waitUsing(5, 50, function () use ($id) {
                     return $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === undefined");
                 }, 'Livewire request was never triggered');
             }
