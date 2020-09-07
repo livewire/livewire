@@ -9,7 +9,6 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
 abstract class Component
@@ -146,8 +145,6 @@ abstract class Component
         $engine = app('view.engine.resolver')->resolve('blade');
         $engine->startLivewireRendering($this);
 
-        $this->normalizePublicPropertiesForJavaScript();
-
         $this->setErrorBag(
             $errorBag = $errors ?: ($view->getData()['errors'] ?? $this->getErrorBag())
         );
@@ -193,29 +190,6 @@ abstract class Component
                 $this->$key = $value->values();
             }
         }
-    }
-
-    protected function reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value)
-    {
-        if (! is_array($value)) {
-            return $value;
-        }
-
-        $normalizedData = $value;
-
-        // Make sure string keys are last (but not ordered) and numeric keys are ordered.
-        // JSON.parse will do this on the frontend, so we'll get ahead of it.
-        uksort($normalizedData, function ($a, $b) {
-            if (is_numeric($a) && is_numeric($b)) return $a > $b;
-
-            if (! is_numeric($a) && ! is_numeric($b)) return 0;
-
-            if (! is_numeric($a)) return 1;
-        });
-
-        return array_map(function ($value) {
-            return $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
-        }, $normalizedData);
     }
 
     public function forgetComputed($key = null)

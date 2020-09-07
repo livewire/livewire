@@ -41,6 +41,8 @@ use Livewire\HydrationMiddleware\{
     CallPropertyHydrationHooks,
     SecureHydrationWithChecksum,
     HashDataPropertiesForDirtyDetection,
+    NormalizeServerMemoSansDataForJavaScript,
+    NormalizeComponentPropertiesForJavaScript,
 };
 use Livewire\Macros\ViewMacros;
 
@@ -268,6 +270,7 @@ class LivewireServiceProvider extends ServiceProvider
             /* ↓                                                           ↑ */
             /* ↓    Secure Stuff                                           ↑ */
             /* ↓ */ SecureHydrationWithChecksum::class, /* --------------- ↑ */
+            /* ↓ */ NormalizeServerMemoSansDataForJavaScript::class, /* -- ↑ */
             /* ↓ */ HashDataPropertiesForDirtyDetection::class, /* ------- ↑ */
             /* ↓                                                           ↑ */
             /* ↓    Hydrate Stuff                                          ↑ */
@@ -282,6 +285,7 @@ class LivewireServiceProvider extends ServiceProvider
             /* ↓                                                           ↑ */
             /* ↓    Output Stuff                                           ↑ */
             /* ↓ */ RenderView::class, /* -------------------------------- ↑ */
+            /* ↓ */ NormalizeComponentPropertiesForJavaScript::class, /* - ↑ */
 
         ]);
 
@@ -289,10 +293,12 @@ class LivewireServiceProvider extends ServiceProvider
 
             /* Initial Response */
             /* ↑ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
+            /* ↑ */ [NormalizeServerMemoSansDataForJavaScript::class, 'dehydrate'],
             /* ↑ */ [HydratePublicProperties::class, 'dehydrate'],
             /* ↑ */ [CallPropertyHydrationHooks::class, 'dehydrate'],
             /* ↑ */ [CallHydrationHooks::class, 'initialDehydrate'],
             /* ↑ */ [RenderView::class, 'dehydrate'],
+            /* ↑ */ [NormalizeComponentPropertiesForJavaScript::class, 'dehydrate'],
 
         ]);
 
