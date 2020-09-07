@@ -82,4 +82,15 @@ class Test extends TestCase
                 ;
         });
     }
+
+    public function test_alpine_still_updates_even_when_livewire_doesnt_update_html()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, SmallComponent::class)
+                ->assertSeeIn('@output', '0')
+                ->waitForLivewire()->click('@button')
+                ->assertSeeIn('@output', '1')
+            ;
+        });
+    }
 }

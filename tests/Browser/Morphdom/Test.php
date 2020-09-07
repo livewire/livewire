@@ -45,12 +45,12 @@ class Test extends TestCase
                 /**
                  * elements added with keys are recognized in the custom lookahead
                  */
-                ->waitForLivewire()->click('@baz')
+                ->waitForLivewire()->click('@bob')
                 ->tap(function ($b) {
                     $this->assertEquals([1], $b->script('return Livewire.components.components()[0].morphChanges.added.length'));
                     $this->assertEquals([0], $b->script('return Livewire.components.components()[0].morphChanges.removed.length'));
                 })
-                ;
+            ;
         });
     }
 }

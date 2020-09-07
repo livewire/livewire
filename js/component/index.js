@@ -18,6 +18,8 @@ export default class Component {
 
         this.el = el
 
+        this.lastFreshHtml = this.el.outerHTML
+
         this.id = this.el.getAttribute('wire:id')
 
         this.connection = connection
@@ -243,7 +245,14 @@ export default class Component {
         }
 
         if (response.effects.html) {
+            // If we get HTML from the server, store it for the next time we might not.
+            this.lastFreshHtml = response.effects.html
+
             this.handleMorph(response.effects.html.trim())
+        } else {
+            // It's important to still "morphdom" even when the server HTML hasn't changed,
+            // because Alpine needs to be given the chance to update.
+            this.handleMorph(this.lastFreshHtml)
         }
 
         if (response.effects.dirty) {
