@@ -60,7 +60,17 @@ class Test extends TestCase
                 ->assertQueryStringHas('baz', 'ploop')
                 ->back()
                 ->back()
-                ->assertQueryStringHas('baz', 'lop');
+                ->assertQueryStringHas('baz', 'lop')
+
+                /**
+                 * Can change an array property.
+                 */
+                ->assertSeeIn('@bob.output', '["foo","bar"]')
+                ->waitForLivewire()->click('@bob.modify')
+                ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
+                ->refresh()
+                ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
+            ;
         });
     }
 

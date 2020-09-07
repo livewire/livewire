@@ -29,7 +29,7 @@ class SupportBrowserHistory
                 $fromQueryString = Arr::get($queryParams, $property);
 
                 if ($fromQueryString !== null) {
-                    $component->$property = ($decoded = json_decode($fromQueryString)) === null ? $fromQueryString : $decoded;
+                    $component->$property = ($decoded = json_decode(json_encode($fromQueryString))) === null ? $fromQueryString : $decoded;
                 }
             }
         });
