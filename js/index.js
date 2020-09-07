@@ -132,6 +132,13 @@ class Livewire {
 
                                 // Now, we'll watch for changes to the Alpine prop, and fire the update to Livewire.
                                 component.unobservedData.$watch(key, value => {
+                                    // Let's also make sure that this watcher isn't a result of a Livewire response.
+                                    // If it is, we don't need to "re-update" Livewire. (sending an extra useless) request.
+                                    if (blockAlpineWatcher === true) {
+                                        blockAlpineWatcher = false
+                                        return
+                                    }
+
                                     // If the Alpine value is the same as the Livewire value, we'll skip the update for 2 reasons:
                                     // - It's just more efficient, why send needless requests.
                                     // - This prevents a circular dependancy with the other watcher below.
@@ -141,13 +148,6 @@ class Livewire {
                                             livewireProperty
                                         )
                                     ) return
-
-                                    // Let's also make sure that this watcher isn't a result of a Livewire response.
-                                    // If it is, we don't need to "re-update" Livewire. (sending an extra useless) request.
-                                    if (blockAlpineWatcher === true) {
-                                        blockAlpineWatcher = false
-                                        return
-                                    }
 
                                     // We'll tell Livewire to update the property, but we'll also tell Livewire
                                     // to not call the normal property watchers on the way back to prevent another

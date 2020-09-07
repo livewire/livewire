@@ -74,30 +74,31 @@ export default class Component {
     }
 
     updateServerMemoFromResponseAndMergeBackIntoResponse(message) {
-        let responseData = message.response.serverMemo.data || {}
+        // We have to do a fair amount of object merging here, but we can't use expressive syntax like {...}
+        // because browsers mess with the object key order which will break Livewire request checksum checks.
 
-        Object.entries(responseData).forEach(([key, value]) => {
-            if (message.shouldSkipWatcher()) return
+        Object.entries(message.response.serverMemo).forEach(([key, value]) => {
+            // Because "data" is "partial" from the server, we have to deep merge it.
+            if (key === 'data') {
+                Object.entries(value || {}).forEach(([dataKey, dataValue]) => {
+                    this.serverMemo.data[dataKey] = dataValue
 
-            // Because Livewire (for payload reduction purposes) only returns the data that has changed,
-            // we can use all the data keys from the response as watcher triggers.
-            let watchers = this.watchers[key] || []
+                    if (message.shouldSkipWatcher()) return
 
-            watchers.forEach(watcher => watcher(value))
+                    // Because Livewire (for payload reduction purposes) only returns the data that has changed,
+                    // we can use all the data keys from the response as watcher triggers.
+                    let watchers = this.watchers[dataKey] || []
+
+                    watchers.forEach(watcher => watcher(dataValue))
+                })
+            } else {
+                // Every other key, we can just overwrite.
+                this.serverMemo[key] = value
+            }
         })
 
-        this.serverMemo = {
-            ...this.serverMemo,
-            ...message.response.serverMemo,
-            // We have to merge in data explicitly because we need "data" to be a "deep" merge.
-            data: {
-                ...this.serverMemo.data,
-                ...responseData,
-            }
-        }
-
         // Merge back serverMemo changes so the response data is no longer incomplete.
-        message.response.serverMemo = { ...this.serverMemo }
+        message.response.serverMemo = Object.assign({}, this.serverMemo)
     }
 
     watch(name, callback) {
