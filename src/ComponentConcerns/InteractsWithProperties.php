@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 trait InteractsWithProperties
 {
-    protected $casts = [];
-
     public function handleHydrateProperty($property, $value)
     {
         $newValue = $value;

@@ -33,11 +33,6 @@ class ComponentWithPublicPropertyCasters extends Component
     public $allCaps;
     public $typeOfs;
 
-    protected $casts = [
-        'dateWithFormat' => 'date:y-m-d',
-        'allCaps' => AllCapsCaster::class,
-    ];
-
     public function updatedDateWithFormat($value)
     {
         $this->dateWithFormat = \Carbon\Carbon::createFromFormat('y-m-d', $value);

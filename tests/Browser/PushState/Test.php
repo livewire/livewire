@@ -8,7 +8,7 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public function test()
+    public function test_core_pushstate_logic()
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class, '?foo=baz')
@@ -61,6 +61,25 @@ class Test extends TestCase
                 ->back()
                 ->back()
                 ->assertQueryStringHas('baz', 'lop');
+        });
+    }
+
+    public function test_excepts_results_in_no_query_string()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithExcepts::class)
+                ->assertSeeIn('@output', 'On page 1');
+
+            $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
+
+            Livewire::visit($browser, ComponentWithExcepts::class, '?page=1')
+                ->assertSeeIn('@output', 'On page 1');
+
+            $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
+
+            Livewire::visit($browser, ComponentWithExcepts::class, '?page=2')
+                ->assertSeeIn('@output', 'On page 2')
+                ->assertQueryStringHas('page', 2);
         });
     }
 }
