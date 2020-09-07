@@ -6,6 +6,7 @@ use Mockery;
 use Livewire\Livewire;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\View;
 use Livewire\GenerateSignedUploadUrl;
 use Illuminate\Routing\RouteCollection;
@@ -179,6 +180,17 @@ class TestableLivewire
     public function instance()
     {
         return Livewire::getInstance($this->componentName, $this->id());
+    }
+
+    public function getEventPayload(string $name)
+    {
+        $event = Collection::make($this->payload['effects']['emits'] ?? [])
+            ->firstWhere('event', $name);
+
+        $parameters = Collection::make($event['params'] ?? []);
+
+        return $parameters->count() <= 1
+            ? $parameters->first() : $parameters;
     }
 
     public function viewData($key)

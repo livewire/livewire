@@ -19,6 +19,33 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
+    public function receive_event_and_assert_payload()
+    {
+        // We should get NULL if the event doesn't exist...
+        $component = Livewire::test(ReceivesEvents::class);
+        $this->assertNull($component->getEventPayload('not-a-real-event'));
+
+        // We should be able to get the single payload parameter...
+        $component = Livewire::test(ReceivesEvents::class);
+
+        $component->call('emitGoo')
+            ->assertEmitted('goo');
+
+        $this->assertEquals('car', $component->getEventPayload('goo'));
+
+        // We should be able to destructure a tuple...
+        $component = Livewire::test(ReceivesEvents::class);
+
+        $component->call('emitTuple')
+            ->assertEmitted('goo');
+
+        [$vehicle, $color] = $component->getEventPayload('goo');
+
+        $this->assertEquals('car', $vehicle);
+        $this->assertEquals('red', $color);
+    }
+
+    /** @test */
     public function receive_event_with_single_value_listener()
     {
         $component = Livewire::test(ReceivesEventsWithSingleValueListener::class);
@@ -136,6 +163,11 @@ class ReceivesEvents extends Component
     public function emitToGooGone()
     {
         $this->emit('gone', 'car')->to()->component('goo');
+    }
+
+    public function emitTuple()
+    {
+        $this->emit('goo', 'car', 'red');
     }
 
     public function render()
