@@ -123,6 +123,16 @@ class Test extends TestCase
         });
     }
 
+    public function test_that_if_a_parameter_comes_in_from_the_route_and_doesnt_have_a_matching_property_things_dont_break()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history-without-mount', ['id' => 1], false))
+                ->assertSeeIn('@output', '1')
+                ->waitForLivewire()->click('@button')
+                ->assertSeeIn('@output', '5');
+        });
+    }
+
     protected function require74()
     {
         // FIXME: We need a PHP 7.3 and below test

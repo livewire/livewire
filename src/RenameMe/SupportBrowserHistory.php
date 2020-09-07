@@ -84,9 +84,12 @@ class SupportBrowserHistory
 
     protected function buildPathFromRoute($component, $route, $queryString)
     {
-        $boundParameters = array_intersect_key(
-            $component->getPublicPropertiesDefinedBySubClass(),
-            $route->parametersWithoutNulls()
+        $boundParameters = array_merge(
+            $route->parametersWithoutNulls(),
+            array_intersect_key(
+                $component->getPublicPropertiesDefinedBySubClass(),
+                $route->parametersWithoutNulls()
+            ),
         );
 
         return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString->toArray(), true);

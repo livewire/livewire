@@ -70,6 +70,12 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
             app('livewire')->component(\Tests\Browser\Extensions\Component::class);
             app('livewire')->component(\Tests\Browser\Defer\Component::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithMount::class);
+
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history-without-mount/{id}',
+                \Tests\Browser\SyncHistory\ComponentWithMount::class
+            )->middleware('web')->name('sync-history-without-mount');
 
             if (PHP_VERSION_ID > 70400) {
                 app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
