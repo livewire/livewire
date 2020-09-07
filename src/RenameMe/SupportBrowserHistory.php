@@ -89,7 +89,7 @@ class SupportBrowserHistory
             array_intersect_key(
                 $component->getPublicPropertiesDefinedBySubClass(),
                 $route->parametersWithoutNulls()
-            ),
+            )
         );
 
         return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString->toArray(), true);
