@@ -193,14 +193,17 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerViewMacros()
     {
-        ComponentAttributeBag::macro('wire', function ($name) {
-            $entries = head($this->whereStartsWith('wire:'.$name));
+        // Early versions of Laravel 7.x don't have this method.
+        if (method_exists(ComponentAttributeBag::class, 'macro')) {
+            ComponentAttributeBag::macro('wire', function ($name) {
+                $entries = head($this->whereStartsWith('wire:'.$name));
 
-            $directive = head(array_keys($entries));
-            $value = head(array_values($entries));
+                $directive = head(array_keys($entries));
+                $value = head(array_values($entries));
 
-            return new WireDirective($name, $directive, $value);
-        });
+                return new WireDirective($name, $directive, $value);
+            });
+        }
 
         View::mixin(new ViewMacros);
     }
