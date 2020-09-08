@@ -18,7 +18,9 @@ class PublicPropertyHydrationHooksTest extends TestCase
             ->assertSet('typeOfs.collection', 'Illuminate\Support\Collection')
             ->assertSet('typeOfs.allCaps', 'FOO')
             ->assertSet('dateWithFormat', '00-01-01')
-            ->assertSet('collection', ['foo', 'bar'])
+            ->assertSet('collection', function ($value) {
+                return $value->toArray() === ['foo', 'bar'];
+            })
             ->assertSet('allCaps', 'foo')
             ->set('dateWithFormat', '00-02-02')
             ->assertSet('dateWithFormat', '00-02-02');

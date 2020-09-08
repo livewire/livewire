@@ -14,6 +14,8 @@ use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
 
 class TestableLivewire
 {
+    protected static $instancesById = [];
+
     public $payload = [];
     public $componentName;
     public $lastValidator;
@@ -36,6 +38,10 @@ class TestableLivewire
 
         Livewire::listen('failed-validation', function ($validator) {
             $this->lastValidator = $validator;
+        });
+
+        Livewire::listen('component.dehydrate', function($component) {
+            static::$instancesById[$component->id] = $component;
         });
 
         Livewire::listen('mounted', function ($response) {
@@ -178,7 +184,7 @@ class TestableLivewire
 
     public function instance()
     {
-        return Livewire::getInstance($this->componentName, $this->id());
+        return static::$instancesById[$this->id()];
     }
 
     public function viewData($key)
@@ -188,7 +194,24 @@ class TestableLivewire
 
     public function get($property)
     {
-        return data_get($this->payload['serverMemo']['data'], $property);
+        return data_get(
+            $this->instance(),
+            $property,
+            function () use ($property) {
+                // If we couldn't find it, make sure it's not a computed property.
+                $root = $this->instance()->beforeFirstDot($property);
+
+                try {
+                    $value = $this->instance()->{$root};
+                } catch (\Throwable $e) {
+                    $value = null;
+                }
+
+                $nested = $root === $property ? null : $this->instance()->afterFirstDot($property);
+
+                return data_get($value, $nested);
+            }
+        );
     }
 
     public function __get($property)
