@@ -13,7 +13,8 @@
         "symfony/http-kernel": "^5.0",
         "illuminate/support": "^7.0|^8.0",
         "illuminate/database": "^7.0|^8.0",
-        "illuminate/validation": "^7.0|^8.0"
+        "illuminate/validation": "^7.0|^8.0",
+        "illuminate/view": "^7.18|^8.0"
     },
     "require-dev": {
         "psy/psysh": "@stable",
