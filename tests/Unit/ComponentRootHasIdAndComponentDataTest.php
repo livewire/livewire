@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Livewire\Exceptions\MultipleRootTagsInViewException;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
@@ -27,6 +28,14 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
         $this->expectException(RootTagMissingFromViewException::class);
 
         $component = Livewire::test(ComponentRootExists::class);
+    }
+
+    /** @test */
+    public function no_multiple_root_elements()
+    {
+        $this->expectException(MultipleRootTagsInViewException::class);
+
+        $component = Livewire::test(ComponentMultipleRootElements::class);
     }
 
     /** @test */
@@ -79,5 +88,13 @@ class ComponentRootExists extends Component
     public function render()
     {
         return app('view')->make('rootless-view');
+    }
+}
+
+class ComponentMultipleRootElements extends Component
+{
+    public function render()
+    {
+        return app('view')->make('multiroot-view');
     }
 }
