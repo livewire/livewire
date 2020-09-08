@@ -17,11 +17,23 @@ class EloquentModelValidationTest extends TestCase
         ])  ->set('foo.bar', '')
             ->call('save')
             ->assertHasErrors('foo.bar')
+            ->assertSee('The foo.bar field is required.')
             ->set('foo.bar', 'baz')
             ->call('save')
             ->assertHasNoErrors();
 
         $this->assertEquals('baz', $foo->fresh()->bar);
+    }
+
+    /** @test */
+    public function validate_message_doesnt_contain_dot_notation_if_property_is_model()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.bar', '')
+            ->call('save')
+            ->assertHasErrors('foo.bar', 'required')
+            ->assertSee('The bar field is required.');
     }
 
     /** @test */
@@ -107,6 +119,6 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
 
     public function render()
     {
-        return view('null-view');
+        return view('dump-errors');
     }
 }
