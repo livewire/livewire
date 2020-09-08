@@ -36,7 +36,7 @@ export default class Connection {
                     'X-Livewire': true,
 
                     // We'll set this explicitly to mitigate potential interference from ad-blockers/etc.
-                    'Referrer': window.location.href,
+                    'Referer': window.location.href,
                 },
             }
         )

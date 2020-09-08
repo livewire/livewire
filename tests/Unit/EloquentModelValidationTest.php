@@ -25,6 +25,28 @@ class EloquentModelValidationTest extends TestCase
     }
 
     /** @test */
+    public function validate_message_doesnt_contain_dot_notation_if_property_is_model()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.bar', '')
+            ->call('save')
+            ->assertHasErrors('foo.bar', 'required')
+            ->assertSee('The bar field is required.');
+    }
+
+    /** @test */
+    public function validate_only_message_doesnt_contain_dot_notation_if_property_is_model()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.bar', '')
+            ->call('performValidateOnly', 'foo.bar')
+            ->assertHasErrors('foo.bar', 'required')
+            ->assertSee('The bar field is required.');
+    }
+
+    /** @test */
     public function array_model_property()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -105,8 +127,13 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
         $this->foo->save();
     }
 
+    public function performValidateOnly($field)
+    {
+       $this->validateOnly($field);
+    }
+
     public function render()
     {
-        return view('null-view');
+        return view('dump-errors');
     }
 }

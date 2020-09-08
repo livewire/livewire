@@ -106,9 +106,16 @@ trait ValidatesInput
 
             $value = $this->getPropertyValue($propertyNameFromValidationField);
 
-            $result[$propertyNameFromValidationField] = $value instanceof Model
-                ? $value->toArray() : $value;
+            if ($value instanceof Model) {
+                // Take the following valition rules for example: ['post.title' => 'required']
+                // Before this line of code: "The post.title field is required"
+                // After this line of code:  "The title field is required."
+                $attributes[$field] = $attributes[$field] ?? $this->afterFirstDot($field);
 
+                $result[$propertyNameFromValidationField] = $value->toArray();
+            } else {
+                $result[$propertyNameFromValidationField] = $value;
+            }
         }
 
         $result = $this->prepareForValidation($result);
@@ -138,6 +145,13 @@ trait ValidatesInput
 
         $result[$propertyNameFromValidationField]
             = $this->getPropertyValue($propertyNameFromValidationField);
+
+        if ($result[$propertyNameFromValidationField] instanceof Model) {
+            // Take the following valition rules for example: ['post.title' => 'required']
+            // Before this line of code: "The post.title field is required"
+            // After this line of code:  "The title field is required."
+            $attributes[$field] = $attributes[$field] ?? $this->afterFirstDot($field);
+        }
 
         try {
             // If the field is "items.0.foo", we should apply the validation rule for "items.*.foo".
