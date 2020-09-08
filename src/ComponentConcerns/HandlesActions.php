@@ -57,14 +57,27 @@ trait HandlesActions
     {
         $propertyName = Str::before(Str::studly($name), '.');
         $keyAfterFirstDot = Str::contains($name, '.') ? Str::after($name, '.') : null;
+        $keyAfterLastDot = Str::contains($name, '.') ? Str::afterLast($name, '.') : null;
 
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
+
+        $beforeNestedMethod = Str::contains($name, '.')
+            ? 'updating'.Str::of($name)->replace('.', '_')->studly()
+            : false;
+
+        $afterNestedMethod = Str::contains($name, '.')
+            ? 'updated'.Str::of($name)->replace('.', '_')->studly()
+            : false;
 
         $this->updating($name, $value);
 
         if (method_exists($this, $beforeMethod)) {
             $this->{$beforeMethod}($value, $keyAfterFirstDot);
+        }
+
+        if ($beforeNestedMethod && method_exists($this, $beforeNestedMethod)) {
+            $this->{$beforeNestedMethod}($value, $keyAfterLastDot);
         }
 
         $callback($name, $value);
@@ -73,6 +86,10 @@ trait HandlesActions
 
         if (method_exists($this, $afterMethod)) {
             $this->{$afterMethod}($value, $keyAfterFirstDot);
+        }
+
+        if ($afterNestedMethod && method_exists($this, $afterNestedMethod)) {
+            $this->{$afterNestedMethod}($value, $keyAfterLastDot);
         }
     }
 
