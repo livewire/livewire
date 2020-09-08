@@ -39,24 +39,28 @@ class SupportBrowserHistory
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
-            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParams($component);
+            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
             $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
         });
 
         Livewire::listen('component.dehydrate.subsequent', function (Component $component, Response $response) {
-            if (! $referrer = request()->header('Referrer')) return;
+            if (! $referer = request()->header('Referer')) return;
 
             $route = app('router')->getRoutes()->match(
-                Request::create($referrer, 'GET')
+                Request::create($referer, 'GET')
             );
 
-            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParams($component);
+            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
             if (false !== strpos($route->getActionName(), get_class($component))) {
-                $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
-            } else if ($queryParams->isNotEmpty()) {
-                $response->effects['path'] = $this->buildPathFromReferrer($referrer, $queryParams);
+                $path = $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
+            } else {
+                $path = $this->buildPathFromReferer($referer, $queryParams);
+            }
+
+            if ($referer !== $path) {
+                $response->effects['path'] = $path;
             }
         });
     }
@@ -64,22 +68,22 @@ class SupportBrowserHistory
     protected function getExistingQueryParams()
     {
         return Livewire::isLivewireRequest()
-            ? $this->getQueryParamsFromReferrerHeader()
+            ? $this->getQueryParamsFromRefererHeader()
             : request()->query();
     }
 
-    public function getQueryParamsFromReferrerHeader()
+    public function getQueryParamsFromRefererHeader()
     {
-        if (empty($referrer = request()->header('Referrer'))) return [];
+        if (empty($referer = request()->header('Referer'))) return [];
 
-        parse_str(parse_url($referrer, PHP_URL_QUERY), $referrerQueryString);
+        parse_str(parse_url($referer, PHP_URL_QUERY), $refererQueryString);
 
-        return $referrerQueryString;
+        return $refererQueryString;
     }
 
-    protected function buildPathFromReferrer($referrer, $queryParams)
+    protected function buildPathFromReferer($referer, $queryParams)
     {
-        return Str::before($referrer, '?').$this->stringifyQueryParams($queryParams);
+        return Str::before($referer, '?').$this->stringifyQueryParams($queryParams);
     }
 
     protected function buildPathFromRoute($component, $route, $queryString)
@@ -95,11 +99,12 @@ class SupportBrowserHistory
         return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString->toArray(), true);
     }
 
-    protected function mergeComponentPropertiesWithExistingQueryParams($component)
+    protected function mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component)
     {
         $excepts = $this->getExceptsFromComponent($component);
 
-        $this->mergedQueryParamsFromDehydratedComponents = collect($this->mergedQueryParamsFromDehydratedComponents)
+        $this->mergedQueryParamsFromDehydratedComponents = collect(request()->query())
+            ->merge($this->mergedQueryParamsFromDehydratedComponents)
             ->merge($this->getQueryParamsFromComponentProperties($component))
             ->reject(function ($value, $key) use ($excepts) {
                 return isset($excepts[$key]) && $excepts[$key] === $value;
