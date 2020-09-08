@@ -42,7 +42,7 @@ class MountComponentTest extends TestCase
         $this->assertSame(10, $componentWithOnlyFoo->foo);
 
         $this->assertSame(5, $componentWithFooBar->bar);
-        $this->assertSame(null, $componentWithOnlyFoo->bar);
+        $this->assertSame(null, data_get($componentWithOnlyFoo->instance(), 'bar'));
     }
 }
 
