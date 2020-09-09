@@ -9,6 +9,8 @@ export default function () {
         let state = generateNewState(component, generateInitialFauxResponse(component))
         let url = initializedPath ? undefined : component.effects.path
 
+        store.callHook('beforeReplaceState', state, url, component)
+
         history.replaceState(state, '', url)
         initializedPath = true
     })
@@ -21,6 +23,8 @@ export default function () {
 
         if ('path' in effects && effects.path !== window.location.href) {
             let state = generateNewState(component, response)
+
+            store.callHook('beforePushState', state, effects.path, component)
 
             history.pushState(state, '', effects.path)
         }

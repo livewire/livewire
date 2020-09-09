@@ -20,6 +20,8 @@ export default {
          */
         'interceptWireModelSetValue',
         'interceptWireModelAttachListener',
+        'beforeReplaceState',
+        'beforePushState',
     ],
 
     bus: new MessageBus(),
