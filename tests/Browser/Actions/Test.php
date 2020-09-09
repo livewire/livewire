@@ -73,6 +73,12 @@ class Test extends TestCase
                 ->assertSeeIn('@output', 'law')
 
                 /**
+                 * keydown.space
+                 */
+                ->waitForLivewire()->keys('@spa', '{space}')
+                ->assertSeeIn('@output', 'spa')
+
+                /**
                  * Elements are marked as read-only during form submission
                  */
                 ->tap(function ($b) {
