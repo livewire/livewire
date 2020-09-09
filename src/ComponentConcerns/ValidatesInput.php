@@ -66,6 +66,14 @@ trait ValidatesInput
         return [];
     }
 
+    protected function getMessages()
+    {
+        if (method_exists($this, 'messages')) return $this->messages();
+        if (property_exists($this, 'messages')) return $this->messages;
+
+        return [];
+    }
+
     public function rulesForModel($name)
     {
         if (empty($this->getRules())) return collect();
@@ -91,6 +99,8 @@ trait ValidatesInput
         $rules = is_null($rules) ? $this->getRules() : $rules;
 
         throw_if(empty($rules), new MissingRulesException($this::getName()));
+
+        $messages = empty($messages) ? $this->getMessages() : $messages;
 
         $result = $this->getPublicPropertiesDefinedBySubClass();
 

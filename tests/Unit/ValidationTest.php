@@ -32,6 +32,16 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validate_component_properties_with_custom_message_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->runAction('runValidationWithMessageProperty');
+
+        $this->assertStringContainsString('Custom Message', $component->payload['effects']['html']);
+    }
+
+    /** @test */
     public function validate_component_properties_with_custom_attribute()
     {
         $component = Livewire::test(ForValidation::class);
@@ -259,6 +269,17 @@ class ForValidation extends Component
         $this->validate([
             'bar' => 'required',
         ], ['required' => 'Custom Message']);
+    }
+
+    public function runValidationWithMessageProperty()
+    {
+        $this->messages = [
+            'required' => 'Custom Message'
+        ];
+
+        $this->validate([
+            'bar' => 'required'
+        ]);
     }
 
     public function runValidationWithCustomAttribute()
