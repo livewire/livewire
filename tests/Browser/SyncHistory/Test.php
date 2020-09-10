@@ -9,8 +9,6 @@ class Test extends TestCase
 {
     public function test_route_bound_properties_are_synced_with_browser_history()
     {
-        $this->require74();
-
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active');
@@ -26,8 +24,6 @@ class Test extends TestCase
 
     public function test_that_query_bound_properties_are_synced_with_browser_history()
     {
-        $this->require74();
-
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Help is currently disabled')
@@ -52,8 +48,6 @@ class Test extends TestCase
 
     public function test_that_route_and_query_bound_properties_can_both_be_synced_with_browser_history()
     {
-        $this->require74();
-
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active')
@@ -88,8 +82,6 @@ class Test extends TestCase
 
     public function test_that_query_updates_from_child_components_can_coexist()
     {
-        $this->require74();
-
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active')
@@ -133,13 +125,13 @@ class Test extends TestCase
         });
     }
 
-    protected function require74()
+    public function test_that_we_are_not_leaking_old_components_into_history_state_on_refresh()
     {
-        // FIXME: We need a PHP 7.3 and below test
-
-        if (PHP_VERSION_ID < 70400) {
-            $this->markTestSkipped('Route-bound parameters are only supported in PHP 7.4 and above.');
-            return;
-        }
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history', ['step' => 1], false))
+                ->assertScript('Object.keys(window.history.state.livewire).length', 2)
+                ->refresh()
+                ->assertScript('Object.keys(window.history.state.livewire).length', 2);
+        });
     }
 }
