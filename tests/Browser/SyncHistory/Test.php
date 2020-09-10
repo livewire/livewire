@@ -125,6 +125,8 @@ class Test extends TestCase
 
     public function test_that_if_a_parameter_comes_in_from_the_route_and_doesnt_have_a_matching_property_things_dont_break()
     {
+        $this->require74();
+
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history-without-mount', ['id' => 1], false))
                 ->assertSeeIn('@output', '1')
@@ -137,6 +139,7 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
+                ->tinker()
                 ->assertScript('Object.keys(window.history.state.livewire).length', 2)
                 ->refresh()
                 ->assertScript('Object.keys(window.history.state.livewire).length', 2);
