@@ -7,8 +7,7 @@ use Livewire\Component as BaseComponent;
 
 class ChildComponent extends BaseComponent
 {
-    public bool $darkmode = false;
-
+    public $darkmode = false;
     protected $queryString = ['darkmode'];
 
     public function toggleDarkmode()
