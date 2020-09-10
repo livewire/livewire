@@ -2,8 +2,10 @@
 
 namespace Tests\Browser\SyncHistory;
 
+use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use Tests\Browser\TestCase;
+use Tests\Browser\Defer\Component as DeferComponent;
 
 class Test extends TestCase
 {
@@ -132,6 +134,15 @@ class Test extends TestCase
                 ->assertScript('Object.keys(window.history.state.livewire).length', 2)
                 ->refresh()
                 ->assertScript('Object.keys(window.history.state.livewire).length', 2);
+        });
+    }
+
+    public function test_that_we_are_not_setting_history_state_unless_there_are_route_bound_params_or_query_string_properties()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, DeferComponent::class)
+                ->assertScript('history.state', null)
+            ;
         });
     }
 }

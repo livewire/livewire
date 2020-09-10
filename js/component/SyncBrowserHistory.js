@@ -9,6 +9,8 @@ export default function () {
     if (window.history.state) window.history.state.livewire = {};
 
     store.registerHook('component.initialized', component => {
+        if (! component.effects.path) return
+
         let state = generateNewState(component, generateInitialFauxResponse(component))
         let url = initializedPath ? undefined : component.effects.path
 
