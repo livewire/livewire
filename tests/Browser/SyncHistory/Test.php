@@ -129,7 +129,6 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
-                ->tinker()
                 ->assertScript('Object.keys(window.history.state.livewire).length', 2)
                 ->refresh()
                 ->assertScript('Object.keys(window.history.state.livewire).length', 2);

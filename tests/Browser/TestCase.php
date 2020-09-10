@@ -7,6 +7,7 @@ use Exception;
 use Psy\Shell;
 use Throwable;
 use Laravel\Dusk\Browser;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
@@ -87,6 +88,7 @@ class TestCase extends BaseTestCase
                 '/livewire-dusk/tests/browser/sync-history/{step}',
                 \Tests\Browser\SyncHistory\Component::class
             )->middleware('web')->name('sync-history');
+            
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
