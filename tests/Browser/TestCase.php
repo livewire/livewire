@@ -216,6 +216,14 @@ class TestCase extends BaseTestCase
             return $this;
         });
 
+        Browser::macro('assertScript', function ($js, $expects = true) {
+            PHPUnit::assertEquals($expects, head($this->script(
+                Str::start( $js, 'return ')
+            )));
+
+            return $this;
+        });
+
         Browser::macro('assertClassMissing', function ($selector, $className) {
             /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);

@@ -3,7 +3,10 @@ import Message from '@/Message';
 
 export default function () {
 
-    let initializedPath = false;
+    let initializedPath = false
+
+    // This is to prevent exponentially increasing the size of our state on page refresh.
+    if (window.history.state) window.history.state.livewire = {};
 
     store.registerHook('component.initialized', component => {
         let state = generateNewState(component, generateInitialFauxResponse(component))

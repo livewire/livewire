@@ -133,6 +133,16 @@ class Test extends TestCase
         });
     }
 
+    public function test_that_we_are_not_leaking_old_components_into_history_state_on_refresh()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history', ['step' => 1], false))
+                ->assertScript('Object.keys(window.history.state.livewire).length', 2)
+                ->refresh()
+                ->assertScript('Object.keys(window.history.state.livewire).length', 2);
+        });
+    }
+
     protected function require74()
     {
         // FIXME: We need a PHP 7.3 and below test
