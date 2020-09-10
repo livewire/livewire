@@ -75,8 +75,10 @@ class SupportBrowserHistory
         if (! $this->getQueryParamsFromComponentProperties($component)->isEmpty()) return true;
 
         if (
+            app('router')->current()
+            && is_string($action = app('router')->current()->getActionName())
             // If the component is registered using `Route::get()`.
-            Str::of(app('router')->current()->getActionName())->contains(get_class($component))
+            && Str::of($action)->contains(get_class($component))
             // AND, the component is tracking route params as its public properties
             && count(array_intersect_key($component->getPublicPropertiesDefinedBySubClass(), app('router')->current()->parametersWithoutNulls()))
         ) {
