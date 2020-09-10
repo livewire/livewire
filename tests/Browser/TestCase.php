@@ -71,6 +71,9 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
             app('livewire')->component(\Tests\Browser\Extensions\Component::class);
             app('livewire')->component(\Tests\Browser\Defer\Component::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\TypeComponent::class);
             app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithMount::class);
             app('livewire')->component(\Tests\Browser\Pagination\Component::class);
 
@@ -79,8 +82,6 @@ class TestCase extends BaseTestCase
                 \Tests\Browser\SyncHistory\ComponentWithMount::class
             )->middleware('web')->name('sync-history-without-mount');
 
-            app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
 
             // This needs to be registered for Dusk to test the route-parameter binding
             // See: \Tests\Browser\SyncHistory\Test.php

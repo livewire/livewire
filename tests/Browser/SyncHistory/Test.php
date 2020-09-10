@@ -145,4 +145,30 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_that_checkbox_blah()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, TypeComponent::class)
+                ->check('@checkbox-1')
+                ->assertChecked('@checkbox-1')
+                ->assertQueryStringHas('type', 'one')
+
+                ->check('@checkbox-2')
+                ->assertChecked('@checkbox-2')
+                ->assertNotChecked('@checkbox-1')
+                ->assertQueryStringHas('type', 'two')
+
+                ->back()
+                ->assertNotChecked('@checkbox-2')
+                ->assertChecked('@checkbox-1')
+                ->assertQueryStringHas('type', 'one')
+
+                ->back()
+                ->assertNotChecked('@checkbox-1')
+                ->assertNotChecked('@checkbox-2')
+                ->assertQueryStringMissing('type')
+            ;
+        });
+    }
 }
