@@ -38,9 +38,13 @@ export default function () {
     window.addEventListener('popstate', event => {
         if (!(event && event.state && event.state.livewire)) return
 
-        Object.entries(event.state.livewire).forEach(([id, response]) => {
+        Object.entries(event.state.livewire).forEach(([id, storageKey]) => {
             let component = store.findComponent(id)
             if (! component) return
+
+            let response = JSON.parse(sessionStorage.getItem(storageKey))
+
+            if (! response) return console.warn(`Livewire: sessionStorage key not found: ${storageKey}`)
 
             let message = new Message(component, [])
             message.storeResponse(response)
@@ -53,7 +57,11 @@ export default function () {
     function generateNewState(component, response, cache = {}) {
         let state = (history.state && history.state.livewire) ? { ...history.state.livewire } : {}
 
-        state[component.id] = response
+        let storageKey = Math.random().toString(36).substring(2)
+
+        sessionStorage.setItem(storageKey, JSON.stringify(response))
+
+        state[component.id] = storageKey
 
         return { livewire: state }
     }
