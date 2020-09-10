@@ -7,10 +7,15 @@ use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    public Step $step;
-    public bool $showHelp = false;
+    public $step;
+    public $showHelp = false;
 
     protected $queryString = ['showHelp'];
+
+    public function mount(Step $step)
+    {
+        $this->step = $step;
+    }
 
     public function setStep($id)
     {

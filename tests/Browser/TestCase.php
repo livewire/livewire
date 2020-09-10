@@ -78,17 +78,15 @@ class TestCase extends BaseTestCase
                 \Tests\Browser\SyncHistory\ComponentWithMount::class
             )->middleware('web')->name('sync-history-without-mount');
 
-            if (PHP_VERSION_ID > 70400) {
-                app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
-                app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
 
-                // This needs to be registered for Dusk to test the route-parameter binding
-                // See: \Tests\Browser\SyncHistory\Test.php
-                Route::get(
-                    '/livewire-dusk/tests/browser/sync-history/{step}',
-                    \Tests\Browser\SyncHistory\Component::class
-                )->middleware('web')->name('sync-history');
-            }
+            // This needs to be registered for Dusk to test the route-parameter binding
+            // See: \Tests\Browser\SyncHistory\Test.php
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history/{step}',
+                \Tests\Browser\SyncHistory\Component::class
+            )->middleware('web')->name('sync-history');
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
