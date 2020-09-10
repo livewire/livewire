@@ -146,28 +146,37 @@ class Test extends TestCase
         });
     }
 
-    public function test_that_checkbox_blah()
+    public function test_that_changing_a_radio_multiple_times_and_hitting_back_multiple_times_works()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, TypeComponent::class)
-                ->check('@checkbox-1')
-                ->assertChecked('@checkbox-1')
-                ->assertQueryStringHas('type', 'one')
+            Livewire::visit($browser, SingleRadioComponent::class)
+                ->waitForLivewire()->radio('@foo.bar', 'bar')
+                ->assertRadioSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'bar')
 
-                ->check('@checkbox-2')
-                ->assertChecked('@checkbox-2')
-                ->assertNotChecked('@checkbox-1')
-                ->assertQueryStringHas('type', 'two')
+                ->waitForLivewire()->radio('@foo.baz', 'baz')
+                ->assertRadioSelected('@foo.baz', 'baz')
+                ->assertRadioNotSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'baz')
+
+                ->waitForLivewire()->radio('@foo.bar', 'bar')
+                ->assertRadioSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'bar')
 
                 ->back()
-                ->assertNotChecked('@checkbox-2')
-                ->assertChecked('@checkbox-1')
-                ->assertQueryStringHas('type', 'one')
+                ->assertRadioSelected('@foo.baz', 'baz')
+                ->assertRadioNotSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'baz')
 
                 ->back()
-                ->assertNotChecked('@checkbox-1')
-                ->assertNotChecked('@checkbox-2')
-                ->assertQueryStringMissing('type')
+                ->assertRadioSelected('@foo.bar', 'bar')
+                ->assertRadioNotSelected('@foo.baz', 'baz')
+                ->assertQueryStringHas('foo', 'bar')
+
+                ->back()
+                ->assertRadioNotSelected('@foo.baz', 'baz')
+                ->assertRadioNotSelected('@foo.bar', 'bar')
+                ->assertQueryStringMissing('foo')
             ;
         });
     }
