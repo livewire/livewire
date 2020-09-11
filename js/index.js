@@ -93,8 +93,8 @@ class Livewire {
         this.components.initialRenderIsFinished = true
     }
 
-    rescan() {
-        DOM.rootComponentElementsWithNoParents().forEach(el => {
+    rescan(node = null) {
+        DOM.rootComponentElementsWithNoParents(node).forEach(el => {
             const componentId = wireDirectives(el).get('id').value
 
             if (this.components.hasComponent(componentId)) return
