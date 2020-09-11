@@ -75,7 +75,8 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
             app('livewire')->component(\Tests\Browser\SyncHistory\SingleRadioComponent::class);
             app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithMount::class);
-            app('livewire')->component(\Tests\Browser\Pagination\Component::class);
+            app('livewire')->component(\Tests\Browser\Pagination\Tailwind::class);
+            app('livewire')->component(\Tests\Browser\Pagination\Bootstrap::class);
 
             Route::get(
                 '/livewire-dusk/tests/browser/sync-history-without-mount/{id}',
