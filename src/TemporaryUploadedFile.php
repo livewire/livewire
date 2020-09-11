@@ -69,7 +69,7 @@ class TemporaryUploadedFile extends UploadedFile
         $supportedPreviewTypes = [
             'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
             'mp4', 'mov', 'avi', 'wmv',
-            'mp3', 'wav', 'm4a', 'wma',
+            'mp3', 'mpga', 'wav', 'm4a', 'wma',
         ];
 
         if (! in_array($this->guessExtension(), $supportedPreviewTypes)) {

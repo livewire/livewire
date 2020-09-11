@@ -2,15 +2,15 @@
 
 namespace Tests\Browser\SyncHistory;
 
+use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use Tests\Browser\TestCase;
+use Tests\Browser\Defer\Component as DeferComponent;
 
 class Test extends TestCase
 {
     public function test_route_bound_properties_are_synced_with_browser_history()
     {
-        $this->require74();
-
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active');
@@ -26,8 +26,6 @@ class Test extends TestCase
 
     public function test_that_query_bound_properties_are_synced_with_browser_history()
     {
-        $this->require74();
-
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Help is currently disabled')
@@ -52,8 +50,6 @@ class Test extends TestCase
 
     public function test_that_route_and_query_bound_properties_can_both_be_synced_with_browser_history()
     {
-        $this->require74();
-
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active')
@@ -88,8 +84,6 @@ class Test extends TestCase
 
     public function test_that_query_updates_from_child_components_can_coexist()
     {
-        $this->require74();
-
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active')
@@ -133,13 +127,57 @@ class Test extends TestCase
         });
     }
 
-    protected function require74()
+    public function test_that_we_are_not_leaking_old_components_into_history_state_on_refresh()
     {
-        // FIXME: We need a PHP 7.3 and below test
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history', ['step' => 1], false))
+                ->assertScript('Object.keys(window.history.state.livewire).length', 2)
+                ->refresh()
+                ->assertScript('Object.keys(window.history.state.livewire).length', 2);
+        });
+    }
 
-        if (PHP_VERSION_ID < 70400) {
-            $this->markTestSkipped('Route-bound parameters are only supported in PHP 7.4 and above.');
-            return;
-        }
+    public function test_that_we_are_not_setting_history_state_unless_there_are_route_bound_params_or_query_string_properties()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, DeferComponent::class)
+                ->assertScript('history.state', null)
+            ;
+        });
+    }
+
+    public function test_that_changing_a_radio_multiple_times_and_hitting_back_multiple_times_works()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, SingleRadioComponent::class)
+                ->waitForLivewire()->radio('@foo.bar', 'bar')
+                ->assertRadioSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'bar')
+
+                ->waitForLivewire()->radio('@foo.baz', 'baz')
+                ->assertRadioSelected('@foo.baz', 'baz')
+                ->assertRadioNotSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'baz')
+
+                ->waitForLivewire()->radio('@foo.bar', 'bar')
+                ->assertRadioSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'bar')
+
+                ->back()
+                ->assertRadioSelected('@foo.baz', 'baz')
+                ->assertRadioNotSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'baz')
+
+                ->back()
+                ->assertRadioSelected('@foo.bar', 'bar')
+                ->assertRadioNotSelected('@foo.baz', 'baz')
+                ->assertQueryStringHas('foo', 'bar')
+
+                ->back()
+                ->assertRadioNotSelected('@foo.baz', 'baz')
+                ->assertRadioNotSelected('@foo.bar', 'bar')
+                ->assertQueryStringMissing('foo')
+            ;
+        });
     }
 }
