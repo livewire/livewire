@@ -51,8 +51,16 @@ class SupportBrowserHistory
 
             if (! $referer = request()->header('Referer')) return;
 
+            $assetUrl = config("livewire.asset_url");
+            // Get the path for sure;
+            $path = parse_url($referer,PHP_URL_PATH);
+            // Remove the asset_url segment
+            if ($assetUrl) {
+                $path = Str::replaceFirst($assetUrl,"",$path);
+            }
+
             $route = app('router')->getRoutes()->match(
-                Request::create($referer, 'GET')
+                Request::create($path,"GET")
             );
 
             $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
