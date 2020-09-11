@@ -71,6 +71,9 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
             app('livewire')->component(\Tests\Browser\Extensions\Component::class);
             app('livewire')->component(\Tests\Browser\Defer\Component::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\SingleRadioComponent::class);
             app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithMount::class);
             app('livewire')->component(\Tests\Browser\Pagination\Component::class);
 
@@ -79,8 +82,6 @@ class TestCase extends BaseTestCase
                 \Tests\Browser\SyncHistory\ComponentWithMount::class
             )->middleware('web')->name('sync-history-without-mount');
 
-            app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
 
             // This needs to be registered for Dusk to test the route-parameter binding
             // See: \Tests\Browser\SyncHistory\Test.php
@@ -88,7 +89,7 @@ class TestCase extends BaseTestCase
                 '/livewire-dusk/tests/browser/sync-history/{step}',
                 \Tests\Browser\SyncHistory\Component::class
             )->middleware('web')->name('sync-history');
-            
+
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 

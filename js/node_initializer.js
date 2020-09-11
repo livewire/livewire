@@ -134,6 +134,11 @@ export default {
                             return false
                     }
 
+		            // Handle spacebar
+                    if (e.keyCode === 32 || (e.key === ' ' || e.key === 'Spacebar')) {
+                        return directive.modifiers.includes('space')
+                    }
+
                     // Strip 'debounce' modifier and time modifiers from modifiers list
                     let modifiers = directive.modifiers.filter(modifier => {
                         return (
