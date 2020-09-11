@@ -30,7 +30,7 @@ class SupportBrowserHistory
 
                 $decoded = is_array($fromQueryString)
                     ? json_decode(json_encode($fromQueryString), true)
-                    : json_decode($fromQueryString);
+                    : json_decode($fromQueryString, true);
 
                 if ($fromQueryString !== null) {
                     $component->$property = $decoded === null ? $fromQueryString : $decoded;
