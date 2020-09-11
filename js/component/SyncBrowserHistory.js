@@ -59,6 +59,10 @@ export default function () {
 
         let storageKey = Math.random().toString(36).substring(2)
 
+        // Add ALL properties as "dirty" so that when the back button is pressed,
+        // they ALL are forced to refresh on the page (even if the HTML didn't change).
+        response.effects.dirty = Object.keys(response.serverMemo.data)
+
         sessionStorage.setItem(storageKey, JSON.stringify(response))
 
         state[component.id] = storageKey
@@ -67,10 +71,9 @@ export default function () {
     }
 
     function generateInitialFauxResponse(component) {
-        let { fingerprint, serverMemo, effects, el } = component
+        let { serverMemo, effects, el } = component
 
         return {
-            fingerprint,
             serverMemo,
             effects: { ...effects, html: el.outerHTML }
         }

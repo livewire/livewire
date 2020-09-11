@@ -145,4 +145,39 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_that_changing_a_radio_multiple_times_and_hitting_back_multiple_times_works()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, SingleRadioComponent::class)
+                ->waitForLivewire()->radio('@foo.bar', 'bar')
+                ->assertRadioSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'bar')
+
+                ->waitForLivewire()->radio('@foo.baz', 'baz')
+                ->assertRadioSelected('@foo.baz', 'baz')
+                ->assertRadioNotSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'baz')
+
+                ->waitForLivewire()->radio('@foo.bar', 'bar')
+                ->assertRadioSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'bar')
+
+                ->back()
+                ->assertRadioSelected('@foo.baz', 'baz')
+                ->assertRadioNotSelected('@foo.bar', 'bar')
+                ->assertQueryStringHas('foo', 'baz')
+
+                ->back()
+                ->assertRadioSelected('@foo.bar', 'bar')
+                ->assertRadioNotSelected('@foo.baz', 'baz')
+                ->assertQueryStringHas('foo', 'bar')
+
+                ->back()
+                ->assertRadioNotSelected('@foo.baz', 'baz')
+                ->assertRadioNotSelected('@foo.bar', 'bar')
+                ->assertQueryStringMissing('foo')
+            ;
+        });
+    }
 }
