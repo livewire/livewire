@@ -84,7 +84,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function readStream()
     {
-        $this->storage->readStream($this->path);
+        return $this->storage->readStream($this->path);
     }
 
     public function exists()
