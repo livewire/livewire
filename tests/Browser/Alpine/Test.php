@@ -62,11 +62,25 @@ class Test extends TestCase
                 ->assertSeeIn('@lob.output', '6')
                 ->waitForLivewire(function ($b) {
                     $b->click('@lob.increment');
-                    $b->assertSeeIn('@lob.output', '6');
                 })
                 ->assertSeeIn('@lob.output', '7')
                 ->waitForLivewire()->click('@lob.decrement')
                 ->assertSeeIn('@lob.output', '6')
+
+                /**
+                 * $wire.entangle nested property
+                 */
+                ->assertSeeIn('@law.output.alpine', '0')
+                ->assertSeeIn('@law.output.wire', '0')
+                ->assertSeeIn('@law.output.blade', '0')
+                ->waitForLivewire()->click('@law.increment.livewire')
+                ->assertSeeIn('@law.output.alpine', '1')
+                ->assertSeeIn('@law.output.wire', '1')
+                ->assertSeeIn('@law.output.blade', '1')
+                ->waitForLivewire()->click('@law.increment.alpine')
+                ->assertSeeIn('@law.output.alpine', '2')
+                ->assertSeeIn('@law.output.wire', '2')
+                ->assertSeeIn('@law.output.blade', '2')
 
                 /**
                  * Make sure property change from Livewire doesn't trigger an additional
