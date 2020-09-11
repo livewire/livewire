@@ -69,7 +69,7 @@ class TemporaryUploadedFile extends UploadedFile
         $supportedPreviewTypes = [
             'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
             'mp4', 'mov', 'avi', 'wmv',
-            'mpga', 'wav', 'm4a', 'wma',
+            'mp3', 'mpga', 'wav', 'm4a', 'wma',
         ];
 
         if (! in_array($this->guessExtension(), $supportedPreviewTypes)) {
@@ -140,7 +140,7 @@ class TemporaryUploadedFile extends UploadedFile
     {
         if (is_string($subject)) {
             return Str::startsWith($subject, ['livewire-file:', 'livewire-files:']);
-        } 
+        }
 
         if (is_array($subject)) {
             return collect($subject)->contains(function ($value) {
@@ -166,7 +166,7 @@ class TemporaryUploadedFile extends UploadedFile
 
             return $subject;
         }
-        
+
         if (is_array($subject)) {
             foreach ($subject as $key => $value) {
                 $subject[$key] =  static::unserializeFromLivewireRequest($value);
