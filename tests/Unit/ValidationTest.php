@@ -131,6 +131,23 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function can_validate_only_a_specific_field_with_custom_message_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', '')
+            ->call('runValidationOnlyWithMessageProperty', 'foo')
+            ->assertDontSee('Foo Message') // Foo is set, no error
+            ->assertDontSee('Bar Message') // Bar is not being validated, don't show
+            ->set('foo', '')
+            ->call('runValidationOnlyWithMessageProperty', 'bar')
+            ->assertDontSee('Foo Message') // Foo is not being validated, don't show
+            ->assertSee('Bar Message'); // Bar is not set, show message
+    }
+
+    /** @test */
     public function can_validate_only_a_specific_field_with_deeply_nested_array()
     {
         $component = Livewire::test(ForValidation::class);
@@ -248,6 +265,19 @@ class ForValidation extends Component
 
     public function runValidationOnly($field)
     {
+        $this->validateOnly($field, [
+            'foo' => 'required',
+            'bar' => 'required',
+        ]);
+    }
+
+    public function runValidationOnlyWithMessageProperty($field)
+    {
+        $this->messages = [
+            'foo.required' => 'Foo Message',
+            'bar.required' => 'Bar Message',
+        ];
+
         $this->validateOnly($field, [
             'foo' => 'required',
             'bar' => 'required',
