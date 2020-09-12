@@ -146,8 +146,7 @@ class SupportBrowserHistory
             })
             ->map(function ($property) {
                 return is_bool($property) ? json_encode($property) : $property;
-            })
-            ->sortKeys();
+            });
 
         return $this->mergedQueryParamsFromDehydratedComponents;
     }

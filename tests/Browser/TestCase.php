@@ -53,6 +53,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Events\NestedComponentB::class);
             app('livewire')->component(\Tests\Browser\Prefetch\Component::class);
             app('livewire')->component(\Tests\Browser\SupportDateTimes\Component::class);
+            app('livewire')->component(\Tests\Browser\DataBinding\DirtyDetection\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputText\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputTextarea\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputCheckboxRadio\Component::class);

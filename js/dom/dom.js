@@ -139,7 +139,7 @@ ${el.outerHTML}
     setInputValueFromModel(el, component) {
         const modelString = wireDirectives(el).get('model').value
         const modelValue = get(component.data, modelString)
-        if (modelValue === undefined) return
+
         // Don't manually set file input's values.
         if (
             el.tagName.toLowerCase() === 'input' &&
@@ -174,6 +174,8 @@ ${el.outerHTML}
         } else if (el.tagName === 'SELECT') {
             this.updateSelect(el, value)
         } else {
+            value = value === undefined ? '' : value
+
             el.value = value
         }
     },
