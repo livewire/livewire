@@ -23,8 +23,8 @@ export default {
         // have a root ancestor, then select all roots that DONT, then diff the two.
 
         // Convert NodeLists to Arrays so we can use ".includes()". Ew.
-        const allEls = Array.from(node.querySelectorAll(`[wire\\:id]`))
-        const onlyChildEls = Array.from(node.querySelectorAll(`[wire\\:id] [wire\\:id]`))
+        const allEls = Array.from(node.querySelectorAll(`[wire\\:initial-data]`))
+        const onlyChildEls = Array.from(node.querySelectorAll(`[wire\\:initial-data] [wire\\:initial-data]`))
 
         return allEls.filter(el => !onlyChildEls.includes(el))
     },
