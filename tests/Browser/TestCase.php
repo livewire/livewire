@@ -42,8 +42,8 @@ class TestCase extends BaseTestCase
 
         $this->tweakApplication(function () {
             app('livewire')->component(\Tests\Browser\Loading\Component::class);
-            app('livewire')->component(\Tests\Browser\PushState\Component::class);
-            app('livewire')->component(\Tests\Browser\PushState\NestedComponent::class);
+            app('livewire')->component(\Tests\Browser\QueryString\Component::class);
+            app('livewire')->component(\Tests\Browser\QueryString\NestedComponent::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputSelect\Component::class);
             app('livewire')->component(\Tests\Browser\FileDownloads\Component::class);
             app('livewire')->component(\Tests\Browser\Redirects\Component::class);
