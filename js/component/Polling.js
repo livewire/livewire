@@ -49,9 +49,12 @@ function fireActionOnInterval(node, component) {
         const method = directive.method || '$refresh'
 
         // Don't poll when the tab is in the background.
-        // The "Math.random" business effectivlly prevents 95% of requests
-        // from executing. We still want "some" requests to get through.
-        if (store.livewireIsInBackground && Math.random() < .95) return
+        // (unless the "wire:poll.keep-alive" modifier is attached)
+        if (store.livewireIsInBackground && ! directive.modifiers.includes('keep-alive')) {
+            // This "Math.random" business effectivlly prevents 95% of requests
+            // from executing. We still want "some" requests to get through.
+            if (Math.random() < .95) return
+        }
 
         // Don't poll if livewire is offline as well.
         if (store.livewireIsOffline) return
