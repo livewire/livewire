@@ -1,4 +1,5 @@
 import Message from '@/Message'
+import dataGet from 'get-value'
 import PrefetchMessage from '@/PrefetchMessage'
 import { dispatch, debounce, wireDirectives, walk } from '@/util'
 import morphdom from '@/dom/morphdom'
@@ -89,9 +90,21 @@ export default class Component {
 
                     // Because Livewire (for payload reduction purposes) only returns the data that has changed,
                     // we can use all the data keys from the response as watcher triggers.
-                    let watchers = this.watchers[dataKey] || []
+                    Object.entries(this.watchers).forEach(([key, watchers]) => {
+                        let originalSplitKey = key.split('.')
+                        let basePropertyName = originalSplitKey.shift()
+                        let restOfPropertyName = originalSplitKey.join('.')
 
-                    watchers.forEach(watcher => watcher(dataValue))
+                        if (basePropertyName == dataKey) {
+                            // If the key deals with nested data, use the "get" function to get
+                            // the most nested data. Otherwise, return the entire data chunk.
+                            let potentiallyNestedValue = !! restOfPropertyName
+                                ? dataGet(dataValue, restOfPropertyName)
+                                : dataValue
+
+                            watchers.forEach(watcher => watcher(potentiallyNestedValue))
+                        }
+                    })
                 })
             } else {
                 // Every other key, we can just overwrite.

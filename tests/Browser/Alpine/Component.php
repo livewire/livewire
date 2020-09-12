@@ -9,6 +9,15 @@ class Component extends BaseComponent
 {
     public $count = 0;
 
+    public $nested = [
+        'count' => 0,
+    ];
+
+    public function incrementNestedCount()
+    {
+        $this->nested['count'] = $this->nested['count'] + 1;
+    }
+
     public function setCount($value)
     {
         $this->count = $value;

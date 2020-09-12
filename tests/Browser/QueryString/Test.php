@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Browser\PushState;
+namespace Tests\Browser\QueryString;
 
 use Livewire\Livewire;
 use Laravel\Dusk\Browser;
@@ -8,13 +8,20 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public function test_core_pushstate_logic()
+    public function test_core_query_string_pushstate_logic()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class, '?foo=baz')
+            Livewire::visit($browser, Component::class, '?foo=baz&eoo=lob')
                 /*
                  * Check that the intial property value is set from the query string.
                  */
+                ->assertSeeIn('@output', 'baz')
+                ->assertInputValue('@input', 'baz')
+
+                /*
+                 * Check that Livewire doesn't mess with query string order.
+                 */
+                ->assertScript('return !! window.location.search.match(/foo=baz&eoo=lob/)')
                 ->assertSeeIn('@output', 'baz')
                 ->assertInputValue('@input', 'baz')
 

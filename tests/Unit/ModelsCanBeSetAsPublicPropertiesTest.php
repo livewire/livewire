@@ -34,6 +34,18 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
     }
 
     /** @test */
+    public function an_eloquent_model_can_be_set_then_removed_as_a_public_property()
+    {
+        $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
+
+        Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model])
+            ->assertSee('foo')
+            ->call('deleteAndRemoveModel')
+            ->assertDontSee('foo')
+            ->call('$refresh');
+    }
+
+    /** @test */
     public function an_eloquent_model_cannot_be_hijacked_by_binding_to_id_data()
     {
         $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
@@ -110,6 +122,13 @@ class ComponentWithModelPublicProperty extends Component
     }
 
     public function refresh() {}
+
+    public function deleteAndRemoveModel()
+    {
+        $this->model->delete();
+
+        $this->model = null;
+    }
 
     public function render()
     {

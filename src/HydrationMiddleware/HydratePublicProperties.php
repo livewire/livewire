@@ -68,6 +68,7 @@ class HydratePublicProperties implements HydrationMiddleware
         $publicData = $instance->getPublicPropertiesDefinedBySubClass();
 
         data_set($response, 'memo.data', []);
+        data_set($response, 'memo.dataMeta', []);
 
         array_walk($publicData, function ($value, $key) use ($instance, $response) {
             if (
