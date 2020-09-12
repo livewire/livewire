@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class SupportBrowserHistory
 {
@@ -51,17 +52,7 @@ class SupportBrowserHistory
 
             if (! $referer = request()->header('Referer')) return;
 
-            $assetUrl = config("livewire.asset_url");
-            // Get the path for sure;
-            $path = parse_url($referer,PHP_URL_PATH);
-            // Remove the asset_url segment
-            if ($assetUrl) {
-                $path = Str::replaceFirst($assetUrl,"",$path);
-            }
-
-            $route = app('router')->getRoutes()->match(
-                Request::create($path,"GET")
-            );
+            $route = $this->getRouteFromReferer($referer);
 
             $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
@@ -75,6 +66,19 @@ class SupportBrowserHistory
                 $response->effects['path'] = $path;
             }
         });
+    }
+
+    protected function getRouteFromReferer($referer)
+    {
+        try {
+            // See if we can get the route from the referer.
+            return app('router')->getRoutes()->match(
+                Request::create($referer, 'GET')
+            );
+        } catch (NotFoundHttpException $e) {
+            // If not, use the current route.
+            return app('router')->current();
+        }
     }
 
     protected function shouldSendPath($component)
@@ -142,7 +146,8 @@ class SupportBrowserHistory
             })
             ->map(function ($property) {
                 return is_bool($property) ? json_encode($property) : $property;
-            });
+            })
+            ->sortKeys();
 
         return $this->mergedQueryParamsFromDehydratedComponents;
     }
