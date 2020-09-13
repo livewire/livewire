@@ -53,6 +53,15 @@ class Test extends TestCase
                 ->assertDontSee('Post #4')
                 ->assertSee('Post #7')
                 ->assertQueryStringHas('page', '3')
+
+                /**
+                 * Test that hitting the back button takes you back to the previous page after a refresh.
+                 */
+                ->refresh()
+                ->back()
+                ->assertQueryStringHas('page', '2')
+                ->assertDontSee('Post #7')
+                ->assertSee('Post #4')
             ;
         });
     }

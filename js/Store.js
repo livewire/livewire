@@ -120,6 +120,29 @@ const store = {
         this.hooks.call(name, ...params)
     },
 
+    changeComponentId(component, newId) {
+        let oldId = component.id
+
+        component.id = newId
+        component.fingerprint.id = newId
+
+        this.componentsById[newId] = component
+
+        delete this.componentsById[oldId]
+
+        // Now go through any parents of this component and change
+        // the component's child id references.
+        this.components().forEach(component => {
+            let children = component.serverMemo.children || {}
+
+            Object.entries(children).forEach(([key, { id, tagName }]) => {
+                if (id === oldId) {
+                    children[key].id = newId
+                }
+            })
+        })
+    },
+
     removeComponent(component) {
         // Remove event listeners attached to the DOM.
         component.tearDown()
@@ -130,6 +153,42 @@ const store = {
     onError(callback) {
         this.onErrorCallback = callback
     },
+
+    getClosestParentId(childId, subsetOfParentIds) {
+        let distancesByParentId = {}
+
+        subsetOfParentIds.forEach(parentId => {
+            let distance = this.getDistanceToChild(parentId, childId)
+
+            if (distance) distancesByParentId[parentId] = distance
+        })
+
+        let smallestDistance =  Math.min(...Object.values(distancesByParentId))
+
+        let closestParentId
+
+        Object.entries(distancesByParentId).forEach(([parentId, distance]) => {
+            if (distance === smallestDistance) closestParentId = parentId
+        })
+
+        return closestParentId
+    },
+
+    getDistanceToChild(parentId, childId, distanceMemo = 1) {
+        let parentComponent = this.findComponent(parentId)
+
+        if (! parentComponent) return
+
+        let childIds = parentComponent.childIds
+
+        if (childIds.includes(childId)) return distanceMemo
+
+        for (let i = 0; i < childIds.length; i++) {
+            let distance = this.getDistanceToChild(childIds[i], childId, distanceMemo + 1)
+
+            if (distance) return distance
+        }
+    }
 }
 
 export default store
