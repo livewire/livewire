@@ -17,6 +17,7 @@ class Component extends BaseComponent
         'foo',
         'bar' => ['except' => 'except-value'],
         'bob',
+        'showNestedComponent',
     ];
 
     public function modifyBob()

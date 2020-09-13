@@ -81,6 +81,25 @@ class Test extends TestCase
         });
     }
 
+    public function test_back_button_after_refresh_works_with_nested_components()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, Component::class)
+                ->waitForLivewire()->click('@show-nested')
+                ->waitForLivewire()->type('@baz-input', 'foo')
+                ->assertSeeIn('@baz-output', 'foo')
+                ->refresh()
+                ->back()
+                ->forward()
+                ->assertSeeIn('@baz-output', 'foo')
+
+                // Interact with the page again to make sure everything still works.
+                ->waitForLivewire()->type('@baz-input', 'bar')
+                ->assertSeeIn('@baz-output', 'bar')
+            ;
+        });
+    }
+
     public function test_excepts_results_in_no_query_string()
     {
         $this->browse(function (Browser $browser) {
