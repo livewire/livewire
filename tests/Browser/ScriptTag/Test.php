@@ -13,13 +13,10 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
-                ->tap(function (Browser $browser) {
-                    $this->assertTrue($browser->driver->executeScript('return window.scriptTagWasCalled === undefined'));
-                })
+                ->assertScript('window.scriptTagWasCalled === undefined')
                 ->waitForLivewire()->click('@button')
-                ->tap(function (Browser $browser) {
-                    $this->assertTrue($browser->driver->executeScript('return window.scriptTagWasCalled === true'));
-                });
+                ->assertScript('window.scriptTagWasCalled === true')
+            ;
         });
     }
 }
