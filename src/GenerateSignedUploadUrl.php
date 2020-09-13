@@ -37,7 +37,7 @@ class GenerateSignedUploadUrl
 
         return [
             'path' => $fileHashName,
-            'url' => (string)$signedRequest->getUri(),
+            'url' => (string) $signedRequest->getUri(),
             'headers' => $this->headers($signedRequest, $fileType),
         ];
     }
