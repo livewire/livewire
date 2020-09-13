@@ -33,10 +33,8 @@ class Component extends BaseComponent
         return $value;
     }
 
-    public function updatingCount($value)
+    public function updatingCount()
     {
-        if ($value === 100) usleep(10 * 1000);
-
         if ($this->count === 100) throw new \Exception('"count" shouldnt already be "100". This means @entangle made an extra request after Livewire set the data.');
     }
 
