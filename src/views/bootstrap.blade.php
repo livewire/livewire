@@ -2,7 +2,7 @@
     @if ($paginator->hasPages())
         <nav>
             <ul class="pagination">
-                <span>
+               
                     {{-- Previous Page Link --}}
                     @if ($paginator->onFirstPage())
                         <li class="page-item disabled" aria-disabled="true" aria-label="@lang('pagination.previous')">
@@ -13,9 +13,9 @@
                             <button type="button" dusk="previousPage" class="page-link" wire:click="previousPage" rel="prev" aria-label="@lang('pagination.previous')">&lsaquo;</button>
                         </li>
                     @endif
-                </span>
+               
 
-                <span>
+               
                     {{-- Pagination Elements --}}
                     @foreach ($elements as $element)
                         {{-- "Three Dots" Separator --}}
@@ -34,9 +34,9 @@
                             @endforeach
                         @endif
                     @endforeach
-                </span>
+               
 
-                <span>
+               
                     {{-- Next Page Link --}}
                     @if ($paginator->hasMorePages())
                         <li class="page-item">
@@ -47,7 +47,7 @@
                             <span class="page-link" aria-hidden="true">&rsaquo;</span>
                         </li>
                     @endif
-                </span>
+                
             </ul>
         </nav>
     @endif
