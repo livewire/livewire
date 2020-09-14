@@ -118,4 +118,17 @@ class Test extends TestCase
                 ->assertQueryStringHas('page', 2);
         });
     }
+
+    public function test_that_input_values_are_set_after_back_button()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, DirtyDataComponent::class)
+                ->type('@input', 'foo')
+                ->waitForLivewire()->click('@nextPage')
+                ->assertSee('The Next Page')
+                ->back()
+                ->assertInputValue('@input', 'foo')
+            ;
+        });
+    }
 }

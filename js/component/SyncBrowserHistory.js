@@ -35,6 +35,8 @@ export default function () {
 
         let effects = response.effects || {}
 
+        // Add replaceState if no "path"
+
         if ('path' in effects && effects.path !== window.location.href) {
             let state = generateNewState(component, response)
 
@@ -151,6 +153,8 @@ class LivewireState
         // Add ALL properties as "dirty" so that when the back button is pressed,
         // they ALL are forced to refresh on the page (even if the HTML didn't change).
         response.effects.dirty = Object.keys(response.serverMemo.data)
+
+        response.effects.html = component.lastFreshHtml
 
         let storageKey = this.storeInSession(response)
 
