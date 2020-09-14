@@ -375,6 +375,10 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function can_preview_a_temporary_file_with_a_temporary_signed_url()
     {
+        $default_config = require __DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'livewire.php';
+
+        config()->set('livewire.supported_preview_types', $default_config['supported_preview_types']);
+
         Storage::fake('avatars');
 
         $file = UploadedFile::fake()->image('avatar.jpg');
@@ -393,6 +397,10 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function cant_preview_a_non_image_temporary_file_with_a_temporary_signed_url()
     {
+        $default_config = require __DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'livewire.php';
+
+        config()->set('livewire.supported_preview_types', $default_config['supported_preview_types']);
+        
         $this->expectException(RuntimeException::class);
 
         Storage::fake('avatars');
@@ -409,6 +417,10 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function public_temporary_file_url_must_have_valid_signature()
     {
+        $default_config = require __DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'livewire.php';
+
+        config()->set('livewire.supported_preview_types', $default_config['supported_preview_types']);
+
         $photo = Livewire::test(FileUploadComponent::class)
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
             ->viewData('photo');
@@ -434,6 +446,9 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function can_preview_a_temporary_files_with_a_temporary_signed_url_from_s3()
     {
+        $default_config = require __DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'livewire.php';
+
+        config()->set('livewire.supported_preview_types', $default_config['supported_preview_types']);
         config()->set('livewire.temporary_file_upload.disk', 's3');
 
         Storage::fake('avatars');

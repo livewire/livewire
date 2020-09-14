@@ -56,6 +56,23 @@ return [
     */
 
     'middleware_group'  => 'web',
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Supported Preview Types
+    |--------------------------------------------------------------------------
+    |
+    | Only allow the the following filetypes when generating 
+    | pre-signed temporary urls for files on local storage.
+    |
+    */
+
+    'supported_preview_types' => [
+        'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
+        'mp4', 'mov', 'avi', 'wmv',
+        'mp3', 'mpga', 'wav', 'm4a', 'wma',
+    ],
+
 
     /*
     |--------------------------------------------------------------------------
