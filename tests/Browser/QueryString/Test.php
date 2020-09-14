@@ -118,4 +118,40 @@ class Test extends TestCase
                 ->assertQueryStringHas('page', 2);
         });
     }
+
+    public function test_that_huge_components_dont_exceed_history_state_or_session_state_storage_limits()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, HugeComponent::class)
+                ->assertSeeIn('@count', '0')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->assertSeeIn('@count', '6')
+                ->back()
+                ->back()
+                ->assertSeeIn('@count', '4')
+            ;
+        });
+    }
+
+    public function test_that_responses_with_less_than_640k_characters_are_stored_in_history_state_and_others_are_stored_in_session()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, HugeComponent::class, '?count=-2')
+            ->tinker()
+                // ->assertSeeIn('@count', '-2')
+                // ->assertScript('sessionStorage.length', 0)
+                // ->waitForLivewire()->click('@increment')
+                // ->assertSeeIn('@count', '-1')
+                // ->assertScript('sessionStorage.length', 0)
+                // ->waitForLivewire()->click('@increment')
+                // ->assertSeeIn('@count', '0')
+                // ->assertScript('sessionStorage.length', 1)
+            ;
+        });
+    }
 }

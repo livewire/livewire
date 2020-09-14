@@ -174,15 +174,41 @@ class LivewireState
     }
 
     storeInSession(value) {
-        let key = Math.random().toString(36).substring(2)
+        let key = 'livewire:'+(new Date).getTime()
 
-        sessionStorage.setItem(key, JSON.stringify(Object.entries(value)))
+        let stringifiedValue = JSON.stringify(Object.entries(value))
+
+        this.tryToStoreInSession(key, stringifiedValue)
 
         return key
     }
 
+    tryToStoreInSession(key, value) {
+        try {
+            sessionStorage.setItem(key, value)
+        } catch (error) {
+            // 22 is Chrome, 1-14 is other browsers.
+            if (! [22, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(error.code)) return
+
+            let oldestTimestamp = Object.keys(sessionStorage)
+                .map(key => Number(key.replace('livewire:', '')))
+                .sort()
+                .shift()
+
+            if (! oldestTimestamp) return
+
+            sessionStorage.removeItem('livewire:'+oldestTimestamp)
+
+            this.tryToStoreInSession(key, value)
+        }
+    }
+
     getFromSession(key) {
-        return Object.fromEntries(JSON.parse(sessionStorage.getItem(key)))
+        let item = sessionStorage.getItem(key)
+
+        if (! item) return
+
+        return Object.fromEntries(JSON.parse(item))
     }
 
     // We can't just store component reponses by their id because
