@@ -163,9 +163,11 @@ trait InteractsWithProperties
         }
 
         foreach ($properties as $property) {
-            $freshInstance = new static($this->id);
+            if ($this->hasProperty($property) {           
+                $freshInstance = new static($this->id);
 
-            $this->{$property} = $freshInstance->{$property};
+                $this->{$property} = $freshInstance->{$property};
+            }
         }
     }
 
