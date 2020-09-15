@@ -14,7 +14,10 @@ class PersistErrorBag implements HydrationMiddleware
     public static function dehydrate($instance, $response)
     {
         if ($errors = $instance->getErrorBag()->toArray()) {
-            $response->errorBag = $errors;
+            $response->errorBag = collect($errors)
+                ->filter(function ($value, $key) use ($instance) {
+                    return $instance->hasProperty($key);
+                })->toArray();
         }
     }
 }
