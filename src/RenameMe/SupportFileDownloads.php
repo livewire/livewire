@@ -20,7 +20,13 @@ class SupportFileDownloads
 
             $response = $returned;
 
-            $name = Str::after($response->headers->get('Content-Disposition'), 'filename=');
+            preg_match(
+                '/^.*?filename=(?:(?:(["\'])([^"\']+)\1)|([^"\';]+))/m',
+                $response->headers->get('Content-Disposition'),
+                $matches
+            );
+
+            $name = (count($matches) == 3) ? $matches[2] : $matches[3];
 
             $binary = $this->captureOutput(function () use ($response) {
                 $response->sendContent();
