@@ -118,4 +118,39 @@ class Test extends TestCase
                 ->assertQueryStringHas('page', 2);
         });
     }
+
+    public function test_that_input_values_are_set_after_back_button()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, DirtyDataComponent::class)
+                ->waitForLivewire()->type('@input', 'foo')
+                ->waitForLivewire()->click('@nextPage')
+                ->assertSee('The Next Page')
+                ->back()
+                ->assertInputValue('@input', 'foo')
+                ->forward()
+                ->back()
+                ->assertInputValue('@input', 'foo')
+            ;
+        });
+    }
+
+    public function test_that_huge_components_dont_exceed_history_state_or_session_state_storage_limits()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, HugeComponent::class)
+                ->assertSeeIn('@count', '0')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->waitForLivewire()->click('@increment')
+                ->assertSeeIn('@count', '6')
+                ->back()
+                ->back()
+                ->assertSeeIn('@count', '4')
+            ;
+        });
+    }
 }

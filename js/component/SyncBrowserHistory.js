@@ -5,8 +5,9 @@ export default function () {
 
     let initializedPath = false
 
-    // This is to prevent exponentially increasing the size of our state on page refresh.
-    if (window.history.state) window.history.state.livewire = (new LivewireState).toStateArray();
+    let componentIdsThatAreWritingToHistoryState = new Set
+
+    LivewireStateManager.clearState()
 
     store.registerHook('component.initialized', component => {
         if (! component.effects.path) return
@@ -15,13 +16,19 @@ export default function () {
         // loaded before we store anything in the history state (because the position
         // of a component on a page matters for generating its state signature).
         setTimeout(() => {
-            let state = generateNewState(component, generateInitialFauxResponse(component))
+            let url = onlyChangeThePathAndQueryString(initializedPath ? undefined : component.effects.path)
 
-            let url = initializedPath ? undefined : component.effects.path
+            // Generate faux response.
+            let response = {
+                serverMemo: component.serverMemo,
+                effects: component.effects,
+            }
 
-            store.callHook('beforeReplaceState', state, url, component)
+            normalizeResponse(response, component)
 
-            history.replaceState(state, '', onlyChangeThePathAndQueryString(url))
+            LivewireStateManager.replaceState(url, response, component)
+
+            componentIdsThatAreWritingToHistoryState.add(component.id)
 
             initializedPath = true
         })
@@ -35,19 +42,29 @@ export default function () {
 
         let effects = response.effects || {}
 
+        normalizeResponse(response, component)
+
         if ('path' in effects && effects.path !== window.location.href) {
-            let state = generateNewState(component, response)
+            let url = onlyChangeThePathAndQueryString(effects.path)
 
-            store.callHook('beforePushState', state, effects.path, component)
+            LivewireStateManager.pushState(url, response, component)
 
-            history.pushState(state, '', onlyChangeThePathAndQueryString(effects.path))
+            componentIdsThatAreWritingToHistoryState.add(component.id)
+        } else {
+            // If the current component has changed it's state, but hasn't written
+            // anything new to the URL, we still need to update it's data in the
+            // history state so that when a back button is hit, it is caught
+            // up to the most recent known data state.
+            if (componentIdsThatAreWritingToHistoryState.has(component.id)) {
+                LivewireStateManager.replaceState(window.location.href, response, component)
+            }
         }
     })
 
     window.addEventListener('popstate', event => {
-        if (! (event.state && event.state.livewire)) return
+        if (LivewireStateManager.missingState(event)) return
 
-        (new LivewireState(event.state.livewire)).replayResponses((response, component) => {
+        LivewireStateManager.replayResponses(event, (response, component) => {
             let message = new Message(component, [])
 
             message.storeResponse(response)
@@ -58,23 +75,14 @@ export default function () {
         })
     })
 
-    function generateNewState(component, response) {
-        let state = history.state && history.state.livewire
-            ? new LivewireState([...history.state.livewire])
-            : new LivewireState
+    function normalizeResponse(response, component) {
+        // Add ALL properties as "dirty" so that when the back button is pressed,
+        // they ALL are forced to refresh on the page (even if the HTML didn't change).
+        response.effects.dirty = Object.keys(response.serverMemo.data)
 
-        state.storeResponse(response, component)
-
-        return { livewire: state.toStateArray() }
-    }
-
-    function generateInitialFauxResponse(component) {
-        let { serverMemo, effects, el } = component
-
-        return {
-            serverMemo,
-            effects: { ...effects, html: el.outerHTML }
-        }
+        // Sometimes Livewire doesn't return html from the server to save on bandwidth.
+        // So we need to set the HTML no matter what.
+        response.effects.html = component.lastFreshHtml
     }
 
     function onlyChangeThePathAndQueryString(url) {
@@ -115,14 +123,122 @@ export default function () {
     })
 }
 
+let LivewireStateManager = {
+    replaceState(url, response, component) {
+        this.updateState('replaceState', url, response, component)
+    },
+
+    pushState(url, response, component) {
+        this.updateState('pushState', url, response, component)
+    },
+
+    updateState(method, url, response, component) {
+        let state = this.currentState()
+
+        state.storeResponse(response, component)
+
+        let stateArray = state.toStateArray()
+        let fullstateObject = { livewire: stateArray }
+
+        let capitalize = subject => subject.charAt(0).toUpperCase() + subject.slice(1)
+
+        store.callHook('before'+capitalize(method), fullstateObject, url, component)
+
+        try {
+            history[method](fullstateObject, '', url)
+        } catch (error) {
+            // Firefox has a 160kb limit to history state entries.
+            // If that limit is reached, we'll instead put it in
+            // sessionStorage and store a reference to it.
+            if (error.name === 'NS_ERROR_ILLEGAL_VALUE') {
+                let key = this.storeInSession(stateArray)
+
+                history[method]({ livewire: key }, '', url)
+            }
+        }
+    },
+
+    replayResponses(event, callback) {
+        if (! event.state.livewire) return
+
+        let state = typeof event.state.livewire === 'string'
+            ? new LivewireState(this.getFromSession(event.state.livewire))
+            : new LivewireState(event.state.livewire)
+
+        state.replayResponses(callback)
+    },
+
+    currentState() {
+        if (! history.state) return new LivewireState
+        if (! history.state.livewire) return new LivewireState
+
+        let state = typeof history.state.livewire === 'string'
+            ? new LivewireState(this.getFromSession(history.state.livewire))
+            : new LivewireState(history.state.livewire)
+
+        return state
+    },
+
+    missingState(event) {
+        return ! (event.state && event.state.livewire)
+    },
+
+    clearState() {
+        // This is to prevent exponentially increasing the size of our state on page refresh.
+        if (window.history.state) window.history.state.livewire = (new LivewireState).toStateArray();
+    },
+
+    storeInSession(value) {
+        let key = 'livewire:'+(new Date).getTime()
+
+        let stringifiedValue = JSON.stringify(value)
+
+        this.tryToStoreInSession(key, stringifiedValue)
+
+        return key
+    },
+
+    tryToStoreInSession(key, value) {
+        // sessionStorage has a max storage limit (usally 5MB).
+        // If we meet that limit, we'll start removing entries
+        // (oldest first), until there's enough space to store
+        // the new one.
+        try {
+            sessionStorage.setItem(key, value)
+        } catch (error) {
+            // 22 is Chrome, 1-14 is other browsers.
+            if (! [22, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(error.code)) return
+
+            let oldestTimestamp = Object.keys(sessionStorage)
+                .map(key => Number(key.replace('livewire:', '')))
+                .sort()
+                .shift()
+
+            if (! oldestTimestamp) return
+
+            sessionStorage.removeItem('livewire:'+oldestTimestamp)
+
+            this.tryToStoreInSession(key, value)
+        }
+    },
+
+    getFromSession(key) {
+        let item = sessionStorage.getItem(key)
+
+        if (! item) return
+
+        return JSON.parse(item)
+    },
+}
+
 class LivewireState
 {
     constructor(stateArray = []) { this.items = stateArray }
 
     toStateArray() { return this.items }
 
-    pushItemInProperOrder(signature, storageKey, component) {
-        let targetItem = { signature, storageKey }
+    pushItemInProperOrder(signature, response, component) {
+        let targetItem = { signature, response }
 
         // First, we'll check if this signature already has an entry, if so, replace it.
         let existingIndex = this.items.findIndex(item => item.signature === signature)
@@ -148,41 +264,19 @@ class LivewireState
     }
 
     storeResponse(response, component) {
-        // Add ALL properties as "dirty" so that when the back button is pressed,
-        // they ALL are forced to refresh on the page (even if the HTML didn't change).
-        response.effects.dirty = Object.keys(response.serverMemo.data)
-
-        let storageKey = this.storeInSession(response)
-
         let signature = this.getComponentNameBasedSignature(component)
 
-        this.pushItemInProperOrder(signature, storageKey, component)
+        this.pushItemInProperOrder(signature, response, component)
     }
 
     replayResponses(callback) {
-        this.items.forEach(({ signature, storageKey }) => {
+        this.items.forEach(({ signature, response }) => {
             let component = this.findComponentBySignature(signature)
 
             if (! component) return
 
-            let response = this.getFromSession(storageKey)
-
-            if (! response) return console.warn(`Livewire: sessionStorage key not found: ${storageKey}`)
-
             callback(response, component)
         })
-    }
-
-    storeInSession(value) {
-        let key = Math.random().toString(36).substring(2)
-
-        sessionStorage.setItem(key, JSON.stringify(Object.entries(value)))
-
-        return key
-    }
-
-    getFromSession(key) {
-        return Object.fromEntries(JSON.parse(sessionStorage.getItem(key)))
     }
 
     // We can't just store component reponses by their id because
