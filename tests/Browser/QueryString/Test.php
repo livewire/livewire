@@ -123,9 +123,12 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, DirtyDataComponent::class)
-                ->type('@input', 'foo')
+                ->waitForLivewire()->type('@input', 'foo')
                 ->waitForLivewire()->click('@nextPage')
                 ->assertSee('The Next Page')
+                ->back()
+                ->assertInputValue('@input', 'foo')
+                ->forward()
                 ->back()
                 ->assertInputValue('@input', 'foo')
             ;
@@ -147,23 +150,6 @@ class Test extends TestCase
                 ->back()
                 ->back()
                 ->assertSeeIn('@count', '4')
-            ;
-        });
-    }
-
-    public function test_that_responses_with_less_than_640k_characters_are_stored_in_history_state_and_others_are_stored_in_session()
-    {
-        $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, HugeComponent::class, '?count=-2')
-            ->tinker()
-                // ->assertSeeIn('@count', '-2')
-                // ->assertScript('sessionStorage.length', 0)
-                // ->waitForLivewire()->click('@increment')
-                // ->assertSeeIn('@count', '-1')
-                // ->assertScript('sessionStorage.length', 0)
-                // ->waitForLivewire()->click('@increment')
-                // ->assertSeeIn('@count', '0')
-                // ->assertScript('sessionStorage.length', 1)
             ;
         });
     }

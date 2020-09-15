@@ -12,7 +12,7 @@ export default {
     input: 'js/index.js',
     output: {
         format: 'umd',
-        // sourcemap: true,
+        sourcemap: true,
         name: 'Livewire',
         file: 'dist/livewire.js',
     },
@@ -23,12 +23,12 @@ export default {
             include: /node_modules\/(get-value|isobject|core-js)/,
         }),
         filesize(),
-        // terser({
-        //     mangle: false,
-        //     compress: {
-        //         drop_debugger: false,
-        //     },
-        // }),
+        terser({
+            mangle: false,
+            compress: {
+                drop_debugger: false,
+            },
+        }),
         babel({
             exclude: 'node_modules/**'
         }),
