@@ -27,7 +27,7 @@ class Livewire {
 
     find(componentId) {
         if (!this.components.componentsById[componentId] && window.Alpine) {
-            console.warn("Livewire: Unable to find Livewire component ' + componentId + '.  Did you verify Livewire is included before AlpineJS?")
+            console.warn("Livewire: Unable to find Livewire component.  Did you verify Livewire is included before AlpineJS?")
         }
 
         return this.components.componentsById[componentId].$wire
