@@ -20,7 +20,9 @@ export default function () {
 
         invisibleLink.click()
 
-        window.URL.revokeObjectURL(url)
+        setTimeout(function() {
+            window.URL.revokeObjectURL(url)
+        }, 0);
     })
 }
 
