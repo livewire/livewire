@@ -645,6 +645,15 @@
       "contributions": [
         "test"
       ]
+    },
+    {
+      "login": "erikwestlund",
+      "name": "Erik Westlund",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/6514609?v=4",
+      "profile": "http://erikwestlund.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
