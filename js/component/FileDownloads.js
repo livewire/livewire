@@ -6,7 +6,9 @@ export default function () {
 
         if (! response.effects.download) return
 
-        let url = window.URL.createObjectURL(
+        let URLObj = window.webkitURL || window.URL
+
+        let url = URLObj.createObjectURL(
             base64toBlob(response.effects.download.content)
         )
 
