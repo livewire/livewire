@@ -95,7 +95,7 @@ trait MakesAssertions
     {
         PHPUnit::assertThat(
             $values,
-            new SeeInOrder($this->stripOutInitialData($this->payload['dom']))
+            new SeeInOrder($this->stripOutInitialData($this->lastRenderedDom))
         );
 
         return $this;
@@ -105,7 +105,7 @@ trait MakesAssertions
     {
         PHPUnit::assertThat(
             array_map('e', ($values)),
-            new SeeInOrder($this->stripOutInitialData($this->payload['dom']))
+            new SeeInOrder($this->stripOutInitialData($this->lastRenderedDom))
         );
 
         return $this;
