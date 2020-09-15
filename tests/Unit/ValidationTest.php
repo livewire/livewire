@@ -6,7 +6,6 @@ use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 
 class ValidationTest extends TestCase
 {
@@ -197,7 +196,7 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    public function can_assert_has_no_errors_when_no_validation_has_faile_and_specific_keys_are_supplied()
+    public function can_assert_has_no_errors_when_no_validation_has_failed_and_specific_keys_are_supplied()
     {
         $component = Livewire::test(ForValidation::class);
 
