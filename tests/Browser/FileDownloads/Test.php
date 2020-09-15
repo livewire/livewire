@@ -63,12 +63,12 @@ class Test extends TestCase
                 ->pause(500);
 
             $this->assertTrue(
-                Storage::disk('dusk-downloads')->exists('download & target.txt')
+                Storage::disk('dusk-downloads')->exists('download & target2.txt')
             );
 
             $this->assertStringContainsString(
                 'I\'m the file you should download.',
-                Storage::disk('dusk-downloads')->get('download & target.txt')
+                Storage::disk('dusk-downloads')->get('download & target2.txt')
             );
         });
     }
