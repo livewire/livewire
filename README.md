@@ -123,7 +123,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/yateric"><img src="https://avatars1.githubusercontent.com/u/1567297?v=4" width="100px;" alt=""/><br /><sub><b>Eric Chow</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=yateric" title="Code">💻</a></td>
     <td align="center"><a href="https://nemrut.co"><img src="https://avatars3.githubusercontent.com/u/5906125?v=4" width="100px;" alt=""/><br /><sub><b>Muzaffer Dede</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=muzafferdede" title="Code">💻</a></td>
     <td align="center"><a href="http://brentvardy.com"><img src="https://avatars1.githubusercontent.com/u/5463577?v=4" width="100px;" alt=""/><br /><sub><b>Brent Vardy</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=vardyb" title="Tests">⚠️</a></td>
-    <td align="center"><a href="http://zepfietje.com"><img src="https://avatars0.githubusercontent.com/u/44533235?v=4" width="100px;" alt=""/><br /><sub><b>Zep Fietje</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=zepfietje" title="Code">💻</a></td>
+    <td align="center"><a href="http://zepfietje.com"><img src="https://avatars0.githubusercontent.com/u/44533235?v=4" width="100px;" alt=""/><br /><sub><b>Zep Fietje</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=zepfietje" title="Code">💻</a> <a href="https://github.com/livewire/livewire/issues?q=author%3Azepfietje" title="Bug reports">🐛</a> <a href="https://github.com/livewire/livewire/commits?author=zepfietje" title="Documentation">📖</a></td>
   </tr>
 </table>
 
