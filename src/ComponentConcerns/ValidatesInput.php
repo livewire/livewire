@@ -39,7 +39,7 @@ trait ValidatesInput
         }
 
         $this->setErrorBag(
-            Arr::except($this->getErrorBag()->toArray(), $field)
+            $this->errorBagExcept($field)
         );
     }
 
@@ -55,7 +55,11 @@ trait ValidatesInput
 
     public function errorBagExcept($field)
     {
-        return new MessageBag(Arr::except($this->getErrorBag()->toArray(), $field));
+        return new MessageBag(
+            Arr::where($this->getErrorBag()->toArray(), function ($value, $key) use ($field) {
+                return ! Str::is($field, $key);
+            })
+        );
     }
 
     protected function getRules()
