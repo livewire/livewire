@@ -172,6 +172,34 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function old_deeply_nested_wildcard_validation_only_is_cleared_if_new_validation_passes()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->runAction('runDeeplyNestedValidationOnly', 'items.*.baz')
+            ->assertSee('items.1.baz field is required')
+            ->set('items.1.baz', 'blab')
+            ->runAction('runDeeplyNestedValidationOnly', 'items.*.baz')
+            ->assertDontSee('items.1.baz field is required');
+    }
+
+    /** @test */
+    public function old_deeply_nested_wildcard_validation_only_is_cleared_if_new_validation_fails()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->runAction('runDeeplyNestedValidationOnly', 'items.*.baz')
+            ->assertSee('items.1.baz field is required')
+            ->set('items.1.baz', 'blab')
+            ->set('items.0.baz', '')
+            ->runAction('runDeeplyNestedValidationOnly', 'items.*.baz')
+            ->assertDontSee('items.1.baz field is required')
+            ->assertSee('items.0.baz field is required');
+    }
+
+    /** @test */
     public function validation_errors_are_shared_for_all_views()
     {
         $component = Livewire::test(ForValidation::class);
