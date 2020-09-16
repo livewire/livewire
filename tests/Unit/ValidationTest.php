@@ -3,10 +3,10 @@
 namespace Tests\Unit;
 
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 
 class ValidationTest extends TestCase
 {
@@ -197,7 +197,7 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    public function can_assert_has_no_errors_when_no_validation_has_faile_and_specific_keys_are_supplied()
+    public function can_assert_has_no_errors_when_no_validation_has_failed_and_specific_keys_are_supplied()
     {
         $component = Livewire::test(ForValidation::class);
 
@@ -228,6 +228,36 @@ class ValidationTest extends TestCase
             ->set('foo', 'foobar')
             ->call('runValidationWithClassBasedRule')
             ->assertHasNoErrors(['foo' => ValueEqualsFoobar::class]);
+    }
+
+    /** @test */
+    public function custom_validation_messages_are_cleared_between_validate_only_validations()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        // cleared when custom validation passes
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', 'b')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertDontSee('The bar field is required')
+            ->assertSee('Lengths must be the same')
+            ->set('bar', 'baz')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertDontSee('The bar field is required')
+            ->assertDontSee('Lengths must be the same');
+
+        // cleared when custom validation isn't run
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', 'b')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertDontSee('The bar field is required')
+            ->assertSee('Lengths must be the same')
+            ->set('bar', '')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertSee('The bar field is required')
+            ->assertDontSee('Lengths must be the same');
     }
 }
 
@@ -269,6 +299,23 @@ class ForValidation extends Component
             'foo' => 'required',
             'bar' => 'required',
         ]);
+    }
+
+    public function runValidationOnlyWithCustomValidation($field)
+    {
+        $this->validateOnly($field, [
+            'foo' => 'required',
+            'bar' => 'required',
+        ]);
+
+        Validator::make(
+            [
+                'foo_length' => strlen($this->foo),
+                'bar_length' => strlen($this->bar),
+            ],
+            [ 'foo_length' => 'same:bar_length' ],
+            [ 'same' => 'Lengths must be the same' ]
+        )->validate();
     }
 
     public function runValidationOnlyWithMessageProperty($field)
