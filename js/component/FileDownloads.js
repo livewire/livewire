@@ -6,9 +6,10 @@ export default function () {
 
         if (! response.effects.download) return
 
-        let URLObj = window.webkitURL || window.URL
+        // We need to use window.webkitURL so downloads work on iOS Sarfari.
+        let urlObject = window.webkitURL || window.URL
 
-        let url = URLObj.createObjectURL(
+        let url = urlObject.createObjectURL(
             base64toBlob(response.effects.download.content)
         )
 
@@ -23,7 +24,7 @@ export default function () {
         invisibleLink.click()
 
         setTimeout(function() {
-            URLObj.revokeObjectURL(url)
+            urlObject.revokeObjectURL(url)
         }, 0);
     })
 }
