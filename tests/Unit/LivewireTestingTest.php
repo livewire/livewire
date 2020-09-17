@@ -171,6 +171,20 @@ class LivewireTestingTest extends TestCase
             ->set('bar', '')
             ->assertHasErrors(['foo', 'bar']);
     }
+
+    /** @test */
+    public function assert_listener()
+    {
+        app(LivewireManager::class)
+            ->test(ListenersComponentStub::class)
+            ->assertListener('foo')
+            ->assertListener('key');
+
+        app(LivewireManager::class)
+            ->test(DynamicListenersComponentStub::class)
+            ->assertListener('foo')
+            ->assertListener('key');
+    }
 }
 
 class HasMountArguments extends Component
@@ -277,6 +291,29 @@ class ValidatesDataWithRealTimeStub extends Component
             'foo' => 'required|min:6',
             'bar' => 'required',
         ]);
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class ListenersComponentStub extends Component
+{
+    protected $listeners = ['foo', 'key' => 'value'];
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class DynamicListenersComponentStub extends Component
+{
+    protected function getListeners()
+    {
+        return ['foo', 'key' => 'value'];
     }
 
     public function render()

@@ -267,4 +267,13 @@ trait MakesAssertions
 
         return $this;
     }
+
+    public function assertListener($listener)
+    {
+        $test = collect($this->payload['effects']['listeners'])->contains($listener);
+
+        PHPUnit::assertTrue($test, "Failed asserting component is listening for the [{$listener}] method.");
+
+        return $this;
+    }
 }
