@@ -23,10 +23,13 @@ class AddAttributesToRootTagOfHtml
             new RootTagMissingFromViewException
         );
 
-        throw_if(
-            $this->domHasMultipleRootTags($dom),
-            new MultipleRootTagsInViewException
-        );
+        if(config('app.debug')) {
+            throw_if(
+                $this->domHasMultipleRootTags($dom),
+                new MultipleRootTagsInViewException
+            );
+        }
+
 
         $tagName = $matches[1][0];
         $lengthOfTagName = strlen($tagName);
@@ -74,7 +77,7 @@ class AddAttributesToRootTagOfHtml
                 array_unshift($openTags, $tag);
             }
         }
-        
+
         return false;
     }
 }
