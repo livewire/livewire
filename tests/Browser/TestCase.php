@@ -7,6 +7,7 @@ use Exception;
 use Psy\Shell;
 use Throwable;
 use Laravel\Dusk\Browser;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
@@ -41,8 +42,10 @@ class TestCase extends BaseTestCase
 
         $this->tweakApplication(function () {
             app('livewire')->component(\Tests\Browser\Loading\Component::class);
-            app('livewire')->component(\Tests\Browser\PushState\Component::class);
-            app('livewire')->component(\Tests\Browser\PushState\NestedComponent::class);
+            app('livewire')->component(\Tests\Browser\QueryString\Component::class);
+            app('livewire')->component(\Tests\Browser\QueryString\NestedComponent::class);
+            app('livewire')->component(\Tests\Browser\QueryString\DirtyDataComponent::class);
+            app('livewire')->component(\Tests\Browser\QueryString\HugeComponent::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputSelect\Component::class);
             app('livewire')->component(\Tests\Browser\FileDownloads\Component::class);
             app('livewire')->component(\Tests\Browser\Redirects\Component::class);
@@ -52,6 +55,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Events\NestedComponentB::class);
             app('livewire')->component(\Tests\Browser\Prefetch\Component::class);
             app('livewire')->component(\Tests\Browser\SupportDateTimes\Component::class);
+            app('livewire')->component(\Tests\Browser\DataBinding\DirtyDetection\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputText\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputTextarea\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputCheckboxRadio\Component::class);
@@ -70,25 +74,26 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
             app('livewire')->component(\Tests\Browser\Extensions\Component::class);
             app('livewire')->component(\Tests\Browser\Defer\Component::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\SingleRadioComponent::class);
             app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithMount::class);
-            app('livewire')->component(\Tests\Browser\Pagination\Component::class);
+            app('livewire')->component(\Tests\Browser\Pagination\Tailwind::class);
+            app('livewire')->component(\Tests\Browser\Pagination\Bootstrap::class);
 
             Route::get(
                 '/livewire-dusk/tests/browser/sync-history-without-mount/{id}',
                 \Tests\Browser\SyncHistory\ComponentWithMount::class
             )->middleware('web')->name('sync-history-without-mount');
 
-            if (PHP_VERSION_ID > 70400) {
-                app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
-                app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
 
-                // This needs to be registered for Dusk to test the route-parameter binding
-                // See: \Tests\Browser\SyncHistory\Test.php
-                Route::get(
-                    '/livewire-dusk/tests/browser/sync-history/{step}',
-                    \Tests\Browser\SyncHistory\Component::class
-                )->middleware('web')->name('sync-history');
-            }
+            // This needs to be registered for Dusk to test the route-parameter binding
+            // See: \Tests\Browser\SyncHistory\Test.php
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history/{step}',
+                \Tests\Browser\SyncHistory\Component::class
+            )->middleware('web')->name('sync-history');
+
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -212,6 +217,14 @@ class TestCase extends BaseTestCase
                 explode(' ', $this->attribute($selector, 'class')),
                 "Element [{$fullSelector}] missing class [{$className}]."
             );
+
+            return $this;
+        });
+
+        Browser::macro('assertScript', function ($js, $expects = true) {
+            PHPUnit::assertEquals($expects, head($this->script(
+                Str::start( $js, 'return ')
+            )));
 
             return $this;
         });

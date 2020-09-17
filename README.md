@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-69-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-70-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Laravel Livewire
@@ -10,7 +10,7 @@ Awesome Livewire stuff here: https://github.com/imliam/awesome-livewire
 
 All contributions are welcomed! (but please submit an issue to make sure the PR is warranted first)
 
-Open GitHub issues for all bugs. Ideas and questions belong on the [forum](https://forum.laravel-livewire.com) or [Discord server](https://discord.gg/H884eyt).
+Open GitHub issues for all bugs. Ideas and questions belong on the [forum](https://forum.laravel-livewire.com) or [Discord server](https://discord.gg/livewire).
 
 Contribute to the docs here: https://github.com/livewire/docs
 
@@ -114,7 +114,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/dododedodonl"><img src="https://avatars2.githubusercontent.com/u/100052?v=4" width="100px;" alt=""/><br /><sub><b>Tom Janssen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=dododedodonl" title="Code">💻</a></td>
     <td align="center"><a href="https://DanHarrin.com"><img src="https://avatars2.githubusercontent.com/u/41773797?v=4" width="100px;" alt=""/><br /><sub><b>Dan Harrin</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=DanHarrin" title="Code">💻</a></td>
     <td align="center"><a href="https://www.codeboutique.com"><img src="https://avatars0.githubusercontent.com/u/247048?v=4" width="100px;" alt=""/><br /><sub><b>Michael Bøcker-Larsen</b></sub></a><br /><a href="#maintenance-mblarsen" title="Maintenance">🚧</a></td>
-    <td align="center"><a href="https://github.com/davideperfetto"><img src="https://avatars0.githubusercontent.com/u/39701809?v=4" width="100px;" alt=""/><br /><sub><b>Davide Perfetto</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=davideperfetto" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/DavideMoney"><img src="https://avatars0.githubusercontent.com/u/39701809?v=4" width="100px;" alt=""/><br /><sub><b>DavideMoney</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=DavideMoney" title="Code">💻</a></td>
   </tr>
   <tr>
     <td align="center"><a href="http://www.dennisvandalen.com"><img src="https://avatars3.githubusercontent.com/u/4375758?v=4" width="100px;" alt=""/><br /><sub><b>Dennis van Dalen</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=dennisvandalen" title="Code">💻</a></td>
@@ -123,6 +123,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/yateric"><img src="https://avatars1.githubusercontent.com/u/1567297?v=4" width="100px;" alt=""/><br /><sub><b>Eric Chow</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=yateric" title="Code">💻</a></td>
     <td align="center"><a href="https://nemrut.co"><img src="https://avatars3.githubusercontent.com/u/5906125?v=4" width="100px;" alt=""/><br /><sub><b>Muzaffer Dede</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=muzafferdede" title="Code">💻</a></td>
     <td align="center"><a href="http://brentvardy.com"><img src="https://avatars1.githubusercontent.com/u/5463577?v=4" width="100px;" alt=""/><br /><sub><b>Brent Vardy</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=vardyb" title="Tests">⚠️</a></td>
+    <td align="center"><a href="http://erikwestlund.com"><img src="https://avatars2.githubusercontent.com/u/6514609?v=4" width="100px;" alt=""/><br /><sub><b>Erik Westlund</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=erikwestlund" title="Code">💻</a></td>
+    <td align="center"><a href="http://zepfietje.com"><img src="https://avatars0.githubusercontent.com/u/44533235?v=4" width="100px;" alt=""/><br /><sub><b>Zep Fietje</b></sub></a><br /><a href="https://github.com/livewire/livewire/commits?author=zepfietje" title="Code">💻</a> <a href="https://github.com/livewire/livewire/issues?q=author%3Azepfietje" title="Bug reports">🐛</a> <a href="https://github.com/livewire/livewire/commits?author=zepfietje" title="Documentation">📖</a></td>
   </tr>
 </table>
 

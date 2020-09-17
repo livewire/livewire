@@ -26,9 +26,7 @@ class Test extends TestCase
                     "Livewire.hook('element.removed', () => { window.elementWasRemoved = true })",
                 ]);})
                 ->waitForLivewire()->click('@bar')
-                ->tap(function ($b) {
-                    $this->assertEquals([false], $b->script('return window.elementWasRemoved'));
-                })
+                ->assertScript('window.elementWasRemoved', false)
 
                 /**
                  * element inserted before element with same tag name is handled as if they were different.
@@ -38,18 +36,14 @@ class Test extends TestCase
                     "Livewire.hook('element.initialized', el => { window.lastAddedElement = el })",
                 ]);})
                 ->waitForLivewire()->click('@baz')
-                ->tap(function ($b) {
-                    $this->assertEquals(['second'], $b->script('return window.lastAddedElement.innerText'));
-                })
+                ->assertScript('window.lastAddedElement.innerText', 'second')
 
                 /**
                  * elements added with keys are recognized in the custom lookahead
                  */
                 ->waitForLivewire()->click('@bob')
-                ->tap(function ($b) {
-                    $this->assertEquals([1], $b->script('return Livewire.components.components()[0].morphChanges.added.length'));
-                    $this->assertEquals([0], $b->script('return Livewire.components.components()[0].morphChanges.removed.length'));
-                })
+                ->assertScript('Livewire.components.components()[0].morphChanges.added.length', 1)
+                ->assertScript('Livewire.components.components()[0].morphChanges.removed.length', 0)
             ;
         });
     }

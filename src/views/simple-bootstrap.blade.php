@@ -9,14 +9,14 @@
                     </li>
                 @else
                     <li class="page-item">
-                        <button class="page-link" wire:click="previousPage" rel="prev">@lang('pagination.previous')</button>
+                        <button type="button" class="page-link" wire:click="previousPage" rel="prev">@lang('pagination.previous')</button>
                     </li>
                 @endif
 
                 {{-- Next Page Link --}}
                 @if ($paginator->hasMorePages())
                     <li class="page-item">
-                        <button class="page-link" wire:click="nextPage" rel="next">@lang('pagination.next')</button>
+                        <button type="button" class="page-link" wire:click="nextPage" rel="next">@lang('pagination.next')</button>
                     </li>
                 @else
                     <li class="page-item disabled" aria-disabled="true">

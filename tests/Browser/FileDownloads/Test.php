@@ -26,6 +26,20 @@ class Test extends TestCase
                 Storage::disk('dusk-downloads')->get('download-target.txt')
             );
 
+            Livewire::visit($browser, Component::class)
+                ->waitForLivewire()->click('@download-quoted-disposition-filename')
+                // Wait for download to be triggered.
+                ->pause(500);
+
+            $this->assertTrue(
+                Storage::disk('dusk-downloads')->exists('download & target.txt')
+            );
+
+            $this->assertStringContainsString(
+                'I\'m the file you should download.',
+                Storage::disk('dusk-downloads')->get('download & target.txt')
+            );
+
             /**
              * Trigger download with a response return.
              */
@@ -41,6 +55,20 @@ class Test extends TestCase
             $this->assertStringContainsString(
                 'I\'m the file you should download.',
                 Storage::disk('dusk-downloads')->get('download-target2.txt')
+            );
+
+            Livewire::visit($browser, Component::class)
+                ->waitForLivewire()->click('@download-from-response-quoted-disposition-filename')
+                // Wait for download to be triggered.
+                ->pause(500);
+
+            $this->assertTrue(
+                Storage::disk('dusk-downloads')->exists('download & target2.txt')
+            );
+
+            $this->assertStringContainsString(
+                'I\'m the file you should download.',
+                Storage::disk('dusk-downloads')->get('download & target2.txt')
             );
         });
     }

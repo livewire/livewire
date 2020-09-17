@@ -33,16 +33,12 @@ class Test extends TestCase
                 /**
                  * window.livewire.onLoad callback is called when Livewire is initialized
                  */
-                ->tap(function (Browser $browser) {
-                    $this->assertTrue($browser->driver->executeScript('return window.isLoaded === true'), "livewire.onLoad wasn't called");
-                })
+                ->assertScript('window.isLoaded', true)
 
                 /**
                  * livewire:load DOM event is fired after start
                  */
-                ->tap(function (Browser $browser) {
-                    $this->assertTrue($browser->driver->executeScript('return window.loadEventWasFired === true'), "livewire:load wasn't triggered");
-                })
+                ->assertScript('window.loadEventWasFired', true)
             ;
         });
     }

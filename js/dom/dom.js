@@ -12,15 +12,19 @@ export default {
         return Array.from(document.querySelectorAll(`[wire\\:id]`))
     },
 
-    rootComponentElementsWithNoParents() {
+    rootComponentElementsWithNoParents(node = null) {
+        if (node === null) {
+            node = document
+        }
+
         // In CSS, it's simple to select all elements that DO have a certain ancestor.
         // However, it's not simple (kinda impossible) to select elements that DONT have
         // a certain ancestor. Therefore, we will flip the logic: select all roots that DO have
         // have a root ancestor, then select all roots that DONT, then diff the two.
 
         // Convert NodeLists to Arrays so we can use ".includes()". Ew.
-        const allEls = Array.from(document.querySelectorAll(`[wire\\:id]`))
-        const onlyChildEls = Array.from(document.querySelectorAll(`[wire\\:id] [wire\\:id]`))
+        const allEls = Array.from(node.querySelectorAll(`[wire\\:initial-data]`))
+        const onlyChildEls = Array.from(node.querySelectorAll(`[wire\\:initial-data] [wire\\:initial-data]`))
 
         return allEls.filter(el => !onlyChildEls.includes(el))
     },
@@ -135,7 +139,7 @@ ${el.outerHTML}
     setInputValueFromModel(el, component) {
         const modelString = wireDirectives(el).get('model').value
         const modelValue = get(component.data, modelString)
-        if (modelValue === undefined) return
+
         // Don't manually set file input's values.
         if (
             el.tagName.toLowerCase() === 'input' &&
@@ -170,6 +174,8 @@ ${el.outerHTML}
         } else if (el.tagName === 'SELECT') {
             this.updateSelect(el, value)
         } else {
+            value = value === undefined ? '' : value
+
             el.value = value
         }
     },

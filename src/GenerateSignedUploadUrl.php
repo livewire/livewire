@@ -35,11 +35,9 @@ class GenerateSignedUploadUrl
             '+5 minutes'
         );
 
-        $uri = $signedRequest->getUri();
-
         return [
             'path' => $fileHashName,
-            'url' => 'https://'.$uri->getHost().$uri->getPath().'?'.$uri->getQuery(),
+            'url' => (string) $signedRequest->getUri(),
             'headers' => $this->headers($signedRequest, $fileType),
         ];
     }

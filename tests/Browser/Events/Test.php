@@ -38,9 +38,7 @@ class Test extends TestCase
                 ]);})
                 ->waitForLivewire()->click('@emit.bob')
                 ->pause(350)
-                ->tap(function ($b) {
-                    $this->assertEquals(['bob'], $b->script('return window.lastFooEventValue'));
-                })
+                ->assertScript('window.lastFooEventValue', 'bob')
 
                 /**
                  * receive event from component fired only to ancestors, and make sure global listener doesnt receive it
@@ -50,9 +48,7 @@ class Test extends TestCase
                 ->assertSeeIn('@lastEventForParent', 'lob')
                 ->assertSeeIn('@lastEventForChildA', 'bob')
                 ->assertSeeIn('@lastEventForChildB', 'bob')
-                ->tap(function ($b) {
-                    $this->assertEquals(['bob'], $b->script('return window.lastFooEventValue'));
-                })
+                ->assertScript('window.lastFooEventValue', 'bob')
 
                 /**
                  * receive event from action fired only to ancestors, and make sure global listener doesnt receive it
@@ -62,9 +58,7 @@ class Test extends TestCase
                 ->assertSeeIn('@lastEventForParent', 'law')
                 ->assertSeeIn('@lastEventForChildA', 'bob')
                 ->assertSeeIn('@lastEventForChildB', 'bob')
-                ->tap(function ($b) {
-                    $this->assertEquals(['bob'], $b->script('return window.lastFooEventValue'));
-                })
+                ->assertScript('window.lastFooEventValue', 'bob')
 
                 /**
                  * receive event from action fired only to component name, and make sure global listener doesnt receive it
@@ -74,9 +68,7 @@ class Test extends TestCase
                 ->assertSeeIn('@lastEventForParent', 'law')
                 ->assertSeeIn('@lastEventForChildA', 'bob')
                 ->assertSeeIn('@lastEventForChildB', 'blog')
-                ->tap(function ($b) {
-                    $this->assertEquals(['bob'], $b->script('return window.lastFooEventValue'));
-                })
+                ->assertScript('window.lastFooEventValue', 'bob')
             ;
         });
     }

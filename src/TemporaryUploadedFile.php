@@ -63,13 +63,17 @@ class TemporaryUploadedFile extends UploadedFile
     public function temporaryUrl()
     {
         if (FileUploadConfiguration::isUsingS3() && ! app()->environment('testing')) {
-            return $this->storage->temporaryUrl($this->path, now()->addDay());
+            return $this->storage->temporaryUrl(
+                $this->path,
+                now()->addDay(),
+                ['ResponseContentDisposition' => 'filename="' . $this->getClientOriginalName() . '"']
+            );
         }
 
         $supportedPreviewTypes = [
             'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
             'mp4', 'mov', 'avi', 'wmv',
-            'mp3', 'wav', 'm4a', 'wma',
+            'mp3', 'mpga', 'wav', 'm4a', 'wma',
         ];
 
         if (! in_array($this->guessExtension(), $supportedPreviewTypes)) {
@@ -84,7 +88,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function readStream()
     {
-        $this->storage->readStream($this->path);
+        return $this->storage->readStream($this->path);
     }
 
     public function exists()

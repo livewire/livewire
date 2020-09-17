@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class SupportBrowserHistory
 {
@@ -29,8 +30,8 @@ class SupportBrowserHistory
                 $fromQueryString = Arr::get($queryParams, $property);
 
                 $decoded = is_array($fromQueryString)
-                    ? json_decode(json_encode($fromQueryString))
-                    : json_decode($fromQueryString);
+                    ? json_decode(json_encode($fromQueryString), true)
+                    : json_decode($fromQueryString, true);
 
                 if ($fromQueryString !== null) {
                     $component->$property = $decoded === null ? $fromQueryString : $decoded;
@@ -39,17 +40,19 @@ class SupportBrowserHistory
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
+            if (! $this->shouldSendPath($component)) return;
+
             $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
             $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
         });
 
         Livewire::listen('component.dehydrate.subsequent', function (Component $component, Response $response) {
+            if (! $this->shouldSendPath($component)) return;
+
             if (! $referer = request()->header('Referer')) return;
 
-            $route = app('router')->getRoutes()->match(
-                Request::create($referer, 'GET')
-            );
+            $route = $this->getRouteFromReferer($referer);
 
             $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
@@ -63,6 +66,38 @@ class SupportBrowserHistory
                 $response->effects['path'] = $path;
             }
         });
+    }
+
+    protected function getRouteFromReferer($referer)
+    {
+        try {
+            // See if we can get the route from the referer.
+            return app('router')->getRoutes()->match(
+                Request::create($referer, 'GET')
+            );
+        } catch (NotFoundHttpException $e) {
+            // If not, use the current route.
+            return app('router')->current();
+        }
+    }
+
+    protected function shouldSendPath($component)
+    {
+        // If the component is setting $queryString params.
+        if (! $this->getQueryParamsFromComponentProperties($component)->isEmpty()) return true;
+
+        if (
+            app('router')->current()
+            && is_string($action = app('router')->current()->getActionName())
+            // If the component is registered using `Route::get()`.
+            && Str::of($action)->contains(get_class($component))
+            // AND, the component is tracking route params as its public properties
+            && count(array_intersect_key($component->getPublicPropertiesDefinedBySubClass(), app('router')->current()->parametersWithoutNulls()))
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     protected function getExistingQueryParams()
@@ -111,8 +146,7 @@ class SupportBrowserHistory
             })
             ->map(function ($property) {
                 return is_bool($property) ? json_encode($property) : $property;
-            })
-            ->sortKeys();
+            });
 
         return $this->mergedQueryParamsFromDehydratedComponents;
     }

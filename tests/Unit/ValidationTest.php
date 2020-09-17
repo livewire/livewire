@@ -3,10 +3,10 @@
 namespace Tests\Unit;
 
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 
 class ValidationTest extends TestCase
 {
@@ -27,6 +27,16 @@ class ValidationTest extends TestCase
         $component = Livewire::test(ForValidation::class);
 
         $component->runAction('runValidationWithCustomMessage');
+
+        $this->assertStringContainsString('Custom Message', $component->payload['effects']['html']);
+    }
+
+    /** @test */
+    public function validate_component_properties_with_custom_message_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->runAction('runValidationWithMessageProperty');
 
         $this->assertStringContainsString('Custom Message', $component->payload['effects']['html']);
     }
@@ -121,6 +131,35 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validating_only_a_specific_field_wont_throw_an_error_if_the_field_doesnt_exist()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('bar', '')
+            ->call('runValidationOnlyWithFooRules', 'bar')
+            ->assertDontSee('The foo field is required')
+            ->assertDontSee('The bar field is required');
+    }
+
+    /** @test */
+    public function can_validate_only_a_specific_field_with_custom_message_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', '')
+            ->call('runValidationOnlyWithMessageProperty', 'foo')
+            ->assertDontSee('Foo Message') // Foo is set, no error
+            ->assertDontSee('Bar Message') // Bar is not being validated, don't show
+            ->set('foo', '')
+            ->call('runValidationOnlyWithMessageProperty', 'bar')
+            ->assertDontSee('Foo Message') // Foo is not being validated, don't show
+            ->assertSee('Bar Message'); // Bar is not set, show message
+    }
+
+    /** @test */
     public function can_validate_only_a_specific_field_with_deeply_nested_array()
     {
         $component = Livewire::test(ForValidation::class);
@@ -170,7 +209,7 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    public function can_assert_has_no_errors_when_no_validation_has_faile_and_specific_keys_are_supplied()
+    public function can_assert_has_no_errors_when_no_validation_has_failed_and_specific_keys_are_supplied()
     {
         $component = Livewire::test(ForValidation::class);
 
@@ -201,6 +240,36 @@ class ValidationTest extends TestCase
             ->set('foo', 'foobar')
             ->call('runValidationWithClassBasedRule')
             ->assertHasNoErrors(['foo' => ValueEqualsFoobar::class]);
+    }
+
+    /** @test */
+    public function custom_validation_messages_are_cleared_between_validate_only_validations()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        // cleared when custom validation passes
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', 'b')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertDontSee('The bar field is required')
+            ->assertSee('Lengths must be the same')
+            ->set('bar', 'baz')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertDontSee('The bar field is required')
+            ->assertDontSee('Lengths must be the same');
+
+        // cleared when custom validation isn't run
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', 'b')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertDontSee('The bar field is required')
+            ->assertSee('Lengths must be the same')
+            ->set('bar', '')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertSee('The bar field is required')
+            ->assertDontSee('Lengths must be the same');
     }
 }
 
@@ -244,6 +313,43 @@ class ForValidation extends Component
         ]);
     }
 
+    public function runValidationOnlyWithFooRules($field)
+    {
+        $this->validateOnly($field, [
+            'foo' => 'required',
+        ]);
+    }
+
+    public function runValidationOnlyWithCustomValidation($field)
+    {
+        $this->validateOnly($field, [
+            'foo' => 'required',
+            'bar' => 'required',
+        ]);
+
+        Validator::make(
+            [
+                'foo_length' => strlen($this->foo),
+                'bar_length' => strlen($this->bar),
+            ],
+            [ 'foo_length' => 'same:bar_length' ],
+            [ 'same' => 'Lengths must be the same' ]
+        )->validate();
+    }
+
+    public function runValidationOnlyWithMessageProperty($field)
+    {
+        $this->messages = [
+            'foo.required' => 'Foo Message',
+            'bar.required' => 'Bar Message',
+        ];
+
+        $this->validateOnly($field, [
+            'foo' => 'required',
+            'bar' => 'required',
+        ]);
+    }
+
     public function runDeeplyNestedValidationOnly($field)
     {
         $this->validateOnly($field, [
@@ -259,6 +365,17 @@ class ForValidation extends Component
         $this->validate([
             'bar' => 'required',
         ], ['required' => 'Custom Message']);
+    }
+
+    public function runValidationWithMessageProperty()
+    {
+        $this->messages = [
+            'required' => 'Custom Message'
+        ];
+
+        $this->validate([
+            'bar' => 'required'
+        ]);
     }
 
     public function runValidationWithCustomAttribute()

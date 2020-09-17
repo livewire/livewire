@@ -11,6 +11,6 @@
     <span dusk="bob.output">@json($bob)</span>
 
     @if ($showNestedComponent)
-        @livewire(\Tests\Browser\PushState\NestedComponent::class)
+        @livewire(\Tests\Browser\QueryString\NestedComponent::class)
     @endif
 </div>
