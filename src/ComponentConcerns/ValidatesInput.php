@@ -128,7 +128,9 @@ trait ValidatesInput
 
         $propertyName = $this->beforeFirstDot($field);
 
-        $validator = Validator::make($data = [$propertyName => $data[$propertyName]], $rulesForField, $messages, $attributes);
+        $data[$propertyName] = $this->getPropertyValue($propertyName);
+
+        $validator = Validator::make($data, $rulesForField, $messages, $attributes);
 
         $this->shortenModelAttributes($data, $rulesForField, $validator);
 

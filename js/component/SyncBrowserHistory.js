@@ -153,7 +153,9 @@ let LivewireStateManager = {
             if (error.name === 'NS_ERROR_ILLEGAL_VALUE') {
                 let key = this.storeInSession(stateArray)
 
-                history[method]({ livewire: key }, '', url)
+                fullstateObject.livewire = key
+
+                history[method](fullstateObject, '', url)
             }
         }
     },

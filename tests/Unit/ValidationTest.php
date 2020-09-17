@@ -131,6 +131,18 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validating_only_a_specific_field_wont_throw_an_error_if_the_field_doesnt_exist()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('bar', '')
+            ->call('runValidationOnlyWithFooRules', 'bar')
+            ->assertDontSee('The foo field is required')
+            ->assertDontSee('The bar field is required');
+    }
+
+    /** @test */
     public function can_validate_only_a_specific_field_with_custom_message_property()
     {
         $component = Livewire::test(ForValidation::class);
@@ -298,6 +310,13 @@ class ForValidation extends Component
         $this->validateOnly($field, [
             'foo' => 'required',
             'bar' => 'required',
+        ]);
+    }
+
+    public function runValidationOnlyWithFooRules($field)
+    {
+        $this->validateOnly($field, [
+            'foo' => 'required',
         ]);
     }
 
