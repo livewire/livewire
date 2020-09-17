@@ -6,7 +6,9 @@ export default function () {
 
         if (! response.effects.download) return
 
-        let url = window.URL.createObjectURL(
+        let URLObj = window.webkitURL || window.URL
+
+        let url = URLObj.createObjectURL(
             base64toBlob(response.effects.download.content)
         )
 
@@ -20,7 +22,9 @@ export default function () {
 
         invisibleLink.click()
 
-        window.URL.revokeObjectURL(url)
+        setTimeout(function() {
+            URLObj.revokeObjectURL(url)
+        }, 0);
     })
 }
 
