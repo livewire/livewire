@@ -20,7 +20,9 @@ class SupportFileDownloads
 
             $response = $returned;
 
-            $name = Str::after($response->headers->get('Content-Disposition'), 'filename=');
+            $name = $this->getFilenameFromContentDispositionHeader(
+                $response->headers->get('Content-Disposition')
+            );
 
             $binary = $this->captureOutput(function () use ($response) {
                 $response->sendContent();
@@ -56,5 +58,28 @@ class SupportFileDownloads
         $callback();
 
         return ob_get_clean();
+    }
+
+    function getFilenameFromContentDispositionHeader($header)
+    {
+        /**
+         * The following conditionals are here to allow for quoted and
+         * non quoted filenames in the Content-Disposition header.
+         *
+         * Both of these values should return the correct filename without quotes.
+         *
+         * Content-Disposition: attachment; filename=filename.jpg
+         * Content-Disposition: attachment; filename="test file.jpg"
+         */
+
+        if (preg_match('/.*?filename="(.+?)"/', $header, $matches)) {
+            return $matches[1];
+        }
+
+        if (preg_match('/.*?filename=([^; ]+)/', $header, $matches)) {
+            return $matches[1];
+        }
+
+        return 'download';
     }
 }
