@@ -271,6 +271,29 @@ class ValidationTest extends TestCase
             ->assertSee('The bar field is required')
             ->assertDontSee('Lengths must be the same');
     }
+
+    /** @test */
+    public function validation_fails_when_same_rule_is_used_without_matching()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('password', 'supersecret')
+            ->call('runSameValidation')
+            ->assertSee('The password and password confirmation must match');
+    }
+
+    /** @test */
+    public function validation_passes_when_same_rule_is_used_and_matches()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('password', 'supersecret')
+            ->set('passwordConfirmation', 'supersecret')
+            ->call('runSameValidation')
+            ->assertDontSee('The password and password confirmation must match');
+    }
 }
 
 class ForValidation extends Component
@@ -282,6 +305,8 @@ class ForValidation extends Component
         ['foo' => 'bar', 'baz' => 'blab'],
         ['foo' => 'bar', 'baz' => ''],
     ];
+    public $password = '';
+    public $passwordConfirmation = '';
 
     public function runValidation()
     {
@@ -399,6 +424,14 @@ class ForValidation extends Component
             'items.*' => 'array',
             'items.*.foo' => ['required', 'string'],
             'items.*.baz' => ['required', 'string'],
+        ]);
+    }
+
+
+    public function runSameValidation()
+    {
+        $this->validate([
+            'password' => 'same:passwordConfirmation',
         ]);
     }
 
