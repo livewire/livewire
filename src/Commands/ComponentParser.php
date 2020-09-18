@@ -148,6 +148,6 @@ class ComponentParser
     {
         $name = Str::replaceFirst(app()->getNamespace(), '', $namespace);
 
-        return app('path').'/'.str_replace('\\', '/', $name);
+        return config('livewire.root_path', app('path')).'/'.str_replace('\\', '/', $name);
     }
 }
