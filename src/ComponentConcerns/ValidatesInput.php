@@ -123,12 +123,8 @@ trait ValidatesInput
         })->toArray();
 
         $data = $this->prepareForValidation(
-            $this->getDataForValidation($rulesForField)
+            $this->getDataForValidation($rules)
         );
-
-        $propertyName = $this->beforeFirstDot($field);
-
-        $data[$propertyName] = $this->getPropertyValue($propertyName);
 
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
 
@@ -186,15 +182,14 @@ trait ValidatesInput
     {
         $properties = $this->getPublicPropertiesDefinedBySubClass();
 
-        return collect($rules)->keys()
-            ->mapWithKeys(function ($ruleKey) use ($properties) {
+        collect($rules)->keys()
+            ->each(function ($ruleKey) use ($properties) {
                 $propertyName = $this->beforeFirstDot($ruleKey);
 
                 throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: ['.$ruleKey.']'));
+            });
 
-                return [$propertyName => $properties[$propertyName]];
-            })
-            ->all();
+        return $properties;
     }
 
     protected function prepareForValidation($attributes)
