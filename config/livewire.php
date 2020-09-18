@@ -1,6 +1,21 @@
 <?php
 
 return [
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Root Path
+    |--------------------------------------------------------------------------
+    |
+    | This value sets the root path for Livewire component classes in
+    | your application. This value affects component auto-discovery and
+    | any Livewire file helper commands, like `artisan make:livewire`.
+    |
+    | After changing this item, run: `php artisan livewire:discover`.
+    |
+    */
+
+    'root_path' => app('path'),
 
     /*
     |--------------------------------------------------------------------------
