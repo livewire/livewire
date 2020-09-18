@@ -1,7 +1,7 @@
 <?php
 
 return [
-    
+
     /*
     |--------------------------------------------------------------------------
     | Root Path
@@ -10,8 +10,6 @@ return [
     | This value sets the root path for Livewire component classes in
     | your application. This value affects component auto-discovery and
     | any Livewire file helper commands, like `artisan make:livewire`.
-    |
-    | After changing this item, run: `php artisan livewire:discover`.
     |
     */
 
@@ -34,7 +32,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | View Path
+    | Root View Path
+    |--------------------------------------------------------------------------
+    |
+    | This value sets the path for root views. This affects
+    | file manipulation helper commands like `artisan make:livewire`.
+    |
+    */
+
+    'root_view_path' => resource_path('views'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Component View Path
     |--------------------------------------------------------------------------
     |
     | This value sets the path for Livewire component views. This affects
