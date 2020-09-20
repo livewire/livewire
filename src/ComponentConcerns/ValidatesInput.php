@@ -32,33 +32,39 @@ trait ValidatesInput
             : new MessageBag($bag);
     }
 
-    public function resetErrorBag($field = null)
+    public function resetErrorBag(...$fields)
     {
-        if (is_null($field)) {
-            $this->errorBag = new MessageBag;
+        if (empty($fields)) {
+            return $this->errorBag = new MessageBag;
         }
 
         $this->setErrorBag(
-            $this->errorBagExcept($field)
+            $this->errorBagExcept(...$fields)
         );
     }
 
-    public function clearValidation($field = null)
+    public function clearValidation(...$field)
     {
-        $this->resetErrorBag($field);
+        $this->resetErrorBag(...$fields);
     }
 
-    public function resetValidation($field = null)
+    public function resetValidation(...$fields)
     {
-        $this->resetErrorBag($field);
+        $this->resetErrorBag(...$fields);
     }
 
-    public function errorBagExcept($field)
+    public function errorBagExcept(...$fields)
     {
         return new MessageBag(
-            Arr::where($this->getErrorBag()->toArray(), function ($value, $key) use ($field) {
-                return ! Str::is($field, $key);
-            })
+            collect($this->getErrorBag())
+                ->reject(function ($messages, $messageKey) use ($fields) {
+                    return collect($fields)
+                        ->flatten()
+                        ->some(function ($field) use ($messageKey) {
+                            return  Str::is($field, $messageKey);
+                        });
+                })
+                ->toArray()
         );
     }
 
@@ -121,10 +127,12 @@ trait ValidatesInput
     {
         [$rules, $messages] = $this->providedOrGlobalRulesAndMessages($rules, $messages);
 
-        // If the field is "items.0.foo", we should apply the validation rule for "items.*.foo".
-        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
-            return Str::is($fullFieldKey, $field);
-        })->toArray();
+        // If the field is "items.0.foo", validation rules for "items.*.foo", "items.*", etc. are applied.
+        $rulesForField = collect($rules)
+            ->filter(function ($rule, $ruleKey) use ($field) {
+                return Str::is($ruleKey, $field);
+            })
+            ->toArray();
 
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
@@ -143,14 +151,14 @@ trait ValidatesInput
             $target->setProperty(
                 'messages',
                 $messages->merge(
-                    $this->errorBagExcept($field)
+                    $this->errorBagExcept(array_keys($rulesForField))
                 )
             );
 
             throw $e;
         }
 
-        $this->resetErrorBag($field);
+        $this->resetErrorBag(array_keys($rulesForField));
 
         return $result;
     }
