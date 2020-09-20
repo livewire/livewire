@@ -45,6 +45,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 }
 
                 $dirtyModelData = $request->memo['data'][$property];
+                $instance->$property = $model;
 
                 if ($rules = $instance->rulesForModel($property)) {
                     $keys = $rules->keys()->map(function ($key) use ($instance) {
@@ -55,8 +56,6 @@ class HydratePublicProperties implements HydrationMiddleware
                         data_set($model, $key, data_get($dirtyModelData, $key));
                     }
                 }
-
-                $instance->$property = $model;
             } else {
                 $instance->$property = $value;
             }

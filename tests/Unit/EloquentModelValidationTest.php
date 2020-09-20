@@ -3,6 +3,8 @@
 namespace Tests\Unit;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\PresenceVerifierInterface;
 use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
@@ -22,6 +24,39 @@ class EloquentModelValidationTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertEquals('baz', $foo->fresh()->bar);
+    }
+
+    /** @test */
+    public function model_is_available_inside_rules_method()
+    {
+        Validator::setPresenceVerifier(new class implements PresenceVerifierInterface {
+            public function getCount($collection, $column, $value, $excludeId = null, $idColumn = null, array $extra = [])
+            {
+                return Foo::where($column, '=', $value)
+                    ->where('id', '!=', $excludeId)
+                    ->count();
+            }
+
+            public function getMultiCount($collection, $column, array $values, array $extra = []) {}
+        });
+
+        Livewire::test(ComponentWithUniqueValidation::class, [
+            'foo' => new Foo(),
+        ])->set('foo.bar', 'rab')
+            ->call('save')
+            ->assertHasErrors('foo.bar', 'unique');
+
+        Livewire::test(ComponentWithUniqueValidation::class, [
+            'foo' => new Foo(),
+        ])->set('foo.bar', 'qux')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        Livewire::test(ComponentWithUniqueValidation::class, [
+            'foo' => Foo::first(),
+        ])->set('foo.bar', 'rab')
+            ->call('save')
+            ->assertHasNoErrors();
     }
 
     /** @test */
@@ -114,6 +149,7 @@ class Foo extends Model
     protected function getRows()
     {
         return [[
+            'id' => 1,
             'bar' => 'rab',
             'baz' => json_encode(['zab', 'azb']),
             'bob' => json_encode(['obb']),
@@ -143,6 +179,35 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
     public function performValidateOnly($field)
     {
        $this->validateOnly($field);
+    }
+
+    public function render()
+    {
+        return view('dump-errors');
+    }
+}
+
+class ComponentWithUniqueValidation extends Component
+{
+    public $foo;
+
+    public function rules()
+    {
+        return [
+            'foo.bar' => 'required|unique:foo,bar,'.$this->foo->id
+        ];
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+        $this->foo->save();
+    }
+
+    public function performValidateOnly($field)
+    {
+        $this->validateOnly($field);
     }
 
     public function render()
