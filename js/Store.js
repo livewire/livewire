@@ -84,14 +84,18 @@ const store = {
     },
 
     componentsListeningForEventThatAreTreeAncestors(el, event) {
-        var parentIds = []
+        let parentIds = []
 
-        var parent = el.parentElement.closest('[wire\\:id]')
+        let parent = el.parentElement
+            ? el.parentElement.closest('[wire\\:id]')
+            : null
 
         while (parent) {
             parentIds.push(parent.getAttribute('wire:id'))
 
-            parent = parent.parentElement.closest('[wire\\:id]')
+            parent = parent.parentElement
+                ? parent.parentElement.closest('[wire\\:id]')
+                : null
         }
 
         return this.components().filter(component => {
