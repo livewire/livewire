@@ -294,6 +294,18 @@ class ValidationTest extends TestCase
             ->call('runSameValidation')
             ->assertDontSee('The password and password confirmation must match');
     }
+
+    /** @test */
+    public function only_data_in_validation_rules_is_returned()
+    {
+        $component = new ForValidation();
+        $component->bar = 'is required';
+
+        $validatedData = $component->runValidationWithoutAllPublicPropertiesAndReturnValidatedData();
+        $this->assertSame([
+            'bar' => $component->bar,
+        ], $validatedData);
+    }
 }
 
 class ForValidation extends Component
@@ -433,6 +445,11 @@ class ForValidation extends Component
         $this->validate([
             'password' => 'same:passwordConfirmation',
         ]);
+    }
+
+    public function runValidationWithoutAllPublicPropertiesAndReturnValidatedData()
+    {
+        return $this->validate(['bar' => 'required']);
     }
 
     public function render()

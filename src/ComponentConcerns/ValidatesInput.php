@@ -106,11 +106,11 @@ trait ValidatesInput
 
         $this->shortenModelAttributes($data, $rules, $validator);
 
-        $validator->validate();
+        $validatedData = $validator->validate();
 
         $this->resetErrorBag();
 
-        return $data;
+        return $validatedData;
     }
 
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
