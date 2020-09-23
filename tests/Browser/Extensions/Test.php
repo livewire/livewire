@@ -13,16 +13,16 @@ class Test extends TestCase
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
                 ->tap(function (Browser $browser) {
-                    $browser->script('window.renameMe = false');
                     $browser->script([
+                        'window.renameMe = false',
                         "window.livewire.directive('foo', (el, directive, component) => {
                             window.renameMe = true
                         })",
                     ]);
-                    $this->assertTrue($browser->driver->executeScript('return window.renameMe === false'));
-                    $browser->waitForLivewire()->click('@refresh');
-                    $this->assertTrue($browser->driver->executeScript('return window.renameMe === true'));
                 })
+                ->assertScript('window.renameMe', false)
+                ->waitForLivewire()->click('@refresh')
+                ->assertScript('window.renameMe', true)
             ;
         });
     }

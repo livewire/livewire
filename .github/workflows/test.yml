@@ -14,18 +14,11 @@ jobs:
       fail-fast: true
       matrix:
         php: [7.2, 7.3, 7.4]
-        laravel: [7.*, 8.x-dev]
+        laravel: [7.*, 8.*]
         dependency-version: [prefer-stable]
         exclude:
           - php: 7.2
-            laravel: 8.x-dev
-        include:
-          - laravel: 7.*
-            testbench: 5.*
-            testbench-dusk: 5.*
-          - laravel: 8.x-dev
-            testbench: 6.x-dev
-            testbench-dusk: dev-master
+            laravel: 8.*
 
     name: PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}(${{ matrix.dependency-version }})
 
@@ -50,18 +43,18 @@ jobs:
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: dependencies-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
-          restore-keys: ${{ runner.os }}-composer-
+          restore-keys: dependencies-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-
 
       - name: Install Composer dependencies
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "orchestra/testbench-dusk:${{ matrix.testbench-dusk }}" --no-interaction --no-update --dev
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
           composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest
-
-      - name: Setup dusk/chrome
-        run: vendor/bin/dusk-updater detect --no-interaction
 
       - name: Run Unit tests
         run: vendor/bin/phpunit --testsuite Unit
+
+      - name: Setup dusk/chrome
+        run: vendor/bin/dusk-updater detect --no-interaction
 
       - name: Run Browser tests
         run: vendor/bin/phpunit --testsuite Browser

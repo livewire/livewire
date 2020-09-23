@@ -3,10 +3,10 @@
 namespace Tests\Unit;
 
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 
 class ValidationTest extends TestCase
 {
@@ -131,6 +131,18 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validating_only_a_specific_field_wont_throw_an_error_if_the_field_doesnt_exist()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('bar', '')
+            ->call('runValidationOnlyWithFooRules', 'bar')
+            ->assertDontSee('The foo field is required')
+            ->assertDontSee('The bar field is required');
+    }
+
+    /** @test */
     public function can_validate_only_a_specific_field_with_custom_message_property()
     {
         $component = Livewire::test(ForValidation::class);
@@ -197,7 +209,7 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    public function can_assert_has_no_errors_when_no_validation_has_faile_and_specific_keys_are_supplied()
+    public function can_assert_has_no_errors_when_no_validation_has_failed_and_specific_keys_are_supplied()
     {
         $component = Livewire::test(ForValidation::class);
 
@@ -229,6 +241,71 @@ class ValidationTest extends TestCase
             ->call('runValidationWithClassBasedRule')
             ->assertHasNoErrors(['foo' => ValueEqualsFoobar::class]);
     }
+
+    /** @test */
+    public function custom_validation_messages_are_cleared_between_validate_only_validations()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        // cleared when custom validation passes
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', 'b')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertDontSee('The bar field is required')
+            ->assertSee('Lengths must be the same')
+            ->set('bar', 'baz')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertDontSee('The bar field is required')
+            ->assertDontSee('Lengths must be the same');
+
+        // cleared when custom validation isn't run
+        $component
+            ->set('foo', 'foo')
+            ->set('bar', 'b')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertDontSee('The bar field is required')
+            ->assertSee('Lengths must be the same')
+            ->set('bar', '')
+            ->call('runValidationOnlyWithCustomValidation', 'bar')
+            ->assertSee('The bar field is required')
+            ->assertDontSee('Lengths must be the same');
+    }
+
+    /** @test */
+    public function validation_fails_when_same_rule_is_used_without_matching()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('password', 'supersecret')
+            ->call('runSameValidation')
+            ->assertSee('The password and password confirmation must match');
+    }
+
+    /** @test */
+    public function validation_passes_when_same_rule_is_used_and_matches()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('password', 'supersecret')
+            ->set('passwordConfirmation', 'supersecret')
+            ->call('runSameValidation')
+            ->assertDontSee('The password and password confirmation must match');
+    }
+
+    /** @test */
+    public function only_data_in_validation_rules_is_returned()
+    {
+        $component = new ForValidation();
+        $component->bar = 'is required';
+
+        $validatedData = $component->runValidationWithoutAllPublicPropertiesAndReturnValidatedData();
+        $this->assertSame([
+            'bar' => $component->bar,
+        ], $validatedData);
+    }
 }
 
 class ForValidation extends Component
@@ -240,6 +317,8 @@ class ForValidation extends Component
         ['foo' => 'bar', 'baz' => 'blab'],
         ['foo' => 'bar', 'baz' => ''],
     ];
+    public $password = '';
+    public $passwordConfirmation = '';
 
     public function runValidation()
     {
@@ -269,6 +348,30 @@ class ForValidation extends Component
             'foo' => 'required',
             'bar' => 'required',
         ]);
+    }
+
+    public function runValidationOnlyWithFooRules($field)
+    {
+        $this->validateOnly($field, [
+            'foo' => 'required',
+        ]);
+    }
+
+    public function runValidationOnlyWithCustomValidation($field)
+    {
+        $this->validateOnly($field, [
+            'foo' => 'required',
+            'bar' => 'required',
+        ]);
+
+        Validator::make(
+            [
+                'foo_length' => strlen($this->foo),
+                'bar_length' => strlen($this->bar),
+            ],
+            [ 'foo_length' => 'same:bar_length' ],
+            [ 'same' => 'Lengths must be the same' ]
+        )->validate();
     }
 
     public function runValidationOnlyWithMessageProperty($field)
@@ -334,6 +437,19 @@ class ForValidation extends Component
             'items.*.foo' => ['required', 'string'],
             'items.*.baz' => ['required', 'string'],
         ]);
+    }
+
+
+    public function runSameValidation()
+    {
+        $this->validate([
+            'password' => 'same:passwordConfirmation',
+        ]);
+    }
+
+    public function runValidationWithoutAllPublicPropertiesAndReturnValidatedData()
+    {
+        return $this->validate(['bar' => 'required']);
     }
 
     public function render()

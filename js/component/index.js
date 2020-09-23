@@ -60,6 +60,10 @@ export default class Component {
         return this.serverMemo.data
     }
 
+    get childIds() {
+        return Object.values(this.serverMemo.children).map(child => child.id)
+    }
+
     initialize() {
         this.walk(
             // Will run for every node in the component tree (not child component nodes).

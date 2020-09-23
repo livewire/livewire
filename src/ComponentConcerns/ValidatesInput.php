@@ -96,84 +96,42 @@ trait ValidatesInput
 
     public function validate($rules = null, $messages = [], $attributes = [])
     {
-        $rules = is_null($rules) ? $this->getRules() : $rules;
+        [$rules, $messages] = $this->providedOrGlobalRulesAndMessages($rules, $messages);
 
-        throw_if(empty($rules), new MissingRulesException($this::getName()));
+        $data = $this->prepareForValidation(
+            $this->getDataForValidation($rules)
+        );
 
-        $messages = empty($messages) ? $this->getMessages() : $messages;
+        $validator = Validator::make($data, $rules, $messages, $attributes);
 
-        $result = $this->getPublicPropertiesDefinedBySubClass();
+        $this->shortenModelAttributes($data, $rules, $validator);
 
-        $fields = array_keys($rules);
+        $validatedData = $validator->validate();
 
-        foreach ($fields as $field) {
-            throw_unless(
-                $this->hasProperty($field),
-                new \Exception('No property found for validation: ['.$field.']')
-            );
-
-            $propertyNameFromValidationField = $this->beforeFirstDot($field);
-
-            $value = $this->getPropertyValue($propertyNameFromValidationField);
-
-            if ($value instanceof Model) {
-                // Take the following valition rules for example: ['post.title' => 'required']
-                // Before this line of code: "The post.title field is required"
-                // After this line of code:  "The title field is required."
-                $attributes[$field] = $attributes[$field] ?? $this->afterFirstDot($field);
-
-                $result[$propertyNameFromValidationField] = $value->toArray();
-            } else {
-                $result[$propertyNameFromValidationField] = $value;
-            }
-        }
-
-        $result = $this->prepareForValidation($result);
-
-        $result = Validator::make($result, Arr::only($rules, $fields), $messages, $attributes)
-            ->validate();
-
-        // If the code made it this far, validation passed, so we can clear old failures.
         $this->resetErrorBag();
 
-        return $result;
+        return $validatedData;
     }
 
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
     {
-        $rules = is_null($rules) ? $this->getRules() : $rules;
+        [$rules, $messages] = $this->providedOrGlobalRulesAndMessages($rules, $messages);
 
-        throw_if(empty($rules), new MissingRulesException($this::getName()));
+        // If the field is "items.0.foo", we should apply the validation rule for "items.*.foo".
+        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
+            return Str::is($fullFieldKey, $field);
+        })->toArray();
 
-        $messages = empty($messages) ? $this->getMessages() : $messages;
-
-        $result = $this->getPublicPropertiesDefinedBySubClass();
-
-        throw_unless(
-            $this->hasProperty($field),
-            new \Exception('No property found for validation: ['.$field.']')
+        $data = $this->prepareForValidation(
+            $this->getDataForValidation($rules)
         );
 
-        $propertyNameFromValidationField = $this->beforeFirstDot($field);
+        $validator = Validator::make($data, $rulesForField, $messages, $attributes);
 
-        $result[$propertyNameFromValidationField]
-            = $this->getPropertyValue($propertyNameFromValidationField);
-
-        if ($result[$propertyNameFromValidationField] instanceof Model) {
-            // Take the following valition rules for example: ['post.title' => 'required']
-            // Before this line of code: "The post.title field is required"
-            // After this line of code:  "The title field is required."
-            $attributes[$field] = $attributes[$field] ?? $this->afterFirstDot($field);
-        }
+        $this->shortenModelAttributes($data, $rulesForField, $validator);
 
         try {
-            // If the field is "items.0.foo", we should apply the validation rule for "items.*.foo".
-            $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
-                return Str::is($fullFieldKey, $field);
-            })->toArray();
-
-            $result = Validator::make($result, $rulesForField, $messages, $attributes)
-                ->validate();
+            $result = $validator->validate();
         } catch (ValidationException $e) {
             $messages = $e->validator->getMessageBag();
             $target = new ObjectPrybar($e->validator);
@@ -188,13 +146,53 @@ trait ValidatesInput
             throw $e;
         }
 
-        // If the code made it this far, validation passed, so we can clear old failures.
         $this->resetErrorBag($field);
 
         return $result;
     }
 
-    protected function prepareForValidation(array $attributes)
+    protected function shortenModelAttributes($data, $rules, $validator)
+    {
+        // If a model ($foo) is a property, and the validation rule is
+        // "foo.bar", then set the attribute to just "bar", so that
+        // the validation message is shortened and more readable.
+        foreach ($rules as $key => $value) {
+            $propertyName = $this->beforeFirstDot($key);
+
+            if ($data[$propertyName] instanceof Model) {
+                if ($key === $validator->getDisplayableAttribute($key)) {
+                    $validator->addCustomAttributes([$key => $this->afterFirstDot($key)]);
+                }
+            }
+        }
+    }
+
+    protected function providedOrGlobalRulesAndMessages($rules, $messages)
+    {
+        $rules = is_null($rules) ? $this->getRules() : $rules;
+
+        throw_if(empty($rules), new MissingRulesException($this::getName()));
+
+        $messages = empty($messages) ? $this->getMessages() : $messages;
+
+        return [$rules, $messages];
+    }
+
+    protected function getDataForValidation($rules)
+    {
+        $properties = $this->getPublicPropertiesDefinedBySubClass();
+
+        collect($rules)->keys()
+            ->each(function ($ruleKey) use ($properties) {
+                $propertyName = $this->beforeFirstDot($ruleKey);
+
+                throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: ['.$ruleKey.']'));
+            });
+
+        return $properties;
+    }
+
+    protected function prepareForValidation($attributes)
     {
         return $attributes;
     }

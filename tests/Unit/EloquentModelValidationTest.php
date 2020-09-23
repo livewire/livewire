@@ -36,6 +36,19 @@ class EloquentModelValidationTest extends TestCase
     }
 
     /** @test */
+    public function validate_message_still_honors_original_custom_attributes_if_property_is_a_model()
+    {
+        app('translator')->addLines(['validation.required' => 'The :attribute field is required.'], 'en');
+        app('translator')->addLines(['validation.attributes.foo.bar' => 'plop'], 'en');
+
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.bar', '')
+            ->call('save')
+            ->assertSee('The plop field is required.');
+    }
+
+    /** @test */
     public function validate_only_message_doesnt_contain_dot_notation_if_property_is_model()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
