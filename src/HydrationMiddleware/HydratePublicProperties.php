@@ -4,6 +4,7 @@ namespace Livewire\HydrationMiddleware;
 
 use DateTime;
 use Carbon\Carbon;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Contracts\Database\ModelIdentifier;
@@ -113,8 +114,15 @@ class HydratePublicProperties implements HydrationMiddleware
                 return $instance->beforeFirstDot($instance->afterFirstDot($key));
             });
 
+            $object = $instance->$property;
+
+            // Allow attribute casting on model
+            if ($object instanceof Arrayable) {
+                $object = $object->toArray();
+            }
+
             foreach ($keys as $key) {
-                data_set($modelData, $key, data_get($instance->$property, $key));
+                data_set($modelData, $key, data_get($object, $key));
             }
         }
 
