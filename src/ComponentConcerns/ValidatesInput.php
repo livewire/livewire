@@ -86,12 +86,22 @@ trait ValidatesInput
 
     public function missingRuleFor($dotNotatedProperty)
     {
-        return ! collect($this->getRules())
+        // Prepare numerical-indexed properties for array attributes
+        $preparedProperty = (string) Str::of($dotNotatedProperty)
+            ->replaceMatches('/(?<=(\.))\d+\./', '.*.')
+            ->replace('..', '.');
+
+        $isANumericallyIndexedProperty = $dotNotatedProperty !== $preparedProperty;
+
+        return !collect($this->getRules())
             ->keys()
-            ->map(function ($key) {
-                return Str::of($key)->before('.*');
-            })
-            ->contains($dotNotatedProperty);
+            ->map(function ($key) use ($isANumericallyIndexedProperty) {
+                if ($isANumericallyIndexedProperty) {
+                    return $key;
+                }
+
+                return (string) Str::of($key)->before('.*');
+            })->contains($preparedProperty);
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])
