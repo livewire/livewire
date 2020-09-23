@@ -27,7 +27,7 @@ class TestCase extends BaseTestCase
             DuskOptions::withoutUI();
         }
 
-        Browser::mixin(DuskBrowserMacros::class);
+        Browser::mixin(new DuskBrowserMacros);
 
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();
