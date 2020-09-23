@@ -291,18 +291,6 @@ class TestCase extends BaseTestCase
         Browser::macro('offline', function () {
             return tap($this)->script("window.dispatchEvent(new Event('offline'))");
         });
-
-        Browser::macro('captureLivewireRequest', function () {
-            $this->driver->executeScript('window.capturedRequestsForDusk = []');
-
-            return $this;
-        });
-
-        Browser::macro('replayLivewireRequest', function () {
-            $this->driver->executeScript('window.capturedRequestsForDusk.forEach(callback => callback()); delete window.capturedRequestsForDusk;');
-
-            return $this;
-        });
     }
 
     protected function driver(): RemoteWebDriver
