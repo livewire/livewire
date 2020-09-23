@@ -9,7 +9,7 @@ class DuskBrowserMacros
 {
     public function assertAttributeMissing()
     {
-        function ($selector, $attribute) {
+        return function ($selector, $attribute) {
             /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
@@ -26,7 +26,7 @@ class DuskBrowserMacros
 
     public function assertNotVisible()
     {
-        function ($selector) {
+        return function ($selector) {
             /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
@@ -41,7 +41,7 @@ class DuskBrowserMacros
 
     public function assertNotPresent()
     {
-        function ($selector) {
+        return function ($selector) {
             /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
@@ -56,7 +56,7 @@ class DuskBrowserMacros
 
     public function assertHasClass()
     {
-        function ($selector, $className) {
+        return function ($selector, $className) {
             /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
@@ -72,7 +72,7 @@ class DuskBrowserMacros
 
     public function assertScript()
     {
-        function ($js, $expects = true) {
+        return function ($js, $expects = true) {
             /** @var \Laravel\Dusk\Browser $this */
             PHPUnit::assertEquals($expects, head($this->script(
                 Str::start( $js, 'return ')
@@ -84,7 +84,7 @@ class DuskBrowserMacros
 
     public function assertClassMissing()
     {
-        function ($selector, $className) {
+        return function ($selector, $className) {
             /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
@@ -100,7 +100,7 @@ class DuskBrowserMacros
 
     public function waitForLivewireToLoad()
     {
-        function () {
+        return function () {
             /** @var \Laravel\Dusk\Browser $this */
             return $this->waitUsing(5, 75, function () {
                 return $this->driver->executeScript("return !! window.Livewire.components.initialRenderIsFinished");
@@ -110,7 +110,7 @@ class DuskBrowserMacros
 
     public function waitForLivewire()
     {
-        function ($callback = null) {
+        return function ($callback = null) {
             /** @var \Laravel\Dusk\Browser $this */
             $id = rand(100, 1000);
 
@@ -150,7 +150,7 @@ class DuskBrowserMacros
 
     public function online()
     {
-        function () {
+        return function () {
             /** @var \Laravel\Dusk\Browser $this */
             return tap($this)->script("window.dispatchEvent(new Event('online'))");
         };
@@ -158,7 +158,7 @@ class DuskBrowserMacros
 
     public function offline()
     {
-        function () {
+        return function () {
             /** @var \Laravel\Dusk\Browser $this */
             return tap($this)->script("window.dispatchEvent(new Event('offline'))");
         };
