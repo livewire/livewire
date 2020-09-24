@@ -32,37 +32,39 @@ trait ValidatesInput
             : new MessageBag($bag);
     }
 
-    public function resetErrorBag(...$fields)
+    public function resetErrorBag($field = null)
     {
+        $fields = (array) $field;
+
         if (empty($fields)) {
             return $this->errorBag = new MessageBag;
         }
 
         $this->setErrorBag(
-            $this->errorBagExcept(...$fields)
+            $this->errorBagExcept($fields)
         );
     }
 
-    public function clearValidation(...$field)
+    public function clearValidation($field = null)
     {
-        $this->resetErrorBag(...$fields);
+        $this->resetErrorBag($field);
     }
 
-    public function resetValidation(...$fields)
+    public function resetValidation($field = null)
     {
-        $this->resetErrorBag(...$fields);
+        $this->resetErrorBag($field);
     }
 
-    public function errorBagExcept(...$fields)
+    public function errorBagExcept($field)
     {
+        $fields = (array) $field;
+
         return new MessageBag(
             collect($this->getErrorBag())
                 ->reject(function ($messages, $messageKey) use ($fields) {
-                    return collect($fields)
-                        ->flatten()
-                        ->some(function ($field) use ($messageKey) {
-                            return  Str::is($field, $messageKey);
-                        });
+                    return collect($fields)->some(function ($field) use ($messageKey) {
+                        return Str::is($field, $messageKey);
+                    });
                 })
                 ->toArray()
         );
@@ -128,11 +130,11 @@ trait ValidatesInput
         [$rules, $messages] = $this->providedOrGlobalRulesAndMessages($rules, $messages);
 
         // If the field is "items.0.foo", validation rules for "items.*.foo", "items.*", etc. are applied.
-        $rulesForField = collect($rules)
-            ->filter(function ($rule, $ruleKey) use ($field) {
-                return Str::is($ruleKey, $field);
-            })
-            ->toArray();
+        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
+            return Str::is($fullFieldKey, $field);
+        })->toArray();
+
+        $ruleKeysForField = array_keys($rulesForField);
 
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
@@ -151,14 +153,14 @@ trait ValidatesInput
             $target->setProperty(
                 'messages',
                 $messages->merge(
-                    $this->errorBagExcept(array_keys($rulesForField))
+                    $this->errorBagExcept($ruleKeysForField)
                 )
             );
 
             throw $e;
         }
 
-        $this->resetErrorBag(array_keys($rulesForField));
+        $this->resetErrorBag($ruleKeysForField);
 
         return $result;
     }
