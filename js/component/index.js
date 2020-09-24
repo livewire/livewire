@@ -645,7 +645,7 @@ export default class Component {
                 if (property === '__instance') return component
 
                 // Forward "emits" to base Livewire object.
-                if (property.match(/^emit.*/)) return function (...args) {
+                if (typeof property === 'string' && property.match(/^emit.*/)) return function (...args) {
                     if (property === 'emitSelf') return store.emitSelf(component.id, ...args)
 
                     return store[property].apply(component, args)
