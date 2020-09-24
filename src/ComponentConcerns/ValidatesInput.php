@@ -34,12 +34,14 @@ trait ValidatesInput
 
     public function resetErrorBag($field = null)
     {
-        if (is_null($field)) {
-            $this->errorBag = new MessageBag;
+        $fields = (array) $field;
+
+        if (empty($fields)) {
+            return $this->errorBag = new MessageBag;
         }
 
         $this->setErrorBag(
-            Arr::except($this->getErrorBag()->toArray(), $field)
+            $this->errorBagExcept($fields)
         );
     }
 
@@ -55,7 +57,17 @@ trait ValidatesInput
 
     public function errorBagExcept($field)
     {
-        return new MessageBag(Arr::except($this->getErrorBag()->toArray(), $field));
+        $fields = (array) $field;
+
+        return new MessageBag(
+            collect($this->getErrorBag())
+                ->reject(function ($messages, $messageKey) use ($fields) {
+                    return collect($fields)->some(function ($field) use ($messageKey) {
+                        return Str::is($field, $messageKey);
+                    });
+                })
+                ->toArray()
+        );
     }
 
     protected function getRules()
@@ -117,10 +129,12 @@ trait ValidatesInput
     {
         [$rules, $messages] = $this->providedOrGlobalRulesAndMessages($rules, $messages);
 
-        // If the field is "items.0.foo", we should apply the validation rule for "items.*.foo".
+        // If the field is "items.0.foo", validation rules for "items.*.foo", "items.*", etc. are applied.
         $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
             return Str::is($fullFieldKey, $field);
         })->toArray();
+
+        $ruleKeysForField = array_keys($rulesForField);
 
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
@@ -139,14 +153,14 @@ trait ValidatesInput
             $target->setProperty(
                 'messages',
                 $messages->merge(
-                    $this->errorBagExcept($field)
+                    $this->errorBagExcept($ruleKeysForField)
                 )
             );
 
             throw $e;
         }
 
-        $this->resetErrorBag($field);
+        $this->resetErrorBag($ruleKeysForField);
 
         return $result;
     }
