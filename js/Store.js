@@ -117,7 +117,7 @@ const store = {
     },
 
     callHook(name, ...params) {
-        this.hooks.call(name, ...params)
+        return this.hooks.call(name, ...params)
     },
 
     changeComponentId(component, newId) {

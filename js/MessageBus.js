@@ -13,9 +13,13 @@ export default class MessageBus {
     }
 
     call(name, ...params) {
+        let result = true
+
         (this.listeners[name] || []).forEach(callback => {
-            callback(...params)
+            result = !! callback(...params)
         })
+
+        return result
     }
 
     has(name) {

@@ -14,6 +14,7 @@ export default {
         'message.failed',
         'message.received',
         'message.processed',
+        'redirecting',
 
         /**
          * Private Hooks
@@ -35,6 +36,6 @@ export default {
     },
 
     call(name, ...params) {
-        this.bus.call(name, ...params)
+        return this.bus.call(name, ...params)
     },
 }

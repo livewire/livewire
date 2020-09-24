@@ -255,9 +255,7 @@ export default class Component {
         store.callHook('message.received', message, this)
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
-        if (response.effects.redirect) {
-            this.redirect(response.effects.redirect)
-
+        if (response.effects.redirect && this.redirect(response.effects.redirect)) {
             return
         }
 
@@ -314,16 +312,21 @@ export default class Component {
             }
         }
 
-
         store.callHook('message.processed', message, this)
     }
 
     redirect(url) {
+        if (! store.callHook('redirecting', url, this)) {
+            return false
+        }
+
         if (window.Turbolinks && window.Turbolinks.supported) {
             window.Turbolinks.visit(url)
         } else {
             window.location.href = url
         }
+
+        return true
     }
 
     forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
