@@ -86,10 +86,17 @@ class Test extends TestCase
                  * Make sure property change from Livewire doesn't trigger an additional
                  * request because of @entangle.
                  */
+                ->tap(function ($b) {
+                    $b->script([
+                        'window.livewireRequestCount = 0',
+                        "window.Livewire.hook('message.sent', () => { window.livewireRequestCount++ })",
+                    ]);
+                })
+                ->assertScript('window.livewireRequestCount', 0)
                 ->waitForLivewire(function ($b) {
                     $b->click('@lob.reset');
-                    $b->assertSeeIn('@lob.output', '6');
                 })
+                ->assertScript('window.livewireRequestCount', 1)
                 ->pause(500)
                 ->assertMissing('#livewire-error')
                 ->assertSeeIn('@lob.output', '100')
