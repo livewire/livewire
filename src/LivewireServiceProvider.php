@@ -126,19 +126,23 @@ class LivewireServiceProvider extends ServiceProvider
             })->middleware('web');
         }
 
-        RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
-        RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
+        RouteFacade::prefix(config('livewire.route_prefix', '/livewire'))->group(function () {
+            RouteFacade::get('/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
+            RouteFacade::get('/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
 
-        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
-            ->middleware(config('livewire.middleware_group', 'web'));
+            RouteFacade::get('/')->name('livewire.base');
 
-        RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group', 'web'))
-            ->name('livewire.upload-file');
+            RouteFacade::post('/message/{name}', HttpConnectionHandler::class)
+                    ->middleware(config('livewire.middleware_group', 'web'));
 
-        RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group', 'web'))
-            ->name('livewire.preview-file');
+            RouteFacade::post('/upload-file', [FileUploadHandler::class, 'handle'])
+                    ->middleware(config('livewire.middleware_group', 'web'))
+                    ->name('livewire.upload-file');
+
+            RouteFacade::get('/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
+                    ->middleware(config('livewire.middleware_group', 'web'))
+                    ->name('livewire.preview-file');
+        });
     }
 
     protected function registerCommands()

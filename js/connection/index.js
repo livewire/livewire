@@ -22,7 +22,7 @@ export default class Connection {
 
         // Forward the query string for the ajax requests.
         fetch(
-            `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}`,
+            `${window.livewire_app_url}${window.livewire_prefix}/message/${payload.fingerprint.name}`,
             {
                 method: 'POST',
                 body: JSON.stringify(payload),

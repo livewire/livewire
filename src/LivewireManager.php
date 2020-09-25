@@ -166,6 +166,7 @@ HTML;
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
         $appUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
+        $prefix = rtrim(route('livewire.base', null, false), '/');
 
         $csrf = csrf_token();
 
@@ -173,7 +174,7 @@ HTML;
         $versionedFileName = $manifest['/livewire.js'];
 
         // Default to dynamic `livewire.js` (served by a Laravel route).
-        $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
+        $fullAssetPath = $appUrl . $prefix . $versionedFileName;
         $assetWarning = null;
 
         // Use static assets if they have been published
@@ -207,6 +208,7 @@ HTML;
     window.livewire = new Livewire({$jsonEncodedOptions});
     window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
+    window.livewire_prefix = '{$prefix}';
     window.livewire_token = '{$csrf}';
 
     /* Make Alpine wait until Livewire is finished rendering to do its thing. */

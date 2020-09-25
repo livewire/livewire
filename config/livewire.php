@@ -31,6 +31,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Livewire Route Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This value sets the prefix for Livewire routes, for cases where
+    | you need to customize where livewire mounts it's routes. By default, Livewire
+    | will prefix its routes with "/livewire".
+    |
+    | Examples: "/livewire", "/{tenant}/livewire".
+    |
+    */
+
+    'route_prefix'  => '/livewire',
+
+    /*
+    |--------------------------------------------------------------------------
     | Livewire Assets URL
     |--------------------------------------------------------------------------
     |
