@@ -165,7 +165,8 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
-        $appUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
+        $appUrl = rtrim($options['app_url'] ?? config('livewire.app_url'), '/');
+        $assetUrl = rtrim(config('app.asset_url') ?? '', '/');
 
         $csrf = csrf_token();
 
@@ -181,7 +182,7 @@ HTML;
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
             $versionedFileName = $publishedManifest['/livewire.js'];
 
-            $fullAssetPath = ($this->isOnVapor() ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
+            $fullAssetPath = $assetUrl.'/vendor/livewire'.$versionedFileName;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'

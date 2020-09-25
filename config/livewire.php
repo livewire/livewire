@@ -31,18 +31,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Livewire Assets URL
+    | Livewire App URL
     |--------------------------------------------------------------------------
     |
-    | This value sets the path to Livewire JavaScript assets, for cases where
-    | your app's domain root is not the correct path. By default, Livewire
-    | will load its JavaScript assets from the app's "relative root".
+    | This value sets the path to your Laravel app, for cases where
+    | your app's domain root is not the correct path. It's used by Livewire's
+    | JavaScript portion when communicating with the server. By default, Livewire
+    | will use the "relative root" ("/") to set up AJAX request paths.
     |
-    | Examples: "/assets", "myurl.com/app".
+    | Examples: "/app", "myurl.com/app".
     |
     */
 
-    'asset_url'  => null,
+    'app_url'  => null,
 
     /*
     |--------------------------------------------------------------------------
