@@ -78,8 +78,8 @@ export default {
                 // We have to check for typeof e.detail here for IE 11.
                 let value =
                     e instanceof CustomEvent &&
-                        typeof e.detail != 'undefined' &&
-                        typeof window.document.documentMode == 'undefined'
+                        typeof e.detail !== undefined &&
+                        typeof window.document.documentMode === undefined
                         ? e.detail
                         : DOM.valueFromInput(el, component)
 
