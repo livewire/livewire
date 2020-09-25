@@ -20,13 +20,6 @@ class ModelAttributesCanBeBoundDirectlyTest extends TestCase
             $table->string('title');
             $table->timestamps();
         });
-
-        Schema::create('model_for_attribute_castings', function ($table) {
-            $table->bigIncrements('id');
-            $table->date('castable_date');
-            $table->date('non_castable_date');
-            $table->timestamps();
-        });
     }
 
     /** @test */
@@ -91,38 +84,12 @@ class ModelAttributesCanBeBoundDirectlyTest extends TestCase
 
         $component->call('$refresh');
     }
-
-    /** @test */
-    public function attributes_can_be_casted_from_model_definition()
-    {
-        $model = ModelForAttributeCasting::create(['id' => 1, 'castable_date' => new \DateTime('2020-03-03'), 'non_castable_date' => new \DateTime('2015-10-21')]);
-
-        $component = Livewire::test(ComponentForModelAttributeCasting::class, ['model' => $model]);
-
-        $castable_date = $component->payload['serverMemo']['data']['model']['castable_date'];
-        $this->assertIsString($castable_date);
-        $this->assertSame($castable_date, '2020-03-03');
-
-        $non_castable_date = $component->payload['serverMemo']['data']['model']['non_castable_date'];
-        $this->assertIsObject($non_castable_date);
-        $this->assertNotSame($non_castable_date, '2015-10-21');
-    }
 }
 
 class ModelForAttributeBinding extends Model
 {
     protected $connection = 'testbench';
     protected $guarded = [];
-}
-
-class ModelForAttributeCasting extends Model
-{
-    protected $connection = 'testbench';
-    protected $guarded = [];
-
-    protected $casts = [
-        'castable_date' => 'date:Y-m-d'
-    ];
 }
 
 class ComponentWithModelProperty extends Component
@@ -148,25 +115,6 @@ class ComponentWithModelProperty extends Component
     public function refreshModel()
     {
         $this->model->refresh();
-    }
-
-    public function render()
-    {
-        return view('null-view');
-    }
-}
-
-class ComponentForModelAttributeCasting extends Component
-{
-    public $model;
-
-    protected $rules = [
-        'model.castable_date' => ['required'],
-        'model.non_castable_date' => ['required']
-    ];
-
-    public function mount(ModelForAttributeCasting $model) {
-        $this->model = $model;
     }
 
     public function render()
