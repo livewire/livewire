@@ -76,8 +76,9 @@ export default {
                 let model = directive.value
                 let el = e.target
                 // We have to check for typeof e.detail here for IE 11.
+                let isIE11 = !!window.MSInputMethodContext && !!window.document.documentMode
                 let value =
-                    e instanceof CustomEvent &&
+                    isIE11 && e instanceof CustomEvent &&
                         typeof e.detail != 'undefined' &&
                         typeof window.document.documentMode == 'undefined'
                         ? e.detail
