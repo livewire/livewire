@@ -407,6 +407,26 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function allows_setting_file_types_for_temporary_signed_urls()
+    {
+        config()->set('livewire.temporary_file_upload.preview_types', ['pdf']);
+
+        Storage::fake('advatars');
+
+        $file = UploadedFile::fake()->create('file.pdf');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        ob_start();
+        $this->get($photo->temporaryUrl())->sendContent();
+        $rawFileContents = ob_get_clean();
+
+        $this->assertEquals($file->get(), $rawFileContents);
+    }
+
+    /** @test */
     public function public_temporary_file_url_must_have_valid_signature()
     {
         $photo = Livewire::test(FileUploadComponent::class)
