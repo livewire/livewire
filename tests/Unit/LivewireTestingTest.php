@@ -106,7 +106,6 @@ class LivewireTestingTest extends TestCase
     {
         app(LivewireManager::class)
             ->test(EmitsEventsComponentStub::class)
-            ->call('methodWithoutEmit')
             ->assertNotEmitted('foo')
             ->call('emitFoo')
             ->assertNotEmitted('bar')
@@ -218,11 +217,6 @@ class EmitsEventsComponentStub extends Component
     public function emitFoo()
     {
         $this->emit('foo');
-    }
-
-    public function methodWithoutEmit()
-    {
-        //
     }
 
     public function emitFooWithParam($param)
