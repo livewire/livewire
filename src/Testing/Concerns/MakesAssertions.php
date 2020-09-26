@@ -11,16 +11,16 @@ use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MakesAssertions
 {
-    public function assertSet($name, $value)
+    public function assertSet($name, $value, $message = '')
     {
-        PHPUnit::assertEquals($value, $this->get($name));
+        PHPUnit::assertEquals($value, $this->get($name), $message);
 
         return $this;
     }
 
-    public function assertNotSet($name, $value)
+    public function assertNotSet($name, $value, $message = '')
     {
-        PHPUnit::assertNotEquals($value, $this->get($name));
+        PHPUnit::assertNotEquals($value, $this->get($name), $message);
 
         return $this;
     }
@@ -35,51 +35,56 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertDontSee($value)
+    public function assertDontSee($value, $message = '')
     {
         PHPUnit::assertStringNotContainsString(
             e($value),
-            $this->stripOutInitialData($this->payload['dom'])
+            $this->stripOutInitialData($this->payload['dom']),
+            $message
         );
 
         return $this;
     }
 
-    public function assertSeeHtml($value)
+    public function assertSeeHtml($value, $message = '')
     {
         PHPUnit::assertStringContainsString(
             $value,
-            $this->stripOutInitialData($this->payload['dom'])
+            $this->stripOutInitialData($this->payload['dom']),
+            $message
         );
 
         return $this;
     }
 
-    public function assertDontSeeHtml($value)
+    public function assertDontSeeHtml($value, $message = '')
     {
         PHPUnit::assertStringNotContainsString(
             $value,
-            $this->stripOutInitialData($this->payload['dom'])
+            $this->stripOutInitialData($this->payload['dom']),
+            $message
         );
 
         return $this;
     }
 
-    public function assertSeeHtmlInOrder(array $values)
+    public function assertSeeHtmlInOrder(array $values, $message = '')
     {
         PHPUnit::assertThat(
             $values,
-            new SeeInOrder($this->stripOutInitialData($this->payload['dom']))
+            new SeeInOrder($this->stripOutInitialData($this->payload['dom'])),
+            $message
         );
 
         return $this;
     }
 
-    public function assertSeeInOrder(array $values)
+    public function assertSeeInOrder(array $values, $message = '')
     {
         PHPUnit::assertThat(
             array_map('e', ($values)),
-            new SeeInOrder($this->stripOutInitialData($this->payload['dom']))
+            new SeeInOrder($this->stripOutInitialData($this->payload['dom'])),
+            $message
         );
 
         return $this;
@@ -213,7 +218,7 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertRedirect($uri = null)
+    public function assertRedirect($uri = null, $message = '')
     {
         PHPUnit::assertIsString(
             $this->payload['redirectTo'],
@@ -221,22 +226,22 @@ trait MakesAssertions
         );
 
         if (! is_null($uri)) {
-            PHPUnit::assertSame(url($uri), url($this->payload['redirectTo']));
+            PHPUnit::assertSame(url($uri), url($this->payload['redirectTo']), $message);
         }
 
         return $this;
     }
 
-    public function assertViewHas($key, $value = null)
+    public function assertViewHas($key, $value = null, $message = '')
     {
         if (is_null($value)) {
-            PHPUnit::assertArrayHasKey($key, $this->lastRenderedView->gatherData());
+            PHPUnit::assertArrayHasKey($key, $this->lastRenderedView->gatherData(), $message);
         } elseif ($value instanceof \Closure) {
-            PHPUnit::assertTrue($value($this->lastRenderedView->gatherData()[$key]));
+            PHPUnit::assertTrue($value($this->lastRenderedView->gatherData()[$key]), $message);
         } elseif ($value instanceof Model) {
-            PHPUnit::assertTrue($value->is($this->lastRenderedView->gatherData()[$key]));
+            PHPUnit::assertTrue($value->is($this->lastRenderedView->gatherData()[$key]), $message);
         } else {
-            PHPUnit::assertEquals($value, $this->lastRenderedView->gatherData()[$key]);
+            PHPUnit::assertEquals($value, $this->lastRenderedView->gatherData()[$key], $message);
         }
 
         return $this;
