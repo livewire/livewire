@@ -56,23 +56,6 @@ return [
     */
 
     'middleware_group'  => 'web',
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Supported Preview Types
-    |--------------------------------------------------------------------------
-    |
-    | Only allow the the following filetypes when generating 
-    | pre-signed temporary urls for files on local storage.
-    |
-    */
-
-    'supported_preview_types' => [
-        'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
-        'mp4', 'mov', 'avi', 'wmv',
-        'mp3', 'mpga', 'wav', 'm4a', 'wma',
-    ],
-
 
     /*
     |--------------------------------------------------------------------------
@@ -91,6 +74,12 @@ return [
         'rules' => null,       // Example: ['file', 'mimes:png,jpg']  Default: ['required', 'file', 'max:12288'] (12MB)
         'directory' => null,   // Example: 'tmp'                      Default  'livewire-tmp'
         'middleware' => null,  // Example: 'throttle:5,1'             Default: 'throttle:60,1'
+        // Supported file types for temp pre-sigend files
+        'preview_types' => [
+            'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
+            'mp4', 'mov', 'avi', 'wmv',
+            'mp3', 'mpga', 'wav', 'm4a', 'wma',
+        ],
     ],
 
     /*
