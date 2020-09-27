@@ -9,11 +9,35 @@ use PHPUnit\Framework\Assert as PHPUnit;
 class LifecycleHooksTest extends TestCase
 {
     /** @test */
+    public function created_hook()
+    {
+        $component = Livewire::test(ForLifecycleHooks::class);
+
+        $this->assertEquals([
+            'created' => true,
+            'mount' => true,
+            'hydrate' => false,
+            'hydrateFoo' => false,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
+            'updating' => false,
+            'updated' => false,
+            'updatingFoo' => false,
+            'updatedFoo' => false,
+            'updatingBar' => false,
+            'updatingBarBaz' => false,
+            'updatedBar' => false,
+            'updatedBarBaz' => false,
+        ], $component->lifecycles);
+    }
+
+    /** @test */
     public function mount_hook()
     {
         $component = Livewire::test(ForLifecycleHooks::class);
 
         $this->assertEquals([
+            'created' => true,
             'mount' => true,
             'hydrate' => false,
             'hydrateFoo' => false,
@@ -38,6 +62,7 @@ class LifecycleHooksTest extends TestCase
         $component->call('$refresh');
 
         $this->assertEquals([
+            'created' => true,
             'mount' => true,
             'hydrate' => true,
             'hydrateFoo' => true,
@@ -72,6 +97,7 @@ class LifecycleHooksTest extends TestCase
 
 
         $this->assertEquals([
+            'created' => true,
             'mount' => true,
             'hydrate' => true,
             'hydrateFoo' => true,
@@ -123,6 +149,7 @@ class LifecycleHooksTest extends TestCase
         $component->updateProperty('bar.cocktail.soft', 'Shirley Cumin');
 
         $this->assertEquals([
+            'created' => true,
             'mount' => true,
             'hydrate' => true,
             'hydrateFoo' => true,
@@ -168,6 +195,7 @@ class LifecycleHooksTest extends TestCase
         $component->set('bar.baz', 'bop');
 
         $this->assertEquals([
+            'created' => true,
             'mount' => true,
             'hydrate' => true,
             'hydrateFoo' => true,
@@ -203,6 +231,7 @@ class LifecycleHooksTest extends TestCase
         $component->call('$set', 'foo', 'bar');
 
         $this->assertEquals([
+            'created' => true,
             'mount' => true,
             'hydrate' => true,
             'hydrateFoo' => true,
@@ -231,6 +260,7 @@ class ForLifecycleHooks extends Component
     public $expected;
 
     public $lifecycles = [
+        'created' => false,
         'mount' => false,
         'hydrate' => false,
         'hydrateFoo' => false,
@@ -245,6 +275,11 @@ class ForLifecycleHooks extends Component
         'updatedBar' => false,
         'updatedBarBaz' => false,
     ];
+
+    public function created()
+    {
+        $this->lifecycles['created'] = true;
+    }
 
     public function mount(array $expected = [])
     {

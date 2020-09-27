@@ -36,6 +36,15 @@ abstract class Component
 
         $this->ensureIdPropertyIsntOverridden();
 
+        if (method_exists($this, 'created')) {
+            // At this point, the component's traits have been initialized,
+            // but neither Request Data nor Property Bindings have been executed.
+            // This is intended for assigning default values to mission-critical properties,
+            // or class-based properties, like Collections or Models, since in PHP you can't
+            // create classes nor call functions inline when defining class properties)
+            $this->created();
+        }
+
         $this->initializeTraits();
     }
 
@@ -221,7 +230,7 @@ abstract class Component
     public function __call($method, $params)
     {
         if (
-            in_array($method, ['mount', 'hydrate', 'dehydrate', 'updating', 'updated'])
+            in_array($method, ['created', 'mount', 'hydrate', 'dehydrate', 'updating', 'updated'])
             || Str::startsWith($method, ['updating', 'updated', 'hydrate', 'dehydrate'])
         ) {
             // Eat calls to the lifecycle hooks if the dev didn't define them.
