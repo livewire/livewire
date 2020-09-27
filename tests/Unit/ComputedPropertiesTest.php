@@ -61,13 +61,13 @@ class ComputedPropertyStub extends Component
     }
 }
 
-class Foo {
+class FooDependency {
     public $baz = 'bar';
 }
 
 class InjectedComputedPropertyStub extends Component
 {
-    public function getFooBarProperty(Foo $foo)
+    public function getFooBarProperty(FooDependency $foo)
     {
         return $foo->baz;
     }
