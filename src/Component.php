@@ -37,8 +37,8 @@ abstract class Component
         $this->ensureIdPropertyIsntOverridden();
 
         if (method_exists($this, 'created')) {
-            // At this point, the component's traits have been initialized,
-            // but neither Request Data nor Property Bindings have been executed.
+            // At this point, the component has been created,
+            // but neither Request Data, Property Bindings, nor Traits have been done.
             // This is intended for assigning default values to mission-critical properties,
             // or class-based properties, like Collections or Models, since in PHP you can't
             // create classes nor call functions inline when defining class properties)
