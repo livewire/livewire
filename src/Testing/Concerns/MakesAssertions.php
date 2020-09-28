@@ -241,8 +241,9 @@ trait MakesAssertions
 
     public function assertRedirect($uri = null)
     {
-        PHPUnit::assertIsString(
-            $this->payload['effects']['redirect'],
+        PHPUnit::assertArrayHasKey(
+            'redirect',
+            $this->payload['effects'],
             'Component did not perform a redirect.'
         );
 
