@@ -90,6 +90,21 @@ class EloquentModelValidationTest extends TestCase
     }
 
     /** @test */
+    public function array_index_key_model_property_validation()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.bob.0', 'b')
+            ->call('save')
+            ->assertHasErrors('foo.bob.*')
+            ->set('foo.bob', 'bbo')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals(['bbo'], $foo->fresh()->bob);
+    }
+
+    /** @test */
     public function array_wildcard_key_with_key_after_model_property_validation()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
