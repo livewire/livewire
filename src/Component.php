@@ -212,7 +212,7 @@ abstract class Component
                 return $this->computedPropertyCache[$property];
             }
 
-            return $this->computedPropertyCache[$property] = $this->$computedMethodName();
+            return $this->computedPropertyCache[$property] = app()->call([$this, $computedMethodName]);
         }
 
         throw new \Exception("Property [{$property}] does not exist on the {$this::getName()} component.");
