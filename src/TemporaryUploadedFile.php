@@ -70,13 +70,14 @@ class TemporaryUploadedFile extends UploadedFile
             );
         }
 
+        // NOTE: This is defined in the config file too
         $supportedPreviewTypes = [
             'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
             'mp4', 'mov', 'avi', 'wmv',
             'mp3', 'mpga', 'wav', 'm4a', 'wma',
         ];
 
-        if (! in_array($this->guessExtension(), $supportedPreviewTypes)) {
+        if (! in_array($this->guessExtension(), config('livewire.temporary_file_upload.preview_types', $supportedPreviewTypes))) {
             // This will throw an error because it's not used with S3.
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
