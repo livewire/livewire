@@ -106,6 +106,7 @@ class LivewireTestingTest extends TestCase
     {
         app(LivewireManager::class)
             ->test(EmitsEventsComponentStub::class)
+            ->assertNotEmitted('foo')
             ->call('emitFoo')
             ->assertNotEmitted('bar')
             ->call('emitFooWithParam', 'not-bar')
