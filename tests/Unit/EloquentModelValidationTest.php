@@ -97,7 +97,7 @@ class EloquentModelValidationTest extends TestCase
         ])  ->set('foo.bob.0', 'b')
             ->call('save')
             ->assertHasErrors('foo.bob.*')
-            ->set('foo.bob', 'bbo')
+            ->set('foo.bob.0', 'bbo')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -113,6 +113,21 @@ class EloquentModelValidationTest extends TestCase
             ->call('save')
             ->assertHasErrors('foo.lob.law.*.blog')
             ->set('foo.lob.law', [['blog' => 'globbbbb']])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals(['law' => [['blog' => 'globbbbb']]], $foo->fresh()->lob);
+    }
+
+    /** @test */
+    public function array_with_numerical_index_key_model_property_validation()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.lob.law.0', ['blog' => 'glob'])
+            ->call('save')
+            ->assertHasErrors(['foo.lob.law.*', 'foo.lob.law.*.blog'])
+            ->set('foo.lob.law.0', ['blog' => 'globbbbb'])
             ->call('save')
             ->assertHasNoErrors();
 
@@ -139,14 +154,14 @@ class EloquentModelValidationTest extends TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.law.0.0.name', 'ar')
+        ])  ->set('foo.zap.0.0.name', 'ar')
             ->call('save')
-            ->assertHasErrors('foo.law.*.*.name')
-            ->set('foo.law.0.0.name', 'arise')
+            ->assertHasErrors('foo.zap.*.*.name')
+            ->set('foo.zap.0.0.name', 'arise')
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertEquals([[['name' => 'arise']]], $foo->fresh()->law);
+        $this->assertEquals([[['name' => 'arise']]], $foo->fresh()->zap);
     }
 }
 
@@ -154,7 +169,7 @@ class Foo extends Model
 {
     use Sushi;
 
-    protected $casts = ['baz' => 'array', 'bob' => 'array', 'lob' => 'array', 'law' => 'array'];
+    protected $casts = ['baz' => 'array', 'bob' => 'array', 'lob' => 'array', 'zap' => 'array'];
 
     protected function getRows()
     {
@@ -163,7 +178,7 @@ class Foo extends Model
             'baz' => json_encode(['zab', 'azb']),
             'bob' => json_encode(['obb']),
             'lob' => json_encode(['law' => []]),
-            'law' => json_encode([]),
+            'zap' => json_encode([]),
         ]];
     }
 }
@@ -176,8 +191,9 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
         'foo.bar' => 'required',
         'foo.baz' => 'required|array|min:2',
         'foo.bob.*' => 'required|min:2',
+        'foo.lob.law.*' => 'required|array',
         'foo.lob.law.*.blog' => 'required|min:5',
-        'foo.law.*.*.name' => 'required|min:3',
+        'foo.zap.*.*.name' => 'required|min:3',
     ];
 
     public function save()

@@ -100,8 +100,15 @@ trait ValidatesInput
     {
         // Prepare numerical-indexed properties for array attributes
         $preparedProperty = (string) Str::of($dotNotatedProperty)
-            ->replaceMatches('/(?<=(\.))\d+\./', '.*.')
-            ->replace('..', '.');
+            // Replace all numeric indexes with an array wildcard: (.0., .10., .007.) => .*.
+            // In order to match overlapping numerical indexes (foo.1.2.3.4.name),
+            // We need to use a positive look-behind, that's technically all the magic here.
+            // For better understanding, see: https://regexr.com/5d1n3
+            ->replaceMatches('/(?<=(\.))\d+\./', '*.')
+            // Replace all numeric indexes at the end of the name with an array wildcard
+            // (Same as the previous regex, but ran only at the end of the string)
+            // For better undestanding, see: https://regexr.com/5d1n6
+            ->replaceMatches('/\.\d+$/', '.*');
 
         $isANumericallyIndexedProperty = $dotNotatedProperty !== $preparedProperty;
 
