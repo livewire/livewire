@@ -75,6 +75,7 @@ export default {
             let el = e.target
 
             let value = e instanceof CustomEvent
+                // We have to check for typeof e.detail here for IE 11.
                 && (e.detail === undefined)
                 && typeof window.document.documentMode == 'undefined'
                     ? e.detail
