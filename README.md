@@ -26,6 +26,7 @@ Livewire uses semantic versioning and will use the following release schedule st
 ## Roadmap
 * Scope loading targets to actions WITH parameters: `<div wire:loading wire:target="updateTodo({{ $todo->id }})">`
 * Add `wire:append` for appending DOM changes rather than replacing them
+* Refine the "asset_url" config. Potentially change to "app_url" (https://github.com/livewire/livewire/pull/1693)
 
 ## Contributors ✨
 
