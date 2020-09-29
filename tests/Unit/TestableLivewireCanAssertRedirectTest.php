@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\LivewireManager;
 
 class TestableLivewireCanAssertRedirectTest extends TestCase
 {
@@ -15,15 +16,6 @@ class TestableLivewireCanAssertRedirectTest extends TestCase
         $component->call('performRedirect');
 
         $component->assertRedirect();
-    }
-
-    /** @test */
-    public function can_fail_a_redirect_assertion()
-    {
-        $this->expectException(\PHPUnit\Framework\AssertionFailedError::class);
-
-        Livewire::test(RedirectComponent::class)
-            ->assertRedirect();
     }
 
     /** @test */

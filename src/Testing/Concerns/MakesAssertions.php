@@ -241,15 +241,13 @@ trait MakesAssertions
 
     public function assertRedirect($uri = null)
     {
-        $redirect = $this->payload['effects']['redirect'] ?? null;
-
         PHPUnit::assertIsString(
-            $redirect,
+            $this->payload['effects']['redirect'],
             'Component did not perform a redirect.'
         );
 
         if (! is_null($uri)) {
-            PHPUnit::assertSame(url($uri), url($redirect));
+            PHPUnit::assertSame(url($uri), url($this->payload['effects']['redirect']));
         }
 
         return $this;
