@@ -20,6 +20,10 @@ use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
 {
+    use SupportsSafari;
+
+    public static $useSafari = false;
+
     public function setUp(): void
     {
         // DuskOptions::withoutUI();
@@ -55,6 +59,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Prefetch\Component::class);
             app('livewire')->component(\Tests\Browser\SupportDateTimes\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\DirtyDetection\Component::class);
+            app('livewire')->component(\Tests\Browser\DataBinding\AutoFill\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputText\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputTextarea\Component::class);
             app('livewire')->component(\Tests\Browser\DataBinding\InputCheckboxRadio\Component::class);
@@ -85,14 +90,12 @@ class TestCase extends BaseTestCase
                 \Tests\Browser\SyncHistory\ComponentWithMount::class
             )->middleware('web')->name('sync-history-without-mount');
 
-
             // This needs to be registered for Dusk to test the route-parameter binding
             // See: \Tests\Browser\SyncHistory\Test.php
             Route::get(
                 '/livewire-dusk/tests/browser/sync-history/{step}',
                 \Tests\Browser\SyncHistory\Component::class
             )->middleware('web')->name('sync-history');
-
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -178,13 +181,17 @@ class TestCase extends BaseTestCase
             'download.default_directory' => __DIR__.'/downloads',
         ]);
 
-        return RemoteWebDriver::create(
-            'http://localhost:9515',
-            DesiredCapabilities::chrome()->setCapability(
-                ChromeOptions::CAPABILITY,
-                $options
+        return static::$useSafari
+            ? RemoteWebDriver::create(
+                'http://localhost:9515', DesiredCapabilities::safari()
             )
-        );
+            : RemoteWebDriver::create(
+                'http://localhost:9515',
+                DesiredCapabilities::chrome()->setCapability(
+                    ChromeOptions::CAPABILITY,
+                    $options
+                )
+            );
     }
 
     public function browse(Closure $callback)

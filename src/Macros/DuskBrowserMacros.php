@@ -82,6 +82,16 @@ class DuskBrowserMacros
         };
     }
 
+    public function runScript()
+    {
+        return function ($js) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $this->script([$js]);
+
+            return $this;
+        };
+    }
+
     public function assertClassMissing()
     {
         return function ($selector, $className) {

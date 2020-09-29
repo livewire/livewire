@@ -11,6 +11,8 @@ class Test extends TestCase
     /** @test */
     public function trigger_downloads_from_livewire_component()
     {
+        $this->onlyRunOnChrome();
+
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
                 ->waitForLivewire()->click('@download')
