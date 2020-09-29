@@ -407,9 +407,9 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function allows_setting_file_types_for_temporary_signed_urls()
+    public function allows_setting_file_types_for_temporary_signed_urls_in_config()
     {
-        config()->set('livewire.temporary_file_upload.preview_types', ['pdf']);
+        config()->set('livewire.temporary_file_upload.preview_mimes', ['pdf']);
 
         Storage::fake('advatars');
 
