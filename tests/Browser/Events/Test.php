@@ -15,19 +15,21 @@ class Test extends TestCase
                  * receive event from global fire
                  */
                 ->waitForLivewire()->tap(function ($browser) { $browser->script('window.livewire.emit("foo", "bar")'); })
-                ->pause(350)
-                ->assertSeeIn('@lastEventForParent', 'bar')
-                ->assertSeeIn('@lastEventForChildA', 'bar')
-                ->assertSeeIn('@lastEventForChildB', 'bar')
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertSeeIn('@lastEventForParent', 'bar')
+                             ->assertSeeIn('@lastEventForChildA', 'bar')
+                             ->assertSeeIn('@lastEventForChildB', 'bar');
+                })
 
                 /**
                  * receive event from action fire
                  */
                 ->waitForLivewire()->click('@emit.baz')
-                ->pause(350)
-                ->assertSeeIn('@lastEventForParent', 'baz')
-                ->assertSeeIn('@lastEventForChildA', 'baz')
-                ->assertSeeIn('@lastEventForChildB', 'baz')
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertSeeIn('@lastEventForParent', 'baz')
+                                   ->assertSeeIn('@lastEventForChildA', 'baz')
+                                   ->assertSeeIn('@lastEventForChildB', 'baz');
+                })
 
                 /**
                  * receive event from component fire, and make sure global listener receives event too
@@ -37,38 +39,43 @@ class Test extends TestCase
                     "window.livewire.on('foo', value => { lastFooEventValue = value })",
                 ]);})
                 ->waitForLivewire()->click('@emit.bob')
-                ->pause(350)
-                ->assertScript('window.lastFooEventValue', 'bob')
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertScript('window.lastFooEventValue', 'bob');
+                })
+
 
                 /**
                  * receive event from component fired only to ancestors, and make sure global listener doesnt receive it
                  */
                 ->waitForLivewire()->click('@emit.lob')
-                ->pause(350)
-                ->assertSeeIn('@lastEventForParent', 'lob')
-                ->assertSeeIn('@lastEventForChildA', 'bob')
-                ->assertSeeIn('@lastEventForChildB', 'bob')
-                ->assertScript('window.lastFooEventValue', 'bob')
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertSeeIn('@lastEventForParent', 'lob')
+                                   ->assertSeeIn('@lastEventForChildA', 'bob')
+                                   ->assertSeeIn('@lastEventForChildB', 'bob')
+                                   ->assertScript('window.lastFooEventValue', 'bob');
+                })
 
                 /**
                  * receive event from action fired only to ancestors, and make sure global listener doesnt receive it
                  */
                 ->waitForLivewire()->click('@emit.law')
-                ->pause(350)
-                ->assertSeeIn('@lastEventForParent', 'law')
-                ->assertSeeIn('@lastEventForChildA', 'bob')
-                ->assertSeeIn('@lastEventForChildB', 'bob')
-                ->assertScript('window.lastFooEventValue', 'bob')
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertSeeIn('@lastEventForParent', 'law')
+                                   ->assertSeeIn('@lastEventForChildA', 'bob')
+                                   ->assertSeeIn('@lastEventForChildB', 'bob')
+                                   ->assertScript('window.lastFooEventValue', 'bob');
+                })
 
                 /**
                  * receive event from action fired only to component name, and make sure global listener doesnt receive it
                  */
                 ->waitForLivewire()->click('@emit.blog')
-                ->pause(350)
-                ->assertSeeIn('@lastEventForParent', 'law')
-                ->assertSeeIn('@lastEventForChildA', 'bob')
-                ->assertSeeIn('@lastEventForChildB', 'blog')
-                ->assertScript('window.lastFooEventValue', 'bob')
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertSeeIn('@lastEventForParent', 'law')
+                                   ->assertSeeIn('@lastEventForChildA', 'bob')
+                                   ->assertSeeIn('@lastEventForChildB', 'blog')
+                                   ->assertScript('window.lastFooEventValue', 'bob');
+                })
             ;
         });
     }

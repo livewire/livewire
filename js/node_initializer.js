@@ -70,34 +70,43 @@ export default {
             || directive.modifiers.includes('lazy') ? 'change' : 'input'
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-        let handler = debounceIf(
-            hasDebounceModifier || (DOM.isTextInput(el) && !isLazy),
-            e => {
-                let model = directive.value
-                let el = e.target
-                // We have to check for typeof e.detail here for IE 11.
-                let value =
-                    e instanceof CustomEvent &&
-                        typeof e.detail != 'undefined' &&
-                        typeof window.document.documentMode == 'undefined'
-                        ? e.detail
-                        : DOM.valueFromInput(el, component)
+        let handler = debounceIf(hasDebounceModifier || (DOM.isTextInput(el) && !isLazy), e => {
+            let model = directive.value
+            let el = e.target
 
-                if (directive.modifiers.includes('defer')) {
-                    component.addAction(
-                        new DeferredModelAction(model, value, el)
-                    )
-                } else {
-                    component.addAction(new ModelAction(model, value, el))
-                }
-            },
-            directive.durationOr(150)
-        )
+            let value = e instanceof CustomEvent
+                // We have to check for typeof e.detail here for IE 11.
+                && (e.detail === undefined)
+                && typeof window.document.documentMode == 'undefined'
+                    ? e.detail
+                    : DOM.valueFromInput(el, component)
+
+            // These conditions should only be met if the event was fired for a Safari autofill.
+            if (el.wasRecentlyAutofilled && e instanceof CustomEvent && e.detail === null) {
+                value = DOM.valueFromInput(el, component)
+            }
+
+            if (directive.modifiers.includes('defer')) {
+                component.addAction(new DeferredModelAction(model, value, el))
+            } else {
+                component.addAction(new ModelAction(model, value, el))
+            }
+        }, directive.durationOr(150))
 
         el.addEventListener(event, handler)
 
         component.addListenerForTeardown(() => {
             el.removeEventListener(event, handler)
+        })
+
+        el.addEventListener('animationstart', e => {
+            if (e.animationName !== 'livewireautofill') return
+
+            e.target.wasRecentlyAutofilled = true
+
+            setTimeout(() => {
+                delete e.target.wasRecentlyAutofilled
+            }, 1000)
         })
     },
 

@@ -15,6 +15,13 @@ class ComputedPropertiesTest extends TestCase
     }
 
     /** @test */
+    public function injected_computed_property_is_accessable_within_blade_view()
+    {
+        Livewire::test(InjectedComputedPropertyStub::class)
+            ->assertSee('bar');
+    }
+
+    /** @test */
     public function computed_property_is_memoized_after_its_accessed()
     {
         Livewire::test(MemoizedComputedPropertyStub::class)
@@ -46,6 +53,23 @@ class ComputedPropertyStub extends Component
     public function getFooBarProperty()
     {
         return strtolower($this->upperCasedFoo);
+    }
+
+    public function render()
+    {
+        return view('var-dump-foo-bar');
+    }
+}
+
+class FooDependency {
+    public $baz = 'bar';
+}
+
+class InjectedComputedPropertyStub extends Component
+{
+    public function getFooBarProperty(FooDependency $foo)
+    {
+        return $foo->baz;
     }
 
     public function render()

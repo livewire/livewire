@@ -17,6 +17,8 @@
     <h1 wire:loading wire:target="foo" dusk="targeting">Loading...</h1>
     <h1 wire:loading wire:target="foo, bar" dusk="targeting-both">Loading...</h1>
 
+    <h1 wire:loading.delay dusk="show-w-delay">Loading with delay...</h1>
+
     <button wire:click="foo" dusk="target-button">targeted button</button>
     <button wire:click="foo('bar')" dusk="target-button-w-param">targeted button with param</button>
 

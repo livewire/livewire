@@ -2,9 +2,12 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Exceptions\MissingRulesException;
+use Livewire\ObjectPrybar;
+use Sushi\Sushi;
 
 class ComponentHasRulesPropertyTest extends TestCase
 {
@@ -31,6 +34,18 @@ class ComponentHasRulesPropertyTest extends TestCase
         $this->expectException(MissingRulesException::class);
 
         Livewire::test(ComponentWithoutRulesProperty::class)->call('save');
+    }
+
+    /** @test */
+    public function can_validate_uniqueness_on_a_model()
+    {
+        Livewire::test(ComponentWithRulesPropertyAndModelWithUniquenessValidation::class)
+            ->set('foo.name', 'bar')
+            ->call('save')
+            ->assertHasErrors('foo.name')
+            ->set('foo.name', 'blubber')
+            ->call('save')
+            ->assertHasNoErrors('foo.name');
     }
 }
 
@@ -66,6 +81,48 @@ class ComponentWithoutRulesProperty extends Component
 
     public function save()
     {
+        $this->validate();
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class FooModelForUniquenessValidation extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['name' => 'foo'],
+        ['name' => 'bar'],
+    ];
+}
+
+class ComponentWithRulesPropertyAndModelWithUniquenessValidation extends Component
+{
+    public $foo;
+
+    protected $rules = [
+        'foo.name' => 'required|unique:foo-connection.foo_model_for_uniqueness_validations,name',
+    ];
+
+    public function mount()
+    {
+        $this->foo = FooModelForUniquenessValidation::first();
+    }
+
+    public function save()
+    {
+        // Sorry about this chunk of ridiculousness. It's Sushi's fault.
+        $connection = $this->foo::resolveConnection();
+        $db = app('db');
+        $prybar = new ObjectPrybar($db);
+        $connections = $prybar->getProperty('connections');
+        $connections['foo-connection'] = $connection;
+        $prybar->setProperty('connections', $connections);
+
         $this->validate();
     }
 
