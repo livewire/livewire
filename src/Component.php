@@ -100,7 +100,7 @@ abstract class Component
         $path = Str::of(config('livewire.view_path', 'livewire'))->replace(' ', '')->trim('/')->replace('/', '.');
         
         if (! $path->isEmpty()) {
-            $path->append('.');
+            $path = $path->append('.');
         }
         
         return $path->append(static::getName());
