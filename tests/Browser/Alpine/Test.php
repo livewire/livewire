@@ -100,7 +100,14 @@ class Test extends TestCase
                 ->pause(500)
                 ->assertMissing('#livewire-error')
                 ->assertSeeIn('@lob.output', '100')
-                ;
+
+                /**
+                 * $dispatch('input', value) works with wire:model
+                 */
+                ->assertSeeIn('@zorp.output', 'before')
+                ->waitForLivewire()->click('@zorp.button')
+                ->assertSeeIn('@zorp.output', 'after')
+            ;
         });
     }
 
