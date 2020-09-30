@@ -268,7 +268,7 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertListener($listener)
+    public function assertListeningFor($listener)
     {
         $test = collect($this->payload['effects']['listeners'])->contains($listener);
 

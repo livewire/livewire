@@ -173,17 +173,17 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
-    public function assert_listener()
+    public function assert_listening_for()
     {
         app(LivewireManager::class)
             ->test(ListenersComponentStub::class)
-            ->assertListener('foo')
-            ->assertListener('key');
+            ->assertListeningFor('foo')
+            ->assertListeningFor('key');
 
         app(LivewireManager::class)
             ->test(DynamicListenersComponentStub::class)
-            ->assertListener('foo')
-            ->assertListener('key');
+            ->assertListeningFor('foo')
+            ->assertListeningFor('key');
     }
 }
 
