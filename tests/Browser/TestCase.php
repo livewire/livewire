@@ -68,6 +68,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Dirty\Component::class);
             app('livewire')->component(\Tests\Browser\Alpine\Component::class);
             app('livewire')->component(\Tests\Browser\Alpine\SmallComponent::class);
+            app('livewire')->component(\Tests\Browser\Alpine\Entangle\Component::class);
             app('livewire')->component(\Tests\Browser\Hooks\Component::class);
             app('livewire')->component(\Tests\Browser\Ignore\Component::class);
             app('livewire')->component(\Tests\Browser\Morphdom\Component::class);
