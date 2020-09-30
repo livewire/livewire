@@ -37,10 +37,12 @@ class LifecycleManager
 
     public static function fromInitialInstance($component)
     {
-        return tap(new static, function ($instance) use ($component) {
+        $name = app('livewire')->getAlias(get_class($component), $component->getName());
+
+        return tap(new static, function ($instance) use ($component,  $name) {
             $instance->instance = $component;
             $instance->request = new Request([
-                'fingerprint' => ['id' => $component->id, 'name' => $component::getName(), 'locale' => app()->getLocale()],
+                'fingerprint' => ['id' => $component->id, 'name' => $name, 'locale' => app()->getLocale()],
                 'updates' => [],
                 'serverMemo' => [],
             ]);
