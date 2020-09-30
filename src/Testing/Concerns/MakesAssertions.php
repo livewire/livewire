@@ -254,6 +254,13 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertViewIs($name)
+    {
+        PHPUnit::assertEquals($name, $this->lastRenderedView->getName());
+
+        return $this;
+    }
+
     public function assertViewHas($key, $value = null)
     {
         if (is_null($value)) {
