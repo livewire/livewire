@@ -94,6 +94,17 @@ abstract class Component
 
         return $fullName;
     }
+    
+    public static function guessViewPath()
+    {
+        $path = Str::of(config('livewire.view_path', 'livewire'))->replace(' ', '')->trim('/')->replace('/', '.');
+        
+        if (! $path->isEmpty()) {
+            $path->append('.');
+        }
+        
+        return $path->append($this::getName());
+    }
 
     public function getQueryString()
     {
@@ -109,7 +120,7 @@ abstract class Component
     {
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
-            : view("livewire.{$this::getName()}");
+            : view($this::guessViewPath());
 
         if (is_string($view)) {
             $view = app('view')->make(CreateBladeView::fromString($view));
