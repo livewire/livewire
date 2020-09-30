@@ -65,7 +65,7 @@ abstract class Component
     {
         throw_if(
             array_key_exists('id', $this->getPublicPropertiesDefinedBySubClass()),
-            new CannotUseReservedLivewireComponentProperties('id', $this::getName())
+            new CannotUseReservedLivewireComponentProperties('id', static::getName())
         );
     }
 
@@ -103,7 +103,7 @@ abstract class Component
             $path->append('.');
         }
         
-        return $path->append($this::getName());
+        return $path->append(static::getName());
     }
 
     public function getQueryString()
@@ -120,7 +120,7 @@ abstract class Component
     {
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
-            : view($this::guessViewPath());
+            : view(static::guessViewPath());
 
         if (is_string($view)) {
             $view = app('view')->make(CreateBladeView::fromString($view));
@@ -226,7 +226,7 @@ abstract class Component
             return $this->computedPropertyCache[$property] = app()->call([$this, $computedMethodName]);
         }
 
-        throw new \Exception("Property [{$property}] does not exist on the {$this::getName()} component.");
+        throw new \Exception("Property [{$property}] does not exist on the {static::getName()} component.");
     }
 
     public function __call($method, $params)
