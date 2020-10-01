@@ -190,7 +190,7 @@ trait MakesAssertions
     public function assertHasErrors($keys = [])
     {
         $errors = new MessageBag(
-            $this->lastValidator->errors()->messages()
+            $this->lastValidator ? $this->lastValidator->errors()->messages() : []
         );
 
         PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
