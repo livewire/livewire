@@ -31,7 +31,7 @@ trait ReceivesEvents
 
     public function emitTo($name, $event, ...$params)
     {
-        $this->emit($event, ...$params)->to($name);
+        $this->emit($event, ...$params)->component($name);
     }
 
     public function dispatchBrowserEvent($event, $data = null)
