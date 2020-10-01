@@ -57,7 +57,7 @@ PHP;
         $class = <<<'PHP'
 namespace Tests\Unit;
 use Livewire\Component;
-class UninitializedPublicTypedPropertyComponent extends Component
+class UninitializedPublicTypedPropertyAfterRefreshComponent extends Component
 {
     public string $message;
 
@@ -69,7 +69,7 @@ class UninitializedPublicTypedPropertyComponent extends Component
 PHP;
         eval($class);
 
-        Livewire::test(UninitializedPublicTypedPropertyComponent::class)
+        Livewire::test(UninitializedPublicTypedPropertyAfterRefreshComponent::class)
             ->call('$refresh')
             ->assertSet('message', null);
     }
