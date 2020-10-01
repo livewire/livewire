@@ -2,9 +2,11 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\ObjectPrybar;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
@@ -224,7 +226,11 @@ trait ValidatesInput
                 throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: ['.$ruleKey.']'));
             });
 
-        return $properties;
+        return collect($properties)->map(function ($value) {
+            if ($value instanceof Collection && ! $value instanceof EloquentCollection) return $value->toArray();
+
+            return $value;
+        })->all();
     }
 
     protected function prepareForValidation($attributes)

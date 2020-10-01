@@ -47,17 +47,40 @@ class ComponentHasRulesPropertyTest extends TestCase
             ->call('save')
             ->assertHasNoErrors('foo.name');
     }
+
+    /** @test */
+    public function can_validate_collection_properties()
+    {
+        Livewire::test(ComponentWithRulesProperty::class)
+            ->set('foo', 'filled')
+            ->call('save')
+            ->assertHasErrors('baz.*.foo')
+            ->set('baz.0.foo', 123)
+            ->set('baz.1.foo', 456)
+            ->call('save')
+            ->assertHasNoErrors('baz.*.foo');
+    }
 }
 
 class ComponentWithRulesProperty extends Component
 {
     public $foo;
     public $bar = 'baz';
+    public $baz;
 
     protected $rules = [
         'foo' => 'required',
         'bar' => 'required',
+        'baz.*.foo' => 'numeric',
     ];
+
+    public function mount()
+    {
+        $this->baz = collect([
+            ['foo' => 'a'],
+            ['foo' => 'b'],
+        ]);
+    }
 
     public function updatedBar()
     {
