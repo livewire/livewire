@@ -96,10 +96,10 @@ trait ValidatesInput
             });
     }
 
-    public function missingRuleFor($dotNotatedProperty)
+    public function hasRuleFor($dotNotatedProperty)
     {
-        // Prepare numerical-indexed properties for array attributes
-        $preparedProperty = (string) Str::of($dotNotatedProperty)
+        // Convert foo.0.bar.1 -> foo.*.bar.*
+        $propertyWithStarsInsteadOfNumbers = (string) Str::of($dotNotatedProperty)
             // Replace all numeric indexes with an array wildcard: (.0., .10., .007.) => .*.
             // In order to match overlapping numerical indexes (foo.1.2.3.4.name),
             // We need to use a positive look-behind, that's technically all the magic here.
@@ -110,17 +110,21 @@ trait ValidatesInput
             // For better undestanding, see: https://regexr.com/5d1n6
             ->replaceMatches('/\.\d+$/', '.*');
 
-        $isANumericallyIndexedProperty = $dotNotatedProperty !== $preparedProperty;
+        // If property has numeric indexes in it,
+        if ($dotNotatedProperty !== $propertyWithStarsInsteadOfNumbers) {
+            return collect($this->getRules())->keys()->contains($propertyWithStarsInsteadOfNumbers);
+        }
 
-        return !collect($this->getRules())
+        return collect($this->getRules())
             ->keys()
-            ->map(function ($key) use ($isANumericallyIndexedProperty) {
-                if ($isANumericallyIndexedProperty) {
-                    return $key;
-                }
-
+            ->map(function ($key) {
                 return (string) Str::of($key)->before('.*');
-            })->contains($preparedProperty);
+            })->contains($dotNotatedProperty);
+    }
+
+    public function missingRuleFor($dotNotatedProperty)
+    {
+        return ! $this->hasRuleFor($dotNotatedProperty);
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])
