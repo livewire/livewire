@@ -132,7 +132,7 @@ class ReceivesEvents extends Component
 
     public function emitToGooGone()
     {
-        $this->emit('gone', 'car')->to()->component('goo');
+        $this->emitTo('goo', 'gone', 'car');
     }
 
     public function render()
