@@ -107,6 +107,8 @@ abstract class Component
 
     public function renderToView()
     {
+        if ($this->shouldSkipRender) return null;
+
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
             : view("livewire.{$this::getName()}");
