@@ -75,7 +75,9 @@ class HydratePublicProperties implements HydrationMiddleware
                 // The value is a supported type, set it in the data, if not, throw an exception for the user.
                 is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value)
             ) {
-                data_set($response, 'memo.data.'.$key, $value);
+                // If the value is null, don't set it, because all values start off as null and this
+                // will prevent Typed properties from wining about being set to null.
+                is_null($value) || data_set($response, 'memo.data.'.$key, $value);
             } else if ($value instanceof QueueableEntity || $value instanceof QueueableCollection) {
                 static::dehydrateModel($value, $key, $response, $instance);
             } else if ($value instanceof Collection) {
