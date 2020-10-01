@@ -90,11 +90,9 @@ class ComponentEventsTest extends TestCase
     /** @test */
     public function server_dispatched_browser_events_are_provided_to_frontend()
     {
-        $component = Livewire::test(DispatchesBrowserEvents::class);
-
-        $component->runAction('dispatchFoo');
-
-        // $this->assertTrue(in_array(['event' => 'foo', 'data' => ['bar' => 'baz']], $component->payload['effects']['dispatches']));
+        Livewire::test(DispatchesBrowserEvents::class)
+                ->call('dispatchFoo')
+                ->assertDispatchedBrowserEvent('foo', ['bar' => 'baz']);
     }
 
     /** @test */
