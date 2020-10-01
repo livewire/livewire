@@ -189,7 +189,9 @@ trait MakesAssertions
 
     public function assertHasErrors($keys = [])
     {
-        $errors = new MessageBag($this->payload['serverMemo']['errors'] ?: []);
+        $errors = new MessageBag(
+            $this->lastValidator->errors()->messages()
+        );
 
         PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
 
@@ -213,7 +215,9 @@ trait MakesAssertions
 
     public function assertHasNoErrors($keys = [])
     {
-        $errors = new MessageBag($this->payload['serverMemo']['errors'] ?? []);
+        $errors = new MessageBag(
+            $this->lastValidator ? $this->lastValidator->errors()->messages() : []
+        );
 
         if (empty($keys)) {
             PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors: "' . implode('", "', $errors->keys()) . '"');
