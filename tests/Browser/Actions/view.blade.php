@@ -22,4 +22,19 @@
     </form>
     <input wire:keydown.debounce.75ms="setOutputTo('bap')" dusk="bap"></button>
     <span dusk="output">{{ $output }}</span>
+
+    <button type="button" wire:click="showButtonGroup()" dusk="show.button.group">Show Button Group</button>
+
+    @if ($showButtonGroup)
+        <div dusk="button.group">
+            <table>
+                <tr>
+                    <td>
+                        <button type="button" wire:click="setOutputTo('button1 clicked')" dusk="button.group.1">Button 1</button>
+                        <button type="button" wire:click="setOutputTo('button2 clicked')" dusk="button.group.2">Button 2</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    @endif
 </div>

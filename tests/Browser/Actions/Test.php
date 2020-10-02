@@ -119,4 +119,21 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_sibling_buttons()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, Component::class)
+                /**
+                 * sibling buttons
+                 */
+                ->press('@show.button.group')
+                ->waitForLivewire()->assertPresent('@button.group')
+                ->press('@button.group.1')
+                ->waitForLivewire()->assertSeeIn('@output', 'button1 clicked')
+                ->press('@button.group.2')
+                ->waitForLivewire()->assertSeeIn('@output', 'button2 clicked')
+            ;
+        });
+    }
 }
