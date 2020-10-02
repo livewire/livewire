@@ -4,7 +4,7 @@ namespace Livewire\HydrationMiddleware;
 
 use DateTime;
 use Carbon\Carbon;
-use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Contracts\Database\ModelIdentifier;
@@ -119,7 +119,7 @@ class HydratePublicProperties implements HydrationMiddleware
             $object = $instance->$property;
 
             // Allow attribute casting on model
-            if ($object instanceof Arrayable) {
+            if ($object instanceof Model && !empty($object->getCasts())) {
                 $object = $object->toArray();
             }
 
