@@ -362,6 +362,14 @@ class ValidationTest extends TestCase
             'bar' => $component->bar,
         ], $validatedData);
     }
+
+    /** @test */
+    public function can_assert_validation_errors_on_errors_thrown_from_custom_validator()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->call('failFooOnCustomValidator')->assertHasErrors('plop');
+    }
 }
 
 class ForValidation extends Component
@@ -506,6 +514,11 @@ class ForValidation extends Component
     public function runValidationWithoutAllPublicPropertiesAndReturnValidatedData()
     {
         return $this->validate(['bar' => 'required']);
+    }
+
+    public function failFooOnCustomValidator()
+    {
+        Validator::make([], ['plop' => 'required'])->validate();
     }
 
     public function render()

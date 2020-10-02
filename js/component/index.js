@@ -335,6 +335,8 @@ export default class Component {
 
             if (DOM.hasFocus(el) && ! dirtyInputs.includes(modelValue)) return
 
+            if (el.wasRecentlyAutofilled) return
+
             DOM.setInputValueFromModel(el, this)
         })
     }
@@ -453,11 +455,12 @@ export default class Component {
                 }
 
                 // Children will update themselves.
-                if (
-                    DOM.isComponentRootEl(from) &&
-                    from.getAttribute('wire:id') !== this.id
-                )
-                    return false
+                if (DOM.isComponentRootEl(from) && from.getAttribute('wire:id') !== this.id) return false
+
+                // Give the root Livewire "to" element, the same object reference as the "from"
+                // element. This ensures new Alpine magics like $wire and @entangle can
+                // initialize in the context of a real Livewire component object.
+                if (DOM.isComponentRootEl(from)) to.__livewire = this
 
                 // If the element we are updating is an Alpine component...
                 if (from.__x) {
