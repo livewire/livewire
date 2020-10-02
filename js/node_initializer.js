@@ -70,7 +70,7 @@ export default {
             || directive.modifiers.includes('lazy') ? 'change' : 'input'
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-        let handler = debounceIf(hasDebounceModifier || (DOM.isTextInput(el) && !isLazy), e => {
+        let handler = debounceIf(hasDebounceModifier || (DOM.isTextInput(el) && (!isLazy || !el.wasRecentlyAutofilled)), e => {
             let model = directive.value
             let el = e.target
 
