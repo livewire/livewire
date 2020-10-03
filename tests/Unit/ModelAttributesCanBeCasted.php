@@ -240,7 +240,7 @@ class ModelAttributesCanBeCasted extends TestCase
     }
 
     /** @test */
-    public function can_cast_decimal_attribute_with_one_digit_from_model_casts_definition()
+    public function can_cast_decimal_attributes_with_one_digit_from_model_casts_definition()
     {
         $this->component
             // Our initial value is a number with one digit...
@@ -271,7 +271,7 @@ class ModelAttributesCanBeCasted extends TestCase
     }
 
     /** @test */
-    public function can_cast_decimal_attribute_with_two_digits_from_model_casts_definition()
+    public function can_cast_decimal_attributes_with_two_digits_from_model_casts_definition()
     {
         $this->component
             // Our initial value is a number with two digits...
@@ -301,9 +301,38 @@ class ModelAttributesCanBeCasted extends TestCase
             ->assertPayloadSet('model.decimal_with_two_digits', 6.21);
     }
 
+    /** @test */
+    public function can_cast_string_attributes_from_model_casts_definition()
+    {
+        $this->component
+            // Check that our initial value is right...
+            ->assertSet('model.string_name', 'Gladys')
+            // Or maybe left in the Payload... Anyway, still the same value.
+            ->assertPayloadSet('model.string_name', 'Gladys')
+
+            // We should be able to change one string for another...
+            ->set('model.string_name', 'Elena')
+            // And, well, strings are string, no issues here.
+            ->call('validateAttribute', 'model.string_name')
+            ->assertHasNoErrors('model.string_name')
+            // Value should be hold on both, the Model...
+            ->assertSet('model.string_name', 'Elena')
+            // And in the Payload without issues.
+            ->assertPayloadSet('model.string_name', 'Elena')
+
+            // Even if we want to force integers in a string attribute...
+            ->set('model.string_name', 123)
+            // Laravel must be able to handle with it, no issue here.
+            ->call('validateAttribute', 'model.string_name')
+            ->assertHasNoErrors('model.string_name')
+            // And we should get a numeric string on the model,
+            ->assertSet('model.string_name', '123')
+            // And a numeric string in the Payload
+            ->assertPayloadSet('model.string_name', '123');
+    }
+
     /*
      * TODO:
-     * - String values
      * - Boolean values
      * - Array values: array, collection
      * - Object values (Literally, objects... Maybe "(object) array()"?)
@@ -360,10 +389,14 @@ class ModelForAttributeCasting extends Model
         /* @see ModelAttributesCanBeCasted::can_cast_double_precision_attributes_from_model_casts_definition() */
         'double_precision_number' => 'double',
         // Decimals
-        /* @see ModelAttributesCanBeCasted::can_cast_decimal_attribute_with_one_digit_from_model_casts_definition() */
+        /* @see ModelAttributesCanBeCasted::can_cast_decimal_attributes_with_one_digit_from_model_casts_definition() */
         'decimal_with_one_digit' => 'decimal:1',
-        /* @see ModelAttributesCanBeCasted::can_cast_decimal_attribute_with_two_digits_from_model_casts_definition() */
-        'decimal_with_two_digits' => 'decimal:2'
+        /* @see ModelAttributesCanBeCasted::can_cast_decimal_attributes_with_two_digits_from_model_casts_definition() */
+        'decimal_with_two_digits' => 'decimal:2',
+
+        // String
+        /* @see ModelAttributesCanBeCasted::can_cast_string_attributes_from_model_casts_definition() */
+        'string_name' => 'string',
 
 //         TODO: Better custom caster
 //        'numerical_string' => Number2String::class
@@ -373,22 +406,17 @@ class ModelForAttributeCasting extends Model
     {
         return [
             [
-                // Dates
                 'normal_date' => new \DateTime('2000-08-12'),
                 'formatted_date' => new \DateTime('2020-03-03'),
-                // DateTime
                 'date_with_time' => new \DateTime('2015-10-21'),
-                // Timestamp
                 'timestamped_date' => new \DateTime('2002-08-30'),
-                // Integer
                 'integer_number' => 1,
-                // Floats
                 'real_number' => 2,
                 'float_number' => 3,
                 'double_precision_number' => 4,
-                // Decimals
                 'decimal_with_one_digit' => 5,
                 'decimal_with_two_digits' => 6,
+                'string_name' => 'Gladys',
 
 //                TODO: Better Custom Caster
 //                'numerical_string' => 'One'
@@ -448,7 +476,8 @@ class ComponentForModelAttributeCasting extends Component
         'model.float_number' => ['required', 'numeric'],
         'model.double_precision_number' => ['required', 'numeric'],
         'model.decimal_with_one_digit' => ['required', 'numeric'],
-        'model.decimal_with_two_digits' => ['required', 'numeric']
+        'model.decimal_with_two_digits' => ['required', 'numeric'],
+        'model.string_name' => ['required', 'string'],
 
 //        TODO: Better Custom Caster
 //        'model.numerical_string' => ['required', 'string']
