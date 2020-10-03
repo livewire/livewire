@@ -36,8 +36,25 @@
                 </tr>
                 <tr>
                     <td>
-                        <button id="btn3" type="button" wire:click="setOutputTo('button3 clicked')" dusk="button.group.3">Button 1</button>
-                        <button id="btn4" type="button" wire:click="setOutputTo('button4 clicked')" dusk="button.group.4">Button 2</button>
+                        <button id="btn3" type="button" wire:click="setOutputTo('button3 clicked')" dusk="button.group.3">Button 3</button>
+                        <button id="btn4" type="button" wire:click="setOutputTo('button4 clicked')" dusk="button.group.4">Button 4</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    @else
+        <div>
+            <table>
+                <tr>
+                    <td>
+                        <button type="button" dusk="button.group.1-noaction">Button 1 - no action</button>
+                        <button type="button" dusk="button.group.2-noaction">Button 2 - no action</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button id="btn5" type="button" wire:click="setOutputTo('button5 clicked')" dusk="button.group.5">Button 5</button>
+                        <button id="btn6" type="button" wire:click="setOutputTo('button6 clicked')" dusk="button.group.6">Button 6</button>
                     </td>
                 </tr>
             </table>
