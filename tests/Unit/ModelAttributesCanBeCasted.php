@@ -461,26 +461,24 @@ class ModelAttributesCanBeCasted extends TestCase
             ->assertPayloadSet('model.object_value.email', 'marian@my-company.rocks');
     }
 
-    /*
-     * TODO:
-     * - Object values (Literally, objects... Maybe "(object) array()"?)
-     * - Better custom caster implementation
-     */
-
     /** @test */
-    public function can_use_custom_casters_from_model_casts_definition()
+    public function can_cast_attributes_with_custom_caster_from_model_casts_definition()
     {
-        $this->markTestIncomplete('Maybe we could provide a better example for custom casters');
-
         $this->component
-            // Assert that our Custom Caster is indeed working for the payload.
-            ->assertPayloadSet('model.numerical_string', 'One')
-            // Did anyone say "Livewire Counter Button"?
-            ->set('model.numerical_string', 'Two')
-            // Check that our Custom Caster kicks in when calling the Model directly.
-            ->assertSet('model.numerical_string', 'Two')
-            // And finally, check that our Custom Caster still kicks in for the payload.
-            ->assertPayloadSet('model.numerical_string', 'Two');
+            // Our simple Quiz Answer should be an instance of an object for PHP.
+            ->assertSet('model.custom_caster', QuizAnswer::make('dumb answer'))
+            // For our payload, the object should be converted to a String.
+            ->assertPayloadSet('model.custom_caster', 'dumb answer')
+
+            // We should be able to provide a new string answer...
+            ->set('model.custom_caster', 'e=mc2')
+            // And our component must not blow up.
+            ->call('validateAttribute', 'model.custom_caster')
+            ->assertHasNoErrors('model.custom_caster')
+            // So, we should be able to get an Object...
+            ->assertSet('model.custom_caster', QuizAnswer::make('e=mc2'))
+            // And a String for the payload...
+            ->assertPayloadSet('model.custom_caster', 'e=mc2');
     }
 }
 
@@ -540,10 +538,12 @@ class ModelForAttributeCasting extends Model
 
         // JSON <-> Object
         /* @see ModelAttributesCanBeCasted::can_cast_object_attributes_from_model_casts_definition() */
-        'object_value' => 'object'
+        'object_value' => 'object',
 
-//         TODO: Better custom caster
-//        'numerical_string' => Number2String::class
+
+        // Custom Laravel Caster
+        /* @see ModelAttributesCanBeCasted::can_cast_attributes_with_custom_caster_from_model_casts_definition() */
+        'custom_caster' => QuizAnswerCaster::class,
     ];
 
     public function getRows()
@@ -567,47 +567,54 @@ class ModelForAttributeCasting extends Model
                 'collected_list' => json_encode([true, false]),
                 'object_value' => json_encode(['name' => 'Marian', 'email' => 'marian@likes.pizza']),
 
-//                TODO: Better Custom Caster
-//                'numerical_string' => 'One'
+                'custom_caster' => 'dumb answer'
             ]
         ];
     }
 }
 
-class Number2String implements CastsAttributes {
-    const CONVERSION_MAP = [
-        1 => 'One',
-        2 => 'Two'
-    ];
+class QuizAnswer
+{
+    protected $answer;
 
+    public static function make(string $answer): self
+    {
+        $new = new static();
+        $new->answer = $answer;
+
+        return $new;
+    }
+
+    public function getAnswer(): string
+    {
+        return $this->answer;
+    }
+
+    public function matches($givenAnswer): bool
+    {
+        return $this->answer === $givenAnswer;
+    }
+
+    public function __toString()
+    {
+        return $this->getAnswer();
+    }
+}
+
+class QuizAnswerCaster implements CastsAttributes
+{
     public function get($model, string $key, $value, array $attributes)
     {
-        throw_unless(
-            is_integer($value),
-            new \InvalidArgumentException('Invalid underlying value: ' . $value)
-        );
-
-        throw_unless(
-            isset(self::CONVERSION_MAP[$value]),
-            new \InvalidArgumentException('Cannot convert number to string')
-        );
-
-        return self::CONVERSION_MAP[$value];
+        return QuizAnswer::make((string) $value);
     }
 
     public function set($model, string $key, $value, array $attributes)
     {
-        throw_unless(
-            is_string($value),
-            new \InvalidArgumentException('String must be either "One" or "Two"')
-        );
+        if ($value instanceof QuizAnswer) {
+            $value = $value->getAnswer();
+        }
 
-        throw_if(
-            ($index = array_search($value, self::CONVERSION_MAP)) === false,
-            new \InvalidArgumentException('Cannot convert string to number')
-        );
-
-        return $index;
+        return $value;
     }
 }
 
@@ -642,8 +649,7 @@ class ComponentForModelAttributeCasting extends Component
         'model.object_value.name' => ['required'],
         'model.object_value.email' => ['required', 'email'],
 
-//        TODO: Better Custom Caster
-//        'model.numerical_string' => ['required', 'string']
+        'model.custom_caster' => ['required']
     ];
 
     public function mount() {
