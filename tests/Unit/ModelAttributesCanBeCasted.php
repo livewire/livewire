@@ -331,9 +331,53 @@ class ModelAttributesCanBeCasted extends TestCase
             ->assertPayloadSet('model.string_name', '123');
     }
 
+    /** @test */
+    public function can_cast_boolean_attributes_from_model_casts_definition()
+    {
+        $this->component
+            // Negativity flows withing this model...
+            ->assertSet('model.boolean_value', false)
+            // And it flows to the payload as well.
+            ->assertPayloadSet('model.boolean_value', false)
+
+            // Hey! Let's be more positive...
+            ->set('model.boolean_value', true)
+            // And, well, the good and the evil are two faces of the same coin.
+            ->call('validateAttribute', 'model.boolean_value')
+            ->assertHasNoErrors('model.boolean_value')
+            // Our model must be more positive :)
+            ->assertSet('model.boolean_value', true)
+            // And the payload should also be positive.
+            ->assertPayloadSet('model.boolean_value', true)
+
+            // Even if we don't provide boolean values, PHP is powerful enough to make interpretations
+            ->set('model.boolean_value', 0)
+            ->call('validateAttribute', 'model.boolean_value')
+            ->assertHasNoErrors('model.boolean_value')
+            ->assertSet('model.boolean_value', false)
+            ->assertPayloadSet('model.boolean_value', false)
+
+            ->set('model.boolean_value', 1)
+            ->call('validateAttribute', 'model.boolean_value')
+            ->assertHasNoErrors('model.boolean_value')
+            ->assertSet('model.boolean_value', true)
+            ->assertPayloadSet('model.boolean_value', true)
+
+            ->set('model.boolean_value', 'true')
+            ->call('validateAttribute', 'model.boolean_value')
+            ->assertHasNoErrors('model.boolean_value')
+            ->assertSet('model.boolean_value', true)
+            ->assertPayloadSet('model.boolean_value', true)
+
+            ->set('model.boolean_value', '')
+            ->call('validateAttribute', 'model.boolean_value')
+            ->assertHasNoErrors('model.boolean_value')
+            ->assertSet('model.boolean_value', false)
+            ->assertPayloadSet('model.boolean_value', false);
+    }
+
     /*
      * TODO:
-     * - Boolean values
      * - Array values: array, collection
      * - Object values (Literally, objects... Maybe "(object) array()"?)
      * - Better custom caster implementation
@@ -398,6 +442,10 @@ class ModelForAttributeCasting extends Model
         /* @see ModelAttributesCanBeCasted::can_cast_string_attributes_from_model_casts_definition() */
         'string_name' => 'string',
 
+        // Boolean
+        /* @see ModelAttributesCanBeCasted::can_cast_boolean_attributes_from_model_casts_definition() */
+        'boolean_value' => 'boolean',
+
 //         TODO: Better custom caster
 //        'numerical_string' => Number2String::class
     ];
@@ -417,6 +465,7 @@ class ModelForAttributeCasting extends Model
                 'decimal_with_one_digit' => 5,
                 'decimal_with_two_digits' => 6,
                 'string_name' => 'Gladys',
+                'boolean_value' => false
 
 //                TODO: Better Custom Caster
 //                'numerical_string' => 'One'
@@ -478,6 +527,7 @@ class ComponentForModelAttributeCasting extends Component
         'model.decimal_with_one_digit' => ['required', 'numeric'],
         'model.decimal_with_two_digits' => ['required', 'numeric'],
         'model.string_name' => ['required', 'string'],
+        'model.boolean_value' => ['required', 'boolean']
 
 //        TODO: Better Custom Caster
 //        'model.numerical_string' => ['required', 'string']
