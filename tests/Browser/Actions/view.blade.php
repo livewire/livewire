@@ -23,7 +23,7 @@
     <input wire:keydown.debounce.75ms="setOutputTo('bap')" dusk="bap"></button>
     <span dusk="output">{{ $output }}</span>
 
-    <button type="button" wire:click="showButtonGroup()" dusk="show.button.group">Show Button Group</button>
+    <button type="button" wire:click="setShowButtonGroup" dusk="show.button.group">Show Button Group</button>
 
     @if ($showButtonGroup)
         <div dusk="button.group">
@@ -32,6 +32,12 @@
                     <td>
                         <button type="button" wire:click="setOutputTo('button1 clicked')" dusk="button.group.1">Button 1</button>
                         <button type="button" wire:click="setOutputTo('button2 clicked')" dusk="button.group.2">Button 2</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button id="btn3" type="button" wire:click="setOutputTo('button3 clicked')" dusk="button.group.3">Button 1</button>
+                        <button id="btn4" type="button" wire:click="setOutputTo('button4 clicked')" dusk="button.group.4">Button 2</button>
                     </td>
                 </tr>
             </table>

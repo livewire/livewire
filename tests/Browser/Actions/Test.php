@@ -120,7 +120,7 @@ class Test extends TestCase
         });
     }
 
-    public function test_sibling_buttons()
+    public function test_sibling_buttons_no_ids()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
@@ -128,11 +128,28 @@ class Test extends TestCase
                  * sibling buttons
                  */
                 ->press('@show.button.group')
-                ->waitForLivewire()->assertPresent('@button.group')
+                ->waitForLivewire()->pause(100)->assertPresent('@button.group')
                 ->press('@button.group.1')
-                ->waitForLivewire()->assertSeeIn('@output', 'button1 clicked')
+                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button1 clicked')
                 ->press('@button.group.2')
-                ->waitForLivewire()->assertSeeIn('@output', 'button2 clicked')
+                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button2 clicked')
+            ;
+        });
+    }
+
+    public function test_sibling_buttons_with_ids()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, Component::class)
+                /**
+                 * sibling buttons
+                 */
+                ->press('@show.button.group')
+                ->waitForLivewire()->pause(100)->assertPresent('@button.group')
+                ->press('@button.group.3')
+                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button3 clicked')
+                ->press('@button.group.4')
+                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button4 clicked')
             ;
         });
     }
