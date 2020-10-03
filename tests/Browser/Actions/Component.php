@@ -8,7 +8,7 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $output = '';
-    public $showButtonGroup = false;
+    public $showButtonsWithClick = false;
 
     public function setOutputToFoo()
     {
@@ -20,9 +20,9 @@ class Component extends BaseComponent
         $this->output = implode('', $params);
     }
 
-    public function setShowButtonGroup($toggle = true)
+    public function setShowButtonsWithClick($toggle = true)
     {
-        $this->showButtonGroup = $toggle;
+        $this->showButtonsWithClick = $toggle;
     }
 
     public function appendToOutput(...$params)

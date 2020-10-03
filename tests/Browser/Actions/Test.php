@@ -120,36 +120,32 @@ class Test extends TestCase
         });
     }
 
-    public function test_sibling_buttons_no_ids()
+    public function test_button_dom_update_click_event()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
                 /**
                  * sibling buttons
                  */
-                ->press('@show.button.group')
-                ->waitForLivewire()->pause(100)->assertPresent('@button.group')
-                ->press('@button.group.1')
-                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button1 clicked')
-                ->press('@button.group.2')
-                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button2 clicked')
+                ->press('@show.button.actions')
+                ->waitForLivewire()->pause(100)->assertPresent('@button.with-actions')
+                ->press('@button.with-click')
+                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button with wire:clicked got triggered')
             ;
         });
     }
 
-    public function test_sibling_buttons_with_ids()
+    public function test_button_dom_update_click_event_with_id()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
                 /**
                  * sibling buttons
                  */
-                ->press('@show.button.group')
-                ->waitForLivewire()->pause(100)->assertPresent('@button.group')
-                ->press('@button.group.3')
-                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button3 clicked')
-                ->press('@button.group.4')
-                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button4 clicked')
+                ->press('@show.button.actions')
+                ->waitForLivewire()->pause(100)->assertPresent('@button.with-actions')
+                ->press('@button.with-id-and-click')
+                ->waitForLivewire()->pause(100)->assertSeeIn('@output', 'button with ID and wire:clicked got triggered')
             ;
         });
     }
