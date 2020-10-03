@@ -4,15 +4,15 @@ namespace Tests\Unit;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 use Livewire\Livewire;
+use Sushi\Sushi;
 
 /**
  * Try to test against all Laravel built-in cast definitions.
  *
  * @see \Illuminate\Database\Eloquent\Concerns\HasAttributes::$primitiveCastTypes
+ * @see \Illuminate\Database\Eloquent\Concerns\HasAttributes::castAttribute()
  */
 class ModelAttributesCanBeCasted extends TestCase
 {
@@ -21,26 +21,6 @@ class ModelAttributesCanBeCasted extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-
-        Schema::create('model_for_attribute_castings', function (Blueprint $table) {
-            $table->bigIncrements('id');
-
-            $table->date('normal_date');
-            $table->date('formatted_date');
-            $table->dateTime('date_with_time');
-            $table->timestamp('timestamped_date');
-
-            $table->timestamps();
-        });
-
-        $model = ModelForAttributeCasting::create([
-            'normal_date' => new \DateTime('2000-08-12'),
-            'formatted_date' => new \DateTime('2020-03-03'),
-            'date_with_time' => new \DateTime('2015-10-21'),
-            'timestamped_date' => new \DateTime('2002-08-30'),
-
-//            'numerical_string' => 'One'
-        ]);
 
         $this->component = Livewire::test(ComponentForModelAttributeCasting::class);
     }
@@ -128,16 +108,201 @@ class ModelAttributesCanBeCasted extends TestCase
             ->set('model.timestamped_date', 1538110800)
             // That a new timestamp in integer format should be a valid property value
             ->call('validateAttribute', 'model.timestamped_date')
-            ->assertHasNoErrors()
+            ->assertHasNoErrors('model.timestamped_date')
             // Now, let's just verify that its properly assigned to the model...
             ->assertSet('model.timestamped_date', 1538110800)
             // And to the payload too...
             ->assertPayloadSet('model.timestamped_date', 1538110800);
     }
 
+    /** @test */
+    public function can_cast_integer_attributes_from_model_casts_definition()
+    {
+        $this->component
+            // Our initial value is a simple integer...
+            ->assertSet('model.integer_number', 1)
+            // Which should have no issues when being converted in the Payload
+            ->assertPayloadSet('model.integer_number', 1)
+
+            // If we set an integer, well, Laravel will convert it to integer, as intended...
+            ->set('model.integer_number', 1.9999999999999)
+            // So, Livewire must not blow up...
+            ->call('validateAttribute', 'model.integer_number')
+            ->assertHasNoErrors('model.integer_number')
+            // And, well, the new number must keep the integer part, and have removed the decimals...
+            ->assertSet('model.integer_number', 1)
+            // And for the payload, the same thing must've happened.
+            ->assertPayloadSet('model.integer_number', 1)
+
+            // Even if we provide a numeric string...
+            ->set('model.integer_number', '1.9999999999')
+            // Laravel is able to cast it to an integer number, and Livewire must not blow up...
+            ->call('validateAttribute', 'model.integer_number')
+            ->assertHasNoErrors('model.integer_number')
+            // And the integer will be kept OK for the model...
+            ->assertSet('model.integer_number', 1)
+            // And it must be OK for the payload as well.
+            ->assertPayloadSet('model.integer_number', 1);
+    }
+
+    /** @test */
+    public function can_cast_real_attributes_from_model_casts_definition()
+    {
+        // Laravel treats Real casting as Float casting, so there should not be any issues...
+
+        $this->component
+            // Our initial value is a real number...
+            ->assertSet('model.real_number', 2.0)
+            // Which should have no issues when being converted in the Payload
+            ->assertPayloadSet('model.real_number', 2.0)
+
+            // If we provide a large decimal point, there should be no issues...
+            ->set('model.real_number', 2.9999999999)
+            // So, Livewire must not blow up...
+            ->call('validateAttribute', 'model.real_number')
+            ->assertHasNoErrors('model.real_number')
+            // And, well, the new number must keep intact... No ceiling nor flooring...
+            ->assertSet('model.real_number', 2.9999999999)
+            // And for the payload, the same thing must've happened.
+            ->assertPayloadSet('model.real_number', 2.9999999999)
+
+            // Even if we provide a numeric string...
+            ->set('model.real_number', '2.345')
+            // Laravel is able to cast it to a real number, and Livewire must not blow up...
+            ->call('validateAttribute', 'model.real_number')
+            ->assertHasNoErrors('model.real_number')
+            // And the number will be kept as is for the model...
+            ->assertSet('model.real_number', 2.345)
+            // And it must be kept for the payload as well.
+            ->assertPayloadSet('model.real_number', 2.345);
+    }
+
+    /** @test */
+    public function can_cast_float_attributes_from_model_casts_definition()
+    {
+        $this->component
+            // Our initial value is a float number...
+            ->assertSet('model.float_number', 3.0)
+            // Which should have no issues when being converted in the Payload
+            ->assertPayloadSet('model.float_number', 3.0)
+
+            // If we provide a large decimal point, there should be no issues...
+            ->set('model.float_number', 3.9999999998)
+            // So, Livewire must not blow up...
+            ->call('validateAttribute', 'model.float_number')
+            ->assertHasNoErrors('model.float_number')
+            // And, well, the new number must keep intact... No ceiling nor flooring...
+            ->assertSet('model.float_number', 3.9999999998)
+            // And for the payload, the same thing must've happened.
+            ->assertPayloadSet('model.float_number', 3.9999999998)
+
+            // Even if we provide a numeric string...
+            ->set('model.float_number', '3.399')
+            // Laravel is able to cast it to a float number, and Livewire must not blow up...
+            ->call('validateAttribute', 'model.float_number')
+            ->assertHasNoErrors('model.float_number')
+            // And the number will be kept as is for the model...
+            ->assertSet('model.float_number', 3.399)
+            // And it must be kept for the payload as well.
+            ->assertPayloadSet('model.float_number', 3.399);
+    }
+
+    /** @test */
+    public function can_cast_double_precision_attributes_from_model_casts_definition()
+    {
+        // Laravel treats Double casting as Float casting, so there should not be any issues...
+
+        $this->component
+            // Our initial value is a double precision number...
+            ->assertSet('model.double_precision_number', 4.0)
+            // Which should have no issues when being converted in the Payload
+            ->assertPayloadSet('model.double_precision_number', 4.0)
+
+            // If we provide a large decimal point, there should be no issues...
+            ->set('model.double_precision_number', 4.9999999997)
+            // So, Livewire must not blow up...
+            ->call('validateAttribute', 'model.double_precision_number')
+            ->assertHasNoErrors('model.double_precision_number')
+            // And, well, the new number must keep intact... No ceiling nor flooring...
+            ->assertSet('model.double_precision_number', 4.9999999997)
+            // And for the payload, the same thing must've happened.
+            ->assertPayloadSet('model.double_precision_number', 4.9999999997)
+
+            // Even if we provide a numeric string...
+            ->set('model.double_precision_number', '4.20')
+            // Laravel is able to cast it to a double precision number, and Livewire must not blow up...
+            ->call('validateAttribute', 'model.double_precision_number')
+            ->assertHasNoErrors('model.double_precision_number')
+            // And the number will be kept as is for the model...
+            ->assertSet('model.double_precision_number', 4.20)
+            // And it must be kept for the payload as well.
+            ->assertPayloadSet('model.double_precision_number', 4.20);
+    }
+
+    /** @test */
+    public function can_cast_decimal_attribute_with_one_digit_from_model_casts_definition()
+    {
+        $this->component
+            // Our initial value is a number with one digit...
+            ->assertSet('model.decimal_with_one_digit', 5.0)
+            // Which should have no issues when being converted in the Payload
+            ->assertPayloadSet('model.decimal_with_one_digit', 5.0)
+
+            // If we provide a large decimal point, Laravel will round the decimal part...
+            ->set('model.decimal_with_one_digit', 5.120983)
+            // So, Livewire must not blow up...
+            ->call('validateAttribute', 'model.decimal_with_one_digit')
+            ->assertHasNoErrors('model.decimal_with_one_digit')
+            // And, well, the number was rounded, but remember, decimal <0.5 will be round down,
+            // decimal >=0.5 will be round up
+            ->assertSet('model.decimal_with_one_digit', 5.1)
+            // And for the payload, the same thing must've happened.
+            ->assertPayloadSet('model.decimal_with_one_digit', 5.1)
+
+            // Even if we provide a numeric string...
+            ->set('model.decimal_with_one_digit', '5.55')
+            // Laravel is able to cast it to a number with one digit, and Livewire must not blow up...
+            ->call('validateAttribute', 'model.decimal_with_one_digit')
+            ->assertHasNoErrors('model.decimal_with_one_digit')
+            // And the number will be rounded for the model...
+            ->assertSet('model.decimal_with_one_digit', 5.6)
+            // And it must be kept for the payload as well.
+            ->assertPayloadSet('model.decimal_with_one_digit', 5.6);
+    }
+
+    /** @test */
+    public function can_cast_decimal_attribute_with_two_digits_from_model_casts_definition()
+    {
+        $this->component
+            // Our initial value is a number with two digits...
+            ->assertSet('model.decimal_with_two_digits', 6.0)
+            // Which should have no issues when being converted in the Payload
+            ->assertPayloadSet('model.decimal_with_two_digits', 6.0)
+
+            // If we provide a large decimal point, Laravel will round the decimal part...
+            ->set('model.decimal_with_two_digits', 6.4567)
+            // So, Livewire must not blow up...
+            ->call('validateAttribute', 'model.decimal_with_two_digits')
+            ->assertHasNoErrors('model.decimal_with_two_digits')
+            // And, well, the number was rounded, but remember, decimal <0.5 will be round down,
+            // decimal >=0.5 will be round up
+            ->assertSet('model.decimal_with_two_digits', 6.46)
+            // And for the payload, the same thing must've happened.
+            ->assertPayloadSet('model.decimal_with_two_digits', 6.46)
+
+            // Even if we provide a numeric string...
+            ->set('model.decimal_with_two_digits', '6.212')
+            // Laravel is able to cast it to a number with two digits, and Livewire must not blow up...
+            ->call('validateAttribute', 'model.decimal_with_two_digits')
+            ->assertHasNoErrors('model.decimal_with_two_digits')
+            // And the number will be rounded for the model...
+            ->assertSet('model.decimal_with_two_digits', 6.21)
+            // And it must be kept for the payload as well.
+            ->assertPayloadSet('model.decimal_with_two_digits', 6.21);
+    }
+
     /*
      * TODO:
-     * - Numeric values: integer, real, float, double, decimal:<digits>
      * - String values
      * - Boolean values
      * - Array values: array, collection
@@ -164,18 +329,72 @@ class ModelAttributesCanBeCasted extends TestCase
 
 class ModelForAttributeCasting extends Model
 {
-    protected $connection = 'testbench';
+    use Sushi;
+
     protected $guarded = [];
 
     protected $casts = [
+        // Dates
+        /* @see ModelAttributesCanBeCasted::can_cast_normal_date_attributes_from_model_casts_definition() */
         'normal_date' => 'date',
+        /* @see ModelAttributesCanBeCasted::can_cast_formatted_date_attributes_from_model_casts_definition() */
         'formatted_date' => 'date:d-m-Y',
+
+        // DateTime
+        /* @see ModelAttributesCanBeCasted::can_cast_datetime_attributes_from_model_casts_definition() */
         'date_with_time' => 'datetime',
+
+        // Timestamp
+        /* @see ModelAttributesCanBeCasted::can_cast_timestamp_attributes_from_model_casts_definition() */
         'timestamped_date' => 'timestamp',
+
+        // Integer
+        /* @see ModelAttributesCanBeCasted::can_cast_integer_attributes_from_model_casts_definition() */
+        'integer_number' => 'integer',
+
+        // Floats
+        /* @see ModelAttributesCanBeCasted::can_cast_real_attributes_from_model_casts_definition() */
+        'real_number' => 'real',
+        /* @see ModelAttributesCanBeCasted::can_cast_float_attributes_from_model_casts_definition() */
+        'float_number' => 'float',
+        /* @see ModelAttributesCanBeCasted::can_cast_double_precision_attributes_from_model_casts_definition() */
+        'double_precision_number' => 'double',
+        // Decimals
+        /* @see ModelAttributesCanBeCasted::can_cast_decimal_attribute_with_one_digit_from_model_casts_definition() */
+        'decimal_with_one_digit' => 'decimal:1',
+        /* @see ModelAttributesCanBeCasted::can_cast_decimal_attribute_with_two_digits_from_model_casts_definition() */
+        'decimal_with_two_digits' => 'decimal:2'
 
 //         TODO: Better custom caster
 //        'numerical_string' => Number2String::class
     ];
+
+    public function getRows()
+    {
+        return [
+            [
+                // Dates
+                'normal_date' => new \DateTime('2000-08-12'),
+                'formatted_date' => new \DateTime('2020-03-03'),
+                // DateTime
+                'date_with_time' => new \DateTime('2015-10-21'),
+                // Timestamp
+                'timestamped_date' => new \DateTime('2002-08-30'),
+                // Integer
+                'integer_number' => 1,
+                // Floats
+                'real_number' => 2,
+                'float_number' => 3,
+                'double_precision_number' => 4,
+                // Decimals
+                'decimal_with_one_digit' => 5,
+                'decimal_with_two_digits' => 6,
+
+//                TODO: Better Custom Caster
+//                'numerical_string' => 'One'
+            ]
+        ];
+    }
 }
 
 class Number2String implements CastsAttributes {
@@ -223,8 +442,15 @@ class ComponentForModelAttributeCasting extends Component
         'model.normal_date' => ['required', 'date'],
         'model.formatted_date' => ['required', 'date'],
         'model.date_with_time' => ['required', 'date'],
-        'model.timestamped_date' => ['required', 'integer']
+        'model.timestamped_date' => ['required', 'integer'],
+        'model.integer_number' => ['required', 'integer'],
+        'model.real_number' => ['required', 'numeric'],
+        'model.float_number' => ['required', 'numeric'],
+        'model.double_precision_number' => ['required', 'numeric'],
+        'model.decimal_with_one_digit' => ['required', 'numeric'],
+        'model.decimal_with_two_digits' => ['required', 'numeric']
 
+//        TODO: Better Custom Caster
 //        'model.numerical_string' => ['required', 'string']
     ];
 
