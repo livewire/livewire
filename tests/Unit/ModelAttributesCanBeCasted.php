@@ -438,6 +438,29 @@ class ModelAttributesCanBeCasted extends TestCase
             ->assertPayloadSet('model.collected_list', [false, true]);
     }
 
+    /** @test */
+    public function can_cast_object_attributes_from_model_casts_definition()
+    {
+        // Laravel treats Collection casting as JSON<->Object casting, so there should not be any issues...
+
+        $this->component
+            // Let's make sure that our object is properly casted to PHP's stdClass.
+            ->assertSet('model.object_value', (object) ['name' => 'Marian', 'email' => 'marian@likes.pizza'])
+            // On our Payload, it should be the same thing, since its already ready to be JSON encoded.
+            ->assertPayloadSet('model.object_value', (object) ['name' => 'Marian', 'email' => 'marian@likes.pizza'])
+
+            // We should be able to assign a new object without problem...
+            ->set('model.object_value', (object) ['name' => 'Marian', 'email' => 'marian@my-company.rocks'])
+            // And our component must not blow up.
+            ->call('validateAttribute', 'model.object_value')
+            ->assertHasNoErrors('model.object_value')
+            // Since its a traditional PHP object, we should be able to assert its properties.
+            ->assertSet('model.object_value.name', 'Marian')
+            ->assertPayloadSet('model.object_value.name', 'Marian')
+            ->assertSet('model.object_value.email', 'marian@my-company.rocks')
+            ->assertPayloadSet('model.object_value.email', 'marian@my-company.rocks');
+    }
+
     /*
      * TODO:
      * - Object values (Literally, objects... Maybe "(object) array()"?)
@@ -507,13 +530,17 @@ class ModelForAttributeCasting extends Model
         /* @see ModelAttributesCanBeCasted::can_cast_boolean_attributes_from_model_casts_definition() */
         'boolean_value' => 'boolean',
 
-        // JSON <-> Arrayable+
+        // JSON <-> Arrayable
         /* @see ModelAttributesCanBeCasted::can_cast_array_attributes_from_model_casts_definition() */
         'array_list' => 'array',
         /* @see ModelAttributesCanBeCasted::can_cast_json_attributes_from_model_casts_definition() */
         'json_list' => 'json',
         /* @see ModelAttributesCanBeCasted::can_cast_collection_attributes_from_model_casts_definition() */
         'collected_list' => 'collection',
+
+        // JSON <-> Object
+        /* @see ModelAttributesCanBeCasted::can_cast_object_attributes_from_model_casts_definition() */
+        'object_value' => 'object'
 
 //         TODO: Better custom caster
 //        'numerical_string' => Number2String::class
@@ -537,7 +564,8 @@ class ModelForAttributeCasting extends Model
                 'boolean_value' => false,
                 'array_list' => json_encode([]),
                 'json_list' => json_encode([1, 2, 3]),
-                'collected_list' => collect([true, false]),
+                'collected_list' => json_encode([true, false]),
+                'object_value' => json_encode(['name' => 'Marian', 'email' => 'marian@likes.pizza']),
 
 //                TODO: Better Custom Caster
 //                'numerical_string' => 'One'
@@ -607,7 +635,12 @@ class ComponentForModelAttributeCasting extends Component
         'model.json_list' => ['required', 'array'],
         'model.json_list.*' => ['required', 'numeric'],
 
+        'model.collected_list' => ['required'],
         'model.collected_list.*' => ['required', 'boolean'],
+
+        'model.object_value' => ['required'],
+        'model.object_value.name' => ['required'],
+        'model.object_value.email' => ['required', 'email'],
 
 //        TODO: Better Custom Caster
 //        'model.numerical_string' => ['required', 'string']
