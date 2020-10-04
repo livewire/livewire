@@ -17,7 +17,7 @@ export default class {
     }
 
     shouldSkipWatcher() {
-        return this.updateQueue.every(update => update.skipWatcher)
+        return this.updateQueue.length && this.updateQueue.every(update => update.skipWatcher)
     }
 
     storeResponse(payload) {
