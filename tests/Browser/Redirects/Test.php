@@ -24,7 +24,21 @@ class Test extends TestCase
                 ->click('@redirect-with-flash')->waitForReload()
                 ->assertPresent('@flash.message')
                 ->waitForLivewire()->click('@refresh')
-                ->assertNotPresent('@flash.message');
+                ->assertNotPresent('@flash.message')
+
+                /**
+                 * Livewire response is not handled if redirecting.
+                 */
+                ->refresh()
+                ->assertSeeIn('@redirect.blade.output', 'foo')
+                ->assertSeeIn('@redirect.alpine.output', 'foo')
+                ->runScript('window.addEventListener("beforeunload", e => { e.preventDefault(); e.returnValue = ""; });')
+                ->click('@redirect.button')
+                ->pause(500)
+                ->dismissDialog()
+                ->assertSeeIn('@redirect.blade.output', 'foo')
+                ->assertSeeIn('@redirect.alpine.output', 'foo')
+            ;
         });
     }
 }
