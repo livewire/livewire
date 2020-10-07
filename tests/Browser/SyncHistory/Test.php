@@ -180,4 +180,21 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_that_alpine_watchers_used_by_entangle_are_fired_when_back_button_is_hit()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithAlpineEntangle::class)
+                ->assertSeeIn('@blade.output', '1')
+                ->assertSeeIn('@alpine.output', 'bar')
+                ->waitForLivewire()->click('@next')
+                ->assertSeeIn('@blade.output', '2')
+                ->waitForLivewire()->click('@changeFoo')
+                ->assertSeeIn('@alpine.output', 'baz')
+                ->back()
+                ->assertSeeIn('@blade.output', '1')
+                ->assertSeeIn('@alpine.output', 'bar')
+            ;
+        });
+    }
 }
