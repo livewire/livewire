@@ -54,7 +54,7 @@ class PropertyTestingComponent extends Component
     public $foo = 'bar';
     public $model;
 
-    protected function getBobProperty()
+    public function getBobProperty()
     {
         return 'lob';
     }

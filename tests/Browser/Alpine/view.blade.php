@@ -50,4 +50,10 @@
         <span dusk="law.output.wire" x-text="$wire.nested.count"></span>
         <span dusk="law.output.blade">{{ $nested['count'] }}"</span>
     </div>
+
+    <div x-data wire:model="zorp">
+        <button type="button" @click="$dispatch('input', 'after')" dusk="zorp.button">Before -> After</button>
+
+        <span dusk="zorp.output">{{ $zorp }}</span>
+    </div>
 </div>

@@ -36,6 +36,22 @@ class Test extends TestCase
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@button');
+
+                    $browser->pause(100);
+
+                    $browser->assertNotVisible('@show-w-delay');
+                })
+                ->tap($this->assertInitialState())
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@button');
+
+                    $browser->pause(200);
+
+                    $browser->assertVisible('@show-w-delay');
+                })
+                ->tap($this->assertInitialState())
+                ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@target-button');
 
                     $browser->waitFor('@targeting');
@@ -77,6 +93,8 @@ class Test extends TestCase
         return function (Browser $browser) {
             $browser->assertNotVisible('@show');
             $browser->assertVisible('@hide');
+
+            $browser->assertNotVisible('@show-w-delay');
 
             $browser->assertAttribute('@add-class', 'class', '');
             $browser->assertAttribute('@remove-class', 'class', 'foo');

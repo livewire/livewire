@@ -124,9 +124,9 @@ class Livewire {
                                 let livewireComponent = livewireEl.__livewire
 
                                 // Let's set the initial value of the Alpine prop to the Livewire prop's value.
-                                component.unobservedData[
-                                    key
-                                ] = livewireEl.__livewire.get(livewireProperty)
+                                component.unobservedData[key]
+                                    // We need to stringify and parse it though to get a deep clone.
+                                    = JSON.parse(JSON.stringify(livewireEl.__livewire.get(livewireProperty)))
 
                                 let blockAlpineWatcher = false
 

@@ -24,6 +24,13 @@ class LivewireManager
         $this->componentAliases[$alias] = $viewClass;
     }
 
+    public function getAlias($class, $default = null)
+    {
+        $alias = array_search($class, $this->componentAliases);
+
+        return $alias === false ? $default : $alias;
+    }
+
     public function getClass($alias)
     {
         $finder = app(LivewireComponentsFinder::class);
@@ -157,6 +164,13 @@ class LivewireManager
     [wire\:dirty]:not(textarea):not(input):not(select) {
         display: none;
     }
+
+    input:-webkit-autofill, select:-webkit-autofill, textarea:-webkit-autofill {
+        animation-duration: 50000s;
+        animation-name: livewireautofill;
+    }
+
+    @keyframes livewireautofill { from {} }
 </style>
 HTML;
     }

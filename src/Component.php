@@ -29,6 +29,7 @@ abstract class Component
     protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
+    protected $beforeRenders = [];
 
     public function __construct($id = null)
     {
@@ -107,6 +108,8 @@ abstract class Component
 
     public function renderToView()
     {
+        $this->callBeforeRenders();
+
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
             : view("livewire.{$this::getName()}");
@@ -203,6 +206,18 @@ abstract class Component
         });
     }
 
+    public function beforeRender($callback)
+    {
+        $this->beforeRenders[] = $callback;
+    }
+
+    protected function callBeforeRenders()
+    {
+        foreach ($this->beforeRenders as $beforeRender) {
+            $beforeRender();
+        }
+    }
+
     public function __get($property)
     {
         $studlyProperty = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
@@ -212,7 +227,7 @@ abstract class Component
                 return $this->computedPropertyCache[$property];
             }
 
-            return $this->computedPropertyCache[$property] = $this->$computedMethodName();
+            return $this->computedPropertyCache[$property] = app()->call([$this, $computedMethodName]);
         }
 
         throw new \Exception("Property [{$property}] does not exist on the {$this::getName()} component.");

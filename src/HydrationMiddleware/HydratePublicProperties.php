@@ -58,7 +58,9 @@ class HydratePublicProperties implements HydrationMiddleware
 
                 $instance->$property = $model;
             } else {
-                $instance->$property = $value;
+                // If the value is null, don't set it, because all values start off as null and this
+                // will prevent Typed properties from wining about being set to null.
+                is_null($value) || $instance->$property = $value;
             }
         }
     }

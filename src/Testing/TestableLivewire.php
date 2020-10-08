@@ -40,6 +40,12 @@ class TestableLivewire
             $this->lastValidator = $validator;
         });
 
+        Livewire::listen('component.hydrate.subsequent', function ($validator) {
+            // Clear the validator held in memory from the last request so we
+            // can properly assert validation errors for the most recent request.
+            $this->lastValidator = null;
+        });
+
         Livewire::listen('component.dehydrate', function($component) {
             static::$instancesById[$component->id] = $component;
         });

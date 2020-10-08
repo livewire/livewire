@@ -8,6 +8,7 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $count = 0;
+    public $zorp = 'before';
 
     public $nested = [
         'count' => 0,

@@ -27,6 +27,16 @@ class TestableLivewireCanAssertRedirectTest extends TestCase
 
         $component->assertRedirect('/some');
     }
+
+    /** @test */
+    public function can_detect_failed_redirect()
+    {
+        $component = Livewire::test(RedirectComponent::class);
+
+        $this->expectException(\PHPUnit\Framework\AssertionFailedError::class);
+
+        $component->assertRedirect();
+    }
 }
 
 class RedirectComponent extends Component
