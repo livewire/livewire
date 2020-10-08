@@ -3,8 +3,10 @@
 namespace Tests\Unit;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\ObjectPrybar;
 use Sushi\Sushi;
 
 class EloquentModelValidationTest extends TestCase
@@ -163,6 +165,38 @@ class EloquentModelValidationTest extends TestCase
 
         $this->assertEquals([[['name' => 'arise']]], $foo->fresh()->zap);
     }
+
+    /** @test */
+    public function unique_model_rule_vaildation()
+    {
+        // issue #1
+        // the column is prefixed with the model name and would result in a unknown column name
+        ComponentForEloquentModelValidation::setUniqueMethode('ignoreHardCodedId');
+
+        $component = Livewire::test(ComponentForEloquentModelValidation::class, [
+            'user' => $user = UniqueUser::firstWhere('username', 'caleb'),
+        ]);
+
+        $component->set('user.username', 'adrian')
+                  ->assertHasErrors('user.username');
+
+        // issue #2
+        // model isn't hydrated - that's the real issue
+        ComponentForEloquentModelValidation::setUniqueMethode('ignore');
+        $component->set('user.username', 'adrian')
+                  ->assertHasErrors('user.username');
+
+        // same as issue #2 - just with another syntax
+        ComponentForEloquentModelValidation::setUniqueMethode('ignoreModel');
+        $component->set('user.username', 'adrian')
+                  ->assertHasErrors('user.username');
+
+        $component->set('user.username', 'calebporzio')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals('calebporzio', $user->fresh()->username);
+    }
 }
 
 class Foo extends Model
@@ -205,7 +239,91 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
 
     public function performValidateOnly($field)
     {
-       $this->validateOnly($field);
+        $this->validateOnly($field);
+    }
+
+    public function render()
+    {
+        return view('dump-errors');
+    }
+}
+
+class UniqueUser extends Model
+{
+    use Sushi;
+
+    protected $connection = 'foo-connection';
+
+    public function __construct(array $attributes = [])
+    {
+        /** @see ComponentHasRulesPropertyTest L141 */
+        $connection = static::resolveConnection();
+        $db = app('db');
+        $prybar = new ObjectPrybar($db);
+        $connections = $prybar->getProperty('connections');
+        $connections['foo-connection'] = $connection;
+        $prybar->setProperty('connections', $connections);
+
+        parent::__construct($attributes);
+    }
+
+    protected function getRows()
+    {
+        return [
+            ['id' => 1, 'username' => 'caleb'],
+            ['id' => 2, 'username' => 'adrian'],
+        ];
+    }
+}
+
+class ComponentForEloquentModelValidation extends Component
+{
+    public $user;
+
+    protected static $uniqueMethode = '';
+
+    protected function rules()
+    {
+        return [
+            'user.username' => [
+                'required',
+                $this->{static::$uniqueMethode}(),
+            ],
+        ];
+    }
+
+    public static function setUniqueMethode($methode)
+    {
+        static::$uniqueMethode = $methode;
+    }
+
+    public function ignoreHardCodedId()
+    {
+        return Rule::unique(UniqueUser::class)->ignore(1, 'id');
+    }
+
+    public function ignore()
+    {
+        // optional to avoid call on null - till its fixed
+        return Rule::unique(UniqueUser::class)->ignore(optional($this->user)->id, 'id');
+    }
+
+    public function ignoreModel()
+    {
+        // optional to avoid call on null - till its fixed
+        return Rule::unique(UniqueUser::class)->ignoreModel(optional($this->user)) ;
+    }
+
+    public function updated()
+    {
+        $this->validate();
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+        $this->user->save();
     }
 
     public function render()
