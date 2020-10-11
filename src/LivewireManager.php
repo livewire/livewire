@@ -4,6 +4,7 @@ namespace Livewire;
 
 use Illuminate\Support\Str;
 use Livewire\Testing\TestableLivewire;
+use Illuminate\View\ViewFinderInterface;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
 
@@ -11,6 +12,7 @@ class LivewireManager
 {
     protected $listeners = [];
     protected $componentAliases = [];
+    protected $componentNamespaces = [];
 
     public static $isLivewireRequestTestingOverride;
 
@@ -22,6 +24,11 @@ class LivewireManager
         }
 
         $this->componentAliases[$alias] = $viewClass;
+    }
+
+    public function componentNamespace($namespace, $prefix)
+    {
+        $this->componentNamespaces[$prefix] = $namespace;
     }
 
     public function getAlias($class, $default = null)
@@ -45,6 +52,12 @@ class LivewireManager
         );
 
         $class = $class ?: (
+            // Let's check registered namespaced components for an existing
+            // class with the same alias under the same namespace.
+            $this->guessNamespacedComponentClass($alias)
+        );
+
+        $class = $class ?: (
             // If none of the above worked, our last-ditch effort will be
             // to re-generate the auto-discovery manifest and look again.
             $finder->build()->find($alias)
@@ -55,6 +68,30 @@ class LivewireManager
         ));
 
         return $class;
+    }
+
+    public function guessNamespacedComponentClass($alias)
+    {
+        $pieces = explode(ViewFinderInterface::HINT_PATH_DELIMITER, $alias);
+
+        $prefix = $pieces[0];
+
+        if (isset($this->componentNamespaces[$prefix]) && isset($pieces[1])) {
+            $component = implode('\\', array_map(function ($componentPiece) {
+                return Str::studly($componentPiece);
+            }, explode('.', $pieces[1])));
+
+            if (class_exists($class = $this->componentNamespaces[$prefix].'\\'.$component)) {
+                return $class;
+            }
+        }
+
+        return false;
+    }
+
+    public function getComponentNamespaces()
+    {
+        return $this->componentNamespaces;
     }
 
     public function getInstance($component, $id)

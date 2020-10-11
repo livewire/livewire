@@ -5,8 +5,10 @@ namespace Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use Illuminate\Routing\Route;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\View\ViewFinderInterface;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
@@ -82,7 +84,7 @@ abstract class Component
 
     public static function getName()
     {
-        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace', 'App\\Http\\Livewire'))))
+        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', static::getNamespace())))
             ->map([Str::class, 'kebab'])
             ->implode('.');
 
@@ -95,6 +97,22 @@ abstract class Component
         }
 
         return $fullName;
+    }
+
+    public static function getPrefix()
+    {
+        return Str::startsWith(static::class, app('livewire')->getComponentNamespaces())
+            ? array_search(Arr::first(app('livewire')->getComponentNamespaces(), function ($namesapce) {
+                return str_starts_with(static::class, $namesapce);
+            }), app('livewire')->getComponentNamespaces())
+            : null;
+    }
+
+    public static function getNamespace()
+    {
+        return ($prefix = static::getPrefix())
+            ? app('livewire')->getComponentNamespaces()[$prefix]
+            : config('livewire.class_namespace', 'App\\Http\\Livewire');
     }
 
     public function getQueryString()
@@ -111,9 +129,13 @@ abstract class Component
     {
         $this->callBeforeRenders();
 
+        if ($prefix = $this::getPrefix()) {
+            $prefix .= ViewFinderInterface::HINT_PATH_DELIMITER;
+        }
+
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
-            : view("livewire.{$this::getName()}");
+            : view("{$prefix}livewire.{$this::getName()}");
 
         if (is_string($view)) {
             $view = app('view')->make(CreateBladeView::fromString($view));
