@@ -101,11 +101,25 @@ abstract class Component
 
     public static function getPrefix()
     {
-        return Str::startsWith(static::class, app('livewire')->getComponentNamespaces())
-            ? array_search(Arr::first(app('livewire')->getComponentNamespaces(), function ($namesapce) {
-                return str_starts_with(static::class, $namesapce);
-            }), app('livewire')->getComponentNamespaces())
-            : null;
+        $prefix = null;
+
+        // Look for the first occurrence of the component namespace.
+        Arr::first(
+            app('livewire')->getComponentNamespaces(),
+            function ($namespace, $key) use (&$prefix) {
+                // If we don't get it on this run, just continue with the next registered prefix.
+                if (! Str::contains(static::class, $namespace)) {
+                    return false;
+                }
+
+                // If we do match the class name in the namespace,
+                // provide the prefix on the outer-scope and exit the loop.
+                $prefix = $key;
+                return true;
+            }
+        );
+
+        return $prefix;
     }
 
     public static function getNamespace()
