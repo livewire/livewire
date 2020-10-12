@@ -118,18 +118,20 @@ class HydratePublicProperties implements HydrationMiddleware
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
 
-        $modelData = [];
+        $filteredModelData = [];
         if ($rules = $instance->rulesForModel($property)) {
             $keys = $rules->keys()->map(function ($key) use ($instance) {
                 return $instance->beforeFirstDot($instance->afterFirstDot($key));
             });
 
+            $fullModelData = $instance->$property->toArray();
+
             foreach ($keys as $key) {
-                data_set($modelData, $key, data_get($instance->$property, $key));
+                data_set($filteredModelData, $key, data_get($fullModelData, $key));
             }
         }
 
         // Only include the allowed data (defined by rules) in the response payload
-        data_set($response, 'memo.data.'.$property, $modelData);
+        data_set($response, 'memo.data.'.$property, $filteredModelData);
     }
 }
