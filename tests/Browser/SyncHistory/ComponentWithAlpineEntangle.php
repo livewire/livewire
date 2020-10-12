@@ -23,6 +23,6 @@ class ComponentWithAlpineEntangle extends Component
                 <button wire:click="$set('foo', 'baz')" dusk="changeFoo">prev page</button>
                 <div x-data="{ foo: @entangle('foo') }" x-text="foo" dusk="alpine.output"></div>
             </div>
-        blade;
+blade;
     }
 }

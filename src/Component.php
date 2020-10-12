@@ -10,6 +10,7 @@ use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
+use Livewire\Exceptions\PropertyNotFoundException;
 
 abstract class Component
 {
@@ -228,7 +229,7 @@ abstract class Component
             return $this->computedPropertyCache[$property] = app()->call([$this, $computedMethodName]);
         }
 
-        throw new \Exception("Property [{$property}] does not exist on the {$this::getName()} component.");
+        throw new PropertyNotFoundException($property, $this::getName());
     }
 
     public function __call($method, $params)

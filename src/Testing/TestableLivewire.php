@@ -11,6 +11,7 @@ use Livewire\GenerateSignedUploadUrl;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Traits\Macroable;
 use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
+use Livewire\Exceptions\PropertyNotFoundException;
 
 class TestableLivewire
 {
@@ -209,7 +210,7 @@ class TestableLivewire
 
                 try {
                     $value = $this->instance()->{$root};
-                } catch (\Throwable $e) {
+                } catch (PropertyNotFoundException $e) {
                     $value = null;
                 }
 

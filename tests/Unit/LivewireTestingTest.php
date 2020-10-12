@@ -42,7 +42,11 @@ class LivewireTestingTest extends TestCase
     {
         app(LivewireManager::class)
             ->test(HasMountArguments::class, ['name' => 'foo'])
-            ->assertSet('name', 'foo');
+            ->assertSet('name', 'foo')
+            ->set('name', 'info')
+            ->assertSet('name', 'info')
+            ->set('name', 'is_array')
+            ->assertSet('name', 'is_array');
     }
 
     /** @test */
