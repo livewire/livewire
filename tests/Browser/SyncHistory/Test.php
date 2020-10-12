@@ -24,6 +24,17 @@ class Test extends TestCase
         });
     }
 
+    public function test_route_bound_properties_are_synced_with_browser_history_when_no_query_string_is_present()
+    {
+        $this->browse(function(Browser $browser) {
+            $browser->visit(route('sync-history-without-query-string', [ 'step' => 1 ], false))->waitForText('Step 1 Active');
+
+            $browser->waitForLivewire()->click('@step-2')->assertRouteIs('sync-history-without-query-string', [ 'step' => 2 ]);
+
+            $browser->back()->assertRouteIs('sync-history-without-query-string', [ 'step' => 1 ]);
+        });
+    }
+
     public function test_that_query_bound_properties_are_synced_with_browser_history()
     {
         $this->browse(function (Browser $browser) {
