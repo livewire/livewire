@@ -10,6 +10,8 @@ use Illuminate\Contracts\Database\ModelIdentifier;
 use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
+use Illuminate\Support\Str;
+use Illuminate\Support\Stringable;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 class HydratePublicProperties implements HydrationMiddleware
@@ -23,6 +25,7 @@ class HydratePublicProperties implements HydrationMiddleware
         $dates = data_get($request, 'memo.dataMeta.dates', []);
         $collections = data_get($request, 'memo.dataMeta.collections', []);
         $models = data_get($request, 'memo.dataMeta.models', []);
+        $stringables = data_get($request, 'memo.dataMeta.stringables', []);
 
         foreach ($publicProperties as $property => $value) {
             if ($type = data_get($dates, $property)) {
@@ -57,8 +60,12 @@ class HydratePublicProperties implements HydrationMiddleware
                 }
 
                 $instance->$property = $model;
+            } else if (in_array($property, $stringables)) {
+                data_set($instance, $property, Str::of($value));
             } else {
-                $instance->$property = $value;
+                // If the value is null, don't set it, because all values start off as null and this
+                // will prevent Typed properties from wining about being set to null.
+                is_null($value) || $instance->$property = $value;
             }
         }
     }
@@ -92,6 +99,10 @@ class HydratePublicProperties implements HydrationMiddleware
                 }
 
                 data_set($response, 'memo.data.'.$key, $value->format(\DateTimeInterface::ISO8601));
+            } else if ($value instanceof Stringable) {
+                $response->memo['dataMeta']['stringables'][] = $key;
+
+                data_set($response, 'memo.data.'.$key, $value->__toString());
             } else {
                 throw new PublicPropertyTypeNotAllowedException($instance::getName(), $key, $value);
             }
@@ -107,18 +118,20 @@ class HydratePublicProperties implements HydrationMiddleware
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
 
-        $modelData = [];
+        $filteredModelData = [];
         if ($rules = $instance->rulesForModel($property)) {
             $keys = $rules->keys()->map(function ($key) use ($instance) {
                 return $instance->beforeFirstDot($instance->afterFirstDot($key));
             });
 
+            $fullModelData = $instance->$property->toArray();
+
             foreach ($keys as $key) {
-                data_set($modelData, $key, data_get($instance->$property, $key));
+                data_set($filteredModelData, $key, data_get($fullModelData, $key));
             }
         }
 
         // Only include the allowed data (defined by rules) in the response payload
-        data_set($response, 'memo.data.'.$property, $modelData);
+        data_set($response, 'memo.data.'.$property, $filteredModelData);
     }
 }

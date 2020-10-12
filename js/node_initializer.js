@@ -70,13 +70,13 @@ export default {
             || directive.modifiers.includes('lazy') ? 'change' : 'input'
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-        let handler = debounceIf(hasDebounceModifier || (DOM.isTextInput(el) && !isLazy), e => {
+        let handler = debounceIf(hasDebounceModifier || (DOM.isTextInput(el) && (!isLazy || !el.wasRecentlyAutofilled)), e => {
             let model = directive.value
             let el = e.target
 
             let value = e instanceof CustomEvent
                 // We have to check for typeof e.detail here for IE 11.
-                && (e.detail === undefined)
+                && typeof e.detail != 'undefined'
                 && typeof window.document.documentMode == 'undefined'
                     ? e.detail
                     : DOM.valueFromInput(el, component)

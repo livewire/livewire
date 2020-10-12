@@ -2,9 +2,11 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\ObjectPrybar;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
@@ -86,6 +88,14 @@ trait ValidatesInput
         return [];
     }
 
+    protected function getCustomAttributes()
+    {
+        if (method_exists($this, 'customAttributes')) return $this->customAttributes();
+        if (property_exists($this, 'customAttributes')) return $this->customAttributes;
+
+        return [];
+    }
+
     public function rulesForModel($name)
     {
         if (empty($this->getRules())) return collect();
@@ -96,19 +106,40 @@ trait ValidatesInput
             });
     }
 
-    public function missingRuleFor($dotNotatedProperty)
+    public function hasRuleFor($dotNotatedProperty)
     {
-        return ! collect($this->getRules())
+        // Convert foo.0.bar.1 -> foo.*.bar.*
+        $propertyWithStarsInsteadOfNumbers = (string) Str::of($dotNotatedProperty)
+            // Replace all numeric indexes with an array wildcard: (.0., .10., .007.) => .*.
+            // In order to match overlapping numerical indexes (foo.1.2.3.4.name),
+            // We need to use a positive look-behind, that's technically all the magic here.
+            // For better understanding, see: https://regexr.com/5d1n3
+            ->replaceMatches('/(?<=(\.))\d+\./', '*.')
+            // Replace all numeric indexes at the end of the name with an array wildcard
+            // (Same as the previous regex, but ran only at the end of the string)
+            // For better undestanding, see: https://regexr.com/5d1n6
+            ->replaceMatches('/\.\d+$/', '.*');
+
+        // If property has numeric indexes in it,
+        if ($dotNotatedProperty !== $propertyWithStarsInsteadOfNumbers) {
+            return collect($this->getRules())->keys()->contains($propertyWithStarsInsteadOfNumbers);
+        }
+
+        return collect($this->getRules())
             ->keys()
             ->map(function ($key) {
-                return Str::of($key)->before('.*');
-            })
-            ->contains($dotNotatedProperty);
+                return (string) Str::of($key)->before('.*');
+            })->contains($dotNotatedProperty);
+    }
+
+    public function missingRuleFor($dotNotatedProperty)
+    {
+        return ! $this->hasRuleFor($dotNotatedProperty);
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])
     {
-        [$rules, $messages] = $this->providedOrGlobalRulesAndMessages($rules, $messages);
+        [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
@@ -127,7 +158,7 @@ trait ValidatesInput
 
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
     {
-        [$rules, $messages] = $this->providedOrGlobalRulesAndMessages($rules, $messages);
+        [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         // If the field is "items.0.foo", validation rules for "items.*.foo", "items.*", etc. are applied.
         $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
@@ -181,15 +212,16 @@ trait ValidatesInput
         }
     }
 
-    protected function providedOrGlobalRulesAndMessages($rules, $messages)
+    protected function providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes)
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
 
         throw_if(empty($rules), new MissingRulesException($this::getName()));
 
         $messages = empty($messages) ? $this->getMessages() : $messages;
+        $attributes = empty($attributes) ? $this->getCustomAttributes() : $attributes;
 
-        return [$rules, $messages];
+        return [$rules, $messages, $attributes];
     }
 
     protected function getDataForValidation($rules)
@@ -203,7 +235,11 @@ trait ValidatesInput
                 throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: ['.$ruleKey.']'));
             });
 
-        return $properties;
+        return collect($properties)->map(function ($value) {
+            if ($value instanceof Collection && ! $value instanceof EloquentCollection) return $value->toArray();
+
+            return $value;
+        })->all();
     }
 
     protected function prepareForValidation($attributes)

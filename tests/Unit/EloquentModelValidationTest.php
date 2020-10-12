@@ -90,6 +90,21 @@ class EloquentModelValidationTest extends TestCase
     }
 
     /** @test */
+    public function array_index_key_model_property_validation()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.bob.0', 'b')
+            ->call('save')
+            ->assertHasErrors('foo.bob.*')
+            ->set('foo.bob.0', 'bbo')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals(['bbo'], $foo->fresh()->bob);
+    }
+
+    /** @test */
     public function array_wildcard_key_with_key_after_model_property_validation()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -103,13 +118,58 @@ class EloquentModelValidationTest extends TestCase
 
         $this->assertEquals(['law' => [['blog' => 'globbbbb']]], $foo->fresh()->lob);
     }
+
+    /** @test */
+    public function array_with_numerical_index_key_model_property_validation()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.lob.law.0', ['blog' => 'glob'])
+            ->call('save')
+            ->assertHasErrors(['foo.lob.law.*', 'foo.lob.law.*.blog'])
+            ->set('foo.lob.law.0', ['blog' => 'globbbbb'])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals(['law' => [['blog' => 'globbbbb']]], $foo->fresh()->lob);
+    }
+
+    /** @test */
+    public function array_wildcard_key_with_numeric_index_model_property_validation()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.lob.law.0.blog', 'glob')
+            ->call('save')
+            ->assertHasErrors('foo.lob.law.*.blog')
+            ->set('foo.lob.law.0.blog', 'globbbbb')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals(['law' => [['blog' => 'globbbbb']]], $foo->fresh()->lob);
+    }
+
+    /** @test */
+    public function array_wildcard_key_with_deep_numeric_index_model_property_validation()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.zap.0.0.name', 'ar')
+            ->call('save')
+            ->assertHasErrors('foo.zap.*.*.name')
+            ->set('foo.zap.0.0.name', 'arise')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals([[['name' => 'arise']]], $foo->fresh()->zap);
+    }
 }
 
 class Foo extends Model
 {
     use Sushi;
 
-    protected $casts = ['baz' => 'array', 'bob' => 'array', 'lob' => 'array'];
+    protected $casts = ['baz' => 'array', 'bob' => 'array', 'lob' => 'array', 'zap' => 'array'];
 
     protected function getRows()
     {
@@ -118,6 +178,7 @@ class Foo extends Model
             'baz' => json_encode(['zab', 'azb']),
             'bob' => json_encode(['obb']),
             'lob' => json_encode(['law' => []]),
+            'zap' => json_encode([]),
         ]];
     }
 }
@@ -130,7 +191,9 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
         'foo.bar' => 'required',
         'foo.baz' => 'required|array|min:2',
         'foo.bob.*' => 'required|min:2',
+        'foo.lob.law.*' => 'required|array',
         'foo.lob.law.*.blog' => 'required|min:5',
+        'foo.zap.*.*.name' => 'required|min:3',
     ];
 
     public function save()

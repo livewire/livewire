@@ -11,6 +11,7 @@ use Livewire\GenerateSignedUploadUrl;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Traits\Macroable;
 use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
+use Livewire\Exceptions\PropertyNotFoundException;
 
 class TestableLivewire
 {
@@ -38,6 +39,12 @@ class TestableLivewire
 
         Livewire::listen('failed-validation', function ($validator) {
             $this->lastValidator = $validator;
+        });
+
+        Livewire::listen('component.hydrate.subsequent', function ($validator) {
+            // Clear the validator held in memory from the last request so we
+            // can properly assert validation errors for the most recent request.
+            $this->lastValidator = null;
         });
 
         Livewire::listen('component.dehydrate', function($component) {
@@ -203,7 +210,7 @@ class TestableLivewire
 
                 try {
                     $value = $this->instance()->{$root};
-                } catch (\Throwable $e) {
+                } catch (PropertyNotFoundException $e) {
                     $value = null;
                 }
 

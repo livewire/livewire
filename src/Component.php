@@ -10,6 +10,7 @@ use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
+use Livewire\Exceptions\PropertyNotFoundException;
 
 abstract class Component
 {
@@ -29,14 +30,13 @@ abstract class Component
     protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
+    protected $beforeRenders = [];
 
     public function __construct($id = null)
     {
         $this->id = $id ?? Str::random(20);
 
         $this->ensureIdPropertyIsntOverridden();
-
-        $this->initializeTraits();
     }
 
     public function __invoke(Container $container, Route $route)
@@ -65,11 +65,11 @@ abstract class Component
     {
         throw_if(
             array_key_exists('id', $this->getPublicPropertiesDefinedBySubClass()),
-            new CannotUseReservedLivewireComponentProperties('id', $this::getName())
+            new CannotUseReservedLivewireComponentProperties('id', static::getName())
         );
     }
 
-    protected function initializeTraits()
+    public function initializeTraits()
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
@@ -95,6 +95,17 @@ abstract class Component
         return $fullName;
     }
 
+    public static function guessViewPath()
+    {
+        $path = Str::of(config('livewire.view_path', 'livewire'))->replace(' ', '')->trim('/')->replace('/', '.');
+
+        if (! $path->isEmpty()) {
+            $path = $path->append('.');
+        }
+
+        return $path->append(static::getName());
+    }
+
     public function getQueryString()
     {
         return $this->queryString;
@@ -107,9 +118,11 @@ abstract class Component
 
     public function renderToView()
     {
+        $this->callBeforeRenders();
+
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
-            : view("livewire.{$this::getName()}");
+            : view(static::guessViewPath());
 
         if (is_string($view)) {
             $view = app('view')->make(CreateBladeView::fromString($view));
@@ -203,6 +216,18 @@ abstract class Component
         });
     }
 
+    public function beforeRender($callback)
+    {
+        $this->beforeRenders[] = $callback;
+    }
+
+    protected function callBeforeRenders()
+    {
+        foreach ($this->beforeRenders as $beforeRender) {
+            $beforeRender();
+        }
+    }
+
     public function __get($property)
     {
         $studlyProperty = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
@@ -215,7 +240,7 @@ abstract class Component
             return $this->computedPropertyCache[$property] = app()->call([$this, $computedMethodName]);
         }
 
-        throw new \Exception("Property [{$property}] does not exist on the {$this::getName()} component.");
+        throw new PropertyNotFoundException($property, static::getName());
     }
 
     public function __call($method, $params)

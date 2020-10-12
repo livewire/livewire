@@ -37,22 +37,27 @@ trait WithPagination
 
     public function previousPage()
     {
-        $this->page = $this->page - 1;
+        $this->setPage($this->page - 1);
     }
 
     public function nextPage()
     {
-        $this->page = $this->page + 1;
+        $this->setPage($this->page + 1);
     }
 
     public function gotoPage($page)
     {
-        $this->page = $page;
+        $this->setPage($page);
     }
 
     public function resetPage()
     {
-        $this->page = 1;
+        $this->setPage(1);
+    }
+
+    public function setPage($page)
+    {
+        $this->page = $page;
     }
 
     public function resolvePage()
