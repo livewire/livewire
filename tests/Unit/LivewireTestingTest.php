@@ -12,7 +12,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function testing_livewire_route_works_with_user_route_with_the_same_signature()
     {
-        Route::get('/{param1}/{param2}', function() {
+        Route::get('/{param1}/{param2}', function () {
             throw new \Exception('I shouldn\'t get executed!');
         });
 
@@ -42,7 +42,11 @@ class LivewireTestingTest extends TestCase
     {
         app(LivewireManager::class)
             ->test(HasMountArguments::class, ['name' => 'foo'])
-            ->assertSet('name', 'foo');
+            ->assertSet('name', 'foo')
+            ->set('name', 'info')
+            ->assertSet('name', 'info')
+            ->set('name', 'is_array')
+            ->assertSet('name', 'is_array');
     }
 
     /** @test */
