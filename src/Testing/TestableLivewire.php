@@ -210,8 +210,14 @@ class TestableLivewire
 
                 try {
                     $value = $this->instance()->{$root};
-                } catch (PropertyNotFoundException $e) {
-                    $value = null;
+                } catch (\Throwable $e) {
+                    if ($e instanceof PropertyNotFoundException) {
+                        $value = null;
+                    } else if (Str::of($e->getMessage())->contains('must not be accessed before initialization')) {
+                        $value = null;
+                    } else {
+                        throw $e;
+                    }
                 }
 
                 $nested = $root === $property ? null : $this->instance()->afterFirstDot($property);
