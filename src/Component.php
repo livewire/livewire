@@ -49,9 +49,9 @@ abstract class Component
             ->mount($componentParams)
             ->renderToView();
 
-        $layoutType = $this->initialLayoutConfiguration['type'] ?? config('livewire.uses_x-layout') ? 'x-layout' : 'component';
+        $layoutType = $this->initialLayoutConfiguration['type'] ?? (config('livewire.uses_x-layout', false) ? 'x-layout' : 'component');
 
-        $view = $this->initialLayoutConfiguration['view'] ?? config('livewire.uses_x-layout') ? 'app-layout' : 'layouts.app';
+        $view = $this->initialLayoutConfiguration['view'] ?? (config('livewire.uses_x-layout', false) ? 'app-layout' : 'layouts.app');
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
             'view' => $view,
