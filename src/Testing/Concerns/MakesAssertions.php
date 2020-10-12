@@ -13,7 +13,7 @@ trait MakesAssertions
 {
     public function assertSet($name, $value)
     {
-        if (is_callable($value)) {
+        if (! is_string($value) && is_callable($value)) {
             PHPUnit::assertTrue($value($this->get($name)));
         } else {
             PHPUnit::assertEquals($value, $this->get($name));
