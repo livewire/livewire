@@ -54,7 +54,7 @@ class LivewireManager
         $class = $class ?: (
             // Let's check registered namespaced components for an existing
             // class with the same alias under the same namespace.
-            $this->guessNamespacedComponentClass($alias)
+            $this->findComponentByClass($alias)
         );
 
         $class = $class ?: (
@@ -70,20 +70,25 @@ class LivewireManager
         return $class;
     }
 
-    public function guessNamespacedComponentClass($alias)
+    public function findComponentByClass($alias)
     {
         $pieces = explode(ViewFinderInterface::HINT_PATH_DELIMITER, $alias);
 
         $prefix = $pieces[0];
 
-        if (isset($this->componentNamespaces[$prefix]) && isset($pieces[1])) {
-            $component = implode('\\', array_map(function ($componentPiece) {
-                return Str::studly($componentPiece);
-            }, explode('.', $pieces[1])));
+        if (!isset($this->componentNamespaces[$prefix]) || !isset($pieces[1])) {
+            return false;
+        }
 
-            if (class_exists($class = $this->componentNamespaces[$prefix].'\\'.$component)) {
-                return $class;
-            }
+        $component = Str::of($pieces[1])
+            ->explode('.')
+            ->map(function ($componentPiece) {
+                return Str::studly($componentPiece);
+            })
+            ->implode('\\');
+
+        if (class_exists($class = $this->componentNamespaces[$prefix].'\\'.$component)) {
+            return $class;
         }
 
         return false;
