@@ -88,6 +88,14 @@ trait ValidatesInput
         return [];
     }
 
+    protected function getCustomAttributes()
+    {
+        if (method_exists($this, 'customAttributes')) return $this->customAttributes();
+        if (property_exists($this, 'customAttributes')) return $this->customAttributes;
+
+        return [];
+    }
+
     public function rulesForModel($name)
     {
         if (empty($this->getRules())) return collect();
@@ -131,7 +139,7 @@ trait ValidatesInput
 
     public function validate($rules = null, $messages = [], $attributes = [])
     {
-        [$rules, $messages] = $this->providedOrGlobalRulesAndMessages($rules, $messages);
+        [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
@@ -150,7 +158,7 @@ trait ValidatesInput
 
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
     {
-        [$rules, $messages] = $this->providedOrGlobalRulesAndMessages($rules, $messages);
+        [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         // If the field is "items.0.foo", validation rules for "items.*.foo", "items.*", etc. are applied.
         $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
@@ -204,15 +212,16 @@ trait ValidatesInput
         }
     }
 
-    protected function providedOrGlobalRulesAndMessages($rules, $messages)
+    protected function providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes)
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
 
         throw_if(empty($rules), new MissingRulesException($this::getName()));
 
         $messages = empty($messages) ? $this->getMessages() : $messages;
+        $attributes = empty($attributes) ? $this->getCustomAttributes() : $attributes;
 
-        return [$rules, $messages];
+        return [$rules, $messages, $attributes];
     }
 
     protected function getDataForValidation($rules)

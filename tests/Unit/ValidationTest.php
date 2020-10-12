@@ -42,6 +42,16 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validate_component_properties_with_custom_attribute_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->runAction('runValidationWithCustomAttributesProperty');
+
+        $this->assertStringContainsString('The foobar field is required.', $component->payload['effects']['html']);
+    }
+
+    /** @test */
     public function validate_component_properties_with_custom_attribute()
     {
         $component = Livewire::test(ForValidation::class);
@@ -476,6 +486,15 @@ class ForValidation extends Component
 
         $this->validate([
             'bar' => 'required'
+        ]);
+    }
+
+    public function runValidationWithCustomAttributesProperty()
+    {
+        $this->customAttributes = ['bar' => 'foobar'];
+
+        $this->validate([
+            'bar' => 'required',
         ]);
     }
 
