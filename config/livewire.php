@@ -97,4 +97,15 @@ return [
 
     'manifest_path' => null,
 
+    /*
+    |--------------------------------------------------------------------------
+    | X-Layout
+    |--------------------------------------------------------------------------
+    |
+    | This value sets the default layout render behavior to use x-blade components styles.
+    |
+    */
+
+    'uses_x-layout' => false
+
 ];
