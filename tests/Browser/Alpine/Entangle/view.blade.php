@@ -16,4 +16,20 @@
             @endforeach
         </div>
     </div>
+
+    <div x-data>
+        <button wire:click="$set('showBob', true)" dusk="bob.show">Show Bob</button>
+
+        <div dusk="bob.blade">{{ $bob }}</div>
+
+        <div>
+            @if ($showBob)
+                <div x-data="{ bob: @entangle('bob') }">
+                    <button x-on:click="bob = 'after'" dusk="bob.button">Change Bob</button>
+
+                    <div dusk="bob.alpine" x-text="bob"></div>
+                </div>
+            @endif
+        </div>
+    </div>
 </div>

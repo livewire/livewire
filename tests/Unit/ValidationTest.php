@@ -42,6 +42,16 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validate_component_properties_with_custom_attribute_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->runAction('runValidationWithCustomAttributesProperty');
+
+        $this->assertStringContainsString('The foobar field is required.', $component->payload['effects']['html']);
+    }
+
+    /** @test */
     public function validate_component_properties_with_custom_attribute()
     {
         $component = Livewire::test(ForValidation::class);
@@ -362,6 +372,14 @@ class ValidationTest extends TestCase
             'bar' => $component->bar,
         ], $validatedData);
     }
+
+    /** @test */
+    public function can_assert_validation_errors_on_errors_thrown_from_custom_validator()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->call('failFooOnCustomValidator')->assertHasErrors('plop');
+    }
 }
 
 class ForValidation extends Component
@@ -471,6 +489,15 @@ class ForValidation extends Component
         ]);
     }
 
+    public function runValidationWithCustomAttributesProperty()
+    {
+        $this->customAttributes = ['bar' => 'foobar'];
+
+        $this->validate([
+            'bar' => 'required',
+        ]);
+    }
+
     public function runValidationWithCustomAttribute()
     {
         $this->validate([
@@ -506,6 +533,11 @@ class ForValidation extends Component
     public function runValidationWithoutAllPublicPropertiesAndReturnValidatedData()
     {
         return $this->validate(['bar' => 'required']);
+    }
+
+    public function failFooOnCustomValidator()
+    {
+        Validator::make([], ['plop' => 'required'])->validate();
     }
 
     public function render()

@@ -53,6 +53,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\FileDownloads\Component::class);
             app('livewire')->component(\Tests\Browser\Redirects\Component::class);
             app('livewire')->component(\Tests\Browser\SupportCollections\Component::class);
+            app('livewire')->component(\Tests\Browser\SupportStringables\Component::class);
             app('livewire')->component(\Tests\Browser\Events\Component::class);
             app('livewire')->component(\Tests\Browser\Events\NestedComponentA::class);
             app('livewire')->component(\Tests\Browser\Events\NestedComponentB::class);
@@ -83,6 +84,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
             app('livewire')->component(\Tests\Browser\SyncHistory\SingleRadioComponent::class);
             app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithMount::class);
+            app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithAlpineEntangle::class);
             app('livewire')->component(\Tests\Browser\Pagination\Tailwind::class);
             app('livewire')->component(\Tests\Browser\Pagination\Bootstrap::class);
 

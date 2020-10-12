@@ -33,6 +33,22 @@ class TestableLivewireCanAssertPropertiesTest extends TestCase
         Livewire::test(PropertyTestingComponent::class)
             ->assertSet('bob', 'lob');
     }
+
+    /** @test */
+    public function swallows_property_not_found_exceptions()
+    {
+        Livewire::test(PropertyTestingComponent::class)
+            ->assertSet('nonExistentProperty', null);
+    }
+
+    /** @test */
+    public function throws_non_property_not_found_exceptions()
+    {
+        $this->expectException(\Exception::class);
+
+        Livewire::test(PropertyTestingComponent::class)
+            ->assertSet('throwsException', null);
+    }
 }
 
 class ModelForPropertyTesting extends Model
@@ -57,6 +73,11 @@ class PropertyTestingComponent extends Component
     public function getBobProperty()
     {
         return 'lob';
+    }
+
+    public function getThrowsExceptionProperty()
+    {
+        throw new \Exception('Test exception');
     }
 
     public function render()

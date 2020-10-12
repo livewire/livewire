@@ -1,16 +1,19 @@
 <?php
 
-namespace Tests\Browser\Alpine\Entangle;
+namespace Tests\Browser\SupportStringables;
 
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
 use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    public $items = ['foo', 'bar'];
+    public $string;
 
-    public $showBob = false;
-    public $bob = 'before';
+    public function mount()
+    {
+        $this->string = Str::of('Be excellent to each other');
+    }
 
     public function render()
     {

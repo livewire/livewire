@@ -20,6 +20,18 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@button')
                 ->assertSeeIn('@output.alpine', 'baz')
                 ->assertSeeIn('@output.blade', 'baz')
+
+                /**
+                 * Can conditionally load in a new Alpine component that uses @entangle
+                 */
+                ->assertNotPresent('@bob.alpine')
+                ->assertSeeIn('@bob.blade', 'before')
+                ->waitForLivewire()->click('@bob.show')
+                ->assertSeeIn('@bob.alpine', 'before')
+                ->assertSeeIn('@bob.blade', 'before')
+                ->waitForLivewire()->click('@bob.button')
+                ->assertSeeIn('@bob.alpine', 'after')
+                ->assertSeeIn('@bob.blade', 'after')
             ;
         });
     }
