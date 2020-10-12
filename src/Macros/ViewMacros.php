@@ -32,6 +32,20 @@ class ViewMacros
         };
     }
 
+    public function xLayout()
+    {
+        return function ($view, $params = []) {
+            $this->livewireLayout = [
+                'type' => 'x-layout',
+                'slotOrSection' => 'default',
+                'view' => $view,
+                'params' => $params,
+            ];
+
+            return $this;
+        };
+    }
+
     public function section()
     {
         return function ($section) {
