@@ -36,8 +36,6 @@ abstract class Component
         $this->id = $id ?? Str::random(20);
 
         $this->ensureIdPropertyIsntOverridden();
-
-        $this->initializeTraits();
     }
 
     public function __invoke(Container $container, Route $route)
@@ -70,7 +68,7 @@ abstract class Component
         );
     }
 
-    protected function initializeTraits()
+    public function initializeTraits()
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
