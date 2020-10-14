@@ -64,7 +64,7 @@ abstract class Component
     {
         throw_if(
             array_key_exists('id', $this->getPublicPropertiesDefinedBySubClass()),
-            new CannotUseReservedLivewireComponentProperties('id', static::getName())
+            new CannotUseReservedLivewireComponentProperties('id', $this::getName())
         );
     }
 
@@ -121,7 +121,7 @@ abstract class Component
 
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
-            : view(static::guessViewPath());
+            : view($this::guessViewPath());
 
         if (is_string($view)) {
             $view = app('view')->make(CreateBladeView::fromString($view));
