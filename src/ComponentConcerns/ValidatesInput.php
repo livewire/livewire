@@ -88,10 +88,10 @@ trait ValidatesInput
         return [];
     }
 
-    protected function getCustomAttributes()
+    protected function getAttributes()
     {
-        if (method_exists($this, 'customAttributes')) return $this->customAttributes();
-        if (property_exists($this, 'customAttributes')) return $this->customAttributes;
+        if (method_exists($this, 'attributes')) return $this->attributes();
+        if (property_exists($this, 'attributes')) return $this->attributes;
 
         return [];
     }
@@ -219,7 +219,7 @@ trait ValidatesInput
         throw_if(empty($rules), new MissingRulesException($this::getName()));
 
         $messages = empty($messages) ? $this->getMessages() : $messages;
-        $attributes = empty($attributes) ? $this->getCustomAttributes() : $attributes;
+        $attributes = empty($attributes) ? $this->getAttributes() : $attributes;
 
         return [$rules, $messages, $attributes];
     }
