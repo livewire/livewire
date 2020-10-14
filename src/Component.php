@@ -30,7 +30,6 @@ abstract class Component
     protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
-    protected $beforeRenders = [];
 
     public function __construct($id = null)
     {
@@ -118,7 +117,7 @@ abstract class Component
 
     public function renderToView()
     {
-        $this->callBeforeRenders();
+        Livewire::dispatch('component.rendering', $this);
 
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
@@ -135,6 +134,8 @@ abstract class Component
         if ($view->livewireLayout) {
             $this->initialLayoutConfiguration = $view->livewireLayout;
         }
+
+        Livewire::dispatch('component.rendered', $this, $view);
 
         return $this->preRenderedView = $view;
     }
@@ -214,18 +215,6 @@ abstract class Component
                 unset($this->computedPropertyCache[$i]);
             }
         });
-    }
-
-    public function beforeRender($callback)
-    {
-        $this->beforeRenders[] = $callback;
-    }
-
-    protected function callBeforeRenders()
-    {
-        foreach ($this->beforeRenders as $beforeRender) {
-            $beforeRender();
-        }
     }
 
     public function __get($property)

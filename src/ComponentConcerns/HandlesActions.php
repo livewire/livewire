@@ -80,6 +80,8 @@ trait HandlesActions
             $this->{$beforeNestedMethod}($value, $keyAfterLastDot);
         }
 
+        Livewire::dispatch('component.updating', $this, $name, $value);
+
         $callback($name, $value);
 
         $this->updated($name, $value);
@@ -91,6 +93,8 @@ trait HandlesActions
         if ($afterNestedMethod && method_exists($this, $afterNestedMethod)) {
             $this->{$afterNestedMethod}($value, $keyAfterLastDot);
         }
+
+        Livewire::dispatch('component.updated', $this, $name, $value);
     }
 
     public function callMethod($method, $params = [])
