@@ -19,7 +19,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
         (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
         (new ModelForBinding)->migrate();
 
-        Livewire::test(ComponentWithModelsProperty::class)
+        Livewire::test(ComponentWithModelCollectionProperty::class)
             ->assertSet('models.0.title', 'foo')
             ->assertPayloadSet('models.0.title', 'foo')
             ->set('models.0.title', 'bo')
@@ -42,7 +42,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
         (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
         (new ModelForBinding)->migrate();
 
-        Livewire::test(ComponentWithModelsProperty::class)
+        Livewire::test(ComponentWithModelCollectionProperty::class)
             ->assertSet('models.2.title', 'baz')
             ->assertSet('models.3', null)
             ->assertPayloadSet('models.3', null)
@@ -74,7 +74,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
         (new ModelWithCustomCollectionForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelWithCustomCollectionForBinding)->getTable());
         (new ModelWithCustomCollectionForBinding)->migrate();
 
-        Livewire::test(ComponentWithModelsProperty::class)
+        Livewire::test(ComponentWithModelCollectionProperty::class)
             ->call('setModelsToCustomCollection')
             ->assertSet('models.0.title', 'foo')
             ->assertPayloadSet('models.0.title', 'foo')
@@ -102,7 +102,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
 
         $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
 
-        Livewire::test(ComponentWithModelsProperty::class)
+        Livewire::test(ComponentWithModelCollectionProperty::class)
             ->set('models.1.restricted', 'bar')
             ->assertSet('models.1.restricted', null);
     }
@@ -116,7 +116,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
 
         $this->expectException(CorruptComponentPayloadException::class);
 
-        $component = Livewire::test(ComponentWithModelsProperty::class);
+        $component = Livewire::test(ComponentWithModelCollectionProperty::class);
 
         $component->payload['serverMemo']['dataMeta']['modelCollections']['models']['id'] = [1];
 
@@ -156,7 +156,7 @@ class ModelWithCustomCollectionForBinding extends Model
     }
 }
 
-class ComponentWithModelsProperty extends Component
+class ComponentWithModelCollectionProperty extends Component
 {
     public $models;
     public $modelsType;
