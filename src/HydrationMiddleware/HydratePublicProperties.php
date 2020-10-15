@@ -39,57 +39,9 @@ class HydratePublicProperties implements HydrationMiddleware
             } else if (in_array($property, $collections)) {
                 data_set($instance, $property, collect($value));
             } else if ($serialized = data_get($models, $property)) {
-                if (isset($serialized['id'])) {
-                    $model = (new static)->getRestoredPropertyValue(
-                        new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
-                    );
-                } else {
-                    $model = new $serialized['class'];
-                }
-
-                $dirtyModelData = $request->memo['data'][$property];
-
-                if ($rules = $instance->rulesForModel($property)) {
-                    $keys = $rules->keys()->map(function ($key) use ($instance) {
-                        return $instance->beforeFirstDot($instance->afterFirstDot($key));
-                    });
-
-                    foreach ($keys as $key) {
-                        data_set($model, $key, data_get($dirtyModelData, $key));
-                    }
-                }
-
-                $instance->$property = $model;
+                static::hydrateModel($serialized, $property, $request, $instance);
             } else if ($serialized = data_get($modelCollections, $property)) {
-                $idsWithNullsIntersparsed = $serialized['id'];
-
-                $models = (new static)->getRestoredPropertyValue(
-                    new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
-                );
-
-                $dirtyModelData = $request->memo['data'][$property];
-
-                foreach ($idsWithNullsIntersparsed as $index => $id) {
-                    if ($rules = $instance->rulesForModel($property)) {
-                        $keys = $rules->keys()
-                            ->map([$instance, 'ruleWithNumbersReplacedByStars'])
-                            ->mapInto(Stringable::class)
-                            ->filter->contains('*.')
-                            ->map->after('*.')
-                            ->map->__toString();
-
-                        if (is_null($id)) {
-                            $model = new $serialized['class'];
-                            $models->splice($index, 0, [$model]);
-                        }
-
-                        foreach ($keys as $key) {
-                            data_set($models[$index], $key, data_get($dirtyModelData[$index], $key));
-                        }
-                    }
-                }
-
-                $instance->$property = $models;
+                static::hydrateModels($serialized, $property, $request, $instance);
             } else if (in_array($property, $stringables)) {
                 data_set($instance, $property, new Stringable($value));
             } else {
@@ -139,6 +91,64 @@ class HydratePublicProperties implements HydrationMiddleware
                 throw new PublicPropertyTypeNotAllowedException($instance::getName(), $key, $value);
             }
         });
+    }
+
+    protected static function hydrateModel($serialized, $property, $request, $instance)
+    {
+        if (isset($serialized['id'])) {
+            $model = (new static)->getRestoredPropertyValue(
+                new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
+            );
+        } else {
+            $model = new $serialized['class'];
+        }
+
+        $dirtyModelData = $request->memo['data'][$property];
+
+        if ($rules = $instance->rulesForModel($property)) {
+            $keys = $rules->keys()->map(function ($key) use ($instance) {
+                return $instance->beforeFirstDot($instance->afterFirstDot($key));
+            });
+
+            foreach ($keys as $key) {
+                data_set($model, $key, data_get($dirtyModelData, $key));
+            }
+        }
+
+        $instance->$property = $model;
+    }
+
+    protected static function hydrateModels($serialized, $property, $request, $instance)
+    {
+        $idsWithNullsIntersparsed = $serialized['id'];
+
+        $models = (new static)->getRestoredPropertyValue(
+            new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
+        );
+
+        $dirtyModelData = $request->memo['data'][$property];
+
+        foreach ($idsWithNullsIntersparsed as $index => $id) {
+            if ($rules = $instance->rulesForModel($property)) {
+                $keys = $rules->keys()
+                    ->map([$instance, 'ruleWithNumbersReplacedByStars'])
+                    ->mapInto(Stringable::class)
+                    ->filter->contains('*.')
+                    ->map->after('*.')
+                    ->map->__toString();
+
+                if (is_null($id)) {
+                    $model = new $serialized['class'];
+                    $models->splice($index, 0, [$model]);
+                }
+
+                foreach ($keys as $key) {
+                    data_set($models[$index], $key, data_get($dirtyModelData[$index], $key));
+                }
+            }
+        }
+
+        $instance->$property = $models;
     }
 
     protected static function dehydrateModel($value, $property, $response, $instance)
