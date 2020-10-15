@@ -87,10 +87,10 @@ trait ValidatesInput
         return [];
     }
 
-    protected function getAttributes()
+    protected function getValidationAttributes()
     {
-        if (method_exists($this, 'attributes')) return $this->attributes();
-        if (property_exists($this, 'attributes')) return $this->attributes;
+        if (method_exists($this, 'validationAttributes')) return $this->validationAttributes();
+        if (property_exists($this, 'validationAttributes')) return $this->validationAttributes;
 
         return [];
     }
@@ -223,7 +223,7 @@ trait ValidatesInput
         throw_if(empty($rules), new MissingRulesException($this::getName()));
 
         $messages = empty($messages) ? $this->getMessages() : $messages;
-        $attributes = empty($attributes) ? $this->getAttributes() : $attributes;
+        $attributes = empty($attributes) ? $this->getValidationAttributes() : $attributes;
 
         return [$rules, $messages, $attributes];
     }

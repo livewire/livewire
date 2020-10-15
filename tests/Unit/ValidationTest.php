@@ -491,7 +491,7 @@ class ForValidation extends Component
 
     public function runValidationWithAttributesProperty()
     {
-        $this->attributes = ['bar' => 'foobar'];
+        $this->validationAttributes = ['bar' => 'foobar'];
 
         $this->validate([
             'bar' => 'required',
