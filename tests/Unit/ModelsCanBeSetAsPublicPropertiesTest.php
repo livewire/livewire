@@ -98,11 +98,11 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
 
         $component = Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models]);
 
-        $this->assertEquals([2, 1], $component->payload['serverMemo']['dataMeta']['models']['models']['id']);
+        $this->assertEquals([2, 1], $component->payload['serverMemo']['dataMeta']['modelCollections']['models']['id']);
 
         $component ->call('refresh');
 
-        $this->assertEquals([2, 1], $component->payload['serverMemo']['dataMeta']['models']['models']['id']);
+        $this->assertEquals([2, 1], $component->payload['serverMemo']['dataMeta']['modelCollections']['models']['id']);
     }
 }
 

@@ -202,18 +202,3 @@ class ComponentWithModelCollectionProperty extends Component
         return view('null-view');
     }
 }
-
-class ComponentWithoutRulesArray extends Component
-{
-    public $models;
-
-    public function mount()
-    {
-        $this->models = ModelForBinding::all();
-    }
-
-    public function render()
-    {
-        return view('null-view');
-    }
-}
