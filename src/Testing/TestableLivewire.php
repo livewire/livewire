@@ -20,6 +20,7 @@ class TestableLivewire
     public $payload = [];
     public $componentName;
     public $lastValidator;
+    public $lastErrorBag;
     public $lastRenderedView;
     public $lastRenderedDom;
     public $lastResponse;
@@ -49,6 +50,8 @@ class TestableLivewire
 
         Livewire::listen('component.dehydrate', function($component) {
             static::$instancesById[$component->id] = $component;
+
+            $this->lastErrorBag = $component->getErrorBag();
         });
 
         Livewire::listen('mounted', function ($response) {

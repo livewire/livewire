@@ -4,7 +4,6 @@ namespace Livewire\Testing\Concerns;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Testing\Constraints\SeeInOrder;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -189,9 +188,7 @@ trait MakesAssertions
 
     public function assertHasErrors($keys = [])
     {
-        $errors = new MessageBag(
-            $this->lastValidator ? $this->lastValidator->errors()->messages() : []
-        );
+        $errors = $this->lastErrorBag;
 
         PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
 
@@ -215,9 +212,7 @@ trait MakesAssertions
 
     public function assertHasNoErrors($keys = [])
     {
-        $errors = new MessageBag(
-            $this->lastValidator ? $this->lastValidator->errors()->messages() : []
-        );
+        $errors = $this->lastErrorBag;
 
         if (empty($keys)) {
             PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors: "' . implode('", "', $errors->keys()) . '"');

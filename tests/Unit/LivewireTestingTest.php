@@ -143,6 +143,15 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_has_error_with_manually_added_error()
+    {
+        app(LivewireManager::class)
+            ->test(ValidatesDataWithSubmitStub::class)
+            ->call('manuallyAddError')
+            ->assertHasErrors('bob');
+    }
+
+    /** @test */
     public function assert_has_error_with_submit_validation()
     {
         app(LivewireManager::class)
@@ -263,6 +272,11 @@ class ValidatesDataWithSubmitStub extends Component
             'foo' => 'required',
             'bar' => 'required',
         ]);
+    }
+
+    public function manuallyAddError()
+    {
+        $this->addError('bob', 'lob');
     }
 
     public function render()
