@@ -10,6 +10,7 @@ use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
 use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 
@@ -20,7 +21,7 @@ trait HandlesActions
         $propertyName = $this->beforeFirstDot($name);
 
         throw_if(
-            $this->{$propertyName} instanceof Model && $this->missingRuleFor($name),
+            ($this->{$propertyName} instanceof Model || $this->{$propertyName} instanceof EloquentCollection) && $this->missingRuleFor($name),
             new CannotBindToModelDataWithoutValidationRuleException($name, $this::getName())
         );
 
