@@ -12,11 +12,10 @@ class PublishCommand extends Command
 
     public function handle()
     {
-        $this->call('vendor:publish', ['--tag' => 'livewire:config', '--force' => true]);
-
         if ($this->option('assets')) {
             $this->call('vendor:publish', ['--tag' => 'livewire:assets', '--force' => true]);
+        } else {
+            $this->call('vendor:publish', ['--tag' => 'livewire:config', '--force' => true]);
         }
-
     }
 }
