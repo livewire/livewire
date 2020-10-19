@@ -190,6 +190,8 @@ HTML;
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
         $assetWarning = null;
 
+        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
+
         // Use static assets if they have been published
         if (file_exists(public_path('vendor/livewire/manifest.json'))) {
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
@@ -198,15 +200,13 @@ HTML;
             $fullAssetPath = ($this->isOnVapor() ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
 
             if ($manifest !== $publishedManifest) {
-                $assetWarning = <<<'HTML'
-<script>
+                $assetWarning = <<<HTML
+<script{$nonce}>
     console.warn("Livewire: The published Livewire assets are out of date\n See: https://laravel-livewire.com/docs/installation/")
 </script>
 HTML;
             }
         }
-
-        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
 
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
