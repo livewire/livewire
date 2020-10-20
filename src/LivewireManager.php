@@ -202,7 +202,7 @@ HTML;
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<HTML
 <script{$nonce}>
-    console.warn("Livewire: The published Livewire assets are out of date\n See: https://laravel-livewire.com/docs/installation/")
+    console.warn("Livewire: The published Livewire assets are out of date\\n See: https://laravel-livewire.com/docs/installation/")
 </script>
 HTML;
             }
