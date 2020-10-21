@@ -10,6 +10,7 @@ use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
+use Livewire\Exceptions\PropertyNotFoundException;
 
 abstract class Component
 {
@@ -35,8 +36,6 @@ abstract class Component
         $this->id = $id ?? Str::random(20);
 
         $this->ensureIdPropertyIsntOverridden();
-
-        $this->initializeTraits();
     }
 
     public function __invoke(Container $container, Route $route)
@@ -69,7 +68,7 @@ abstract class Component
         );
     }
 
-    protected function initializeTraits()
+    public function initializeTraits()
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
@@ -107,7 +106,7 @@ abstract class Component
 
     public function renderToView()
     {
-        if ($this->shouldSkipRender) return null;
+        Livewire::dispatch('component.rendering', $this);
 
         $view = method_exists($this, 'render')
             ? app()->call([$this, 'render'])
@@ -124,6 +123,8 @@ abstract class Component
         if ($view->livewireLayout) {
             $this->initialLayoutConfiguration = $view->livewireLayout;
         }
+
+        Livewire::dispatch('component.rendered', $this, $view);
 
         return $this->preRenderedView = $view;
     }
@@ -217,7 +218,7 @@ abstract class Component
             return $this->computedPropertyCache[$property] = app()->call([$this, $computedMethodName]);
         }
 
-        throw new \Exception("Property [{$property}] does not exist on the {$this::getName()} component.");
+        throw new PropertyNotFoundException($property, static::getName());
     }
 
     public function __call($method, $params)

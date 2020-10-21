@@ -11,6 +11,7 @@ use Livewire\GenerateSignedUploadUrl;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Traits\Macroable;
 use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
+use Livewire\Exceptions\PropertyNotFoundException;
 
 class TestableLivewire
 {
@@ -19,6 +20,7 @@ class TestableLivewire
     public $payload = [];
     public $componentName;
     public $lastValidator;
+    public $lastErrorBag;
     public $lastRenderedView;
     public $lastRenderedDom;
     public $lastResponse;
@@ -48,6 +50,8 @@ class TestableLivewire
 
         Livewire::listen('component.dehydrate', function($component) {
             static::$instancesById[$component->id] = $component;
+
+            $this->lastErrorBag = $component->getErrorBag();
         });
 
         Livewire::listen('mounted', function ($response) {
@@ -210,7 +214,13 @@ class TestableLivewire
                 try {
                     $value = $this->instance()->{$root};
                 } catch (\Throwable $e) {
-                    $value = null;
+                    if ($e instanceof PropertyNotFoundException) {
+                        $value = null;
+                    } else if (Str::of($e->getMessage())->contains('must not be accessed before initialization')) {
+                        $value = null;
+                    } else {
+                        throw $e;
+                    }
                 }
 
                 $nested = $root === $property ? null : $this->instance()->afterFirstDot($property);

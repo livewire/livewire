@@ -24,6 +24,17 @@ class Test extends TestCase
         });
     }
 
+    public function test_route_bound_properties_are_synced_with_browser_history_when_no_query_string_is_present()
+    {
+        $this->browse(function(Browser $browser) {
+            $browser->visit(route('sync-history-without-query-string', [ 'step' => 1 ], false))->waitForText('Step 1 Active');
+
+            $browser->waitForLivewire()->click('@step-2')->assertRouteIs('sync-history-without-query-string', [ 'step' => 2 ]);
+
+            $browser->back()->assertRouteIs('sync-history-without-query-string', [ 'step' => 1 ]);
+        });
+    }
+
     public function test_that_query_bound_properties_are_synced_with_browser_history()
     {
         $this->browse(function (Browser $browser) {
@@ -177,6 +188,23 @@ class Test extends TestCase
                 ->assertRadioNotSelected('@foo.baz', 'baz')
                 ->assertRadioNotSelected('@foo.bar', 'bar')
                 ->assertQueryStringMissing('foo')
+            ;
+        });
+    }
+
+    public function test_that_alpine_watchers_used_by_entangle_are_fired_when_back_button_is_hit()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithAlpineEntangle::class)
+                ->assertSeeIn('@blade.output', '1')
+                ->assertSeeIn('@alpine.output', 'bar')
+                ->waitForLivewire()->click('@next')
+                ->assertSeeIn('@blade.output', '2')
+                ->waitForLivewire()->click('@changeFoo')
+                ->assertSeeIn('@alpine.output', 'baz')
+                ->back()
+                ->assertSeeIn('@blade.output', '1')
+                ->assertSeeIn('@alpine.output', 'bar')
             ;
         });
     }

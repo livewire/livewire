@@ -97,6 +97,13 @@ class Response
             }
         }
 
+        // Make sure any data marked as "dirty" is present in the resulting data payload.
+        foreach (data_get($this, 'effects.dirty', []) as $property) {
+            $property = head(explode('.', $property));
+
+            data_set($dirtyMemo, 'data.'.$property, $responseMemo['data'][$property]);
+        }
+
         return [
             'effects' => $this->effects,
             'serverMemo' => $dirtyMemo,

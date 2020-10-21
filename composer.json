@@ -25,6 +25,9 @@
         "calebporzio/sushi": "^2.1"
     },
     "autoload": {
+        "files": [
+            "src/helpers.php"
+        ],
         "psr-4": {
             "Livewire\\": "src/"
         }

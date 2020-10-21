@@ -48,15 +48,15 @@ class SupportBrowserHistory
         });
 
         Livewire::listen('component.dehydrate.subsequent', function (Component $component, Response $response) {
-            if (! $this->shouldSendPath($component)) return;
-
             if (! $referer = request()->header('Referer')) return;
 
             $route = $this->getRouteFromReferer($referer);
 
+            if ( ! $this->shouldSendPath($component, $route)) return;
+
             $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
-            if (false !== strpos($route->getActionName(), get_class($component))) {
+            if ($route && false !== strpos($route->getActionName(), get_class($component))) {
                 $path = $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
             } else {
                 $path = $this->buildPathFromReferer($referer, $queryParams);
@@ -81,18 +81,20 @@ class SupportBrowserHistory
         }
     }
 
-    protected function shouldSendPath($component)
+    protected function shouldSendPath($component, $route = null)
     {
         // If the component is setting $queryString params.
         if (! $this->getQueryParamsFromComponentProperties($component)->isEmpty()) return true;
 
+        $route = $route ?? app('router')->current();
+
         if (
-            app('router')->current()
-            && is_string($action = app('router')->current()->getActionName())
+            $route
+            && is_string($action = $route->getActionName())
             // If the component is registered using `Route::get()`.
             && Str::of($action)->contains(get_class($component))
             // AND, the component is tracking route params as its public properties
-            && count(array_intersect_key($component->getPublicPropertiesDefinedBySubClass(), app('router')->current()->parametersWithoutNulls()))
+            && count(array_intersect_key($component->getPublicPropertiesDefinedBySubClass(), $route->parametersWithoutNulls()))
         ) {
             return true;
         }

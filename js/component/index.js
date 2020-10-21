@@ -250,16 +250,16 @@ export default class Component {
     handleResponse(message) {
         let response = message.response
 
-        this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
-
-        store.callHook('message.received', message, this)
-
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.effects.redirect) {
             this.redirect(response.effects.redirect)
 
             return
         }
+
+        this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
+
+        store.callHook('message.received', message, this)
 
         if (response.effects.html) {
             // If we get HTML from the server, store it for the next time we might not.
