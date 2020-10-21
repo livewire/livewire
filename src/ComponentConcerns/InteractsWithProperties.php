@@ -136,14 +136,22 @@ trait InteractsWithProperties
     public function fill($values)
     {
         $publicProperties = array_keys($this->getPublicPropertiesDefinedBySubClass());
-
+        
         if ($values instanceof Model) {
             $values = $values->toArray();
         }
-
+        
         foreach ($values as $key => $value) {
-            if (in_array($key, $publicProperties)) {
-                $this->{$key} = $value;
+            if ($this->containsDots($key)) {
+                $propertyName = $this->beforeFirstDot($key);
+
+                $keyName = $this->afterFirstDot($key);
+                $targetKey = $this->beforeFirstDot($keyName);
+                data_set($this->{$propertyName}, $targetKey, $value);
+            } else {
+                if (in_array($key, $publicProperties)) {
+                    $this->{$key} = $value;
+                }
             }
         }
     }
