@@ -18,6 +18,7 @@ class Livewire {
     constructor() {
         this.connection = new Connection()
         this.components = store
+        this.devToolsEnabled = false
         this.onLoadCallback = () => { }
     }
 
@@ -61,6 +62,10 @@ class Livewire {
 
     on(event, callback) {
         this.components.on(event, callback)
+    }
+
+    devTools(enableDevtools) {
+        this.devToolsEnabled = enableDevtools
     }
 
     restart() {

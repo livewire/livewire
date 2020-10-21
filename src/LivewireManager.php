@@ -179,6 +179,12 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
+        $devTools = null;
+
+        if (config('app.debug')) {
+            $devTools = 'window.livewire.devTools(true);';
+        }
+
         $appUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
 
         $csrf = csrf_token();
@@ -219,6 +225,7 @@ HTML;
     }
 
     window.livewire = new Livewire({$jsonEncodedOptions});
+    {$devTools}
     window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
