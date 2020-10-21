@@ -7,6 +7,7 @@ use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\ImplicitlyBoundMethod;
+use Error;
 use ReflectionException;
 use stdClass;
 
@@ -198,9 +199,14 @@ class ImplicitlyBoundMethodTest extends TestCase
     /** @test */
      public function call_with_at_sign_based_class_references_without_method_throws_exception()
     {
-        $this->expectException(ReflectionException::class);
-        $this->expectExceptionMessage('Function ContainerTestCallStub() does not exist');
-
+        if(version_compare($this->app->version(), '8.10.0', '>')) {
+            $this->expectException(Error::class);
+            $this->expectExceptionMessage('Call to undefined function ContainerTestCallStub()');
+        } else {
+            $this->expectException(ReflectionException::class);
+            $this->expectExceptionMessage('Function ContainerTestCallStub() does not exist');
+        }
+        
         $container = new Container;
         ImplicitlyBoundMethod::call($container, 'ContainerTestCallStub');
     }
