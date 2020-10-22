@@ -19,6 +19,15 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
+    public function receive_event_from_mount()
+    {
+        $component = Livewire::test(ReceivesEvents::class);
+
+        $this->assertTrue(in_array(['event' => 'mounted', 'params' => ['cool']], $component->payload['effects']['emits']));
+        $this->assertEquals($component->get('bar'), 'cool');
+    }
+
+    /** @test */
     public function receive_event_with_single_value_listener()
     {
         $component = Livewire::test(ReceivesEventsWithSingleValueListener::class);
@@ -107,12 +116,23 @@ class ComponentEventsTest extends TestCase
 class ReceivesEvents extends Component
 {
     public $foo;
+    public $bar;
 
-    protected $listeners = ['bar' => 'onBar'];
+    protected $listeners = ['bar' => 'onBar', 'mounted' => 'onFoo'];
 
     public function onBar($value, $otherValue = '')
     {
         $this->foo = $value.$otherValue;
+    }
+
+    public function onFoo($value, $otherValue = '')
+    {
+        $this->bar = $value.$otherValue;
+    }
+
+    public function mount()
+    {
+        $this->emit('mounted', 'cool');
     }
 
     public function emitGoo()
