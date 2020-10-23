@@ -142,7 +142,8 @@ class Livewire {
                                     // If the Alpine value is the same as the Livewire value, we'll skip the update for 2 reasons:
                                     // - It's just more efficient, why send needless requests.
                                     // - This prevents a circular dependancy with the other watcher below.
-                                    if (
+                                    // But if it is deferred we need to continue as Livewire is out of sync with Alpine.
+                                    if (! isDeferred &&
                                         value ===
                                         livewireEl.__livewire.get(
                                             livewireProperty
