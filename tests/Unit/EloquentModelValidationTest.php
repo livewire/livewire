@@ -36,6 +36,17 @@ class EloquentModelValidationTest extends TestCase
     }
 
     /** @test */
+    public function validate_message_doesnt_contain_dot_notation_if_property_is_model_with_snake_cased_attribute()
+    {
+        Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
+            'foo' => $foo = Foo::first(),
+        ])  ->set('foo.bar_baz', '')
+            ->call('save')
+            ->assertHasErrors('foo.bar_baz', 'required')
+            ->assertSee('The bar baz field is required.');
+    }
+
+    /** @test */
     public function validate_message_still_honors_original_custom_attributes_if_property_is_a_model()
     {
         app('translator')->addLines(['validation.required' => 'The :attribute field is required.'], 'en');
@@ -175,6 +186,7 @@ class Foo extends Model
     {
         return [[
             'bar' => 'rab',
+            'bar_baz' => 'zab_rab',
             'baz' => json_encode(['zab', 'azb']),
             'bob' => json_encode(['obb']),
             'lob' => json_encode(['law' => []]),
@@ -189,6 +201,7 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
 
     protected $rules = [
         'foo.bar' => 'required',
+        'foo.bar_baz' => 'required',
         'foo.baz' => 'required|array|min:2',
         'foo.bob.*' => 'required|min:2',
         'foo.lob.law.*' => 'required|array',
