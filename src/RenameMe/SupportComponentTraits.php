@@ -87,7 +87,7 @@ class SupportComponentTraits
             $methods = $this->componentIdMethodMap[$component->id]['dehydrate'] ?? [];
 
             foreach ($methods as $method) {
-                ImplicitlyBoundMethod::call(app(), $method,);
+                ImplicitlyBoundMethod::call(app(), $method);
             }
         });
     }
