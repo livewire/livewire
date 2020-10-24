@@ -3,7 +3,7 @@
 namespace Livewire\Macros;
 
 use PHPUnit\Framework\Assert as PHPUnit;
-use Illuminate\Support\Str;
+use function Livewire\str;
 
 class DuskBrowserMacros
 {
@@ -75,7 +75,7 @@ class DuskBrowserMacros
         return function ($js, $expects = true) {
             /** @var \Laravel\Dusk\Browser $this */
             PHPUnit::assertEquals($expects, head($this->script(
-                Str::start( $js, 'return ')
+                str($js)->start('return ')
             )));
 
             return $this;
