@@ -83,6 +83,15 @@ class DataBindingTest extends TestCase
         $this->assertEquals('something else', $component->propertyWithHook);
         $this->assertContains('propertyWithHook', $component->payload['effects']['dirty']);
     }
+
+    /** @test */
+    public function property_larger_than_javascript_maximum_is_converted_to_string()
+    {
+        $component = Livewire::test(DataBindingStub::class);
+        $component->updateProperty('foo', 100000000000000000);
+        $this->assertEquals('100000000000000000', $component->foo);
+        $this->assertIsString($component->foo);
+    }
 }
 
 class DataBindingStub extends Component
