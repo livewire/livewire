@@ -164,9 +164,9 @@ class HydratePublicProperties implements HydrationMiddleware
         if ($rules = $instance->rulesForModel($property)) {
             $keys = $rules->keys()->map(function ($key) use ($instance) {
                 return $instance->beforeFirstDot($instance->afterFirstDot($key));
-            });
+            })->toArray();
 
-            $fullModelData = $instance->$property->toArray();
+            $fullModelData = $instance->$property->makeVisible($keys)->toArray();
 
             foreach ($keys as $key) {
                 data_set($filteredModelData, $key, data_get($fullModelData, $key));

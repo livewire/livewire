@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Database\Schema\Blueprint;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Schema;
@@ -15,9 +16,10 @@ class ModelAttributesCanBeBoundDirectlyTest extends TestCase
     {
         parent::setUp();
 
-        Schema::create('model_for_attribute_bindings', function ($table) {
+        Schema::create('model_for_attribute_bindings', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('title');
+            $table->string('secret')->nullable();
             $table->timestamps();
         });
     }
@@ -44,7 +46,7 @@ class ModelAttributesCanBeBoundDirectlyTest extends TestCase
 
 
     /** @test */
-    public function a_non_existant_eloquent_model_can_be_set()
+    public function a_non_existent_eloquent_model_can_be_set()
     {
         $model = new ModelForAttributeBinding;
 
@@ -59,7 +61,7 @@ class ModelAttributesCanBeBoundDirectlyTest extends TestCase
     }
 
     /** @test */
-    public function cant_set_a_model_attribute_that_isnt_present_in_rules_array()
+    public function cant_set_a_model_attribute_that_is_not_present_in_rules_array()
     {
         $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
 
@@ -84,12 +86,42 @@ class ModelAttributesCanBeBoundDirectlyTest extends TestCase
 
         $component->call('$refresh');
     }
+
+    /** @test */
+    public function hidden_model_attributes_are_not_exposed_if_not_in_rules()
+    {
+        $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
+
+        $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo', 'secret' => 'The cake is a lie']);
+
+        Livewire::test(ComponentWithoutRulesArray::class, ['model' => $model])
+            ->assertSet('model.secret', 'The cake is a lie')
+            ->assertPayloadNotSet('model.secret', 'The cake is a lie')
+            ->set('model.secret', 'Tampered!')
+            ->assertNotSet('model.secret', 'Tampered!')
+            ->assertPayloadNotSet('model.secret', 'Tampered!');
+    }
+
+    /** @test */
+    public function hidden_model_attributes_are_exposed_if_present_in_rules()
+    {
+        $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo', 'secret' => 'The cake is a lie']);
+
+        Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
+            ->assertSet('model.secret', 'The cake is a lie')
+            ->assertPayloadSet('model.secret', 'The cake is a lie')
+            ->set('model.secret', 'Laravel4Ever')
+            ->assertSet('model.secret', 'Laravel4Ever')
+            ->assertPayloadSet('model.secret', 'Laravel4Ever');
+    }
 }
 
 class ModelForAttributeBinding extends Model
 {
     protected $connection = 'testbench';
     protected $guarded = [];
+
+    protected $hidden = ['secret'];
 }
 
 class ComponentWithModelProperty extends Component
@@ -98,6 +130,7 @@ class ComponentWithModelProperty extends Component
 
     protected $rules = [
         'model.title' => 'required|min:3',
+        'model.secret' => 'sometimes|required'
     ];
 
     public function mount(ModelForAttributeBinding $model)
