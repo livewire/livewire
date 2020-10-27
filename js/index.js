@@ -13,6 +13,7 @@ import FileDownloads from '@/component/FileDownloads'
 import LoadingStates from '@/component/LoadingStates'
 import OfflineStates from '@/component/OfflineStates'
 import SyncBrowserHistory from '@/component/SyncBrowserHistory'
+import SupportAlpine from '@/component/SupportAlpine'
 
 class Livewire {
     constructor() {
@@ -77,8 +78,6 @@ class Livewire {
             this.components.addComponent(new Component(el, this.connection))
         })
 
-        this.setupAlpineCompatibility()
-
         this.onLoadCallback()
         dispatch('livewire:load')
 
@@ -102,108 +101,6 @@ class Livewire {
             this.components.addComponent(new Component(el, this.connection))
         })
     }
-
-    setupAlpineCompatibility() {
-        if (!window.Alpine) return
-
-        if (window.Alpine.onBeforeComponentInitialized) {
-            window.Alpine.onBeforeComponentInitialized(component => {
-                let livewireEl = component.$el.closest('[wire\\:id]')
-
-                if (livewireEl && livewireEl.__livewire) {
-                    Object.entries(component.unobservedData).forEach(
-                        ([key, value]) => {
-                            if (
-                                !!value &&
-                                typeof value === 'object' &&
-                                value.livewireEntangle
-                            ) {
-                                // Ok, it looks like someone set an Alpine property to $wire.entangle or @entangle.
-                                let livewireProperty = value.livewireEntangle
-                                let isDeferred = value.isDeferred
-                                let livewireComponent = livewireEl.__livewire
-
-                                // Let's set the initial value of the Alpine prop to the Livewire prop's value.
-                                component.unobservedData[key]
-                                    // We need to stringify and parse it though to get a deep clone.
-                                    = JSON.parse(JSON.stringify(livewireEl.__livewire.get(livewireProperty)))
-
-                                let blockAlpineWatcher = false
-
-                                // Now, we'll watch for changes to the Alpine prop, and fire the update to Livewire.
-                                component.unobservedData.$watch(key, value => {
-                                    // Let's also make sure that this watcher isn't a result of a Livewire response.
-                                    // If it is, we don't need to "re-update" Livewire. (sending an extra useless) request.
-                                    if (blockAlpineWatcher === true) {
-                                        blockAlpineWatcher = false
-                                        return
-                                    }
-
-                                    // If the Alpine value is the same as the Livewire value, we'll skip the update for 2 reasons:
-                                    // - It's just more efficient, why send needless requests.
-                                    // - This prevents a circular dependancy with the other watcher below.
-                                    if (
-                                        value ===
-                                        livewireEl.__livewire.get(
-                                            livewireProperty
-                                        )
-                                    ) return
-
-                                    // We'll tell Livewire to update the property, but we'll also tell Livewire
-                                    // to not call the normal property watchers on the way back to prevent another
-                                    // circular dependancy.
-                                    livewireComponent.set(
-                                        livewireProperty,
-                                        value,
-                                        isDeferred,
-                                        true // Skip firing Livewire watchers when the request comes back.
-                                    )
-                                })
-
-                                // We'll also listen for changes to the Livewire prop, and set them in Alpine.
-                                livewireComponent.watch(
-                                    livewireProperty,
-                                    value => {
-                                        blockAlpineWatcher = true
-                                        component.$data[key] = value
-                                    }
-                                )
-                            }
-                        }
-                    )
-                }
-            })
-        }
-
-        if (window.Alpine.onComponentInitialized) {
-            window.Alpine.onComponentInitialized(component => {
-                let livewireEl = component.$el.closest('[wire\\:id]')
-
-                if (livewireEl && livewireEl.__livewire) {
-                    this.hook('message.processed', livewireComponent => {
-                        if (livewireComponent === livewireEl.__livewire) {
-                            component.updateElements(component.$el)
-                        }
-                    })
-                }
-            })
-        }
-
-        if (window.Alpine.addMagicProperty) {
-            window.Alpine.addMagicProperty('wire', function (componentEl) {
-                let wireEl = componentEl.closest('[wire\\:id]')
-
-                if (!wireEl)
-                    console.warn(
-                        'Alpine: Cannot reference "$wire" outside a Livewire component.'
-                    )
-
-                let component = wireEl.__livewire
-
-                return component.$wire
-            })
-        }
-    }
 }
 
 if (!window.Livewire) {
@@ -211,6 +108,7 @@ if (!window.Livewire) {
 }
 
 SyncBrowserHistory()
+SupportAlpine()
 FileDownloads()
 OfflineStates()
 LoadingStates()
