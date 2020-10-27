@@ -43,6 +43,7 @@ class Test extends TestCase
             $this->runThroughTransitions($browser, 'button', 'button');
             $this->runThroughTransitions($browser, 'livewire-button', 'livewire-button');
             $this->runThroughTransitions($browser, 'button', 'livewire-button');
+            $browser->pause(500);
             $this->runThroughTransitions($browser, 'livewire-button', 'button');
 
             $browser->waitForLivewire()->click('@change-dom');
