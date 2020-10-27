@@ -61,7 +61,7 @@ class Test extends TestCase
             ->assertScript('document.querySelector(\'[dusk="outer"]\').style.display', '')
             ->assertScript('document.querySelector(\'[dusk="inner"]\').style.display', '')
             ->click('@'.$firstHook)
-            ->pause(75)
+            ->pause(100)
             ->assertScript('document.querySelector(\'[dusk="outer"]\').style.display', '')
             ->assertScript('document.querySelector(\'[dusk="inner"]\').style.display', '')
             ->assertScript('document.querySelector(\'[dusk="inner"]\').style.opacity', '0')
@@ -71,7 +71,7 @@ class Test extends TestCase
 
             // Transition back in
             ->click('@'.$secondHook)
-            ->pause(75)
+            ->pause(100)
             ->assertScript('document.querySelector(\'[dusk="outer"]\').style.display', '')
             ->assertScript('document.querySelector(\'[dusk="inner"]\').style.display', '')
             ->assertScript('document.querySelector(\'[dusk="inner"]\').style.opacity', '1')
@@ -81,12 +81,12 @@ class Test extends TestCase
 
             // Transition out, but interrupt mid-way, then go back
             ->click('@'.$firstHook)
-            ->pause(75)
+            ->pause(100)
             ->assertScript('document.querySelector(\'[dusk="outer"]\').style.display', '')
             ->assertScript('document.querySelector(\'[dusk="inner"]\').style.display', '')
             ->assertScript('document.querySelector(\'[dusk="inner"]\').style.opacity', '0')
             ->click('@'.$secondHook)
-            ->pause(75)
+            ->pause(100)
             ->assertScript('document.querySelector(\'[dusk="outer"]\').style.display', '')
             ->assertScript('document.querySelector(\'[dusk="inner"]\').style.display', '')
             ->assertScript('document.querySelector(\'[dusk="inner"]\').style.opacity', '1')
