@@ -73,6 +73,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Alpine\Transition\DollarSignWireComponent::class);
             app('livewire')->component(\Tests\Browser\Alpine\Transition\EntangleComponent::class);
             app('livewire')->component(\Tests\Browser\Alpine\Transition\EntangleDeferComponent::class);
+            app('livewire')->component(\Tests\Browser\Alpine\EntangleArray\Component::class);
             app('livewire')->component(\Tests\Browser\Hooks\Component::class);
             app('livewire')->component(\Tests\Browser\Ignore\Component::class);
             app('livewire')->component(\Tests\Browser\Morphdom\Component::class);
@@ -104,7 +105,8 @@ class TestCase extends BaseTestCase
                 \Tests\Browser\SyncHistory\Component::class
             )->middleware('web')->name('sync-history');
 
-            Route::get('/livewire-dusk/tests/browser/sync-history-without-query-string/{step}',
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history-without-query-string/{step}',
                 \Tests\Browser\SyncHistory\ComponentWithoutQueryString::class
             )->middleware('web')->name('sync-history-without-query-string');
 
@@ -127,8 +129,12 @@ class TestCase extends BaseTestCase
     }
 
     // We don't want to deal with screenshots or console logs.
-    protected function storeConsoleLogsFor($browsers) {}
-    protected function captureFailuresFor($browsers) {}
+    protected function storeConsoleLogsFor($browsers)
+    {
+    }
+    protected function captureFailuresFor($browsers)
+    {
+    }
 
     public function makeACleanSlate()
     {
@@ -194,7 +200,8 @@ class TestCase extends BaseTestCase
 
         return static::$useSafari
             ? RemoteWebDriver::create(
-                'http://localhost:9515', DesiredCapabilities::safari()
+                'http://localhost:9515',
+                DesiredCapabilities::safari()
             )
             : RemoteWebDriver::create(
                 'http://localhost:9515',
@@ -211,11 +218,15 @@ class TestCase extends BaseTestCase
             try {
                 $callback(...$browsers);
             } catch (Exception $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+                if (DuskOptions::hasUI()) {
+                    $this->breakIntoATinkerShell($browsers, $e);
+                }
 
                 throw $e;
             } catch (Throwable $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+                if (DuskOptions::hasUI()) {
+                    $this->breakIntoATinkerShell($browsers, $e);
+                }
 
                 throw $e;
             }
