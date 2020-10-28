@@ -21,6 +21,30 @@ class ComponentTraitsTest extends TestCase
                 ['initialized', 'hydrate', 'updating:foobar', 'updated:foobar', 'rendering', 'rendered:show-name', 'dehydrate']
             );
     }
+
+    /** @test */
+    public function multiple_traits_can_intercept_lifecycle_hooks()
+    {
+        Livewire::test(ComponentWithTwoTraitsStub::class)
+            ->assertSet('hooksFromTrait', [
+                'initialized', 'secondInitialized', 
+                'hydrate', 'secondHydrate', 
+                'mount', 'secondMount',
+                'rendering', 'secondRendering',
+                'rendered:show-name', 'secondRendered:show-name', 
+                'dehydrate', 'secondDehydrate'
+            ])
+            ->set('foo', 'bar')
+            ->assertSet('hooksFromTrait', [
+                'initialized', 'secondInitialized', 
+                'hydrate', 'secondHydrate', 
+                'updating:foobar', 'secondUpdating:foobar', 
+                'updated:foobar', 'secondUpdated:foobar', 
+                'rendering', 'secondRendering', 
+                'rendered:show-name', 'secondRendered:show-name', 
+                'dehydrate', 'secondDehydrate'
+            ]);
+    }
 }
 
 trait TraitForComponent
@@ -81,4 +105,53 @@ class ComponentWithTraitStub extends Component
     {
         return view('show-name', ['name' => $this->foo]);
     }
+}
+
+trait SecondTraitForComponent
+{
+    public function mountSecondTraitForComponent()
+    {
+        $this->hooksFromTrait[] = 'secondMount';
+    }
+
+    public function hydrateSecondTraitForComponent()
+    {
+        $this->hooksFromTrait[] = 'secondHydrate';
+    }
+
+    public function dehydrateSecondTraitForComponent()
+    {
+        $this->hooksFromTrait[] = 'secondDehydrate';
+    }
+
+    public function updatingSecondTraitForComponent($name, $value)
+    {
+        $this->hooksFromTrait[] = 'secondUpdating:'.$name.$value;
+    }
+
+    public function updatedSecondTraitForComponent($name, $value)
+    {
+        $this->hooksFromTrait[] = 'secondUpdated:'.$name.$value;
+    }
+
+    public function renderingSecondTraitForComponent()
+    {
+        $this->hooksFromTrait[] = 'secondRendering';
+    }
+
+    public function renderedSecondTraitForComponent($view)
+    {
+        $this->hooksFromTrait[] = 'secondRendered:'.$view->getName();
+    }
+
+    public function initializeSecondTraitForComponent()
+    {
+        $this->hooksFromTrait[] = 'secondInitialized';
+    }
+
+}
+
+class ComponentWithTwoTraitsStub extends ComponentWithTraitStub
+{
+    use TraitForComponent, SecondTraitForComponent;
 }
