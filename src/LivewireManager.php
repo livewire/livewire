@@ -233,8 +233,8 @@ HTML;
     if (window.Alpine) {
         /* Defer showing the warning so it doesn't get buried under downstream errors. */
         document.addEventListener("DOMContentLoaded", function () {
-            setTimeout(() => {
-                console.warn(`Livewire: It looks like AlpineJS has already been loaded. Make sure Livewire\'s scripts are loaded before Alpine.\n\n Reference docs for more info: http://laravel-livewire.com/docs/alpine-js`)
+            setTimeout(function() {
+                console.warn("Livewire: It looks like AlpineJS has already been loaded. Make sure Livewire\'s scripts are loaded before Alpine.\n\n Reference docs for more info: http://laravel-livewire.com/docs/alpine-js")
             })
         });
     }
