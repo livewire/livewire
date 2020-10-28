@@ -179,6 +179,12 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
+        $devTools = null;
+
+        if (config('app.debug')) {
+            $devTools = 'window.livewire.devTools(true);';
+        }
+
         $appUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
 
         $csrf = csrf_token();
@@ -219,9 +225,20 @@ HTML;
     }
 
     window.livewire = new Livewire({$jsonEncodedOptions});
+    {$devTools}
     window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
+
+    /* Make sure Livewire loads first. */
+    if (window.Alpine) {
+        /* Defer showing the warning so it doesn't get buried under downstream errors. */
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(() => {
+                console.warn(`Livewire: It looks like AlpineJS has already been loaded. Make sure Livewire\'s scripts are loaded before Alpine.\n\n Reference docs for more info: http://laravel-livewire.com/docs/alpine-js`)
+            })
+        });
+    }
 
     /* Make Alpine wait until Livewire is finished rendering to do its thing. */
     window.deferLoadingAlpine = function (callback) {

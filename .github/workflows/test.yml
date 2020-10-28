@@ -52,9 +52,13 @@ jobs:
 
       - name: Run Unit tests
         run: vendor/bin/phpunit --testsuite Unit
+        env:
+          RUNNING_IN_CI: true
 
       - name: Setup dusk/chrome
         run: vendor/bin/dusk-updater detect --no-interaction
 
       - name: Run Browser tests
         run: vendor/bin/phpunit --testsuite Browser
+        env:
+          RUNNING_IN_CI: true

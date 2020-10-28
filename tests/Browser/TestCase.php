@@ -70,6 +70,9 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\Alpine\Component::class);
             app('livewire')->component(\Tests\Browser\Alpine\SmallComponent::class);
             app('livewire')->component(\Tests\Browser\Alpine\Entangle\Component::class);
+            app('livewire')->component(\Tests\Browser\Alpine\Transition\DollarSignWireComponent::class);
+            app('livewire')->component(\Tests\Browser\Alpine\Transition\EntangleComponent::class);
+            app('livewire')->component(\Tests\Browser\Alpine\Transition\EntangleDeferComponent::class);
             app('livewire')->component(\Tests\Browser\Hooks\Component::class);
             app('livewire')->component(\Tests\Browser\Ignore\Component::class);
             app('livewire')->component(\Tests\Browser\Morphdom\Component::class);
