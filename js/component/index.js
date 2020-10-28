@@ -12,6 +12,7 @@ import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
 import DeferredModelAction from '@/action/deferred-model'
 import MessageBus from '../MessageBus'
+import { alpinifyElementsForMorphdom } from './SupportAlpine'
 
 export default class Component {
     constructor(el, connection) {
@@ -78,6 +79,14 @@ export default class Component {
         return name
             .split('.')
             .reduce((carry, segment) => carry[segment], this.data)
+    }
+
+    getPropertyValueIncludingDefers(name) {
+        let action = this.deferredActions[name]
+
+        if (! action) return this.get(name)
+
+        return action.payload.value
     }
 
     updateServerMemoFromResponseAndMergeBackIntoResponse(message) {
@@ -419,19 +428,6 @@ export default class Component {
                     to.selectedIndex = -1
                 }
 
-                // If the element is x-show.transition.
-                if (
-                    Array.from(from.attributes)
-                        .map(attr => attr.name)
-                        .some(
-                            name =>
-                                /x-show.transition/.test(name) ||
-                                /x-transition/.test(name)
-                        )
-                ) {
-                    from.__livewire_transition = true
-                }
-
                 let fromDirectives = wireDirectives(from)
 
                 // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
@@ -462,12 +458,7 @@ export default class Component {
                 // initialize in the context of a real Livewire component object.
                 if (DOM.isComponentRootEl(from)) to.__livewire = this
 
-                // If the element we are updating is an Alpine component...
-                if (from.__x) {
-                    // Then temporarily clone it (with it's data) to the "to" element.
-                    // This should simulate backend Livewire being aware of Alpine changes.
-                    window.Alpine.clone(from.__x, to)
-                }
+                alpinifyElementsForMorphdom(from, to)
             },
 
             onElUpdated: node => {
@@ -494,6 +485,8 @@ export default class Component {
                 this.morphChanges.added.push(node)
             },
         })
+
+        window.skipShow = false
     }
 
     walk(callback, callbackWhenNewComponentIsEncountered = el => { }) {
