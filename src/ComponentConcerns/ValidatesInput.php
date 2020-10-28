@@ -209,8 +209,8 @@ trait ValidatesInput
             $propertyName = $this->beforeFirstDot($key);
 
             if ($data[$propertyName] instanceof Model) {
-                if ($key === $validator->getDisplayableAttribute($key)) {
-                    $validator->addCustomAttributes([$key => $this->afterFirstDot($key)]);
+                if (str($key)->replace('_', ' ')->is($validator->getDisplayableAttribute($key))) {
+                    $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute($this->afterFirstDot($key))]);
                 }
             }
         }
