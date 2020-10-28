@@ -33,7 +33,7 @@ abstract class Component
 
     public function __construct($id = null)
     {
-        $this->id = $id ?? Str::random(20);
+        $this->id = $id ?? str()->random(20);
 
         $this->ensureIdPropertyIsntOverridden();
     }
@@ -87,8 +87,8 @@ abstract class Component
             ->map([Str::class, 'kebab'])
             ->implode('.');
 
-        if (Str::startsWith($fullName, $namespace)) {
-            return Str::substr($fullName, strlen($namespace) + 1);
+        if (str($fullName)->startsWith($namespace)) {
+            return (string) str($fullName)->substr(strlen($namespace) + 1);
         }
 
         return $fullName;
@@ -225,7 +225,7 @@ abstract class Component
     {
         if (
             in_array($method, ['mount', 'hydrate', 'dehydrate', 'updating', 'updated'])
-            || Str::startsWith($method, ['updating', 'updated', 'hydrate', 'dehydrate'])
+            || str($method)->startsWith(['updating', 'updated', 'hydrate', 'dehydrate'])
         ) {
             // Eat calls to the lifecycle hooks if the dev didn't define them.
             return;

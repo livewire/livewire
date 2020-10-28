@@ -5,6 +5,7 @@ namespace Livewire\Commands;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use function Livewire\str;
 
 class ComponentParser
 {
@@ -26,11 +27,11 @@ class ComponentParser
 
         $directories = preg_split('/[.\/(\\\\)]+/', $rawCommand);
 
-        $camelCase = Str::camel(array_pop($directories));
-        $kebabCase = Str::kebab($camelCase);
+        $camelCase = str(array_pop($directories))->camel();
+        $kebabCase = str($camelCase)->kebab();
 
         $this->component = $kebabCase;
-        $this->componentClass = Str::studly($this->component);
+        $this->componentClass = str($this->component)->studly();
 
         $this->directories = array_map([Str::class, 'studly'], $directories);
     }
@@ -48,9 +49,9 @@ class ComponentParser
             ->implode('/');
     }
 
-    public function relativeClassPath()
+    public function relativeClassPath() : string
     {
-        return Str::replaceFirst(base_path().DIRECTORY_SEPARATOR, '', $this->classPath());
+        return str($this->classPath())->replaceFirst(base_path().DIRECTORY_SEPARATOR, '');
     }
 
     public function classFile()
@@ -103,9 +104,9 @@ class ComponentParser
             ->implode(DIRECTORY_SEPARATOR);
     }
 
-    public function relativeViewPath()
+    public function relativeViewPath() : string
     {
-        return Str::replaceFirst(base_path().'/', '', $this->viewPath());
+        return str($this->viewPath())->replaceFirst(base_path().'/', '');
     }
 
     public function viewFile()
@@ -116,7 +117,7 @@ class ComponentParser
     public function viewName()
     {
         return collect()
-            ->concat(explode('/',Str::after($this->baseViewPath, resource_path('views'))))
+            ->concat(explode('/',str($this->baseViewPath)->after(resource_path('views'))))
             ->filter()
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])
@@ -146,7 +147,7 @@ class ComponentParser
 
     public static function generatePathFromNamespace($namespace)
     {
-        $name = Str::replaceFirst(app()->getNamespace(), '', $namespace);
+        $name = str($namespace)->replaceFirst(app()->getNamespace(), '');
 
         return app('path').'/'.str_replace('\\', '/', $name);
     }

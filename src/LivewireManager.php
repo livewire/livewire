@@ -2,7 +2,6 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Str;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
@@ -73,7 +72,7 @@ class LivewireManager
         // This is if a user doesn't pass params, BUT passes key() as the second argument.
         if (is_string($params)) $params = [];
 
-        $id = Str::random(20);
+        $id = str()->random(20);
 
         if (class_exists($name)) {
             $name = $name::getName();

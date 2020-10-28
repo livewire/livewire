@@ -4,7 +4,6 @@ namespace Livewire\Testing;
 
 use Mockery;
 use Livewire\Livewire;
-use Illuminate\Support\Str;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\View;
 use Livewire\GenerateSignedUploadUrl;
@@ -12,6 +11,7 @@ use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Traits\Macroable;
 use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
 use Livewire\Exceptions\PropertyNotFoundException;
+use function Livewire\str;
 
 class TestableLivewire
 {
@@ -68,7 +68,7 @@ class TestableLivewire
         // and not have to register an alias.
         if (class_exists($name)) {
             $componentClass = $name;
-            app('livewire')->component($name = Str::random(20), $componentClass);
+            app('livewire')->component($name = str()->random(20), $componentClass);
         }
 
         $this->componentName = $name;
@@ -122,7 +122,7 @@ class TestableLivewire
 
     public function pretendWereMountingAComponentOnAPage($name, $params)
     {
-        $randomRoutePath = '/testing-livewire/'.Str::random(20);
+        $randomRoutePath = '/testing-livewire/'.str()->random(20);
 
         $this->registerRouteBeforeExistingRoutes($randomRoutePath, function () use ($name, $params) {
             return View::file(__DIR__.'/../views/mount-component.blade.php', [
@@ -216,7 +216,7 @@ class TestableLivewire
                 } catch (\Throwable $e) {
                     if ($e instanceof PropertyNotFoundException) {
                         $value = null;
-                    } else if (Str::of($e->getMessage())->contains('must not be accessed before initialization')) {
+                    } else if (str($e->getMessage())->contains('must not be accessed before initialization')) {
                         $value = null;
                     } else {
                         throw $e;
