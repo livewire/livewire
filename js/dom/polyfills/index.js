@@ -3,6 +3,8 @@ import 'core-js/features/array/includes';
 import 'core-js/features/array/flat';
 import 'core-js/features/array/find';
 import 'core-js/features/object/assign';
+import 'core-js/features/object/entries';
+import 'core-js/features/object/values';
 import 'core-js/features/promise';
 import 'core-js/features/string/starts-with';
 import 'whatwg-fetch'
