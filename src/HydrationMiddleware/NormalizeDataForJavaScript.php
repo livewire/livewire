@@ -10,17 +10,19 @@ abstract class NormalizeDataForJavaScript
             return $value;
         }
 
-        $normalizedData = $value;
-
         // Make sure string keys are last (but not ordered) and numeric keys are ordered.
         // JSON.parse will do this on the frontend, so we'll get ahead of it.
-        uksort($normalizedData, function ($a, $b) {
-            if (is_numeric($a) && is_numeric($b)) return $a > $b;
 
-            if (! is_numeric($a) && ! is_numeric($b)) return 0;
+        $itemsWithNumericKeys = array_filter($value, function ($key) {
+            return is_numeric($key);
+        }, ARRAY_FILTER_USE_KEY);
+        ksort($itemsWithNumericKeys);
 
-            if (! is_numeric($a)) return 1;
-        });
+        $itemsWithStringKeys = array_filter($value, function ($key) {
+            return ! is_numeric($key);
+        }, ARRAY_FILTER_USE_KEY);
+
+        $normalizedData = array_merge($itemsWithNumericKeys, $itemsWithStringKeys);
 
         return array_map(function ($value) {
             return static::reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
