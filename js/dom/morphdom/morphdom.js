@@ -320,8 +320,8 @@ export default function morphdomFactory(morphAttrs) {
                                 // used as a morph target.
                                 if (
                                     ! curToNodeChild.isEqualNode(curFromNodeChild)
-                                    && curToNodeChild.nextElementSibling
-                                    && curToNodeChild.nextElementSibling.isEqualNode(curFromNodeChild)
+                                    && curToNodeChild.nextSibling
+                                    && curToNodeChild.nextSibling.isEqualNode(curFromNodeChild)
                                 ) {
                                     isCompatible = false
                                 } else {
@@ -357,11 +357,11 @@ export default function morphdomFactory(morphAttrs) {
                     // element in the "to" list. If it is, we can assume we can insert the new
                     // element before the original one instead of removing it. This is kind of
                     // a "look-ahead".
-                    if (curToNodeChild.nextElementSibling && curToNodeChild.nextElementSibling.isEqualNode(curFromNodeChild)) {
+                    if (curToNodeChild.nextSibling && curToNodeChild.nextSibling.isEqualNode(curFromNodeChild)) {
                         const nodeToBeAdded = curToNodeChild.cloneNode(true)
                         fromEl.insertBefore(nodeToBeAdded, curFromNodeChild)
                         handleNodeAdded(nodeToBeAdded)
-                        curToNodeChild = curToNodeChild.nextElementSibling.nextSibling;
+                        curToNodeChild = curToNodeChild.nextSibling.nextSibling;
                         curFromNodeChild = fromNextSibling;
                         continue outer;
                     } else {

@@ -66,6 +66,7 @@ class TestCase extends BaseTestCase
             app('livewire')->component(\Tests\Browser\DataBinding\InputCheckboxRadio\Component::class);
             app('livewire')->component(\Tests\Browser\Actions\Component::class);
             app('livewire')->component(\Tests\Browser\Init\Component::class);
+            app('livewire')->component(\Tests\Browser\Diffing\Component::class);
             app('livewire')->component(\Tests\Browser\Dirty\Component::class);
             app('livewire')->component(\Tests\Browser\Alpine\Component::class);
             app('livewire')->component(\Tests\Browser\Alpine\SmallComponent::class);

@@ -10,18 +10,11 @@
     </button>
 
     <button wire:click="$set('baz', true)" dusk="baz">
-        @if ($baz)
-            <div>second</div>
-        @endif
-        <div>first</div>
+        @if ($baz)<div>second</div>@endif<div>first</div>
     </button>
 
     <button wire:click="$set('bob', true)" dusk="bob">
-        @if ($bob)
-            <div>0</div>
-        @endif
-
-        <div wire:key="bob">1</div>
+        @if ($bob)<div>0</div>@endif<div wire:key="bob">1</div>
 
         <div>
             <div id="bob-id">2</div>
