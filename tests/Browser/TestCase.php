@@ -97,12 +97,8 @@ class TestCase extends BaseTestCase
     }
 
     // We don't want to deal with screenshots or console logs.
-    protected function storeConsoleLogsFor($browsers)
-    {
-    }
-    protected function captureFailuresFor($browsers)
-    {
-    }
+    protected function storeConsoleLogsFor($browsers) {}
+    protected function captureFailuresFor($browsers) {}
 
     public function makeACleanSlate()
     {
@@ -168,8 +164,7 @@ class TestCase extends BaseTestCase
 
         return static::$useSafari
             ? RemoteWebDriver::create(
-                'http://localhost:9515',
-                DesiredCapabilities::safari()
+                'http://localhost:9515', DesiredCapabilities::safari()
             )
             : RemoteWebDriver::create(
                 'http://localhost:9515',
@@ -186,15 +181,11 @@ class TestCase extends BaseTestCase
             try {
                 $callback(...$browsers);
             } catch (Exception $e) {
-                if (DuskOptions::hasUI()) {
-                    $this->breakIntoATinkerShell($browsers, $e);
-                }
+                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
 
                 throw $e;
             } catch (Throwable $e) {
-                if (DuskOptions::hasUI()) {
-                    $this->breakIntoATinkerShell($browsers, $e);
-                }
+                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
 
                 throw $e;
             }
