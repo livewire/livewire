@@ -14,9 +14,12 @@ use Illuminate\Support\Facades\Artisan;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Livewire\Component;
 use Livewire\Macros\DuskBrowserMacros;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
+
+use function Livewire\str;
 
 class TestCase extends BaseTestCase
 {
@@ -44,54 +47,19 @@ class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->tweakApplication(function () {
-            app('livewire')->component(\Tests\Browser\Loading\Component::class);
-            app('livewire')->component(\Tests\Browser\Loading\CustomDisplayProperty::class);
-            app('livewire')->component(\Tests\Browser\QueryString\Component::class);
-            app('livewire')->component(\Tests\Browser\QueryString\NestedComponent::class);
-            app('livewire')->component(\Tests\Browser\QueryString\DirtyDataComponent::class);
-            app('livewire')->component(\Tests\Browser\QueryString\HugeComponent::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\InputSelect\Component::class);
-            app('livewire')->component(\Tests\Browser\FileDownloads\Component::class);
-            app('livewire')->component(\Tests\Browser\Redirects\Component::class);
-            app('livewire')->component(\Tests\Browser\SupportCollections\Component::class);
-            app('livewire')->component(\Tests\Browser\SupportStringables\Component::class);
-            app('livewire')->component(\Tests\Browser\Events\Component::class);
-            app('livewire')->component(\Tests\Browser\Events\NestedComponentA::class);
-            app('livewire')->component(\Tests\Browser\Events\NestedComponentB::class);
-            app('livewire')->component(\Tests\Browser\Prefetch\Component::class);
-            app('livewire')->component(\Tests\Browser\SupportDateTimes\Component::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\DirtyDetection\Component::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\AutoFill\Component::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\InputText\Component::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\InputTextarea\Component::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\InputCheckboxRadio\Component::class);
-            app('livewire')->component(\Tests\Browser\Actions\Component::class);
-            app('livewire')->component(\Tests\Browser\Init\Component::class);
-            app('livewire')->component(\Tests\Browser\Dirty\Component::class);
-            app('livewire')->component(\Tests\Browser\Alpine\Component::class);
-            app('livewire')->component(\Tests\Browser\Alpine\SmallComponent::class);
-            app('livewire')->component(\Tests\Browser\Alpine\Entangle\Component::class);
-            app('livewire')->component(\Tests\Browser\Alpine\Transition\DollarSignWireComponent::class);
-            app('livewire')->component(\Tests\Browser\Alpine\Transition\EntangleComponent::class);
-            app('livewire')->component(\Tests\Browser\Alpine\Transition\EntangleDeferComponent::class);
-            app('livewire')->component(\Tests\Browser\Hooks\Component::class);
-            app('livewire')->component(\Tests\Browser\Ignore\Component::class);
-            app('livewire')->component(\Tests\Browser\Morphdom\Component::class);
-            app('livewire')->component(\Tests\Browser\ScriptTag\Component::class);
-            app('livewire')->component(\Tests\Browser\Polling\Component::class);
-            app('livewire')->component(\Tests\Browser\GlobalLivewire\Component::class);
-            app('livewire')->component(\Tests\Browser\Nesting\Component::class);
-            app('livewire')->component(\Tests\Browser\Nesting\NestedComponent::class);
-            app('livewire')->component(\Tests\Browser\Extensions\Component::class);
-            app('livewire')->component(\Tests\Browser\Defer\Component::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\Component::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\ChildComponent::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\SingleRadioComponent::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithMount::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithoutQueryString::class);
-            app('livewire')->component(\Tests\Browser\SyncHistory\ComponentWithAlpineEntangle::class);
-            app('livewire')->component(\Tests\Browser\Pagination\Tailwind::class);
-            app('livewire')->component(\Tests\Browser\Pagination\Bootstrap::class);
+            // Autoload all Livewire components in this test suite.
+            collect(File::allFiles(__DIR__))
+                ->map(function ($file) {
+                    return 'Tests\\Browser\\'.str($file->getRelativePathname())->before('.php')->replace('/', '\\');
+                })
+                ->filter(function ($computedClassName) {
+                    return class_exists($computedClassName);
+                })
+                ->filter(function ($class) {
+                    return is_subclass_of($class, Component::class);
+                })->each(function ($componentClass) {
+                    app('livewire')->component($componentClass);
+                });
 
             Route::get(
                 '/livewire-dusk/tests/browser/sync-history-without-mount/{id}',
