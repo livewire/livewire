@@ -3,11 +3,10 @@
 namespace Livewire\HydrationMiddleware;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 
 class NormalizeComponentPropertiesForJavaScript extends NormalizeDataForJavaScript implements HydrationMiddleware
 {
-    protected const JAVASCRIPT_MAX_SAFE_INTEGER = 9007199254740991;
-
     public static function hydrate($instance, $request)
     {
         //
@@ -16,10 +15,7 @@ class NormalizeComponentPropertiesForJavaScript extends NormalizeDataForJavaScri
     public static function dehydrate($instance, $response)
     {
         foreach ($instance->getPublicPropertiesDefinedBySubClass() as $key => $value) {
-
-            // The javascript maximum integer is 9007199254740991. 
-            // If the value is larger than that, it should be converted to a string
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
+            // If the value is larger than the javascript integer maximum, it should be converted to a string
             if (is_numeric($value) && $value > self::JAVASCRIPT_MAX_SAFE_INTEGER) {
                 $instance->$key = (string) $value;
             }

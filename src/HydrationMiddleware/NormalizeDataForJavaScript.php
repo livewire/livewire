@@ -4,9 +4,17 @@ namespace Livewire\HydrationMiddleware;
 
 abstract class NormalizeDataForJavaScript
 {
+    // The javascript maximum integer is 9007199254740991, or 2^53.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
+    protected const JAVASCRIPT_MAX_SAFE_INTEGER = 9007199254740991;
+
     protected static function reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value)
     {
         if (! is_array($value)) {
+            if (is_numeric($value) && $value > self::JAVASCRIPT_MAX_SAFE_INTEGER) {
+               return (string) $value;
+            }
+
             return $value;
         }
 
