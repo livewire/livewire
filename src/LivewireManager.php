@@ -152,7 +152,7 @@ class LivewireManager
     {
         return <<<HTML
 <style>
-    [wire\:loading], [wire\:loading\.delay] {
+    [wire\:loading], [wire\:loading\.delay], [wire\:loading\.inline-block], [wire\:loading\.inline], [wire\:loading\.block], [wire\:loading\.flex], [wire\:loading\.table], [wire\:loading\.grid] {
         display: none;
     }
 
