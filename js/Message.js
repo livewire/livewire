@@ -20,6 +20,18 @@ export default class {
         return this.updateQueue.length && this.updateQueue.every(update => update.skipWatcher)
     }
 
+    shouldSkipWatcherForDataKey(dataKey) {
+        let compareBeforeFirstDot = (subject, value) => {
+            if (typeof subject !== 'string' || typeof value !== 'string') return false
+
+            return subject.split('.')[0] === value.split('.')[0]
+        }
+
+        return this.updateQueue
+            .filter(update => compareBeforeFirstDot(update.name, dataKey))
+            .some(update => update.shouldSkipWatcher)
+    }
+
     storeResponse(payload) {
         return (this.response = payload)
     }

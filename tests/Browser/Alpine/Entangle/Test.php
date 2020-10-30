@@ -35,4 +35,29 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_watcher_is_fired_when_entangled_update_changes_other_entangled_data()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ChangeMultipleDataAtTheSameTime::class)
+                ->assertSeeIn('@output.alpine', 1)
+                ->assertSeeIn('@output.alpine', 2)
+                ->assertSeeIn('@output.alpine', 3)
+                ->assertSeeIn('@output.alpine', 4)
+                ->assertSeeIn('@output.livewire', 1)
+                ->assertSeeIn('@output.livewire', 2)
+                ->assertSeeIn('@output.livewire', 3)
+                ->assertSeeIn('@output.livewire', 4)
+                ->waitForLivewire()->type('@search', 's')
+                ->assertSeeIn('@output.alpine', 5)
+                ->assertSeeIn('@output.alpine', 6)
+                ->assertSeeIn('@output.alpine', 7)
+                ->assertSeeIn('@output.alpine', 8)
+                ->assertSeeIn('@output.livewire', 5)
+                ->assertSeeIn('@output.livewire', 6)
+                ->assertSeeIn('@output.livewire', 7)
+                ->assertSeeIn('@output.livewire', 8)
+            ;
+        });
+    }
 }

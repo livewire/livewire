@@ -73,7 +73,8 @@ class TestCase extends BaseTestCase
                 \Tests\Browser\SyncHistory\Component::class
             )->middleware('web')->name('sync-history');
 
-            Route::get('/livewire-dusk/tests/browser/sync-history-without-query-string/{step}',
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history-without-query-string/{step}',
                 \Tests\Browser\SyncHistory\ComponentWithoutQueryString::class
             )->middleware('web')->name('sync-history-without-query-string');
 
