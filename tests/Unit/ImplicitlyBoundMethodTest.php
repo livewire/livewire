@@ -200,13 +200,8 @@ class ImplicitlyBoundMethodTest extends TestCase
     public function call_with_at_sign_based_class_references_without_method_throws_exception()
     {
 
-        if(version_compare($this->app->version(), '8.10.0', '>')) {
-            $this->expectException(Error::class);
-            $this->expectExceptionMessage('Call to undefined function ContainerTestCallStub()');
-        } else {
-            $this->expectException(ReflectionException::class);
-            $this->expectExceptionMessage('Function ContainerTestCallStub() does not exist');
-        }
+        $this->expectException(Error::class);
+        $this->expectExceptionMessage('Call to undefined function ContainerTestCallStub()');
 
         $container = new Container;
         ImplicitlyBoundMethod::call($container, 'ContainerTestCallStub');
