@@ -1,3 +1,30 @@
+<?php
+
+namespace Tests\Browser\Alpine\Entangle;
+
+use Illuminate\Support\Facades\View;
+use Livewire\Component as BaseComponent;
+
+class ChangeMultipleDataAtTheSameTime extends BaseComponent
+{
+    public $livewireList = [1,2,3,4];
+
+    public $livewireSearch;
+
+    public function updatedLivewireSearch()
+    {
+        $this->change();
+    }
+
+    public function change()
+    {
+        $this->livewireList = [5,6,7,8];
+    }
+
+    public function render()
+    {
+        return
+<<<'HTML'
 <div>
     <div x-data="{
         alpineList: @entangle('livewireList'),
@@ -31,3 +58,6 @@
         <button dusk="change" wire:click="change">Change List</button>
     </div>
 </div>
+HTML;
+    }
+}

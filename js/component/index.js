@@ -99,7 +99,7 @@ export default class Component {
                 Object.entries(value || {}).forEach(([dataKey, dataValue]) => {
                     this.serverMemo.data[dataKey] = dataValue
 
-                    if (message.shouldSkipWatcher()) return
+                    if (message.shouldSkipWatcherForDataKey(dataKey)) return
 
                     // Because Livewire (for payload reduction purposes) only returns the data that has changed,
                     // we can use all the data keys from the response as watcher triggers.

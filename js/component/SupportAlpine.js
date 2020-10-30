@@ -97,7 +97,7 @@ function supportEntangle() {
                                 livewireProperty,
                                 value,
                                 isDeferred,
-                                false // Allow firing of Livewire watchers when the request comes back.
+                                true // Block firing of Livewire watchers for this data key when the request comes back.
                             )
                         })
 
