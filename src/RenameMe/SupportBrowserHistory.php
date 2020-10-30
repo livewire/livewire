@@ -6,10 +6,10 @@ use Livewire\Livewire;
 use Livewire\Response;
 use Livewire\Component;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use function Livewire\str;
 
 class SupportBrowserHistory
 {
@@ -92,7 +92,7 @@ class SupportBrowserHistory
             $route
             && is_string($action = $route->getActionName())
             // If the component is registered using `Route::get()`.
-            && Str::of($action)->contains(get_class($component))
+            && str($action)->contains(get_class($component))
             // AND, the component is tracking route params as its public properties
             && count(array_intersect_key($component->getPublicPropertiesDefinedBySubClass(), $route->parametersWithoutNulls()))
         ) {
@@ -118,9 +118,9 @@ class SupportBrowserHistory
         return $refererQueryString;
     }
 
-    protected function buildPathFromReferer($referer, $queryParams)
+    protected function buildPathFromReferer($referer, $queryParams) : string
     {
-        return Str::before($referer, '?').$this->stringifyQueryParams($queryParams);
+        return str($referer)->before('?').$this->stringifyQueryParams($queryParams);
     }
 
     protected function buildPathFromRoute($component, $route, $queryString)

@@ -2,7 +2,6 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Str;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
@@ -73,7 +72,7 @@ class LivewireManager
         // This is if a user doesn't pass params, BUT passes key() as the second argument.
         if (is_string($params)) $params = [];
 
-        $id = Str::random(20);
+        $id = str()->random(20);
 
         if (class_exists($name)) {
             $name = $name::getName();
@@ -153,7 +152,7 @@ class LivewireManager
     {
         return <<<HTML
 <style>
-    [wire\:loading], [wire\:loading\.delay] {
+    [wire\:loading], [wire\:loading\.delay], [wire\:loading\.inline-block], [wire\:loading\.inline], [wire\:loading\.block], [wire\:loading\.flex], [wire\:loading\.table], [wire\:loading\.grid] {
         display: none;
     }
 
@@ -179,6 +178,12 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
+        $devTools = null;
+
+        if (config('app.debug')) {
+            $devTools = 'window.livewire.devTools(true);';
+        }
+
         $appUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
 
         $csrf = csrf_token();
@@ -190,6 +195,8 @@ HTML;
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
         $assetWarning = null;
 
+        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
+
         // Use static assets if they have been published
         if (file_exists(public_path('vendor/livewire/manifest.json'))) {
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
@@ -199,14 +206,12 @@ HTML;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
-<script>
+<script{$nonce}>
     console.warn("Livewire: The published Livewire assets are out of date\n See: https://laravel-livewire.com/docs/installation/")
 </script>
 HTML;
             }
         }
-
-        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
 
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
@@ -219,6 +224,7 @@ HTML;
     }
 
     window.livewire = new Livewire({$jsonEncodedOptions});
+    {$devTools}
     window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
@@ -227,8 +233,8 @@ HTML;
     if (window.Alpine) {
         /* Defer showing the warning so it doesn't get buried under downstream errors. */
         document.addEventListener("DOMContentLoaded", function () {
-            setTimeout(() => {
-                console.warn(`Livewire: It looks like AlpineJS has already been loaded. Make sure Livewire\'s scripts are loaded before Alpine.\n\n Reference docs for more info: http://laravel-livewire.com/docs/alpine-js`)
+            setTimeout(function() {
+                console.warn("Livewire: It looks like AlpineJS has already been loaded. Make sure Livewire\'s scripts are loaded before Alpine.\\n\\n Reference docs for more info: http://laravel-livewire.com/docs/alpine-js")
             })
         });
     }

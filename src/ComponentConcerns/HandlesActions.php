@@ -3,7 +3,6 @@
 namespace Livewire\ComponentConcerns;
 
 use Livewire\Livewire;
-use Illuminate\Support\Str;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Exceptions\MethodNotFoundException;
@@ -13,6 +12,7 @@ use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
 use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
+use function Livewire\str;
 
 trait HandlesActions
 {
@@ -56,20 +56,24 @@ trait HandlesActions
 
     protected function callBeforeAndAfterSyncHooks($name, $value, $callback)
     {
-        $propertyName = Str::before(Str::studly($name), '.');
-        $keyAfterFirstDot = Str::contains($name, '.') ? Str::after($name, '.') : null;
-        $keyAfterLastDot = Str::contains($name, '.') ? Str::afterLast($name, '.') : null;
+        $name = str($name);
+
+        $propertyName = $name->studly()->before('.');
+        $keyAfterFirstDot = $name->contains('.') ? $name->after('.') : null;
+        $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.') : null;
 
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
 
-        $beforeNestedMethod = Str::contains($name, '.')
-            ? 'updating'.Str::of($name)->replace('.', '_')->studly()
+        $beforeNestedMethod = $name->contains('.')
+            ? 'updating'.$name->replace('.', '_')->studly()
             : false;
 
-        $afterNestedMethod = Str::contains($name, '.')
-            ? 'updated'.Str::of($name)->replace('.', '_')->studly()
+        $afterNestedMethod = $name->contains('.')
+            ? 'updated'.$name->replace('.', '_')->studly()
             : false;
+
+        $name = $name->__toString();
 
         $this->updating($name, $value);
 

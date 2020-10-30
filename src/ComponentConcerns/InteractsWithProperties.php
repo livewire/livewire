@@ -2,8 +2,8 @@
 
 namespace Livewire\ComponentConcerns;
 
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
+use function Livewire\str;
 
 trait InteractsWithProperties
 {
@@ -118,9 +118,9 @@ trait InteractsWithProperties
         return head(explode('.', $subject));
     }
 
-    public function afterFirstDot($subject)
+    public function afterFirstDot($subject) : string
     {
-        return Str::after($subject, '.');
+        return str($subject)->after('.');
     }
 
     public function propertyIsPublicAndNotDefinedOnBaseClass($propertyName)

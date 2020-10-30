@@ -31,50 +31,64 @@ class SupportComponentTraits
                     $method = $hook.class_basename($trait);
 
                     if (method_exists($component, $method)) {
-                        $this->componentIdMethodMap[$component->id][$hook] = [$component, $method];
+                        $this->componentIdMethodMap[$component->id][$hook][] = [$component, $method];
                     }
                 }
             }
 
-            $method = $this->componentIdMethodMap[$component->id]['hydrate'] ?? function () {};
+            $methods = $this->componentIdMethodMap[$component->id]['hydrate'] ?? [];
 
-            ImplicitlyBoundMethod::call(app(), $method, []);
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method);
+            }
         });
 
         Livewire::listen('component.mount', function ($component, $params) {
-            $method = $this->componentIdMethodMap[$component->id]['mount'] ?? function () {};
+            $methods = $this->componentIdMethodMap[$component->id]['mount'] ?? [];
 
-            ImplicitlyBoundMethod::call(app(), $method, $params);
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method, $params);
+            }
         });
 
         Livewire::listen('component.updating', function ($component, $name, $value) {
-            $method = $this->componentIdMethodMap[$component->id]['updating'] ?? function () {};
+            $methods = $this->componentIdMethodMap[$component->id]['updating'] ?? [];
 
-            ImplicitlyBoundMethod::call(app(), $method, [$name, $value]);
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method, [$name, $value]);
+            }
         });
 
         Livewire::listen('component.updated', function ($component, $name, $value) {
-            $method = $this->componentIdMethodMap[$component->id]['updated'] ?? function () {};
+            $methods = $this->componentIdMethodMap[$component->id]['updated'] ?? [];
 
-            ImplicitlyBoundMethod::call(app(), $method, [$name, $value]);
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method, [$name, $value]);
+            }
         });
 
         Livewire::listen('component.rendering', function ($component) {
-            $method = $this->componentIdMethodMap[$component->id]['rendering'] ?? function () {};
+            $methods = $this->componentIdMethodMap[$component->id]['rendering'] ?? [];
 
-            ImplicitlyBoundMethod::call(app(), $method, []);
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method);
+            }
         });
 
         Livewire::listen('component.rendered', function ($component, $view) {
-            $method = $this->componentIdMethodMap[$component->id]['rendered'] ?? function () {};
+            $methods = $this->componentIdMethodMap[$component->id]['rendered'] ?? [];
 
-            ImplicitlyBoundMethod::call(app(), $method, [$view]);
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method, [$view]);
+            }
         });
 
         Livewire::listen('component.dehydrate', function ($component) {
-            $method = $this->componentIdMethodMap[$component->id]['dehydrate'] ?? function () {};
+            $methods = $this->componentIdMethodMap[$component->id]['dehydrate'] ?? [];
 
-            ImplicitlyBoundMethod::call(app(), $method, []);
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method);
+            }
         });
     }
 }

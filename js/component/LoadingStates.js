@@ -197,7 +197,7 @@ function startLoading(els) {
                 () => {
                     el.style.display = directive.modifiers.includes('remove')
                         ? cache
-                        : 'inline-block'
+                        : getDisplayProperty(directive)
                 },
                 () => {
                     el.style.display = 'none'
@@ -205,6 +205,11 @@ function startLoading(els) {
             )
         }
     })
+}
+
+function getDisplayProperty(directive) {
+    return ['inline', 'block', 'table', 'flex', 'grid']
+        .filter(i => directive.modifiers.includes(i))[0] || 'inline-block'
 }
 
 function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {

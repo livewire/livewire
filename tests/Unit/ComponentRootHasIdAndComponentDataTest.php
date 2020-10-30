@@ -7,6 +7,7 @@ use Livewire\Component;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
+use function Livewire\str;
 
 class ComponentRootHasIdAndComponentDataTest extends TestCase
 {
@@ -15,10 +16,9 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
-        $this->assertTrue(Str::contains(
-            $component->payload['effects']['html'],
-            [$component->id(), 'foo']
-        ));
+        $this->assertTrue(
+            str($component->payload['effects']['html'])->contains([$component->id(), 'foo'])
+        );
     }
 
     /** @test */
@@ -26,7 +26,7 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
     {
         $this->expectException(RootTagMissingFromViewException::class);
 
-        $component = Livewire::test(ComponentRootExists::class);
+        Livewire::test(ComponentRootExists::class);
     }
 
     /** @test */
@@ -49,13 +49,9 @@ EOT
 
         $component->call('$refresh');
 
-        $this->assertTrue(Str::contains(
-            $component->lastRenderedDom, $component->id()
-        ));
+        $this->assertStringContainsString($component->id(), $component->lastRenderedDom);
 
-        $this->assertFalse(Str::contains(
-            $component->lastRenderedDom, 'foo'
-        ));
+        $this->assertStringNotContainsString('foo', $component->lastRenderedDom);
     }
 }
 
@@ -70,7 +66,7 @@ class ComponentRootHasIdAndDataStub extends Component
 
     public function render()
     {
-        return app('view')->make('show-name', ['name' => Str::random(5)]);
+        return app('view')->make('show-name', ['name' => str()->random(5)]);
     }
 }
 
