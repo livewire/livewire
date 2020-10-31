@@ -10,6 +10,7 @@ class LivewireManager
 {
     protected $listeners = [];
     protected $componentAliases = [];
+    protected $queryParams = [];
 
     public static $isLivewireRequestTestingOverride;
 
@@ -93,7 +94,7 @@ class LivewireManager
 
     public function test($name, $params = [])
     {
-        return new TestableLivewire($name, $params);
+        return new TestableLivewire($name, $params, $this->queryParams);
     }
 
     public function visit($browser, $class, $queryString = '')
@@ -289,5 +290,12 @@ HTML;
     public function isOnVapor()
     {
         return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
+    }
+
+    public function withQueryParams($queryParams)
+    {
+        $this->queryParams = $queryParams;
+
+        return $this;
     }
 }
