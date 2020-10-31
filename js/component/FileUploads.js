@@ -31,8 +31,15 @@ export default function () {
 
         el.addEventListener('change', eventHandler)
 
+        let clearFileHandler = function(e) {
+            this.value = null
+        }
+
+        el.addEventListener('click', clearFileHandler)
+
         component.addListenerForTeardown(() => {
             el.removeEventListener('change', eventHandler)
+            el.removeEventListener('click', clearFileHandler)
         })
     })
 }
