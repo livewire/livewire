@@ -2,10 +2,14 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Facades\Log;
+use Livewire\Concerns\EncodesJsonSafely;
 use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
 class Response
 {
+    use EncodesJsonSafely;
+
     public $request;
 
     public $fingerprint;
@@ -24,6 +28,8 @@ class Response
         $this->fingerprint = $request->fingerprint;
         $this->memo = $request->memo;
         $this->effects = [];
+
+        self::stringEncodeTooLargeIntegers($this->memo);
     }
 
     public function id() { return $this->fingerprint['id']; }
@@ -71,6 +77,10 @@ class Response
 
         $requestMemo = $this->request->memo;
         $responseMemo = $this->memo;
+
+        self::stringEncodeTooLargeIntegers($requestMemo);
+        self::stringEncodeTooLargeIntegers($responseMemo);
+
         $dirtyMemo = [];
 
         // Only send along the memos that have changed to not bloat the payload.

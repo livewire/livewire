@@ -2,10 +2,16 @@
 
 namespace Livewire\HydrationMiddleware;
 
+use Livewire\Concerns\EncodesJsonSafely;
+
 abstract class NormalizeDataForJavaScript
 {
+    use EncodesJsonSafely;
+
     protected static function reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value)
     {
+        self::stringEncodeTooLargeIntegers($value);
+
         if (! is_array($value)) {
             return $value;
         }

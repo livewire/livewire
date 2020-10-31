@@ -14,6 +14,9 @@ class NormalizeComponentPropertiesForJavaScript extends NormalizeDataForJavaScri
     public static function dehydrate($instance, $response)
     {
         foreach ($instance->getPublicPropertiesDefinedBySubClass() as $key => $value) {
+
+            self::stringEncodeTooLargeIntegers($value);
+
             if (is_array($value)) {
                 $instance->$key = static::reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
             }

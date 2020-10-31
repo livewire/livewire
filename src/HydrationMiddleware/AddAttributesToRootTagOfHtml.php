@@ -2,10 +2,13 @@
 
 namespace Livewire\HydrationMiddleware;
 
+use Livewire\Concerns\EncodesJsonSafely;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 
 class AddAttributesToRootTagOfHtml
 {
+    use EncodesJsonSafely;
+
     public function __invoke($dom, $data)
     {
         $attributesFormattedForHtmlElement = collect($data)
@@ -36,6 +39,8 @@ class AddAttributesToRootTagOfHtml
 
     protected function escapeStringForHtml($subject)
     {
+        self::stringEncodeTooLargeIntegers($subject);
+
         if (is_string($subject) || is_numeric($subject)) {
             return htmlspecialchars($subject);
         }

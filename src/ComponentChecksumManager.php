@@ -2,10 +2,16 @@
 
 namespace Livewire;
 
+use Livewire\Concerns\EncodesJsonSafely;
+
 class ComponentChecksumManager
 {
+    use EncodesJsonSafely;
+
     public function generate($fingerprint, $memo)
     {
+        self::stringEncodeTooLargeIntegers($memo);
+
         $hashKey = app('encrypter')->getKey();
 
         // It's actually Ok if the "children" tracking is tampered with.
