@@ -10,7 +10,7 @@ class LivewireManager
 {
     protected $listeners = [];
     protected $componentAliases = [];
-    protected $queryParams = [];
+    protected $queryParamsForTesting = [];
 
     public static $isLivewireRequestTestingOverride;
 
@@ -94,7 +94,7 @@ class LivewireManager
 
     public function test($name, $params = [])
     {
-        return new TestableLivewire($name, $params, $this->queryParams);
+        return new TestableLivewire($name, $params, $this->queryParamsForTesting);
     }
 
     public function visit($browser, $class, $queryString = '')
@@ -294,7 +294,7 @@ HTML;
 
     public function withQueryParams($queryParams)
     {
-        $this->queryParams = $queryParams;
+        $this->queryParamsForTesting = $queryParams;
 
         return $this;
     }
