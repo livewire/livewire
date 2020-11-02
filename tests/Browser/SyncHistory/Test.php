@@ -148,6 +148,17 @@ class Test extends TestCase
         });
     }
 
+    public function test_that_livewire_does_not_overwrite_existing_history_state()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history', ['step' => 1], false))
+                ->script('window.history.pushState({ ...window.history.state, userHistoryState: { foo: "bar" }}, document.title)');
+
+            $browser->refresh()
+                ->assertScript('Object.keys(window.history.state.userHistoryState).length', 1);
+        });
+    }
+
     public function test_that_we_are_not_setting_history_state_unless_there_are_route_bound_params_or_query_string_properties()
     {
         $this->browse(function ($browser) {

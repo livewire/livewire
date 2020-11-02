@@ -142,8 +142,8 @@ trait InteractsWithProperties
         }
 
         foreach ($values as $key => $value) {
-            if (in_array($key, $publicProperties)) {
-                $this->{$key} = $value;
+            if (in_array($this->beforeFirstDot($key), $publicProperties)) {
+                data_set($this, $key, $value);
             }
         }
     }

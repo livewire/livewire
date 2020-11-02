@@ -111,7 +111,7 @@ class LivewireServiceProvider extends ServiceProvider
         // This is mainly for overriding Laravel's pagination views
         // when a user applies the WithPagination trait to a component.
         $this->loadViewsFrom(
-            __DIR__.DIRECTORY_SEPARATOR.'views',
+            __DIR__.DIRECTORY_SEPARATOR.'views'.DIRECTORY_SEPARATOR.'pagination',
             'livewire'
         );
     }
@@ -226,6 +226,10 @@ class LivewireServiceProvider extends ServiceProvider
         $this->publishesToGroups([
             __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
         ], ['livewire', 'livewire:config']);
+
+        $this->publishesToGroups([
+            __DIR__.'/views/pagination' => $this->app->resourcePath('views/vendor/livewire'),
+        ], ['livewire', 'livewire:pagination']);
     }
 
     protected function registerBladeDirectives()
