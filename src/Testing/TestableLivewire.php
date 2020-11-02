@@ -32,7 +32,7 @@ class TestableLivewire
         Concerns\MakesCallsToComponent,
         Concerns\HasFunLittleUtilities;
 
-    public function __construct($name, $params = [])
+    public function __construct($name, $params = [], $queryParams = [])
     {
         Livewire::listen('view:render', function ($view) {
             $this->lastRenderedView = $view;
@@ -73,7 +73,7 @@ class TestableLivewire
 
         $this->componentName = $name;
 
-        $this->lastResponse = $this->pretendWereMountingAComponentOnAPage($name, $params);
+        $this->lastResponse = $this->pretendWereMountingAComponentOnAPage($name, $params, $queryParams);
 
         if (! $this->lastResponse->exception) {
             $this->updateComponent([
@@ -120,7 +120,7 @@ class TestableLivewire
         $this->payload['effects'] = $output['effects'];
     }
 
-    public function pretendWereMountingAComponentOnAPage($name, $params)
+    public function pretendWereMountingAComponentOnAPage($name, $params, $queryParams)
     {
         $randomRoutePath = '/testing-livewire/'.str()->random(20);
 
@@ -135,8 +135,8 @@ class TestableLivewire
 
         $response = null;
 
-        $laravelTestingWrapper->temporarilyDisableExceptionHandlingAndMiddleware(function ($wrapper) use ($randomRoutePath, &$response) {
-            $response = $wrapper->call('GET', $randomRoutePath);
+        $laravelTestingWrapper->temporarilyDisableExceptionHandlingAndMiddleware(function ($wrapper) use ($randomRoutePath, &$response, $queryParams) {
+            $response = $wrapper->call('GET', $randomRoutePath, $queryParams);
         });
 
         return $response;

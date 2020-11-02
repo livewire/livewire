@@ -138,7 +138,10 @@ let LivewireStateManager = {
         state.storeResponse(response, component)
 
         let stateArray = state.toStateArray()
-        let fullstateObject = { livewire: stateArray }
+
+        // Copy over existing history state if it's an object, so we don't overwrite it.
+        let currentState = typeof history.state === 'object' ? history.state : {}
+        let fullstateObject = Object.assign(currentState, { livewire: stateArray })
 
         let capitalize = subject => subject.charAt(0).toUpperCase() + subject.slice(1)
 

@@ -60,4 +60,20 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_dot_defer()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, DeferDataUpdates::class)
+                ->type('@input', 's')
+                ->waitForLivewire()->click('@submit')
+                ->assertSeeIn('@output.alpine', 's')
+                ->assertSeeIn('@output.livewire', 's')
+                ->append('@input', 's')
+                ->waitForLivewire()->click('@submit')
+                ->assertSeeIn('@output.alpine', 'ss')
+                ->assertSeeIn('@output.livewire', 'ss')
+            ;
+        });
+    }
 }

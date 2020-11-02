@@ -197,16 +197,6 @@ class ImplicitlyBoundMethodTest extends TestCase
      * ImplicitlyBoundMethod had no adverse impacts when extending BoundMethod.
      *************************************************************************/
     /** @test */
-    public function call_with_at_sign_based_class_references_without_method_throws_exception()
-    {
-
-        $this->expectException(Error::class);
-        $this->expectExceptionMessage('Call to undefined function ContainerTestCallStub()');
-
-        $container = new Container;
-        ImplicitlyBoundMethod::call($container, 'ContainerTestCallStub');
-    }
-
     /** @test */
     public function call_with_at_sign_based_class_references()
     {
