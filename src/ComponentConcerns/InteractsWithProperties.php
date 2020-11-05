@@ -2,7 +2,7 @@
 
 namespace Livewire\ComponentConcerns;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Support\Arrayable;
 use function Livewire\str;
 
 trait InteractsWithProperties
@@ -137,7 +137,7 @@ trait InteractsWithProperties
     {
         $publicProperties = array_keys($this->getPublicPropertiesDefinedBySubClass());
 
-        if ($values instanceof Model) {
+        if ($values instanceof Arrayable) {
             $values = $values->toArray();
         }
 
