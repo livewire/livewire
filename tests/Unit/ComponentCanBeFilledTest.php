@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Database\Eloquent\Model;
@@ -29,7 +30,7 @@ class ComponentCanBeFilledTest extends TestCase
     }
 
     /** @test */
-    public function can_fill_from_an_object()
+    public function can_fill_from_object_properties()
     {
         $component = Livewire::test(ComponentWithFillableProperties::class);
 
@@ -54,6 +55,22 @@ class ComponentCanBeFilledTest extends TestCase
         $component->assertSee('private');
 
         $component->call('callFill', new UserModel());
+
+        $component->assertSee('Caleb');
+        $component->assertSee('protected');
+        $component->assertSee('private');
+    }
+
+    /** @test */
+    public function can_fill_from_arrayable_interfaces()
+    {
+        $component = Livewire::test(ComponentWithFillableProperties::class);
+
+        $component->assertSee('public');
+        $component->assertSee('protected');
+        $component->assertSee('private');
+
+        $component->call('callFill', new ArrayableUser());
 
         $component->assertSee('Caleb');
         $component->assertSee('protected');
@@ -112,6 +129,19 @@ class UserModel extends Model {
 
     public function getPrivatePropertyAttribute() {
         return 'private';
+    }
+}
+
+class ArrayableUser implements Arrayable {
+    private $attributes = [
+        'publicProperty' => 'Caleb',
+        'protectedProperty' => 'Caleb',
+        'privateProperty' => 'Caleb'
+    ];
+
+    public function toArray()
+    {
+        return $this->attributes;
     }
 }
 
