@@ -61,6 +61,22 @@ class Test extends TestCase
         });
     }
 
+    public function test_watcher_is_fired_each_time_entangled_data_changes()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ToggleEntangled::class)
+                ->assertSeeIn('@output.alpine', 'false')
+                ->assertSeeIn('@output.livewire', 'false')
+                ->waitForLivewire()->click('@toggle')
+                ->assertSeeIn('@output.alpine', 'true')
+                ->assertSeeIn('@output.livewire', 'true')
+                ->waitForLivewire()->click('@toggle')
+                ->assertSeeIn('@output.alpine', 'false')
+                ->assertSeeIn('@output.livewire', 'false')
+            ;
+        });
+    }
+
     public function test_dot_defer()
     {
         $this->browse(function ($browser) {
