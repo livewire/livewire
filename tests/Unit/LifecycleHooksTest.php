@@ -14,19 +14,19 @@ class LifecycleHooksTest extends TestCase
         $component = Livewire::test(ForLifecycleHooks::class);
 
         $this->assertEquals([
-            'mount' => true,
-            'hydrate' => false,
-            'hydrateFoo' => false,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
-            'updating' => false,
-            'updated' => false,
-            'updatingFoo' => false,
-            'updatedFoo' => false,
-            'updatingBar' => false,
-            'updatingBarBaz' => false,
-            'updatedBar' => false,
-            'updatedBarBaz' => false,
+            'mount' => 1,
+            'hydrate' => 0,
+            'hydrateFoo' => 0,
+            'dehydrate' => 1,
+            'dehydrateFoo' => 1,
+            'updating' => 0,
+            'updated' => 0,
+            'updatingFoo' => 0,
+            'updatedFoo' => 0,
+            'updatingBar' => 0,
+            'updatingBarBaz' => 0,
+            'updatedBar' => 0,
+            'updatedBarBaz' => 0,
         ], $component->lifecycles);
     }
 
@@ -38,19 +38,19 @@ class LifecycleHooksTest extends TestCase
         $component->call('$refresh');
 
         $this->assertEquals([
-            'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
-            'updating' => false,
-            'updated' => false,
-            'updatingFoo' => false,
-            'updatedFoo' => false,
-            'updatingBar' => false,
-            'updatingBarBaz' => false,
-            'updatedBar' => false,
-            'updatedBarBaz' => false,
+            'mount' => 1,
+            'hydrate' => 1,
+            'hydrateFoo' => 1,
+            'dehydrate' => 2,
+            'dehydrateFoo' => 2,
+            'updating' => 0,
+            'updated' => 0,
+            'updatingFoo' => 0,
+            'updatedFoo' => 0,
+            'updatingBar' => 0,
+            'updatingBarBaz' => 0,
+            'updatedBar' => 0,
+            'updatedBarBaz' => 0,
         ], $component->lifecycles);
     }
 
@@ -72,19 +72,19 @@ class LifecycleHooksTest extends TestCase
 
 
         $this->assertEquals([
-            'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
-            'updating' => true,
-            'updated' => true,
-            'updatingFoo' => true,
-            'updatedFoo' => true,
-            'updatingBar' => false,
-            'updatingBarBaz' => false,
-            'updatedBar' => false,
-            'updatedBarBaz' => false,
+            'mount' => 1,
+            'hydrate' => 1,
+            'hydrateFoo' => 1,
+            'dehydrate' => 2,
+            'dehydrateFoo' => 2,
+            'updating' => 1,
+            'updated' => 1,
+            'updatingFoo' => 1,
+            'updatedFoo' => 1,
+            'updatingBar' => 0,
+            'updatingBarBaz' => 0,
+            'updatedBar' => 0,
+            'updatedBarBaz' => 0,
         ], $component->lifecycles);
     }
 
@@ -123,19 +123,19 @@ class LifecycleHooksTest extends TestCase
         $component->updateProperty('bar.cocktail.soft', 'Shirley Cumin');
 
         $this->assertEquals([
-            'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
-            'updating' => true,
-            'updated' => true,
-            'updatingFoo' => false,
-            'updatedFoo' => false,
-            'updatingBar' => true,
-            'updatingBarBaz' => false,
-            'updatedBar' => true,
-            'updatedBarBaz' => false,
+            'mount' => 1,
+            'hydrate' => 3,
+            'hydrateFoo' => 3,
+            'dehydrate' => 4,
+            'dehydrateFoo' => 4,
+            'updating' => 3,
+            'updated' => 3,
+            'updatingFoo' => 0,
+            'updatedFoo' => 0,
+            'updatingBar' => 3,
+            'updatingBarBaz' => 0,
+            'updatedBar' => 3,
+            'updatedBarBaz' => 0,
         ], $component->lifecycles);
     }
 
@@ -168,19 +168,19 @@ class LifecycleHooksTest extends TestCase
         $component->set('bar.baz', 'bop');
 
         $this->assertEquals([
-            'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
-            'updating' => true,
-            'updated' => true,
-            'updatingFoo' => false,
-            'updatedFoo' => false,
-            'updatingBar' => true,
-            'updatingBarBaz' => true,
-            'updatedBar' => true,
-            'updatedBarBaz' => true,
+            'mount' => 1,
+            'hydrate' => 1,
+            'hydrateFoo' => 1,
+            'dehydrate' => 2,
+            'dehydrateFoo' => 2,
+            'updating' => 1,
+            'updated' => 1,
+            'updatingFoo' => 0,
+            'updatedFoo' => 0,
+            'updatingBar' => 1,
+            'updatingBarBaz' => 1,
+            'updatedBar' => 1,
+            'updatedBarBaz' => 1,
         ], $component->lifecycles);
     }
 
@@ -203,19 +203,19 @@ class LifecycleHooksTest extends TestCase
         $component->call('$set', 'foo', 'bar');
 
         $this->assertEquals([
-            'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
-            'updating' => true,
-            'updated' => true,
-            'updatingFoo' => true,
-            'updatedFoo' => true,
-            'updatingBar' => false,
-            'updatingBarBaz' => false,
-            'updatedBar' => false,
-            'updatedBarBaz' => false,
+            'mount' => 1,
+            'hydrate' => 1,
+            'hydrateFoo' => 1,
+            'dehydrate' => 2,
+            'dehydrateFoo' => 2,
+            'updating' => 1,
+            'updated' => 1,
+            'updatingFoo' => 1,
+            'updatedFoo' => 1,
+            'updatingBar' => 0,
+            'updatingBarBaz' => 0,
+            'updatedBar' => 0,
+            'updatedBarBaz' => 0,
         ], $component->lifecycles);
     }
 }
@@ -231,74 +231,74 @@ class ForLifecycleHooks extends Component
     public $expected;
 
     public $lifecycles = [
-        'mount' => false,
-        'hydrate' => false,
-        'hydrateFoo' => false,
-        'dehydrate' => false,
-        'dehydrateFoo' => false,
-        'updating' => false,
-        'updated' => false,
-        'updatingFoo' => false,
-        'updatedFoo' => false,
-        'updatingBar' => false,
-        'updatingBarBaz' => false,
-        'updatedBar' => false,
-        'updatedBarBaz' => false,
+        'mount' => 0,
+        'hydrate' => 0,
+        'hydrateFoo' => 0,
+        'dehydrate' => 0,
+        'dehydrateFoo' => 0,
+        'updating' => 0,
+        'updated' => 0,
+        'updatingFoo' => 0,
+        'updatedFoo' => 0,
+        'updatingBar' => 0,
+        'updatingBarBaz' => 0,
+        'updatedBar' => 0,
+        'updatedBarBaz' => 0,
     ];
 
     public function mount(array $expected = [])
     {
         $this->expected = $expected;
 
-        $this->lifecycles['mount'] = true;
+        $this->lifecycles['mount']++;
     }
 
     public function hydrate()
     {
-        $this->lifecycles['hydrate'] = true;
+        $this->lifecycles['hydrate']++;
     }
 
     public function hydrateFoo()
     {
-        $this->lifecycles['hydrateFoo'] = true;
+        $this->lifecycles['hydrateFoo']++;
     }
 
     public function dehydrate()
     {
-        $this->lifecycles['dehydrate'] = true;
+        $this->lifecycles['dehydrate']++;
     }
 
     public function dehydrateFoo()
     {
-        $this->lifecycles['dehydrateFoo'] = true;
+        $this->lifecycles['dehydrateFoo']++;
     }
 
     public function updating($name, $value)
     {
         PHPUnit::assertEquals(array_shift($this->expected['updating']), [$name => $value]);
 
-        $this->lifecycles['updating'] = true;
+        $this->lifecycles['updating']++;
     }
 
     public function updated($name, $value)
     {
         PHPUnit::assertEquals(array_shift($this->expected['updated']), [$name => $value]);
 
-        $this->lifecycles['updated'] = true;
+        $this->lifecycles['updated']++;
     }
 
     public function updatingFoo($value)
     {
         PHPUnit::assertEquals(array_shift($this->expected['updatingFoo']), $value);
 
-        $this->lifecycles['updatingFoo'] = true;
+        $this->lifecycles['updatingFoo']++;
     }
 
     public function updatedFoo($value)
     {
         PHPUnit::assertEquals(array_shift($this->expected['updatedFoo']), $value);
 
-        $this->lifecycles['updatedFoo'] = true;
+        $this->lifecycles['updatedFoo']++;
     }
 
     public function updatingBar($value, $key)
@@ -312,7 +312,7 @@ class ForLifecycleHooks extends Component
         PHPUnit::assertEquals($before, data_get($this->bar, $key));
         PHPUnit::assertEquals($after, $value);
 
-        $this->lifecycles['updatingBar'] = true;
+        $this->lifecycles['updatingBar']++;
     }
 
     public function updatedBar($value, $key)
@@ -325,7 +325,7 @@ class ForLifecycleHooks extends Component
         PHPUnit::assertEquals($expected_value, $value);
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
 
-        $this->lifecycles['updatedBar'] = true;
+        $this->lifecycles['updatedBar']++;
     }
 
     public function updatingBarBaz($value, $key)
@@ -339,7 +339,7 @@ class ForLifecycleHooks extends Component
         PHPUnit::assertEquals($before, data_get($this->bar, $key));
         PHPUnit::assertEquals($after, $value);
 
-        $this->lifecycles['updatingBarBaz'] = true;
+        $this->lifecycles['updatingBarBaz']++;
     }
 
     public function updatedBarBaz($value, $key)
@@ -352,7 +352,7 @@ class ForLifecycleHooks extends Component
         PHPUnit::assertEquals($expected_value, $value);
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
 
-        $this->lifecycles['updatedBarBaz'] = true;
+        $this->lifecycles['updatedBarBaz']++;
     }
 
     public function render()

@@ -18,10 +18,6 @@ class CallPropertyHydrationHooks implements HydrationMiddleware
             $studlyProperty = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
             $method = 'hydrate'.$studlyProperty;
             $instance->{$method}($value, $request);
-
-            if (method_exists($instance, $method = 'hydrate'.$studlyProperty)) {
-                $instance->{$method}($value, $request);
-            }
         }
     }
 
