@@ -121,4 +121,19 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_alpine_registers_click_handlers_properly_on_livewire_change()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ClickComponent::class)
+                ->waitForLivewire()->click('@show')
+                ->click('@click')
+                ->assertSeeIn('@alpineNumberClicksFired', 1)
+                ->click('@click')
+                ->assertSeeIn('@alpineNumberClicksFired', 2)
+                ->click('@click')
+                ->assertSeeIn('@alpineNumberClicksFired', 3)
+            ;
+        });
+    }
 }
