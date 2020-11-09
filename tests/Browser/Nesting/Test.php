@@ -33,7 +33,16 @@ class Test extends TestCase
                 ->assertDontSeeIn('@output.nested', 'foo')
                 ->waitForLivewire()->click('@button.nested')
                 ->assertSeeIn('@output.nested', 'foo')
-            ;
+
+                /**
+                 * Nested component constructors aren't called again when they already exist on the page
+                 */
+                ->waitForLivewire()->type('@input.search', 2)
+                ->assertDontSee('Item #1')
+                ->assertSee('Item #2')
+                ->waitForLivewire()->type('@input.search', ' ')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2');
         });
     }
 }

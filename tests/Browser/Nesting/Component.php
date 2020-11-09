@@ -11,9 +11,23 @@ class Component extends BaseComponent
 
     public $showChild = false;
     public $key = 'foo';
+    public $search;
 
     public function render()
     {
-        return View::file(__DIR__.'/view.blade.php');
+        $items = collect([
+            'a' => 'Item #1',
+            'b' => 'Item #2'
+        ]);
+
+        if ($this->search) {
+            $items = $items->filter(function ($item) {
+                return stripos($item, $this->search) !== false;
+            });
+        }
+
+        return View::file(__DIR__ . '/view.blade.php', [
+            'items' => $items
+        ]);
     }
 }

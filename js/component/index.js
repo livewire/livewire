@@ -475,11 +475,14 @@ export default class Component {
                         return false
                     }
                 } else if (DOM.isComponentRootEl(node)) {
-                    store.addComponent(new Component(node, this.connection))
+                    // Only initialize "new" components if they don't exist on the page already
+                    if (node.hasAttribute('wire:initial-data')) {
+                        store.addComponent(new Component(node, this.connection))
 
-                    // We don't need to initialize children, the
-                    // new Component constructor will do that for us.
-                    node.skipAddingChildren = true
+                        // We don't need to initialize children, the
+                        // new Component constructor will do that for us.
+                        node.skipAddingChildren = true
+                    }
                 }
 
                 this.morphChanges.added.push(node)
