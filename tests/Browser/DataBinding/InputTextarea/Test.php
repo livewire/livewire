@@ -16,8 +16,7 @@ class Test extends TestCase
                  * Can change value
                  */
                 ->assertDontSeeIn('@foo.output', 'changed')
-                ->click('@foo.change')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@foo.change')
                 ->assertSeeIn('@foo.output', 'changed')
 
                 /**
@@ -25,25 +24,26 @@ class Test extends TestCase
                  */
                 ->assertInputValue('@foo', 'changed')
                 ->assertSourceMissing('class="foo"')
-                ->click('@foo.add-class')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@foo.add-class')
                 ->assertInputValue('@foo', 'changed')
                 ->assertSourceHas('class="foo"')
 
                 /**
                  * Value will change if marked as dirty AND input is focused.
                  */
-                ->click('@foo')
-                ->tap(function ($b) { $b->script('window.livewire.first().set("foo", "changed-again")'); })
-                ->waitForLivewire()
+                ->waitForLivewire(function ($b) {
+                    $b->click('@foo');
+                    $b->script('window.livewire.first().set("foo", "changed-again")');
+                })
                 ->assertInputValue('@foo', 'changed-again')
 
                 /**
                  * Value won't change if focused but NOT dirty.
                  */
-                ->click('@foo')
-                ->tap(function ($b) { $b->script('window.livewire.first().sync("foo", "changed-alot")'); })
-                ->waitForLivewire()
+                ->waitForLivewire(function ($b) {
+                    $b->click('@foo');
+                    $b->script('window.livewire.first().sync("foo", "changed-alot")');
+                })
                 ->assertSeeIn('@foo.output', 'changed-alot')
                 ->assertInputValue('@foo', 'changed-again')
 
@@ -54,8 +54,7 @@ class Test extends TestCase
                 ->type('@baz', 'lazy')
                 ->pause(150) // Wait for the amount of time it would have taken to do a round trip.
                 ->assertDontSeeIn('@baz.output', 'lazy')
-                ->click('@refresh') // Blur input and send action.
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@refresh') // Blur input and send action.
                 ->assertSeeIn('@baz.output', 'lazy')
 
                 /**
@@ -67,8 +66,7 @@ class Test extends TestCase
                 ->click('@foo') // Blur input to make sure this is more thans "lazy".
                 ->pause(150) // Pause for upper-bound of most round-trip lengths.
                 ->assertDontSeeIn('@bob.output', 'deferred')
-                ->click('@refresh')
-                ->waitForLivewire()
+                ->waitForLivewire()->click('@refresh')
                 ->assertSeeIn('@bob.output', 'deferred')
                 ;
         });

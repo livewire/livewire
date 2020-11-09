@@ -16,6 +16,23 @@ export default class {
         }
     }
 
+    shouldSkipWatcherForDataKey(dataKey) {
+        // If the data is dirty, run the watcher.
+        if (this.response.effects.dirty.includes(dataKey)) return false
+
+        let compareBeforeFirstDot = (subject, value) => {
+            if (typeof subject !== 'string' || typeof value !== 'string') return false
+
+            return subject.split('.')[0] === value.split('.')[0]
+        }
+
+        // Otherwise see if there was a defered update for a data key.
+        // In that case, we want to skip running the Livewire watcher.
+        return this.updateQueue
+            .filter(update => compareBeforeFirstDot(update.name, dataKey))
+            .some(update => update.skipWatcher)
+    }
+
     storeResponse(payload) {
         return (this.response = payload)
     }

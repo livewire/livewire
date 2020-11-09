@@ -22,7 +22,7 @@ export default class Connection {
 
         // Forward the query string for the ajax requests.
         fetch(
-            `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}${window.location.search}`,
+            `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}`,
             {
                 method: 'POST',
                 body: JSON.stringify(payload),
@@ -30,10 +30,13 @@ export default class Connection {
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
-                    Accept: 'text/html, application/xhtml+xml',
+                    'Accept': 'text/html, application/xhtml+xml',
                     'X-CSRF-TOKEN': getCsrfToken(),
                     'X-Socket-ID': this.getSocketId(),
                     'X-Livewire': true,
+
+                    // We'll set this explicitly to mitigate potential interference from ad-blockers/etc.
+                    'Referer': window.location.href,
                 },
             }
         )
@@ -68,11 +71,6 @@ export default class Connection {
             .catch(() => {
                 this.onError(message)
             })
-            .finally(() => {
-                store.requestIsOut = false
-            })
-
-        store.requestIsOut = true
     }
 
     isOutputFromDump(output) {

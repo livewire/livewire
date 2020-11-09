@@ -1,23 +1,24 @@
 import store from '@/Store'
+import { wireDirectives } from '../util'
 
 let cleanupStackByComponentId = {}
 
 export default function () {
-    store.registerHook('elementInitialized', (el, component) => {
-        if (el.directives.missing('submit')) return
+    store.registerHook('element.initialized', (el, component) => {
+        let directives = wireDirectives(el)
+
+        if (directives.missing('submit')) return
 
         // Set a forms "disabled" state on inputs and buttons.
         // Livewire will clean it all up automatically when the form
         // submission returns and the new DOM lacks these additions.
-        el.el.addEventListener('submit', () => {
+        el.addEventListener('submit', () => {
             cleanupStackByComponentId[component.id] = []
 
-            component.walk(elem => {
-                const node = elem.el
+            component.walk(node => {
+                if (! el.contains(node)) return
 
-                if (!el.el.contains(node)) return
-
-                if (elem.hasAttribute('ignore')) return false
+                if (node.hasAttribute('wire:ignore')) return false
 
                 if (
                     // <button type="submit">
@@ -52,8 +53,8 @@ export default function () {
         })
     })
 
-    store.registerHook('messageFailed', component => cleanup(component))
-    store.registerHook('responseReceived', component => cleanup(component))
+    store.registerHook('message.failed', (message, component) => cleanup(component))
+    store.registerHook('message.received', (message, component) => cleanup(component))
 }
 
 function cleanup(component) {

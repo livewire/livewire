@@ -8,7 +8,7 @@ class MethodNotFoundException extends \Exception
 
     public function __construct($method, $component)
     {
-        return parent::__construct(
+        parent::__construct(
             "Unable to call component method. Public method [{$method}] not found on component: [{$component}]"
         );
     }

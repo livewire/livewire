@@ -7,10 +7,20 @@ use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
+    public $baz = '';
+
     public function hydrate()
     {
-        usleep(1000 * 50);
+        usleep(1000 * 250);
     }
+
+    public function throwError()
+    {
+        throw new \Exception;
+    }
+
+    public function foo() {}
+    public function bar() {}
 
     public function render()
     {

@@ -7,16 +7,15 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function happy_path()
+    public function test()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
                 /**
                  * wire:init runs on page load.
                  */
-                ->waitForLivewire()
-                ->assertSeeIn('@output', 'foo')
+                ->waitForText('foo')
+                ->assertSee('foo')
             ;
         });
     }

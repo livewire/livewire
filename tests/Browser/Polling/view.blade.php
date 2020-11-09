@@ -1,19 +1,7 @@
-<div>
-    <button wire:click="$refresh" dusk="button">Load</button>
+<div @if($enabled) wire:poll.500ms @endif>
+    <button wire:click="$refresh" dusk="refresh">count++</button>
+    <button wire:click="$set('enabled', true)" dusk="enable">enable</button>
+    <button wire:click="$set('enabled', false)" dusk="disable">disable</button>
 
-    <h1 wire:loading dusk="show">Loading...</h1>
-    <h1 wire:loading.remove dusk="hide">Loading...</h1>
-
-    <h1 wire:loading.class="foo" dusk="add-class">Loading...</h1>
-    <h1 wire:loading.class.remove="foo" dusk="remove-class" class="foo">Loading...</h1>
-
-    <h1 wire:loading.attr="disabled" dusk="add-attr">Loading...</h1>
-    <h1 wire:loading.attr.remove="disabled" dusk="remove-attr" disabled>Loading...</h1>
-
-    <h1 wire:loading.attr="disabled" dusk="add-attr">Loading...</h1>
-    <h1 wire:loading.attr.remove="disabled" dusk="remove-attr" disabled>Loading...</h1>
-
-    <h1 wire:loading wire:target="foo" dusk="targeting">Loading...</h1>
-
-    <button wire:click="foo" dusk="target-button">targeted buttong</button>
+    <span dusk="output">{{ $count }}</span>
 </div>

@@ -6,7 +6,6 @@ use LogicException;
 use RuntimeException;
 use Livewire\Livewire;
 use Livewire\Component;
-use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
@@ -15,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
+use function Livewire\str;
 
 class FileUploadsTest extends TestCase
 {
@@ -407,13 +407,33 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function allows_setting_file_types_for_temporary_signed_urls_in_config()
+    {
+        config()->set('livewire.temporary_file_upload.preview_mimes', ['pdf']);
+
+        Storage::fake('advatars');
+
+        $file = UploadedFile::fake()->create('file.pdf');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        ob_start();
+        $this->get($photo->temporaryUrl())->sendContent();
+        $rawFileContents = ob_get_clean();
+
+        $this->assertEquals($file->get(), $rawFileContents);
+    }
+
+    /** @test */
     public function public_temporary_file_url_must_have_valid_signature()
     {
         $photo = Livewire::test(FileUploadComponent::class)
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
             ->viewData('photo');
 
-        $this->get(Str::before($photo->temporaryUrl(), '&signature='))->assertStatus(401);
+        $this->get(str($photo->temporaryUrl())->before('&signature='))->assertStatus(401);
     }
 
     /** @test */

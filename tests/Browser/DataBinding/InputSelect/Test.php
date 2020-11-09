@@ -16,8 +16,7 @@ class Test extends TestCase
                  * Standard select.
                  */
                 ->assertDontSeeIn('@single.output', 'bar')
-                ->select('@single.input', 'bar')
-                ->waitForLivewire()
+                ->waitForLivewire()->select('@single.input', 'bar')
                 ->assertSelected('@single.input', 'bar')
                 ->assertSeeIn('@single.output', 'bar')
 
@@ -25,8 +24,7 @@ class Test extends TestCase
                  * Standard select with value attributes.
                  */
                 ->assertDontSeeIn('@single-value.output', 'par')
-                ->select('@single-value.input', 'par')
-                ->waitForLivewire()
+                ->waitForLivewire()->select('@single-value.input', 'par')
                 ->assertSelected('@single-value.input', 'par')
                 ->assertSeeIn('@single-value.output', 'par')
 
@@ -35,8 +33,7 @@ class Test extends TestCase
                  */
                 ->assertSeeIn('@single-number.output', '3')
                 ->assertSelected('@single-number.input', '3')
-                ->select('@single-number.input', '4')
-                ->waitForLivewire()
+                ->waitForLivewire()->select('@single-number.input', '4')
                 ->assertSeeIn('@single-number.output', '4')
                 ->assertSelected('@single-number.input', '4')
 
@@ -45,8 +42,7 @@ class Test extends TestCase
                  */
                 ->assertSelected('@placeholder.input', '')
                 ->assertDontSeeIn('@placeholder.output', 'foo')
-                ->select('@placeholder.input', 'foo')
-                ->waitForLivewire()
+                ->waitForLivewire()->select('@placeholder.input', 'foo')
                 ->assertSelected('@placeholder.input', 'foo')
                 ->assertSeeIn('@placeholder.output', 'foo')
 
@@ -54,12 +50,10 @@ class Test extends TestCase
                  * Select multiple.
                  */
                 ->assertDontSeeIn('@multiple.output', 'bar')
-                ->select('@multiple.input', 'bar')
-                ->waitForLivewire()
+                ->waitForLivewire()->select('@multiple.input', 'bar')
                 ->assertSelected('@multiple.input', 'bar')
                 ->assertSeeIn('@multiple.output', 'bar')
-                ->select('@multiple.input', 'baz')
-                ->waitForLivewire()
+                ->waitForLivewire()->select('@multiple.input', 'baz')
                 ->assertSelected('@multiple.input', 'baz')
                 ->assertSeeIn('@multiple.output', 'bar')
                 ->assertSeeIn('@multiple.output', 'baz');

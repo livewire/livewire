@@ -8,8 +8,8 @@ class MissingFileUploadsTraitException extends \Exception
 
     public function __construct($component)
     {
-        return parent::__construct(
-            "Cannot handle file upload without [Livewire\WithFileUploads] trait on the [{$component->getName()}] component class."
+        parent::__construct(
+            "Cannot handle file upload without [Livewire\WithFileUploads] trait on the [{$component::getName()}] component class."
         );
     }
 }

@@ -1,3 +1,3 @@
 @component($view, $params)
-        {!! $contents !!}
+    {!! $manager->initialDehydrate()->toInitialResponse()->effects['html']; !!}
 @endcomponent

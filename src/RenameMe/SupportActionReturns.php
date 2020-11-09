@@ -3,7 +3,6 @@
 namespace Livewire\RenameMe;
 
 use Livewire\Livewire;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 

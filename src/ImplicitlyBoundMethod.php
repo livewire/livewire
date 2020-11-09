@@ -15,7 +15,7 @@ class ImplicitlyBoundMethod extends BoundMethod
 
         foreach (static::getCallReflector($callback)->getParameters() as $parameter) {
             static::substituteNameBindingForCallParameter($parameter, $parameters, $paramIndex);
-            static::substituteImplicitBindingForCallParameter($container, $parameter, $parameters, $dependencies);
+            static::substituteImplicitBindingForCallParameter($container, $parameter, $parameters);
             static::addDependencyForCallParameter($container, $parameter, $parameters, $dependencies);
         }
 

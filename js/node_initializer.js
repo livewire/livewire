@@ -1,28 +1,25 @@
-import { kebabCase, debounce } from '@/util'
+import { kebabCase, debounce, wireDirectives } from '@/util'
 import ModelAction from '@/action/model'
 import DeferredModelAction from '@/action/deferred-model'
 import MethodAction from '@/action/method'
-import DOMElement from '@/dom/dom_element'
 import store from '@/Store'
+import DOM from './dom/dom'
 
 export default {
     initialize(el, component) {
-        if (
-            store.initialRenderIsFinished &&
-            el.rawNode().tagName.toLowerCase() === 'script'
-        ) {
-            eval(el.rawNode().innerHTML)
+        if (store.initialRenderIsFinished && el.tagName.toLowerCase() === 'script') {
+            eval(el.innerHTML)
             return false
         }
 
-        el.directives.all().forEach(directive => {
+        wireDirectives(el).all().forEach(directive => {
             switch (directive.type) {
                 case 'init':
                     this.fireActionRightAway(el, directive, component)
                     break
 
                 case 'model':
-                    el.setInputValueFromModel(component)
+                    DOM.setInputValueFromModel(el, component)
 
                     this.attachModelListener(el, directive, component)
                     break
@@ -31,7 +28,7 @@ export default {
                     if (store.directives.has(directive.type)) {
                         store.directives.call(
                             directive.type,
-                            el.el,
+                            el,
                             directive,
                             component
                         )
@@ -42,7 +39,7 @@ export default {
             }
         })
 
-        store.callHook('elementInitialized', el, component)
+        store.callHook('element.initialized', el, component)
     },
 
     fireActionRightAway(el, directive, component) {
@@ -53,7 +50,7 @@ export default {
 
     attachModelListener(el, directive, component) {
         // This is used by morphdom: morphdom.js:391
-        el.el.isLivewireModel = true
+        el.isLivewireModel = true
 
         const isLazy = directive.modifiers.includes('lazy')
         const debounceIf = (condition, callback, time) => {
@@ -63,57 +60,53 @@ export default {
         }
         const hasDebounceModifier = directive.modifiers.includes('debounce')
 
-        store.callHook(
-            'interceptWireModelAttachListener',
-            el,
-            directive,
-            component,
-            debounceIf
-        )
+        store.callHook('interceptWireModelAttachListener', directive, el, component)
 
         // File uploads are handled by UploadFiles.js.
-        if (
-            el.rawNode().tagName.toLowerCase() === 'input' &&
-            el.rawNode().type === 'file'
-        )
-            return
+        if (el.tagName.toLowerCase() === 'input' && el.type === 'file') return
 
-        const event =
-            el.rawNode().tagName.toLowerCase() === 'select' ||
-            ['checkbox', 'radio'].includes(el.rawNode().type) ||
-            directive.modifiers.includes('lazy')
-                ? 'change'
-                : 'input'
+        const event = el.tagName.toLowerCase() === 'select'
+            || ['checkbox', 'radio'].includes(el.type)
+            || directive.modifiers.includes('lazy') ? 'change' : 'input'
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-        let handler = debounceIf(
-            hasDebounceModifier || (el.isTextInput() && !isLazy),
-            e => {
-                const model = directive.value
-                const el = new DOMElement(e.target)
-                // We have to check for typeof e.detail here for IE 11.
-                const value =
-                    e instanceof CustomEvent &&
-                    typeof e.detail != 'undefined' &&
-                    typeof window.document.documentMode == 'undefined'
-                        ? e.detail
-                        : el.valueFromInput(component)
+        let handler = debounceIf(hasDebounceModifier || (DOM.isTextInput(el) && (!isLazy || !el.wasRecentlyAutofilled)), e => {
+            let model = directive.value
+            let el = e.target
 
-                if (directive.modifiers.includes('defer')) {
-                    component.addAction(
-                        new DeferredModelAction(model, value, el)
-                    )
-                } else {
-                    component.addAction(new ModelAction(model, value, el))
-                }
-            },
-            directive.durationOr(150)
-        )
+            let value = e instanceof CustomEvent
+                // We have to check for typeof e.detail here for IE 11.
+                && typeof e.detail != 'undefined'
+                && typeof window.document.documentMode == 'undefined'
+                    ? e.detail
+                    : DOM.valueFromInput(el, component)
+
+            // These conditions should only be met if the event was fired for a Safari autofill.
+            if (el.wasRecentlyAutofilled && e instanceof CustomEvent && e.detail === null) {
+                value = DOM.valueFromInput(el, component)
+            }
+
+            if (directive.modifiers.includes('defer')) {
+                component.addAction(new DeferredModelAction(model, value, el))
+            } else {
+                component.addAction(new ModelAction(model, value, el))
+            }
+        }, directive.durationOr(150))
 
         el.addEventListener(event, handler)
 
         component.addListenerForTeardown(() => {
             el.removeEventListener(event, handler)
+        })
+
+        el.addEventListener('animationstart', e => {
+            if (e.animationName !== 'livewireautofill') return
+
+            e.target.wasRecentlyAutofilled = true
+
+            setTimeout(() => {
+                delete e.target.wasRecentlyAutofilled
+            }, 1000)
         })
     },
 
@@ -150,6 +143,11 @@ export default {
                             return false
                     }
 
+		            // Handle spacebar
+                    if (e.keyCode === 32 || (e.key === ' ' || e.key === 'Spacebar')) {
+                        return directive.modifiers.includes('space')
+                    }
+
                     // Strip 'debounce' modifier and time modifiers from modifiers list
                     let modifiers = directive.modifiers.filter(modifier => {
                         return (
@@ -159,10 +157,8 @@ export default {
                     })
 
                     // Only handle listener if no, or matching key modifiers are passed.
-                    return (
-                        modifiers.length === 0 ||
-                        modifiers.includes(kebabCase(e.key))
-                    )
+                    // It's important to check that e.key exists - OnePassword's extension does weird things.
+                    return Boolean(modifiers.length === 0 || (e.key && modifiers.includes(kebabCase(e.key))))
                 })
                 break
             case 'click':
@@ -196,9 +192,9 @@ export default {
             if (callback && callback(e) === false) {
                 return
             }
-            
+
             component.callAfterModelDebounce(() => {
-                const el = new DOMElement(e.target)
+                const el = e.target
 
                 directive.setEventContext(e)
 

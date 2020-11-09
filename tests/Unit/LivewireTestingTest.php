@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 use Illuminate\Support\Facades\Route;
 
@@ -15,7 +16,7 @@ class LivewireTestingTest extends TestCase
             throw new \Exception('I shouldn\'t get executed!');
         });
 
-        app(LivewireManager::class)->test(HasMountArguments::class, ['name' => 'foo']);
+        Livewire::test(HasMountArguments::class, ['name' => 'foo']);
     }
 
     /** @test */
@@ -41,7 +42,11 @@ class LivewireTestingTest extends TestCase
     {
         app(LivewireManager::class)
             ->test(HasMountArguments::class, ['name' => 'foo'])
-            ->assertSet('name', 'foo');
+            ->assertSet('name', 'foo')
+            ->set('name', 'info')
+            ->assertSet('name', 'info')
+            ->set('name', 'is_array')
+            ->assertSet('name', 'is_array');
     }
 
     /** @test */
@@ -105,6 +110,7 @@ class LivewireTestingTest extends TestCase
     {
         app(LivewireManager::class)
             ->test(EmitsEventsComponentStub::class)
+            ->assertNotEmitted('foo')
             ->call('emitFoo')
             ->assertNotEmitted('bar')
             ->call('emitFooWithParam', 'not-bar')
@@ -134,6 +140,15 @@ class LivewireTestingTest extends TestCase
             ->assertDispatchedBrowserEvent('foo', function ($event, $data) {
                 return $event === 'foo' && $data === ['bar' => 'baz'];
             });
+    }
+
+    /** @test */
+    public function assert_has_error_with_manually_added_error()
+    {
+        app(LivewireManager::class)
+            ->test(ValidatesDataWithSubmitStub::class)
+            ->call('manuallyAddError')
+            ->assertHasErrors('bob');
     }
 
     /** @test */
@@ -257,6 +272,11 @@ class ValidatesDataWithSubmitStub extends Component
             'foo' => 'required',
             'bar' => 'required',
         ]);
+    }
+
+    public function manuallyAddError()
+    {
+        $this->addError('bob', 'lob');
     }
 
     public function render()

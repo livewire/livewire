@@ -1,19 +1,19 @@
 <div>
-    <button wire:click="$refresh" dusk="button">Load</button>
+    <button wire:click="$set('foo', true)" @if ($foo) some-new-attribute="true" @endif wire:ignore dusk="foo">Foo</button>
 
-    <h1 wire:loading dusk="show">Loading...</h1>
-    <h1 wire:loading.remove dusk="hide">Loading...</h1>
+    <button wire:click="$set('bar', true)" wire:ignore dusk="bar">
+         <span dusk="bar.output">{{ $bar ? 'new' : 'old' }}</span>
+    </button>
 
-    <h1 wire:loading.class="foo" dusk="add-class">Loading...</h1>
-    <h1 wire:loading.class.remove="foo" dusk="remove-class" class="foo">Loading...</h1>
+    <button wire:click="$set('baz', true)" @if ($baz) some-new-attribute="true" @endif wire:ignore dusk="baz">Baz</button>
+         <span dusk="baz.output">{{ $baz ? 'new' : 'old' }}</span>
+    </button>
 
-    <h1 wire:loading.attr="disabled" dusk="add-attr">Loading...</h1>
-    <h1 wire:loading.attr.remove="disabled" dusk="remove-attr" disabled>Loading...</h1>
+    <button wire:click="$set('bob', true)" wire:ignore dusk="bob">
+         <span dusk="bob.output">{{ $bob ? 'new' : 'old' }}</span>
+    </button>
 
-    <h1 wire:loading.attr="disabled" dusk="add-attr">Loading...</h1>
-    <h1 wire:loading.attr.remove="disabled" dusk="remove-attr" disabled>Loading...</h1>
-
-    <h1 wire:loading wire:target="foo" dusk="targeting">Loading...</h1>
-
-    <button wire:click="foo" dusk="target-button">targeted buttong</button>
+    <button wire:click="$set('lob', true)" @if ($lob) some-new-attribute="true" @endif wire:ignore dusk="lob">lob</button>
+         <span dusk="lob.output">{{ $lob ? 'new' : 'old' }}</span>
+    </button>
 </div>

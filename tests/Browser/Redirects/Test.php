@@ -4,12 +4,10 @@ namespace Tests\Browser\Redirects;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Redirects\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function redirects()
+    public function test()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
@@ -19,14 +17,28 @@ class Test extends TestCase
                  * page right after.
                  */
                 ->assertNotPresent('@flash.message')
-                ->click('@flash')->waitForLivewire()
+                ->waitForLivewire()->click('@flash')
                 ->assertPresent('@flash.message')
-                ->click('@refresh')->waitForLivewire()
+                ->waitForLivewire()->click('@refresh')
                 ->assertNotPresent('@flash.message')
                 ->click('@redirect-with-flash')->waitForReload()
                 ->assertPresent('@flash.message')
-                ->click('@refresh')->waitForLivewire()
-                ->assertNotPresent('@flash.message');
+                ->waitForLivewire()->click('@refresh')
+                ->assertNotPresent('@flash.message')
+
+                /**
+                 * Livewire response is not handled if redirecting.
+                 */
+                ->refresh()
+                ->assertSeeIn('@redirect.blade.output', 'foo')
+                ->assertSeeIn('@redirect.alpine.output', 'foo')
+                ->runScript('window.addEventListener("beforeunload", e => { e.preventDefault(); e.returnValue = ""; });')
+                ->click('@redirect.button')
+                ->pause(500)
+                ->dismissDialog()
+                ->assertSeeIn('@redirect.blade.output', 'foo')
+                ->assertSeeIn('@redirect.alpine.output', 'foo')
+            ;
         });
     }
 }

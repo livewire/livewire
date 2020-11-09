@@ -12,20 +12,18 @@ class Response
     public $effects;
     public $memo;
 
-    public static function fromRequest($request, $html)
+    public static function fromRequest($request)
     {
-        return new static($request, $html);
+        return new static($request);
    }
 
-    public function __construct($request, $html)
+    public function __construct($request)
     {
         $this->request = $request;
 
         $this->fingerprint = $request->fingerprint;
         $this->memo = $request->memo;
-        $this->effects = [
-            'html' => $html,
-        ];
+        $this->effects = [];
     }
 
     public function id() { return $this->fingerprint['id']; }
@@ -62,28 +60,48 @@ class Response
         ];
     }
 
-    public function toInitialResonse()
+    public function toInitialResponse()
     {
-        $this->embedIdInHtml();
-
-        return $this;
+        return tap($this)->embedIdInHtml();
     }
 
-    public function toSusequentLaravelResponse()
+    public function toSubsequentResponse()
     {
         $this->embedIdInHtml();
 
+        $requestMemo = $this->request->memo;
+        $responseMemo = $this->memo;
         $dirtyMemo = [];
 
         // Only send along the memos that have changed to not bloat the payload.
-        foreach ($this->memo as $key => $newValue) {
-            if (! isset($this->request->memo[$key])) {
+        foreach ($responseMemo as $key => $newValue) {
+            // If the memo key is not in the request, add it.
+            if (! isset($requestMemo[$key])) {
                 $dirtyMemo[$key] = $newValue;
 
                 continue;
-            } else if ($this->request->memo[$key] !== $newValue) {
-                $dirtyMemo[$key] = $newValue;
             }
+
+            // If the memo values are the same, skip adding them.
+            if ($requestMemo[$key] === $newValue) continue;
+
+            $dirtyMemo[$key] = $newValue;
+        }
+
+        // If 'data' is present in the response memo, diff it one level deep.
+        if (isset($dirtyMemo['data']) && isset($requestMemo['data'])) {
+            foreach ($dirtyMemo['data'] as $key => $value) {
+                if ($value === $requestMemo['data'][$key]) {
+                    unset($dirtyMemo['data'][$key]);
+                }
+            }
+        }
+
+        // Make sure any data marked as "dirty" is present in the resulting data payload.
+        foreach (data_get($this, 'effects.dirty', []) as $property) {
+            $property = head(explode('.', $property));
+
+            data_set($dirtyMemo, 'data.'.$property, $responseMemo['data'][$property]);
         }
 
         return [

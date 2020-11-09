@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
-use Livewire\LivewireManager;
+use Livewire\Livewire;
 use Illuminate\Routing\UrlGenerator;
 
 class ComponentDependencyInjectionTest extends TestCase
@@ -11,7 +11,7 @@ class ComponentDependencyInjectionTest extends TestCase
     /** @test */
     public function component_mount_action_with_dependency()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class, ['id' => 123]);
+        $component = Livewire::test(ComponentWithDependencyInjection::class, ['id' => 123]);
 
         $this->assertEquals('http://localhost/some-url/123', $component->foo);
         $this->assertEquals(123, $component->bar);
@@ -20,7 +20,7 @@ class ComponentDependencyInjectionTest extends TestCase
     /** @test */
     public function component_action_with_dependency()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+        $component = Livewire::test(ComponentWithDependencyInjection::class);
 
         $component->runAction('injection', 'foobar');
 
@@ -31,7 +31,7 @@ class ComponentDependencyInjectionTest extends TestCase
     /** @test */
     public function component_action_with_spread_operator()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+        $component = Livewire::test(ComponentWithDependencyInjection::class);
 
         $component->runAction('spread', 'foo', 'bar', 'baz');
 
@@ -41,7 +41,7 @@ class ComponentDependencyInjectionTest extends TestCase
     /** @test */
     public function component_action_with_paramter_name_that_matches_a_container_registration_name()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+        $component = Livewire::test(ComponentWithDependencyInjection::class);
 
         app()->bind('foo', \StdClass::class);
 
@@ -53,7 +53,7 @@ class ComponentDependencyInjectionTest extends TestCase
     /** @test */
     public function component_action_with_primitive()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+        $component = Livewire::test(ComponentWithDependencyInjection::class);
 
         $component->runAction('primitive', 1);
 
@@ -63,7 +63,7 @@ class ComponentDependencyInjectionTest extends TestCase
     /** @test */
     public function component_action_with_default_value()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+        $component = Livewire::test(ComponentWithDependencyInjection::class);
 
         $component->runAction('primitiveWithDefault', 10, 'foo');
         $this->assertEquals(10, $component->foo);
@@ -85,7 +85,7 @@ class ComponentDependencyInjectionTest extends TestCase
     /** @test */
     public function component_action_with_dependency_and_primitive()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+        $component = Livewire::test(ComponentWithDependencyInjection::class);
 
         $component->runAction('mixed', 1);
 
@@ -96,7 +96,7 @@ class ComponentDependencyInjectionTest extends TestCase
     /** @test */
     public function component_action_with_dependency_and_optional_primitive()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithDependencyInjection::class);
+        $component = Livewire::test(ComponentWithDependencyInjection::class);
 
         $component->runAction('mixedWithDefault', 10);
         $this->assertEquals('http://localhost/some-url', $component->foo);
@@ -112,9 +112,9 @@ class ComponentDependencyInjectionTest extends TestCase
     }
 
     /** @test */
-    public function it_can_inject_dependency_via_render_method()
+    public function component_render_method_with_dependency()
     {
-        $component = app(LivewireManager::class)->test(CustomComponent::class);
+        $component = Livewire::test(CustomComponent::class);
 
         $component->assertSee('Results from the service');
     }

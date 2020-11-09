@@ -1,9 +1,9 @@
 import Message from '@/Message'
+import dataGet from 'get-value'
 import PrefetchMessage from '@/PrefetchMessage'
-import { dispatch, debounce, walk } from '@/util'
+import { dispatch, debounce, wireDirectives, walk } from '@/util'
 import morphdom from '@/dom/morphdom'
 import DOM from '@/dom/dom'
-import DOMElement from '@/dom/dom_element'
 import nodeInitializer from '@/node_initializer'
 import store from '@/Store'
 import PrefetchManager from './PrefetchManager'
@@ -12,17 +12,22 @@ import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
 import DeferredModelAction from '@/action/deferred-model'
 import MessageBus from '../MessageBus'
+import { alpinifyElementsForMorphdom } from './SupportAlpine'
 
 export default class Component {
     constructor(el, connection) {
-        el.rawNode().__livewire = this
+        el.__livewire = this
 
-        this.id = el.getAttribute('id')
+        this.el = el
+
+        this.lastFreshHtml = this.el.outerHTML
+
+        this.id = this.el.getAttribute('wire:id')
 
         this.connection = connection
 
-        const initialData = JSON.parse(this.el.getAttribute('initial-data'))
-        this.el.removeAttribute(name)
+        const initialData = JSON.parse(this.el.getAttribute('wire:initial-data'))
+        this.el.removeAttribute('wire:initial-data')
 
         this.fingerprint = initialData.fingerprint
         this.serverMemo = initialData.serverMemo
@@ -39,7 +44,7 @@ export default class Component {
         this.uploadManager = new UploadManager(this)
         this.watchers = {}
 
-        store.callHook('componentInitialized', this)
+        store.callHook('component.initialized', this)
 
         this.initialize()
 
@@ -48,16 +53,16 @@ export default class Component {
         if (this.effects.redirect) return this.redirect(this.effects.redirect)
     }
 
-    get el() {
-        return DOM.getByAttributeAndValue('id', this.id)
-    }
-
     get name() {
         return this.fingerprint.name
     }
 
     get data() {
         return this.serverMemo.data
+    }
+
+    get childIds() {
+        return Object.values(this.serverMemo.children).map(child => child.id)
     }
 
     initialize() {
@@ -76,25 +81,52 @@ export default class Component {
             .reduce((carry, segment) => carry[segment], this.data)
     }
 
-    updateDataAndMemo(newData, newMemo) {
-        Object.entries(newData || {}).forEach(([key, value]) => {
-            let oldValue = this.serverMemo.data[key]
+    getPropertyValueIncludingDefers(name) {
+        let action = this.deferredActions[name]
 
-            if (oldValue !== undefined && oldValue !== value) {
-                this.serverMemo.data[key] = value
+        if (! action) return this.get(name)
 
-                let watchers = this.watchers[key] || []
+        return action.payload.value
+    }
 
-                watchers.forEach(watcher => watcher(value))
+    updateServerMemoFromResponseAndMergeBackIntoResponse(message) {
+        // We have to do a fair amount of object merging here, but we can't use expressive syntax like {...}
+        // because browsers mess with the object key order which will break Livewire request checksum checks.
+
+        Object.entries(message.response.serverMemo).forEach(([key, value]) => {
+            // Because "data" is "partial" from the server, we have to deep merge it.
+            if (key === 'data') {
+                Object.entries(value || {}).forEach(([dataKey, dataValue]) => {
+                    this.serverMemo.data[dataKey] = dataValue
+
+                    if (message.shouldSkipWatcherForDataKey(dataKey)) return
+
+                    // Because Livewire (for payload reduction purposes) only returns the data that has changed,
+                    // we can use all the data keys from the response as watcher triggers.
+                    Object.entries(this.watchers).forEach(([key, watchers]) => {
+                        let originalSplitKey = key.split('.')
+                        let basePropertyName = originalSplitKey.shift()
+                        let restOfPropertyName = originalSplitKey.join('.')
+
+                        if (basePropertyName == dataKey) {
+                            // If the key deals with nested data, use the "get" function to get
+                            // the most nested data. Otherwise, return the entire data chunk.
+                            let potentiallyNestedValue = !! restOfPropertyName
+                                ? dataGet(dataValue, restOfPropertyName)
+                                : dataValue
+
+                            watchers.forEach(watcher => watcher(potentiallyNestedValue))
+                        }
+                    })
+                })
+            } else {
+                // Every other key, we can just overwrite.
+                this.serverMemo[key] = value
             }
         })
 
-        // Only update the memo properties that exist in the returning payload.
-        Object.entries(newMemo).forEach(([key, value]) => {
-            if (key === 'data') return
-
-            this.serverMemo[key] = value
-        })
+        // Merge back serverMemo changes so the response data is no longer incomplete.
+        message.response.serverMemo = Object.assign({}, this.serverMemo)
     }
 
     watch(name, callback) {
@@ -103,12 +135,24 @@ export default class Component {
         this.watchers[name].push(callback)
     }
 
-    set(name, value) {
-        this.addAction(new MethodAction('$set', [name, value], this.el))
+    set(name, value, defer = false, skipWatcher = false) {
+        if (defer) {
+            this.addAction(
+                new DeferredModelAction(name, value, this.el, skipWatcher)
+            )
+        } else {
+            this.addAction(
+                new MethodAction('$set', [name, value], this.el, skipWatcher)
+            )
+        }
     }
 
-    sync(name, value) {
-        this.addAction(new ModelAction(name, value, this.el))
+    sync(name, value, defer = false) {
+        if (defer) {
+            this.addAction(new DeferredModelAction(name, value, this.el))
+        } else {
+            this.addAction(new ModelAction(name, value, this.el))
+        }
     }
 
     call(method, ...params) {
@@ -141,7 +185,7 @@ export default class Component {
                 action
             )
 
-            this.handleResponse(message.response)
+            this.handleResponse(message)
 
             this.prefetchManager.clearPrefetches()
 
@@ -176,7 +220,7 @@ export default class Component {
         let sendMessage = () => {
             this.connection.sendMessage(this.messageInTransit)
 
-            store.callHook('messageSent', this, this.messageInTransit)
+            store.callHook('message.sent', this.messageInTransit, this)
 
             this.updateQueue = []
         }
@@ -189,7 +233,7 @@ export default class Component {
     }
 
     messageSendFailed() {
-        store.callHook('messageFailed', this)
+        store.callHook('message.failed', this.messageInTransit, this)
 
         this.messageInTransit.reject()
 
@@ -197,11 +241,11 @@ export default class Component {
     }
 
     receiveMessage(message, payload) {
-        var response = message.storeResponse(payload)
+        message.storeResponse(payload)
 
         if (message instanceof PrefetchMessage) return
 
-        this.handleResponse(response)
+        this.handleResponse(message)
 
         // This bit of logic ensures that if actions were queued while a request was
         // out to the server, they are sent when the request comes back.
@@ -212,10 +256,8 @@ export default class Component {
         dispatch('livewire:update')
     }
 
-    handleResponse(response) {
-        this.updateDataAndMemo(response.serverMemo.data, response.serverMemo)
-
-        store.callHook('responseReceived', this, response)
+    handleResponse(message) {
+        let response = message.response
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.effects.redirect) {
@@ -224,10 +266,19 @@ export default class Component {
             return
         }
 
-        store.callHook('responseReceived', this, response)
+        this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
+
+        store.callHook('message.received', message, this)
 
         if (response.effects.html) {
-            this.replaceDom(response.effects.html)
+            // If we get HTML from the server, store it for the next time we might not.
+            this.lastFreshHtml = response.effects.html
+
+            this.handleMorph(response.effects.html.trim())
+        } else {
+            // It's important to still "morphdom" even when the server HTML hasn't changed,
+            // because Alpine needs to be given the chance to update.
+            this.handleMorph(this.lastFreshHtml)
         }
 
         if (response.effects.dirty) {
@@ -236,39 +287,44 @@ export default class Component {
             )
         }
 
-        this.messageInTransit.resolve()
+        if (! message.replaying) {
+            this.messageInTransit && this.messageInTransit.resolve()
 
-        this.messageInTransit = null
+            this.messageInTransit = null
 
-        if (response.effects.emits && response.effects.emits.length > 0) {
-            response.effects.emits.forEach(event => {
-                this.scopedListeners.call(event.event, ...event.params)
+            if (response.effects.emits && response.effects.emits.length > 0) {
+                response.effects.emits.forEach(event => {
+                    this.scopedListeners.call(event.event, ...event.params)
 
-                if (event.selfOnly) {
-                    store.emitSelf(this.id, event.event, ...event.params)
-                } else if (event.to) {
-                    store.emitTo(event.to, event.event, ...event.params)
-                } else if (event.ancestorsOnly) {
-                    store.emitUp(this.el, event.event, ...event.params)
-                } else {
-                    store.emit(event.event, ...event.params)
-                }
-            })
-        }
-
-        if (
-            response.effects.dispatches &&
-            response.effects.dispatches.length > 0
-        ) {
-            response.effects.dispatches.forEach(event => {
-                const data = event.data ? event.data : {}
-                const e = new CustomEvent(event.event, {
-                    bubbles: true,
-                    detail: data,
+                    if (event.selfOnly) {
+                        store.emitSelf(this.id, event.event, ...event.params)
+                    } else if (event.to) {
+                        store.emitTo(event.to, event.event, ...event.params)
+                    } else if (event.ancestorsOnly) {
+                        store.emitUp(this.el, event.event, ...event.params)
+                    } else {
+                        store.emit(event.event, ...event.params)
+                    }
                 })
-                this.el.el.dispatchEvent(e)
-            })
+            }
+
+            if (
+                response.effects.dispatches &&
+                response.effects.dispatches.length > 0
+            ) {
+                response.effects.dispatches.forEach(event => {
+                    const data = event.data ? event.data : {}
+                    const e = new CustomEvent(event.event, {
+                        bubbles: true,
+                        detail: data,
+                    })
+                    this.el.dispatchEvent(e)
+                })
+            }
         }
+
+
+        store.callHook('message.processed', message, this)
     }
 
     redirect(url) {
@@ -281,31 +337,17 @@ export default class Component {
 
     forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
         this.walk(el => {
-            if (el.directives.missing('model')) return
+            let directives = wireDirectives(el)
+            if (directives.missing('model')) return
 
-            const modelValue = el.directives.get('model').value
+            const modelValue = directives.get('model').value
 
-            if (el.isFocused() && !dirtyInputs.includes(modelValue)) return
+            if (DOM.hasFocus(el) && ! dirtyInputs.includes(modelValue)) return
 
-            el.setInputValueFromModel(this)
+            if (el.wasRecentlyAutofilled) return
+
+            DOM.setInputValueFromModel(el, this)
         })
-    }
-
-    replaceDom(rawDom) {
-        let objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook = {
-            html: rawDom,
-        }
-        store.callHook(
-            'beforeDomUpdate',
-            this,
-            objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook
-        )
-
-        this.handleMorph(
-            objectContainingRawDomToFakePassingByReferenceToBeAbleToMutateFromWithinAHook.html.trim()
-        )
-
-        store.callHook('afterDomUpdate', this)
     }
 
     addPrefetchAction(action) {
@@ -323,7 +365,7 @@ export default class Component {
     handleMorph(dom) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
-        morphdom(this.el.rawNode(), dom, {
+        morphdom(this.el, dom, {
             childrenOnly: false,
 
             getNodeKey: node => {
@@ -332,8 +374,8 @@ export default class Component {
                     ? node.getAttribute(`wire:key`)
                     : // If no "key", then first check for "wire:id", then "id"
                     node.hasAttribute(`wire:id`)
-                    ? node.getAttribute(`wire:id`)
-                    : node.id
+                        ? node.getAttribute(`wire:id`)
+                        : node.id
             },
 
             onBeforeNodeAdded: node => {
@@ -353,9 +395,7 @@ export default class Component {
             },
 
             onNodeDiscarded: node => {
-                const el = new DOMElement(node)
-
-                store.callHook('elementRemoved', el, this)
+                store.callHook('element.removed', node, this)
 
                 if (node.__livewire) {
                     store.removeComponent(node.__livewire)
@@ -376,42 +416,29 @@ export default class Component {
                     return false
                 }
 
-                store.callHook('beforeElementUpdate', from, to, this)
-
-                const fromEl = new DOMElement(from)
+                store.callHook('element.updating', from, to, this)
 
                 // Reset the index of wire:modeled select elements in the
                 // "to" node before doing the diff, so that the options
                 // have the proper in-memory .selected value set.
                 if (
-                    fromEl.hasAttribute('model') &&
-                    fromEl.rawNode().tagName.toUpperCase() === 'SELECT'
+                    from.hasAttribute('wire:model') &&
+                    from.tagName.toUpperCase() === 'SELECT'
                 ) {
                     to.selectedIndex = -1
                 }
 
-                // If the element is x-show.transition.
-                if (
-                    Array.from(from.attributes)
-                        .map(attr => attr.name)
-                        .some(
-                            name =>
-                                /x-show.transition/.test(name) ||
-                                /x-transition/.test(name)
-                        )
-                ) {
-                    from.__livewire_transition = true
-                }
+                let fromDirectives = wireDirectives(from)
 
                 // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
                 if (
-                    fromEl.directives.has('ignore') ||
+                    fromDirectives.has('ignore') ||
                     from.__livewire_ignore === true ||
                     from.__livewire_ignore_self === true
                 ) {
                     if (
-                        (fromEl.directives.has('ignore') &&
-                            fromEl.directives
+                        (fromDirectives.has('ignore') &&
+                            fromDirectives
                                 .get('ignore')
                                 .modifiers.includes('self')) ||
                         from.__livewire_ignore_self === true
@@ -424,37 +451,31 @@ export default class Component {
                 }
 
                 // Children will update themselves.
-                if (
-                    fromEl.isComponentRootEl() &&
-                    fromEl.getAttribute('id') !== this.id
-                )
-                    return false
+                if (DOM.isComponentRootEl(from) && from.getAttribute('wire:id') !== this.id) return false
 
-                // If the element we are updating is an Alpine component...
-                if (from.__x) {
-                    // Then temporarily clone it (with it's data) to the "to" element.
-                    // This should simulate backend Livewire being aware of Alpine changes.
-                    window.Alpine.clone(from.__x, to)
-                }
+                // Give the root Livewire "to" element, the same object reference as the "from"
+                // element. This ensures new Alpine magics like $wire and @entangle can
+                // initialize in the context of a real Livewire component object.
+                if (DOM.isComponentRootEl(from)) to.__livewire = this
+
+                alpinifyElementsForMorphdom(from, to)
             },
 
             onElUpdated: node => {
                 this.morphChanges.changed.push(node)
 
-                store.callHook('afterElementUpdate', node, this)
+                store.callHook('element.updated', node, this)
             },
 
             onNodeAdded: node => {
-                const el = new DOMElement(node)
-
-                const closestComponentId = el.closestRoot().getAttribute('id')
+                const closestComponentId = DOM.closestRoot(node).getAttribute('wire:id')
 
                 if (closestComponentId === this.id) {
-                    if (nodeInitializer.initialize(el, this) === false) {
+                    if (nodeInitializer.initialize(node, this) === false) {
                         return false
                     }
-                } else if (el.isComponentRootEl()) {
-                    store.addComponent(new Component(el, this.connection))
+                } else if (DOM.isComponentRootEl(node)) {
+                    store.addComponent(new Component(node, this.connection))
 
                     // We don't need to initialize children, the
                     // new Component constructor will do that for us.
@@ -464,12 +485,12 @@ export default class Component {
                 this.morphChanges.added.push(node)
             },
         })
+
+        window.skipShow = false
     }
 
-    walk(callback, callbackWhenNewComponentIsEncountered = el => {}) {
-        walk(this.el.rawNode(), node => {
-            const el = new DOMElement(node)
-
+    walk(callback, callbackWhenNewComponentIsEncountered = el => { }) {
+        walk(this.el, el => {
             // Skip the root component element.
             if (el.isSameNode(this.el)) {
                 callback(el)
@@ -477,7 +498,7 @@ export default class Component {
             }
 
             // If we encounter a nested component, skip walking that tree.
-            if (el.isComponentRootEl()) {
+            if (el.hasAttribute('wire:id')) {
                 callbackWhenNewComponentIsEncountered(el)
 
                 return false
@@ -500,7 +521,7 @@ export default class Component {
         if (!this.modelDebounceCallbacks) this.modelDebounceCallbacks = []
 
         // This is a "null" callback. Each wire:model will resister one of these upon initialization.
-        let callbackRegister = { callback: () => {} }
+        let callbackRegister = { callback: () => { } }
         this.modelDebounceCallbacks.push(callbackRegister)
 
         // This is a normal "timeout" for a debounce function.
@@ -515,7 +536,7 @@ export default class Component {
 
                 // Because we just called the callback, let's return the
                 // callback register to it's normal "null" state.
-                callbackRegister.callback = () => {}
+                callbackRegister.callback = () => { }
             }, time)
 
             // Register the current callback in the register as a kind-of "escape-hatch".
@@ -536,7 +557,7 @@ export default class Component {
         if (this.modelDebounceCallbacks) {
             this.modelDebounceCallbacks.forEach(callbackRegister => {
                 callbackRegister.callback()
-                callbackRegister = () => {}
+                callbackRegister = () => { }
             })
         }
 
@@ -554,9 +575,9 @@ export default class Component {
     upload(
         name,
         file,
-        finishCallback = () => {},
-        errorCallback = () => {},
-        progressCallback = () => {}
+        finishCallback = () => { },
+        errorCallback = () => { },
+        progressCallback = () => { }
     ) {
         this.uploadManager.upload(
             name,
@@ -570,9 +591,9 @@ export default class Component {
     uploadMultiple(
         name,
         files,
-        finishCallback = () => {},
-        errorCallback = () => {},
-        progressCallback = () => {}
+        finishCallback = () => { },
+        errorCallback = () => { },
+        progressCallback = () => { }
     ) {
         this.uploadManager.uploadMultiple(
             name,
@@ -586,8 +607,8 @@ export default class Component {
     removeUpload(
         name,
         tmpFilename,
-        finishCallback = () => {},
-        errorCallback = () => {}
+        finishCallback = () => { },
+        errorCallback = () => { }
     ) {
         this.uploadManager.removeUpload(
             name,
@@ -607,11 +628,38 @@ export default class Component {
         return (this.dollarWireProxy = new Proxy(refObj, {
             get(object, property) {
                 if (property === 'entangle') {
-                    return name => ({ livewireEntangle: name })
+                    return (name, defer = false) => ({
+                        isDeferred: defer,
+                        livewireEntangle: name,
+                        get defer() {
+                            this.isDeferred = true
+                            return this
+                        },
+                    })
                 }
 
-                // Forward public API methods right away.
-                if (['get', 'set', 'call', 'on'].includes(property)) {
+                if (property === '__instance') return component
+
+                // Forward "emits" to base Livewire object.
+                if (typeof property === 'string' && property.match(/^emit.*/)) return function (...args) {
+                    if (property === 'emitSelf') return store.emitSelf(component.id, ...args)
+
+                    return store[property].apply(component, args)
+                }
+
+                if (
+                    [
+                        'get',
+                        'set',
+                        'sync',
+                        'call',
+                        'on',
+                        'upload',
+                        'uploadMultiple',
+                        'removeUpload',
+                    ].includes(property)
+                ) {
+                    // Forward public API methods right away.
                     return function (...args) {
                         return component[property].apply(component, args)
                     }
@@ -634,9 +682,6 @@ export default class Component {
             },
 
             set: function (obj, prop, value) {
-                // This prevents a "blip" when using x-model to set a Livewire property.
-                Alpine.ignoreFocusedForValueBinding = true
-
                 component.set(prop, value)
 
                 return true

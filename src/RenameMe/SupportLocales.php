@@ -11,8 +11,8 @@ class SupportLocales
 
     function __construct()
     {
-        Livewire::listen('component.dehydrate.initial', function ($component, $request) {
-            $request->fingerprint['locale'] = app()->getLocale();
+        Livewire::listen('component.dehydrate.initial', function ($component, $response) {
+            $response->fingerprint['locale'] = app()->getLocale();
         });
 
         Livewire::listen('component.hydrate.subsequent', function ($component, $request) {

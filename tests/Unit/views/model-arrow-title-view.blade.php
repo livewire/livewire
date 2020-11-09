@@ -1,3 +1,5 @@
 <div>
-    {{ $this->model->title }}
+    @if ($model)
+        {{ $this->model->title }}
+    @endif
 </div>

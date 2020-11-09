@@ -6,7 +6,7 @@ use Illuminate\View\View;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Livewire\LivewireViewCompilerEngine;
+use Illuminate\View\ComponentAttributeBag;
 use Livewire\Controllers\FileUploadHandler;
 use Livewire\Controllers\FilePreviewHandler;
 use Livewire\Controllers\HttpConnectionHandler;
@@ -25,23 +25,24 @@ use Livewire\Commands\{
     StubsCommand,
     TouchCommand,
     DeleteCommand,
+    PublishCommand,
     ComponentParser,
     DiscoverCommand,
     S3CleanupCommand,
-    MakeLivewireCommand
+    MakeLivewireCommand,
 };
 use Livewire\HydrationMiddleware\{
-    PersistErrorBag,
+    RenderView,
+    PerformActionCalls,
     CallHydrationHooks,
-    CastPublicProperties,
+    PerformEventEmissions,
     HydratePublicProperties,
+    PerformDataBindingUpdates,
+    CallPropertyHydrationHooks,
     SecureHydrationWithChecksum,
-    HashPropertiesForDirtyDetection,
-    HydratePreviouslyRenderedChildren,
-    PrioritizeDataUpdatesBeforeActionCalls,
-    HydrateEloquentModelsAsPublicProperties,
-    PerformPublicPropertyFromDataBindingUpdates,
-    HydratePropertiesWithCustomRuntimeHydrators
+    HashDataPropertiesForDirtyDetection,
+    NormalizeServerMemoSansDataForJavaScript,
+    NormalizeComponentPropertiesForJavaScript,
 };
 use Livewire\Macros\ViewMacros;
 
@@ -60,7 +61,6 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerCommands();
         $this->registerRenameMes();
-        $this->registerTestMacros();
         $this->registerViewMacros();
         $this->registerTagCompiler();
         $this->registerPublishables();
@@ -111,18 +111,18 @@ class LivewireServiceProvider extends ServiceProvider
         // This is mainly for overriding Laravel's pagination views
         // when a user applies the WithPagination trait to a component.
         $this->loadViewsFrom(
-            __DIR__.DIRECTORY_SEPARATOR.'views',
+            __DIR__.DIRECTORY_SEPARATOR.'views'.DIRECTORY_SEPARATOR.'pagination',
             'livewire'
         );
     }
 
     protected function registerRoutes()
     {
-        if (! $this->app->environment('production')) {
+        if ($this->app->runningUnitTests()) {
             RouteFacade::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
 
-                return (new $class)();
+                return app()->call(new $class);
             })->middleware('web');
         }
 
@@ -158,44 +158,53 @@ class LivewireServiceProvider extends ServiceProvider
             StubsCommand::class,        // livewire:stubs
             DiscoverCommand::class,     // livewire:discover
             S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
+            PublishCommand::class,      // livewire:publish
         ]);
     }
 
     protected function registerTestMacros()
     {
         // Usage: $this->assertSeeLivewire('counter');
-        $macro = function ($component) {
+        TestResponse::macro('assertSeeLivewire', function ($component) {
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringContainsString(
-                (string) $escapedComponentName, $this->getContent(),
+                $escapedComponentName,
+                $this->getContent(),
                 'Cannot find Livewire component ['.$component.'] rendered on page.'
             );
 
             return $this;
-        };
-
-
-        TestResponse::macro('assertSeeLivewire', $macro);
+        });
 
         // Usage: $this->assertDontSeeLivewire('counter');
-        $macro = function ($component) {
+        TestResponse::macro('assertDontSeeLivewire', function ($component) {
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringNotContainsString(
-                (string) $escapedComponentName, $this->getContent(),
+                $escapedComponentName,
+                $this->getContent(),
                 'Found Livewire component ['.$component.'] rendered on page.'
             );
 
             return $this;
-        };
-
-
-        TestResponse::macro('assertDontSeeLivewire', $macro);
+        });
     }
 
     protected function registerViewMacros()
     {
+        // Early versions of Laravel 7.x don't have this method.
+        if (method_exists(ComponentAttributeBag::class, 'macro')) {
+            ComponentAttributeBag::macro('wire', function ($name) {
+                $entries = head($this->whereStartsWith('wire:'.$name));
+
+                $directive = head(array_keys($entries));
+                $value = head(array_values($entries));
+
+                return new WireDirective($name, $directive, $value);
+            });
+        }
+
         View::mixin(new ViewMacros);
     }
 
@@ -217,10 +226,16 @@ class LivewireServiceProvider extends ServiceProvider
         $this->publishesToGroups([
             __DIR__.'/../config/livewire.php' => base_path('config/livewire.php'),
         ], ['livewire', 'livewire:config']);
+
+        $this->publishesToGroups([
+            __DIR__.'/views/pagination' => $this->app->resourcePath('views/vendor/livewire'),
+        ], ['livewire', 'livewire:pagination']);
     }
 
     protected function registerBladeDirectives()
     {
+        Blade::directive('this', [LivewireBladeDirectives::class, 'this']);
+        Blade::directive('entangle', [LivewireBladeDirectives::class, 'entangle']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
         Blade::directive('livewireStyles', [LivewireBladeDirectives::class, 'livewireStyles']);
         Blade::directive('livewireScripts', [LivewireBladeDirectives::class, 'livewireScripts']);
@@ -240,50 +255,65 @@ class LivewireServiceProvider extends ServiceProvider
     {
         RenameMe\SupportEvents::init();
         RenameMe\SupportLocales::init();
-        RenameMe\SupportDateTimes::init();
+        RenameMe\SupportChildren::init();
         RenameMe\SupportRedirects::init();
-        RenameMe\SupportQueryString::init();
-        RenameMe\SupportCollections::init();
+        RenameMe\SupportValidation::init();
+        RenameMe\SupportFileUploads::init();
         RenameMe\OptimizeRenderedDom::init();
         RenameMe\SupportFileDownloads::init();
         RenameMe\SupportActionReturns::init();
+        RenameMe\SupportBrowserHistory::init();
+        RenameMe\SupportComponentTraits::init();
     }
 
     protected function registerHydrationMiddleware()
     {
-        Livewire::registerHydrationMiddleware([
-        /* This is the core middleware stack of Livewire. It's important */
-        /* to understand that the request goes through each class by the */
-        /* order it is listed in this array, and is reversed on response */
-        /*                                                               */
-        /* Incoming Request                            Outgoing Response */
-        /* v */ SecureHydrationWithChecksum::class,                 /* ^ */
-        /* v */ HydratePublicProperties::class,                     /* ^ */
-        /* v */ HashPropertiesForDirtyDetection::class,             /* ^ */
-        /* v */ CallHydrationHooks::class,                          /* ^ */
-        /* v */ HydrateEloquentModelsAsPublicProperties::class,     /* ^ */
-        /* v */ PersistErrorBag::class,                             /* ^ */
-        /* v */ PerformPublicPropertyFromDataBindingUpdates::class, /* ^ */
-        /* v */ HydratePropertiesWithCustomRuntimeHydrators::class, /* ^ */
-        /* v */ CastPublicProperties::class,                        /* ^ */
-        /* v */ HydratePreviouslyRenderedChildren::class,           /* ^ */
-        /* v */ PrioritizeDataUpdatesBeforeActionCalls::class,      /* ^ */
+        LifecycleManager::registerHydrationMiddleware([
+
+            /* This is the core middleware stack of Livewire. It's important */
+            /* to understand that the request goes through each class by the */
+            /* order it is listed in this array, and is reversed on response */
+            /*                                                               */
+            /* ↓    Incoming Request                  Outgoing Response    ↑ */
+            /* ↓                                                           ↑ */
+            /* ↓    Secure Stuff                                           ↑ */
+            /* ↓ */ SecureHydrationWithChecksum::class, /* --------------- ↑ */
+            /* ↓ */ NormalizeServerMemoSansDataForJavaScript::class, /* -- ↑ */
+            /* ↓ */ HashDataPropertiesForDirtyDetection::class, /* ------- ↑ */
+            /* ↓                                                           ↑ */
+            /* ↓    Hydrate Stuff                                          ↑ */
+            /* ↓ */ HydratePublicProperties::class, /* ------------------- ↑ */
+            /* ↓ */ CallPropertyHydrationHooks::class, /* ---------------- ↑ */
+            /* ↓ */ CallHydrationHooks::class, /* ------------------------ ↑ */
+            /* ↓                                                           ↑ */
+            /* ↓    Update Stuff                                           ↑ */
+            /* ↓ */ PerformDataBindingUpdates::class, /* ----------------- ↑ */
+            /* ↓ */ PerformActionCalls::class, /* ------------------------ ↑ */
+            /* ↓ */ PerformEventEmissions::class, /* --------------------- ↑ */
+            /* ↓                                                           ↑ */
+            /* ↓    Output Stuff                                           ↑ */
+            /* ↓ */ RenderView::class, /* -------------------------------- ↑ */
+            /* ↓ */ NormalizeComponentPropertiesForJavaScript::class, /* - ↑ */
+
         ]);
 
-        Livewire::registerInitialDehydrationMiddleware([
-        /* Initial Response */
-        /* ^ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
-        /* ^ */ [HydratePreviouslyRenderedChildren::class, 'dehydrate'],
-        /* ^ */ [HydratePublicProperties::class, 'dehydrate'],
-        /* ^ */ [CallHydrationHooks::class, 'initialDehydrate'],
-        /* ^ */ [HydrateEloquentModelsAsPublicProperties::class, 'dehydrate'],
-        /* ^ */ [HydratePropertiesWithCustomRuntimeHydrators::class, 'dehydrate'],
-        /* ^ */ [PersistErrorBag::class, 'dehydrate'],
-        /* ^ */ [CastPublicProperties::class, 'dehydrate'],
+        LifecycleManager::registerInitialDehydrationMiddleware([
+
+            /* Initial Response */
+            /* ↑ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
+            /* ↑ */ [NormalizeServerMemoSansDataForJavaScript::class, 'dehydrate'],
+            /* ↑ */ [HydratePublicProperties::class, 'dehydrate'],
+            /* ↑ */ [CallPropertyHydrationHooks::class, 'dehydrate'],
+            /* ↑ */ [CallHydrationHooks::class, 'initialDehydrate'],
+            /* ↑ */ [RenderView::class, 'dehydrate'],
+            /* ↑ */ [NormalizeComponentPropertiesForJavaScript::class, 'dehydrate'],
+
         ]);
 
-        Livewire::registerInitialHydrationMiddleware([
-            [CallHydrationHooks::class, 'initialHydrate'],
+        LifecycleManager::registerInitialHydrationMiddleware([
+
+                [CallHydrationHooks::class, 'initialHydrate'],
+
         ]);
     }
 
