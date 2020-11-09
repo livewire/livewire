@@ -6,60 +6,60 @@ use Illuminate\Pagination\Paginator;
 
 trait WithPagination
 {
-    public function getPageNames() {return ['page'];}
+    public $pageNames = ['page'];
 
-    /* TODO is this called once for all paginations, or called per each pagination?
-    if it's once for all, we should build an array like this instead of the first argument:
-        [
-            'page' => ['except' => 1],
-            'otherPageName' => ['except' => 1],
-            ...
-        ]
-    if it's celled per each we should pass $pageName = 'page' as argument
-    and replace the first argument with this:
-    [$pageName => ['except' => 1]]*/
-    public function getFromQueryString()
+    public function getQueryString()
     {
-        return array_merge(['page' => ['except' => 1]], $this->queryString);
+        return array_merge(collect($this->pageNames)->map(fn($i) => [$i => ['except' => 1]]), $this->queryString);
     }
 
     public function initializeWithPagination()
     {
-        foreach ($this->getPageNames() as $pageName) {
+        foreach ($this->pageNames as $pageName) {
             $this->$pageName = $this->resolvePage();
         }
 
-        // not sure if this closure needs default argument value as well $pageName = 'page'?
-        Paginator::currentPageResolver(function ($pageName) {
+        Paginator::currentPageResolver(function ($pageName = 'page') {
             return $this->$pageName;
         });
 
         Paginator::defaultView($this->paginationView());
+        Paginator::defaultSimpleView($this->paginationSimpleView());
     }
 
     public function paginationView()
     {
-        return 'livewire::pagination-links';
+        return 'livewire::' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
+    }
+
+    public function paginationSimpleView()
+    {
+        return 'livewire::simple-' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
     }
 
     public function previousPage($pageName = 'page')
     {
-        $this->$pageName = $this->$pageName - 1;
+        $this->setPage(max($this->$pageName - 1, 1));
     }
 
     public function nextPage($pageName = 'page')
     {
-        $this->$pageName = $this->$pageName + 1;
+        $this->setPage($this->$pageName + 1);
     }
 
-    public function gotoPage($page, $pageName = 'page')
+    public function gotoPage($page)
+    {
+        $this->setPage($page);
+    }
+
+    public function resetPage()
+    {
+        $this->setPage(1);
+    }
+
+    public function setPage($page, $pageName = 'page')
     {
         $this->$pageName = $page;
-    }
-
-    public function resetPage($pageName = 'page')
-    {
-        $this->$pageName = 1;
     }
 
     public function resolvePage($pageName = 'page')
