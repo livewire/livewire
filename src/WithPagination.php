@@ -6,8 +6,18 @@ use Illuminate\Pagination\Paginator;
 
 trait WithPagination
 {
-    public $page = 1;
+    public function getPageNames() {return ['page'];}
 
+    /* TODO is this called once for all paginations, or called per each pagination?
+    if it's once for all, we should build an array like this instead of the first argument:
+        [
+            'page' => ['except' => 1],
+            'otherPageName' => ['except' => 1],
+            ...
+        ]
+    if it's celled per each we should pass $pageName = 'page' as argument
+    and replace the first argument with this:
+    [$pageName => ['except' => 1]]*/
     public function getFromQueryString()
     {
         return array_merge(['page' => ['except' => 1]], $this->queryString);
@@ -15,10 +25,13 @@ trait WithPagination
 
     public function initializeWithPagination()
     {
-        $this->page = $this->resolvePage();
+        foreach ($this->getPageNames() as $pageName) {
+            $this->$pageName = $this->resolvePage();
+        }
 
-        Paginator::currentPageResolver(function () {
-            return $this->page;
+        // not sure if this closure needs default argument value as well $pageName = 'page'?
+        Paginator::currentPageResolver(function ($pageName) {
+            return $this->$pageName;
         });
 
         Paginator::defaultView($this->paginationView());
@@ -29,30 +42,30 @@ trait WithPagination
         return 'livewire::pagination-links';
     }
 
-    public function previousPage()
+    public function previousPage($pageName = 'page')
     {
-        $this->page = $this->page - 1;
+        $this->$pageName = $this->$pageName - 1;
     }
 
-    public function nextPage()
+    public function nextPage($pageName = 'page')
     {
-        $this->page = $this->page + 1;
+        $this->$pageName = $this->$pageName + 1;
     }
 
-    public function gotoPage($page)
+    public function gotoPage($page, $pageName = 'page')
     {
-        $this->page = $page;
+        $this->$pageName = $page;
     }
 
-    public function resetPage()
+    public function resetPage($pageName = 'page')
     {
-        $this->page = 1;
+        $this->$pageName = 1;
     }
 
-    public function resolvePage()
+    public function resolvePage($pageName = 'page')
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return request()->query('page', $this->page);
+        return request()->query($pageName, $this->$pageName);
     }
 }
