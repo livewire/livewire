@@ -10,7 +10,9 @@ trait WithPagination
 
     public function getQueryString()
     {
-        return array_merge(collect($this->pageNames)->map(fn($i) => [$i => ['except' => 1]]), $this->queryString);
+        return array_merge(collect($this->pageNames)->map(function($i) {
+            return [$i => ['except' => 1]];
+        }), $this->queryString);
     }
 
     public function initializeWithPagination()
