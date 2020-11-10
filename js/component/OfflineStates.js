@@ -1,10 +1,11 @@
 import store from '@/Store'
+import { wireDirectives} from '@/util'
 
 var offlineEls = [];
 
 export default function () {
-    store.registerHook('elementInitialized', el => {
-        if (el.directives.missing('offline')) return
+    store.registerHook('element.initialized', el => {
+        if (wireDirectives(el).missing('offline')) return
 
         offlineEls.push(el)
     })
@@ -25,28 +26,29 @@ export default function () {
         })
     })
 
-    store.registerHook('elementRemoved', el => {
+    store.registerHook('element.removed', el => {
         offlineEls = offlineEls.filter(el => ! el.isSameNode(el))
     })
 }
 
 function toggleOffline(el, isOffline) {
-    const directive = el.directives.get('offline')
+    let directives = wireDirectives(el)
+    let directive = directives.get('offline')
 
     if (directive.modifiers.includes('class')) {
         const classes = directive.value.split(' ')
         if (directive.modifiers.includes('remove') !== isOffline) {
-            el.rawNode().classList.add(...classes)
+            el.classList.add(...classes)
         } else {
-            el.rawNode().classList.remove(...classes)
+            el.classList.remove(...classes)
         }
     } else if (directive.modifiers.includes('attr')) {
         if (directive.modifiers.includes('remove') !== isOffline) {
-            el.rawNode().setAttribute(directive.value, true)
+            el.setAttribute(directive.value, true)
         } else {
-            el.rawNode().removeAttribute(directive.value)
+            el.removeAttribute(directive.value)
         }
-    } else if (! el.directives.get('model')) {
-        el.rawNode().style.display = isOffline ? 'inline-block' : 'none'
+    } else if (! directives.get('model')) {
+        el.style.display = isOffline ? 'inline-block' : 'none'
     }
 }

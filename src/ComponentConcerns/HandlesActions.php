@@ -3,14 +3,16 @@
 namespace Livewire\ComponentConcerns;
 
 use Livewire\Livewire;
-use Illuminate\Support\Str;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
 use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
+use function Livewire\str;
 
 trait HandlesActions
 {
@@ -19,40 +21,71 @@ trait HandlesActions
         $propertyName = $this->beforeFirstDot($name);
 
         throw_if(
-            $this->{$propertyName} instanceof Model && $this->missingRuleFor($name),
-            new CannotBindToModelDataWithoutValidationRuleException($name, $this->getName())
+            ($this->{$propertyName} instanceof Model || $this->{$propertyName} instanceof EloquentCollection) && $this->missingRuleFor($name),
+            new CannotBindToModelDataWithoutValidationRuleException($name, $this::getName())
         );
 
         $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName, $rehash) {
             throw_unless(
                 $this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName),
-                new PublicPropertyNotFoundException($propertyName, $this->getName())
+                new PublicPropertyNotFoundException($propertyName, $this::getName())
             );
 
             if ($this->containsDots($name)) {
-                data_set($this->{$propertyName}, $this->afterFirstDot($name), $value);
+                // Strip away model name.
+                $keyName = $this->afterFirstDot($name);
+                // Get model attribute to be filled.
+                $targetKey = $this->beforeFirstDot($keyName);
+
+                // Get existing data from model property.
+                $results = [];
+                $results[$targetKey] = data_get($this->{$propertyName}, $targetKey, []);
+
+                // Merge in new data.
+                data_set($results, $keyName, $value);
+
+                // Re-assign data to model.
+                data_set($this->{$propertyName}, $targetKey, $results[$targetKey]);
             } else {
                 $this->{$name} = $value;
             }
 
-            $rehash && $this->rehashProperty($name);
+            $rehash && HashDataPropertiesForDirtyDetection::rehashProperty($name, $value, $this);
         });
     }
 
     protected function callBeforeAndAfterSyncHooks($name, $value, $callback)
     {
-        $propertyName = Str::before(Str::studly($name), '.');
-        $keyAfterFirstDot = Str::contains($name, '.') ? Str::after($name, '.') : null;
+        $name = str($name);
+
+        $propertyName = $name->studly()->before('.');
+        $keyAfterFirstDot = $name->contains('.') ? $name->after('.') : null;
+        $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.') : null;
 
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
 
+        $beforeNestedMethod = $name->contains('.')
+            ? 'updating'.$name->replace('.', '_')->studly()
+            : false;
+
+        $afterNestedMethod = $name->contains('.')
+            ? 'updated'.$name->replace('.', '_')->studly()
+            : false;
+
+        $name = $name->__toString();
 
         $this->updating($name, $value);
 
         if (method_exists($this, $beforeMethod)) {
             $this->{$beforeMethod}($value, $keyAfterFirstDot);
         }
+
+        if ($beforeNestedMethod && method_exists($this, $beforeNestedMethod)) {
+            $this->{$beforeNestedMethod}($value, $keyAfterLastDot);
+        }
+
+        Livewire::dispatch('component.updating', $this, $name, $value);
 
         $callback($name, $value);
 
@@ -61,6 +94,12 @@ trait HandlesActions
         if (method_exists($this, $afterMethod)) {
             $this->{$afterMethod}($value, $keyAfterFirstDot);
         }
+
+        if ($afterNestedMethod && method_exists($this, $afterNestedMethod)) {
+            $this->{$afterNestedMethod}($value, $keyAfterLastDot);
+        }
+
+        Livewire::dispatch('component.updated', $this, $name, $value);
     }
 
     public function callMethod($method, $params = [])
@@ -71,41 +110,34 @@ trait HandlesActions
                 $this->syncInput($prop, head($params));
 
                 return;
-                break;
 
             case '$set':
                 $prop = array_shift($params);
                 $this->syncInput($prop, head($params), $rehash = false);
 
                 return;
-                break;
 
             case '$toggle':
                 $prop = array_shift($params);
                 $this->syncInput($prop, ! $this->{$prop}, $rehash = false);
 
                 return;
-                break;
 
             case '$refresh':
                 return;
-                break;
-
-            default:
-                if (! method_exists($this, $method)) {
-                    throw_if($method === 'startUpload', new MissingFileUploadsTraitException($this));
-
-                    throw new MethodNotFoundException($method, $this->getName());
-                }
-
-                throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
-
-                $returned = ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
-
-                Livewire::dispatch('action.returned', $this, $method, $returned);
-
-                break;
         }
+
+        if (! method_exists($this, $method)) {
+            throw_if($method === 'startUpload', new MissingFileUploadsTraitException($this));
+
+            throw new MethodNotFoundException($method, $this::getName());
+        }
+
+        throw_unless($this->methodIsPublicAndNotDefinedOnBaseClass($method), new NonPublicComponentMethodCall($method));
+
+        $returned = ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
+
+        Livewire::dispatch('action.returned', $this, $method, $returned);
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)

@@ -8,6 +8,7 @@
     <input type="text" wire:keydown="appendToOutput('bob')" wire:keydown.enter="appendToOutput('bob')" dusk="bob">
     <input type="text" wire:keydown.enter="setOutputTo('lob')" dusk="lob">
     <input type="text" wire:keydown.shift.enter="setOutputTo('law')" dusk="law">
+    <input type="text" wire:keydown.space="setOutputTo('spa')" dusk="spa">
     <form wire:submit.prevent="pause">
         <div wire:ignore>
             <input type="text" dusk="blog.input.ignored">

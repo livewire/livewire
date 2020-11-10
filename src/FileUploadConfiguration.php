@@ -26,9 +26,11 @@ class FileUploadConfiguration
 
     public static function disk()
     {
-        return app()->environment('testing')
-            ? 'tmp-for-tests'
-            : (config('livewire.temporary_file_upload.disk') ?: config('filesystems.default'));
+        if (app()->environment('testing')) {
+            return 'tmp-for-tests';
+        }
+
+        return config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
     }
 
     public static function diskConfig()
@@ -50,7 +52,9 @@ class FileUploadConfiguration
 
     protected static function s3Root()
     {
-        return static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig()) ? Util::normalizeRelativePath(static::diskConfig()['root']) : '';
+        return static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig())
+            ? Util::normalizeRelativePath(static::diskConfig()['root'])
+            : '';
     }
 
     public static function path($path = '', $withS3Root = true)

@@ -1,24 +1,26 @@
-import '@/dom/polyfills/index'
-import componentStore from '@/Store'
 import DOM from '@/dom/dom'
-import Component from '@/component/index'
+import '@/dom/polyfills/index'
+import store from '@/Store'
 import Connection from '@/connection'
-import { dispatch } from './util'
+import Polling from '@/component/Polling'
+import Component from '@/component/index'
+import { dispatch, wireDirectives } from '@/util'
 import FileUploads from '@/component/FileUploads'
+import LaravelEcho from '@/component/LaravelEcho'
+import DirtyStates from '@/component/DirtyStates'
+import DisableForms from '@/component/DisableForms'
 import FileDownloads from '@/component/FileDownloads'
 import LoadingStates from '@/component/LoadingStates'
-import LaravelEcho from '@/component/LaravelEcho'
-import DisableForms from '@/component/DisableForms'
-import DirtyStates from '@/component/DirtyStates'
 import OfflineStates from '@/component/OfflineStates'
-import Polling from '@/component/Polling'
-import UpdateQueryString from '@/component/UpdateQueryString'
+import SyncBrowserHistory from '@/component/SyncBrowserHistory'
+import SupportAlpine from '@/component/SupportAlpine'
 
 class Livewire {
     constructor() {
         this.connection = new Connection()
-        this.components = componentStore
-        this.onLoadCallback = () => {}
+        this.components = store
+        this.devToolsEnabled = false
+        this.onLoadCallback = () => { }
     }
 
     first() {
@@ -63,6 +65,10 @@ class Livewire {
         this.components.on(event, callback)
     }
 
+    devTools(enableDevtools) {
+        this.devToolsEnabled = enableDevtools
+    }
+
     restart() {
         this.stop()
         this.start()
@@ -76,8 +82,6 @@ class Livewire {
         DOM.rootComponentElementsWithNoParents().forEach(el => {
             this.components.addComponent(new Component(el, this.connection))
         })
-
-        this.setupAlpineCompatibility()
 
         this.onLoadCallback()
         dispatch('livewire:load')
@@ -93,116 +97,14 @@ class Livewire {
         this.components.initialRenderIsFinished = true
     }
 
-    rescan() {
-        DOM.rootComponentElementsWithNoParents().forEach(el => {
-            const componentId = el.getAttribute('id')
+    rescan(node = null) {
+        DOM.rootComponentElementsWithNoParents(node).forEach(el => {
+            const componentId = wireDirectives(el).get('id').value
+
             if (this.components.hasComponent(componentId)) return
 
             this.components.addComponent(new Component(el, this.connection))
         })
-    }
-
-    plugin(callable) {
-        callable(this)
-    }
-
-    requestIsOut() {
-        return this.components.requestIsOut
-    }
-
-    setupAlpineCompatibility() {
-        if (!window.Alpine) return
-
-        if (window.Alpine.onBeforeComponentInitialized) {
-            window.Alpine.onBeforeComponentInitialized(component => {
-                let livewireEl = component.$el.closest('[wire\\:id]')
-
-                if (livewireEl && livewireEl.__livewire) {
-                    Object.entries(component.unobservedData).forEach(
-                        ([key, value]) => {
-                            if (
-                                !!value &&
-                                typeof value === 'object' &&
-                                value.livewireEntangle
-                            ) {
-                                let livewireProperty = value.livewireEntangle
-                                let livewireComponent = livewireEl.__livewire
-
-                                component.unobservedData[
-                                    key
-                                ] = livewireEl.__livewire.get(livewireProperty)
-
-                                let preventSelfReaction = false
-
-                                component.unobservedData.$watch(key, value => {
-                                    if (preventSelfReaction) {
-                                        preventSelfReaction = false
-                                        return
-                                    }
-
-                                    preventSelfReaction = true
-
-                                    // This prevents a "blip" when using x-model to set a Livewire property.
-                                    Alpine.ignoreFocusedForValueBinding = true
-
-                                    livewireComponent.set(
-                                        livewireProperty,
-                                        value
-                                    )
-                                })
-
-                                livewireComponent.watch(
-                                    livewireProperty,
-                                    value => {
-                                        if (preventSelfReaction) {
-                                            preventSelfReaction = false
-                                            return
-                                        }
-
-                                        preventSelfReaction = true
-
-                                        component.$data[key] = value
-                                    }
-                                )
-                            }
-                        }
-                    )
-                }
-            })
-        }
-
-        if (window.Alpine.onComponentInitialized) {
-            window.Alpine.onComponentInitialized(component => {
-                let livewireEl = component.$el.closest('[wire\\:id]')
-
-                if (livewireEl && livewireEl.__livewire) {
-                    this.hook('afterDomUpdate', livewireComponent => {
-                        if (livewireComponent === livewireEl.__livewire) {
-                            component.updateElements(component.$el)
-
-                            // This was set to true in the $wire Proxy's setter,
-                            // Now we can re-set it to false.
-                            Alpine.ignoreFocusedForValueBinding = false
-                        }
-                    })
-                }
-            })
-        }
-
-        if (window.Alpine.addMagicProperty) {
-            window.Alpine.addMagicProperty('wire', function (componentEl) {
-                let wireEl = componentEl.closest('[wire\\:id]')
-
-                if (!wireEl)
-                    console.warn(
-                        'Alpine: Cannot reference "$wire" outside a Livewire component.'
-                    )
-
-                let component = wireEl.__livewire
-
-                return component.$wire
-            })
-        }
     }
 }
 
@@ -210,13 +112,14 @@ if (!window.Livewire) {
     window.Livewire = Livewire
 }
 
-UpdateQueryString()
+SyncBrowserHistory()
+SupportAlpine()
+FileDownloads()
 OfflineStates()
 LoadingStates()
 DisableForms()
 FileUploads()
 LaravelEcho()
-FileDownloads()
 DirtyStates()
 Polling()
 

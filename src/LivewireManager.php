@@ -2,24 +2,15 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Fluent;
-use Illuminate\Foundation\Application;
-use Illuminate\Validation\ValidationException;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Laravel\Dusk\Browser;
 use Livewire\Exceptions\ComponentNotFoundException;
-use Livewire\Exceptions\MountMethodMissingException;
-use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
 class LivewireManager
 {
-    use RegistersHydrationMiddleware;
-
-    protected $componentAliases = [];
-    protected $customComponentResolver;
     protected $listeners = [];
+    protected $componentAliases = [];
+    protected $queryParamsForTesting = [];
 
     public static $isLivewireRequestTestingOverride;
 
@@ -27,27 +18,24 @@ class LivewireManager
     {
         if (is_null($viewClass)) {
             $viewClass = $alias;
-            $alias = (new $viewClass('fake-id'))->getName();
+            $alias = $viewClass::getName();
         }
 
         $this->componentAliases[$alias] = $viewClass;
     }
 
-    public function componentResolver($callback)
+    public function getAlias($class, $default = null)
     {
-        $this->customComponentResolver = $callback;
+        $alias = array_search($class, $this->componentAliases);
+
+        return $alias === false ? $default : $alias;
     }
 
-    public function getComponentClass($alias)
+    public function getClass($alias)
     {
-        $finder = app()->make(LivewireComponentsFinder::class);
+        $finder = app(LivewireComponentsFinder::class);
 
         $class = false;
-
-        if ($this->customComponentResolver) {
-            // A developer can hijack the way Livewire finds components using Livewire::componentResolver();
-            $class = call_user_func($this->customComponentResolver, $alias);
-        }
 
         $class = $class ?: (
             // Let's first check if the user registered the component using:
@@ -69,9 +57,9 @@ class LivewireManager
         return $class;
     }
 
-    public function activate($component, $id)
+    public function getInstance($component, $id)
     {
-        $componentClass = $this->getComponentClass($component);
+        $componentClass = $this->getClass($component);
 
         throw_unless(class_exists($componentClass), new ComponentNotFoundException(
             "Component [{$component}] class not found: [{$componentClass}]"
@@ -85,55 +73,18 @@ class LivewireManager
         // This is if a user doesn't pass params, BUT passes key() as the second argument.
         if (is_string($params)) $params = [];
 
-        $id = Str::random(20);
+        $id = str()->random(20);
 
-        // Allow instantiating Livewire components directly from classes.
-        if ($name instanceof Component) {
-            $id = $name->id;
-
-            $instance = $name;
-
-            $name = $instance->getName();
-        } elseif (class_exists($name)) {
-            $instance = new $name($id);
-            // Set the name to the computed name, so that the full namespace
-            // isn't leaked to the front-end.
-            $name = $instance->getName();
-        } else {
-            $instance = $this->activate($name, $id);
+        if (class_exists($name)) {
+            $name = $name::getName();
         }
 
-        $request = new Request([
-            'fingerprint' => [
-                'id' => $id,
-                'name' => $name,
-                'locale' => app()->getLocale(),
-            ],
-            'updates' => [],
-            'serverMemo' => [],
-        ]);
-
-        $this->initialHydrate($instance, $request);
-
-        try {
-            $this->performMount($instance, $params);
-        } catch (ValidationException $e) {
-            Livewire::dispatch('failed-validation', $e->validator);
-
-            $errors = $e->validator->errors();
-        }
-
-        $html = $instance->output($errors ?? null);
-
-        $response = Response::fromRequest($request, $html);
-
-        $this->initialDehydrate($instance, $response);
-
-        $response->embedThyselfInHtml();
-
-        $this->dispatch('mounted', $response);
-
-        return $response->toInitialResonse();
+        return LifecycleManager::fromInitialRequest($name, $id)
+            ->initialHydrate()
+            ->mount($params)
+            ->renderToView()
+            ->initialDehydrate()
+            ->toInitialResponse();
     }
 
     public function dummyMount($id, $tagName)
@@ -143,18 +94,20 @@ class LivewireManager
 
     public function test($name, $params = [])
     {
-        return new TestableLivewire($name, $params);
+        return new TestableLivewire($name, $params, $this->queryParamsForTesting);
     }
 
     public function visit($browser, $class, $queryString = '')
     {
         $url = '/livewire-dusk/'.urlencode($class).$queryString;
 
-        return $browser->visit($url);
+        return $browser->visit($url)->waitForLivewireToLoad();
     }
 
     public function actingAs(Authenticatable $user, $driver = null)
     {
+        // This is a helper to be used during testing.
+
         if (isset($user->wasRecentlyCreated) && $user->wasRecentlyCreated) {
             $user->wasRecentlyCreated = false;
         }
@@ -200,7 +153,7 @@ class LivewireManager
     {
         return <<<HTML
 <style>
-    [wire\:loading], [wire\:loading\.delay] {
+    [wire\:loading], [wire\:loading\.delay], [wire\:loading\.inline-block], [wire\:loading\.inline], [wire\:loading\.block], [wire\:loading\.flex], [wire\:loading\.table], [wire\:loading\.grid] {
         display: none;
     }
 
@@ -211,6 +164,13 @@ class LivewireManager
     [wire\:dirty]:not(textarea):not(input):not(select) {
         display: none;
     }
+
+    input:-webkit-autofill, select:-webkit-autofill, textarea:-webkit-autofill {
+        animation-duration: 50000s;
+        animation-name: livewireautofill;
+    }
+
+    @keyframes livewireautofill { from {} }
 </style>
 HTML;
     }
@@ -218,6 +178,12 @@ HTML;
     protected function javaScriptAssets($options)
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
+
+        $devTools = null;
+
+        if (config('app.debug')) {
+            $devTools = 'window.livewire.devTools(true);';
+        }
 
         $appUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
 
@@ -230,8 +196,10 @@ HTML;
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
         $assetWarning = null;
 
+        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
+
         // Use static assets if they have been published
-        if (file_exists(public_path('vendor/livewire'))) {
+        if (file_exists(public_path('vendor/livewire/manifest.json'))) {
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
             $versionedFileName = $publishedManifest['/livewire.js'];
 
@@ -239,14 +207,12 @@ HTML;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
-<script>
+<script{$nonce}>
     console.warn("Livewire: The published Livewire assets are out of date\n See: https://laravel-livewire.com/docs/installation/")
 </script>
 HTML;
             }
         }
-
-        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
 
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
@@ -259,9 +225,20 @@ HTML;
     }
 
     window.livewire = new Livewire({$jsonEncodedOptions});
-    window.Livewire = window.livewire
+    {$devTools}
+    window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
     window.livewire_token = '{$csrf}';
+
+    /* Make sure Livewire loads first. */
+    if (window.Alpine) {
+        /* Defer showing the warning so it doesn't get buried under downstream errors. */
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(function() {
+                console.warn("Livewire: It looks like AlpineJS has already been loaded. Make sure Livewire\'s scripts are loaded before Alpine.\\n\\n Reference docs for more info: http://laravel-livewire.com/docs/alpine-js")
+            })
+        });
+    }
 
     /* Make Alpine wait until Livewire is finished rendering to do its thing. */
     window.deferLoadingAlpine = function (callback) {
@@ -272,36 +249,6 @@ HTML;
 
     document.addEventListener("DOMContentLoaded", function () {
         window.livewire.start();
-    });
-
-    var firstTime = true;
-    document.addEventListener("turbolinks:load", function() {
-        /* We only want this handler to run AFTER the first load. */
-        if  (firstTime) {
-            firstTime = false;
-            return;
-        }
-
-        window.livewire.restart();
-    });
-
-    document.addEventListener("turbolinks:before-cache", function() {
-        document.querySelectorAll('[wire\\\:id]').forEach(function(el) {
-            const component = el.__livewire;
-
-            const dataObject = {
-                data: component.data,
-                events: component.listeners,
-                children: component.children,
-                checksum: component.checksum,
-                locale: component.locale,
-                name: component.name,
-                errorBag: component.errorBag,
-                redirectTo: component.redirectTo,
-            };
-
-            el.setAttribute('wire:initial-data', JSON.stringify(dataObject));
-        });
     });
 </script>
 HTML;
@@ -337,8 +284,6 @@ HTML;
 
     public function listen($event, $callback)
     {
-        $this->listeners[$event] ?? $this->listeners[$event] = [];
-
         $this->listeners[$event][] = $callback;
     }
 
@@ -347,14 +292,10 @@ HTML;
         return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
     }
 
-    private function performMount($instance, $params)
+    public function withQueryParams($queryParams)
     {
-        if (! method_exists($instance, 'mount') && count($params) > 0) {
-            throw new MountMethodMissingException($instance->getName());
-        }
+        $this->queryParamsForTesting = $queryParams;
 
-        if (! method_exists($instance, 'mount')) return;
-
-        ImplicitlyBoundMethod::call(app(), [$instance, 'mount'], $params);
+        return $this;
     }
 }

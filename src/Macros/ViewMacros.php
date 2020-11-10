@@ -9,7 +9,7 @@ class ViewMacros
         return function ($view, $params = []) {
             $this->livewireLayout = [
                 'type' => 'extends',
-                'sectionOrSlot' => 'content',
+                'slotOrSection' => 'content',
                 'view' => $view,
                 'params' => $params,
             ];
@@ -23,7 +23,7 @@ class ViewMacros
         return function ($view, $params = []) {
             $this->livewireLayout = [
                 'type' => 'component',
-                'sectionOrSlot' => 'default',
+                'slotOrSection' => 'default',
                 'view' => $view,
                 'params' => $params,
             ];
@@ -35,7 +35,7 @@ class ViewMacros
     public function section()
     {
         return function ($section) {
-            $this->livewireLayout['sectionOrSlot'] = $section;
+            $this->livewireLayout['slotOrSection'] = $section;
 
             return $this;
         };
@@ -44,7 +44,7 @@ class ViewMacros
     public function slot()
     {
         return function ($slot) {
-            $this->livewireLayout['sectionOrSlot'] = $slot;
+            $this->livewireLayout['slotOrSection'] = $slot;
 
             return $this;
         };

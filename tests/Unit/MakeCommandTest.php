@@ -81,6 +81,15 @@ class MakeCommandTest extends TestCase
     }
 
     /** @test */
+    public function pascal_case_component_with_double_backslashes_is_automatically_converted_by_make_command()
+    {
+        Artisan::call('make:livewire', ['name' => 'FooBar\\FooBar']);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('FooBar/FooBar.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('foo-bar/foo-bar.blade.php')));
+    }
+
+    /** @test */
     public function snake_case_component_is_automatically_converted_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'text_replace']);

@@ -1,19 +1,31 @@
-<div>
-    <button wire:click="$refresh" dusk="button">Load</button>
+<div @if ($foo) foo="true" @endif dusk="root">
+    <button wire:click="$set('foo', true)" dusk="foo"></button>
 
-    <h1 wire:loading dusk="show">Loading...</h1>
-    <h1 wire:loading.remove dusk="hide">Loading...</h1>
+    <button wire:click="$set('bar', true)" dusk="bar">
+        <div dusk="bar.start">start</div>
+        @if ($bar)
+            <div dusk="bar.middle">middle</div>
+        @endif
+        <div dusk="bar.end">end</div>
+    </button>
 
-    <h1 wire:loading.class="foo" dusk="add-class">Loading...</h1>
-    <h1 wire:loading.class.remove="foo" dusk="remove-class" class="foo">Loading...</h1>
+    <button wire:click="$set('baz', true)" dusk="baz">
+        @if ($baz)
+            <div>second</div>
+        @endif
+        <div>first</div>
+    </button>
 
-    <h1 wire:loading.attr="disabled" dusk="add-attr">Loading...</h1>
-    <h1 wire:loading.attr.remove="disabled" dusk="remove-attr" disabled>Loading...</h1>
+    <button wire:click="$set('bob', true)" dusk="bob">
+        @if ($bob)
+            <div>0</div>
+        @endif
 
-    <h1 wire:loading.attr="disabled" dusk="add-attr">Loading...</h1>
-    <h1 wire:loading.attr.remove="disabled" dusk="remove-attr" disabled>Loading...</h1>
+        <div wire:key="bob">1</div>
 
-    <h1 wire:loading wire:target="foo" dusk="targeting">Loading...</h1>
+        <div>
+            <div id="bob-id">2</div>
+        </div>
+    </button>
 
-    <button wire:click="foo" dusk="target-button">targeted buttong</button>
 </div>

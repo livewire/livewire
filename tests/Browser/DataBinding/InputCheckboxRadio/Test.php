@@ -21,8 +21,7 @@ class Test extends TestCase
                 /**
                  * Can set value
                  */
-                ->uncheck('@foo')
-                ->waitForLivewire()
+                ->waitForLivewire()->uncheck('@foo')
                 ->assertNotChecked('@foo')
                 ->assertSeeIn('@foo.output', 'false')
 
@@ -31,8 +30,7 @@ class Test extends TestCase
                  */
                 ->assertNotChecked('@bar.a')->assertChecked('@bar.b')->assertNotChecked('@bar.c')
                 ->assertSeeIn('@bar.output', '["b"]')
-                ->check('@bar.c')
-                ->waitForLivewire()
+                ->waitForLivewire()->check('@bar.c')
                 ->assertNotChecked('@bar.a')->assertChecked('@bar.b')->assertChecked('@bar.c')
                 ->assertSeeIn('@bar.output', '["b","c"]')
 

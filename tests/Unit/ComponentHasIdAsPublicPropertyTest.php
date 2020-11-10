@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 
 class ComponentHasIdAsPublicPropertyTest extends TestCase
@@ -11,7 +12,7 @@ class ComponentHasIdAsPublicPropertyTest extends TestCase
     /** @test */
     public function public_id_property_is_set()
     {
-        $component = app(LivewireManager::class)->test(ComponentWithIdProperty::class);
+        $component = Livewire::test(ComponentWithIdProperty::class);
 
         $this->assertNotNull($component->id());
     }
@@ -21,7 +22,7 @@ class ComponentHasIdAsPublicPropertyTest extends TestCase
     {
         $this->expectException(CannotUseReservedLivewireComponentProperties::class);
 
-        $component = app(LivewireManager::class)->test(ComponentWithReservedProperties::class);
+        $component = Livewire::test(ComponentWithReservedProperties::class);
 
         $this->assertNotNull($component->id());
     }

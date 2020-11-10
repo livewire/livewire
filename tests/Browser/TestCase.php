@@ -8,22 +8,33 @@ use Psy\Shell;
 use Throwable;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
 use Illuminate\Support\Facades\Artisan;
-use PHPUnit\Framework\Assert as PHPUnit;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Livewire\Component;
+use Livewire\Macros\DuskBrowserMacros;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
 
+use function Livewire\str;
+
 class TestCase extends BaseTestCase
 {
+    use SupportsSafari;
+
+    public static $useSafari = false;
+
     public function setUp(): void
     {
         // DuskOptions::withoutUI();
+        if (isset($_SERVER['CI'])) {
+            DuskOptions::withoutUI();
+        }
 
-        $this->registerMacros();
+        Browser::mixin(new DuskBrowserMacros);
 
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();
@@ -36,25 +47,36 @@ class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->tweakApplication(function () {
-            app('livewire')->component(\Tests\Browser\Loading\Component::class);
-            app('livewire')->component(\Tests\Browser\PushState\Component::class);
-            app('livewire')->component(\Tests\Browser\PushState\NestedComponent::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\InputSelect\Component::class);
-            app('livewire')->component(\Tests\Browser\FileDownloads\Component::class);
-            app('livewire')->component(\Tests\Browser\Redirects\Component::class);
-            app('livewire')->component(\Tests\Browser\SupportCollections\Component::class);
-            app('livewire')->component(\Tests\Browser\Events\Component::class);
-            app('livewire')->component(\Tests\Browser\Events\NestedComponentA::class);
-            app('livewire')->component(\Tests\Browser\Events\NestedComponentB::class);
-            app('livewire')->component(\Tests\Browser\Prefetch\Component::class);
-            app('livewire')->component(\Tests\Browser\SupportDateTimes\Component::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\InputText\Component::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\InputTextarea\Component::class);
-            app('livewire')->component(\Tests\Browser\DataBinding\InputCheckboxRadio\Component::class);
-            app('livewire')->component(\Tests\Browser\Actions\Component::class);
-            app('livewire')->component(\Tests\Browser\Init\Component::class);
-            app('livewire')->component(\Tests\Browser\Dirty\Component::class);
-            app('livewire')->component(\Tests\Browser\Alpine\Component::class);
+            // Autoload all Livewire components in this test suite.
+            collect(File::allFiles(__DIR__))
+                ->map(function ($file) {
+                    return 'Tests\\Browser\\'.str($file->getRelativePathname())->before('.php')->replace('/', '\\');
+                })
+                ->filter(function ($computedClassName) {
+                    return class_exists($computedClassName);
+                })
+                ->filter(function ($class) {
+                    return is_subclass_of($class, Component::class);
+                })->each(function ($componentClass) {
+                    app('livewire')->component($componentClass);
+                });
+
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history-without-mount/{id}',
+                \Tests\Browser\SyncHistory\ComponentWithMount::class
+            )->middleware('web')->name('sync-history-without-mount');
+
+            // This needs to be registered for Dusk to test the route-parameter binding
+            // See: \Tests\Browser\SyncHistory\Test.php
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history/{step}',
+                \Tests\Browser\SyncHistory\Component::class
+            )->middleware('web')->name('sync-history');
+
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history-without-query-string/{step}',
+                \Tests\Browser\SyncHistory\ComponentWithoutQueryString::class
+            )->middleware('web')->name('sync-history-without-query-string');
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -73,6 +95,10 @@ class TestCase extends BaseTestCase
 
         parent::tearDown();
     }
+
+    // We don't want to deal with screenshots or console logs.
+    protected function storeConsoleLogsFor($browsers) {}
+    protected function captureFailuresFor($browsers) {}
 
     public function makeACleanSlate()
     {
@@ -128,69 +154,6 @@ class TestCase extends BaseTestCase
         return resource_path('views').'/livewire'.($path ? '/'.$path : '');
     }
 
-    protected function registerMacros()
-    {
-        Browser::macro('assertNotVisible', function ($selector) {
-            $fullSelector = $this->resolver->format($selector);
-
-            PHPUnit::assertFalse(
-                $this->resolver->findOrFail($selector)->isDisplayed(),
-                "Element [{$fullSelector}] is visible."
-            );
-
-            return $this;
-        });
-
-        Browser::macro('assertNotPresent', function ($selector) {
-            $fullSelector = $this->resolver->format($selector);
-
-            PHPUnit::assertTrue(
-                is_null($this->resolver->find($selector)),
-                "Element [{$fullSelector}] is present."
-            );
-
-            return $this;
-        });
-
-        Browser::macro('waitForLivewire', function () {
-            return $this->waitForLivewireRequest()->waitForLivewireResponse();
-        });
-
-        Browser::macro('waitForLivewireRequest', function () {
-            return $this->waitUsing(5, 25, function () {
-                return $this->driver->executeScript('return window.livewire.requestIsOut() === true');
-            }, 'Livewire request was never triggered');
-        });
-
-        Browser::macro('waitForLivewireResponse', function () {
-            return $this->waitUsing(5, 25, function () {
-                return $this->driver->executeScript('return window.livewire.requestIsOut() === false');
-            }, 'Livewire response was never received');
-        });
-
-        Browser::macro('captureLivewireRequest', function () {
-            $this->driver->executeScript('window.capturedRequestsForDusk = []');
-
-            return $this;
-        });
-
-        Browser::macro('replayLivewireRequest', function () {
-            $this->driver->executeScript('window.capturedRequestsForDusk.forEach(callback => callback()); delete window.capturedRequestsForDusk;');
-
-            return $this;
-        });
-
-        Browser::macro('assertScript', function () {
-            PHPUnit::assertTrue(
-                $this->driver->executeScript('return window.livewire.requestIsOut() === false'),
-                'Something this'
-            );
-
-            return $this;
-
-        });
-    }
-
     protected function driver(): RemoteWebDriver
     {
         $options = DuskOptions::getChromeOptions();
@@ -199,13 +162,17 @@ class TestCase extends BaseTestCase
             'download.default_directory' => __DIR__.'/downloads',
         ]);
 
-        return RemoteWebDriver::create(
-            'http://localhost:9515',
-            DesiredCapabilities::chrome()->setCapability(
-                ChromeOptions::CAPABILITY,
-                $options
+        return static::$useSafari
+            ? RemoteWebDriver::create(
+                'http://localhost:9515', DesiredCapabilities::safari()
             )
-        );
+            : RemoteWebDriver::create(
+                'http://localhost:9515',
+                DesiredCapabilities::chrome()->setCapability(
+                    ChromeOptions::CAPABILITY,
+                    $options
+                )
+            );
     }
 
     public function browse(Closure $callback)

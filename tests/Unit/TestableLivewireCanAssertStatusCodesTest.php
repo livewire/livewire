@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\Livewire;
 use Livewire\LivewireManager;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -11,7 +12,7 @@ class TestableLivewireCanAssertStatusCodesTest extends TestCase
     /** @test */
     public function can_assert_a_status_code_when_an_exception_is_encountered()
     {
-        $component = app(LivewireManager::class)->test(NotFoundComponent::class);
+        $component = Livewire::test(NotFoundComponent::class);
 
         $component->assertStatus(404);
     }
@@ -19,7 +20,7 @@ class TestableLivewireCanAssertStatusCodesTest extends TestCase
     /** @test */
     public function can_assert_a_404_status_code_when_an_exception_is_encountered()
     {
-        $component = app(LivewireManager::class)->test(NotFoundComponent::class);
+        $component = Livewire::test(NotFoundComponent::class);
 
         $component->assertNotFound();
     }
@@ -27,7 +28,7 @@ class TestableLivewireCanAssertStatusCodesTest extends TestCase
     /** @test */
     public function can_assert_a_401_status_code_when_an_exception_is_encountered()
     {
-        $component = app(LivewireManager::class)->test(UnauthorizedComponent::class);
+        $component = Livewire::test(UnauthorizedComponent::class);
 
         $component->assertUnauthorized();
     }
@@ -35,7 +36,7 @@ class TestableLivewireCanAssertStatusCodesTest extends TestCase
     /** @test */
     public function can_assert_a_403_status_code_when_an_exception_is_encountered()
     {
-        $component = app(LivewireManager::class)->test(ForbiddenComponent::class);
+        $component = Livewire::test(ForbiddenComponent::class);
 
         $component->assertForbidden();
     }

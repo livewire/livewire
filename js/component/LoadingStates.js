@@ -1,17 +1,20 @@
 import store from '@/Store'
+import { wireDirectives} from '@/util'
 
 export default function () {
-    store.registerHook('componentInitialized', component => {
+    store.registerHook('component.initialized', component => {
         component.targetedLoadingElsByAction = {}
         component.genericLoadingEls = []
         component.currentlyActiveLoadingEls = []
         component.currentlyActiveUploadLoadingEls = []
     })
 
-    store.registerHook('elementInitialized', (el, component) => {
-        if (el.directives.missing('loading')) return
+    store.registerHook('element.initialized', (el, component) => {
+        let directives = wireDirectives(el)
 
-        const loadingDirectives = el.directives.directives.filter(
+        if (directives.missing('loading')) return
+
+        const loadingDirectives = directives.directives.filter(
             i => i.type === 'loading'
         )
 
@@ -20,7 +23,7 @@ export default function () {
         })
     })
 
-    store.registerHook('messageSent', (component, message) => {
+    store.registerHook('message.sent', (message, component) => {
         const actions = message.updateQueue
             .filter(action => {
                 return action.type === 'callMethod'
@@ -36,25 +39,32 @@ export default function () {
         setLoading(component, actions.concat(models))
     })
 
-    store.registerHook('messageFailed', component => {
+    store.registerHook('message.failed', (message, component) => {
         unsetLoading(component)
     })
 
-    store.registerHook('responseReceived', component => {
+    store.registerHook('message.received', (message, component) => {
         unsetLoading(component)
     })
 
-    store.registerHook('elementRemoved', (el, component) => {
+    store.registerHook('element.removed', (el, component) => {
         removeLoadingEl(component, el)
     })
 }
 
 function processLoadingDirective(component, el, directive) {
+    // If this element is going to be dealing with loading states.
+    // We will initialize an "undo" stack upfront, so we don't
+    // have to deal with isset() type conditionals later.
+    el.__livewire_on_finish_loading = []
+
     var actionNames = false
 
-    if (el.directives.get('target')) {
+    let directives = wireDirectives(el)
+
+    if (directives.get('target')) {
         // wire:target overrides any automatic loading scoping we do.
-        actionNames = el.directives
+        actionNames = directives
             .get('target')
             .value.split(',')
             .map(s => s.trim())
@@ -73,7 +83,7 @@ function processLoadingDirective(component, el, directive) {
             'id',
         ]
 
-        actionNames = el.directives
+        actionNames = directives
             .all()
             .filter(i => !nonActionOrModelLivewireDirectives.includes(i.type))
             .map(i => i.method)
@@ -117,7 +127,7 @@ function removeLoadingEl(component, el) {
         component.targetedLoadingElsByAction[
             key
         ] = component.targetedLoadingElsByAction[key].filter(element => {
-            return !element.el.isSameNode(el)
+            return ! element.el.isSameNode(el)
         })
     })
 }
@@ -160,8 +170,6 @@ function unsetLoading(component) {
 
 function startLoading(els) {
     els.forEach(({ el, directive }) => {
-        el = el.el // I'm so sorry.
-
         if (directive.modifiers.includes('class')) {
             let classes = directive.value.split(' ').filter(Boolean)
 
@@ -179,19 +187,29 @@ function startLoading(els) {
                 () => el.removeAttribute(directive.value)
             )
         } else {
-            let cache = el.style.display
-            let target = directive.modifiers.includes('remove')
-                ? 'none'
-                : 'inline-block'
+            let cache = window
+                .getComputedStyle(el, null)
+                .getPropertyValue('display')
 
             doAndSetCallbackOnElToUndo(
                 el,
                 directive,
-                () => (el.style.display = target),
-                () => (el.style.display = cache)
+                () => {
+                    el.style.display = directive.modifiers.includes('remove')
+                        ? cache
+                        : getDisplayProperty(directive)
+                },
+                () => {
+                    el.style.display = 'none'
+                }
             )
         }
     })
+}
+
+function getDisplayProperty(directive) {
+    return ['inline', 'block', 'table', 'flex', 'grid']
+        .filter(i => directive.modifiers.includes(i))[0] || 'inline-block'
 }
 
 function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
@@ -201,24 +219,20 @@ function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
     if (directive.modifiers.includes('delay')) {
         let timeout = setTimeout(() => {
             doCallback()
-            el.__livewire_on_finish_loading = () => undoCallback()
+            el.__livewire_on_finish_loading.push(() => undoCallback())
         }, 200)
 
-        el.__livewire_on_finish_loading = () => clearTimeout(timeout)
+        el.__livewire_on_finish_loading.push(() => clearTimeout(timeout))
     } else {
         doCallback()
-        el.__livewire_on_finish_loading = () => undoCallback()
+        el.__livewire_on_finish_loading.push(() => undoCallback())
     }
 }
 
 function endLoading(els) {
-    els.forEach(({ el, directive }) => {
-        el = el.el // I'm so sorry.
-
-        if (el.__livewire_on_finish_loading) {
-            el.__livewire_on_finish_loading()
-
-            delete el.__livewire_on_finish_loading
+    els.forEach(({ el }) => {
+        while (el.__livewire_on_finish_loading.length > 0) {
+            el.__livewire_on_finish_loading.shift()()
         }
     })
 }

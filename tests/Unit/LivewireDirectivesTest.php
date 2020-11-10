@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use Illuminate\Testing\TestResponse;
 use Livewire\Livewire;
 use Livewire\Component;
+use Illuminate\Testing\TestResponse;
 use Illuminate\Support\Facades\Artisan;
 
 class LivewireDirectivesTest extends TestCase
@@ -81,14 +81,6 @@ class LivewireDirectivesTest extends TestCase
         Livewire::test(ComponentForTestingNestedThisDirective::class)
             ->assertDontSee('@this')
             ->assertSee('window.livewire.find(');
-    }
-
-    /** @test */
-    public function this_directive_isnt_registered_outside_of_livewire_component()
-    {
-        $output = view('this-directive')->render();
-
-        $this->assertStringContainsString('@this', $output);
     }
 }
 

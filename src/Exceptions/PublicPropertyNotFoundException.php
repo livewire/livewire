@@ -8,7 +8,7 @@ class PublicPropertyNotFoundException extends \Exception
 
     public function __construct($property, $component)
     {
-        return parent::__construct(
+        parent::__construct(
             "Unable to set component data. Public property [\${$property}] not found on component: [{$component}]"
         );
     }

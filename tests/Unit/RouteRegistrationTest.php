@@ -17,6 +17,17 @@ class RouteRegistrationTest extends TestCase
 
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
+
+    /** @test */
+    public function component_uses_alias_instead_of_full_name_if_registered()
+    {
+        Livewire::component('component-alias', ComponentForRouteRegistration::class);
+
+        Route::get('/foo', ComponentForRouteRegistration::class);
+
+        $this->withoutExceptionHandling()->get('/foo')
+            ->assertSee('component-alias');
+    }
 }
 
 class ComponentForRouteRegistration extends Component
@@ -25,7 +36,7 @@ class ComponentForRouteRegistration extends Component
 
     public function render()
     {
-        return view('show-name')->extends('layouts.app-with-bar', [
+        return view('show-name')->layout('layouts.app-with-bar', [
             'bar' => 'baz',
         ]);
     }

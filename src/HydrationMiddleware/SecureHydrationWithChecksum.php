@@ -18,7 +18,7 @@ class SecureHydrationWithChecksum implements HydrationMiddleware
 
         throw_unless(
             $checksumManager->check($checksum, $request->fingerprint, $request->memo),
-            new CorruptComponentPayloadException($unHydratedInstance->getName())
+            new CorruptComponentPayloadException($unHydratedInstance::getName())
         );
     }
 

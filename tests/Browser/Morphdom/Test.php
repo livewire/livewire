@@ -4,68 +4,47 @@ namespace Tests\Browser\Morphdom;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Loading\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function loading_indicator()
+    public function test()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
-                ->tap(function ($browser) {
-                    $browser->assertNotVisible('@show');
-                    $browser->assertVisible('@hide');
+                /**
+                 * element root is DOM diffed
+                 */
+                ->assertAttributeMissing('@root', 'foo')
+                ->waitForLivewire()->click('@foo')
+                ->assertAttribute('@root', 'foo', 'true')
 
-                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
+                /**
+                 * element inserted in the middle moves subsequent elements instead of removing them
+                 */
+                ->tap(function ($b) { $b->script([
+                    "window.elementWasRemoved = false",
+                    "Livewire.hook('element.removed', () => { window.elementWasRemoved = true })",
+                ]);})
+                ->waitForLivewire()->click('@bar')
+                ->assertScript('window.elementWasRemoved', false)
 
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
+                /**
+                 * element inserted before element with same tag name is handled as if they were different.
+                 */
+                ->tap(function ($b) { $b->script([
+                    "window.lastAddedElement = false",
+                    "Livewire.hook('element.initialized', el => { window.lastAddedElement = el })",
+                ]);})
+                ->waitForLivewire()->click('@baz')
+                ->assertScript('window.lastAddedElement.innerText', 'second')
 
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
-                })
-                ->click('@button')
-                ->waitForLivewireRequest()
-                ->tap(function ($browser) {
-                    $browser->assertVisible('@show');
-                    $browser->assertNotVisible('@hide');
-
-                    $this->assertEquals('foo', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-class')->getAttribute('class'));
-
-                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('true', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
-                })
-                ->waitForLivewireResponse()
-                ->tap(function ($browser) {
-                    $browser->assertNotVisible('@show');
-                    $browser->assertVisible('@hide');
-
-                    $this->assertEquals('', $browser->resolver->find('@add-class')->getAttribute('class'));
-                    $this->assertEquals('foo', $browser->resolver->find('@remove-class')->getAttribute('class'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $this->assertEquals('', $browser->resolver->find('@add-attr')->getAttribute('disabled'));
-                    $this->assertEquals('true', $browser->resolver->find('@remove-attr')->getAttribute('disabled'));
-
-                    $browser->assertNotVisible('@targeting');
-                })
-                ->click('@target-button')
-                ->waitForLivewireRequest()
-                ->tap(function ($browser) {
-                    $browser->assertVisible('@targeting');
-                });
+                /**
+                 * elements added with keys are recognized in the custom lookahead
+                 */
+                ->waitForLivewire()->click('@bob')
+                ->assertScript('Livewire.components.components()[0].morphChanges.added.length', 1)
+                ->assertScript('Livewire.components.components()[0].morphChanges.removed.length', 0)
+            ;
         });
     }
 }

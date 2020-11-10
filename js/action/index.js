@@ -1,17 +1,13 @@
-
 export default class {
-    constructor(el) {
+    constructor(el, skipWatcher = false) {
         this.el = el
-        this.resolveCallback = () => {}
-        this.rejectCallback = () => {}
-    }
-
-    get ref() {
-        return this.el ? this.el.ref : null
+        this.skipWatcher = skipWatcher
+        this.resolveCallback = () => { }
+        this.rejectCallback = () => { }
     }
 
     toId() {
-        return btoa(encodeURIComponent(this.el.el.outerHTML))
+        return btoa(encodeURIComponent(this.el.outerHTML))
     }
 
     onResolve(callback) {

@@ -8,10 +8,17 @@ use Livewire\Livewire;
 class ComputedPropertiesTest extends TestCase
 {
     /** @test */
-    public function compute_property_is_accessable_within_blade_view()
+    public function computed_property_is_accessable_within_blade_view()
     {
         Livewire::test(ComputedPropertyStub::class)
             ->assertSee('foo');
+    }
+
+    /** @test */
+    public function injected_computed_property_is_accessable_within_blade_view()
+    {
+        Livewire::test(InjectedComputedPropertyStub::class)
+            ->assertSee('bar');
     }
 
     /** @test */
@@ -41,16 +48,33 @@ class ComputedPropertiesTest extends TestCase
 
 class ComputedPropertyStub extends Component
 {
-    public $upperCasedFoo = 'FOO';
+    public $upperCasedFoo = 'FOO_BAR';
 
-    public function getFooProperty()
+    public function getFooBarProperty()
     {
         return strtolower($this->upperCasedFoo);
     }
 
     public function render()
     {
-        return view('var-dump-foo');
+        return view('var-dump-foo-bar');
+    }
+}
+
+class FooDependency {
+    public $baz = 'bar';
+}
+
+class InjectedComputedPropertyStub extends Component
+{
+    public function getFooBarProperty(FooDependency $foo)
+    {
+        return $foo->baz;
+    }
+
+    public function render()
+    {
+        return view('var-dump-foo-bar');
     }
 }
 

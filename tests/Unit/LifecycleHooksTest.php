@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
-use Livewire\LivewireManager;
+use Livewire\Livewire;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 class LifecycleHooksTest extends TestCase
@@ -11,43 +11,53 @@ class LifecycleHooksTest extends TestCase
     /** @test */
     public function mount_hook()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
+        $component = Livewire::test(ForLifecycleHooks::class);
 
         $this->assertEquals([
             'mount' => true,
             'hydrate' => false,
+            'hydrateFoo' => false,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
             'updatedFoo' => false,
             'updatingBar' => false,
+            'updatingBarBaz' => false,
             'updatedBar' => false,
+            'updatedBarBaz' => false,
         ], $component->lifecycles);
     }
 
     /** @test */
     public function refresh_magic_method()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class);
+        $component = Livewire::test(ForLifecycleHooks::class);
 
         $component->call('$refresh');
 
         $this->assertEquals([
             'mount' => true,
             'hydrate' => true,
+            'hydrateFoo' => true,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
             'updatedFoo' => false,
             'updatingBar' => false,
+            'updatingBarBaz' => false,
             'updatedBar' => false,
+            'updatedBarBaz' => false,
         ], $component->lifecycles);
     }
 
     /** @test */
     public function update_property()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class, [
+        $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
                 'updating' => [[
                     'foo' => 'bar',
@@ -64,19 +74,24 @@ class LifecycleHooksTest extends TestCase
         $this->assertEquals([
             'mount' => true,
             'hydrate' => true,
+            'hydrateFoo' => true,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
             'updatedFoo' => true,
             'updatingBar' => false,
+            'updatingBarBaz' => false,
             'updatedBar' => false,
+            'updatedBarBaz' => false,
         ], $component->lifecycles);
     }
 
     /** @test */
     public function update_nested_properties()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class, [
+        $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
                 'updating' => [
                     ['bar.foo' => 'baz',],
@@ -97,8 +112,8 @@ class LifecycleHooksTest extends TestCase
                     ['foo' => 'baz'],
                     ['cocktail.soft' => 'Shirley Ginger'],
                     ['cocktail.soft' => 'Shirley Cumin']
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $component->updateProperty('bar.foo', 'baz');
@@ -110,19 +125,69 @@ class LifecycleHooksTest extends TestCase
         $this->assertEquals([
             'mount' => true,
             'hydrate' => true,
+            'hydrateFoo' => true,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => false,
             'updatedFoo' => false,
             'updatingBar' => true,
+            'updatingBarBaz' => false,
             'updatedBar' => true,
+            'updatedBarBaz' => false,
+        ], $component->lifecycles);
+    }
+
+    /** @test */
+    public function update_nested_properties_with_nested_update_hook()
+    {
+        $component = Livewire::test(ForLifecycleHooks::class, [
+            'expected' => [
+                'updating' => [
+                    ['bar.baz' => 'bop'],
+                ],
+                'updated' => [
+                    ['bar.baz' => 'bop'],
+                ],
+                'updatingBar' => [
+                    ['baz' => [null, 'bop']],
+                ],
+                'updatedBar' => [
+                    ['baz' => 'bop'],
+                ],
+                'updatingBarBaz' => [
+                    ['baz' => [null, 'bop']],
+                ],
+                'updatedBarBaz' => [
+                    ['baz' => 'bop'],
+                ],
+            ]
+        ]);
+
+        $component->set('bar.baz', 'bop');
+
+        $this->assertEquals([
+            'mount' => true,
+            'hydrate' => true,
+            'hydrateFoo' => true,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
+            'updating' => true,
+            'updated' => true,
+            'updatingFoo' => false,
+            'updatedFoo' => false,
+            'updatingBar' => true,
+            'updatingBarBaz' => true,
+            'updatedBar' => true,
+            'updatedBarBaz' => true,
         ], $component->lifecycles);
     }
 
     /** @test */
     public function set_magic_method()
     {
-        $component = app(LivewireManager::class)->test(ForLifecycleHooks::class, [
+        $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
                 'updating' => [[
                     'foo' => 'bar',
@@ -140,12 +205,17 @@ class LifecycleHooksTest extends TestCase
         $this->assertEquals([
             'mount' => true,
             'hydrate' => true,
+            'hydrateFoo' => true,
+            'dehydrate' => true,
+            'dehydrateFoo' => true,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
             'updatedFoo' => true,
             'updatingBar' => false,
+            'updatingBarBaz' => false,
             'updatedBar' => false,
+            'updatedBarBaz' => false,
         ], $component->lifecycles);
     }
 }
@@ -163,12 +233,17 @@ class ForLifecycleHooks extends Component
     public $lifecycles = [
         'mount' => false,
         'hydrate' => false,
+        'hydrateFoo' => false,
+        'dehydrate' => false,
+        'dehydrateFoo' => false,
         'updating' => false,
         'updated' => false,
         'updatingFoo' => false,
         'updatedFoo' => false,
         'updatingBar' => false,
+        'updatingBarBaz' => false,
         'updatedBar' => false,
+        'updatedBarBaz' => false,
     ];
 
     public function mount(array $expected = [])
@@ -181,6 +256,21 @@ class ForLifecycleHooks extends Component
     public function hydrate()
     {
         $this->lifecycles['hydrate'] = true;
+    }
+
+    public function hydrateFoo()
+    {
+        $this->lifecycles['hydrateFoo'] = true;
+    }
+
+    public function dehydrate()
+    {
+        $this->lifecycles['dehydrate'] = true;
+    }
+
+    public function dehydrateFoo()
+    {
+        $this->lifecycles['dehydrateFoo'] = true;
     }
 
     public function updating($name, $value)
@@ -236,6 +326,33 @@ class ForLifecycleHooks extends Component
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
 
         $this->lifecycles['updatedBar'] = true;
+    }
+
+    public function updatingBarBaz($value, $key)
+    {
+        $expected = array_shift($this->expected['updatingBarBaz']);
+        $expected_key = array_keys($expected)[0];
+        $expected_value = $expected[$expected_key];
+        [$before, $after] = $expected_value;
+
+        PHPUnit::assertEquals($expected_key, $key);
+        PHPUnit::assertEquals($before, data_get($this->bar, $key));
+        PHPUnit::assertEquals($after, $value);
+
+        $this->lifecycles['updatingBarBaz'] = true;
+    }
+
+    public function updatedBarBaz($value, $key)
+    {
+        $expected = array_shift($this->expected['updatedBarBaz']);
+        $expected_key = array_keys($expected)[0];
+        $expected_value = $expected[$expected_key];
+
+        PHPUnit::assertEquals($expected_key, $key);
+        PHPUnit::assertEquals($expected_value, $value);
+        PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
+
+        $this->lifecycles['updatedBarBaz'] = true;
     }
 
     public function render()
