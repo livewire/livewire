@@ -1,4 +1,4 @@
-<div>
+<div @if($id ?? false) id="{{ $id }}" @endif>
     @if ($paginator->hasPages())
         <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center justify-between">
             <div class="flex justify-between flex-1 sm:hidden">
@@ -73,7 +73,7 @@
                             {{-- Array Of Links --}}
                             @if (is_array($element))
                                 @foreach ($element as $page => $url)
-                                    <span wire:key="paginator-page{{ $page }}">
+                                    <span wire:key="{{ $id ?? uniqid('paginator') }}-page{{ $page }}">
                                         @if ($page == $paginator->currentPage())
                                             <span aria-current="page">
                                                 <span class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-gray-500 bg-white border border-gray-300 cursor-default leading-5">{{ $page }}</span>
