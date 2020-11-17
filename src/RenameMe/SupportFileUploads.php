@@ -10,7 +10,7 @@ class SupportFileUploads
 {
     static function init() { return new static; }
 
-    function __construct()
+    public function __construct()
     {
         Livewire::listen('property.hydrate', function ($property, $value, $component, $request) {
             $uses = array_flip(class_uses_recursive($component));
@@ -42,11 +42,11 @@ class SupportFileUploads
         }
 
         if ($value instanceof TemporaryUploadedFile) {
-            return  $value->serializeForLivewireResponse();
+            return $value->serializeForLivewireResponse();
         }
 
-        if (is_array($value) && isset(array_values($value)[0]) && array_values($value)[0] instanceof TemporaryUploadedFile && is_numeric(key($value))) {
-            return array_values($value)[0]::serializeMultipleForLivewireResponse($value);
+        if (is_array($value) && isset($value[0]) && $value[0] instanceof TemporaryUploadedFile && is_numeric(key($value))) {
+            return $value[0]::serializeMultipleForLivewireResponse($value);
         }
 
         if (is_array($value)) {
