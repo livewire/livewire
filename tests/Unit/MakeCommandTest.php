@@ -129,4 +129,14 @@ class MakeCommandTest extends TestCase
         $this->assertFalse(File::exists($this->livewireClassesPath('Component.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('component.blade.php')));
     }
+
+    /** @test */
+    public function a_component_is_created_with_a_test()
+    {
+        $this->withoutExceptionHandling();
+
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
+
+        $this->assertTrue(File::exists(base_path('tests/Feature/FooTest.php')));
+    }
 }

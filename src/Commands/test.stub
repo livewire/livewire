@@ -1,0 +1,14 @@
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+use Livewire\Livewire;
+
+class [class]Test extends TestCase
+{
+    public function test()
+    {
+        //
+    }
+}

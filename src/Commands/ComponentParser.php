@@ -11,6 +11,7 @@ class ComponentParser
 {
     protected $appPath;
     protected $viewPath;
+    protected $testPath;
     protected $component;
     protected $componentClass;
     protected $directories;
@@ -21,9 +22,11 @@ class ComponentParser
         $this->baseClassNamespace = $classNamespace;
 
         $classPath = static::generatePathFromNamespace($classNamespace);
+        $testPath = base_path('tests/Feature');
 
         $this->baseClassPath = rtrim($classPath, DIRECTORY_SEPARATOR).'/';
         $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
+        $this->baseTestPath = rtrim($testPath, DIRECTORY_SEPARATOR).'/';
 
         $directories = preg_split('/[.\/(\\\\)]+/', $rawCommand);
 
@@ -134,6 +137,38 @@ class ComponentParser
         return preg_replace(
             '/\[quote\]/',
             $this->wisdomOfTheTao(),
+            file_get_contents($stubPath)
+        );
+    }
+
+    public function testPath()
+    {
+        return $this->baseTestPath.collect()
+                ->concat($this->directories)
+                ->map([Str::class, 'kebab'])
+                ->push($this->testFile())
+                ->implode(DIRECTORY_SEPARATOR);
+    }
+
+    public function relativeTestPath() : string
+    {
+        return str($this->testPath())->replaceFirst(base_path().'/', '');
+    }
+
+    public function testFile()
+    {
+        return ucfirst($this->component).'Test.php';
+    }
+
+    public function testContents()
+    {
+        if( ! File::exists($stubPath = base_path('stubs/test.stub'))) {
+            $stubPath = __DIR__.DIRECTORY_SEPARATOR.'test.stub';
+        }
+
+        return preg_replace(
+            '/\[class\]/',
+            $this->className(),
             file_get_contents($stubPath)
         );
     }
