@@ -69,4 +69,9 @@ class TestCase extends BaseTestCase
     {
         return resource_path('views').'/livewire'.($path ? '/'.$path : '');
     }
+
+    protected function livewireTestsPath($path = '')
+    {
+        return base_path('tests/Feature').($path ? '/'.$path : '');
+    }
 }

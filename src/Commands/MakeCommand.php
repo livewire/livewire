@@ -32,10 +32,7 @@ class MakeCommand extends FileManipulationCommand
 
         $class = $this->createClass($force, $inline);
         $view = $this->createView($force, $inline);
-
-        if ($makeTest) {
-            $this->createTest();
-        }
+        $test = $makeTest ? $this->createTest() : false;
 
         $this->refreshComponentAutodiscovery();
 
@@ -49,6 +46,11 @@ class MakeCommand extends FileManipulationCommand
 
             if ($showWelcomeMessage && ! app()->environment('testing')) {
                 $this->writeWelcomeMessage();
+            }
+
+            if ($test) {
+                $this->line("<options=bold,reverse;fg=green> TEST CREATED </> 🤙\n");
+                $class && $this->line("<options=bold;fg=green>TEST:</> {$this->parser->relativeTestPath()}");
             }
         }
     }
