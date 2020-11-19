@@ -45,7 +45,10 @@ class HashDataPropertiesForDirtyDetection implements HydrationMiddleware
 
     public static function hash($value)
     {
-        if (! is_null($value) && ! is_string($value) && ! is_numeric($value)) {
+        if (! is_null($value) && ! is_string($value) && ! is_numeric($value) && ! is_bool($value)) {
+            if (is_array($value)) {
+                return json_encode($value);
+            }
             $value = method_exists($value, '__toString')
                 ? (string) $value
                 : json_encode($value);
