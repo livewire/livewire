@@ -22,6 +22,16 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validate_emits_validation_failed_event()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->runAction('runValidation');
+
+        $this->assertStringContainsString('failed-validation', $component->payload['effects']['emits'][0]['event']);
+    }
+
+    /** @test */
     public function validate_component_properties_with_custom_message()
     {
         $component = Livewire::test(ForValidation::class);
