@@ -71,12 +71,14 @@ class LivewireServiceProvider extends ServiceProvider
         // Bypass specific middlewares during Livewire requests.
         // These are usually helpful during a typical request, but
         // during Livewire requests, they can damage data properties.
-        $this->bypassTheseMiddlewaresDuringLivewireRequests([
-            TrimStrings::class,
-            ConvertEmptyStringsToNull::class,
-            // If the app overrode "TrimStrings".
-            \App\Http\Middleware\TrimStrings::class,
-        ]);
+        $this->bypassTheseMiddlewaresDuringLivewireRequests(
+            array_merge([
+                TrimStrings::class,
+                ConvertEmptyStringsToNull::class,
+                // If the app overrode "TrimStrings".
+                \App\Http\Middleware\TrimStrings::class,
+            ], config('livewire.middlewares_to_exclude', []))
+        );
     }
 
     protected function registerLivewireSingleton()

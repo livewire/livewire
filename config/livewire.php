@@ -59,6 +59,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Livewire Excluded Middlewares
+    |--------------------------------------------------------------------------
+    |
+    | This value sets the middlewares that will be excluded from the main Livewire 
+    | "message" endpoint. It is set to null by default, but should be set to 
+    | exclude the TrimStrings Middleware if the location is different.
+    |
+    */
+    'middlewares_to_exclude' => [
+        //\App\Http\Middleware\TrimStrings::class,
+    ],
+    
+
+    /*
+    |--------------------------------------------------------------------------
     | Livewire Temporary File Uploads Endpoint Configuration
     |--------------------------------------------------------------------------
     |
