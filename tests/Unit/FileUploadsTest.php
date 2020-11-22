@@ -589,7 +589,7 @@ class FileUploadsTest extends TestCase
         $file3 = UploadedFile::fake()->image('avatar3.jpg');
         $file4 = UploadedFile::fake()->image('avatar4.jpg');
 
-        $component = Livewire::test(FileUploadInArrayComponent::class)
+        $component = Livewire::test(FileUploadInArrayWithNumberPropertiesComponent::class)
                              ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
                              ->set('obj.first_name', 'john')
                              ->set('obj.last_name', 'doe');
