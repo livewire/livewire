@@ -102,6 +102,8 @@ class HydratePublicProperties implements HydrationMiddleware
         } else {
             $model = new $serialized['class'];
         }
+        
+        $instance->$property = $model;
 
         $dirtyModelData = $request->memo['data'][$property];
 
@@ -114,8 +116,6 @@ class HydratePublicProperties implements HydrationMiddleware
                 data_set($model, $key, data_get($dirtyModelData, $key));
             }
         }
-
-        $instance->$property = $model;
     }
 
     protected static function hydrateModels($serialized, $property, $request, $instance)
@@ -125,6 +125,8 @@ class HydratePublicProperties implements HydrationMiddleware
         $models = (new static)->getRestoredPropertyValue(
             new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
         );
+        
+        $instance->$property = $models;
 
         $dirtyModelData = $request->memo['data'][$property];
 
@@ -147,8 +149,6 @@ class HydratePublicProperties implements HydrationMiddleware
                 }
             }
         }
-
-        $instance->$property = $models;
     }
 
     protected static function dehydrateModel($value, $property, $response, $instance)
