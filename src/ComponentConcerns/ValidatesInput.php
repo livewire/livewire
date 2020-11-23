@@ -157,7 +157,7 @@ trait ValidatesInput
             $validatedData = $validator->validate();
         } catch (ValidationException $e) {
             $this->emit('failed-validation');
-            throw ValidationException::withMessages($e->validator->errors()->toArray());
+            throw new ValidationException($validator);
         }
 
         $this->resetErrorBag();
