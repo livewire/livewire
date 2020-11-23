@@ -153,11 +153,12 @@ trait ValidatesInput
 
         $this->shortenModelAttributes($data, $rules, $validator);
 
-        if($validator->fails()) {
+        try {
+            $validatedData = $validator->validate();
+        } catch (ValidationException $e) {
             $this->emit('failed-validation');
+            throw ValidationException::withMessages($e->validator->errors()->toArray());
         }
-
-        $validatedData = $validator->validate();
 
         $this->resetErrorBag();
 
