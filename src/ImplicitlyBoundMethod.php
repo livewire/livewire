@@ -20,7 +20,7 @@ class ImplicitlyBoundMethod extends BoundMethod
             static::addDependencyForCallParameter($container, $parameter, $parameters, $dependencies);
         }
 
-        return array_merge($dependencies, $parameters);
+        return array_values(array_merge($dependencies, $parameters));
     }
 
     protected static function substituteNameBindingForCallParameter($parameter, array &$parameters, int &$paramIndex)

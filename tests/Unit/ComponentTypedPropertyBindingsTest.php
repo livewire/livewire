@@ -59,6 +59,6 @@ class ComponentTypedPropertyBindingsTest extends TestCase
 
         // In the case that a parent is a public property, and a child is injected via mount(),
         // the result will *not* resolve via the relationship (it's super edge-case and makes everything terrible)
-        $this->get('/foo/parent-model/child/child-model')->assertSeeText('via-route:parent-model:via-route:child-model');
+        $this->withoutExceptionHandling()->get('/foo/parent-model/child/child-model')->assertSeeText('via-route:parent-model:via-route:child-model');
     }
 }
