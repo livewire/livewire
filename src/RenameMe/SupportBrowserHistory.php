@@ -176,6 +176,6 @@ class SupportBrowserHistory
 
     protected function stringifyQueryParams($queryParams)
     {
-        return $queryParams->isEmpty() ? '' : '?'.http_build_query($queryParams->toArray());
+        return $queryParams->isEmpty() ? '' : '?'.Arr::query($queryParams->toArray());
     }
 }
