@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -308,6 +309,7 @@ class ForLifecycleHooks extends Component
         $expected_value = $expected[$expected_key];
         [$before, $after] = $expected_value;
 
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
         PHPUnit::assertEquals($expected_key, $key);
         PHPUnit::assertEquals($before, data_get($this->bar, $key));
         PHPUnit::assertEquals($after, $value);
@@ -321,6 +323,7 @@ class ForLifecycleHooks extends Component
         $expected_key = array_keys($expected)[0];
         $expected_value = $expected[$expected_key];
 
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
         PHPUnit::assertEquals($expected_key, $key);
         PHPUnit::assertEquals($expected_value, $value);
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
@@ -335,6 +338,7 @@ class ForLifecycleHooks extends Component
         $expected_value = $expected[$expected_key];
         [$before, $after] = $expected_value;
 
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
         PHPUnit::assertEquals($expected_key, $key);
         PHPUnit::assertEquals($before, data_get($this->bar, $key));
         PHPUnit::assertEquals($after, $value);
@@ -348,6 +352,7 @@ class ForLifecycleHooks extends Component
         $expected_key = array_keys($expected)[0];
         $expected_value = $expected[$expected_key];
 
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
         PHPUnit::assertEquals($expected_key, $key);
         PHPUnit::assertEquals($expected_value, $value);
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
