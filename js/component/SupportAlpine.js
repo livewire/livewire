@@ -105,7 +105,6 @@ function supportEntangle() {
                         livewireComponent.watch(
                             livewireProperty,
                             value => {
-                                blockAlpineWatcher = true
                                 component.$data[key] = value
                             }
                         )
