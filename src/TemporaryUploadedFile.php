@@ -70,7 +70,7 @@ class TemporaryUploadedFile extends UploadedFile
         $supportedPreviewTypes = config('livewire.temporary_file_upload.preview_mimes', [
             'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
             'mov', 'avi', 'wmv', 'mp3', 'm4a',
-            'jpeg', 'mpga', 'webp', 'wma',
+            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
         ]);
 
         if (! in_array($this->guessExtension(),  $supportedPreviewTypes)) {
@@ -164,17 +164,15 @@ class TemporaryUploadedFile extends UploadedFile
 
                 return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
             }
-
-            return $subject;
         }
 
         if (is_array($subject)) {
             foreach ($subject as $key => $value) {
                 $subject[$key] =  static::unserializeFromLivewireRequest($value);
             }
-
-            return $subject;
         }
+
+        return $subject;
     }
 
     public function serializeForLivewireResponse()
