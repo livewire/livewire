@@ -54,7 +54,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getClientOriginalName()
     {
-        return $this->extractOriginalNameFromFilePath($this->path);
+        return static::extractOriginalNameFromFilePath($this->path);
     }
 
     public function temporaryUrl()
