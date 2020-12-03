@@ -127,7 +127,7 @@ class TemporaryUploadedFile extends UploadedFile
         return $hash.$meta.$extension;
     }
 
-    public function extractOriginalNameFromFilePath($path)
+    public static function extractOriginalNameFromFilePath($path)
     {
         return base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
     }
