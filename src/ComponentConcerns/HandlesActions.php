@@ -119,9 +119,16 @@ trait HandlesActions
 
             case '$toggle':
                 $prop = array_shift($params);
-                $propertyName = $this->beforeFirstDot($prop);
-                $targetKey = $this->afterFirstDot($prop);
-                $this->syncInput($prop, ! data_get($this->{$propertyName}, $targetKey), $rehash = false);
+
+                if ($this->containsDots($prop)) {
+                    $propertyName = $this->beforeFirstDot($prop);
+                    $targetKey = $this->afterFirstDot($prop);
+                    $currentValue = data_get($this->{$propertyName}, $targetKey);
+                } else {
+                    $currentValue = $this->{$prop};
+                }
+                
+                $this->syncInput($prop, ! $currentValue, $rehash = false);
 
                 return;
 
