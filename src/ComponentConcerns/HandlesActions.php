@@ -119,7 +119,9 @@ trait HandlesActions
 
             case '$toggle':
                 $prop = array_shift($params);
-                $this->syncInput($prop, ! $this->{$prop}, $rehash = false);
+                $propertyName = $this->beforeFirstDot($prop);
+                $targetKey = $this->afterFirstDot($prop);
+                $this->syncInput($prop, ! data_get($this->{$propertyName}, $targetKey), $rehash = false);
 
                 return;
 
