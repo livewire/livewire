@@ -65,7 +65,9 @@ class LivewireManager
             "Component [{$component}] class not found: [{$componentClass}]"
         ));
 
-        return new $componentClass($id);
+        return tap(app($componentClass), static function (Component $component) use ($id): void {
+            $component->setId($id);
+        });
     }
 
     public function mount($name, $params = [])

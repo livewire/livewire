@@ -9,6 +9,14 @@ use Illuminate\Routing\UrlGenerator;
 class ComponentDependencyInjectionTest extends TestCase
 {
     /** @test */
+    public function component_constructor_with_dependency()
+    {
+        $component = app(ComponentWithDependencyInjection::class);
+        
+        $this->assertInstanceOf(Dependency::class, $component->getDep());
+    }
+
+    /** @test */
     public function component_mount_action_with_dependency()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class, ['id' => 123]);
@@ -120,10 +128,24 @@ class ComponentDependencyInjectionTest extends TestCase
     }
 }
 
+class Dependency {}
+
 class ComponentWithDependencyInjection extends Component
 {
     public $foo;
     public $bar;
+    private $dep;
+
+    public function __construct(Dependency $dep)
+    {
+        parent::__construct();
+        $this->dep = $dep;
+    }
+
+    public function getDep()
+    {
+        return $this->dep;
+    }
 
     public function mount(UrlGenerator $generator, $id = 123)
     {

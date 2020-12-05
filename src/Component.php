@@ -239,4 +239,9 @@ abstract class Component
             'Method %s::%s does not exist.', static::class, $method
         ));
     }
+
+    public function setId($id): void
+    {
+        $this->id = $id;
+    }
 }
