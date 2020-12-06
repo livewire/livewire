@@ -9,7 +9,7 @@ class Component extends BaseComponent
 {
     public function click($id)
     {
-        $this->renderSelector('#' . $id . ' span', 'Clicked');
+        $this->renderSelector('#' . $id, 'Clicked');
     }
 
     public function render()

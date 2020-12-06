@@ -28,14 +28,13 @@ class ComponentSelectorOutputTest extends TestCase
 
         $component->call('click');
 
-        $this->assertTrue(
-            str($component->payload['effects']['html'])->is('Clicked')
+        $this->assertSame(
+            '<div>Clicked</div>',
+            $component->payload['effects']['html']
         );
-        $this->assertTrue(
-            str($component->payload['effects']['selector'])->is('#output')
-        );
+        $this->assertSame('#output', $component->payload['effects']['selector']);
 
-        $this->assertSame('Clicked', $component->lastRenderedDom);
+        $this->assertSame('<div>Clicked</div>', $component->lastRenderedDom);
     }
 }
 

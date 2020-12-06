@@ -109,7 +109,7 @@ abstract class Component
     public function renderSelector($selector, $html)
     {
         $this->outputSelector = $selector;
-        $this->preRenderedOutput = $html;
+        $this->preRenderedOutput = '<div>' . $html .'</div>';
     }
 
     public function getOutputSelector()

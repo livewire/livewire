@@ -373,7 +373,7 @@ export default class Component {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
         morphdom(el || this.el, dom, {
-            childrenOnly: false,
+            childrenOnly: !!el,
 
             getNodeKey: node => {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
