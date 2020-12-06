@@ -41,6 +41,8 @@ class Response
     {
         if (! $html = $this->effects['html'] ?? null) return;
 
+        if ($selector = $this->effects['selector'] ?? null) return;
+
         $this->effects['html'] = (new AddAttributesToRootTagOfHtml)($html, [
             'id' => $this->fingerprint['id'],
         ]);

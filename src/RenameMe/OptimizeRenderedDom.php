@@ -25,7 +25,7 @@ class OptimizeRenderedDom
 
             $response->memo['htmlHash'] = $newHash = hash('crc32b', $response->effects['html']);
 
-            if ($oldHash === $newHash) {
+            if ($oldHash === $newHash && !isset($response->effects['selector'])) {
                 $response->effects['html'] = null;
             }
         });

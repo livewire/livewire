@@ -30,6 +30,8 @@ abstract class Component
     protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
+    protected $preRenderedOutput;
+    protected $outputSelector;
 
     public function __construct($id = null)
     {
@@ -104,6 +106,17 @@ abstract class Component
         $this->shouldSkipRender = true;
     }
 
+    public function renderSelector($selector, $html)
+    {
+        $this->outputSelector = $selector;
+        $this->preRenderedOutput = $html;
+    }
+
+    public function getOutputSelector()
+    {
+        return $this->outputSelector;
+    }
+
     public function renderToView()
     {
         Livewire::dispatch('component.rendering', $this);
@@ -131,6 +144,8 @@ abstract class Component
 
     public function output($errors = null)
     {
+        if ($this->preRenderedOutput) return $this->preRenderedOutput;
+
         if ($this->shouldSkipRender) return null;
 
         $view = $this->preRenderedView;
