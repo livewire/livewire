@@ -270,7 +270,14 @@ export default class Component {
 
         store.callHook('message.received', message, this)
 
-        if (response.effects.html) {
+        if (response.effects.selector) {
+            // Morp a part of the dom only, based on the selector
+            var selectorEl  = document.querySelector(response.effects.selector);
+
+            if (selectorEl) {
+                this.handleMorph(response.effects.html.trim(), selectorEl);
+            }
+        } else if (response.effects.html) {
             // If we get HTML from the server, store it for the next time we might not.
             this.lastFreshHtml = response.effects.html
 
@@ -362,10 +369,10 @@ export default class Component {
         this.connection.sendMessage(message)
     }
 
-    handleMorph(dom) {
+    handleMorph(dom, el) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
-        morphdom(this.el, dom, {
+        morphdom(el || this.el, dom, {
             childrenOnly: false,
 
             getNodeKey: node => {
