@@ -7,9 +7,15 @@ use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    public function click($target)
+    public function click($target, $text)
     {
-        $this->morphSelector($target, 'Clicked');
+        $this->morphSelector($target, $text);
+    }
+
+    public function clickBoth()
+    {
+        $this->morphSelector('#result1', 'Foo');
+        $this->morphSelector('#result2', 'Bar');
     }
 
     public function render()

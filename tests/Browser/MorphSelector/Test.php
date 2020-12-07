@@ -19,6 +19,9 @@ class Test extends TestCase
                 ->assertSeeIn('@result1', 'Clicked')
                 ->waitForLivewire()->click('@btn2')
                 ->assertSeeIn('@result2', 'Clicked')
+                ->waitForLivewire()->click('@btn3')
+                ->assertSeeIn('@result1', 'Foo')
+                ->assertSeeIn('@result2', 'Bar')
             ;
         });
     }
