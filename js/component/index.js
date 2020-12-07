@@ -368,7 +368,7 @@ export default class Component {
     handleMorph(dom, selector) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
-        var el = this.el;
+        let el = this.el;
         if (selector) {
             el = el.querySelector(selector);
             if (!el) {
@@ -376,7 +376,7 @@ export default class Component {
             }
         }
 
-        morphdom(el || this.el, dom, {
+        morphdom(el, dom, {
             childrenOnly: !!selector,
 
             getNodeKey: node => {
