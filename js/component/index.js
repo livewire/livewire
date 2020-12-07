@@ -277,7 +277,9 @@ export default class Component {
             this.handleMorph(response.effects.html.trim())
         } else if (response.effects.morphs) {
             // Morp parts of the dom only, based on the selector
-            response.effects.morphs.forEach(morph => this.handleMorph(morph.html.trim(), morph.selector));
+            response.effects.morphs.forEach(morph => {
+                this.el.querySelectorAll(morph.selector).forEach(el => this.handleMorph(morph.html.trim(), el))
+            })
         } else {
             // It's important to still "morphdom" even when the server HTML hasn't changed,
             // because Alpine needs to be given the chance to update.
@@ -365,19 +367,11 @@ export default class Component {
         this.connection.sendMessage(message)
     }
 
-    handleMorph(dom, selector) {
+    handleMorph(dom, el) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
-        let el = this.el;
-        if (selector) {
-            el = el.querySelector(selector);
-            if (!el) {
-                return;
-            }
-        }
-
-        morphdom(el, dom, {
-            childrenOnly: !!selector,
+        morphdom(el || this.el, dom, {
+            childrenOnly: !!el,
 
             getNodeKey: node => {
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.

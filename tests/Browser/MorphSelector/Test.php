@@ -16,12 +16,15 @@ class Test extends TestCase
                  */
                 ->assertSee('TBD')
                 ->waitForLivewire()->click('@btn1')
-                ->assertSeeIn('@result1', 'Clicked')
+                ->assertSeeIn('@result1', 'Clicked1')
                 ->waitForLivewire()->click('@btn2')
-                ->assertSeeIn('@result2', 'Clicked')
-                ->waitForLivewire()->click('@btn3')
+                ->assertSeeIn('@result2', 'Clicked2')
+                ->waitForLivewire()->click('@btnBoth')
                 ->assertSeeIn('@result1', 'Foo')
                 ->assertSeeIn('@result2', 'Bar')
+                ->waitForLivewire()->click('@btnAll')
+                ->assertSeeIn('@result1', 'All')
+                ->assertSeeIn('@result2', 'All')
             ;
         });
     }
