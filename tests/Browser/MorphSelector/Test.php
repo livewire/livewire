@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Browser\RenderSelector;
+namespace Tests\Browser\MorphSelector;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;

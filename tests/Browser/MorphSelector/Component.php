@@ -1,15 +1,15 @@
 <?php
 
-namespace Tests\Browser\RenderSelector;
+namespace Tests\Browser\MorphSelector;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    public function click($id)
+    public function click($target)
     {
-        $this->renderSelector('#' . $id, 'Clicked');
+        $this->morphSelector($target, 'Clicked');
     }
 
     public function render()

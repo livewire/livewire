@@ -270,18 +270,20 @@ export default class Component {
 
         store.callHook('message.received', message, this)
 
-        if (response.effects.selector) {
-            // Morp a part of the dom only, based on the selector
-            var selectorEl  = document.querySelector(response.effects.selector);
-
-            if (selectorEl) {
-                this.handleMorph(response.effects.html.trim(), selectorEl);
-            }
-        } else if (response.effects.html) {
+        if (response.effects.html) {
             // If we get HTML from the server, store it for the next time we might not.
             this.lastFreshHtml = response.effects.html
 
             this.handleMorph(response.effects.html.trim())
+        } else if (response.effects.morphs) {
+            // Morp parts of the dom only, based on the selector
+            response.effects.morphs.forEach(morph => {
+                var selectorEl = document.querySelector(morph.selector);
+
+                if (selectorEl) {
+                    this.handleMorph(morph.html.trim(), selectorEl);
+                }
+            })
         } else {
             // It's important to still "morphdom" even when the server HTML hasn't changed,
             // because Alpine needs to be given the chance to update.

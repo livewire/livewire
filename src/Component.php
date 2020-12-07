@@ -30,8 +30,7 @@ abstract class Component
     protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
-    protected $preRenderedOutput;
-    protected $outputSelector;
+    protected $morphs;
 
     public function __construct($id = null)
     {
@@ -106,15 +105,19 @@ abstract class Component
         $this->shouldSkipRender = true;
     }
 
-    public function renderSelector($selector, $html)
+    public function morphSelector($selector, $html)
     {
-        $this->outputSelector = $selector;
-        $this->preRenderedOutput = '<div>' . $html .'</div>';
+        $this->skipRender();
+
+        $this->morphs[$selector] = [
+            'selector' => $selector,
+            'html' => '<div>' . $html .'</div>',
+        ];
     }
 
-    public function getOutputSelector()
+    public function getMorphs()
     {
-        return $this->outputSelector;
+        return $this->morphs;
     }
 
     public function renderToView()
@@ -144,8 +147,6 @@ abstract class Component
 
     public function output($errors = null)
     {
-        if ($this->preRenderedOutput) return $this->preRenderedOutput;
-
         if ($this->shouldSkipRender) return null;
 
         $view = $this->preRenderedView;

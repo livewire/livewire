@@ -15,8 +15,8 @@ class RenderView implements HydrationMiddleware
 
         data_set($response, 'effects.html', $html);
 
-        if ($selector = $instance->getOutputSelector()) {
-            data_set($response, 'effects.selector', $selector);
+        if ($morphs = $instance->getMorphs()) {
+            data_set($response, 'effects.morphs', array_values($morphs));
         }
     }
 }

@@ -9,12 +9,12 @@ use Livewire\Livewire;
 use Livewire\LivewireManager;
 use function Livewire\str;
 
-class ComponentSelectorOutputTest extends TestCase
+class ComponentMorphSelectorTest extends TestCase
 {
     /** @test */
-    public function component_renders_like_normale()
+    public function component_renders_initial_like_normal()
     {
-        $component = Livewire::test(ComponentSelectorOutputStub::class);
+        $component = Livewire::test(ComponentMorphSelectorStub::class);
 
         $this->assertTrue(
             str($component->payload['effects']['html'])->contains([$component->id(), 'foo'])
@@ -24,25 +24,23 @@ class ComponentSelectorOutputTest extends TestCase
     /** @test */
     public function on_selector_output_contains_selector_and_selector_output()
     {
-        $component = Livewire::test(ComponentSelectorOutputStub::class);
+        $component = Livewire::test(ComponentMorphSelectorStub::class);
 
         $component->call('click');
 
         $this->assertSame(
             '<div>Clicked</div>',
-            $component->payload['effects']['html']
+            $component->payload['effects']['morphs'][0]['html']
         );
-        $this->assertSame('#output', $component->payload['effects']['selector']);
-
-        $this->assertSame('<div>Clicked</div>', $component->lastRenderedDom);
+        $this->assertSame('#output', $component->payload['effects']['morphs'][0]['selector']);
     }
 }
 
-class ComponentSelectorOutputStub extends Component
+class ComponentMorphSelectorStub extends Component
 {
     public function click()
     {
-        $this->renderSelector('#output', 'Clicked');
+        $this->morphSelector('#output', 'Clicked');
     }
 
     public function render()
