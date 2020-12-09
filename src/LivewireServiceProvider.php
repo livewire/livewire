@@ -15,35 +15,31 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Livewire\Commands\{
-    CpCommand,
-    MvCommand,
-    RmCommand,
-    CopyCommand,
-    MakeCommand,
-    MoveCommand,
-    StubsCommand,
-    TouchCommand,
-    DeleteCommand,
-    PublishCommand,
-    ComponentParser,
-    DiscoverCommand,
-    S3CleanupCommand,
-    MakeLivewireCommand,
-};
-use Livewire\HydrationMiddleware\{
-    RenderView,
-    PerformActionCalls,
-    CallHydrationHooks,
-    PerformEventEmissions,
-    HydratePublicProperties,
-    PerformDataBindingUpdates,
-    CallPropertyHydrationHooks,
-    SecureHydrationWithChecksum,
-    HashDataPropertiesForDirtyDetection,
-    NormalizeServerMemoSansDataForJavaScript,
-    NormalizeComponentPropertiesForJavaScript,
-};
+use Livewire\Commands\CpCommand;
+use Livewire\Commands\MvCommand;
+use Livewire\Commands\RmCommand;
+use Livewire\Commands\CopyCommand;
+use Livewire\Commands\MakeCommand;
+use Livewire\Commands\MoveCommand;
+use Livewire\Commands\StubsCommand;
+use Livewire\Commands\TouchCommand;
+use Livewire\Commands\DeleteCommand;
+use Livewire\Commands\PublishCommand;
+use Livewire\Commands\ComponentParser;
+use Livewire\Commands\DiscoverCommand;
+use Livewire\Commands\S3CleanupCommand;
+use Livewire\Commands\MakeLivewireCommand;
+use Livewire\HydrationMiddleware\RenderView;
+use Livewire\HydrationMiddleware\PerformActionCalls;
+use Livewire\HydrationMiddleware\CallHydrationHooks;
+use Livewire\HydrationMiddleware\PerformEventEmissions;
+use Livewire\HydrationMiddleware\HydratePublicProperties;
+use Livewire\HydrationMiddleware\PerformDataBindingUpdates;
+use Livewire\HydrationMiddleware\CallPropertyHydrationHooks;
+use Livewire\HydrationMiddleware\SecureHydrationWithChecksum;
+use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
+use Livewire\HydrationMiddleware\NormalizeServerMemoSansDataForJavaScript;
+use Livewire\HydrationMiddleware\NormalizeComponentPropertiesForJavaScript;
 use Livewire\Macros\ViewMacros;
 
 class LivewireServiceProvider extends ServiceProvider
@@ -143,7 +139,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerCommands()
     {
-        if (! $this->app->runningInConsole()) return;
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
 
         $this->commands([
             MakeLivewireCommand::class, // make:livewire
@@ -247,6 +245,10 @@ class LivewireServiceProvider extends ServiceProvider
         // Livewire views. Things like letting certain exceptions bubble
         // to the handler, and registering custom directives like: "@this".
         $this->app->make('view.engine.resolver')->register('blade', function () {
+
+            // If the application is using Ignition, make sure Livewire's view compiler
+            // uses a version that extends Ignition's so it can continue to report errors
+            // correctly. Don't change this class without first submitting a PR to Ignition.
             if (class_exists(\Facade\Ignition\IgnitionServiceProvider::class)) {
                 return new CompilerEngineForIgnition($this->app['blade.compiler']);
             }
@@ -323,7 +325,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function bypassTheseMiddlewaresDuringLivewireRequests(array $middlewareToExclude)
     {
-        if (! $this->app['livewire']->isLivewireRequest()) return;
+        if (! $this->app['livewire']->isLivewireRequest()) {
+            return;
+        }
 
         $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
 
