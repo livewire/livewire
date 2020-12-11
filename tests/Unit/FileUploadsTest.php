@@ -636,11 +636,6 @@ class FileUploadComponent extends Component
         $this->storedFilename = $this->photo->store('/', $disk = 'avatars');
     }
 
-    public function uploadDangerous()
-    {
-        $this->photo->store();
-    }
-
     public function validateUpload()
     {
         $this->validate(['photo' => 'file|max:100']);
