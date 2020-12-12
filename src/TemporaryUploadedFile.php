@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
+use JsonSerializable;
 
 class TemporaryUploadedFile extends UploadedFile implements JsonSerializable
 {
