@@ -7,7 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 
-class TemporaryUploadedFile extends UploadedFile
+class TemporaryUploadedFile extends UploadedFile implements JsonSerializable
 {
     protected $storage;
     protected $path;
@@ -183,5 +183,10 @@ class TemporaryUploadedFile extends UploadedFile
     public static function serializeMultipleForLivewireResponse($files)
     {
         return 'livewire-files:'.json_encode(collect($files)->map->getFilename());
+    }
+
+    public function jsonSerialize()
+    {
+        return $this->serializeForLivewireResponse();
     }
 }
