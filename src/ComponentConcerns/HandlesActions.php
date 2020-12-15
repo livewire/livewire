@@ -59,8 +59,8 @@ trait HandlesActions
         $name = str($name);
 
         $propertyName = $name->studly()->before('.');
-        $keyAfterFirstDot = $name->contains('.') ? $name->after('.') : null;
-        $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.') : null;
+        $keyAfterFirstDot = $name->contains('.') ? $name->after('.')->__toString() : null;
+        $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.')->__toString() : null;
 
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
