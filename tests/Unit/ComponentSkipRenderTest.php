@@ -27,6 +27,15 @@ class ComponentSkipRenderTest extends TestCase
 
         $this->assertNull($component->payload['effects']['html']);
     }
+
+    /** @test */
+    public function on_redirect_in_mount_render_is_not_called()
+    {
+        $component = Livewire::test(ComponentSkipRenderOnRedirectInMountStub::class);
+
+        $this->assertEquals('/foo', $component->payload['effects']['redirect']);
+        $this->assertNull($component->payload['effects']['html']);
+    }
 }
 
 class ComponentSkipRenderStub extends Component
@@ -47,5 +56,18 @@ class ComponentSkipRenderStub extends Component
         }
 
         return app('view')->make('null-view');
+    }
+}
+
+class ComponentSkipRenderOnRedirectInMountStub extends Component
+{
+    public function mount()
+    {
+        $this->redirect('/foo');
+    }
+
+    public function render()
+    {
+        throw new \RuntimeException('Render should not be called on redirect');
     }
 }
