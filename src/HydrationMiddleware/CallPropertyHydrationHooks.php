@@ -14,7 +14,7 @@ class CallPropertyHydrationHooks implements HydrationMiddleware
             Livewire::dispatch('property.hydrate', $property, $value, $instance, $request);
 
             // Call magic hydrateProperty methods on the component.
-            // If the method doesn't exist, the __call with eat it.
+            // If the method doesn't exist, the __call will eat it.
             $studlyProperty = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
             $method = 'hydrate'.$studlyProperty;
             $instance->{$method}($value, $request);
