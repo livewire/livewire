@@ -28,6 +28,13 @@
         <option>baz</option>
     </select>
 
+    <h1 dusk="selected.output">{{ $selected }}</h1>
+    <select wire:model="selected" dusk="selected.input">
+        @foreach($selectOptions as $option)
+        <option @if($selected == $option) selected @endif>{{ $option }}</option>
+        @endforeach
+    </select>
+
     <h1 dusk="multiple.output">@json($multiple)</h1>
     <select wire:model="multiple" multiple dusk="multiple.input">
         <option>foo</option>

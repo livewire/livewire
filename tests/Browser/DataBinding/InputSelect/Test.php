@@ -47,6 +47,15 @@ class Test extends TestCase
                 ->assertSeeIn('@placeholder.output', 'foo')
 
                 /**
+                 * Select with a server-rendered `selected` option.
+                 */
+                ->assertSelected('@selected.input', '')
+                ->assertDontSeeIn('@selected.output', 'foo')
+                ->waitForLivewire()->select('@selected.input', 'bar')
+                ->assertSelected('@selected.input', 'bar')
+                ->assertSeeIn('@selected.output', 'bar')
+
+                /**
                  * Select multiple.
                  */
                 ->assertDontSeeIn('@multiple.output', 'bar')

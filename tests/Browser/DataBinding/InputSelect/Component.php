@@ -11,6 +11,8 @@ class Component extends BaseComponent
     public $singleValue;
     public $singleNumber = 3;
     public $placeholder = '';
+    public $selected = '';
+    public $selectOptions = ['', 'foo', 'bar', 'baz'];
     public $multiple = [];
 
     public function render()
