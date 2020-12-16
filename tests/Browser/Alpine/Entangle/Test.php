@@ -92,4 +92,19 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_entangle_does_not_throw_error_after_nested_array_removed()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, EntangleNestedArray::class)
+                ->waitForLivewire()->click('@add')
+                ->waitForLivewire()->click('@add')
+                ->assertSeeIn('@output', "Item0")
+                ->assertSeeIn('@output', "Item1")
+                ->waitForLivewire()->click('@remove')
+                ->assertSeeIn('@output', "Item0")
+                ->assertDontSeeIn('@output', "Item1")
+            ;
+        });
+    }
 }
