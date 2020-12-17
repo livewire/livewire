@@ -364,7 +364,7 @@ class ValidationTest extends TestCase
     /** @test */
     public function only_data_in_validation_rules_is_returned()
     {
-        $component = new ForValidation();
+        $component      = new ForValidation();
         $component->bar = 'is required';
 
         $validatedData = $component->runValidationWithoutAllPublicPropertiesAndReturnValidatedData();
@@ -384,14 +384,14 @@ class ValidationTest extends TestCase
 
 class ForValidation extends Component
 {
-    public $foo = 'foo';
-    public $bar = '';
+    public $foo    = 'foo';
+    public $bar    = '';
     public $emails = ['foo@bar.com', 'invalid-email'];
-    public $items = [
+    public $items  = [
         ['foo' => 'bar', 'baz' => 'blab'],
         ['foo' => 'bar', 'baz' => ''],
     ];
-    public $password = '';
+    public $password             = '';
     public $passwordConfirmation = '';
 
     public function runValidation()
@@ -443,14 +443,14 @@ class ForValidation extends Component
                 'foo_length' => strlen($this->foo),
                 'bar_length' => strlen($this->bar),
             ],
-            [ 'foo_length' => 'same:bar_length' ],
-            [ 'same' => 'Lengths must be the same' ]
+            ['foo_length' => 'same:bar_length'],
+            ['same' => 'Lengths must be the same']
         )->validate();
     }
 
     public function runValidationOnlyWithMessageProperty($field)
     {
-        $this->messages = [
+        $this->validationMessages = [
             'foo.required' => 'Foo Message',
             'bar.required' => 'Bar Message',
         ];
@@ -464,8 +464,8 @@ class ForValidation extends Component
     public function runDeeplyNestedValidationOnly($field)
     {
         $this->validateOnly($field, [
-            'items' => ['required', 'array'],
-            'items.*' => 'array',
+            'items'       => ['required', 'array'],
+            'items.*'     => 'array',
             'items.*.foo' => ['required', 'string'],
             'items.*.baz' => ['required', 'string'],
         ]);
@@ -480,12 +480,12 @@ class ForValidation extends Component
 
     public function runValidationWithMessageProperty()
     {
-        $this->messages = [
-            'required' => 'Custom Message'
+        $this->validationMessages = [
+            'required' => 'Custom Message',
         ];
 
         $this->validate([
-            'bar' => 'required'
+            'bar' => 'required',
         ]);
     }
 
@@ -515,13 +515,12 @@ class ForValidation extends Component
     public function runDeeplyNestedValidation()
     {
         $this->validate([
-            'items' => ['required', 'array'],
-            'items.*' => 'array',
+            'items'       => ['required', 'array'],
+            'items.*'     => 'array',
             'items.*.foo' => ['required', 'string'],
             'items.*.baz' => ['required', 'string'],
         ]);
     }
-
 
     public function runSameValidation()
     {
