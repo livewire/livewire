@@ -557,7 +557,7 @@ export default class Component {
         if (this.modelDebounceCallbacks) {
             this.modelDebounceCallbacks.forEach(callbackRegister => {
                 callbackRegister.callback()
-                callbackRegister = () => { }
+                callbackRegister.callback = () => { }
             })
         }
 
