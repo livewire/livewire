@@ -78,7 +78,7 @@ export default class Component {
         // The .split() stuff is to support dot-notation.
         return name
             .split('.')
-            .reduce((carry, segment) => typeof carry === "undefined" ? carry : carry[segment], this.data)
+            .reduce((carry, segment) => typeof carry === 'undefined' ? carry : carry[segment], this.data)
     }
 
     getPropertyValueIncludingDefers(name) {
