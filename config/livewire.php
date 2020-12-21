@@ -31,13 +31,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Full-page Layout
+    | Layout
     |--------------------------------------------------------------------------
-    |
-    | This value sets the view to use as a layout for full-page components.
+    | The default layout view that will be used when rendering a component via
+    | Route::get('/some-endpoint', SomeComponent::class);. In this case the
+    | the view returned by SomeComponent will be wrapped in "layouts.app"
     |
     */
-    'fullpage_layout' => 'layouts.app',
+    'layout' => 'layouts.app',
 
     /*
     |--------------------------------------------------------------------------
