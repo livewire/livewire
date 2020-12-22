@@ -105,7 +105,8 @@ function supportEntangle() {
                         livewireComponent.watch(
                             livewireProperty,
                             value => {
-                                component.$data[key] = value
+                                // Ensure data is deep cloned otherwise Alpine mutates Livewire data
+                                component.$data[key] = typeof value !== 'undefined' ? JSON.parse(JSON.stringify(value)) : value
                             }
                         )
                     }
