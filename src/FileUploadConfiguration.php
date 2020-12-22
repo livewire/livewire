@@ -66,6 +66,12 @@ class FileUploadConfiguration
         return $prefix.($prefix ? '/' : '').$directory.($path ? '/' : '').$path;
     }
 
+     public static function mimeType($filename)
+    {
+        $mimeType = static::storage()->getMimeType(static::path($filename));
+        return $mimeType === 'image/svg' ? 'image/svg+xml' : $mimeType;
+    }
+
     public static function middleware()
     {
         return config('livewire.temporary_file_upload.middleware') ?: 'throttle:60,1';

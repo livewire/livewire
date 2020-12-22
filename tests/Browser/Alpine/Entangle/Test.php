@@ -3,8 +3,9 @@
 namespace Tests\Browser\Alpine\Entangle;
 
 use Livewire\Livewire;
-use Tests\Browser\TestCase;
 use Tests\Browser\Alpine\Entangle\Component;
+use Tests\Browser\Alpine\Entangle\EntangleConsecutiveActions;
+use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
@@ -89,6 +90,80 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@submit')
                 ->assertSeeIn('@output.alpine', 'ss')
                 ->assertSeeIn('@output.livewire', 'ss')
+            ;
+        });
+    }
+
+    public function test_entangle_does_not_throw_error_after_nested_array_removed()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, EntangleNestedArray::class)
+                ->waitForLivewire()->click('@add')
+                ->waitForLivewire()->click('@add')
+                ->assertSeeIn('@output', "Item0")
+                ->assertSeeIn('@output', "Item1")
+                ->waitForLivewire()->click('@remove')
+                ->assertSeeIn('@output', "Item0")
+                ->assertDontSeeIn('@output', "Item1")
+            ;
+        });
+    }
+
+    public function test_entangle_watchers_fire_on_consecutive_changes()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, EntangleConsecutiveActions::class)
+
+                // Trigger some consecutive alpine changes
+                ->waitForLivewire()->click('@alpineAdd')
+                ->assertSeeIn('@alpineOutput', 0)
+                ->assertDontSeeIn('@alpineOutput', 1)
+                ->assertDontSeeIn('@alpineOutput', 2)
+                ->assertSeeIn('@livewireOutput', 0)
+                ->assertDontSeeIn('@livewireOutput', 1)
+                ->assertDontSeeIn('@livewireOutput', 2)
+
+                ->waitForLivewire()->click('@alpineAdd')
+                ->assertSeeIn('@alpineOutput', 0)
+                ->assertSeeIn('@alpineOutput', 1)
+                ->assertDontSeeIn('@alpineOutput', 2)
+                ->assertSeeIn('@livewireOutput', 0)
+                ->assertSeeIn('@livewireOutput', 1)
+                ->assertDontSeeIn('@livewireOutput', 2)
+
+                ->waitForLivewire()->click('@alpineAdd')
+                ->assertSeeIn('@alpineOutput', 0)
+                ->assertSeeIn('@alpineOutput', 1)
+                ->assertSeeIn('@alpineOutput', 2)
+                ->assertSeeIn('@livewireOutput', 0)
+                ->assertSeeIn('@livewireOutput', 1)
+                ->assertSeeIn('@livewireOutput', 2)
+
+
+                // Trigger some consecutive livewire changes
+                ->waitForLivewire()->click('@livewireAdd')
+                ->assertSeeIn('@alpineOutput', 3)
+                ->assertDontSeeIn('@alpineOutput', 4)
+                ->assertDontSeeIn('@alpineOutput', 5)
+                ->assertSeeIn('@livewireOutput', 3)
+                ->assertDontSeeIn('@livewireOutput', 4)
+                ->assertDontSeeIn('@livewireOutput', 5)
+
+                ->waitForLivewire()->click('@livewireAdd')
+                ->assertSeeIn('@alpineOutput', 3)
+                ->assertSeeIn('@alpineOutput', 4)
+                ->assertDontSeeIn('@alpineOutput', 5)
+                ->assertSeeIn('@livewireOutput', 3)
+                ->assertSeeIn('@livewireOutput', 4)
+                ->assertDontSeeIn('@livewireOutput', 5)
+
+                ->waitForLivewire()->click('@livewireAdd')
+                ->assertSeeIn('@alpineOutput', 3)
+                ->assertSeeIn('@alpineOutput', 4)
+                ->assertSeeIn('@alpineOutput', 5)
+                ->assertSeeIn('@livewireOutput', 0)
+                ->assertSeeIn('@livewireOutput', 4)
+                ->assertSeeIn('@livewireOutput', 5)
             ;
         });
     }

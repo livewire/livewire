@@ -51,7 +51,7 @@ abstract class Component
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
-            'view' => $this->initialLayoutConfiguration['view'] ?? 'layouts.app',
+            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout', 'layouts.app'),
             'params' => $this->initialLayoutConfiguration['params'] ?? [],
             'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
                 'extends' => 'content', 'component' => 'default',
@@ -106,6 +106,8 @@ abstract class Component
 
     public function renderToView()
     {
+        if ($this->shouldSkipRender) return null;
+
         Livewire::dispatch('component.rendering', $this);
 
         $view = method_exists($this, 'render')
