@@ -32,6 +32,7 @@ class Test extends TestCase
 
                     $browser->assertNotVisible('@targeting');
                     $browser->assertNotVisible('@targeting-both');
+                    $browser->assertNotVisible('@targeting-param');
                     $browser->assertClassMissing('@self-target-button', 'foo');
                 })
                 ->tap($this->assertInitialState())
@@ -63,6 +64,7 @@ class Test extends TestCase
 
                     $browser->waitFor('@targeting');
                     $browser->assertVisible('@targeting-both');
+                    $browser->assertVisible('@targeting-param');
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
@@ -135,6 +137,7 @@ class Test extends TestCase
 
             $browser->assertNotVisible('@targeting');
             $browser->assertNotVisible('@targeting-both');
+            $browser->assertNotVisible('@targeting-param');
 
             $browser->assertClassMissing('@self-target-button', 'foo');
             $browser->assertClassMissing('@self-target-model', 'foo');
