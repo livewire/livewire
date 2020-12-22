@@ -103,16 +103,10 @@ class HydratePublicProperties implements HydrationMiddleware
             $model = new $serialized['class'];
         }
 
-        $dirtyModelData = $request->memo['data'][$property];
+        $modelData = $request->memo['data'][$property];
 
-        if ($rules = $instance->rulesForModel($property)) {
-            $keys = $rules->keys()->map(function ($key) use ($instance) {
-                return $instance->beforeFirstDot($instance->afterFirstDot($key));
-            });
-
-            foreach ($keys as $key) {
-                data_set($model, $key, data_get($dirtyModelData, $key));
-            }
+        foreach ($modelData as $key => $value) {
+            data_set($model, $key, $value);
         }
 
         $instance->$property = $model;

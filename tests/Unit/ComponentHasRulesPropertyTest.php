@@ -49,6 +49,21 @@ class ComponentHasRulesPropertyTest extends TestCase
     }
 
     /** @test */
+    public function can_validate_uniqueness_on_a_model_but_exempt_the_model_itself()
+    {
+        Livewire::test(ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions::class)
+            ->set('foo.email', 'baz@example.com')
+            ->call('save')
+            ->assertHasNoErrors('foo.email')
+            ->set('foo.email', 'baz@example.com')
+            ->call('save')
+            ->assertHasNoErrors('foo.email')
+            ->set('foo.email', 'bar@example.com')
+            ->call('save')
+            ->assertHasErrors('foo.email');
+    }
+
+    /** @test */
     public function can_validate_collection_properties()
     {
         Livewire::test(ComponentWithRulesProperty::class)
@@ -118,8 +133,8 @@ class FooModelForUniquenessValidation extends Model
     use Sushi;
 
     protected $rows = [
-        ['name' => 'foo'],
-        ['name' => 'bar'],
+        ['name' => 'foo', 'email' => 'foo@example.com'],
+        ['name' => 'bar', 'email' => 'bar@example.com'],
     ];
 }
 
@@ -130,6 +145,40 @@ class ComponentWithRulesPropertyAndModelWithUniquenessValidation extends Compone
     protected $rules = [
         'foo.name' => 'required|unique:foo-connection.foo_model_for_uniqueness_validations,name',
     ];
+
+    public function mount()
+    {
+        $this->foo = FooModelForUniquenessValidation::first();
+    }
+
+    public function save()
+    {
+        // Sorry about this chunk of ridiculousness. It's Sushi's fault.
+        $connection = $this->foo::resolveConnection();
+        $db = app('db');
+        $prybar = new ObjectPrybar($db);
+        $connections = $prybar->getProperty('connections');
+        $connections['foo-connection'] = $connection;
+        $prybar->setProperty('connections', $connections);
+
+        $this->validate();
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions extends Component
+{
+    public $foo;
+
+    protected function rules() {
+        return [
+            'foo.email' => 'unique:foo-connection.foo_model_for_uniqueness_validations,email,'.$this->foo->id
+        ];
+    }
 
     public function mount()
     {
