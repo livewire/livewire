@@ -145,7 +145,7 @@ function removeLoadingEl(component, el) {
         component.targetedLoadingElsByAction[
             key
         ] = component.targetedLoadingElsByAction[key].filter(element => {
-            return !element.el.isSameNode(el)
+            return ! element.el.isSameNode(el)
         })
     })
 }
@@ -226,11 +226,8 @@ function startLoading(els) {
 }
 
 function getDisplayProperty(directive) {
-    return (
-        ['inline', 'block', 'table', 'flex', 'grid'].filter(i =>
-            directive.modifiers.includes(i)
-        )[0] || 'inline-block'
-    )
+    return (['inline', 'block', 'table', 'flex', 'grid']
+        .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
 }
 
 function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
