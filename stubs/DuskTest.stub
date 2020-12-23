@@ -1,0 +1,19 @@
+<?php
+
+namespace Tests\Browser\[name];
+
+use Livewire\Livewire;
+use Tests\Browser\TestCase;
+use Tests\Browser\[name]\Component;
+
+class Test extends TestCase
+{
+    public function test()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, Component::class)
+                //
+            ;
+        });
+    }
+}

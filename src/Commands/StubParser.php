@@ -3,6 +3,7 @@
 namespace Livewire\Commands;
 
 use Illuminate\Support\Str;
+use function Livewire\str;
 
 class StubParser extends ComponentParser
 {
@@ -17,8 +18,8 @@ class StubParser extends ComponentParser
 
         $directories = preg_split('/[.\/]+/', $rawCommand);
 
-        $this->component = Str::kebab(array_pop($directories));
-        $this->componentClass = Str::studly($this->component);
+        $this->component = str(array_pop($directories))->kebab();
+        $this->componentClass = str($this->component)->studly();
 
         $this->directories = array_map([Str::class, 'studly'], $directories);
     }
@@ -33,7 +34,7 @@ class StubParser extends ComponentParser
         return $this->component.'.stub';
     }
 
-    public function classContents()
+    public function classContents($inline = false)
     {
         return file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'Component.stub');
     }

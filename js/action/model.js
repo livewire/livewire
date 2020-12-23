@@ -5,6 +5,7 @@ export default class extends Action {
         super(el)
 
         this.type = 'syncInput'
+        this.name = name
         this.payload = {
             name,
             value,

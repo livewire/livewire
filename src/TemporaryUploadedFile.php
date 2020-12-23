@@ -3,11 +3,9 @@
 namespace Livewire;
 
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
-use League\Flysystem\Util;
 
 class TemporaryUploadedFile extends UploadedFile
 {
@@ -18,8 +16,7 @@ class TemporaryUploadedFile extends UploadedFile
     {
         $this->disk = $disk;
         $this->storage = Storage::disk($this->disk);
-        // Strip out any directory seperators.
-        $this->path = FileUploadConfiguration::directory().Util::normalizeRelativePath($path);
+        $this->path = FileUploadConfiguration::path($path, false);
 
         $tmpFile = tmpfile();
 
@@ -33,10 +30,8 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getSize()
     {
-        if (app()->environment('testing') && str::contains($this->getfilename(), '-size:')) {
-            // This head/explode/last/explode nonsense is the equivelant of Str::between().
-            [$beginning, $end] = ['-size:', '.'];
-            return (int) head(explode($end, last(explode($beginning, $this->getFilename()))));
+        if (app()->environment('testing') && str($this->getfilename())->contains('-size=')) {
+            return (int) str($this->getFilename())->between('-size=', '.')->__toString();
         }
 
         return (int) $this->storage->size($this->path);
@@ -65,16 +60,20 @@ class TemporaryUploadedFile extends UploadedFile
     public function temporaryUrl()
     {
         if (FileUploadConfiguration::isUsingS3() && ! app()->environment('testing')) {
-            return $this->storage->temporaryUrl($this->path, now()->addDay());
+            return $this->storage->temporaryUrl(
+                $this->path,
+                now()->addDay(),
+                ['ResponseContentDisposition' => 'filename="' . $this->getClientOriginalName() . '"']
+            );
         }
 
-        $supportedPreviewTypes = [
-            'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp',
-            'mp4', 'mov', 'avi', 'wmv',
-            'mp3', 'wav', 'm4a', 'wma',
-        ];
+        $supportedPreviewTypes = config('livewire.temporary_file_upload.preview_mimes', [
+            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
+            'mov', 'avi', 'wmv', 'mp3', 'm4a',
+            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
+        ]);
 
-        if (! in_array($this->guessExtension(), $supportedPreviewTypes)) {
+        if (! in_array($this->guessExtension(),  $supportedPreviewTypes)) {
             // This will throw an error because it's not used with S3.
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
@@ -86,7 +85,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function readStream()
     {
-        $this->storage->readStream($this->path);
+        return $this->storage->readStream($this->path);
     }
 
     public function exists()
@@ -112,21 +111,17 @@ class TemporaryUploadedFile extends UploadedFile
 
         $newPath = trim($path.'/'.$name, '/');
 
-        if ($disk === $this->disk) {
-            $this->storage->copy($this->path, $newPath);
-        } else {
-            Storage::disk($disk)->put(
-                $newPath, $this->storage->readStream($this->path), $options
-            );
-        }
+        Storage::disk($disk)->put(
+            $newPath, $this->storage->readStream($this->path), $options
+        );
 
         return $newPath;
     }
 
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
-        $hash = Str::random(30);
-        $meta = '-meta'.base64_encode($file->getClientOriginalName()).'-';
+        $hash = str()->random(30);
+        $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
         $extension = '.'.$file->guessExtension();
 
         return $hash.$meta.$extension;
@@ -134,7 +129,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function extractOriginalNameFromFilePath($path)
     {
-        return base64_decode(head(explode('-', last(explode('-meta', $path)))));
+        return base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
     }
 
     public static function createFromLivewire($filePath)
@@ -144,21 +139,40 @@ class TemporaryUploadedFile extends UploadedFile
 
     public static function canUnserialize($subject)
     {
-        if (! is_string($subject)) return false;
+        if (is_string($subject)) {
+            return (string) str($subject)->startsWith(['livewire-file:', 'livewire-files:']);
+        }
 
-        return Str::startsWith($subject, 'livewire-file:')
-            || Str::startsWith($subject, 'livewire-files:');
+        if (is_array($subject)) {
+            return collect($subject)->contains(function ($value) {
+                return static::canUnserialize($value);
+            });
+        }
+
+        return false;
     }
 
     public static function unserializeFromLivewireRequest($subject)
     {
-        if (Str::startsWith($subject, 'livewire-file:')) {
-            return static::createFromLivewire(Str::after($subject, 'livewire-file:'));
-        } elseif (Str::startsWith($subject, 'livewire-files:')) {
-            $paths = json_decode(Str::after($subject, 'livewire-files:'), true);
+        if (is_string($subject)) {
+            if (str($subject)->startsWith('livewire-file:')) {
+                return static::createFromLivewire(str($subject)->after('livewire-file:'));
+            }
 
-            return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
+            if (str($subject)->startsWith('livewire-files:')) {
+                $paths = json_decode(str($subject)->after('livewire-files:'), true);
+
+                return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
+            }
         }
+
+        if (is_array($subject)) {
+            foreach ($subject as $key => $value) {
+                $subject[$key] =  static::unserializeFromLivewireRequest($value);
+            }
+        }
+
+        return $subject;
     }
 
     public function serializeForLivewireResponse()

@@ -1,33 +1,45 @@
-import { kebabCase, debounce } from '@/util'
+import { kebabCase, debounce, wireDirectives } from '@/util'
 import ModelAction from '@/action/model'
+import DeferredModelAction from '@/action/deferred-model'
 import MethodAction from '@/action/method'
-import DOMElement from '@/dom/dom_element'
 import store from '@/Store'
+import DOM from './dom/dom'
 
 export default {
     initialize(el, component) {
-        el.directives.all().forEach(directive => {
+        if (store.initialRenderIsFinished && el.tagName.toLowerCase() === 'script') {
+            eval(el.innerHTML)
+            return false
+        }
+
+        wireDirectives(el).all().forEach(directive => {
             switch (directive.type) {
                 case 'init':
                     this.fireActionRightAway(el, directive, component)
-                    break;
+                    break
 
                 case 'model':
-                    el.setInputValueFromModel(component)
+                    DOM.setInputValueFromModel(el, component)
+
                     this.attachModelListener(el, directive, component)
-                    break;
+                    break
 
                 default:
                     if (store.directives.has(directive.type)) {
-                        store.directives.call(directive.type, el.el, directive, component)
+                        store.directives.call(
+                            directive.type,
+                            el,
+                            directive,
+                            component
+                        )
                     }
 
                     this.attachDomListener(el, directive, component)
-                    break;
+                    break
             }
         })
 
-        store.callHook('elementInitialized', el, component)
+        store.callHook('element.initialized', el, component)
     },
 
     fireActionRightAway(el, directive, component) {
@@ -38,7 +50,7 @@ export default {
 
     attachModelListener(el, directive, component) {
         // This is used by morphdom: morphdom.js:391
-        el.el.isLivewireModel = true
+        el.isLivewireModel = true
 
         const isLazy = directive.modifiers.includes('lazy')
         const debounceIf = (condition, callback, time) => {
@@ -48,26 +60,37 @@ export default {
         }
         const hasDebounceModifier = directive.modifiers.includes('debounce')
 
-        store.callHook('interceptWireModelAttachListener', el, directive, component, debounceIf)
+        store.callHook('interceptWireModelAttachListener', directive, el, component)
 
         // File uploads are handled by UploadFiles.js.
-        if (el.rawNode().tagName.toLowerCase() === 'input' && el.rawNode().type === 'file') return
+        if (el.tagName.toLowerCase() === 'input' && el.type === 'file') return
 
-        const event = (el.rawNode().tagName.toLowerCase() === 'select')
-            || ['checkbox', 'radio'].includes(el.rawNode().type)
-            || directive.modifiers.includes('lazy')
-            ? 'change' : 'input'
+        const event = el.tagName.toLowerCase() === 'select'
+            || ['checkbox', 'radio'].includes(el.type)
+            || directive.modifiers.includes('lazy') ? 'change' : 'input'
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-        let handler = debounceIf(hasDebounceModifier || (el.isTextInput() && ! isLazy), e => {
-            const model = directive.value
-            const el = new DOMElement(e.target)
-            // We have to check for typeof e.detail here for IE 11.
-            const value = e instanceof CustomEvent && typeof e.detail != 'undefined'
-                ? e.detail
-                : el.valueFromInput(component)
+        let handler = debounceIf(hasDebounceModifier || (DOM.isTextInput(el) && (!isLazy || !el.wasRecentlyAutofilled)), e => {
+            let model = directive.value
+            let el = e.target
 
-            component.addAction(new ModelAction(model, value, el))
+            let value = e instanceof CustomEvent
+                // We have to check for typeof e.detail here for IE 11.
+                && typeof e.detail != 'undefined'
+                && typeof window.document.documentMode == 'undefined'
+                    ? e.detail
+                    : DOM.valueFromInput(el, component)
+
+            // These conditions should only be met if the event was fired for a Safari autofill.
+            if (el.wasRecentlyAutofilled && e instanceof CustomEvent && e.detail === null) {
+                value = DOM.valueFromInput(el, component)
+            }
+
+            if (directive.modifiers.includes('defer')) {
+                component.addAction(new DeferredModelAction(model, value, el))
+            } else {
+                component.addAction(new ModelAction(model, value, el))
+            }
         }, directive.durationOr(150))
 
         el.addEventListener(event, handler)
@@ -75,60 +98,92 @@ export default {
         component.addListenerForTeardown(() => {
             el.removeEventListener(event, handler)
         })
+
+        el.addEventListener('animationstart', e => {
+            if (e.animationName !== 'livewireautofill') return
+
+            e.target.wasRecentlyAutofilled = true
+
+            setTimeout(() => {
+                delete e.target.wasRecentlyAutofilled
+            }, 1000)
+        })
     },
 
     attachDomListener(el, directive, component) {
         switch (directive.type) {
             case 'keydown':
             case 'keyup':
-                this.attachListener(el, directive, component, (e) => {
+                this.attachListener(el, directive, component, e => {
                     // Detect system modifier key combinations if specified.
-                    const systemKeyModifiers = ['ctrl', 'shift', 'alt', 'meta', 'cmd', 'super']
-                    const selectedSystemKeyModifiers = systemKeyModifiers.filter(key => directive.modifiers.includes(key))
+                    const systemKeyModifiers = [
+                        'ctrl',
+                        'shift',
+                        'alt',
+                        'meta',
+                        'cmd',
+                        'super',
+                    ]
+                    const selectedSystemKeyModifiers = systemKeyModifiers.filter(
+                        key => directive.modifiers.includes(key)
+                    )
 
                     if (selectedSystemKeyModifiers.length > 0) {
-                        const selectedButNotPressedKeyModifiers = selectedSystemKeyModifiers.filter(key => {
-                            // Alias "cmd" and "super" to "meta"
-                            if (key === 'cmd' || key === 'super') key = 'meta'
+                        const selectedButNotPressedKeyModifiers = selectedSystemKeyModifiers.filter(
+                            key => {
+                                // Alias "cmd" and "super" to "meta"
+                                if (key === 'cmd' || key === 'super')
+                                    key = 'meta'
 
-                            return ! e[`${key}Key`]
-                        })
+                                return !e[`${key}Key`]
+                            }
+                        )
 
-                        if (selectedButNotPressedKeyModifiers.length > 0) return false;
+                        if (selectedButNotPressedKeyModifiers.length > 0)
+                            return false
+                    }
+
+		            // Handle spacebar
+                    if (e.keyCode === 32 || (e.key === ' ' || e.key === 'Spacebar')) {
+                        return directive.modifiers.includes('space')
                     }
 
                     // Strip 'debounce' modifier and time modifiers from modifiers list
                     let modifiers = directive.modifiers.filter(modifier => {
-                        return ! modifier.match(/debounce/)
-                            && ! modifier.match(/[0-9ms]/)
-                            && ! modifier.match(/[0-9s]/)
+                        return (
+                            !modifier.match(/^debounce$/) &&
+                            !modifier.match(/^[0-9]+m?s$/)
+                        )
                     })
 
                     // Only handle listener if no, or matching key modifiers are passed.
-                    return modifiers.length === 0 || modifiers.includes(kebabCase(e.key))
+                    // It's important to check that e.key exists - OnePassword's extension does weird things.
+                    return Boolean(modifiers.length === 0 || (e.key && modifiers.includes(kebabCase(e.key))))
                 })
-                break;
+                break
             case 'click':
-                this.attachListener(el, directive, component, (e) => {
+                this.attachListener(el, directive, component, e => {
                     // We only care about elements that have the .self modifier on them.
-                    if (! directive.modifiers.includes('self')) return
+                    if (!directive.modifiers.includes('self')) return
 
                     // This ensures a listener is only run if the event originated
                     // on the elemenet that registered it (not children).
                     // This is useful for things like modal back-drop listeners.
                     return el.isSameNode(e.target)
                 })
-                break;
+                break
             default:
                 this.attachListener(el, directive, component)
-                break;
+                break
         }
     },
 
     attachListener(el, directive, component, callback) {
         if (directive.modifiers.includes('prefetch')) {
             el.addEventListener('mouseenter', () => {
-                component.addPrefetchAction(new MethodAction(directive.method, directive.params, el))
+                component.addPrefetchAction(
+                    new MethodAction(directive.method, directive.params, el)
+                )
             })
         }
 
@@ -139,7 +194,7 @@ export default {
             }
 
             component.callAfterModelDebounce(() => {
-                const el = new DOMElement(e.target)
+                const el = e.target
 
                 directive.setEventContext(e)
 
@@ -149,7 +204,11 @@ export default {
                 const method = directive.method
                 let params = directive.params
 
-                if (params.length === 0 && e instanceof CustomEvent && e.detail) {
+                if (
+                    params.length === 0 &&
+                    e instanceof CustomEvent &&
+                    e.detail
+                ) {
                     params.push(e.detail)
                 }
 
@@ -182,13 +241,15 @@ export default {
         }
 
         const debounceIf = (condition, callback, time) => {
-            return condition
-                ? debounce(callback, time)
-                : callback
+            return condition ? debounce(callback, time) : callback
         }
 
         const hasDebounceModifier = directive.modifiers.includes('debounce')
-        const debouncedHandler = debounceIf(hasDebounceModifier, handler, directive.durationOr(150))
+        const debouncedHandler = debounceIf(
+            hasDebounceModifier,
+            handler,
+            directive.durationOr(150)
+        )
 
         el.addEventListener(event, debouncedHandler)
 

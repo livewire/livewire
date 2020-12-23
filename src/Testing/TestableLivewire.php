@@ -4,27 +4,35 @@ namespace Livewire\Testing;
 
 use Mockery;
 use Livewire\Livewire;
-use Illuminate\Support\Str;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\View;
 use Livewire\GenerateSignedUploadUrl;
 use Illuminate\Routing\RouteCollection;
+use Illuminate\Support\Traits\Macroable;
 use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
+use Livewire\Exceptions\PropertyNotFoundException;
+use function Livewire\str;
 
 class TestableLivewire
 {
+    protected static $instancesById = [];
+
     public $payload = [];
     public $componentName;
     public $lastValidator;
+    public $lastErrorBag;
     public $lastRenderedView;
+    public $lastRenderedDom;
     public $lastResponse;
     public $rawMountedResponse;
+
+    use Macroable { __call as macroCall; }
 
     use Concerns\MakesAssertions,
         Concerns\MakesCallsToComponent,
         Concerns\HasFunLittleUtilities;
 
-    public function __construct($name, $params = [])
+    public function __construct($name, $params = [], $queryParams = [])
     {
         Livewire::listen('view:render', function ($view) {
             $this->lastRenderedView = $view;
@@ -32,6 +40,18 @@ class TestableLivewire
 
         Livewire::listen('failed-validation', function ($validator) {
             $this->lastValidator = $validator;
+        });
+
+        Livewire::listen('component.hydrate.subsequent', function ($validator) {
+            // Clear the validator held in memory from the last request so we
+            // can properly assert validation errors for the most recent request.
+            $this->lastValidator = null;
+        });
+
+        Livewire::listen('component.dehydrate', function($component) {
+            static::$instancesById[$component->id] = $component;
+
+            $this->lastErrorBag = $component->getErrorBag();
         });
 
         Livewire::listen('mounted', function ($response) {
@@ -48,40 +68,61 @@ class TestableLivewire
         // and not have to register an alias.
         if (class_exists($name)) {
             $componentClass = $name;
-            app('livewire')->component($name = Str::random(20), $componentClass);
+            app('livewire')->component($name = str()->random(20), $componentClass);
         }
 
         $this->componentName = $name;
 
-        $this->lastResponse = $this->pretendWereMountingAComponentOnAPage($name, $params);
+        $this->lastResponse = $this->pretendWereMountingAComponentOnAPage($name, $params, $queryParams);
 
         if (! $this->lastResponse->exception) {
-            $this->updateComponent($this->rawMountedResponse);
+            $this->updateComponent([
+                'fingerprint' => $this->rawMountedResponse->fingerprint,
+                'serverMemo' => $this->rawMountedResponse->memo,
+                'effects' => $this->rawMountedResponse->effects,
+            ], $isInitial = true);
         }
     }
 
-    public function updateComponent($output)
+    public function updateComponent($output, $isInitial = false)
     {
-        $this->payload = [
-            'id' => $output->id,
-            'name' => $output->name,
-            'dom' => $output->dom,
-            'data' => $output->data,
-            'children' => $output->children,
-            'events' => $output->events,
-            'eventQueue' => $output->eventQueue,
-            'dispatchQueue' => $output->dispatchQueue,
-            'errorBag' => $output->errorBag,
-            'checksum' => $output->checksum,
-            'redirectTo' => $output->redirectTo,
-            'dirtyInputs' => $output->dirtyInputs,
-            'updatesQueryString' => $output->updatesQueryString,
-        ];
+        // Sometimes Livewire will skip rendering the DOM.
+        // We still want to be able to make assertions on
+        // the currently rendered DOM. So we will store
+        // the last known one.
+        if ($output['effects']['html'] ?? false) {
+            $this->lastRenderedDom = $output['effects']['html'];
+        }
+
+        if ($output['fingerprint'] ?? false) {
+            $this->payload['fingerprint'] = $output['fingerprint'];
+        }
+
+        foreach ($output['serverMemo'] as $key => $newValue) {
+            if ($key === 'data') {
+                if ($isInitial) data_set($this->payload, 'serverMemo.data', []);
+
+                foreach ($newValue as $dataKey => $dataValue) {
+                    data_set($this->payload, 'serverMemo.data.'.$dataKey, $dataValue);
+                }
+
+                continue;
+            }
+
+            if (
+                ! isset($this->payload['serverMemo'][$key])
+                || $this->payload['serverMemo'][$key] !== $newValue
+            ) {
+                $this->payload['serverMemo'][$key] = $newValue;
+            }
+        }
+
+        $this->payload['effects'] = $output['effects'];
     }
 
-    public function pretendWereMountingAComponentOnAPage($name, $params)
+    public function pretendWereMountingAComponentOnAPage($name, $params, $queryParams)
     {
-        $randomRoutePath = '/testing-livewire/'.Str::random(20);
+        $randomRoutePath = '/testing-livewire/'.str()->random(20);
 
         $this->registerRouteBeforeExistingRoutes($randomRoutePath, function () use ($name, $params) {
             return View::file(__DIR__.'/../views/mount-component.blade.php', [
@@ -94,8 +135,8 @@ class TestableLivewire
 
         $response = null;
 
-        $laravelTestingWrapper->temporarilyDisableExceptionHandlingAndMiddleware(function ($wrapper) use ($randomRoutePath, &$response) {
-            $response = $wrapper->call('GET', $randomRoutePath);
+        $laravelTestingWrapper->temporarilyDisableExceptionHandlingAndMiddleware(function ($wrapper) use ($randomRoutePath, &$response, $queryParams) {
+            $response = $wrapper->call('GET', $randomRoutePath, $queryParams);
         });
 
         return $response;
@@ -127,13 +168,9 @@ class TestableLivewire
     public function pretendWereSendingAComponentUpdateRequest($message, $payload)
     {
         return $this->callEndpoint('POST', '/livewire/message/'.$this->componentName, [
-            'id' => $this->payload['id'],
-            'name' => $this->payload['name'],
-            'data' => $this->payload['data'],
-            'children' => $this->payload['children'],
-            'checksum' => $this->payload['checksum'],
-            'errorBag' => $this->payload['errorBag'],
-            'actionQueue' => [['type' => $message, 'payload' => $payload]],
+            'fingerprint' => $this->payload['fingerprint'],
+            'serverMemo' => $this->payload['serverMemo'],
+            'updates' => [['type' => $message, 'payload' => $payload]],
         ]);
     }
 
@@ -152,12 +189,12 @@ class TestableLivewire
 
     public function id()
     {
-        return $this->payload['id'];
+        return $this->payload['fingerprint']['id'];
     }
 
     public function instance()
     {
-        return Livewire::activate($this->componentName, $this->id());
+        return static::$instancesById[$this->id()];
     }
 
     public function viewData($key)
@@ -167,7 +204,30 @@ class TestableLivewire
 
     public function get($property)
     {
-        return data_get($this->payload['data'], $property);
+        return data_get(
+            $this->instance(),
+            $property,
+            function () use ($property) {
+                // If we couldn't find it, make sure it's not a computed property.
+                $root = $this->instance()->beforeFirstDot($property);
+
+                try {
+                    $value = $this->instance()->{$root};
+                } catch (\Throwable $e) {
+                    if ($e instanceof PropertyNotFoundException) {
+                        $value = null;
+                    } else if (str($e->getMessage())->contains('must not be accessed before initialization')) {
+                        $value = null;
+                    } else {
+                        throw $e;
+                    }
+                }
+
+                $nested = $root === $property ? null : $this->instance()->afterFirstDot($property);
+
+                return data_get($value, $nested);
+            }
+        );
     }
 
     public function __get($property)
@@ -177,6 +237,10 @@ class TestableLivewire
 
     public function __call($method, $params)
     {
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $params);
+        }
+
         return $this->lastResponse->$method(...$params);
     }
 }

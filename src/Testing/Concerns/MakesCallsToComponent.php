@@ -2,11 +2,11 @@
 
 namespace Livewire\Testing\Concerns;
 
-use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Livewire\FileUploadConfiguration;
 use Livewire\Controllers\FileUploadHandler;
 use Illuminate\Validation\ValidationException;
+use function Livewire\str;
 
 trait MakesCallsToComponent
 {
@@ -112,13 +112,11 @@ trait MakesCallsToComponent
         // We are going to encode the file size in the filename so that when we create
         // a new TemporaryUploadedFile instance we can fake a specific file size.
         $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
-            return Str::replaceFirst('.', "-size:{$file->getSize()}.", $fileHash);
+            return (string) str($fileHash)->replaceFirst('.', "-size={$file->getSize()}.");
         })->toArray();
 
-        $directory = FileUploadConfiguration::directory();
-
-        collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage, $directory) {
-            $storage->move('/'.$directory.$fileHash, '/'.$directory.$newFileHash);
+        collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
+            $storage->move('/'.FileUploadConfiguration::path($fileHash), '/'.FileUploadConfiguration::path($newFileHash));
         });
 
         // Now we finish the upload with a final call to the Livewire component

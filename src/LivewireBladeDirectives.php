@@ -2,13 +2,18 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Str;
-
 class LivewireBladeDirectives
 {
     public static function this()
     {
         return "window.livewire.find('{{ \$_instance->id }}')";
+    }
+
+    public static function entangle($expression)
+    {
+        return <<<EOT
+<?php if ((object) ({$expression}) instanceof \Livewire\WireDirective) : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression}->value() }}'){{ {$expression}->hasModifier('defer') ? '.defer' : '' }} <?php else : ?> window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression} }}') <?php endif; ?>
+EOT;
     }
 
     public static function livewireStyles($expression)
@@ -23,32 +28,32 @@ class LivewireBladeDirectives
 
     public static function livewire($expression)
     {
-        $lastArg = trim(last(explode(',', $expression)));
+        $lastArg = str(last(explode(',', $expression)))->trim();
 
-        if (Str::startsWith($lastArg, 'key(') && Str::endsWith($lastArg, ')')) {
-            $cachedKey = Str::replaceFirst('key(', '', Str::replaceLast(')', '', $lastArg));
+        if ($lastArg->startsWith('key(') && $lastArg->endsWith(')')) {
+            $cachedKey = $lastArg->replaceFirst('key(', '')->replaceLast(')', '');
             $args = explode(',', $expression);
             array_pop($args);
             $expression = implode(',', $args);
         } else {
-            $cachedKey = "'".Str::random(7)."'";
+            $cachedKey = "'".str()->random(7)."'";
         }
 
         return <<<EOT
 <?php
 if (! isset(\$_instance)) {
-    \$dom = \Livewire\Livewire::mount({$expression})->dom;
+    \$html = \Livewire\Livewire::mount({$expression})->html();
 } elseif (\$_instance->childHasBeenRendered($cachedKey)) {
     \$componentId = \$_instance->getRenderedChildComponentId($cachedKey);
     \$componentTag = \$_instance->getRenderedChildComponentTagName($cachedKey);
-    \$dom = \Livewire\Livewire::dummyMount(\$componentId, \$componentTag);
+    \$html = \Livewire\Livewire::dummyMount(\$componentId, \$componentTag);
     \$_instance->preserveRenderedChild($cachedKey);
 } else {
     \$response = \Livewire\Livewire::mount({$expression});
-    \$dom = \$response->dom;
-    \$_instance->logRenderedChild($cachedKey, \$response->id, \Livewire\Livewire::getRootElementTagName(\$dom));
+    \$html = \$response->html();
+    \$_instance->logRenderedChild($cachedKey, \$response->id(), \Livewire\Livewire::getRootElementTagName(\$html));
 }
-echo \$dom;
+echo \$html;
 ?>
 EOT;
     }

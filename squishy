@@ -1,0 +1,52 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Symfony\Component\Console\Command\Command;
+
+$application = new Symfony\Component\Console\Application();
+
+$application->add(new class extends  Command {
+    use \Illuminate\Console\Concerns\InteractsWithIO;
+
+    protected static $defaultName = 'make:dusk';
+
+    protected function configure()
+    {
+        $this->addArgument('name', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Test folder name');
+    }
+
+    protected function execute($input, $output)
+    {
+        $this->input = $input;
+        $this->output = $output;
+
+        $name = $this->input->getArgument('name');
+        $testPath = __DIR__.'/tests/Browser';
+        $folderPath = $testPath.'/'.$name;
+
+        if (file_exists($folderPath)) throw new \Exception('Test folder already exists: '.$folderPath);
+
+        mkdir($folderPath);
+
+        file_put_contents(
+            $folderPath.'/Test.php',
+            str_replace('[name]', $name, file_get_contents(__DIR__.'/stubs/DuskTest.stub'))
+        );
+
+        file_put_contents(
+            $folderPath.'/Component.php',
+            str_replace('[name]', $name, file_get_contents(__DIR__.'/stubs/DuskComponent.stub'))
+        );
+
+        file_put_contents(
+            $folderPath.'/view.blade.php',
+            str_replace('[name]', $name, file_get_contents(__DIR__.'/stubs/DuskView.stub'))
+        );
+
+        return Command::SUCCESS;
+    }
+});
+
+$application->run();

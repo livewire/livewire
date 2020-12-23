@@ -1,4 +1,3 @@
-
 class PrefetchManager {
     constructor(component) {
         this.component = component
@@ -9,14 +8,10 @@ class PrefetchManager {
         this.prefetchMessagesByActionId[message.prefetchId] = message
     }
 
-    storeResponseInMessageForPayload(payload) {
-        const message = this.prefetchMessagesByActionId[payload.fromPrefetch]
-
-        if (message) message.storeResponse(payload)
-    }
-
     actionHasPrefetch(action) {
-        return Object.keys(this.prefetchMessagesByActionId).includes(action.toId())
+        return Object.keys(this.prefetchMessagesByActionId).includes(
+            action.toId()
+        )
     }
 
     actionPrefetchResponseHasBeenReceived(action) {

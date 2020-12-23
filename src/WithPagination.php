@@ -8,9 +8,9 @@ trait WithPagination
 {
     public $page = 1;
 
-    public function getUpdatesQueryString()
+    public function getQueryString()
     {
-        return array_merge(['page' => ['except' => 1]], $this->updatesQueryString);
+        return array_merge(['page' => ['except' => 1]], $this->queryString);
     }
 
     public function initializeWithPagination()
@@ -22,31 +22,42 @@ trait WithPagination
         });
 
         Paginator::defaultView($this->paginationView());
+        Paginator::defaultSimpleView($this->paginationSimpleView());
     }
 
     public function paginationView()
     {
-        return 'livewire::pagination-links';
+        return 'livewire::' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
+    }
+
+    public function paginationSimpleView()
+    {
+        return 'livewire::simple-' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
     }
 
     public function previousPage()
     {
-        $this->page = $this->page - 1;
+        $this->setPage(max($this->page - 1, 1));
     }
 
     public function nextPage()
     {
-        $this->page = $this->page + 1;
+        $this->setPage($this->page + 1);
     }
 
     public function gotoPage($page)
     {
-        $this->page = $page;
+        $this->setPage($page);
     }
 
     public function resetPage()
     {
-        $this->page = 1;
+        $this->setPage(1);
+    }
+
+    public function setPage($page)
+    {
+        $this->page = $page;
     }
 
     public function resolvePage()

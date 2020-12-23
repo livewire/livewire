@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Util;
 
 class FileUploadConfiguration
 {
@@ -25,9 +26,11 @@ class FileUploadConfiguration
 
     public static function disk()
     {
-        return app()->environment('testing')
-            ? 'tmp-for-tests'
-            : (config('livewire.temporary_file_upload.disk') ?: config('filesystems.default'));
+        if (app()->environment('testing')) {
+            return 'tmp-for-tests';
+        }
+
+        return config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
     }
 
     public static function diskConfig()
@@ -37,14 +40,36 @@ class FileUploadConfiguration
 
     public static function isUsingS3()
     {
-        $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filsystems.default');
+        $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
 
         return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
     }
 
-    public static function directory()
+    protected static function directory()
     {
-        return config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp/';
+        return Util::normalizeRelativePath(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
+    }
+
+    protected static function s3Root()
+    {
+        return static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig())
+            ? Util::normalizeRelativePath(static::diskConfig()['root'])
+            : '';
+    }
+
+    public static function path($path = '', $withS3Root = true)
+    {
+        $prefix = $withS3Root ? static::s3Root() : '';
+        $directory = static::directory();
+        $path = Util::normalizeRelativePath($path);
+
+        return $prefix.($prefix ? '/' : '').$directory.($path ? '/' : '').$path;
+    }
+
+     public static function mimeType($filename)
+    {
+        $mimeType = static::storage()->getMimeType(static::path($filename));
+        return $mimeType === 'image/svg' ? 'image/svg+xml' : $mimeType;
     }
 
     public static function middleware()
