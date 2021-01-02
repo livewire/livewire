@@ -94,6 +94,22 @@ class Test extends TestCase
         });
     }
 
+    public function test_dot_defer_with_nested_data()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, DeferArrayDataUpdates::class)
+                ->assertSeeIn('@output.alpine', 'guest')
+                ->assertSeeIn('@output.livewire', 'guest')
+                ->select('@role-select', 'user')
+                ->assertSeeIn('@output.alpine', 'user')
+                ->assertSeeIn('@output.livewire', 'guest')
+                ->waitForLivewire()->click('@submit')
+                ->assertSeeIn('@output.alpine', 'guest')
+                ->assertSeeIn('@output.livewire', 'guest')
+            ;
+        });
+    }
+
     public function test_entangle_does_not_throw_error_after_nested_array_removed()
     {
         $this->browse(function ($browser) {
