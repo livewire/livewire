@@ -97,7 +97,9 @@ function supportEntangle() {
                                 livewireProperty,
                                 value,
                                 isDeferred,
-                                true // Block firing of Livewire watchers for this data key when the request comes back.
+                                // Block firing of Livewire watchers for this data key when the request comes back.
+                                // Unless it is deferred, in which cause we don't know if the state will be the same, so let it run.
+                                isDeferred ? false : true
                             )
                         })
 
