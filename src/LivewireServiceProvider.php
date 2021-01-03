@@ -116,7 +116,7 @@ class LivewireServiceProvider extends ServiceProvider
             })->middleware('web');
         }
 
-        RouteFacade::group(['prefix' => 'livewire',], function () {
+        RouteFacade::group(['prefix' => 'livewire'], function () {
             RouteFacade::get('/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
             RouteFacade::get('/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
 
