@@ -142,7 +142,10 @@ export function alpinifyElementsForMorphdom(from, to) {
             // so that if/when the element has a transition on it, it will occur naturally.
             if (isHiding(from, to)) {
                 let style = to.getAttribute('style')
-                to.setAttribute('style', style.replace('display: none;', ''))
+                
+                if (style) {
+                    to.setAttribute('style', style.replace('display: none;', ''))
+                }
             } else if (isShowing(from, to)) {
                 to.style.display = from.style.display
             }
