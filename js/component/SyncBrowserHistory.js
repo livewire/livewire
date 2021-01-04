@@ -90,7 +90,7 @@ export default function () {
 
         let destination = new URL(url)
 
-        let afterOrigin = destination.href.replace(destination.origin, '')
+        let afterOrigin = destination.href.replace(destination.origin, '').replace(/\?$/, '')
 
         return window.location.origin + afterOrigin + window.location.hash
     }
