@@ -14,7 +14,7 @@ class CompilerEngineForIgnition extends CompilerEngine
     protected function handleViewException(Throwable $e, $obLevel)
     {
         if ($this->shouldBypassExceptionForLivewire($e, $obLevel)) {
-            PhpEngine::handleViewException($e, $obLevel);
+            (new PhpEngine($this->files))->handleViewException($e, $obLevel);
 
             return;
         }
