@@ -125,6 +125,17 @@ class Test extends TestCase
         });
     }
 
+    public function test_entangle_equality_check_ensures_alpine_does_not_update_livewire()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, EntangleResponseCheck::class)
+                ->assertSeeIn('@output', "false")
+                ->waitForLivewire()->click('@add')
+                ->assertSeeIn('@output', "false")
+            ;
+        });
+    }
+
     public function test_entangle_watchers_fire_on_consecutive_changes()
     {
         $this->browse(function ($browser) {
