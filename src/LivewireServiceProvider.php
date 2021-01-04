@@ -67,16 +67,6 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerBladeDirectives();
         $this->registerViewCompilerEngine();
         $this->registerHydrationMiddleware();
-
-        // Bypass specific middlewares during Livewire requests.
-        // These are usually helpful during a typical request, but
-        // during Livewire requests, they can damage data properties.
-        $this->bypassTheseMiddlewaresDuringLivewireRequests([
-            TrimStrings::class,
-            ConvertEmptyStringsToNull::class,
-            // If the app overrode "TrimStrings".
-            \App\Http\Middleware\TrimStrings::class,
-        ]);
     }
 
     protected function registerLivewireSingleton()
@@ -126,19 +116,31 @@ class LivewireServiceProvider extends ServiceProvider
             })->middleware('web');
         }
 
-        RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
-        RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
+        RouteFacade::group(['prefix' => 'livewire'], function () {
+            RouteFacade::get('/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
+            RouteFacade::get('/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
 
-        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
-            ->middleware(config('livewire.middleware_group', 'web'));
+            // Bypass specific middlewares during Livewire requests.
+            // These are usually helpful during a typical request, but
+            // during Livewire requests, they can damage data properties.
+            RouteFacade::group([
+                'middleware' => config('livewire.middleware_group', 'web'),
+                'excluded_middleware' => [
+                    TrimStrings::class,
+                    ConvertEmptyStringsToNull::class,
+                    // If the app overrode "TrimStrings".
+                    \App\Http\Middleware\TrimStrings::class,
+                ]
+            ], function () {
+                RouteFacade::post('/message/{name}', HttpConnectionHandler::class);
 
-        RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group', 'web'))
-            ->name('livewire.upload-file');
+                RouteFacade::post('/upload-file', [FileUploadHandler::class, 'handle'])
+                    ->name('livewire.upload-file');
 
-        RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group', 'web'))
-            ->name('livewire.preview-file');
+                RouteFacade::get('/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
+                    ->name('livewire.preview-file');
+            });
+        });
     }
 
     protected function registerCommands()
@@ -323,19 +325,6 @@ class LivewireServiceProvider extends ServiceProvider
                 [CallHydrationHooks::class, 'initialHydrate'],
 
         ]);
-    }
-
-    protected function bypassTheseMiddlewaresDuringLivewireRequests(array $middlewareToExclude)
-    {
-        if (! $this->app['livewire']->isLivewireRequest()) return;
-
-        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
-
-        $openKernel = new ObjectPrybar($kernel);
-
-        $middleware = $openKernel->getProperty('middleware');
-
-        $openKernel->setProperty('middleware', array_diff($middleware, $middlewareToExclude));
     }
 
     protected function publishesToGroups(array $paths, $groups = null)
