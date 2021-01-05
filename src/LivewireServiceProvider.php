@@ -108,29 +108,34 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
+        // Bypass specific middlewares during Livewire requests.
+        // These are usually helpful during a typical request, but
+        // during Livewire requests, they can damage data properties.
+        $excludedMiddlewares = [
+            'middleware' => config('livewire.middleware_group', 'web'),
+            'excluded_middleware' => [
+                TrimStrings::class,
+                ConvertEmptyStringsToNull::class,
+                // If the app overrode "TrimStrings".
+                \App\Http\Middleware\TrimStrings::class,
+            ]
+        ];
+
         if ($this->app->runningUnitTests()) {
-            RouteFacade::get('/livewire-dusk/{component}', function ($component) {
+            RouteFacade::get('/livewire-dusk/{component}', function ($component) use ($excludedMiddlewares) {
                 $class = urldecode($component);
 
                 return app()->call(new $class);
-            })->middleware('web');
+            })->middleware('web')->withoutMiddleware($excludedMiddlewares);
         }
 
-        RouteFacade::group(['prefix' => 'livewire'], function () {
+        RouteFacade::group(['prefix' => 'livewire'], function () use ($excludedMiddlewares) {
             RouteFacade::get('/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
             RouteFacade::get('/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
 
-            // Bypass specific middlewares during Livewire requests.
-            // These are usually helpful during a typical request, but
-            // during Livewire requests, they can damage data properties.
             RouteFacade::group([
                 'middleware' => config('livewire.middleware_group', 'web'),
-                'excluded_middleware' => [
-                    TrimStrings::class,
-                    ConvertEmptyStringsToNull::class,
-                    // If the app overrode "TrimStrings".
-                    \App\Http\Middleware\TrimStrings::class,
-                ]
+                'excluded_middleware' => $excludedMiddlewares
             ], function () {
                 RouteFacade::post('/message/{name}', HttpConnectionHandler::class);
 
