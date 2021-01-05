@@ -112,13 +112,10 @@ class LivewireServiceProvider extends ServiceProvider
         // These are usually helpful during a typical request, but
         // during Livewire requests, they can damage data properties.
         $excludedMiddlewares = [
-            'middleware' => config('livewire.middleware_group', 'web'),
-            'excluded_middleware' => [
-                TrimStrings::class,
-                ConvertEmptyStringsToNull::class,
-                // If the app overrode "TrimStrings".
-                \App\Http\Middleware\TrimStrings::class,
-            ]
+            TrimStrings::class,
+            ConvertEmptyStringsToNull::class,
+            // If the app overrode "TrimStrings".
+            \App\Http\Middleware\TrimStrings::class,
         ];
 
         if ($this->app->runningUnitTests()) {
