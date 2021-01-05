@@ -119,11 +119,16 @@ class LivewireServiceProvider extends ServiceProvider
         ];
 
         if ($this->app->runningUnitTests()) {
-            RouteFacade::get('/livewire-dusk/{component}', function ($component) use ($excludedMiddlewares) {
-                $class = urldecode($component);
+            RouteFacade::group([
+                'middleware' => 'web',
+                'excluded_middleware' => $excludedMiddlewares
+            ], function () {
+                RouteFacade::get('/livewire-dusk/{component}', function ($component) {
+                    $class = urldecode($component);
 
-                return app()->call(new $class);
-            })->middleware('web')->withoutMiddleware($excludedMiddlewares);
+                    return app()->call(new $class);
+                });
+            });
         }
 
         RouteFacade::group(['prefix' => 'livewire'], function () use ($excludedMiddlewares) {
