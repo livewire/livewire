@@ -158,6 +158,8 @@ class TestCase extends BaseTestCase
     {
         $options = DuskOptions::getChromeOptions();
 
+        $options->addArguments(['--headless']);
+
         $options->setExperimentalOption('prefs', [
             'download.default_directory' => __DIR__.'/downloads',
         ]);
