@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
 use function Livewire\str;
@@ -35,6 +36,17 @@ class ComponentSkipRenderTest extends TestCase
 
         $this->assertEquals('/foo', $component->payload['effects']['redirect']);
         $this->assertNull($component->payload['effects']['html']);
+
+        Route::get('/403', ComponentSkipRenderOnRedirectInMountStub::class);
+        $this->get('/403')->assertRedirect('/foo');
+
+        $component = Livewire::test(ComponentSkipRenderOnRedirectHelperInMountStub::class);
+
+        $this->assertStringEndsWith('/bar', $component->payload['effects']['redirect']);
+        $this->assertNull($component->payload['effects']['html']);
+
+        Route::get('/403', ComponentSkipRenderOnRedirectHelperInMountStub::class);
+        $this->get('/403')->assertRedirect('/bar');
     }
 }
 
@@ -64,6 +76,19 @@ class ComponentSkipRenderOnRedirectInMountStub extends Component
     public function mount()
     {
         $this->redirect('/foo');
+    }
+
+    public function render()
+    {
+        throw new \RuntimeException('Render should not be called on redirect');
+    }
+}
+
+class ComponentSkipRenderOnRedirectHelperInMountStub extends Component
+{
+    public function mount()
+    {
+        return redirect('/bar');
     }
 
     public function render()

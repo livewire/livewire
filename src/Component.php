@@ -48,6 +48,10 @@ abstract class Component
             ->mount($componentParams)
             ->renderToView();
 
+        if ($this->redirectTo) {
+            return redirect()->response($this->redirectTo);
+        }
+
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
