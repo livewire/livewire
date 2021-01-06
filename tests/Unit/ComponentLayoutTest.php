@@ -49,7 +49,7 @@ class ComponentLayoutTest extends TestCase
     }
 
     /** @test */
-    public function can_set_slot__value_of_a_layout()
+    public function can_set_slot_value_of_a_layout()
     {
         Livewire::component(ComponentWithSettingSlotValue::class);
 
