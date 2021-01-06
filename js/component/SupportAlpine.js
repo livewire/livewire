@@ -83,10 +83,13 @@ function supportEntangle() {
                             // If the Alpine value is the same as the Livewire value, we'll skip the update for 2 reasons:
                             // - It's just more efficient, why send needless requests.
                             // - This prevents a circular dependancy with the other watcher below.
+                            // - Due to the deep clone using stringify, we need to do the same here to compare.
                             if (
-                                value ===
-                                livewireEl.__livewire.getPropertyValueIncludingDefers(
-                                    livewireProperty
+                                JSON.stringify(value) ==
+                                JSON.stringify(
+                                    livewireEl.__livewire.getPropertyValueIncludingDefers(
+                                        livewireProperty
+                                    )
                                 )
                             ) return
 
