@@ -36,6 +36,12 @@ class Test extends TestCase
                 ->assertSeeIn('@output', 'foo')
 
                 /**
+                 * Action with no params, but still parenthesis and having some spaces.
+                 */
+                ->waitForLivewire()->click('@baw')
+                ->assertSeeIn('@output', 'foo')
+
+                /**
                  * wire:click.self
                  */
                 ->waitForLivewire()->click('@baz.inner')
