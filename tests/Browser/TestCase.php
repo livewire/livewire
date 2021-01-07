@@ -137,6 +137,11 @@ class TestCase extends BaseTestCase
             'driver' => 'local',
             'root' => __DIR__.'/downloads',
         ]);
+
+        $app['config']->set('filesystems.disks.tmp-for-tests', [
+            'driver' => 'local',
+            'root' => __DIR__.'/uploads',
+        ]);
     }
 
     protected function resolveApplicationHttpKernel($app)
