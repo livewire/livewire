@@ -11,8 +11,6 @@ class Test extends TestCase
 {
     public function test_set_uploaded_file_from_livewire_component()
     {
-        $this->onlyRunOnChrome();
-
         $this->browse(function (Browser $browser) {
             $fakeFile = UploadedFile::fake()->create('foo');
 
