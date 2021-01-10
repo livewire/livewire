@@ -20,7 +20,7 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
     }
 
     /** @test */
-    public function unordered_numeric_arrays_are_reordered_so_javascript_doesnt_do_it_for_us()
+    public function unordered_numeric_keyed_arrays_are_reordered_so_javascript_doesnt_do_it_for_us()
     {
         $orderedNumericArray = [
             1 => 'foo',
@@ -32,6 +32,24 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
         $this->assertSame([
             0 => 'bar',
             1 => 'foo',
+        ], $foo);
+    }
+
+    /** @test */
+    public function unordered_string_keyed_arrays_are_reordered_so_javascript_doesnt_do_it_for_us()
+    {
+        $orderedNumericArray = [
+            '20' => 'baz',
+            '19' => 'bar',
+            '0' => 'foo',
+        ];
+
+        $foo = Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])->foo;
+
+        $this->assertSame([
+            '0' => 'foo',
+            '19' => 'bar',
+            '20' => 'baz',
         ], $foo);
     }
 

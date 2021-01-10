@@ -37,7 +37,7 @@ trait WithPagination
 
     public function previousPage()
     {
-        $this->setPage($this->page - 1);
+        $this->setPage(max($this->page - 1, 1));
     }
 
     public function nextPage()
