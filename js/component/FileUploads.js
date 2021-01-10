@@ -31,8 +31,15 @@ export default function () {
 
         el.addEventListener('change', eventHandler)
 
+        // There's a bug in browsers where selecting a file, removing it,
+        // then re-adding it doesn't fire the change event. This fixes it.
+        // Reference: https://stackoverflow.com/questions/12030686/html-input-file-selection-event-not-firing-upon-selecting-the-same-file
+        let clearFileInputValue = () => { el.value = null }
+        el.addEventListener('click', clearFileInputValue)
+
         component.addListenerForTeardown(() => {
             el.removeEventListener('change', eventHandler)
+            el.removeEventListener('click', clearFileInputValue)
         })
     })
 }

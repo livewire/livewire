@@ -4,7 +4,7 @@ namespace Livewire\Controllers;
 
 trait CanPretendToBeAFile
 {
-    public function pretendResponseIsFile($file)
+    public function pretendResponseIsFile($file, $mimeType = 'application/javascript')
     {
         $expires = strtotime('+1 year');
         $lastModified = filemtime($file);
@@ -18,7 +18,7 @@ trait CanPretendToBeAFile
         }
 
         return response()->file($file, [
-            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Content-Type' => "$mimeType; charset=utf-8",
             'Expires' => $this->httpDate($expires),
             'Cache-Control' => $cacheControl,
             'Last-Modified' => $this->httpDate($lastModified),

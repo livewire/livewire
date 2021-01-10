@@ -33,7 +33,7 @@ abstract class Component
 
     public function __construct($id = null)
     {
-        $this->id = $id ?? Str::random(20);
+        $this->id = $id ?? str()->random(20);
 
         $this->ensureIdPropertyIsntOverridden();
     }
@@ -48,10 +48,14 @@ abstract class Component
             ->mount($componentParams)
             ->renderToView();
 
+        if ($this->redirectTo) {
+            return redirect()->response($this->redirectTo);
+        }
+
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
-            'view' => $this->initialLayoutConfiguration['view'] ?? 'layouts.app',
+            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout', 'layouts.app'),
             'params' => $this->initialLayoutConfiguration['params'] ?? [],
             'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
                 'extends' => 'content', 'component' => 'default',
@@ -87,8 +91,8 @@ abstract class Component
             ->map([Str::class, 'kebab'])
             ->implode('.');
 
-        if (Str::startsWith($fullName, $namespace)) {
-            return Str::substr($fullName, strlen($namespace) + 1);
+        if (str($fullName)->startsWith($namespace)) {
+            return (string) str($fullName)->substr(strlen($namespace) + 1);
         }
 
         return $fullName;
@@ -106,6 +110,8 @@ abstract class Component
 
     public function renderToView()
     {
+        if ($this->shouldSkipRender) return null;
+
         Livewire::dispatch('component.rendering', $this);
 
         $view = method_exists($this, 'render')
@@ -225,7 +231,7 @@ abstract class Component
     {
         if (
             in_array($method, ['mount', 'hydrate', 'dehydrate', 'updating', 'updated'])
-            || Str::startsWith($method, ['updating', 'updated', 'hydrate', 'dehydrate'])
+            || str($method)->startsWith(['updating', 'updated', 'hydrate', 'dehydrate'])
         ) {
             // Eat calls to the lifecycle hooks if the dev didn't define them.
             return;

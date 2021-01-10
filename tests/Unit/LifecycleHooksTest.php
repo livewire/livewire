@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -15,10 +16,10 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
-            'hydrate' => false,
-            'hydrateFoo' => false,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
+            'hydrate' => 0,
+            'hydrateFoo' => 0,
+            'dehydrate' => 1,
+            'dehydrateFoo' => 1,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
@@ -39,10 +40,10 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
+            'hydrate' => 1,
+            'hydrateFoo' => 1,
+            'dehydrate' => 2,
+            'dehydrateFoo' => 2,
             'updating' => false,
             'updated' => false,
             'updatingFoo' => false,
@@ -73,10 +74,10 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
+            'hydrate' => 1,
+            'hydrateFoo' => 1,
+            'dehydrate' => 2,
+            'dehydrateFoo' => 2,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
@@ -124,10 +125,10 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
+            'hydrate' => 3,
+            'hydrateFoo' => 3,
+            'dehydrate' => 4,
+            'dehydrateFoo' => 4,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => false,
@@ -204,10 +205,10 @@ class LifecycleHooksTest extends TestCase
 
         $this->assertEquals([
             'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
+            'hydrate' => 1,
+            'hydrateFoo' => 1,
+            'dehydrate' => 2,
+            'dehydrateFoo' => 2,
             'updating' => true,
             'updated' => true,
             'updatingFoo' => true,
@@ -232,10 +233,10 @@ class ForLifecycleHooks extends Component
 
     public $lifecycles = [
         'mount' => false,
-        'hydrate' => false,
-        'hydrateFoo' => false,
-        'dehydrate' => false,
-        'dehydrateFoo' => false,
+        'hydrate' => 0,
+        'hydrateFoo' => 0,
+        'dehydrate' => 0,
+        'dehydrateFoo' => 0,
         'updating' => false,
         'updated' => false,
         'updatingFoo' => false,
@@ -255,22 +256,22 @@ class ForLifecycleHooks extends Component
 
     public function hydrate()
     {
-        $this->lifecycles['hydrate'] = true;
+        $this->lifecycles['hydrate']++;
     }
 
     public function hydrateFoo()
     {
-        $this->lifecycles['hydrateFoo'] = true;
+        $this->lifecycles['hydrateFoo']++;
     }
 
     public function dehydrate()
     {
-        $this->lifecycles['dehydrate'] = true;
+        $this->lifecycles['dehydrate']++;
     }
 
     public function dehydrateFoo()
     {
-        $this->lifecycles['dehydrateFoo'] = true;
+        $this->lifecycles['dehydrateFoo']++;
     }
 
     public function updating($name, $value)
@@ -308,6 +309,7 @@ class ForLifecycleHooks extends Component
         $expected_value = $expected[$expected_key];
         [$before, $after] = $expected_value;
 
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
         PHPUnit::assertEquals($expected_key, $key);
         PHPUnit::assertEquals($before, data_get($this->bar, $key));
         PHPUnit::assertEquals($after, $value);
@@ -321,6 +323,7 @@ class ForLifecycleHooks extends Component
         $expected_key = array_keys($expected)[0];
         $expected_value = $expected[$expected_key];
 
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
         PHPUnit::assertEquals($expected_key, $key);
         PHPUnit::assertEquals($expected_value, $value);
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
@@ -335,6 +338,7 @@ class ForLifecycleHooks extends Component
         $expected_value = $expected[$expected_key];
         [$before, $after] = $expected_value;
 
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
         PHPUnit::assertEquals($expected_key, $key);
         PHPUnit::assertEquals($before, data_get($this->bar, $key));
         PHPUnit::assertEquals($after, $value);
@@ -348,6 +352,7 @@ class ForLifecycleHooks extends Component
         $expected_key = array_keys($expected)[0];
         $expected_value = $expected[$expected_key];
 
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
         PHPUnit::assertEquals($expected_key, $key);
         PHPUnit::assertEquals($expected_value, $value);
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
