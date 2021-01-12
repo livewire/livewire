@@ -49,13 +49,4 @@ class ViewMacros
             return $this;
         };
     }
-
-    public function setSlot()
-    {
-        return function ($slot, $value) {
-            $this->livewireLayout['params'] = array_merge($this->livewireLayout['params'] ?? [], [$slot => $value]);
-
-            return $this;
-        };
-    }
 }
