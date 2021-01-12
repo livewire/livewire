@@ -1,3 +1,6 @@
 <div>
+    {{-- Please ensure there is always only one root element inside
+         this view file for livewire to function properly. --}}
+
     {{-- [quote] --}}
 </div>
