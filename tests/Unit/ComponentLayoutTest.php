@@ -47,16 +47,6 @@ class ComponentLayoutTest extends TestCase
 
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
-
-    /** @test */
-    public function can_set_slot_value_of_a_layout()
-    {
-        Livewire::component(ComponentWithSettingSlotValue::class);
-
-        Route::get('/foo', ComponentWithSettingSlotValue::class);
-
-        $this->get('/foo')->assertSee('baz');
-    }
 }
 
 class ComponentWithExtendsLayout extends Component
@@ -96,14 +86,5 @@ class ComponentWithCustomSlotForLayout extends Component
     public function render()
     {
         return view('show-name')->layout('layouts.app-custom-slot')->slot('main');
-    }
-}
-
-class ComponentWithSettingSlotValue extends Component
-{
-    public function render()
-    {
-        return view('null-view')->layout('layouts.app-with-bar')
-            ->setSlot('bar', 'baz');
     }
 }
