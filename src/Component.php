@@ -58,7 +58,7 @@ abstract class Component
             'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout', 'layouts.app'),
             'params' => $this->initialLayoutConfiguration['params'] ?? [],
             'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
-                'extends' => 'content', 'component' => 'default',
+                'extends' => 'content', 'component' => 'slot',
             ][$layoutType],
             'manager' => $manager,
         ]);
