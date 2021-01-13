@@ -2,15 +2,16 @@
 
 namespace Livewire\HydrationMiddleware;
 
-use DateTime;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Stringable;
-use Illuminate\Contracts\Queue\QueueableEntity;
+use DateTime;
 use Illuminate\Contracts\Database\ModelIdentifier;
-use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Contracts\Queue\QueueableCollection;
+use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
+use Illuminate\Support\Carbon as IlluminateCarbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Illuminate\Support\Stringable;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 
 class HydratePublicProperties implements HydrationMiddleware
@@ -120,29 +121,32 @@ class HydratePublicProperties implements HydrationMiddleware
             new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
         );
 
+        $models->loadMissing($serialized['relations']);
+
         $dirtyModelData = $request->memo['data'][$property];
 
         foreach ($idsWithNullsIntersparsed as $index => $id) {
-            if ($rules = $instance->rulesForModel($property)) {
-                $keys = $rules->keys()
-                    ->map([$instance, 'ruleWithNumbersReplacedByStars'])
-                    ->mapInto(Stringable::class)
-                    ->filter->contains('*.')
-                    ->map->after('*.')
-                    ->map->__toString();
-
-                if (is_null($id)) {
-                    $model = new $serialized['class'];
-                    $models->splice($index, 0, [$model]);
-                }
-
-                foreach ($keys as $key) {
-                    data_set($models[$index], $key, data_get($dirtyModelData[$index], $key));
-                }
+            if (is_null($id)) {
+                $model = new $serialized['class'];
+                $models->splice($index, 0, [$model]);
             }
+            
+            static::setDirtyData(data_get($models, $index), data_get($dirtyModelData, $index));
         }
 
         $instance->$property = $models;
+    }
+
+    public static function setDirtyData($model, $data) {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                foreach($value as $index => $valueData) {
+                    static::setDirtyData(data_get($model[$key], $index), data_get($value, $index));
+                }
+            } else {
+                data_set($model, $key, data_get($data, $key));
+            }
+        }
     }
 
     protected static function dehydrateModel($value, $property, $response, $instance)
@@ -178,27 +182,50 @@ class HydratePublicProperties implements HydrationMiddleware
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.modelCollections.'.$property, $serializedModel);
 
-        $filteredModelData = [];
-        if ($rules = $instance->rulesForModel($property)) {
-            $keys = $rules->keys()
-                ->map([$instance, 'ruleWithNumbersReplacedByStars'])
-                ->mapInto(Stringable::class)
-                ->filter->contains('*.')
-                ->map->after('*.')
-                ->map->__toString();
-
-            $fullModelData = $instance->$property->map->toArray();
-
-            foreach ($fullModelData as $index => $data) {
-                $filteredModelData[$index] = [];
-
-                foreach ($keys as $key) {
-                    data_set($filteredModelData[$index], $key, data_get($data, $key));
-                }
-            }
-        }
+        $filteredModelData = static::filterData($instance->$property, $instance->rulesForModel($property)->keys());
 
         // Only include the allowed data (defined by rules) in the response payload
         data_set($response, 'memo.data.'.$property, $filteredModelData);
     }
+
+    public static function filterData($data, $rules) {
+        $filteredModelData = [];
+
+          if ($rules) {
+            $keys = collect($rules)
+                ->mapInto(Stringable::class)
+                ->filter->contains('*.')
+                ->map->after('*.');
+
+            $fullModelData = $data->map->toArray();
+
+            foreach ($fullModelData as $index => $fullData) {
+                $filteredModelData[$index] = [];
+
+                $nestedKeys = [];
+
+                foreach ($keys as $key) {
+                  if($key->contains('.*.')) {
+                    $nestedKeys[] = $key;
+                  } else {
+                    data_fill($filteredModelData[$index], $key, data_get($fullData, $key));
+                  }
+                }
+
+                if ($nestedKeys) {
+                    $nestedKeys = collect($nestedKeys)
+                        ->mapToGroups(function($key){
+                            return [$key->before('.*.')->__toString() => $key->__toString()];
+                        });
+
+                    foreach($nestedKeys as $key => $rules) {
+                        $results = static::filterData(data_get($data[$index], $key), $rules);
+                        data_fill($filteredModelData[$index], $key, $results);
+                    }
+                }
+            }
+        }
+
+        return $filteredModelData;
+      }
 }
