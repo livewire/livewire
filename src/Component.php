@@ -11,7 +11,6 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 use Livewire\Exceptions\PropertyNotFoundException;
-use ReflectionMethod;
 
 abstract class Component
 {
