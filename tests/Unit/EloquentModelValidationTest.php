@@ -185,6 +185,19 @@ class EloquentModelValidationTest extends TestCase
 
         $this->assertEquals([[['name' => 'arise']]], $foo->fresh()->zap);
     }
+
+    /** @test */
+    public function array_with_deep_nested_model_relationship_validation()
+    {
+        Livewire::test(ComponentForEloquentModelNestedHydrationMiddleware::class, [
+            'users' => $users = User::with('items')->get(),
+        ])
+            ->set('users.1.items.0.title', 'sparkling')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals([[['users.1.items.0.title' => 'sparkling']]], $users[0]->fresh()->items[0]->title);
+    }
 }
 
 class Foo extends Model
@@ -255,6 +268,76 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
         $this->validate();
 
         $this->foo->save();
+    }
+
+    public function performValidateOnly($field)
+    {
+        $this->validateOnly($field);
+    }
+
+    public function render()
+    {
+        return view('dump-errors');
+    }
+}
+
+class Items extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['title' => 'Lawn Mower', 'price' => '226.99', 'user_id' => 1],
+        ['title' => 'Leaf Blower', 'price' => '134.99', 'user_id' => 1],
+        ['title' => 'Rake', 'price' => '9.99', 'user_id' => 1],
+        ['title' => 'Lawn Mower', 'price' => '226.99', 'user_id' => 2],
+        ['title' => 'Leaf Blower', 'price' => '134.99', 'user_id' => 2],
+        ['title' => 'Lawn Mower', 'price' => '226.99', 'user_id' => 3],
+        ['title' => 'Leaf Blower', 'price' => '134.99', 'user_id' => 3],
+        ['title' => 'Rake', 'price' => '9.99', 'user_id' => 3],
+
+    ];
+
+    protected $schema = [
+        'price' => 'float',
+    ];
+
+}
+
+class User extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'name' => 'Bob'],
+        ['id' => 2, 'name' => 'John'],
+        ['id' => 3, 'name' => 'Mark'],
+    ];
+
+    public function items()
+    {
+
+        return $this->hasMany(Items::class, 'user_id', 'id');
+
+    }
+}
+
+class ComponentForEloquentModelNestedHydrationMiddleware extends Component
+{
+    public $users;
+    protected $rules = [
+        'users.*.items.*.title' => 'required',
+    ];
+
+
+    public function save()
+    {
+        $this->validate();
+
+        foreach($this->users as $user) {
+            foreach($user->items as $item) {
+                   $item->save();
+            }
+        }
     }
 
     public function performValidateOnly($field)
