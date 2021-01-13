@@ -35,7 +35,7 @@ class ComponentSkipRenderTest extends TestCase
         $component = Livewire::test(ComponentSkipRenderOnRedirectInMountStub::class);
 
         $this->assertEquals('/foo', $component->payload['effects']['redirect']);
-        $this->assertNull($component->payload['effects']['html']);
+        $this->assertNull($component->lastRenderedView);
 
         Route::get('/403', ComponentSkipRenderOnRedirectInMountStub::class);
         $this->get('/403')->assertRedirect('/foo');
@@ -43,7 +43,7 @@ class ComponentSkipRenderTest extends TestCase
         $component = Livewire::test(ComponentSkipRenderOnRedirectHelperInMountStub::class);
 
         $this->assertStringEndsWith('/bar', $component->payload['effects']['redirect']);
-        $this->assertNull($component->payload['effects']['html']);
+        $this->assertNull($component->lastRenderedView);
 
         Route::get('/403', ComponentSkipRenderOnRedirectHelperInMountStub::class);
         $this->get('/403')->assertRedirect('/bar');

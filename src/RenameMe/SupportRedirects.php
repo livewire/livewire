@@ -40,6 +40,7 @@ class SupportRedirects
             }
 
             $response->effects['redirect'] = $component->redirectTo;
+            $response->effects['html'] = $response->effects['html'] ?? '<div></div>';
         });
     }
 }
