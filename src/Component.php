@@ -11,6 +11,7 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 use Livewire\Exceptions\PropertyNotFoundException;
+use ReflectionMethod;
 
 abstract class Component
 {
@@ -165,7 +166,7 @@ abstract class Component
         $view->with([
             'errors' => $errors,
             '_instance' => $this,
-        ] + $this->getPublicPropertiesDefinedBySubClass());
+        ] + $this->getPublicPropertiesDefinedBySubClass() + $this->mapPublicMethodsToClosures());
 
         app('view')->share('errors', $errors);
         app('view')->share('_instance', $this);
@@ -180,6 +181,18 @@ abstract class Component
         $engine->endLivewireRendering();
 
         return $output;
+    }
+
+    public function mapPublicMethodsToClosures()
+    {
+        return collect((new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC))
+            ->reject(function($method) {
+                return $method->getDeclaringClass() === self::class || Str::startsWith($method->getName(), '__');
+            })
+            ->mapWithKeys(function($method) {
+                return [$method->getName() => $method->getClosure($this)];
+            })
+            ->all();
     }
 
     public function normalizePublicPropertiesForJavaScript()
