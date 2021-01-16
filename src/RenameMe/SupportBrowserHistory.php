@@ -2,12 +2,13 @@
 
 namespace Livewire\RenameMe;
 
-use Livewire\Livewire;
-use Livewire\Response;
-use Livewire\Component;
-use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
+use Illuminate\Support\Arr;
+use Livewire\Component;
+use Livewire\Livewire;
+use Livewire\Response;
+use Livewire\WithPagination;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use function Livewire\str;
 
@@ -34,6 +35,12 @@ class SupportBrowserHistory
                     : json_decode($fromQueryString, true);
 
                 if ($fromQueryString !== null) {
+                    // Skip property "page" if component uses the trait WithPagination.
+                    // Since the property "page" has already been set in the initializeWithPagination() method.
+                    if ($property === 'page' && in_array(WithPagination::class, class_uses_recursive($component))) {
+                        continue;
+                    }
+
                     $component->$property = $decoded === null ? $fromQueryString : $decoded;
                 }
             }

@@ -64,6 +64,12 @@ trait WithPagination
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return request()->query('page', $this->page);
+        $page = request()->query('page', $this->page);
+
+        if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
+            return (int) $page;
+        }
+
+        return 1;
     }
 }

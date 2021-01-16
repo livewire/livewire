@@ -40,12 +40,29 @@ class ComponentPaginationTest extends TestCase
             ->call('previousPage')
             ->assertSet('page', 1);
     }
+
+    /** @test */
+    public function resolve_default_page_number_if_request_has_wrong_page_parameter()
+    {
+        Livewire::withQueryParams(['page' => '2/foo'])
+            ->test(ComponentWithPaginationStub::class)
+            ->assertSet('page', 1);
+    }
+
+    /** @test */
+    public function resolve_integer_page_number_from_query()
+    {
+        Livewire::withQueryParams(['page' => 43])
+            ->test(ComponentWithPaginationStub::class)
+            ->call('initializeWithPagination')
+            ->assertSet('page', 43);
+    }
 }
 
 class ComponentWithPaginationStub extends Component
 {
     use WithPagination;
-    
+
     public function render()
     {
         return view('show-name', ['name' => 'example']);
