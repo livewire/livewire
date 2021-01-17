@@ -1,5 +1,5 @@
 import MethodAction from '@/action/method'
-import { wireDirectives} from '@/util'
+import { wireDirectives, inViewPort } from '@/util'
 import store from '@/Store'
 
 export default function () {
@@ -58,6 +58,11 @@ function fireActionOnInterval(node, component) {
 
         // Don't poll if livewire is offline as well.
         if (store.livewireIsOffline) return
+
+        // Don't poll if the element is not in the viewport if "wire.poll.disable-hidden" is attached
+        if (directive.modifiers.includes('disable-hidden') && ! inViewPort(directive.el)) {
+            return
+        }
 
         component.addAction(new MethodAction(method, directive.params, node))
     }, interval);
