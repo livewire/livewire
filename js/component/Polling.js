@@ -56,13 +56,13 @@ function fireActionOnInterval(node, component) {
             if (Math.random() < .95) return
         }
 
+        // Don't poll if the element is not in the viewport if "wire.poll.disable-hidden" is attached
+        if (! inViewPort(directive.el) && ! directive.modifiers.includes('keep-alive')) {
+            if (Math.random() < .95) return
+        }
+
         // Don't poll if livewire is offline as well.
         if (store.livewireIsOffline) return
-
-        // Don't poll if the element is not in the viewport if "wire.poll.disable-hidden" is attached
-        if (directive.modifiers.includes('disable-hidden') && ! inViewPort(directive.el)) {
-            return
-        }
 
         component.addAction(new MethodAction(method, directive.params, node))
     }, interval);
