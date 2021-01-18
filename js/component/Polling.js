@@ -56,7 +56,7 @@ function fireActionOnInterval(node, component) {
             if (Math.random() < .95) return
         }
 
-        // Don't poll if the element is not in the viewport if "wire.poll.disable-hidden" is attached
+        // Don't poll if the element is not in the viewport, unless `keep-alive` is used
         if (! inViewPort(directive.el) && ! directive.modifiers.includes('keep-alive')) {
             if (Math.random() < .95) return
         }
