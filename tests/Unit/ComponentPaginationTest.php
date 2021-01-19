@@ -52,10 +52,10 @@ class ComponentPaginationTest extends TestCase
     /** @test */
     public function resolve_integer_page_number_from_query()
     {
-        Livewire::withQueryParams(['page' => 43])
+        Livewire::withQueryParams(['page' => 45])
             ->test(ComponentWithPaginationStub::class)
             ->call('initializeWithPagination')
-            ->assertSet('page', 43);
+            ->assertSet('page', 45);
     }
 }
 
