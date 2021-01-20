@@ -118,6 +118,10 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
+        $this->loadRoutesFrom(
+            __DIR__.DIRECTORY_SEPARATOR.'routes'.DIRECTORY_SEPARATOR.'web.php'
+        );
+        
         if ($this->app->runningUnitTests()) {
             RouteFacade::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
