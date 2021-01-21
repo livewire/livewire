@@ -3,8 +3,8 @@
 namespace Tests\Browser\DataBinding\EagerLoading;
 
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
+use Livewire\Livewire;
 use Sushi\Sushi;
 use Tests\Browser\TestCase;
 
@@ -13,17 +13,30 @@ class Test extends TestCase
     /** @test */
     public function it_restores_eloquent_colletion_eager_loaded_relations_on_hydrate()
     {
-        $this->browse(function(Browser $browser) {
+        $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
-                    ->assertSeeIn('@comments-relation-loaded', 'true')
+                    ->assertSeeIn('@posts-comments-relation-loaded', 'true')
                     ->waitForLivewire()->click('@refresh-server')
-                    ->assertSeeIn('@comments-relation-loaded', 'true')
+                    ->assertSeeIn('@posts-comments-relation-loaded', 'true')
+                    ;
+        });
+    }
+
+    /** @test */
+    public function models_without_eager_loaded_relations_are_not_affected()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, Component::class)
+                    ->assertSeeIn('@comments-has-no-relations', 'true')
+                    ->waitForLivewire()->click('@refresh-server')
+                    ->assertSeeIn('@comments-has-no-relations', 'true')
                     ;
         });
     }
 }
 
-class Post extends Model {
+class Post extends Model
+{
     use Sushi;
 
     protected $rows = [
@@ -31,12 +44,14 @@ class Post extends Model {
         ['id' => 2, 'name' => 'post2'],
     ];
 
-    public function comments() {
+    public function comments()
+    {
         return $this->hasMany(Comment::class);
     }
 }
 
-class Comment extends Model {
+class Comment extends Model
+{
     use Sushi;
 
     protected $rows = [

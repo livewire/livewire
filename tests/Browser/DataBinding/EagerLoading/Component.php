@@ -2,21 +2,37 @@
 
 namespace Tests\Browser\DataBinding\EagerLoading;
 
+use Illuminate\Support\Facades\DB;
 use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
     public $posts;
 
+    public $comments;
+
     public function mount()
     {
         $this->posts = Post::with('comments')->get();
+        $this->comments = Comment::all();
     }
 
-    public function isPostsCommentsRelationLoaded()
+    public function hydratePosts()
     {
-        return $this->posts->every(function($post) {
+        $this->posts->load('comments');
+    }
+
+    public function postsCommentsRelationIsLoaded()
+    {
+        return $this->posts->every(function ($post) {
             return $post->relationLoaded('comments');
+        });
+    }
+
+    public function commentsHaveNoRelations()
+    {
+        return $this->comments->every(function ($comments) {
+            return $comments->getRelations() === [];
         });
     }
 
@@ -24,8 +40,12 @@ class Component extends BaseComponent
     {
         return <<<'HTML'
         <div>
-            <div dusk="comments-relation-loaded">
-                {{ $this->isPostsCommentsRelationLoaded() ? 'true' : 'false' }}
+            <div dusk="posts-comments-relation-loaded">
+                {{ $this->postsCommentsRelationIsLoaded() ? 'true' : 'false' }}
+            </div>
+
+            <div dusk="comments-has-no-relations">
+                {{ $this->commentsHaveNoRelations() ? 'true' : 'false' }}
             </div>
 
             <button dusk="refresh-server" type="button" wire:click="$refresh">Refresh Server</button>
