@@ -39,17 +39,17 @@ class Component extends BaseComponent
     public function render()
     {
         return <<<'HTML'
-        <div>
-            <div dusk="posts-comments-relation-loaded">
-                {{ $this->postsCommentsRelationIsLoaded() ? 'true' : 'false' }}
-            </div>
+<div>
+    <div dusk="posts-comments-relation-loaded">
+        {{ $this->postsCommentsRelationIsLoaded() ? 'true' : 'false' }}
+    </div>
 
-            <div dusk="comments-has-no-relations">
-                {{ $this->commentsHaveNoRelations() ? 'true' : 'false' }}
-            </div>
+    <div dusk="comments-has-no-relations">
+        {{ $this->commentsHaveNoRelations() ? 'true' : 'false' }}
+    </div>
 
-            <button dusk="refresh-server" type="button" wire:click="$refresh">Refresh Server</button>
-        </div>
-        HTML;
+    <button dusk="refresh-server" type="button" wire:click="$refresh">Refresh Server</button>
+</div>
+HTML;
     }
 }
