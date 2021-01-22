@@ -256,5 +256,5 @@ function endLoading(els) {
 }
 
 function generateSignatureFromMethodAndParams(method, params) {
-    return method + btoa(params.toString())
+    return method + btoa(encodeURIComponent(params.toString()))
 }
