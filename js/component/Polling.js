@@ -56,8 +56,9 @@ function fireActionOnInterval(node, component) {
             if (Math.random() < .95) return
         }
 
-        // Don't poll if the element is not in the viewport, unless `keep-alive` is used
-        if (! inViewPort(directive.el) && ! directive.modifiers.includes('keep-alive')) {
+        // Only poll visible elements - effectively this prevents 95% of the requests
+        // if the element is not in the viewport
+        if (! inViewPort(directive.el) && directive.modifiers.includes('visible')) {
             if (Math.random() < .95) return
         }
 
