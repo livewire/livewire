@@ -520,7 +520,7 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function it_can_upload_multiple_file_with_in_array_public_property()
+    public function it_can_upload_multiple_file_within_array_public_property()
     {
         $file1 = UploadedFile::fake()->image('avatar1.jpg');
         $file2 = UploadedFile::fake()->image('avatar2.jpg');
@@ -538,13 +538,19 @@ class FileUploadsTest extends TestCase
 
         $this->assertSame($component->get('obj.last_name'), 'doe');
 
+        $component->updateProperty('obj.first_number', 10);
+
+        $this->assertSame($component->get('obj.first_number'), 10);
+
+        $this->assertSame($component->get('obj.second_number'), 99);
+
         $this->assertStringStartsWith('livewire-files:', $component->get('obj.file_uploads'));
 
         $this->assertCount(4, $tmpFiles);
     }
 
     /** @test */
-    public function it_can_upload_single_file_with_in_array_public_property()
+    public function it_can_upload_single_file_within_array_public_property()
     {
         $file1 = UploadedFile::fake()->image('avatar1.jpg');
 
@@ -557,8 +563,15 @@ class FileUploadsTest extends TestCase
 
         $this->assertSame($component->get('obj.last_name'), 'doe');
 
+        $component->updateProperty('obj.first_number', 10);
+
+        $this->assertSame($component->get('obj.first_number'), 10);
+
+        $this->assertSame($component->get('obj.second_number'), 99);
+
         $this->assertStringStartsWith('livewire-file:', $component->get('obj.file_uploads'));
     }
+
 }
 
 class DummyMiddleware
@@ -623,11 +636,6 @@ class FileUploadComponent extends Component
         $this->storedFilename = $this->photo->store('/', $disk = 'avatars');
     }
 
-    public function uploadDangerous()
-    {
-        $this->photo->store();
-    }
-
     public function validateUpload()
     {
         $this->validate(['photo' => 'file|max:100']);
@@ -657,6 +665,8 @@ class FileUploadInArrayComponent extends FileUploadComponent
     public $obj = [
         'first_name' => null,
         'last_name' => null,
+        'first_number' => 2,
+        'second_number' => 99,
         'file_uploads' => null
     ];
 

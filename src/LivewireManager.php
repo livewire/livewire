@@ -196,7 +196,7 @@ HTML;
         $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
         $assetWarning = null;
 
-        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
+        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
         // Use static assets if they have been published
         if (file_exists(public_path('vendor/livewire/manifest.json'))) {
@@ -207,7 +207,7 @@ HTML;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
-<script{$nonce}>
+<script {$nonce}>
     console.warn("Livewire: The published Livewire assets are out of date\n See: https://laravel-livewire.com/docs/installation/")
 </script>
 HTML;
@@ -218,8 +218,8 @@ HTML;
         // because it will be minified in production.
         return <<<HTML
 {$assetWarning}
-<script src="{$fullAssetPath}" data-turbolinks-eval="false"></script>
-<script data-turbolinks-eval="false"{$nonce}>
+<script src="{$fullAssetPath}" data-turbo-eval="false" data-turbolinks-eval="false"></script>
+<script data-turbo-eval="false" data-turbolinks-eval="false"{$nonce}>
     if (window.livewire) {
         console.warn('Livewire: It looks like Livewire\'s @livewireScripts JavaScript assets have already been loaded. Make sure you aren\'t loading them twice.')
     }

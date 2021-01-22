@@ -47,6 +47,17 @@ class EloquentModelValidationTest extends TestCase
     }
 
     /** @test */
+    public function validate_message_doesnt_contain_dot_notation_if_property_is_camelcased_model()
+    {
+        Livewire::test(ComponentWithCamelCasedModelProperty::class, [
+            'camelFoo' => $foo = CamelFoo::first(),
+        ])  ->set('camelFoo.bar', '')
+            ->call('save')
+            ->assertHasErrors('camelFoo.bar', 'required')
+            ->assertSee('The bar field is required.');
+    }
+
+    /** @test */
     public function validate_message_still_honors_original_custom_attributes_if_property_is_a_model()
     {
         app('translator')->addLines(['validation.required' => 'The :attribute field is required.'], 'en');
@@ -195,10 +206,40 @@ class Foo extends Model
     }
 }
 
+class CamelFoo extends Model
+{
+    use Sushi;
+
+    protected function getRows()
+    {
+        return [[
+            'bar' => 'baz'
+        ]];
+    }
+}
+
+class ComponentWithCamelCasedModelProperty extends Component
+{
+    public $camelFoo;
+
+    protected $rules = [
+        'camelFoo.bar' => 'required'
+    ];
+
+    public function save()
+    {
+        $this->validate();
+    }
+
+    public function render()
+    {
+        return view('dump-errors');
+    }
+}
+
 class ComponentForEloquentModelHydrationMiddleware extends Component
 {
     public $foo;
-
     protected $rules = [
         'foo.bar' => 'required',
         'foo.bar_baz' => 'required',
@@ -218,7 +259,7 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
 
     public function performValidateOnly($field)
     {
-       $this->validateOnly($field);
+        $this->validateOnly($field);
     }
 
     public function render()

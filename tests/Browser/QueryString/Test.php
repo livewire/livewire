@@ -81,6 +81,19 @@ class Test extends TestCase
         });
     }
 
+    public function test_query_string_format_in_rfc_3986()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, Component::class)
+                ->waitForLivewire()->type('@input', 'foo bar')
+                ->assertSeeIn('@output', 'foo bar')
+                ->assertInputValue('@input', 'foo bar')
+                ->assertQueryStringHas('foo', 'foo bar')
+                ->assertScript('return !! window.location.search.match(/foo=foo%20bar/)')
+            ;
+        });
+    }
+
     public function test_back_button_after_refresh_works_with_nested_components()
     {
         $this->browse(function (Browser $browser) {

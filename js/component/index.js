@@ -78,7 +78,7 @@ export default class Component {
         // The .split() stuff is to support dot-notation.
         return name
             .split('.')
-            .reduce((carry, segment) => carry[segment], this.data)
+            .reduce((carry, segment) => typeof carry === 'undefined' ? carry : carry[segment], this.data)
     }
 
     getPropertyValueIncludingDefers(name) {
@@ -557,7 +557,7 @@ export default class Component {
         if (this.modelDebounceCallbacks) {
             this.modelDebounceCallbacks.forEach(callbackRegister => {
                 callbackRegister.callback()
-                callbackRegister = () => { }
+                callbackRegister.callback = () => { }
             })
         }
 

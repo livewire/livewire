@@ -23,7 +23,7 @@ class ViewMacros
         return function ($view, $params = []) {
             $this->livewireLayout = [
                 'type' => 'component',
-                'slotOrSection' => 'default',
+                'slotOrSection' => 'slot',
                 'view' => $view,
                 'params' => $params,
             ];

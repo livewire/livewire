@@ -43,7 +43,7 @@ class LivewireTagCompiler extends ComponentTagCompiler
 
             // Convert kebab attributes to camel-case.
             $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {
-                return [str($key)->camel() => $value];
+                return [(string) str($key)->camel() => $value];
             })->toArray();
 
             if ($matches[1] === 'styles') return '@livewireStyles';

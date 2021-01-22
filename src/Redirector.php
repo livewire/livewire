@@ -24,4 +24,9 @@ class Redirector extends BaseRedirector
 
         return $this;
     }
+
+    public function response($to)
+    {
+        return $this->createRedirect($to, 302, []);
+    }
 }

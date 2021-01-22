@@ -209,7 +209,7 @@ trait ValidatesInput
             $propertyName = $this->beforeFirstDot($key);
 
             if ($data[$propertyName] instanceof Model) {
-                if (str($key)->replace('_', ' ')->is($validator->getDisplayableAttribute($key))) {
+                if (str($key)->snake()->replace('_', ' ')->is($validator->getDisplayableAttribute($key))) {
                     $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute($this->afterFirstDot($key))]);
                 }
             }

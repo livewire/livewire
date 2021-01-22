@@ -1,5 +1,5 @@
 import store from '@/Store'
-import { wireDirectives} from '@/util'
+import { wireDirectives } from '@/util'
 
 export default function () {
     store.registerHook('component.initialized', component => {
@@ -30,13 +30,24 @@ export default function () {
             })
             .map(action => action.payload.method)
 
+        const actionsWithParams = message.updateQueue
+            .filter(action => {
+                return action.type === 'callMethod'
+            })
+            .map(action =>
+                generateSignatureFromMethodAndParams(
+                    action.payload.method,
+                    action.payload.params
+                )
+            )
+
         const models = message.updateQueue
             .filter(action => {
                 return action.type === 'syncInput'
             })
             .map(action => action.payload.name)
 
-        setLoading(component, actions.concat(models))
+        setLoading(component, actions.concat(actionsWithParams).concat(models))
     })
 
     store.registerHook('message.failed', (message, component) => {
@@ -63,11 +74,18 @@ function processLoadingDirective(component, el, directive) {
     let directives = wireDirectives(el)
 
     if (directives.get('target')) {
-        // wire:target overrides any automatic loading scoping we do.
-        actionNames = directives
-            .get('target')
-            .value.split(',')
-            .map(s => s.trim())
+        let target = directives.get('target')
+        if (target.params.length > 0) {
+            actionNames = [
+                generateSignatureFromMethodAndParams(
+                    target.method,
+                    target.params
+                ),
+            ]
+        } else {
+            // wire:target overrides any automatic loading scoping we do.
+            actionNames = target.value.split(',').map(s => s.trim())
+        }
     } else {
         // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
         // and automatically scope this loading directive to that action.
@@ -208,8 +226,8 @@ function startLoading(els) {
 }
 
 function getDisplayProperty(directive) {
-    return ['inline', 'block', 'table', 'flex', 'grid']
-        .filter(i => directive.modifiers.includes(i))[0] || 'inline-block'
+    return (['inline', 'block', 'table', 'flex', 'grid']
+        .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
 }
 
 function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
@@ -235,4 +253,8 @@ function endLoading(els) {
             el.__livewire_on_finish_loading.shift()()
         }
     })
+}
+
+function generateSignatureFromMethodAndParams(method, params) {
+    return method + btoa(params.toString())
 }

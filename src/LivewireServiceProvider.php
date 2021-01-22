@@ -247,6 +247,14 @@ class LivewireServiceProvider extends ServiceProvider
         // Livewire views. Things like letting certain exceptions bubble
         // to the handler, and registering custom directives like: "@this".
         $this->app->make('view.engine.resolver')->register('blade', function () {
+
+            // If the application is using Ignition, make sure Livewire's view compiler
+            // uses a version that extends Ignition's so it can continue to report errors
+            // correctly. Don't change this class without first submitting a PR to Ignition.
+            if (class_exists(\Facade\Ignition\IgnitionServiceProvider::class)) {
+                return new CompilerEngineForIgnition($this->app['blade.compiler']);
+            }
+
             return new LivewireViewCompilerEngine($this->app['blade.compiler']);
         });
     }
