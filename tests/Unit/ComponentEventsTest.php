@@ -43,8 +43,8 @@ class ComponentEventsTest extends TestCase
     {
         $component = Livewire::test(ReceivesEventsWithModifiedDynamicListeners::class, ['listener' => 'bar']);
 
-        $component->call('delete', 2);
-        $component->emit('bar:2');
+        $component->call('delete', 2)
+            ->emit('bar:2');
 
         $component->emit('bar:3', 'goo')
             ->assertSet('foo', 'goo');
