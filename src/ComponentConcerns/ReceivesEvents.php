@@ -69,8 +69,10 @@ trait ReceivesEvents
 
     public function fireEvent($event, $params)
     {
-        $method = $this->getEventsAndHandlers()[$event];
+        $method = $this->getEventsAndHandlers()[$event] ?? null;
 
-        $this->callMethod($method, $params);
+        if($method) {
+            $this->callMethod($method, $params);
+        }
     }
 }

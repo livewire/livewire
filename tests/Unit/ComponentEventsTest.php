@@ -39,6 +39,18 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
+    public function receive_modified_dynamic_event()
+    {
+        $component = Livewire::test(ReceivesEventsWithModifiedDynamicListeners::class, ['listener' => 'bar']);
+
+        $component->call('delete', 2);
+        $component->emit('bar:2');
+
+        $component->emit('bar:3', 'goo')
+            ->assertSet('foo', 'goo');
+    }
+
+    /** @test */
     public function listeners_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -175,6 +187,47 @@ class ReceivesEventsWithDynamicListeners extends Component
     public function handle($value)
     {
         $this->foo = $value;
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class ReceivesEventsWithModifiedDynamicListeners extends Component
+{
+    public $listener;
+    public $foo = '';
+    public $items = [];
+
+    public function mount($listener)
+    {
+        $this->listener = $listener;
+
+        $this->items = [
+            1 => ['name' => 'Item 1'],
+            2 => ['name' => 'Item 2'],
+            3 => ['name' => 'Item 3'],
+        ];
+    }
+
+    public function handle($value)
+    {
+        $this->foo = $value;
+    }
+
+    public function delete($id)
+    {
+        unset($this->items[$id]);
+    }
+
+    protected function getListeners() {
+        return collect($this->items)
+            ->mapWithKeys(function ($item, $key) {
+                return [$this->listener . ':' . $key => 'handle'];
+            })
+            ->toArray();
     }
 
     public function render()
