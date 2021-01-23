@@ -102,6 +102,14 @@ trait InteractsWithProperties
 
         return $value;
     }
+    
+    public function setPropertyValue($name, $value)
+    {
+        if ($this->containsDots($name)) {
+            return data_set($this->{$this->beforeFirstDot($name)}, $this->afterFirstDot($name), $value);
+        }
+        return $this->{$this->beforeFirstDot($name)} = $value;
+    }
 
     public function setProtectedPropertyValue($name, $value)
     {
