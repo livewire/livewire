@@ -34,7 +34,18 @@ class SupportBrowserHistory
                     : json_decode($fromQueryString, true);
 
                 if ($fromQueryString !== null) {
-                    $component->$property = $decoded === null ? $fromQueryString : $decoded;
+                    if ($decoded === null) {
+                        $component->$property = $fromQueryString;
+                    } else {
+                        // If the property is as Collection, we transform the value
+                        $type = (new ReflectionObject($component))->getProperty($property)->getType()->getName();
+
+                        if ($type === Collection::class) {
+                            $decoded = new Collection($decoded);
+                        }
+
+                        $component->$property = $decoded;
+                    }
                 }
             }
         });
