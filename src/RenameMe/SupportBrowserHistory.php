@@ -39,10 +39,7 @@ class SupportBrowserHistory
                     if ($decoded === null) {
                         $component->$property = $fromQueryString;
                     } else {
-                        // If the property is as Collection, we transform the value
-                        $type = (new ReflectionObject($component))->getProperty($property)->getType()->getName();
-
-                        if ($type === Collection::class) {
+                        if ($this->propertyIsCollection($component, $property)) {
                             $decoded = new Collection($decoded);
                         }
 
@@ -183,12 +180,27 @@ class SupportBrowserHistory
             ->mapWithKeys(function($value, $key) use ($component) {
                 $key = is_string($key) ? $key : $value;
 
-                return [$key => $component->{$key}];
+                if ($this->propertyIsCollection($component, $key) && ! isset($component->{$key})) {
+                    $property = new Collection([]);
+                } else {
+                    $property = $component->{$key};
+                }
+
+                return [$key => $property];
             });
     }
 
     protected function stringifyQueryParams($queryParams)
     {
         return $queryParams->isEmpty() ? '' : '?'.Arr::query($queryParams->toArray());
+    }
+
+    protected function propertyIsCollection(Component $component, string $property): bool
+    {
+        return optional(
+            (new ReflectionObject($component))
+                ->getProperty($property)
+                ->getType()
+        )->getName() === Collection::class;
     }
 }
