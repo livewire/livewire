@@ -78,6 +78,12 @@ class TestCase extends BaseTestCase
                 \Tests\Browser\SyncHistory\ComponentWithoutQueryString::class
             )->middleware('web')->name('sync-history-without-query-string');
 
+            Route::get('/livewire-dusk/{component}', function ($component) {
+                $class = urldecode($component);
+
+                return app()->call(new $class);
+            })->middleware('web', ExpectedDummyMiddleware::class);
+
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
             app('config')->set('view.paths', [
@@ -209,5 +215,13 @@ class TestCase extends BaseTestCase
         $sh->run();
 
         return $sh->getScopeVariables(false);
+    }
+}
+
+class ExpectedDummyMiddleware
+{
+    public function handle($request, $next)
+    {
+        return $next($request);
     }
 }

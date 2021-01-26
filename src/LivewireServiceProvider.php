@@ -3,8 +3,10 @@
 namespace Livewire;
 
 use Illuminate\View\View;
+use Illuminate\Testing\TestResponse;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\ComponentAttributeBag;
 use Livewire\Controllers\FileUploadHandler;
@@ -13,7 +15,6 @@ use Livewire\Controllers\HttpConnectionHandler;
 use Livewire\Controllers\LivewireJavaScriptAssets;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
-use Illuminate\Testing\TestResponse;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Livewire\Commands\{
     CpCommand,
@@ -118,19 +119,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
-        if ($this->app->runningUnitTests()) {
-            RouteFacade::get('/livewire-dusk/{component}', function ($component) {
-                $class = urldecode($component);
-
-                return app()->call(new $class);
-            })->middleware('web');
+        if (Livewire::isLivewireRequest()) {
+            RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class);
         }
-
-        RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
-        RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
-
-        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
-            ->middleware(config('livewire.middleware_group', 'web'));
 
         RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
             ->middleware(config('livewire.middleware_group', 'web'))
@@ -139,6 +130,9 @@ class LivewireServiceProvider extends ServiceProvider
         RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
             ->middleware(config('livewire.middleware_group', 'web'))
             ->name('livewire.preview-file');
+
+        RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
+        RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
     }
 
     protected function registerCommands()

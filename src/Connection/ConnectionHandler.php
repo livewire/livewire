@@ -2,9 +2,10 @@
 
 namespace Livewire\Connection;
 
+use Illuminate\Routing\Controller;
 use Livewire\LifecycleManager;
 
-abstract class ConnectionHandler
+abstract class ConnectionHandler extends Controller
 {
     public function handle($payload)
     {
