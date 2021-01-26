@@ -124,7 +124,7 @@ class TemporaryUploadedFile extends UploadedFile
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
         $hash = Str::random(30);
-        $meta = '-meta'.base64_encode($file->getClientOriginalName()).'-';
+        $meta = str_replace('/', '_', '-meta'.base64_encode($file->getClientOriginalName()).'-');
         $extension = '.'.$file->guessExtension();
 
         return $hash.$meta.$extension;
@@ -132,7 +132,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function extractOriginalNameFromFilePath($path)
     {
-        return base64_decode(head(explode('-', last(explode('-meta', $path)))));
+        return base64_decode(head(explode('-', last(explode('-meta', str_replace('_', '/', $path))))));
     }
 
     public static function createFromLivewire($filePath)
