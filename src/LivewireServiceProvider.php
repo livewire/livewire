@@ -119,9 +119,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
-        if (Livewire::isLivewireRequest()) {
-            RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class);
-        }
+        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)->name('livewire.message');
 
         RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
             ->middleware(config('livewire.middleware_group', 'web'))
@@ -321,7 +319,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function bypassTheseMiddlewaresDuringLivewireRequests(array $middlewareToExclude)
     {
-        if (! $this->app['livewire']->isLivewireRequest()) return;
+        if (! request()->hasHeader('X-Livewire')) return;
 
         $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
 

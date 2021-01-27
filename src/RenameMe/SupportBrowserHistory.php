@@ -19,8 +19,6 @@ class SupportBrowserHistory
 
     function __construct()
     {
-        $this->mergedQueryParamsFromDehydratedComponents = collect($this->getExistingQueryParams());
-
         Livewire::listen('component.hydrate.initial', function ($component) {
             if (! $properties = $this->getQueryParamsFromComponentProperties($component)->keys()) return;
 
@@ -138,6 +136,10 @@ class SupportBrowserHistory
 
     protected function mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component)
     {
+        if (! $this->mergedQueryParamsFromDehydratedComponents) {
+            $this->mergedQueryParamsFromDehydratedComponents = collect($this->getExistingQueryParams());
+        }
+
         $excepts = $this->getExceptsFromComponent($component);
 
         $this->mergedQueryParamsFromDehydratedComponents = collect(request()->query())

@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Exception;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
@@ -11,8 +12,6 @@ class LivewireManager
     protected $listeners = [];
     protected $componentAliases = [];
     protected $queryParamsForTesting = [];
-
-    public static $isLivewireRequestTestingOverride;
 
     public function component($alias, $viewClass = null)
     {
@@ -261,11 +260,28 @@ HTML;
 
     public function isLivewireRequest()
     {
-        if (static::$isLivewireRequestTestingOverride) {
-            return true;
+        $route = request()->route();
+
+        if (! $route && app()->runningUnitTests()) {
+            return false;
         }
 
-        return request()->hasHeader('X-Livewire');
+        throw_unless(
+            $route,
+            new Exception('It\'s too early in the request to call Livewire::isLivewireRequest().')
+        );
+
+        return $route->named('livewire.message');
+
+    }
+
+    public function originalUrl()
+    {
+        if ($this->isLivewireRequest()) {
+            return request('fingerprint')['url'];
+        }
+
+        return url()->current();
     }
 
     public function getRootElementTagName($dom)
