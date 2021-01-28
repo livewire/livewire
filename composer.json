@@ -13,8 +13,7 @@
         "symfony/http-kernel": "^5.0",
         "illuminate/support": "^7.0|^8.0",
         "illuminate/database": "^7.0|^8.0",
-        "illuminate/validation": "^7.0|^8.0",
-        "spatie/laravel-ray": "^1.9"
+        "illuminate/validation": "^7.0|^8.0"
     },
     "require-dev": {
         "psy/psysh": "@stable",
@@ -23,7 +22,8 @@
         "laravel/framework": "^7.0|^8.0",
         "orchestra/testbench": "^5.0|^6.0",
         "orchestra/testbench-dusk": "^5.2|^6.0",
-        "calebporzio/sushi": "^2.1"
+        "calebporzio/sushi": "^2.1",
+        "spatie/laravel-ray": "^1.9"
     },
     "autoload": {
         "files": [
