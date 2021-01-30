@@ -54,6 +54,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerTestMacros();
         $this->registerLivewireSingleton();
         $this->registerComponentAutoDiscovery();
+        $this->registerConfig();
     }
 
     public function boot()
@@ -105,6 +106,11 @@ class LivewireServiceProvider extends ServiceProvider
                 )
             );
         });
+    }
+
+    protected function registerConfig()
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/livewire.php', 'livewire');
     }
 
     protected function registerViews()
