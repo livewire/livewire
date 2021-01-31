@@ -13,6 +13,13 @@ class LivewireManager
     protected $componentAliases = [];
     protected $queryParamsForTesting = [];
 
+    protected $persistentMiddleware = [
+        \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        \App\Http\Middleware\RedirectIfAuthenticated::class,
+        \Illuminate\Auth\Middleware\Authorize::class,
+        \App\Http\Middleware\Authenticate::class,
+    ];
+
     public function component($alias, $viewClass = null)
     {
         if (is_null($viewClass)) {
@@ -116,6 +123,21 @@ class LivewireManager
         auth()->shouldUse($driver);
 
         return $this;
+    }
+
+    public function addPersistentMiddleware($middleware)
+    {
+        $this->persistentMiddleware = array_merge($this->persistentMiddleware, (array) $middleware);
+    }
+
+    public function setPersistentMiddleware($middleware)
+    {
+        $this->persistentMiddleware = (array) $middleware;
+    }
+
+    public function getPersistentMiddleware()
+    {
+        return $this->persistentMiddleware;
     }
 
     public function styles($options = [])

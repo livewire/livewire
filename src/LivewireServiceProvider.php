@@ -6,7 +6,6 @@ use Illuminate\View\View;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\ComponentAttributeBag;
 use Livewire\Controllers\FileUploadHandler;
@@ -51,10 +50,10 @@ class LivewireServiceProvider extends ServiceProvider
 {
     public function register()
     {
+        $this->registerConfig();
         $this->registerTestMacros();
         $this->registerLivewireSingleton();
         $this->registerComponentAutoDiscovery();
-        $this->registerConfig();
     }
 
     public function boot()

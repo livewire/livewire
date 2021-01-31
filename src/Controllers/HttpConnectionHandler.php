@@ -10,17 +10,7 @@ class HttpConnectionHandler extends ConnectionHandler
 {
     public function __construct()
     {
-        $originalUrl = Livewire::originalUrl();
-
-        $route = app('router')->getRoutes()->match(
-            Request::create($originalUrl, 'GET')
-        );
-
-        $originalRequestMiddleware = $route->gatherMiddleware();
-
-        $configuredMiddlewareGroup = config('livewire.middleware_group', 'web');
-
-        $this->middleware([$configuredMiddlewareGroup, ...$originalRequestMiddleware]);
+        $this->applyPersistentMiddleware();
     }
 
     public function __invoke()
@@ -32,5 +22,24 @@ class HttpConnectionHandler extends ConnectionHandler
                 'updates',
             ])
         );
+    }
+
+    public function applyPersistentMiddleware()
+    {
+        $originalUrl = Livewire::originalUrl();
+
+        $originalRoute = app('router')->getRoutes()->match(
+            Request::create($originalUrl, 'GET')
+        );
+
+        $originalRequestMiddleware = app('router')->gatherRouteMiddleware($originalRoute);
+
+        $allowedMiddleware = Livewire::getPersistentMiddleware();
+
+        $filteredOriginalRequestMiddleware = array_intersect($originalRequestMiddleware, $allowedMiddleware);
+
+        $configuredMiddlewareGroup = config('livewire.middleware_group', 'web');
+
+        $this->middleware([$configuredMiddlewareGroup, ...$filteredOriginalRequestMiddleware]);
     }
 }

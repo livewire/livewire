@@ -6,20 +6,21 @@ use Closure;
 use Exception;
 use Psy\Shell;
 use Throwable;
+use Livewire\Livewire;
+use Livewire\Component;
 use Laravel\Dusk\Browser;
+use function Livewire\str;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
+use Livewire\Macros\DuskBrowserMacros;
 use Illuminate\Support\Facades\Artisan;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
-use Livewire\Component;
-use Livewire\Macros\DuskBrowserMacros;
+
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
-
-use function Livewire\str;
 
 class TestCase extends BaseTestCase
 {
@@ -82,7 +83,7 @@ class TestCase extends BaseTestCase
                 $class = urldecode($component);
 
                 return app()->call(new $class);
-            })->middleware('web', ExpectedDummyMiddleware::class);
+            })->middleware('web', AllowListedMiddleware::class, BlockListedMiddleware::class);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
@@ -92,6 +93,8 @@ class TestCase extends BaseTestCase
             ]);
 
             config()->set('app.debug', true);
+
+            Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
         });
     }
 
@@ -218,7 +221,15 @@ class TestCase extends BaseTestCase
     }
 }
 
-class ExpectedDummyMiddleware
+class AllowListedMiddleware
+{
+    public function handle($request, $next)
+    {
+        return $next($request);
+    }
+}
+
+class BlockListedMiddleware
 {
     public function handle($request, $next)
     {
