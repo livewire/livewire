@@ -38,7 +38,7 @@ class HttpConnectionHandler extends ConnectionHandler
 
         $filteredOriginalRequestMiddleware = array_intersect($originalRequestMiddleware, $allowedMiddleware);
 
-        $configuredMiddlewareGroup = config('livewire.middleware_group', 'web');
+        $configuredMiddlewareGroup = config('livewire.middleware_group');
 
         $this->middleware([$configuredMiddlewareGroup, ...$filteredOriginalRequestMiddleware]);
     }

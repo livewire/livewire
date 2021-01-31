@@ -67,11 +67,7 @@ class TemporaryUploadedFile extends UploadedFile
             );
         }
 
-        $supportedPreviewTypes = config('livewire.temporary_file_upload.preview_mimes', [
-            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
-            'mov', 'avi', 'wmv', 'mp3', 'm4a',
-            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
-        ]);
+        $supportedPreviewTypes = config('livewire.temporary_file_upload.preview_mimes');
 
         if (! in_array($this->guessExtension(),  $supportedPreviewTypes)) {
             // This will throw an error because it's not used with S3.

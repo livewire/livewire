@@ -102,7 +102,7 @@ class SupportBrowserHistory
 
     protected function getExistingQueryParams()
     {
-        return Livewire::isLivewireRequest()
+        return Livewire::isDefinitelyLivewireRequest()
             ? $this->getQueryParamsFromRefererHeader()
             : request()->query();
     }

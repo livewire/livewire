@@ -21,7 +21,7 @@ class Component extends BaseComponent
         return <<<'HTML'
 <div>
     <span dusk="middleware">@json($middleware)</span>
-    <span dusk="url">{{ \Livewire\Livewire::isLivewireRequest() ? request('fingerprint')['url'] : '' }}</span>
+    <span dusk="url">{{ \Livewire\Livewire::isDefinitelyLivewireRequest() ? request('fingerprint')['url'] : '' }}</span>
 
     <button wire:click="$refresh" dusk="refresh">Refresh</button>
     <button wire:click="showNestedComponent" dusk="showNested">Show Nested</button>

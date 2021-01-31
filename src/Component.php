@@ -55,7 +55,7 @@ abstract class Component
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
-            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout', 'layouts.app'),
+            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout'),
             'params' => $this->initialLayoutConfiguration['params'] ?? [],
             'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
                 'extends' => 'content', 'component' => 'slot',
@@ -83,7 +83,7 @@ abstract class Component
 
     public static function getName()
     {
-        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace', 'App\\Http\\Livewire'))))
+        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace'))))
             ->map([Str::class, 'kebab'])
             ->implode('.');
 

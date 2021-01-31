@@ -20,6 +20,8 @@ class LivewireManager
         \App\Http\Middleware\Authenticate::class,
     ];
 
+    public static $isLivewireRequestTestingOverride = false;
+
     public function component($alias, $viewClass = null)
     {
         if (is_null($viewClass)) {
@@ -206,7 +208,7 @@ HTML;
             $devTools = 'window.livewire.devTools(true);';
         }
 
-        $appUrl = config('livewire.asset_url', rtrim($options['asset_url'] ?? '', '/'));
+        $appUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
 
         $csrf = csrf_token();
 
@@ -280,7 +282,7 @@ HTML;
         return preg_replace('~(\v|\t|\s{2,})~m', '', $subject);
     }
 
-    public function isLivewireRequest()
+    public function isDefinitelyLivewireRequest()
     {
         $route = request()->route();
 
@@ -290,16 +292,23 @@ HTML;
 
         throw_unless(
             $route,
-            new Exception('It\'s too early in the request to call Livewire::isLivewireRequest().')
+            new Exception('It\'s too early in the request to call Livewire::isDefinitelyLivewireRequest().')
         );
 
         return $route->named('livewire.message');
 
     }
 
+    public function isProbablyLivewireRequest()
+    {
+        if (static::$isLivewireRequestTestingOverride) return true;
+
+        return request()->hasHeader('X-Livewire');
+    }
+
     public function originalUrl()
     {
-        if ($this->isLivewireRequest()) {
+        if ($this->isDefinitelyLivewireRequest()) {
             return request('fingerprint')['url'];
         }
 

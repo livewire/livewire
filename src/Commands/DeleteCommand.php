@@ -13,8 +13,8 @@ class DeleteCommand extends FileManipulationCommand
     public function handle()
     {
         $this->parser = new ComponentParser(
-            config('livewire.class_namespace', 'App\\Http\\Livewire'),
-            config('livewire.view_path', resource_path('views/livewire')),
+            config('livewire.class_namespace'),
+            config('livewire.view_path'),
             $this->argument('name')
         );
 

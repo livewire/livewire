@@ -101,7 +101,7 @@ class LivewireServiceProvider extends ServiceProvider
                 new Filesystem,
                 config('livewire.manifest_path') ?: $defaultManifestPath,
                 ComponentParser::generatePathFromNamespace(
-                    config('livewire.class_namespace', 'App\\Http\\Livewire')
+                    config('livewire.class_namespace')
                 )
             );
         });
@@ -127,11 +127,11 @@ class LivewireServiceProvider extends ServiceProvider
         RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)->name('livewire.message');
 
         RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group', 'web'))
+            ->middleware(config('livewire.middleware_group'))
             ->name('livewire.upload-file');
 
         RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group', 'web'))
+            ->middleware(config('livewire.middleware_group'))
             ->name('livewire.preview-file');
 
         RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
@@ -324,7 +324,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function bypassTheseMiddlewaresDuringLivewireRequests(array $middlewareToExclude)
     {
-        if (! request()->hasHeader('X-Livewire')) return;
+        if (! Livewire::isProbablyLivewireRequest()) return;
 
         $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
 
