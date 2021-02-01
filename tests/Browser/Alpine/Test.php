@@ -128,11 +128,17 @@ class Test extends TestCase
             Livewire::visit($browser, ClickComponent::class)
                 ->waitForLivewire()->click('@show')
                 ->click('@click')
-                ->assertSeeIn('@alpineNumberClicksFired', 1)
+                ->assertSeeIn('@alpineClicksFired', 1)
                 ->click('@click')
-                ->assertSeeIn('@alpineNumberClicksFired', 2)
+                ->assertSeeIn('@alpineClicksFired', 2)
                 ->click('@click')
-                ->assertSeeIn('@alpineNumberClicksFired', 3)
+                ->assertSeeIn('@alpineClicksFired', 3)
+                ->click('@componentClick')
+                ->assertSeeIn('@alpineComponentClicksFired', 1)
+                ->click('@componentClick')
+                ->assertSeeIn('@alpineComponentClicksFired', 2)
+                ->click('@componentClick')
+                ->assertSeeIn('@alpineComponentClicksFired', 3)
             ;
         });
     }
