@@ -51,7 +51,7 @@ class Test extends TestCase
                 // We're going to make a fetch request, but store the request payload
                 // so we can replay it from a different page.
                 ->tap(function ($b) {
-                    $b->script(<<<'JS'
+                    $script = <<<'JS'
                         let unDecoratedFetch = window.fetch
                         let decoratedFetch = (...args) => {
                             window.localStorage.setItem(
@@ -62,7 +62,9 @@ class Test extends TestCase
                             return unDecoratedFetch(...args)
                         }
                         window.fetch = decoratedFetch
-JS);
+JS;
+
+                    $b->script($script);
                 })
                 ->waitForLivewire()->click('@refresh')
                 // Now we logout.
@@ -71,13 +73,15 @@ JS);
                 // the "auth" middleware will be applied, recognize we've
                 // logged out and throw an error in the response.
                 ->tap(function ($b) {
-                    $b->script(<<<'JS'
+                    $script = <<<'JS'
                         let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
 
                         window.fetch(...args).then(i => i.text()).then(response => {
                             document.body.textContent = 'response-ready: '+JSON.stringify(response)
                         })
-JS);
+JS;
+
+                    $b->script($script);
                 })
                 ->waitForText('response-ready: ')
                 ->assertDontSee('Protected Content');
@@ -93,7 +97,7 @@ JS);
                 ->visit('/with-authorization/1/livewire-dusk/'.urlencode(Component::class))
                 ->waitForLivewireToLoad()
                 ->tap(function ($b) {
-                    $b->script(<<<'JS'
+                    $script = <<<'JS'
                         let unDecoratedFetch = window.fetch
                         let decoratedFetch = (...args) => {
                             window.localStorage.setItem(
@@ -104,18 +108,22 @@ JS);
                             return unDecoratedFetch(...args)
                         }
                         window.fetch = decoratedFetch
-JS);
+JS;
+
+                    $b->script($script);
                 })
                 ->waitForLivewire()->click('@refresh')
                 ->visit('/force-login/2')
                 ->tap(function ($b) {
-                    $b->script(<<<'JS'
+                    $script = <<<'JS'
                         let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
 
                         window.fetch(...args).then(i => i.text()).then(response => {
                             document.body.textContent = 'response-ready: '+JSON.stringify(response)
                         })
-JS);
+JS;
+
+                    $b->script($script);
                 })
                 ->waitForText('response-ready: ')
                 ->assertDontSee('Protected Content');
