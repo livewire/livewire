@@ -10,7 +10,7 @@ class NestedComponent extends BaseComponent
 
     public function render()
     {
-        $this->middleware = app('router')->current()->gatherMiddleware();
+        $this->middleware = Component::$loggedMiddleware;
 
         return <<<'HTML'
 <div>
