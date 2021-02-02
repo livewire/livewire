@@ -13,6 +13,22 @@ export default class Connection {
         return componentStore.onErrorCallback(status)
     }
 
+    getUrl(payload) {
+        return `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}`
+    }
+
+    sendBeacon(message) {
+        let payload    = message.payload()
+        payload._token = getCsrfToken()
+
+        navigator.sendBeacon(
+            this.getUrl(payload),
+            new Blob([JSON.stringify(payload)], {
+                type: 'application/json',
+            })
+        )
+    }
+
     sendMessage(message) {
         let payload = message.payload()
 
@@ -22,7 +38,7 @@ export default class Connection {
 
         // Forward the query string for the ajax requests.
         fetch(
-            `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}`,
+            this.getUrl(payload),
             {
                 method: 'POST',
                 body: JSON.stringify(payload),

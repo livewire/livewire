@@ -76,6 +76,26 @@ class Test extends TestCase
                                    ->assertSeeIn('@lastEventForChildB', 'blog')
                                    ->assertScript('window.lastFooEventValue', 'bob');
                 })
+
+                /**
+                 * dispatching an event as a beacon to a specific component
+                 */
+                ->tap(function ($browser) { $browser->script('window.livewire.first().beacon("foo", "bar")'); })
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertScript('window.beacon.url', '/livewire/message/tests.browser.events.nested-component-a')
+                        ->assertScript('window.beacon.payload.updates[0].payload.method', 'foo')
+                        ->assertScript('window.beacon.payload.updates[0].payload.params[0]','bar');
+                })
+
+                /**
+                 * dispatching an event as a beacon using the global object
+                 */
+                ->tap(function ($browser) { $browser->script('window.livewire.beaconTo("tests.browser.events.nested-component-b", "foo", "bar")'); })
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertScript('window.beacon.url', '/livewire/message/tests.browser.events.nested-component-b')
+                        ->assertScript('window.beacon.payload.updates[0].payload.method', 'foo')
+                        ->assertScript('window.beacon.payload.updates[0].payload.params[0]', 'bar');
+                })
             ;
         });
     }

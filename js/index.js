@@ -65,6 +65,10 @@ class Livewire {
         this.components.on(event, callback)
     }
 
+    beaconTo(name, event, ...params) {
+        this.components.beaconTo(name, event, ...params)
+    }
+
     devTools(enableDevtools) {
         this.devToolsEnabled = enableDevtools
     }

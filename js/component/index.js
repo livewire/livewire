@@ -166,6 +166,12 @@ export default class Component {
         })
     }
 
+    beacon(method, ...params) {
+        let action = new MethodAction(method, params, this.el)
+        let message = new Message(this, [action])
+        this.connection.sendBeacon(message)
+    }
+
     on(event, callback) {
         this.scopedListeners.register(event, callback)
     }
@@ -653,6 +659,7 @@ export default class Component {
                         'set',
                         'sync',
                         'call',
+                        'beacon',
                         'on',
                         'upload',
                         'uploadMultiple',

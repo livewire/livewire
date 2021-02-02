@@ -83,6 +83,16 @@ const store = {
         })
     },
 
+    beaconTo(componentName, event, ...params) {
+        let components = this.getComponentsByName(componentName)
+
+        components.forEach(component => {
+            if (component.listeners.includes(event)) {
+                component.beacon(event, ...params)
+            }
+        })
+    },
+
     componentsListeningForEventThatAreTreeAncestors(el, event) {
         var parentIds = []
 

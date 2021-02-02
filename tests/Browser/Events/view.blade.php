@@ -14,3 +14,13 @@
     @livewire(Tests\Browser\Events\NestedComponentA::class)
     @livewire(Tests\Browser\Events\NestedComponentB::class)
 </div>
+
+@push('scripts')
+    <script>
+        navigator.sendBeacon = (url, blob) => {
+            blob.text()
+            .then(JSON.parse)
+            .then(payload => window.beacon = { url, payload })
+        }
+    </script>
+@endpush
