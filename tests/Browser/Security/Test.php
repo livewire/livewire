@@ -62,7 +62,7 @@ class Test extends TestCase
                             return unDecoratedFetch(...args)
                         }
                         window.fetch = decoratedFetch
-                    JS);
+JS);
                 })
                 ->waitForLivewire()->click('@refresh')
                 // Now we logout.
@@ -77,7 +77,7 @@ class Test extends TestCase
                         window.fetch(...args).then(i => i.text()).then(response => {
                             document.body.textContent = 'response-ready: '+JSON.stringify(response)
                         })
-                    JS);
+JS);
                 })
                 ->waitForText('response-ready: ')
                 ->assertDontSee('Protected Content');
@@ -104,7 +104,7 @@ class Test extends TestCase
                             return unDecoratedFetch(...args)
                         }
                         window.fetch = decoratedFetch
-                    JS);
+JS);
                 })
                 ->waitForLivewire()->click('@refresh')
                 ->visit('/force-login/2')
@@ -115,7 +115,7 @@ class Test extends TestCase
                         window.fetch(...args).then(i => i.text()).then(response => {
                             document.body.textContent = 'response-ready: '+JSON.stringify(response)
                         })
-                    JS);
+JS);
                 })
                 ->waitForText('response-ready: ')
                 ->assertDontSee('Protected Content');
