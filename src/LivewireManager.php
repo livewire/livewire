@@ -300,7 +300,6 @@ HTML;
         );
 
         return $route->named('livewire.message');
-
     }
 
     public function isProbablyLivewireRequest()

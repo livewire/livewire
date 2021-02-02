@@ -36,6 +36,9 @@ class HttpConnectionHandler extends ConnectionHandler
         $persistentMiddleware = Livewire::getPersistentMiddleware();
 
         $filteredMiddleware = collect($originalRouteMiddleware)->filter(function ($middleware) use ($persistentMiddleware) {
+            // Some middlewares can be closures.
+            if (! is_string($middleware)) return false;
+
             return in_array(Str::before($middleware, ':'), $persistentMiddleware);
         })->toArray();
 
