@@ -17,10 +17,10 @@ class LivewireManager
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
         \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
         \App\Http\Middleware\RedirectIfAuthenticated::class,
         \Illuminate\Auth\Middleware\Authenticate::class,
         \Illuminate\Auth\Middleware\Authorize::class,
-        \Illuminate\Routing\Middleware\SubstituteBindings::class,
         \App\Http\Middleware\Authenticate::class,
     ];
 
