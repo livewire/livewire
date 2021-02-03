@@ -125,16 +125,16 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerRoutes()
     {
         RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
-            ->middleware(config('livewire.middleware_group'))
-            ->name('livewire.message');
+            ->name('livewire.message')
+            ->middleware(config('livewire.middleware_group', ''));
 
         RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group'))
-            ->name('livewire.upload-file');
+            ->name('livewire.upload-file')
+            ->middleware(config('livewire.middleware_group', ''));
 
         RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group'))
-            ->name('livewire.preview-file');
+            ->name('livewire.preview-file')
+            ->middleware(config('livewire.middleware_group', ''));
 
         RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
         RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
