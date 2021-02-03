@@ -290,14 +290,7 @@ HTML;
     {
         $route = request()->route();
 
-        if (! $route && app()->runningUnitTests()) {
-            return false;
-        }
-
-        throw_unless(
-            $route,
-            new Exception('It\'s too early in the request to call Livewire::isDefinitelyLivewireRequest().')
-        );
+        if (! $route) return false;
 
         return $route->named('livewire.message') || $route->named('livewire.locale-message');
     }
