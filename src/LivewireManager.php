@@ -292,7 +292,7 @@ HTML;
 
         if (! $route) return false;
 
-        return $route->named('livewire.message') || $route->named('livewire.locale-message');
+        return $route->named('livewire.message');
     }
 
     public function isProbablyLivewireRequest()

@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\Request;
 use Livewire\Connection\ConnectionHandler;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class HttpConnectionHandler extends ConnectionHandler
 {
@@ -25,9 +26,15 @@ class HttpConnectionHandler extends ConnectionHandler
 
     public function applyPersistentMiddleware()
     {
-        $request = $this->makeRequestFromUrl(
-            Livewire::originalUrl()
-        );
+        try {
+            $request = $this->makeRequestFromUrl(
+                Livewire::originalUrl()
+            );
+        } catch (NotFoundHttpException $e) {
+            $request = $this->makeRequestFromUrl(
+                Str::replaceFirst(Livewire::originalUrl(), request('fingerprint')['locale'].'/', '')
+            );
+        }
 
         // Gather all the middleware for the original route, and filter it by
         // the ones we have designated for persistence on Livewire requests.
