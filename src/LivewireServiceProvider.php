@@ -125,7 +125,7 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerRoutes()
     {
         RouteFacade::post('/{locale}/livewire/message/{name}', HttpConnectionHandler::class)
-            ->name('livewire.message')
+            ->name('livewire.locale-message')
             ->middleware(config('livewire.middleware_group', ''));
 
         RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
