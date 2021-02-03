@@ -20,9 +20,11 @@ export default class Connection {
             return window.__testing_request_interceptor(payload, this)
         }
 
+        let localeSegment = payload.fingerprint.locale ? `/${payload.fingerprint.locale}` : ''
+
         // Forward the query string for the ajax requests.
         fetch(
-            `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}`,
+            `${window.livewire_app_url}${localeSegment}/livewire/message/${payload.fingerprint.name}`,
             {
                 method: 'POST',
                 body: JSON.stringify(payload),
