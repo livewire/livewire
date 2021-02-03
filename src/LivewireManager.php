@@ -299,7 +299,7 @@ HTML;
             new Exception('It\'s too early in the request to call Livewire::isDefinitelyLivewireRequest().')
         );
 
-        return $route->named('livewire.message') || $route->named('livewire.locale-messge');
+        return $route->named('livewire.message') || $route->named('livewire.locale-message');
     }
 
     public function isProbablyLivewireRequest()
