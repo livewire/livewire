@@ -286,6 +286,11 @@ HTML;
         return preg_replace('~(\v|\t|\s{2,})~m', '', $subject);
     }
 
+    public function isLivewireRequest()
+    {
+        return $this->isProbablyLivewireRequest();
+    }
+
     public function isDefinitelyLivewireRequest()
     {
         $route = request()->route();
