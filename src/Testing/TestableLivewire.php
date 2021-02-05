@@ -11,6 +11,8 @@ use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Traits\Macroable;
 use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
 use Livewire\Exceptions\PropertyNotFoundException;
+use Livewire\LivewireManager;
+
 use function Livewire\str;
 
 class TestableLivewire
@@ -167,11 +169,15 @@ class TestableLivewire
 
     public function pretendWereSendingAComponentUpdateRequest($message, $payload)
     {
-        return $this->callEndpoint('POST', '/livewire/message/'.$this->componentName, [
+        $result = $this->callEndpoint('POST', '/livewire/message/'.$this->componentName, [
             'fingerprint' => $this->payload['fingerprint'],
             'serverMemo' => $this->payload['serverMemo'],
             'updates' => [['type' => $message, 'payload' => $payload]],
         ]);
+
+        LivewireManager::$isLivewireRequestTestingOverride = true;
+
+        return $result;
     }
 
     public function callEndpoint($method, $url, $payload)

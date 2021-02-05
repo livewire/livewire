@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Illuminate\View\View;
+use Illuminate\Testing\TestResponse;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -13,7 +14,6 @@ use Livewire\Controllers\HttpConnectionHandler;
 use Livewire\Controllers\LivewireJavaScriptAssets;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
-use Illuminate\Testing\TestResponse;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Livewire\Commands\{
     CpCommand,
@@ -50,6 +50,7 @@ class LivewireServiceProvider extends ServiceProvider
 {
     public function register()
     {
+        $this->registerConfig();
         $this->registerTestMacros();
         $this->registerLivewireSingleton();
         $this->registerComponentAutoDiscovery();
@@ -100,10 +101,15 @@ class LivewireServiceProvider extends ServiceProvider
                 new Filesystem,
                 config('livewire.manifest_path') ?: $defaultManifestPath,
                 ComponentParser::generatePathFromNamespace(
-                    config('livewire.class_namespace', 'App\\Http\\Livewire')
+                    config('livewire.class_namespace')
                 )
             );
         });
+    }
+
+    protected function registerConfig()
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/livewire.php', 'livewire');
     }
 
     protected function registerViews()
@@ -118,27 +124,20 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
-        if ($this->app->runningUnitTests()) {
-            RouteFacade::get('/livewire-dusk/{component}', function ($component) {
-                $class = urldecode($component);
+        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
+            ->name('livewire.message')
+            ->middleware(config('livewire.middleware_group', ''));
 
-                return app()->call(new $class);
-            })->middleware('web');
-        }
+        RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
+            ->name('livewire.upload-file')
+            ->middleware(config('livewire.middleware_group', ''));
+
+        RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
+            ->name('livewire.preview-file')
+            ->middleware(config('livewire.middleware_group', ''));
 
         RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
         RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
-
-        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
-            ->middleware(config('livewire.middleware_group', 'web'));
-
-        RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group', 'web'))
-            ->name('livewire.upload-file');
-
-        RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
-            ->middleware(config('livewire.middleware_group', 'web'))
-            ->name('livewire.preview-file');
     }
 
     protected function registerCommands()
@@ -327,7 +326,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function bypassTheseMiddlewaresDuringLivewireRequests(array $middlewareToExclude)
     {
-        if (! $this->app['livewire']->isLivewireRequest()) return;
+        if (! Livewire::isProbablyLivewireRequest()) return;
 
         $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
 

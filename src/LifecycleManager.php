@@ -28,7 +28,7 @@ class LifecycleManager
         return tap(new static, function ($instance) use ($name, $id) {
             $instance->instance = app('livewire')->getInstance($name, $id);
             $instance->request = new Request([
-                'fingerprint' => ['id' => $id, 'name' => $name, 'locale' => app()->getLocale()],
+                'fingerprint' => ['id' => $id, 'name' => $name, 'locale' => app()->getLocale(), 'url' => Livewire::originalUrl()],
                 'updates' => [],
                 'serverMemo' => [],
             ]);
@@ -42,7 +42,7 @@ class LifecycleManager
         return tap(new static, function ($instance) use ($component,  $name) {
             $instance->instance = $component;
             $instance->request = new Request([
-                'fingerprint' => ['id' => $component->id, 'name' => $name, 'locale' => app()->getLocale()],
+                'fingerprint' => ['id' => $component->id, 'name' => $name, 'locale' => app()->getLocale(), 'url' => Livewire::originalUrl()],
                 'updates' => [],
                 'serverMemo' => [],
             ]);

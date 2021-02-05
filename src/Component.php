@@ -55,7 +55,7 @@ abstract class Component
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
-            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout', 'layouts.app'),
+            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout'),
             'params' => $this->initialLayoutConfiguration['params'] ?? [],
             'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
                 'extends' => 'content', 'component' => 'slot',
@@ -83,7 +83,7 @@ abstract class Component
 
     public static function getName()
     {
-        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace', 'App\\Http\\Livewire'))))
+        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace'))))
             ->map([Str::class, 'kebab'])
             ->implode('.');
 
@@ -165,7 +165,7 @@ abstract class Component
         $view->with([
             'errors' => $errors,
             '_instance' => $this,
-        ] + $this->getPublicPropertiesDefinedBySubClass() + $this->mapPublicMethodsToClosures());
+        ] + $this->getPublicPropertiesDefinedBySubClass());
 
         app('view')->share('errors', $errors);
         app('view')->share('_instance', $this);
@@ -180,18 +180,6 @@ abstract class Component
         $engine->endLivewireRendering();
 
         return $output;
-    }
-
-    public function mapPublicMethodsToClosures()
-    {
-        return collect((new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC))
-            ->reject(function($method) {
-                return $method->getDeclaringClass() === self::class || Str::startsWith($method->getName(), '__');
-            })
-            ->mapWithKeys(function($method) {
-                return [$method->getName() => $method->getClosure($this)];
-            })
-            ->all();
     }
 
     public function normalizePublicPropertiesForJavaScript()

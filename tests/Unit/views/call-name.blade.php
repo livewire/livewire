@@ -1,1 +1,0 @@
-<span>{{ $name('Chris') }}</span>

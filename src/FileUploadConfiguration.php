@@ -90,6 +90,6 @@ class FileUploadConfiguration
 
     public static function maxUploadTime()
     {
-        return config('livewire.temporary_file_upload.max_upload_time');
+        return config('livewire.temporary_file_upload.max_upload_time') ?: 5;
     }
 }
