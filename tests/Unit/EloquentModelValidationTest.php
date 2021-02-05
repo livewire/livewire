@@ -190,13 +190,13 @@ class EloquentModelValidationTest extends TestCase
     public function array_with_deep_nested_model_relationship_validation()
     {
         Livewire::test(ComponentForEloquentModelNestedHydrationMiddleware::class, [
-            'users' => $users = User::with('items')->get(),
+            'carts' => $carts = Cart::with('items')->get(),
         ])
-            ->set('users.1.items.0.title', 'sparkling')
+            ->set('carts.1.items.0.title', 'sparkling')
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertEquals([[['users.1.items.0.title' => 'sparkling']]], $users[0]->fresh()->items[0]->title);
+        $this->assertEquals('sparkling', $carts[1]->fresh()->items[0]->title);
     }
 }
 
@@ -286,14 +286,14 @@ class Items extends Model
     use Sushi;
 
     protected $rows = [
-        ['title' => 'Lawn Mower', 'price' => '226.99', 'user_id' => 1],
-        ['title' => 'Leaf Blower', 'price' => '134.99', 'user_id' => 1],
-        ['title' => 'Rake', 'price' => '9.99', 'user_id' => 1],
-        ['title' => 'Lawn Mower', 'price' => '226.99', 'user_id' => 2],
-        ['title' => 'Leaf Blower', 'price' => '134.99', 'user_id' => 2],
-        ['title' => 'Lawn Mower', 'price' => '226.99', 'user_id' => 3],
-        ['title' => 'Leaf Blower', 'price' => '134.99', 'user_id' => 3],
-        ['title' => 'Rake', 'price' => '9.99', 'user_id' => 3],
+        ['title' => 'Lawn Mower', 'price' => '226.99', 'cart_id' => 1],
+        ['title' => 'Leaf Blower', 'price' => '134.99', 'cart_id' => 1],
+        ['title' => 'Rake', 'price' => '9.99', 'cart_id' => 1],
+        ['title' => 'Lawn Mower', 'price' => '226.99', 'cart_id' => 2],
+        ['title' => 'Leaf Blower', 'price' => '134.99', 'cart_id' => 2],
+        ['title' => 'Lawn Mower', 'price' => '226.99', 'cart_id' => 3],
+        ['title' => 'Leaf Blower', 'price' => '134.99', 'cart_id' => 3],
+        ['title' => 'Rake', 'price' => '9.99', 'cart_id' => 3],
 
     ];
 
@@ -303,7 +303,7 @@ class Items extends Model
 
 }
 
-class User extends Model
+class Cart extends Model
 {
     use Sushi;
 
@@ -316,16 +316,16 @@ class User extends Model
     public function items()
     {
 
-        return $this->hasMany(Items::class, 'user_id', 'id');
+        return $this->hasMany(Items::class, 'cart_id', 'id');
 
     }
 }
 
 class ComponentForEloquentModelNestedHydrationMiddleware extends Component
 {
-    public $users;
+    public $carts;
     protected $rules = [
-        'users.*.items.*.title' => 'required',
+        'carts.*.items.*.title' => 'required',
     ];
 
 
@@ -333,8 +333,8 @@ class ComponentForEloquentModelNestedHydrationMiddleware extends Component
     {
         $this->validate();
 
-        foreach($this->users as $user) {
-            foreach($user->items as $item) {
+        foreach($this->carts as $cart) {
+            foreach($cart->items as $item) {
                    $item->save();
             }
         }
