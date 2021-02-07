@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
+use Livewire\TemporaryUploadedFile;
 
 class FileUploadsTest extends TestCase
 {
@@ -538,6 +539,23 @@ class FileUploadsTest extends TestCase
         $this->assertSame($component->get('obj.last_name'), 'doe');
 
         $this->assertStringStartsWith('livewire-file:', $component->get('obj.file_uploads'));
+    }
+
+    /** @test */
+    public function generate_safe_hash_name_with_original_name_embedded()
+    {
+        $fileName = 'Документация новый файл проверка.png';
+
+        $component = Livewire::test(FileUploadComponent::class);
+        /** @var TemporaryUploadedFile $temporaryUploadedFile */
+        $temporaryUploadedFile = $component->set('photo', UploadedFile::fake()->image($fileName))
+            ->viewData('photo');
+
+        $this->assertSame($fileName, $temporaryUploadedFile->getClientOriginalName());
+
+        $hashWithOriginalNameEmbedded = str_replace('livewire-file:', '', $component->get('photo'));
+        $extractedFileName = $temporaryUploadedFile->extractOriginalNameFromFilePath($hashWithOriginalNameEmbedded);
+        $this->assertSame($fileName, $extractedFileName);
     }
 }
 
