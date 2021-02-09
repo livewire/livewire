@@ -71,7 +71,7 @@ class SupportBrowserHistory
         try {
             // See if we can get the route from the referer.
             return app('router')->getRoutes()->match(
-                Request::create($referer, 'GET')
+                Request::create($referer, Livewire::originalMethod())
             );
         } catch (NotFoundHttpException $e) {
             // If not, use the current route.
