@@ -15,7 +15,7 @@ class NestedComponent extends BaseComponent
         return <<<'HTML'
 <div>
     <span dusk="nested-middleware">@json($middleware)</span>
-    <span dusk="nested-url">{{ \Livewire\Livewire::isDefinitelyLivewireRequest() ? request('fingerprint')['url'] : '' }}</span>
+    <span dusk="nested-path">{{ \Livewire\Livewire::isDefinitelyLivewireRequest() ? request('fingerprint')['path'] : '' }}</span>
 
     <button wire:click="$refresh" dusk="refreshNested">Refresh</button>
 </div>

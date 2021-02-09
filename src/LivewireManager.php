@@ -310,10 +310,44 @@ HTML;
     public function originalUrl()
     {
         if ($this->isDefinitelyLivewireRequest()) {
-            return request('fingerprint')['url'];
+            return url()->to($this->originalPath());
         }
 
         return url()->current();
+    }
+
+    public function originalPath()
+    {
+        if ($this->isDefinitelyLivewireRequest()) {
+            // @depricted: "url" usage was removed in v2.3.17
+            // This can be removed after a period of time
+            // as users will have refreshed all pages
+            // that still used "url".
+            if (isset(request('fingerprint')['url'])) {
+                return str(request('fingerprint')['url'])->after(request()->root());
+            }
+
+            return request('fingerprint')['path'];
+        }
+
+        return request()->path();
+    }
+
+    public function originalMethod()
+    {
+        if ($this->isDefinitelyLivewireRequest()) {
+            // @depricted: "url" usage was removed in v2.3.17
+            // This can be removed after a period of time
+            // as users will have refreshed all pages
+            // that still used "url".
+            if (isset(request('fingerprint')['url'])) {
+                return 'GET';
+            }
+
+            return request('fingerprint')['method'];
+        }
+
+        return request()->method();
     }
 
     public function getRootElementTagName($dom)
