@@ -141,6 +141,11 @@ trait ValidatesInput
         return ! $this->hasRuleFor($dotNotatedProperty);
     }
 
+    protected function beforeValidation(\Illuminate\Validation\Validator $validator)
+    {
+        return $validator;
+    }
+
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
@@ -152,6 +157,8 @@ trait ValidatesInput
         $validator = Validator::make($data, $rules, $messages, $attributes);
 
         $this->shortenModelAttributes($data, $rules, $validator);
+
+        $this->beforeValidation($validator);
 
         $validatedData = $validator->validate();
 
