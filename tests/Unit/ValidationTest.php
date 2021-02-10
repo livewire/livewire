@@ -584,7 +584,9 @@ class ForValidationWithRulesAndBeforeValidationHook extends Component {
     ];
 
     protected function beforeValidation(\Illuminate\Validation\Validator $validator) {
-        $validator->sometimes('permission', 'required', fn() => $this->age < 18);
+        $validator->sometimes('permission', 'required', function () {
+            return $this->age < 18;
+        });
     }
 
     public function runValidation()
