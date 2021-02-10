@@ -1,2 +1,2 @@
-@livewireStyles
+@livewireStyles($options)
 @livewireScripts($options)

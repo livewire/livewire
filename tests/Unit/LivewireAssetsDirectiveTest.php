@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Livewire\Livewire;
 use Illuminate\Support\Facades\View;
+use Livewire\Livewire;
 
 class LivewireAssetsDirectiveTest extends TestCase
 {
@@ -92,6 +92,11 @@ class LivewireAssetsDirectiveTest extends TestCase
 
         $this->assertStringContainsString(
             'nonce="foobarnonce">',
+            $output
+        );
+
+        $this->assertStringContainsString(
+            '<style nonce="foobarnonce">',
             $output
         );
     }
