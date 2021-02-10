@@ -380,6 +380,20 @@ class ValidationTest extends TestCase
 
         $component->call('failFooOnCustomValidator')->assertHasErrors('plop');
     }
+
+    /** @test */
+    public function can_add_complex_conditional_rules_in_before_validation_hook()
+    {
+        $component = Livewire::test(ForValidationWithRulesAndBeforeValidationHook::class);
+
+        $component
+            ->set('age', 20)
+            ->call('runValidation')
+            ->assertDontSee('The permission field is required')
+            ->set('age', 17)
+            ->call('runValidation')
+            ->assertSee('The permission field is required');
+    }
 }
 
 class ForValidation extends Component
@@ -556,5 +570,30 @@ class ValueEqualsFoobar implements Rule
     public function message()
     {
         return '';
+    }
+}
+
+class ForValidationWithRulesAndBeforeValidationHook extends Component {
+
+    public $age;
+    public $permission = null;
+
+    protected $rules = [
+        'age' => 'required|integer',
+        'permission' => 'nullable',
+    ];
+
+    protected function beforeValidation(\Illuminate\Validation\Validator $validator) {
+        $validator->sometimes('permission', 'required', fn() => $this->age < 18);
+    }
+
+    public function runValidation()
+    {
+        $this->validate();
+    }
+
+    public function render()
+    {
+        return app('view')->make('dump-errors');
     }
 }
