@@ -147,7 +147,12 @@ class ComponentParser
 
     public static function generatePathFromNamespace($namespace)
     {
-        $name = str($namespace)->replaceFirst(app()->getNamespace(), '');
+        $appNamespace = app()->getNamespace();
+        if (rtrim($appNamespace, '\\') === $namespace) {
+            return app('path');
+        }
+
+        $name = str($namespace)->replaceFirst($appNamespace, '');
 
         return app('path').'/'.str_replace('\\', '/', $name);
     }
