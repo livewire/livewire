@@ -14,8 +14,12 @@ class LivewireManager
     protected $queryParamsForTesting = [];
 
     protected $persistentMiddleware = [
+        \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
         \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
         \App\Http\Middleware\RedirectIfAuthenticated::class,
+        \Illuminate\Auth\Middleware\Authenticate::class,
         \Illuminate\Auth\Middleware\Authorize::class,
         \App\Http\Middleware\Authenticate::class,
     ];
@@ -282,21 +286,18 @@ HTML;
         return preg_replace('~(\v|\t|\s{2,})~m', '', $subject);
     }
 
+    public function isLivewireRequest()
+    {
+        return $this->isProbablyLivewireRequest();
+    }
+
     public function isDefinitelyLivewireRequest()
     {
         $route = request()->route();
 
-        if (! $route && app()->runningUnitTests()) {
-            return false;
-        }
-
-        throw_unless(
-            $route,
-            new Exception('It\'s too early in the request to call Livewire::isDefinitelyLivewireRequest().')
-        );
+        if (! $route) return false;
 
         return $route->named('livewire.message');
-
     }
 
     public function isProbablyLivewireRequest()
@@ -309,10 +310,44 @@ HTML;
     public function originalUrl()
     {
         if ($this->isDefinitelyLivewireRequest()) {
-            return request('fingerprint')['url'];
+            return url()->to($this->originalPath());
         }
 
         return url()->current();
+    }
+
+    public function originalPath()
+    {
+        if ($this->isDefinitelyLivewireRequest()) {
+            // @depricted: "url" usage was removed in v2.3.17
+            // This can be removed after a period of time
+            // as users will have refreshed all pages
+            // that still used "url".
+            if (isset(request('fingerprint')['url'])) {
+                return str(request('fingerprint')['url'])->after(request()->root());
+            }
+
+            return request('fingerprint')['path'];
+        }
+
+        return request()->path();
+    }
+
+    public function originalMethod()
+    {
+        if ($this->isDefinitelyLivewireRequest()) {
+            // @depricted: "url" usage was removed in v2.3.17
+            // This can be removed after a period of time
+            // as users will have refreshed all pages
+            // that still used "url".
+            if (isset(request('fingerprint')['url'])) {
+                return 'GET';
+            }
+
+            return request('fingerprint')['method'];
+        }
+
+        return request()->method();
     }
 
     public function getRootElementTagName($dom)
