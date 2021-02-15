@@ -10,12 +10,12 @@ class NestedComponent extends BaseComponent
 
     public function render()
     {
-        $this->middleware = app('router')->current()->gatherMiddleware();
+        $this->middleware = Component::$loggedMiddleware;
 
         return <<<'HTML'
 <div>
     <span dusk="nested-middleware">@json($middleware)</span>
-    <span dusk="nested-url">{{ \Livewire\Livewire::isDefinitelyLivewireRequest() ? request('fingerprint')['url'] : '' }}</span>
+    <span dusk="nested-path">{{ \Livewire\Livewire::isDefinitelyLivewireRequest() ? request('fingerprint')['path'] : '' }}</span>
 
     <button wire:click="$refresh" dusk="refreshNested">Refresh</button>
 </div>
