@@ -2,7 +2,6 @@
 
 namespace Tests\Browser\DataBinding\EagerLoading;
 
-use Illuminate\Support\Facades\DB;
 use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
@@ -15,11 +14,6 @@ class Component extends BaseComponent
     {
         $this->posts = Post::with('comments')->get();
         $this->comments = Comment::all();
-    }
-
-    public function hydratePosts()
-    {
-        $this->posts->load('comments');
     }
 
     public function postsCommentsRelationIsLoaded()
