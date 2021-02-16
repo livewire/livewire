@@ -1,10 +1,9 @@
 <?php
 
-namespace Tests\Browser\Defer;
+namespace Tests\Browser\DataBinding\Defer;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Defer\Component;
 
 class Test extends TestCase
 {

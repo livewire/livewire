@@ -48,6 +48,26 @@ class Test extends TestCase
                 ->assertSeeIn('@baz.output', '6')
 
                 /**
+                 * get, set, and call with special characters
+                 */
+                ->assertSeeIn('@special.output', 'abc')
+                ->assertSeeIn('@special.get', 'abc')
+                ->assertSeeIn('@special.get.proxy', 'abc')
+                ->assertSeeIn('@special.get.proxy.magic', 'abc')
+                ->waitForLivewire()->click('@special.set')
+                ->assertSeeIn('@special.output', 'ž')
+                ->waitForLivewire()->click('@special.set.proxy')
+                ->assertSeeIn('@special.output', 'žž')
+                ->waitForLivewire()->click('@special.set.proxy.magic')
+                ->assertSeeIn('@special.output', 'žžž')
+                ->waitForLivewire()->click('@special.call')
+                ->assertSeeIn('@special.output', 'žžžž')
+                ->waitForLivewire()->click('@special.call.proxy')
+                ->assertSeeIn('@special.output', 'žžžžž')
+                ->waitForLivewire()->click('@special.call.proxy.magic')
+                ->assertSeeIn('@special.output', 'žžžžžž')
+
+                /**
                  * .call() return value
                  */
                 ->assertDontSeeIn('@bob.output', '1')

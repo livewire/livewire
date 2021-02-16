@@ -344,8 +344,6 @@ export default class Component {
 
             if (DOM.hasFocus(el) && ! dirtyInputs.includes(modelValue)) return
 
-            if (el.wasRecentlyAutofilled) return
-
             DOM.setInputValueFromModel(el, this)
         })
     }

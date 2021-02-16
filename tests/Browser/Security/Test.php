@@ -14,29 +14,29 @@ class Test extends TestCase
             Livewire::visit($browser, Component::class)
                 // See allow-listed middleware from original request.
                 ->assertSeeIn('@middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware","Tests\\\\Browser\\\\BlockListedMiddleware"]')
-                ->assertDontSeeIn('@url', 'http://127.0.0.1:8001/livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
+                ->assertDontSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
 
                 ->waitForLivewire()->click('@refresh')
 
                 // See that the original request middleware was re-applied.
                 ->assertSeeIn('@middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
-                ->assertSeeIn('@url', 'http://127.0.0.1:8001/livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
+                ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
 
                 ->waitForLivewire()->click('@showNested')
 
                 // Even to nested components shown AFTER the first load.
                 ->assertSeeIn('@middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
-                ->assertSeeIn('@url', 'http://127.0.0.1:8001/livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
+                ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
                 ->assertSeeIn('@nested-middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
-                ->assertSeeIn('@nested-url', 'http://127.0.0.1:8001/livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
+                ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
 
                 ->waitForLivewire()->click('@refreshNested')
 
                 // Make sure they are still applied when stand-alone requests are made to that component.
                 ->assertSeeIn('@middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
-                ->assertSeeIn('@url', 'http://127.0.0.1:8001/livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
+                ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
                 ->assertSeeIn('@nested-middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
-                ->assertSeeIn('@nested-url', 'http://127.0.0.1:8001/livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
+                ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
             ;
         });
     }
