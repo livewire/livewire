@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Browser\Lazy;
+namespace Tests\Browser\DataBinding\Lazy;
 
 use Livewire\Component as BaseComponent;
 

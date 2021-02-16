@@ -1,10 +1,9 @@
 <?php
 
-namespace Tests\Browser\Lazy;
+namespace Tests\Browser\DataBinding\Lazy;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Lazy\LazyInputsWithUpdatesDisplayedComponent;
 
 class Test extends TestCase
 {
