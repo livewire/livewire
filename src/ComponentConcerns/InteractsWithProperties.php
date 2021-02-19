@@ -172,6 +172,25 @@ trait InteractsWithProperties
         }
     }
 
+    public function resetExcept($exceptions)
+    {
+        $properties = array_keys($this->getPublicPropertiesDefinedBySubClass());
+
+        // Remove exceptions from properties
+        if (is_array($exceptions)) {
+            $properties = array_diff($properties, $exceptions);
+        } elseif (is_string($exceptions)) {
+            $exceptions = [$exceptions];
+            $properties = array_diff($properties, $exceptions);
+        }
+
+        foreach ($properties as $property) {
+            $freshInstance = new static($this->id);
+
+            $this->{$property} = $freshInstance->{$property};
+        }
+    }
+
     public function only($properties)
     {
         $results = [];
