@@ -247,6 +247,7 @@ class TestableLivewire
             return $this->macroCall($method, $params);
         }
 
-        return $this->lastResponse->$method(...$params);
+        $this->lastResponse->$method(...$params);
+        return $this;
     }
 }
