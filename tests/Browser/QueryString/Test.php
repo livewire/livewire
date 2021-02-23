@@ -3,6 +3,7 @@
 namespace Tests\Browser\QueryString;
 
 use Livewire\Livewire;
+use Livewire\Component;
 use Laravel\Dusk\Browser;
 use Tests\Browser\TestCase;
 
@@ -163,6 +164,15 @@ class Test extends TestCase
                 ->back()
                 ->back()
                 ->assertSeeIn('@count', '4')
+            ;
+        });
+    }
+
+    public function test_dynamic_query_string_method()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithMethodInsteadOfProperty::class)
+                ->assertQueryStringHas('foo', 'bar')
             ;
         });
     }
