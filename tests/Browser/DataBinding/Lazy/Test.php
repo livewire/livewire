@@ -1,10 +1,9 @@
 <?php
 
-namespace Tests\Browser\Lazy;
+namespace Tests\Browser\DataBinding\Lazy;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
-use Tests\Browser\Lazy\LazyInputsWithUpdatesDisplayedComponent;
 
 class Test extends TestCase
 {
@@ -25,6 +24,19 @@ class Test extends TestCase
                 ->assertDontSeeIn('@updatesList', 'syncInput - name')
                 ->assertSeeIn('@updatesList', 'syncInput - description')
                 ->assertSeeIn('@updatesList', 'callMethod - submit')
+            ;
+        });
+    }
+
+    public function test_it_sends_input_lazy_request_before_checkbox_request_in_the_same_request()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, LazyInputsWithUpdatesDisplayedComponent::class)
+                ->type('@name', 'bob')
+                ->waitForLivewire()->check('@is_active')
+                ->assertSeeIn('@totalNumberUpdates', 2)
+                ->assertSeeIn('@updatesList', 'syncInput - name')
+                ->assertSeeIn('@updatesList', 'syncInput - is_active')
             ;
         });
     }
