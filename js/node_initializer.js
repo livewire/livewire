@@ -70,7 +70,7 @@ export default {
             || directive.modifiers.includes('lazy') ? 'change' : 'input'
 
         // If it's a text input and not .lazy, debounce, otherwise fire immediately.
-        let handler = debounceIf(hasDebounceModifier || (DOM.isTextInput(el) && (!isLazy || !el.wasRecentlyAutofilled)), e => {
+        let handler = debounceIf(hasDebounceModifier || (DOM.isTextInput(el) && !isLazy), e => {
             let model = directive.value
             let el = e.target
 
@@ -80,11 +80,6 @@ export default {
                 && typeof window.document.documentMode == 'undefined'
                     ? e.detail
                     : DOM.valueFromInput(el, component)
-
-            // These conditions should only be met if the event was fired for a Safari autofill.
-            if (el.wasRecentlyAutofilled && e instanceof CustomEvent && e.detail === null) {
-                value = DOM.valueFromInput(el, component)
-            }
 
             if (directive.modifiers.includes('defer')) {
                 component.addAction(new DeferredModelAction(model, value, el))
@@ -99,14 +94,17 @@ export default {
             el.removeEventListener(event, handler)
         })
 
-        el.addEventListener('animationstart', e => {
+        // Taken from: https://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
+        let isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+
+        // Safari is weird and doesn't properly fire input events when
+        // a user "autofills" a wire:model(.lazy) field. So we are
+        // firing them manually for assurance.
+        isSafari && el.addEventListener('animationstart', e => {
             if (e.animationName !== 'livewireautofill') return
 
-            e.target.wasRecentlyAutofilled = true
-
-            setTimeout(() => {
-                delete e.target.wasRecentlyAutofilled
-            }, 1000)
+            e.target.dispatchEvent(new Event('change', { bubbles: true }))
+            e.target.dispatchEvent(new Event('input', { bubbles: true }))
         })
     },
 
