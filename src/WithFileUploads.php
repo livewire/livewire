@@ -96,9 +96,9 @@ trait WithFileUploads
         $storage = FileUploadConfiguration::storage();
 
         foreach ($storage->allFiles(FileUploadConfiguration::path()) as $filePathname) {
-            if (! $storage->exists($filePathname)) {
-                continue;
-            }
+            // On busy websites, this cleanup code can run in multiple threads causing part of the output
+            // of allFiles() to have already been deleted by another thread.
+            if (! $storage->exists($filePathname)) continue;
 
             $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
