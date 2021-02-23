@@ -3,6 +3,7 @@
 namespace Tests\Browser\QueryString;
 
 use Livewire\Livewire;
+use Livewire\Component;
 use Laravel\Dusk\Browser;
 use Tests\Browser\TestCase;
 
