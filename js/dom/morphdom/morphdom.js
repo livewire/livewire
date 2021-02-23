@@ -394,6 +394,7 @@ export default function morphdomFactory(morphAttrs) {
                     // MORPH
                     morphEl(matchingFromEl, curToNodeChild);
                 } else {
+                    curToNodeChild = curToNodeChild.cloneNode(true)
                     var onBeforeNodeAddedResult = callHook(onBeforeNodeAdded, curToNodeChild);
                     if (onBeforeNodeAddedResult !== false) {
                         if (onBeforeNodeAddedResult) {
