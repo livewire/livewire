@@ -38,6 +38,7 @@ return [
     | the view returned by SomeComponent will be wrapped in "layouts.app"
     |
     */
+    
     'layout' => 'layouts.app',
 
     /*
