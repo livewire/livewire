@@ -96,6 +96,10 @@ trait WithFileUploads
         $storage = FileUploadConfiguration::storage();
 
         foreach ($storage->allFiles(FileUploadConfiguration::path()) as $filePathname) {
+            if (! $storage->exists($filePathname)) {
+                continue;
+            }
+
             $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);
