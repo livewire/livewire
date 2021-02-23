@@ -166,4 +166,13 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_dynamic_query_string_method()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithMethodInsteadOfProperty::class)
+                ->assertQueryStringHas('foo', 'bar')
+            ;
+        });
+    }
 }
