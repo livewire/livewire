@@ -28,6 +28,13 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertCount($name, $value)
+    {
+        PHPUnit::assertCount($value, $this->get($name));
+
+        return $this;
+    }
+
     public function assertPayloadSet($name, $value)
     {
         if (is_callable($value)) {
