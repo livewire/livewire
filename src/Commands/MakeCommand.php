@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class MakeCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:make {name} {--force} {--inline}';
+    protected $signature = 'livewire:make {name} {--force} {--inline} {--test}';
 
     protected $description = 'Create a new Livewire component';
 
@@ -26,11 +26,16 @@ class MakeCommand extends FileManipulationCommand
 
         $force = $this->option('force');
         $inline = $this->option('inline');
+        $test = $this->option('test');
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
 
         $class = $this->createClass($force, $inline);
         $view = $this->createView($force, $inline);
+
+        if ($test) {
+            $test = $this->createTest($force);
+        }
 
         $this->refreshComponentAutodiscovery();
 
@@ -40,6 +45,10 @@ class MakeCommand extends FileManipulationCommand
 
             if (! $inline) {
                 $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
+            }
+
+            if ($test) {
+                $test && $this->line("<options=bold;fg=green>Test:</>  {$this->parser->relativeTestPath()}");
             }
 
             if ($showWelcomeMessage && ! app()->environment('testing')) {
@@ -84,6 +93,24 @@ class MakeCommand extends FileManipulationCommand
         File::put($viewPath, $this->parser->viewContents());
 
         return $viewPath;
+    }
+
+    protected function createTest($force = false)
+    {
+        $testPath = $this->parser->testPath();
+
+        if (File::exists($testPath) && ! $force) {
+            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
+            $this->line("<fg=red;options=bold>Test class already exists:</> {$this->parser->relativeTestPath()}");
+
+            return false;
+        }
+
+        $this->ensureDirectoryExists($testPath);
+
+        File::put($testPath, $this->parser->testContents());
+
+        return $testPath;
     }
 
     public function isReservedClassName($name)

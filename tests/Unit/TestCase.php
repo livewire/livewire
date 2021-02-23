@@ -28,6 +28,7 @@ class TestCase extends BaseTestCase
 
         File::deleteDirectory($this->livewireViewsPath());
         File::deleteDirectory($this->livewireClassesPath());
+        File::deleteDirectory($this->livewireTestsPath());
         File::delete(app()->bootstrapPath('cache/livewire-components.php'));
     }
 
@@ -68,5 +69,10 @@ class TestCase extends BaseTestCase
     protected function livewireViewsPath($path = '')
     {
         return resource_path('views').'/livewire'.($path ? '/'.$path : '');
+    }
+
+    protected function livewireTestsPath($path = '')
+    {
+        return base_path('tests/Feature/Livewire'.($path ? '/'.$path : ''));
     }
 }
