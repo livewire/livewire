@@ -2,17 +2,16 @@
 
 namespace Livewire\ComponentConcerns;
 
-use Illuminate\Support\Traits\Macroable;
-use Livewire\Livewire;
-use Livewire\ImplicitlyBoundMethod;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
-use Livewire\Exceptions\MissingFileUploadsTraitException;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
-use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
+use Livewire\ImplicitlyBoundMethod;
+use Livewire\Livewire;
 use function Livewire\str;
 
 trait HandlesActions
