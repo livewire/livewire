@@ -2,6 +2,7 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Illuminate\Support\Traits\Macroable;
 use Livewire\Livewire;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Database\Eloquent\Model;
@@ -129,13 +130,21 @@ trait HandlesActions
                 } else {
                     $currentValue = $this->{$prop};
                 }
-                
+
                 $this->syncInput($prop, ! $currentValue, $rehash = false);
 
                 return;
 
             case '$refresh':
                 return;
+        }
+
+        if (method_exists($this, 'macroCall') && static::hasMacro($method)) {
+            $returned = $this->macroCall($method, $params);
+
+            Livewire::dispatch('action.returned', $this, $method, $returned);
+
+            return;
         }
 
         if (! method_exists($this, $method)) {
