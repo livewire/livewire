@@ -26,10 +26,6 @@ class FileUploadConfiguration
 
     public static function disk()
     {
-        if (app()->environment('testing')) {
-            return 'tmp-for-tests';
-        }
-
         return config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
     }
 
