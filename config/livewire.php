@@ -38,7 +38,7 @@ return [
     | the view returned by SomeComponent will be wrapped in "layouts.app"
     |
     */
-    
+
     'layout' => 'layouts.app',
 
     /*
@@ -92,6 +92,7 @@ return [
             'jpg', 'jpeg', 'mpga', 'webp', 'wma',
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload gets invalidated.
+        'test_disk' => null // Overwrite disk to be used during tests, defaults to 'tmp-for-tests'
     ],
 
     /*
