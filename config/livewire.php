@@ -92,7 +92,7 @@ return [
             'jpg', 'jpeg', 'mpga', 'webp', 'wma',
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload gets invalidated.
-        'test_disk' => null // Overwrite disk to be used during tests, defaults to 'tmp-for-tests'
+        //'test_disk' => 'tmp-for-tests' // Overwrite disk to be used during tests
     ],
 
     /*
