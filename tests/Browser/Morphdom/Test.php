@@ -44,6 +44,16 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@bob')
                 ->assertScript('Livewire.components.components()[0].morphChanges.added.length', 1)
                 ->assertScript('Livewire.components.components()[0].morphChanges.removed.length', 0)
+
+
+                ->tap(function ($b) { $b->script([
+                    "window.lastAddedElement = false",
+                    "window.lastUpdatedElement = false",
+                    "Livewire.hook('element.updated', el => { window.lastUpdatedElement = el })",
+                ]);})
+                ->waitForLivewire()->click('@qux')
+                ->assertScript('window.lastAddedElement.innerText', 'second')
+                ->assertScript('window.lastUpdatedElement.innerText', 'third')
             ;
         });
     }

@@ -10,8 +10,8 @@
 
 'use strict';
 
-import { compareNodeNames, toElement, moveChildren, createElementNS, doc } from './util';
 import specialElHandlers from './specialElHandlers';
+import { compareNodeNames, createElementNS, doc, moveChildren, toElement } from './util';
 
 var ELEMENT_NODE = 1;
 var DOCUMENT_FRAGMENT_NODE = 11;
@@ -153,15 +153,15 @@ export default function morphdomFactory(morphAttrs) {
                     if (unmatchedFromEl && compareNodeNames(curChild, unmatchedFromEl)) {
                         curChild.parentNode.replaceChild(unmatchedFromEl, curChild);
                         morphEl(unmatchedFromEl, curChild);
-
-                        // @livewireModification
-                        // Otherwise, "curChild" will be unnatached when it is passed to "handleNodeAdde"
-                        // things like .parent and .closest will break.
-                        curChild = unmatchedFromEl
+                    }
+                    else {
+                        handleNodeAdded(curChild);
                     }
                 }
+                else {
+                    handleNodeAdded(curChild);
+                }
 
-                handleNodeAdded(curChild);
                 curChild = nextSibling;
             }
         }
