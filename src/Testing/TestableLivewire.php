@@ -248,6 +248,7 @@ class TestableLivewire
         }
 
         $this->lastResponse->$method(...$params);
+        
         return $this;
     }
 }
