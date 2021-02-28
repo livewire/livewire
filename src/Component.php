@@ -101,7 +101,9 @@ abstract class Component
 
     public function getQueryString()
     {
-        return $this->queryString;
+        return method_exists($this, 'queryString')
+            ? $this->queryString()
+            : $this->queryString;
     }
 
     public function skipRender()

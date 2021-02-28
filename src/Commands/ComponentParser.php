@@ -19,11 +19,14 @@ class ComponentParser
     {
 
         $this->baseClassNamespace = $classNamespace;
+        $this->baseTestNamespace = 'Tests\Feature\Livewire';
 
         $classPath = static::generatePathFromNamespace($classNamespace);
+        $testPath = static::generateTestPathFromNamespace($this->baseTestNamespace);
 
         $this->baseClassPath = rtrim($classPath, DIRECTORY_SEPARATOR).'/';
         $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
+        $this->baseTestPath = rtrim($testPath, DIRECTORY_SEPARATOR).'/';
 
         $directories = preg_split('/[.\/(\\\\)]+/', $rawCommand);
 
@@ -138,6 +141,56 @@ class ComponentParser
         );
     }
 
+    public function testNamespace()
+    {
+        return empty($this->directories)
+            ? $this->baseTestNamespace
+            : $this->baseTestNamespace.'\\'.collect()
+                ->concat($this->directories)
+                ->map([Str::class, 'studly'])
+                ->implode('\\');
+    }
+
+    public function testClassName()
+    {
+        return $this->componentClass.'Test';
+    }
+
+    public function testFile()
+    {
+        return $this->componentClass.'Test.php';
+    }
+
+    public function testPath()
+    {
+        return $this->baseTestPath.collect()
+        ->concat($this->directories)
+        ->push($this->testFile())
+        ->implode('/');
+    }
+
+    public function relativeTestPath() : string
+    {
+        return str($this->testPath())->replaceFirst(base_path().'/', '');
+    }
+
+    public function testContents()
+    {
+        $stubName = 'livewire.test.stub';
+
+        if(File::exists($stubPath = base_path('stubs/'.$stubName))) {
+            $template = file_get_contents($stubPath);
+        } else {
+            $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.$stubName);
+        }
+
+        return preg_replace_array(
+            ['/\[testnamespace\]/', '/\[classwithnamespace\]/', '/\[testclass\]/', '/\[class\]/'],
+            [$this->testNamespace(), $this->classNamespace() . '\\' . $this->className(), $this->testClassName(), $this->className()],
+            $template
+        );
+    }
+
     public function wisdomOfTheTao()
     {
         $wisdom = require __DIR__.DIRECTORY_SEPARATOR.'the-tao.php';
@@ -150,5 +203,12 @@ class ComponentParser
         $name = str($namespace)->replaceFirst(app()->getNamespace(), '');
 
         return app('path').'/'.str_replace('\\', '/', $name);
+    }
+
+    public static function generateTestPathFromNamespace($namespace)
+    {
+        return str(base_path($namespace))
+            ->replace('\\', '/', $namespace)
+            ->replaceFirst('T', 't');
     }
 }
