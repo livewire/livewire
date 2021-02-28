@@ -5,7 +5,7 @@ namespace Tests\Browser\SyncHistory;
 use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use Tests\Browser\TestCase;
-use Tests\Browser\Defer\Component as DeferComponent;
+use Tests\Browser\DataBinding\Defer\Component as DeferComponent;
 
 class Test extends TestCase
 {

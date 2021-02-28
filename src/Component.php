@@ -9,6 +9,7 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 use Livewire\Exceptions\PropertyNotFoundException;
 
@@ -100,7 +101,9 @@ abstract class Component
 
     public function getQueryString()
     {
-        return $this->queryString;
+        return method_exists($this, 'queryString')
+            ? $this->queryString()
+            : $this->queryString;
     }
 
     public function skipRender()

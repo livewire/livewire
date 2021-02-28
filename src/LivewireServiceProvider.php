@@ -250,7 +250,7 @@ class LivewireServiceProvider extends ServiceProvider
             // If the application is using Ignition, make sure Livewire's view compiler
             // uses a version that extends Ignition's so it can continue to report errors
             // correctly. Don't change this class without first submitting a PR to Ignition.
-            if (class_exists(\Facade\Ignition\IgnitionServiceProvider::class)) {
+            if (class_exists('Facade\Ignition\IgnitionServiceProvider')) {
                 return new CompilerEngineForIgnition($this->app['blade.compiler']);
             }
 
