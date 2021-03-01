@@ -88,4 +88,45 @@ EOT
 
         $this->assertEquals('custom-namespace', $component->instance()->getName());
     }
+
+    /** @test */
+    public function can_get_name_with_app_namespace()
+    {
+        config(['livewire.class_namespace' => 'App']);
+        $finder = new LivewireComponentsFinder(
+            new Filesystem,
+            app()->bootstrapPath('cache/livewire-components.php'),
+            ComponentParser::generatePathFromNamespace(config('livewire.class_namespace'))
+        );
+
+        app()->instance(LivewireComponentsFinder::class, $finder);
+
+        File::makeDirectory($this->livewireViewsPath());
+
+        File::put(
+            app_path() . '/AppNamespace.php',
+<<<EOT
+<?php
+
+namespace App;
+
+use Livewire\Component;
+
+class AppNamespace extends Component {}
+EOT
+        );
+
+        File::put(
+            $this->livewireViewsPath('app-namespace.blade.php'),
+            <<<EOT
+<div>I've been namespaced!</div>
+EOT
+        );
+
+        require(app_path('') . '/AppNamespace.php');
+        $component = Livewire::test('App\AppNamespace');
+
+        $this->assertEquals('app-namespace', $component->instance()->getName());
+        $this->assertContains('App\AppNamespace', $finder->getClassNames());
+    }
 }
