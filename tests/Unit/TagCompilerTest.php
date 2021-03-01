@@ -89,4 +89,13 @@ class TagCompilerTest extends TestCase
         $alertComponent = '<livewire:dynamic-component />';
         $this->compiler->compile($alertComponent);
     }
+
+    /** @test */
+    public function it_compiles_livewire_dynamic_component_self_closing_tags_using_is_syntax()
+    {
+        $alertComponent = '<livewire:is component="alert" type="warning" />';
+        $result = $this->compiler->compile($alertComponent);
+
+        $this->assertEquals("@livewire('alert', ['type' => 'warning'])", $result);
+    }
 }

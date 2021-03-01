@@ -51,7 +51,7 @@ class LivewireTagCompiler extends ComponentTagCompiler
 
             if ($component === 'styles') return '@livewireStyles';
             if ($component === 'scripts') return '@livewireScripts';
-            if ($component === 'dynamic-component') {
+            if ($component === 'dynamic-component' || $component === 'is') {
                 if(! isset($attributes['component'])) {
                     throw new ComponentAttributeMissingOnDynamicComponentException;
                 }
