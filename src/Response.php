@@ -91,6 +91,11 @@ class Response
         // If 'data' is present in the response memo, diff it one level deep.
         if (isset($dirtyMemo['data']) && isset($requestMemo['data'])) {
             foreach ($dirtyMemo['data'] as $key => $value) {
+
+                if (!array_key_exists($key, $requestMemo['data'])) {
+                    continue;
+                }
+
                 if ($value === $requestMemo['data'][$key]) {
                     unset($dirtyMemo['data'][$key]);
                 }
@@ -99,7 +104,11 @@ class Response
 
         // Make sure any data marked as "dirty" is present in the resulting data payload.
         foreach (data_get($this, 'effects.dirty', []) as $property) {
+
             $property = head(explode('.', $property));
+            if (!array_key_exists($property, $responseMemo['data'])) {
+                continue;
+            }
 
             data_set($dirtyMemo, 'data.'.$property, $responseMemo['data'][$property]);
         }

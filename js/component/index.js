@@ -125,6 +125,17 @@ export default class Component {
             }
         })
 
+        // Remove values that don't exist anymore.
+        // (detected because they're "dirty", but aren't present in the list of changed fields).
+        Object.entries(message.response.effects.dirty).forEach(([, value]) => {
+            if (message.response.serverMemo.data[value] === undefined) delete this.serverMemo.data[value];
+        });
+
+        // Just in case a new property has been added, make sure they're in alphabetical order.
+        // This will keep the list consistent with the order on the server.
+        const sortObject = obj => Object.keys(obj).sort().reduce((res, key) => (res[key] = obj[key], res), {});
+        this.serverMemo.data = sortObject(this.serverMemo.data);
+
         // Merge back serverMemo changes so the response data is no longer incomplete.
         message.response.serverMemo = Object.assign({}, this.serverMemo)
     }

@@ -59,6 +59,8 @@ trait InteractsWithProperties
             }
         }
 
+        ksort($data);
+
         return $data;
     }
 
