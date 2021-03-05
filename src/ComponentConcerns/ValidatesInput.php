@@ -165,9 +165,14 @@ trait ValidatesInput
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         // If the field is "items.0.foo", validation rules for "items.*.foo", "items.*", etc. are applied.
-        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
+        $rulesForField = [$field => collect($rules)->sortKeysDesc()
+                ->filter(function ($rule, $fullFieldKey) use ($field) {
             return str($field)->is($fullFieldKey);
-        })->toArray();
+        })->first() ?? []];
+
+//        $attributes = [$field => collect($attributes)->filter(function ($attribute, $fullFieldKey) use ($field) {
+//            return str($field)->is($fullFieldKey);
+//        })->first()];
 
         $ruleKeysForField = array_keys($rulesForField);
 
