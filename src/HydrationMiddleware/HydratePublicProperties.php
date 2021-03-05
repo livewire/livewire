@@ -120,6 +120,12 @@ class HydratePublicProperties implements HydrationMiddleware
             new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
         );
 
+        /*
+         * Use `loadMissing` here incase loading collection relations gets fixed in Laravel framework,
+         * in which case we don't want to load relations again.
+         */
+        $models->loadMissing($serialized['relations']);
+
         $dirtyModelData = $request->memo['data'][$property];
 
         foreach ($idsWithNullsIntersparsed as $index => $id) {

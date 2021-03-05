@@ -26,6 +26,23 @@
         <span dusk="baz.output">{{ $count }}</span>
     </div>
 
+    {{-- Special characters are encoded properly --}}
+    <div x-data>
+        <span dusk="special.get" x-text="@this.get('special')"></span>
+        <span dusk="special.get.proxy" x-text="$wire.get('special')"></span>
+        <span dusk="special.get.proxy.magic" x-text="$wire.special"></span>
+
+        <button type="button" dusk="special.set" x-on:click="@this.set('special', 'ž')"></button>
+        <button type="button" dusk="special.set.proxy" x-on:click="$wire.set('special', 'žž')"></button>
+        <button type="button" dusk="special.set.proxy.magic" x-on:click="$wire.special = 'žžž'"></button>
+
+        <button type="button" dusk="special.call" x-on:click="@this.call('setSpecial', 'žžžž')"></button>
+        <button type="button" dusk="special.call.proxy" x-on:click="$wire.call('setSpecial', 'žžžžž')"></button>
+        <button type="button" dusk="special.call.proxy.magic" x-on:click="$wire.setSpecial('žžžžžž')"></button>
+
+        <span dusk="special.output">{{ $special }}</span>
+    </div>
+
     <div x-data="{ count: null }">
         <button type="button" dusk="bob.button.await" x-on:click="count = await $wire.returnValue(1)"></button>
         <button type="button" dusk="bob.button.promise" x-on:click="$wire.returnValue(2).then(value => count = value)"></button>

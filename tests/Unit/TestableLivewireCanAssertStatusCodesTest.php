@@ -40,6 +40,15 @@ class TestableLivewireCanAssertStatusCodesTest extends TestCase
 
         $component->assertForbidden();
     }
+
+    /** @test */
+    public function can_assert_status_and_continue_making_livewire_assertions()
+    {
+        Livewire::test(NormalComponent::class)
+            ->assertStatus(200)
+            ->assertSee('Hello!')
+            ->assertSeeHtml('</example>');
+    }
 }
 
 class NotFoundComponent extends Component
@@ -63,5 +72,13 @@ class ForbiddenComponent extends Component
     public function render()
     {
         throw new HttpException(403);
+    }
+}
+
+class NormalComponent extends Component
+{
+    public function render()
+    {
+        return '<example>Hello!</example>';
     }
 }

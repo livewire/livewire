@@ -104,6 +104,8 @@ trait HandlesActions
 
     public function callMethod($method, $params = [])
     {
+        $method = trim($method);
+
         switch ($method) {
             case '$sync':
                 $prop = array_shift($params);

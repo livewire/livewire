@@ -58,6 +58,20 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_count()
+    {
+        app(LivewireManager::class)
+            ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => ['foo']])
+            ->assertCount('name', 1)
+            ->set('name', ['foo', 'bar'])
+            ->assertCount('name', 2)
+            ->set('name', ['foo', 'bar', 'baz'])
+            ->assertCount('name', 3)
+            ->set('name', [])
+            ->assertCount('name', 0);
+    }
+
+    /** @test */
     public function assert_see()
     {
         app(LivewireManager::class)

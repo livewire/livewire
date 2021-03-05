@@ -83,10 +83,13 @@ function supportEntangle() {
                             // If the Alpine value is the same as the Livewire value, we'll skip the update for 2 reasons:
                             // - It's just more efficient, why send needless requests.
                             // - This prevents a circular dependancy with the other watcher below.
+                            // - Due to the deep clone using stringify, we need to do the same here to compare.
                             if (
-                                value ===
-                                livewireEl.__livewire.getPropertyValueIncludingDefers(
-                                    livewireProperty
+                                JSON.stringify(value) ==
+                                JSON.stringify(
+                                    livewireEl.__livewire.getPropertyValueIncludingDefers(
+                                        livewireProperty
+                                    )
                                 )
                             ) return
 
@@ -97,7 +100,9 @@ function supportEntangle() {
                                 livewireProperty,
                                 value,
                                 isDeferred,
-                                true // Block firing of Livewire watchers for this data key when the request comes back.
+                                // Block firing of Livewire watchers for this data key when the request comes back.
+                                // Unless it is deferred, in which cause we don't know if the state will be the same, so let it run.
+                                isDeferred ? false : true
                             )
                         })
 
@@ -140,7 +145,10 @@ export function alpinifyElementsForMorphdom(from, to) {
             // so that if/when the element has a transition on it, it will occur naturally.
             if (isHiding(from, to)) {
                 let style = to.getAttribute('style')
-                to.setAttribute('style', style.replace('display: none;', ''))
+                
+                if (style) {
+                    to.setAttribute('style', style.replace('display: none;', ''))
+                }
             } else if (isShowing(from, to)) {
                 to.style.display = from.style.display
             }

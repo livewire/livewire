@@ -25,7 +25,7 @@ class FileManipulationCommand extends Command
 
     public function isFirstTimeMakingAComponent()
     {
-        $namespace = str(config('livewire.class_namespace', 'App\\Http\\Livewire'))->replaceFirst(app()->getNamespace(), '');
+        $namespace = str(config('livewire.class_namespace'))->replaceFirst(app()->getNamespace(), '');
 
         $livewireFolder = app_path($namespace->explode('\\')->implode(DIRECTORY_SEPARATOR));
 
