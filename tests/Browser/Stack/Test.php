@@ -15,7 +15,7 @@ class Test extends TestCase
                 // Make sure events are registered in stacked html elements.
                 ->assertDontSee('bar')
                 ->click('@toggle')
-                ->waitForLivewire()->pause(25)
+                ->waitForLivewire()->pause(100)
                 ->assertSee('bar')
 
                 // After component update the stack is updated as well.
@@ -24,13 +24,13 @@ class Test extends TestCase
                 // Make sure nested components can push elements
                 // and make sure prepends works like push.
                 ->click('@toggleChild')
-                ->waitForLivewire()->pause(25)
+                ->waitForLivewire()->pause(100)
                 ->assertSee('bob')
                 ->assertSee('qux')
 
                 // Check if removing stack element works.
                 ->click('@toggleChild')
-                ->waitForLivewire()->pause(25)
+                ->waitForLivewire()->pause(100)
                 ->assertDontSee('bob')
                 ->assertDontSee('qux');
         });
