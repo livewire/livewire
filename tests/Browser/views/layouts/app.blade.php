@@ -8,6 +8,10 @@
 <body>
     {{ $slot }}
 
+    <div dusk="stack">
+        @stack('page_bottom')
+    </div>
+
     @livewireScripts
     @stack('scripts')
 </body>
