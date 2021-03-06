@@ -196,6 +196,15 @@ class EloquentModelValidationTest extends TestCase
             ->assertHasErrors('foos.0.bar_baz')
             ->assertHasNoErrors('foos.1.bar_baz');
     }
+
+    /** @test */
+    public function collection_model_property_validation_only_includes_all_errors_when_using_wildcard()
+    {   $test = Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
+        'foos' => collect()->pad(3, Foo::first())]);
+        $test  ->call('performValidateOnly', 'foos.*.bar_baz')
+            ->assertHasErrors('foos.0.bar_baz')
+            ->assertHasErrors('foos.1.bar_baz');
+    }
 }
 
 class Foo extends Model
