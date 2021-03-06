@@ -72,6 +72,11 @@ export default class Component {
             // When new component is encountered in the tree, add it.
             el => store.addComponent(new Component(el, this.connection))
         )
+
+        // Initialize stack elements.
+        DOM.rootComponentStackElements(this.id).forEach(stackElement => {
+            walk(stackElement, el => nodeInitializer.initialize(el, this))
+        })
     }
 
     get(name) {
@@ -274,11 +279,11 @@ export default class Component {
             // If we get HTML from the server, store it for the next time we might not.
             this.lastFreshHtml = response.effects.html
 
-            this.handleMorph(response.effects.html.trim())
+            this.handleMorph(this.el, response.effects.html.trim())
         } else {
             // It's important to still "morphdom" even when the server HTML hasn't changed,
             // because Alpine needs to be given the chance to update.
-            this.handleMorph(this.lastFreshHtml)
+            this.handleMorph(this.el, this.lastFreshHtml)
         }
 
         if (response.effects.dirty) {
@@ -286,6 +291,33 @@ export default class Component {
                 response.effects.dirty
             )
         }
+
+        // Insert stacks for this component.
+        Object.entries(response.effects.stack || {}).forEach(([section, componentStack]) => {
+            Object.entries(componentStack).forEach(([componentId, stackHtml]) => {
+                const component = store.findComponent(componentId)
+
+                let stackElement = document.querySelector(
+                    `[wire\\:stack="${section}"] > [wire\\:stack-id="${componentId}"]`
+                )
+
+                if (!stackElement) {
+                    stackElement = document.createElement('div')
+                    stackElement.setAttribute('wire:stack-id', componentId)
+                    DOM.getByAttributeAndValue('stack', section).appendChild(stackElement)
+                }
+
+                component.handleMorph(
+                    stackElement,
+                    stackHtml
+                )
+
+                component.forceRefreshDataBoundElementsMarkedAsDirty(
+                    response.effects.dirty,
+                    stackElement
+                )
+            })
+        })
 
         if (! message.replaying) {
             this.messageInTransit && this.messageInTransit.resolve()
@@ -335,16 +367,18 @@ export default class Component {
         }
     }
 
-    forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs) {
-        this.walk(el => {
-            let directives = wireDirectives(el)
-            if (directives.missing('model')) return
+    forceRefreshDataBoundElementsMarkedAsDirty(dirtyInputs, root = null) {
+        walk(root ?? this.el, el => {
+            if (!el.hasAttribute('wire:id')) {
+                let directives = wireDirectives(el)
+                if (directives.missing('model')) return
 
-            const modelValue = directives.get('model').value
+                const modelValue = directives.get('model').value
 
-            if (DOM.hasFocus(el) && ! dirtyInputs.includes(modelValue)) return
+                if (DOM.hasFocus(el) && ! dirtyInputs.includes(modelValue)) return
 
-            DOM.setInputValueFromModel(el, this)
+                DOM.setInputValueFromModel(el, this)
+            }
         })
     }
 
@@ -360,10 +394,10 @@ export default class Component {
         this.connection.sendMessage(message)
     }
 
-    handleMorph(dom) {
+    handleMorph(el, dom) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
-        morphdom(this.el, dom, {
+        morphdom(el, dom, {
             childrenOnly: false,
 
             getNodeKey: node => {
@@ -397,6 +431,11 @@ export default class Component {
 
                 if (node.__livewire) {
                     store.removeComponent(node.__livewire)
+
+                    // Remove component stack elements if component is removed.
+                    DOM.rootComponentStackElements(node.__livewire.id).forEach(stackElement => {
+                        stackElement.parentNode.removeChild(stackElement)
+                    });
                 }
 
                 this.morphChanges.removed.push(node)
@@ -466,7 +505,7 @@ export default class Component {
             },
 
             onNodeAdded: node => {
-                const closestComponentId = DOM.closestRoot(node).getAttribute('wire:id')
+                const closestComponentId = DOM.closestRootComponentId(node)
 
                 if (closestComponentId === this.id) {
                     if (nodeInitializer.initialize(node, this) === false) {

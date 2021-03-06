@@ -63,6 +63,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerRenameMes();
         $this->registerViewMacros();
+        $this->registerViewFactory();
         $this->registerTagCompiler();
         $this->registerPublishables();
         $this->registerBladeDirectives();
@@ -240,6 +241,30 @@ class LivewireServiceProvider extends ServiceProvider
         Blade::directive('livewireScripts', [LivewireBladeDirectives::class, 'livewireScripts']);
     }
 
+    protected function registerViewFactory()
+    {
+        // Override view factory to use our custom stacks implementation.
+        $this->app->singleton('view', function ($app) {
+            // Next we need to grab the engine resolver instance that will be used by the
+            // environment. The resolver will be used by an environment to get each of
+            // the various engine implementations such as plain PHP or Blade engine.
+            $resolver = $app['view.engine.resolver'];
+
+            $finder = $app['view.finder'];
+
+            $factory = new LivewireViewFactory($resolver, $finder, $app['events']);
+
+            // We will also set the container instance on this view environment since the
+            // view composers may be classes registered in the container, which allows
+            // for great testable, flexible composers for the application developer.
+            $factory->setContainer($app);
+
+            $factory->share('app', $app);
+
+            return $factory;
+        });
+    }
+
     protected function registerViewCompilerEngine()
     {
         // This is a custom view engine that gets used when rendering
@@ -271,6 +296,7 @@ class LivewireServiceProvider extends ServiceProvider
         RenameMe\SupportActionReturns::init();
         RenameMe\SupportBrowserHistory::init();
         RenameMe\SupportComponentTraits::init();
+        RenameMe\SupportComponentStacks::init();
     }
 
     protected function registerHydrationMiddleware()

@@ -12,6 +12,10 @@ export default {
         return Array.from(document.querySelectorAll(`[wire\\:id]`))
     },
 
+    rootComponentStackElements(id) {
+        return document.querySelectorAll(`[wire\\:stack-id="${id}"]`)
+    },
+
     rootComponentElementsWithNoParents(node = null) {
         if (node === null) {
             node = document
@@ -43,25 +47,27 @@ export default {
         })
     },
 
-    closestRoot(el) {
-        return this.closestByAttribute(el, 'id')
-    },
+    closestRootComponentId(el) {
+        let closestRoot = el.closest(`[wire\\:id]`)
 
-    closestByAttribute(el, attribute) {
-        const closestEl = el.closest(`[wire\\:${attribute}]`)
+        if (closestRoot) {
+            return closestRoot.getAttribute('wire:id')
+        }
 
-        if (! closestEl) {
-            throw `
+        closestRoot = el.closest(`[wire\\:stack-id]`)
+
+        if (closestRoot) {
+            return closestRoot.getAttribute('wire:stack-id')
+        }
+
+        throw `
 Livewire Error:\n
-Cannot find parent element in DOM tree containing attribute: [wire:${attribute}].\n
+Cannot find parent element in DOM tree containing attribute: [wire:id].\n
 Usually this is caused by Livewire's DOM-differ not being able to properly track changes.\n
 Reference the following guide for common causes: https://laravel-livewire.com/docs/troubleshooting \n
 Referenced element:\n
 ${el.outerHTML}
 `
-        }
-
-        return closestEl
     },
 
     isComponentRootEl(el) {

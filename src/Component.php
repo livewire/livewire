@@ -31,6 +31,7 @@ abstract class Component
     protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
+    protected $stacks = [];
 
     public function __construct($id = null)
     {
@@ -106,6 +107,11 @@ abstract class Component
             : $this->queryString;
     }
 
+    public function getStacks()
+    {
+        return $this->stacks;
+    }
+
     public function skipRender()
     {
         $this->shouldSkipRender = true;
@@ -173,7 +179,9 @@ abstract class Component
         app('view')->share('errors', $errors);
         app('view')->share('_instance', $this);
 
-        $output = $view->render();
+        $output = $view->render(function ($view) {
+            $this->stacks = $view->getFactory()->getComponentStack($this);
+        });
 
         app('view')->share('errors', $previouslySharedErrors);
         app('view')->share('_instance', $previouslySharedInstance);
