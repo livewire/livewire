@@ -15,10 +15,11 @@ class LivewireViewFactory extends Factory
     {
         $output = parent::yieldPushContent($section, $default);
 
-        $components = array_unique([
-            ...array_keys($this->componentPrepends),
-            ...array_keys($this->componentPushes),
-        ]);
+        $components = array_unique(
+            array_merge(
+                array_keys($this->componentPrepends), array_keys($this->componentPushes)
+            )
+        );
 
         $output .= "<div wire:ignore wire:stack=\"$section\">";
         foreach ($components as $id) {
