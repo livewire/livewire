@@ -17,7 +17,8 @@ class LivewireViewFactory extends Factory
 
         $components = array_unique(
             array_merge(
-                array_keys($this->componentPrepends), array_keys($this->componentPushes)
+                array_keys($this->componentPrepends),
+                array_keys($this->componentPushes)
             )
         );
 
@@ -97,7 +98,7 @@ class LivewireViewFactory extends Factory
         $sections = array_unique(
             array_merge(
                 array_keys($this->componentPrepends[$component->id] ?? []),
-                array_keys($this->componentPushes[$component->id] ?? []),
+                array_keys($this->componentPushes[$component->id] ?? [])
             )
         );
 
