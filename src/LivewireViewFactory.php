@@ -94,10 +94,12 @@ class LivewireViewFactory extends Factory
 
     public function getComponentStack(Component $component)
     {
-        $sections = array_unique([
-            ...array_keys($this->componentPrepends[$component->id] ?? []),
-            ...array_keys($this->componentPushes[$component->id] ?? []),
-        ]);
+        $sections = array_unique(
+            array_merge(
+                array_keys($this->componentPrepends[$component->id] ?? []),
+                array_keys($this->componentPushes[$component->id] ?? []),
+            )
+        );
 
         return collect($sections)
             ->mapWithKeys(function ($section) use ($component) {
