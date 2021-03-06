@@ -185,6 +185,26 @@ class EloquentModelValidationTest extends TestCase
 
         $this->assertEquals([[['name' => 'arise']]], $foo->fresh()->zap);
     }
+
+    /** @test */
+    public function collection_model_property_validation_only_includes_relevant_error()
+    {   Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
+            'foos' => collect()->pad(3, Foo::first())
+        ])  ->call('performValidateOnly', 'foos.0.bar_baz')
+            ->assertHasErrors('foos.0.bar_baz')
+            ->assertHasNoErrors('foos.1.bar_baz');
+    }
+
+    /** @test */
+    public function collection_model_property_validation_only_includes_all_errors_when_using_wildcard()
+    {   Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
+            'foos' => collect()->pad(3, Foo::first())
+        ])  ->set('foos.2.bar_baz', 'is-10-long')
+            ->call('performValidateOnly', 'foos.*.bar_baz')
+            ->assertHasErrors('foos.0.bar_baz')
+            ->assertHasErrors('foos.1.bar_baz')
+            ->assertHasNoErrors('foos.2.bar_baz');
+    }
 }
 
 class Foo extends Model
@@ -256,6 +276,26 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
 
         $this->foo->save();
     }
+
+    public function performValidateOnly($field)
+    {
+        $this->validateOnly($field);
+    }
+
+    public function render()
+    {
+        return view('dump-errors');
+    }
+}
+
+
+class ComponentForEloquentModelCollectionHydrationMiddleware extends Component
+{
+    public $foos;
+
+    protected $rules = [
+        'foos.*.bar_baz' => 'required|min:10',
+    ];
 
     public function performValidateOnly($field)
     {
