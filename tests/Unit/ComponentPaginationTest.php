@@ -12,7 +12,7 @@ class ComponentPaginationTest extends TestCase
     public function can_navigate_to_previous_page()
     {
         Livewire::test(ComponentWithPaginationStub::class)
-            ->set('page', 2)
+            ->call('setPage', 2)
             ->call('previousPage')
             ->assertSet('page', 1);
     }
@@ -45,7 +45,7 @@ class ComponentPaginationTest extends TestCase
 class ComponentWithPaginationStub extends Component
 {
     use WithPagination;
-    
+
     public function render()
     {
         return view('show-name', ['name' => 'example']);

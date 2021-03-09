@@ -6,7 +6,7 @@ use Illuminate\Pagination\Paginator;
 
 trait WithPagination
 {
-    public $page = 1;
+    public $pageName = 'page';
 
     public function getQueryString()
     {
@@ -14,15 +14,15 @@ trait WithPagination
             ? $this->queryString()
             : $this->queryString;
 
-        return array_merge(['page' => ['except' => 1]], $queryString);
+        return array_merge([$this->pageName => ['except' => 1]], $queryString);
     }
 
     public function initializeWithPagination()
     {
-        $this->page = $this->resolvePage();
+        $this->setPage($this->resolvePage());
 
         Paginator::currentPageResolver(function () {
-            return $this->page;
+            return $this->getPage();
         });
 
         Paginator::defaultView($this->paginationView());
@@ -41,12 +41,12 @@ trait WithPagination
 
     public function previousPage()
     {
-        $this->setPage(max($this->page - 1, 1));
+        $this->setPage(max($this->getPage() - 1, 1));
     }
 
     public function nextPage()
     {
-        $this->setPage($this->page + 1);
+        $this->setPage($this->getPage() + 1);
     }
 
     public function gotoPage($page)
@@ -61,13 +61,18 @@ trait WithPagination
 
     public function setPage($page)
     {
-        $this->page = $page;
+        $this->{$this->pageName} = $page;
+    }
+
+    public function getPage()
+    {
+        return object_get($this, $this->pageName, 1);
     }
 
     public function resolvePage()
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return request()->query('page', $this->page);
+        return request()->query($this->pageName, $this->getPage());
     }
 }
