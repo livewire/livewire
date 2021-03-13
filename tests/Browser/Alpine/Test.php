@@ -159,6 +159,12 @@ class Test extends TestCase
                 ->assertSeeIn('@alpineComponentClicksFired', 2)
                 ->click('@componentClick')
                 ->assertSeeIn('@alpineComponentClicksFired', 3)
+
+                ->click('@loopClick1')
+                ->assertSeeIn('@alpineLoopClicksFired', 1)
+                ->waitForLivewire()->click('@reverseItems')
+                ->click('@loopClick1')
+                ->assertSeeIn('@alpineLoopClicksFired', 2)
             ;
         });
     }
