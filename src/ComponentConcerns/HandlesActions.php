@@ -136,6 +136,11 @@ trait HandlesActions
 
             case '$refresh':
                 return;
+
+            case '$reset':
+                $this->reset();
+                
+                return;
         }
 
         if (! method_exists($this, $method)) {
