@@ -56,10 +56,10 @@ function fireActionOnInterval(node, component) {
             if (Math.random() < .95) return
         }
 
-        // Only poll visible elements - effectively this prevents 95% of the requests
-        // if the element is not in the viewport
+        // Only poll visible elements. Visible elements are elements that
+        // are visible in the current viewport.
         if (! inViewPort(directive.el) && directive.modifiers.includes('visible')) {
-            if (Math.random() < .95) return
+            return
         }
 
         // Don't poll if livewire is offline as well.
