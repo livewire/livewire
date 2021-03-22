@@ -28,6 +28,7 @@ Livewire uses semantic versioning and will use the following release schedule st
 * Refine the "asset_url" config. Potentially change to "app_url" (https://github.com/livewire/livewire/pull/1693)
 * Support multiple pagination (https://github.com/livewire/livewire/pull/1997)
 * A CSP-safe mode for Livewire (https://github.com/livewire/livewire/pull/2485#issuecomment-784355989)
+* Add `$wire.errors()` type deal
 
 ## Contributors ✨
 
