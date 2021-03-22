@@ -9,7 +9,7 @@ class DirectlyCallingLifecycleHooksNotAllowedException extends \Exception
     public function __construct($method, $component)
     {
         parent::__construct(
-            "Unable to call lifecycle method directly [{$method}] on component: [{$component}]"
+            "Unable to call lifecycle method [{$method}] directly on component: [{$component}]"
         );
     }
 }
