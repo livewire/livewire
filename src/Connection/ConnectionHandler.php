@@ -3,8 +3,10 @@
 namespace Livewire\Connection;
 
 use Livewire\Livewire;
+use Illuminate\Support\Str;
 use Illuminate\Support\Fluent;
 use Illuminate\Validation\ValidationException;
+use Livewire\Exceptions\DirectlyCallingLifecycleHooksNotAllowedException;
 
 abstract class ConnectionHandler
 {
@@ -43,6 +45,17 @@ abstract class ConnectionHandler
     {
         switch ($type) {
             case 'callMethod':
+                throw_if(
+                    Str::is([
+                        'mount',
+                        'hydrate*',
+                        'dehydrate*',
+                        'updating*',
+                        'updated*',
+                    ], $data['method']),
+                    new DirectlyCallingLifecycleHooksNotAllowedException($data['method'], $instance->getName())
+                );
+
                 $instance->callMethod($data['method'], $data['params']);
                 break;
             case 'fireEvent':
