@@ -29,7 +29,7 @@ class PerformActionCalls implements HydrationMiddleware
 
                 throw_if(
                     str($method)->is(static::PROTECTED_METHODS),
-                    new DirectlyCallingLifecycleHooksNotAllowedException($method, $unHydratedInstance->getName()),
+                    new DirectlyCallingLifecycleHooksNotAllowedException($method, $unHydratedInstance->getName())
                 );
 
                 $unHydratedInstance->callMethod($method, $params);
