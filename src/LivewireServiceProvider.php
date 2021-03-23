@@ -8,11 +8,6 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\ComponentAttributeBag;
-use Livewire\Controllers\FileUploadHandler;
-use Livewire\Controllers\FilePreviewHandler;
-use Livewire\Controllers\HttpConnectionHandler;
-use Livewire\Controllers\LivewireJavaScriptAssets;
-use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Livewire\Commands\{
@@ -124,20 +119,11 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
-        RouteFacade::post('/livewire/message/{name}', HttpConnectionHandler::class)
-            ->name('livewire.message')
-            ->middleware(config('livewire.middleware_group', ''));
+        if (config('livewire.routes') === false) {
+            return;
+        }
 
-        RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
-            ->name('livewire.upload-file')
-            ->middleware(config('livewire.middleware_group', ''));
-
-        RouteFacade::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
-            ->name('livewire.preview-file')
-            ->middleware(config('livewire.middleware_group', ''));
-
-        RouteFacade::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
-        RouteFacade::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
+        $this->loadRoutesFrom(__DIR__.'/../routes/livewire.php');
     }
 
     protected function registerCommands()
