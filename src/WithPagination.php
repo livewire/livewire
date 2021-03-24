@@ -66,7 +66,7 @@ trait WithPagination
 
     public function resolvePage()
     {
-        // The "page name" query string item should only be available
+        // The "pagination page name" query string item should only be available
         // from within the original component mount run.
         return (int)request()->query($this->pageName, $this->getPage());
     }
@@ -76,11 +76,11 @@ trait WithPagination
         return object_get($this, $this->pageName, 1);
     }
 
-    public function getPublicPropertiesDefinedBySubClass()
-    {
-        return tap(parent::getPublicPropertiesDefinedBySubClass(), function (&$props) {
-            $props[$this->pageName] = $this->getPage();
-        });
-    }
+//    public function getPublicPropertiesDefinedBySubClass()
+//    {
+//        return tap(parent::getPublicPropertiesDefinedBySubClass(), function (&$props) {
+//            $props[$this->pageName] = $this->getPage();
+//        });
+//    }
 
 }
