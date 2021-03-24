@@ -74,13 +74,10 @@ class ComponentWithMultiplePaginationStub extends Component
     public $threadsListPage = 1;
     public $messagesListPage = 1;
 
+    protected $paginatorNames = ['threadsListPage', 'messagesListPage'];
+
     public function render()
     {
         return view('show-name', ['name' => 'example']);
-    }
-
-    public function getPaginatorNames()
-    {
-        return ['threadsListPage', 'messagesListPage'];
     }
 }
