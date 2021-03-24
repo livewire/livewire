@@ -66,7 +66,7 @@ trait WithPagination
 
     public function resolvePage()
     {
-        // The "page" query string item should only be available
+        // The "page name" query string item should only be available
         // from within the original component mount run.
         return (int)request()->query($this->pageName, $this->getPage());
     }
