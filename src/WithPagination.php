@@ -14,7 +14,7 @@ trait WithPagination
             ? $this->queryString()
             : $this->queryString;
 
-        return array_merge(['page' => ['except' => 1]], $queryString);
+        return array_merge([$this->getPageName() => ['except' => 1]], $this->queryString);
     }
 
     public function initializeWithPagination()
@@ -22,7 +22,7 @@ trait WithPagination
         $this->page = $this->resolvePage();
 
         Paginator::currentPageResolver(function () {
-            return (int) $this->page;
+            return $this->{$this->getPageName()};
         });
 
         Paginator::defaultView($this->paginationView());
@@ -41,12 +41,12 @@ trait WithPagination
 
     public function previousPage()
     {
-        $this->setPage(max($this->page - 1, 1));
+        $this->setPage(max($this->{$this->getPageName()} - 1, 1));
     }
 
     public function nextPage()
     {
-        $this->setPage($this->page + 1);
+        $this->setPage($this->{$this->getPageName()} + 1);
     }
 
     public function gotoPage($page)
@@ -61,13 +61,18 @@ trait WithPagination
 
     public function setPage($page)
     {
-        $this->page = $page;
+        $this->{$this->getPageName()} = $page;
     }
 
     public function resolvePage()
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return (int) request()->query('page', $this->page);
+        return request()->query($this->getPageName(), $this->page);
+    }
+    
+    public function getPageName()
+    {
+        return 'page';
     }
 }
