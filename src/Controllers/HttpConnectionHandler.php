@@ -62,6 +62,8 @@ class HttpConnectionHandler extends ConnectionHandler
 
     protected function makeRequestFromUrlAndMethod($url, $method = 'GET')
     {
+        $url = str_replace(config('app.url'), '', $url);
+
         $request = Request::create($url, $method);
 
         if ($session = request()->getSession()) {
