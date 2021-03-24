@@ -14,15 +14,19 @@ trait WithPagination
             ? $this->queryString()
             : $this->queryString;
 
-        return array_merge([$this->getPageName() => ['except' => 1]], $this->queryString);
+        $queryParameters = array_fill_keys($this->getPaginatorNames(), ['except' => 1]);
+
+        return array_merge($queryParameters, $this->queryString);
     }
 
     public function initializeWithPagination()
     {
-        $this->page = $this->resolvePage();
+        foreach($this->getPaginatorNames() as $pageName) {
+            $this->{$this->getPageName($pageName)} = $this->resolvePage($pageName);
+        }
 
-        Paginator::currentPageResolver(function () {
-            return $this->{$this->getPageName()};
+        Paginator::currentPageResolver(function ($pageName = 'page') {
+            return $this->{$this->getPageName($pageName)};
         });
 
         Paginator::defaultView($this->paginationView());
@@ -39,40 +43,45 @@ trait WithPagination
         return 'livewire::simple-' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
     }
 
-    public function previousPage()
+    public function previousPage($pageName = 'page')
     {
-        $this->setPage(max($this->{$this->getPageName()} - 1, 1));
+        $this->setPage(max($this->{$this->getPageName($pageName)} - 1, 1), $pageName);
     }
 
-    public function nextPage()
+    public function nextPage($pageName = 'page')
     {
-        $this->setPage($this->{$this->getPageName()} + 1);
+        $this->setPage($this->{$this->getPageName($pageName)} + 1, $pageName);
     }
 
-    public function gotoPage($page)
+    public function gotoPage($page, $pageName = 'page')
     {
-        $this->setPage($page);
+        $this->setPage($page, $pageName);
     }
 
-    public function resetPage()
+    public function resetPage($pageName = 'page')
     {
-        $this->setPage(1);
+        $this->setPage(1, $pageName);
     }
 
-    public function setPage($page)
+    public function setPage($page, $pageName = 'page')
     {
-        $this->{$this->getPageName()} = $page;
+        $this->{$this->getPageName($pageName)} = $page;
     }
 
-    public function resolvePage()
+    public function resolvePage($pageName = 'page')
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return request()->query($this->getPageName(), $this->page);
+        return request()->query($this->getPageName($pageName), $this->{$this->getPageName($pageName)});
     }
-    
-    public function getPageName()
+
+    public function getPageName($pageName = 'page')
     {
-        return 'page';
+        return $pageName;
+    }
+
+    public function getPaginatorNames()
+    {
+        return ['page'];
     }
 }
