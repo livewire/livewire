@@ -19,10 +19,10 @@ trait WithPagination
 
     public function initializeWithPagination()
     {
-        $this->setPage($this->resolvePage());
+        $this->page = $this->resolvePage();
 
         Paginator::currentPageResolver(function () {
-            return $this->getPage();
+            return (int)$this->getPage();
         });
 
         Paginator::defaultView($this->paginationView());
@@ -64,16 +64,16 @@ trait WithPagination
         $this->{$this->pageName} = $page;
     }
 
-    public function getPage()
-    {
-        return object_get($this, $this->pageName, 1);
-    }
-
     public function resolvePage()
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return request()->query($this->pageName, $this->getPage());
+        return (int)request()->query($this->pageName, $this->getPage());
+    }
+
+    public function getPage()
+    {
+        return object_get($this, $this->pageName, 1);
     }
 
     public function getPublicPropertiesDefinedBySubClass()
@@ -82,4 +82,5 @@ trait WithPagination
             $props[$this->pageName] = $this->getPage();
         });
     }
+
 }
