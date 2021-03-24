@@ -215,6 +215,10 @@ class LivewireServiceProvider extends ServiceProvider
         $this->publishesToGroups([
             __DIR__.'/views/pagination' => $this->app->resourcePath('views/vendor/livewire'),
         ], ['livewire', 'livewire:pagination']);
+
+        $this->publishesToGroups([
+            __DIR__.'/../routes/livewire.php' => base_path('routes/livewire.php'),
+        ], ['livewire', 'livewire:routes']);
     }
 
     protected function registerBladeDirectives()
