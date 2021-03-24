@@ -75,4 +75,11 @@ trait WithPagination
         // from within the original component mount run.
         return request()->query($this->pageName, $this->getPage());
     }
+
+    public function getPublicPropertiesDefinedBySubClass()
+    {
+        return tap(parent::getPublicPropertiesDefinedBySubClass(), function (&$props) {
+            $props[$this->pageName] = $this->getPage();
+        });
+    }
 }
