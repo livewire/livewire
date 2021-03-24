@@ -82,6 +82,6 @@ trait WithPagination
 
     public function getPaginatorNames()
     {
-        return $this->paginatorNames ?? ['page'];
+        return property_exists($this, 'paginatorNames') ? $this->paginatorNames : ['page'];
     }
 }

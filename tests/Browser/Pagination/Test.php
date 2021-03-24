@@ -103,4 +103,67 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_multiple_pagination()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, TailwindWithMultiplePagination::class)
+                // Render initial content, both message and posts list are on page 1
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertSee('Content #1')
+                ->assertSee('Content #2')
+                ->assertSee('Content #3')
+                ->assertDontSee('Post #4')
+                ->assertDontSee('Content #4')
+
+                // Go to posts list page 2, message paginator should keep its initial data
+                ->waitForLivewire()->click('@postsListNextPage')
+
+                ->assertDontSee('Post #1')
+                ->assertSee('Post #4')
+                ->assertQueryStringHas('postsPage', '2')
+                ->assertSee('Content #1')
+                ->assertQueryStringMissing('page')
+
+
+                // Go to posts list page 3, messages paginator should keep its initial data
+                ->waitForLivewire()->click('@postsListNextPage')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #7')
+                ->assertSee('Post #8')
+                ->assertSee('Post #9')
+                ->assertQueryStringHas('postsPage', '3')
+                ->assertSee('Content #1')
+                ->assertQueryStringMissing('page')
+
+
+                // Go to messages list page 2, posts paginator should keep its previous data
+                ->waitForLivewire()->click('@nextPage.after')
+
+                ->assertSee('Content #4')
+                ->assertDontSee('Content #1')
+                ->assertQueryStringHas('page', '2')
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #7')
+                ->assertQueryStringHas('postsPage', '3')
+
+
+                // Go to posts list page 1, messages paginator should keep its previous data
+                ->waitForLivewire()->click('@postsListPreviousPage')
+                ->waitForLivewire()->click('@postsListPreviousPage')
+
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringMissing('postsPage')
+                ->assertSee('Content #4')
+                ->assertDontSee('Content #1')
+                ->assertQueryStringHas('page', '2')
+            ;
+        });
+    }
 }
