@@ -33,6 +33,18 @@ class TestCase extends BaseTestCase
 
     public static $useSafari = false;
 
+    /** @beforeClass */
+    public static function prepare()
+    {
+        if (static::$useSafari) {
+            // static::useSafaridriver('/usr/bin/safaridriver');
+            static::startSafariDriver('-p 9515');
+        } else {
+            // static::useChromedriver('/usr/bin/chromedriver');
+            static::startChromeDriver(['--port=9515']);
+        }
+    }
+
     public function setUp(): void
     {
         // DuskOptions::withoutUI();

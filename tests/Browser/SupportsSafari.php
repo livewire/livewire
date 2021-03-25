@@ -2,31 +2,25 @@
 
 namespace Tests\Browser;
 
+use Symfony\Component\Process\Process;
+
 // Thanks to https://github.com/appstract/laravel-dusk-safari for most of this source.
 trait SupportsSafari
 {
-    protected static $safariProcess;
+    protected static $safariDriver = '/usr/bin/safaridriver';
 
-    /** @beforeClass */
-    public static function prepare()
-    {
-        if (static::$useSafari) {
-            static::startSafariDriver();
-        } else {
-            static::startChromeDriver(['port' => 9515]);
-        }
-    }
+    protected static $safariProcess;
 
     public function onlyRunOnChrome()
     {
         static::$useSafari && $this->markTestSkipped();
     }
 
-    public static function startSafariDriver()
+    public static function startSafariDriver(array $arguments = [])
     {
-        static::$safariProcess = new \Symfony\Component\Process\Process([
-            '/usr/bin/safaridriver', '-p 9515',
-        ]);
+        static::$safariProcess = new Process(
+            array_merge([static::$safariDriver], $arguments)
+        );
 
         static::$safariProcess->start();
 
@@ -35,5 +29,10 @@ trait SupportsSafari
                 static::$safariProcess->stop();
             }
         });
+    }
+
+    public static function useSafaridriver($path)
+    {
+        static::$safariDriver = $path;
     }
 }
