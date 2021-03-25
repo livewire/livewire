@@ -11,17 +11,16 @@ Route::group([
     'domain' => config('livewire.routes_domain', null),
     'prefix' => config('livewire.routes_prefix', null),
 ], function () {
-    Route::post('/livewire/message/{name}', HttpConnectionHandler::class)
-        ->name('livewire.message')
-        ->middleware(config('livewire.middleware_group', ''));
+    Route::middleware(config('livewire.middleware_group', ''))->group(function () {
+        Route::post('/livewire/message/{name}', HttpConnectionHandler::class)
+            ->name('livewire.message');
 
-    Route::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
-        ->name('livewire.upload-file')
-        ->middleware(config('livewire.middleware_group', ''));
+        Route::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
+            ->name('livewire.upload-file');
 
-    Route::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
-        ->name('livewire.preview-file')
-        ->middleware(config('livewire.middleware_group', ''));
+        Route::get('/livewire/preview-file/{filename}', [FilePreviewHandler::class, 'handle'])
+            ->name('livewire.preview-file');
+    });
 
     Route::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
     Route::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
