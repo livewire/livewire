@@ -72,17 +72,21 @@ class LivewireServiceProvider extends ServiceProvider
         // Bypass specific middlewares during Livewire requests.
         // These are usually helpful during a typical request, but
         // during Livewire requests, they can damage data properties.
-        $this->bypassTheseMiddlewaresDuringLivewireRequests([
-            TrimStrings::class,
-            ConvertEmptyStringsToNull::class,
-            // If the app overrode "TrimStrings".
-            \App\Http\Middleware\TrimStrings::class,
-        ]);
+        if (! $this->attemptToBypassRequestModifyingMiddlewareViaCallbacks()) {
+            $this->bypassTheseMiddlewaresDuringLivewireRequests([
+                TrimStrings::class,
+                ConvertEmptyStringsToNull::class,
+                // If the app overrode "TrimStrings".
+                \App\Http\Middleware\TrimStrings::class,
+            ]);
+        }
     }
 
     protected function registerLivewireSingleton()
     {
-        $this->app->singleton('livewire', LivewireManager::class);
+        $this->app->singleton(LivewireManager::class);
+
+        $this->app->alias(LivewireManager::class, 'livewire');
     }
 
     protected function registerComponentAutoDiscovery()
@@ -322,6 +326,24 @@ class LivewireServiceProvider extends ServiceProvider
                 [CallHydrationHooks::class, 'initialHydrate'],
 
         ]);
+    }
+
+    protected function attemptToBypassRequestModifyingMiddlewareViaCallbacks()
+    {
+        if (method_exists(TrimStrings::class, 'skipWhen') &&
+            method_exists(ConvertEmptyStringsToNull::class, 'skipWhen')) {
+            TrimStrings::skipWhen(function () {
+                return Livewire::isProbablyLivewireRequest();
+            });
+
+            ConvertEmptyStringsToNull::skipWhen(function () {
+                return Livewire::isProbablyLivewireRequest();
+            });
+
+            return true;
+        }
+
+        return false;
     }
 
     protected function bypassTheseMiddlewaresDuringLivewireRequests(array $middlewareToExclude)
