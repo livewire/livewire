@@ -85,6 +85,7 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerLivewireSingleton()
     {
         $this->app->singleton(LivewireManager::class);
+
         $this->app->alias(LivewireManager::class, 'livewire');
     }
 
