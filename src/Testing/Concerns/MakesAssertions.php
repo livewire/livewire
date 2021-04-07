@@ -2,6 +2,7 @@
 
 namespace Livewire\Testing\Concerns;
 
+use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
@@ -278,6 +279,13 @@ trait MakesAssertions
         } else {
             PHPUnit::assertEquals($value, $this->lastRenderedView->gatherData()[$key]);
         }
+
+        return $this;
+    }
+    
+    public function assertComponent(Closure $closure)
+    {
+        $closure($this->viewData('_instance'));
 
         return $this;
     }
