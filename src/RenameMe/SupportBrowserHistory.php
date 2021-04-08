@@ -40,7 +40,12 @@ class SupportBrowserHistory
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
             if (! $this->shouldSendPath($component)) return;
 
-            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
+            $route = app('router')->current();
+            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component)
+                // We need to filter any route parameters so they won't get embedded in the query string.
+                ->filter(function ($parameter, $key) use ($route) {
+                    return ! $route->hasParameter($key);
+                });
 
             $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
         });
@@ -131,7 +136,7 @@ class SupportBrowserHistory
             )
         );
 
-        return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString->toArray(), true);
+        return app(UrlGenerator::class)->toRoute($route, $boundParameters + $queryString->all(), true);
     }
 
     protected function mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component)
