@@ -104,7 +104,7 @@ return [
     | "<app_root>/bootstrap/cache/livewire-components.php)", but for specific
     | cases like when hosting on Laravel Vapor, it could be set to a different value.
     |
-    | Example: for Laravel Vapor, it would be "/tmp/storage/bootstrap/cache/livewire-components.php".
+    | Example: for Laravel Vapor, it would be "/var/task/bootstrap/cache/livewire-components.php".
     |
     */
 
