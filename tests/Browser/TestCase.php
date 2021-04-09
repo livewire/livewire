@@ -84,6 +84,11 @@ class TestCase extends BaseTestCase
                 \Tests\Browser\SyncHistory\ComponentWithoutQueryString::class
             )->middleware('web')->name('sync-history-without-query-string');
 
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history-with-optional-parameter/{step?}',
+                \Tests\Browser\SyncHistory\ComponentWithOptionalParameter::class
+            )->middleware('web')->name('sync-history-with-optional-parameter');
+
             Route::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
 
