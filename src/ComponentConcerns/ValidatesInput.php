@@ -138,7 +138,7 @@ trait ValidatesInput
 
     public function missingRuleFor($dotNotatedProperty)
     {
-        return ! $this->hasRuleFor($dotNotatedProperty);
+        return !$this->hasRuleFor($dotNotatedProperty);
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])
@@ -168,6 +168,10 @@ trait ValidatesInput
         $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
             return str($field)->is($fullFieldKey);
         })->toArray();
+
+        if (empty($rulesForField)) {
+            $rulesForField[$field] = "nullable";
+        }
 
         $ruleKeysForField = array_keys($rulesForField);
 
@@ -236,7 +240,7 @@ trait ValidatesInput
             ->each(function ($ruleKey) use ($properties) {
                 $propertyName = $this->beforeFirstDot($ruleKey);
 
-                throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: ['.$ruleKey.']'));
+                throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: [' . $ruleKey . ']'));
             });
 
         return collect($properties)->map(function ($value) {

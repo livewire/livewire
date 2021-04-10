@@ -153,6 +153,20 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validating_only_a_specific_field_will_throw_expected_errors__if_the_field_doesnt_exist()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('foo', '')
+            ->set('bar', '')
+            ->call('runValidationOnlyWithMissingPropertyRules', 'foo')
+            ->call('runValidationOnlyWithMissingPropertyRules', 'bar')
+            ->assertSee('The foo field is required')
+            ->assertDontSee('The bar field is required');
+    }
+
+    /** @test */
     public function can_validate_only_a_specific_field_with_custom_message_property()
     {
         $component = Livewire::test(ForValidation::class);
@@ -431,6 +445,13 @@ class ForValidation extends Component
         ]);
     }
 
+    public function runValidationOnlyWithMissingPropertyRules($field)
+    {
+        $this->validateOnly($field, [
+            'foo' => 'required',
+        ]);
+    }
+
     public function runValidationOnlyWithCustomValidation($field)
     {
         $this->validateOnly($field, [
@@ -443,8 +464,8 @@ class ForValidation extends Component
                 'foo_length' => strlen($this->foo),
                 'bar_length' => strlen($this->bar),
             ],
-            [ 'foo_length' => 'same:bar_length' ],
-            [ 'same' => 'Lengths must be the same' ]
+            ['foo_length' => 'same:bar_length'],
+            ['same' => 'Lengths must be the same']
         )->validate();
     }
 
