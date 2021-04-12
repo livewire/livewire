@@ -58,7 +58,7 @@ function fireActionOnInterval(node, component) {
 
         // Only poll visible elements. Visible elements are elements that
         // are visible in the current viewport.
-        if (! inViewPort(directive.el) && directive.modifiers.includes('visible')) {
+        if (directive.modifiers.includes('visible') && ! inViewPort(directive.el)) {
             return
         }
 
