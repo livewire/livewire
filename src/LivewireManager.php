@@ -212,6 +212,7 @@ HTML;
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
         $appUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
+        $forceTrailingSlash = (config('livewire.force_trailing_slash') ?? false) ? 'true' : 'false';
 
         $csrf = csrf_token();
 
@@ -280,6 +281,7 @@ HTML;
     {$devTools}
     window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
+    window.livewire_force_trailing_slash = {$forceTrailingSlash};
     window.livewire_token = '{$csrf}';
 
 	{$windowAlpineCheck}

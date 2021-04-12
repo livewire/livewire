@@ -12,7 +12,7 @@ export default class Connection {
 
         return componentStore.onErrorCallback(status)
     }
-    
+
     showExpiredMessage() {
         confirm(
             'This page has expired due to inactivity.\nWould you like to refresh the page?'
@@ -27,8 +27,13 @@ export default class Connection {
         }
 
         // Forward the query string for the ajax requests.
+        let endpoint = payload.fingerprint.name;
+        if (window.livewire_force_trailing_slash && endpoint.indexOf('/') === -1) {
+            endpoint = `${endpoint}/`
+        }
+
         fetch(
-            `${window.livewire_app_url}/livewire/message/${payload.fingerprint.name}`,
+            `${window.livewire_app_url}/livewire/message/${endpoint}`,
             {
                 method: 'POST',
                 body: JSON.stringify(payload),
