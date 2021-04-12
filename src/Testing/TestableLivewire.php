@@ -15,6 +15,7 @@ use Livewire\LivewireManager;
 
 use function Livewire\str;
 
+/** @mixin \Illuminate\Testing\TestResponse */
 class TestableLivewire
 {
     protected static $instancesById = [];
