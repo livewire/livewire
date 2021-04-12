@@ -92,7 +92,7 @@ class SupportBrowserHistory
             // If the component is registered using `Route::get()`.
             && str($action)->contains(get_class($component))
             // AND, the component is tracking route params as its public properties
-            && count(array_intersect_key($component->getPublicPropertiesDefinedBySubClass(), $route->parametersWithoutNulls()))
+            && count(array_intersect_key($component->getPublicPropertiesDefinedBySubClass(), array_flip($route->parameterNames())))
         ) {
             return true;
         }
@@ -127,7 +127,7 @@ class SupportBrowserHistory
             $route->parametersWithoutNulls(),
             array_intersect_key(
                 $component->getPublicPropertiesDefinedBySubClass(),
-                $route->parametersWithoutNulls()
+                array_flip($route->parameterNames())
             )
         );
 
