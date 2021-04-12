@@ -223,11 +223,13 @@ class Test extends TestCase
     public function test_optional_route_bound_properties_are_synced_with_browser_history()
     {
         $this->browse(function(Browser $browser) {
-            $browser->visit(route('sync-history-with-optional-parameter', [], false))->waitForText('Activate Step 1');
-
-            $browser->waitForLivewire()->click('@step-1')->assertRouteIs('sync-history-with-optional-parameter', [ 'step' => 1 ]);
-
-            $browser->back()->assertRouteIs('sync-history-with-optional-parameter', []);
+            $browser->visit(route('sync-history-with-optional-parameter', [], false))
+                ->waitForText('Activate Step 1')
+                ->waitForLivewire()
+                ->click('@step-1')
+                ->assertRouteIs('sync-history-with-optional-parameter', [ 'step' => 1 ])
+                ->back()
+                ->assertRouteIs('sync-history-with-optional-parameter', []);
         });
     }
 }
