@@ -388,6 +388,8 @@ class FileUploadsTest extends TestCase
         $rawFileContents = ob_get_clean();
 
         $this->assertEquals($file->get(), $rawFileContents);
+
+        $this->assertTrue($photo->isPreviewable());
     }
 
     /** @test */
@@ -404,6 +406,8 @@ class FileUploadsTest extends TestCase
             ->viewData('photo');
 
         $photo->temporaryUrl();
+
+        $this->assertFalse($photo->isPreviewable());
     }
 
     /** @test */

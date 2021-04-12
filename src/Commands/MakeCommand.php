@@ -48,7 +48,7 @@ class MakeCommand extends FileManipulationCommand
             }
 
             if ($test) {
-                $test && $this->line("<options=bold;fg=green>Test:</>  {$this->parser->relativeTestPath()}");
+                $test && $this->line("<options=bold;fg=green>TEST:</>  {$this->parser->relativeTestPath()}");
             }
 
             if ($showWelcomeMessage && ! app()->environment('testing')) {

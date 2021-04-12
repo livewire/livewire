@@ -43,6 +43,11 @@ class LivewireManager
         return $alias === false ? $default : $alias;
     }
 
+    public function getComponentAliases()
+    {
+        return $this->componentAliases;
+    }
+
     public function getClass($alias)
     {
         $finder = app(LivewireComponentsFinder::class);
