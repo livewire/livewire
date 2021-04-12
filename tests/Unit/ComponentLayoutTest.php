@@ -51,11 +51,13 @@ class ComponentLayoutTest extends TestCase
     /** @test */
     public function can_load_dynamic_layout_properties()
     {
-        Livewire::component(ComponentWithDynamicLayout::class);
+        Livewire::component(ComponentWithClassBasedComponentLayout::class);
 
-        Route::get('/foo', ComponentWithDynamicLayout::class);
+        Route::get('/foo', ComponentWithClassBasedComponentLayout::class);
 
-        $this->withoutExceptionHandling()->get('/foo')->assertSee('bar')->assertSee('baz');
+        $this->withoutExceptionHandling()->get('/foo')
+            ->assertSee('bar')
+            ->assertSee('baz');
     }
 }
 
@@ -99,7 +101,7 @@ class ComponentWithCustomSlotForLayout extends Component
     }
 }
 
-class ComponentWithDynamicLayout extends Component
+class ComponentWithClassBasedComponentLayout extends Component
 {
     public function render()
     {

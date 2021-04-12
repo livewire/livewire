@@ -6,10 +6,10 @@ use Illuminate\View\Component;
 
 class AppLayout extends Component
 {
-	public $foo = 'bar';
+    public $foo = 'bar';
 
     public function render()
     {
-        return view('layouts.app-x');
+        return view('layouts.app-from-class-component');
     }
 }
