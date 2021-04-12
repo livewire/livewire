@@ -47,6 +47,16 @@ class ComponentLayoutTest extends TestCase
 
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
+
+    /** @test */
+    public function can_load_dynamic_layout_properties()
+    {
+        Livewire::component(ComponentWithDynamicLayout::class);
+
+        Route::get('/foo', ComponentWithDynamicLayout::class);
+
+        $this->withoutExceptionHandling()->get('/foo')->assertSee('bar')->assertSee('baz');
+    }
 }
 
 class ComponentWithExtendsLayout extends Component
@@ -86,5 +96,15 @@ class ComponentWithCustomSlotForLayout extends Component
     public function render()
     {
         return view('show-name')->layout('layouts.app-custom-slot')->slot('main');
+    }
+}
+
+class ComponentWithDynamicLayout extends Component
+{
+    public function render()
+    {
+        return view('null-view')->layout(\Tests\AppLayout::class, [
+            'bar' => 'baz'
+        ]);
     }
 }
