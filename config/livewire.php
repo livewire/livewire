@@ -111,13 +111,17 @@ return [
     'manifest_path' => null,
 
     /*
-     * This will force a trailing slash to be appended to AJAX request URLs, like `/livewire/message/example'
-     *
-     * When force_trailing_slash is set to true, it will convert the above endpoint to: `/livewire/message/example/'
-     *
-     * This fixes usage of LiveWire when trailing slashes are required on all application routes, which some websites
-     * enforce.
-     */
+    |--------------------------------------------------------------------------
+    | Force Trailing Slash
+    |--------------------------------------------------------------------------
+    |
+    | This value sets forces a trailing slash be appended to `/livewire/message/example` AJAX requests.
+    |
+    | The default should work for most cases, but for specific cases like when your application requires a trailing
+    | slash be used on all API routes, this can be set to true to change the endpoint to `/livewire/message/example/`
+    | to prevent a redirect occurring, which may cause a `301` -> `404` response.
+    |
+    */
     'force_trailing_slash' => null,
 
 ];
