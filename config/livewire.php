@@ -115,11 +115,11 @@ return [
     | Force Trailing Slash
     |--------------------------------------------------------------------------
     |
-    | This value sets forces a trailing slash be appended to `/livewire/message/example` AJAX requests.
+    | This value determines if a trailing slash should be appended to `/livewire/message/example` AJAX requests.
     |
-    | The default should work for most cases, but for specific cases like when your application requires a trailing
-    | slash be used on all API routes, this can be set to true to change the endpoint to `/livewire/message/example/`
-    | to prevent a redirect occurring, which may cause a `301` -> `404` response.
+    | The default (no trailing slash) should work for most cases. For specific cases like when your application
+    | requires a trailing slash be used on all API routes, this can be set to true to change the endpoint to
+    | `/livewire/message/example/` to prevent a redirect from occurring, which may cause a `301` -> `404` response.
     |
     */
 
