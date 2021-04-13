@@ -122,6 +122,7 @@ return [
     | to prevent a redirect occurring, which may cause a `301` -> `404` response.
     |
     */
+
     'force_trailing_slash' => null,
 
 ];
