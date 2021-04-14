@@ -64,10 +64,19 @@ function supportEntangle() {
                         let isDeferred = value.isDeferred
                         let livewireComponent = livewireEl.__livewire
 
+                        let livewirePropertyValue = livewireEl.__livewire.get(livewireProperty)
+
+                        // Check to see if the Livewire property exists and if not log a console error
+                        // and return so everything else keeps running.
+                        if (typeof livewirePropertyValue === 'undefined') {
+                            console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`)
+                            return
+                        }
+
                         // Let's set the initial value of the Alpine prop to the Livewire prop's value.
                         component.unobservedData[key]
                             // We need to stringify and parse it though to get a deep clone.
-                            = JSON.parse(JSON.stringify(livewireEl.__livewire.get(livewireProperty)))
+                            = JSON.parse(JSON.stringify(livewirePropertyValue))
 
                         let blockAlpineWatcher = false
 

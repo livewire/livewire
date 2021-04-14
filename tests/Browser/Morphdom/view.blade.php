@@ -28,4 +28,15 @@
         </div>
     </button>
 
+    <button wire:click="$set('qux', true)" dusk="qux">
+        @if ($qux)
+            <div>first</div>
+        @endif
+
+        <div>
+            <div>second</div>
+            <div wire:key="qux" data-qux="{{ $qux ? 'true' : 'false' }}">third</div>
+        </div>
+    </button>
+
 </div>

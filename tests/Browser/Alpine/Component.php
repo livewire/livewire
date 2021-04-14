@@ -8,6 +8,7 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $count = 0;
+    public $special = 'abc';
     public $zorp = 'before';
 
     public $nested = [
@@ -22,6 +23,11 @@ class Component extends BaseComponent
     public function setCount($value)
     {
         $this->count = $value;
+    }
+
+    public function setSpecial($value)
+    {
+        $this->special = $value;
     }
 
     public function dispatchSomeEvent()

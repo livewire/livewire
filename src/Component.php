@@ -9,6 +9,7 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 use Livewire\Exceptions\PropertyNotFoundException;
 
@@ -55,10 +56,10 @@ abstract class Component
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
-            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout', 'layouts.app'),
+            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout'),
             'params' => $this->initialLayoutConfiguration['params'] ?? [],
             'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
-                'extends' => 'content', 'component' => 'default',
+                'extends' => 'content', 'component' => 'slot',
             ][$layoutType],
             'manager' => $manager,
         ]);
@@ -83,7 +84,7 @@ abstract class Component
 
     public static function getName()
     {
-        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace', 'App\\Http\\Livewire'))))
+        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace'))))
             ->map([Str::class, 'kebab'])
             ->implode('.');
 
@@ -100,7 +101,9 @@ abstract class Component
 
     public function getQueryString()
     {
-        return $this->queryString;
+        return method_exists($this, 'queryString')
+            ? $this->queryString()
+            : $this->queryString;
     }
 
     public function skipRender()

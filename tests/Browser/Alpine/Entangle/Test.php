@@ -125,6 +125,19 @@ class Test extends TestCase
         });
     }
 
+    public function test_entangle_does_not_throw_wire_undefined_error_after_dynamically_adding_child_component()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, EntangleNestedParentComponent::class)
+                ->assertSeeIn('@livewire-output-test1', "test1")
+                ->assertSeeIn('@alpine-output-test1', "test1")
+                ->waitForLivewire()->click('@add')
+                ->assertSeeIn('@livewire-output-test2', "test2")
+                ->assertSeeIn('@alpine-output-test2', "test2")
+            ;
+        });
+    }
+
     public function test_entangle_equality_check_ensures_alpine_does_not_update_livewire()
     {
         $this->browse(function ($browser) {

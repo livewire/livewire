@@ -6,20 +6,26 @@ use Closure;
 use Exception;
 use Psy\Shell;
 use Throwable;
+use Sushi\Sushi;
+use Livewire\Livewire;
+use Livewire\Component;
 use Laravel\Dusk\Browser;
+use function Livewire\str;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
+use Livewire\Macros\DuskBrowserMacros;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
-use Livewire\Component;
-use Livewire\Macros\DuskBrowserMacros;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
-
-use function Livewire\str;
+use Tests\Browser\Security\Component as SecurityComponent;
 
 class TestCase extends BaseTestCase
 {
@@ -78,6 +84,43 @@ class TestCase extends BaseTestCase
                 \Tests\Browser\SyncHistory\ComponentWithoutQueryString::class
             )->middleware('web')->name('sync-history-without-query-string');
 
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history-with-optional-parameter/{step?}',
+                \Tests\Browser\SyncHistory\ComponentWithOptionalParameter::class
+            )->middleware('web')->name('sync-history-with-optional-parameter');
+
+            Route::get('/livewire-dusk/{component}', function ($component) {
+                $class = urldecode($component);
+
+                return app()->call(new $class);
+            })->middleware('web', AllowListedMiddleware::class, BlockListedMiddleware::class);
+
+            Route::get('/force-login/{userId}', function ($userId) {
+                Auth::login(User::find($userId));
+
+                return 'You\'re logged in.';
+            })->middleware('web');
+
+            Route::get('/force-logout', function () {
+                Auth::logout();
+
+                return 'You\'re logged out.';
+            })->middleware('web');
+
+            Route::get('/with-authentication/livewire-dusk/{component}', function ($component) {
+                $class = urldecode($component);
+
+                return app()->call(new $class);
+            })->middleware(['web', 'auth']);
+
+            Gate::policy(Post::class, PostPolicy::class);
+
+            Route::get('/with-authorization/{post}/livewire-dusk/{component}', function (Post $post, $component) {
+                $class = urldecode($component);
+
+                return app()->call(new $class);
+            })->middleware(['web', 'auth', 'can:update,post']);
+
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
             app('config')->set('view.paths', [
@@ -86,6 +129,9 @@ class TestCase extends BaseTestCase
             ]);
 
             config()->set('app.debug', true);
+
+            Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
+
         });
     }
 
@@ -108,6 +154,8 @@ class TestCase extends BaseTestCase
         File::cleanDirectory(__DIR__.'/downloads');
         File::deleteDirectory($this->livewireClassesPath());
         File::delete(app()->bootstrapPath('cache/livewire-components.php'));
+
+
     }
 
     protected function getPackageProviders($app)
@@ -132,6 +180,8 @@ class TestCase extends BaseTestCase
             'database' => ':memory:',
             'prefix'   => '',
         ]);
+
+        $app['config']->set('auth.providers.users.model', User::class);
 
         $app['config']->set('filesystems.disks.dusk-downloads', [
             'driver' => 'local',
@@ -209,5 +259,71 @@ class TestCase extends BaseTestCase
         $sh->run();
 
         return $sh->getScopeVariables(false);
+    }
+}
+
+class AllowListedMiddleware
+{
+    public function handle($request, $next)
+    {
+        SecurityComponent::$loggedMiddleware[] = static::class;
+
+        return $next($request);
+    }
+}
+
+class BlockListedMiddleware
+{
+    public function handle($request, $next)
+    {
+        SecurityComponent::$loggedMiddleware[] = static::class;
+
+        return $next($request);
+    }
+}
+
+class User extends AuthUser
+{
+    use Sushi;
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    protected $rows = [
+        [
+            'name' => 'First User',
+            'email' => 'first@laravel-livewire.com',
+            'password' => '',
+        ],
+        [
+            'name' => 'Second user',
+            'email' => 'second@laravel-livewire.com',
+            'password' => '',
+        ],
+    ];
+}
+
+class Post extends Model
+{
+    use Sushi;
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    protected $rows = [
+        ['title' => 'First', 'user_id' => 1],
+        ['title' => 'Second', 'user_id' => 2],
+    ];
+}
+
+class PostPolicy
+{
+    public function update(User $user, Post $post)
+    {
+        return (int) $post->user_id === (int) $user->id;
     }
 }

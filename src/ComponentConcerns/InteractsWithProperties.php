@@ -47,7 +47,10 @@ trait InteractsWithProperties
 
     public function getPublicPropertiesDefinedBySubClass()
     {
-        $publicProperties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PUBLIC);
+        $publicProperties = array_filter((new \ReflectionClass($this))->getProperties(), function ($property) {
+            return $property->isPublic() && ! $property->isStatic();
+        });
+
         $data = [];
 
         foreach ($publicProperties as $property) {

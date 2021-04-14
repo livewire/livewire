@@ -38,7 +38,7 @@ class LivewireAssetsDirectiveTest extends TestCase
     }
 
     /** @test */
-    public function livewire_js_calls_reference_congigured_asset_url()
+    public function livewire_js_calls_reference_configured_asset_url()
     {
         $this->assertStringContainsString(
             '<script src="https://foo.com/assets/livewire/livewire.js?',

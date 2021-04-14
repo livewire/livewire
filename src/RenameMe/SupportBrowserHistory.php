@@ -19,8 +19,6 @@ class SupportBrowserHistory
 
     function __construct()
     {
-        $this->mergedQueryParamsFromDehydratedComponents = collect($this->getExistingQueryParams());
-
         Livewire::listen('component.hydrate.initial', function ($component) {
             if (! $properties = $this->getQueryParamsFromComponentProperties($component)->keys()) return;
 
@@ -73,7 +71,7 @@ class SupportBrowserHistory
         try {
             // See if we can get the route from the referer.
             return app('router')->getRoutes()->match(
-                Request::create($referer, 'GET')
+                Request::create($referer, Livewire::originalMethod())
             );
         } catch (NotFoundHttpException $e) {
             // If not, use the current route.
@@ -94,7 +92,7 @@ class SupportBrowserHistory
             // If the component is registered using `Route::get()`.
             && str($action)->contains(get_class($component))
             // AND, the component is tracking route params as its public properties
-            && count(array_intersect_key($component->getPublicPropertiesDefinedBySubClass(), $route->parametersWithoutNulls()))
+            && count(array_intersect_key($component->getPublicPropertiesDefinedBySubClass(), array_flip($route->parameterNames())))
         ) {
             return true;
         }
@@ -104,7 +102,7 @@ class SupportBrowserHistory
 
     protected function getExistingQueryParams()
     {
-        return Livewire::isLivewireRequest()
+        return Livewire::isDefinitelyLivewireRequest()
             ? $this->getQueryParamsFromRefererHeader()
             : request()->query();
     }
@@ -129,7 +127,7 @@ class SupportBrowserHistory
             $route->parametersWithoutNulls(),
             array_intersect_key(
                 $component->getPublicPropertiesDefinedBySubClass(),
-                $route->parametersWithoutNulls()
+                array_flip($route->parameterNames())
             )
         );
 
@@ -138,6 +136,10 @@ class SupportBrowserHistory
 
     protected function mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component)
     {
+        if (! $this->mergedQueryParamsFromDehydratedComponents) {
+            $this->mergedQueryParamsFromDehydratedComponents = collect($this->getExistingQueryParams());
+        }
+
         $excepts = $this->getExceptsFromComponent($component);
 
         $this->mergedQueryParamsFromDehydratedComponents = collect(request()->query())

@@ -1,3 +1,5 @@
 @component($view, $params)
-    {!! $manager->initialDehydrate()->toInitialResponse()->effects['html']; !!}
+    @slot($slotOrSection)
+        {!! $manager->initialDehydrate()->toInitialResponse()->effects['html']; !!}
+    @endslot
 @endcomponent

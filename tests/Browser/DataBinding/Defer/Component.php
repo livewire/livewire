@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Browser\Defer;
+namespace Tests\Browser\DataBinding\Defer;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
