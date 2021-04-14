@@ -70,9 +70,11 @@ class UploadManager {
         let formData = new FormData()
         Array.from(this.uploadBag.first(name).files).forEach(file => formData.append('files[]', file))
 
+        let csrfToken = getCsrfToken()
+
         let headers = {
-            'X-CSRF-TOKEN': getCsrfToken(),
             'Accept': 'application/json',
+            ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken })
         }
 
         this.makeRequest(name, formData, 'post', url, headers, response => {
