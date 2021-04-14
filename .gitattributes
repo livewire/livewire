@@ -12,3 +12,6 @@
 /tests              export-ignore
 /.editorconfig      export-ignore
 /github_banner.png  export-ignore
+
+# Ignore blade files
+*.blade.php linguist-vendored
