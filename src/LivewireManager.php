@@ -213,7 +213,7 @@ HTML;
 
         $appUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
 
-        $csrf = csrf_token();
+        $jsLivewireToken = app()->has('session.store') ? "'" . csrf_token() . "'" : 'null';
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
@@ -280,7 +280,7 @@ HTML;
     {$devTools}
     window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
-    window.livewire_token = '{$csrf}';
+    window.livewire_token = {$jsLivewireToken};
 
 	{$windowAlpineCheck}
     window.deferLoadingAlpine = function (callback) {
