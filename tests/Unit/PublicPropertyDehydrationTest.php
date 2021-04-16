@@ -50,6 +50,24 @@ class PublicPropertyDehydrationTest extends TestCase
     }
 
     /** @test */
+    public function an_eloquent_model_properties_can_be_serialised()
+    {
+        $model = Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
+
+        $rules = [
+            'user.title',
+            'user.email',
+        ];
+
+        $expected = [
+            'title' => 'foo',
+            'email' => 'baz',
+        ];
+
+        $this->assertEquals($expected, HydratePublicProperties::filterData2($model, $rules));
+    }
+
+    /** @test */
     public function an_eloquent_collection_properties_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
@@ -73,7 +91,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::filterData($models, $rules));
+        $this->assertEquals($expected, HydratePublicProperties::filterData2($models, $rules));
     }
 
     /** @test */
@@ -114,7 +132,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::filterData($models, $rules));
+        $this->assertEquals($expected, HydratePublicProperties::filterData2($models, $rules));
     }
 
     /** @test */
@@ -168,7 +186,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::filterData($models, $rules));
+        $this->assertEquals($expected, HydratePublicProperties::filterData2($models, $rules));
     }
 
     /** @test */
@@ -228,7 +246,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::filterData($models, $rules));
+        $this->assertEquals($expected, HydratePublicProperties::filterData2($models, $rules));
     }
 }
 
