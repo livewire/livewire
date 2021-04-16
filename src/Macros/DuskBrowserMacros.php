@@ -92,6 +92,14 @@ class DuskBrowserMacros
         };
     }
 
+    public function scrollTo()
+    {
+        return function ($selector) {
+            $this->browser->scrollTo($selector);
+            return $this;
+        };
+    }
+
     public function assertClassMissing()
     {
         return function ($selector, $className) {
