@@ -23,6 +23,7 @@ use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Illuminate\Support\Facades\View;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
 use Tests\Browser\Security\Component as SecurityComponent;
@@ -88,6 +89,16 @@ class TestCase extends BaseTestCase
                 '/livewire-dusk/tests/browser/sync-history-with-optional-parameter/{step?}',
                 \Tests\Browser\SyncHistory\ComponentWithOptionalParameter::class
             )->middleware('web')->name('sync-history-with-optional-parameter');
+
+            // The following two routes belong together. The first one serves a view which in return
+            // loads and renders a component dynamically. There may not be a POST route for the first one.
+            Route::get('/livewire-dusk/tests/browser/load-dynamic-component', function () {
+                return View::file(__DIR__ . '/DynamicComponentLoading/view-load-dynamic-component.blade.php');
+            })->middleware('web')->name('load-dynamic-component');
+
+            Route::post('/livewire-dusk/tests/browser/dynamic-component', function () {
+                return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
+            })->middleware('web')->name('dynamic-component');
 
             Route::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
