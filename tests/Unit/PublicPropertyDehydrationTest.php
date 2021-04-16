@@ -50,6 +50,48 @@ class PublicPropertyDehydrationTest extends TestCase
     }
 
     /** @test */
+    public function model_rules_get_extracted_properly()
+    {
+        $rules = [
+            'author.title',
+            'author.email',
+            'author.posts.*.title',
+            'author.posts.*.description',
+            'authors.*.posts.*.title',
+            'authors.*.posts.*.content',
+            'posts.*.title',
+            'posts.*.content',
+            'posts.*.author.name',
+        ];
+
+        $expected = [
+            'author' => [
+                'title',
+                'email',
+                'posts' => [
+                    'title',
+                    'description',
+                ],
+            ],
+            'authors' => [
+                'posts' => [
+                    'title',
+                    'content',
+                ],
+            ],
+            'posts' => [
+                'title',
+                'content',
+                'author' => [
+                    'name',
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expected, HydratePublicProperties::restructureRules($rules)->toArray());
+    }
+
+    /** @test */
     public function an_eloquent_model_properties_can_be_serialised()
     {
         $model = Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);

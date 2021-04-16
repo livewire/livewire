@@ -227,5 +227,93 @@ class HydratePublicProperties implements HydrationMiddleware
         }
 
         return $filteredModelData;
-      }
+    }
+
+    public static function filterData2($data, $rules) {
+        $filteredData = [];
+
+        $rules = static::restructureRules($rules);
+
+        $filteredData = static::extractData($data, $rules, $filteredData);
+
+        return $filteredData;
+    }
+
+    public static function restructureRules($rules) {
+        // map to groups, so we have author => title,email,posts,posts,; authors => posts
+
+        $rules = Collection::wrap($rules);
+
+        // Map to groups
+        $rules = $rules
+            ->mapInto(Stringable::class)
+            ->mapToGroups(function($rule) {
+                // ray($rule);
+                return [$rule->before('.')->__toString() => $rule->after('.')];
+            });
+
+        // Go through groups and process rules
+        $rules = $rules->mapWithKeys(function($rules, $group) {
+            // Split into single and plural rules
+            [$pluralRules, $singleRules] = $rules
+                ->partition(function($rule) {
+                    return $rule->startsWith('*.');
+                });
+
+
+            /*-----------PLURAL RULES-------*/
+            // Clean up plural rules
+            $pluralRules = $pluralRules->map->after('*.');
+
+            // Partition plural rules
+            [$pluralPluralRules, $pluralSingleRules] = $pluralRules
+                ->partition(function($rule) {
+                    return $rule->contains('.');
+                });
+
+            // Process plural plural rules
+            $pluralPluralRules = static::restructureRules($pluralPluralRules);
+
+            // Clean up plural single rules
+            $pluralSingleRules = $pluralSingleRules->map->__toString();
+
+            $pluralRules = $pluralSingleRules->merge($pluralPluralRules);
+
+            /*-----------END PLURAL RULES-------*/
+
+
+
+            /*-----------SINGLE RULES-------*/
+
+            // Partition single rules
+            [$singlePluralRules, $singleSingleRules] = $singleRules
+                ->partition(function($rule) {
+                    return $rule->contains('.');
+                });
+
+            // Process single plural rules
+            $singlePluralRules = static::restructureRules($singlePluralRules);
+
+            // Clean up single single rules
+            $singleSingleRules = $singleSingleRules->map->__toString();
+
+            $singleRules = $singleSingleRules->merge($singlePluralRules);
+
+            /*-----------END SINGLE RULES-------*/
+
+
+
+            $rules = $singleRules->merge($pluralRules);
+
+            // Return single and processed plural rules
+            return [$group => $rules];
+        });
+
+        return $rules;
+    }
+
+    public static function extractData($data, $rules, $filteredData)
+    {
+        return $filteredData;
+    }
 }
