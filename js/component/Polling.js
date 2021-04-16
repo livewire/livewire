@@ -1,5 +1,5 @@
 import MethodAction from '@/action/method'
-import { wireDirectives} from '@/util'
+import { wireDirectives, inViewPort } from '@/util'
 import store from '@/Store'
 
 export default function () {
@@ -54,6 +54,12 @@ function fireActionOnInterval(node, component) {
             // This "Math.random" business effectivlly prevents 95% of requests
             // from executing. We still want "some" requests to get through.
             if (Math.random() < .95) return
+        }
+
+        // Only poll visible elements. Visible elements are elements that
+        // are visible in the current viewport.
+        if (directive.modifiers.includes('visible') && ! inViewPort(directive.el)) {
+            return
         }
 
         // Don't poll if livewire is offline as well.
