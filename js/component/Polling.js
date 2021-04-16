@@ -1,5 +1,5 @@
 import MethodAction from '@/action/method'
-import { wireDirectives, inViewPort } from '@/util'
+import { wireDirectives } from '@/util'
 import store from '@/Store'
 
 export default function () {
@@ -58,7 +58,7 @@ function fireActionOnInterval(node, component) {
 
         // Only poll visible elements. Visible elements are elements that
         // are visible in the current viewport.
-        if (directive.modifiers.includes('visible') && ! inViewPort(directive.el)) {
+        if (directive.modifiers.includes('visible') && ! inViewport(directive.el)) {
             return
         }
 
@@ -67,4 +67,15 @@ function fireActionOnInterval(node, component) {
 
         component.addAction(new MethodAction(method, directive.params, node))
     }, interval);
+}
+
+function inViewport(el) {
+    var bounding = el.getBoundingClientRect();
+
+    return (
+        bounding.top >= 0 &&
+        bounding.left >= 0 &&
+        bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
 }
