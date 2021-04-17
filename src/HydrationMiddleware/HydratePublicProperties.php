@@ -130,7 +130,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 $model = new $serialized['class'];
                 $models->splice($index, 0, [$model]);
             }
-            
+
             static::setDirtyData(data_get($models, $index), data_get($dirtyModelData, $index));
         }
 
@@ -255,55 +255,55 @@ class HydratePublicProperties implements HydrationMiddleware
         // Go through groups and process rules
         $rules = $rules->mapWithKeys(function($rules, $group) {
             // Split into single and plural rules
-            [$pluralRules, $singleRules] = $rules
+            [$collectionRules, $modelRules] = $rules
                 ->partition(function($rule) {
                     return $rule->startsWith('*.');
                 });
 
 
-            /*-----------PLURAL RULES-------*/
-            // Clean up plural rules
-            $pluralRules = $pluralRules->map->after('*.');
+            /*-----------COLLECTION RULES-------*/
+            // Clean up collection rules
+            $collectionRules = $collectionRules->map->after('*.');
 
-            // Partition plural rules
-            [$pluralPluralRules, $pluralSingleRules] = $pluralRules
+            // Partition collection rules
+            [$collectionPluralRules, $collectionSingleRules] = $collectionRules
                 ->partition(function($rule) {
                     return $rule->contains('.');
                 });
 
-            // Process plural plural rules
-            $pluralPluralRules = static::restructureRules($pluralPluralRules);
+            // Process collection plural rules
+            $collectionPluralRules = static::restructureRules($collectionPluralRules);
 
-            // Clean up plural single rules
-            $pluralSingleRules = $pluralSingleRules->map->__toString();
+            // Clean up collection single rules
+            $collectionSingleRules = $collectionSingleRules->map->__toString();
 
-            $pluralRules = $pluralSingleRules->merge($pluralPluralRules);
+            $collectionRules = $collectionSingleRules->merge($collectionPluralRules);
 
-            /*-----------END PLURAL RULES-------*/
+            /*-----------END COLLECTION RULES-------*/
 
 
 
-            /*-----------SINGLE RULES-------*/
+            /*-----------MODEL RULES-------*/
 
-            // Partition single rules
-            [$singlePluralRules, $singleSingleRules] = $singleRules
+            // Partition model rules
+            [$modelPluralRules, $modelSingleRules] = $modelRules
                 ->partition(function($rule) {
                     return $rule->contains('.');
                 });
 
-            // Process single plural rules
-            $singlePluralRules = static::restructureRules($singlePluralRules);
+            // Process model plural rules
+            $modelPluralRules = static::restructureRules($modelPluralRules);
 
-            // Clean up single single rules
-            $singleSingleRules = $singleSingleRules->map->__toString();
+            // Clean up model single rules
+            $modelSingleRules = $modelSingleRules->map->__toString();
 
-            $singleRules = $singleSingleRules->merge($singlePluralRules);
+            $modelRules = $modelSingleRules->merge($modelPluralRules);
 
-            /*-----------END SINGLE RULES-------*/
+            /*-----------END MODEL RULES-------*/
 
 
 
-            $rules = $singleRules->merge($pluralRules);
+            $rules = $modelRules->merge($collectionRules);
 
             // Return single and processed plural rules
             return [$group => $rules];
