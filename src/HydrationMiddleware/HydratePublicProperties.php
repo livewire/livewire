@@ -274,6 +274,25 @@ class HydratePublicProperties implements HydrationMiddleware
 
     public static function extractData($data, $rules, $filteredData)
     {
+        ray($data, $rules, $filteredData);
+
+        foreach($rules as $key => $rule) {
+            ray('RULE', $key, $rule);
+
+            if($key === '*') {
+                ray('ASTERISKKEY');
+                $collectionData = [];
+                foreach($data as $modelKey => $model) {
+                    ray('COLLECTMODEL', $modelKey, $model, $rule);
+                    $collectionData[] = static::extractData($model, $rule, []);
+                }
+
+                $filteredData = $collectionData;
+            } else {
+                data_set($filteredData, $rule, $data[$rule]);
+            }
+        }
+
         return $filteredData;
     }
 }

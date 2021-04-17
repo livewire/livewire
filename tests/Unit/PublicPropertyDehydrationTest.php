@@ -118,7 +118,13 @@ class PublicPropertyDehydrationTest extends TestCase
             'email' => 'baz',
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []));
+        ray()->clearScreen();
+
+        $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);
+
+        ray($results);
+
+        $this->assertEquals($expected, $results);
     }
 
     /** @test */
@@ -145,7 +151,13 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors'], []));
+        ray()->clearScreen();
+
+        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
+
+        ray('Results', $results);
+
+        $this->assertEquals($expected, $results);
     }
 
     // /** @test */
