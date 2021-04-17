@@ -254,10 +254,6 @@ class HydratePublicProperties implements HydrationMiddleware
         $rules = $rules->mapWithKeys(function($rules, $group) {
             // Split rules into collection and model rules
             [$collectionRules, $modelRules] = $rules
-                ->map(function($rule) {
-                    // Clean up any rules that start with *. from previous level
-                    return $rule->startsWith('*.') ? $rule->after('*.') : $rule;
-                })
                 ->partition(function($rule) {
                     return $rule->contains('.');
                 });

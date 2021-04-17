@@ -50,13 +50,15 @@ class PublicPropertyDehydrationTest extends TestCase
     }
 
     /** @test */
-    public function model_rules_get_extracted_properly()
+    public function rules_get_extracted_properly()
     {
         $rules = [
             'author.title',
             'author.email',
             'author.posts.*.title',
             'author.posts.*.description',
+            'authors.*.title',
+            'authors.*.email',
             'authors.*.posts.*.title',
             'authors.*.posts.*.content',
             'posts.*.title',
@@ -69,21 +71,31 @@ class PublicPropertyDehydrationTest extends TestCase
                 'title',
                 'email',
                 'posts' => [
-                    'title',
-                    'description',
+                    '*' => [
+                        'title',
+                        'description',
+                    ],
                 ],
             ],
             'authors' => [
-                'posts' => [
+                '*' => [
                     'title',
-                    'content',
+                    'email',
+                    'posts' => [
+                        '*' => [
+                            'title',
+                            'content',
+                        ],
+                    ],
                 ],
             ],
             'posts' => [
-                'title',
-                'content',
-                'author' => [
-                    'name',
+                '*' => [
+                    'title',
+                    'content',
+                    'author' => [
+                        'name',
+                    ],
                 ],
             ],
         ];
