@@ -118,11 +118,7 @@ class PublicPropertyDehydrationTest extends TestCase
             'email' => 'baz',
         ];
 
-        ray()->clearScreen();
-
         $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);
-
-        ray($results);
 
         $this->assertEquals($expected, $results);
     }
@@ -151,11 +147,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        ray()->clearScreen();
-
         $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
-
-        ray('Results', $results);
 
         $this->assertEquals($expected, $results);
     }
@@ -198,11 +190,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        ray()->clearScreen();
-
         $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
-
-        ray($results);
 
         $this->assertEquals($expected, $results);
     }
@@ -258,11 +246,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        ray()->clearScreen();
-
         $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
-
-        ray($results);
 
         $this->assertEquals($expected, $results);
     }
@@ -324,11 +308,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        ray()->clearScreen();
-
         $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
-
-        ray($results);
 
         $this->assertEquals($expected, $results);
     }
@@ -378,11 +358,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        ray()->clearScreen();
-
         $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
-
-        ray($results);
 
         $this->assertEquals($expected, $results);
     }
@@ -403,11 +379,7 @@ class PublicPropertyDehydrationTest extends TestCase
             'email' => 'baz',
         ];
 
-        ray()->clearScreen();
-
         $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);
-
-        ray($results);
 
         $this->assertEquals($expected, $results);
     }
