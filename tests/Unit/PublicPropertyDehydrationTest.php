@@ -314,6 +314,65 @@ class PublicPropertyDehydrationTest extends TestCase
     }
 
     /** @test */
+    public function an_eloquent_collection_properties_with_deep_relations_with_skipped_relations_can_be_serialised()
+    {
+        Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
+        Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
+
+        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'author_id' => 1]);
+        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'author_id' => 1]);
+
+        Comment::create(['id' => 1, 'comment' => 'Comment 1', 'post_id' => 1, 'author_id' => 1]);
+        Comment::create(['id' => 2, 'comment' => 'Comment 2', 'post_id' => 1, 'author_id' => 2]);
+
+        $models = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->get();
+
+        $rules = [
+            'authors.*.title',
+            'authors.*.email',
+            'authors.*.posts.*.comments.*.comment',
+            'authors.*.posts.*.comments.*.author.name',
+        ];
+
+        $expected = [
+            [
+                'title' => 'foo',
+                'email' => 'baz',
+                'posts' => [
+                    [
+                        'comments' => [
+                            [
+                                'comment' => 'Comment 1',
+                                'author' => [
+                                    'name' => 'bar'
+                                ],
+                            ],
+                            [
+                                'comment' => 'Comment 2',
+                                'author' => [
+                                    'name' => 'thing'
+                                ],
+                            ],
+                        ],
+                    ],
+                    [
+                        'comments' => [],
+                    ],
+                ],
+            ],
+            [
+                'title' => 'sample',
+                'email' => 'todo',
+                'posts' => [],
+            ],
+        ];
+
+        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
+
+        $this->assertEquals($expected, $results);
+    }
+
+    /** @test */
     public function it_does_not_throw_error_if_relation_is_not_loaded()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
