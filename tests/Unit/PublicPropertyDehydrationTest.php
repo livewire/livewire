@@ -109,8 +109,8 @@ class PublicPropertyDehydrationTest extends TestCase
         $model = Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
 
         $rules = [
-            'user.title',
-            'user.email',
+            'author.title',
+            'author.email',
         ];
 
         $expected = [
@@ -118,7 +118,7 @@ class PublicPropertyDehydrationTest extends TestCase
             'email' => 'baz',
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::filterData2($model, $rules));
+        $this->assertEquals($expected, HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []));
     }
 
     /** @test */
@@ -130,8 +130,8 @@ class PublicPropertyDehydrationTest extends TestCase
         $models = Author::all();
 
         $rules = [
-            'users.*.title',
-            'users.*.email',
+            'authors.*.title',
+            'authors.*.email',
         ];
 
         $expected = [
@@ -145,7 +145,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::filterData2($models, $rules));
+        $this->assertEquals($expected, HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors'], []));
     }
 
     /** @test */
