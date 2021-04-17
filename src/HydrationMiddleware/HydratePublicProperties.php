@@ -260,56 +260,31 @@ class HydratePublicProperties implements HydrationMiddleware
                     return $rule->startsWith('*.');
                 });
 
-
-            /*-----------COLLECTION RULES-------*/
-            // Clean up collection rules
             $collectionRules = $collectionRules->map->after('*.');
 
-            // Partition collection rules
-            [$collectionPluralRules, $collectionSingleRules] = $collectionRules
-                ->partition(function($rule) {
-                    return $rule->contains('.');
-                });
+            $collectionRules = static::processRules($collectionRules);
 
-            // Process collection plural rules
-            $collectionPluralRules = static::restructureRules($collectionPluralRules);
-
-            // Clean up collection single rules
-            $collectionSingleRules = $collectionSingleRules->map->__toString();
-
-            $collectionRules = $collectionSingleRules->merge($collectionPluralRules);
-
-            /*-----------END COLLECTION RULES-------*/
-
-
-
-            /*-----------MODEL RULES-------*/
-
-            // Partition model rules
-            [$modelPluralRules, $modelSingleRules] = $modelRules
-                ->partition(function($rule) {
-                    return $rule->contains('.');
-                });
-
-            // Process model plural rules
-            $modelPluralRules = static::restructureRules($modelPluralRules);
-
-            // Clean up model single rules
-            $modelSingleRules = $modelSingleRules->map->__toString();
-
-            $modelRules = $modelSingleRules->merge($modelPluralRules);
-
-            /*-----------END MODEL RULES-------*/
-
-
+            $modelRules = static::processRules($modelRules);
 
             $rules = $modelRules->merge($collectionRules);
 
-            // Return single and processed plural rules
             return [$group => $rules];
         });
 
         return $rules;
+    }
+
+    public static function processRules($rules) {
+        [$collectionRules, $modelRules] = $rules
+            ->partition(function($rule) {
+                return $rule->contains('.');
+            });
+
+        $modelRules = $modelRules->map->__toString();
+
+        $collectionRules = static::restructureRules($collectionRules);
+
+        return $rules = $modelRules->merge($collectionRules);
     }
 
     public static function extractData($data, $rules, $filteredData)
