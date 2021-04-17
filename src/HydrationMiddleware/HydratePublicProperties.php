@@ -282,18 +282,22 @@ class HydratePublicProperties implements HydrationMiddleware
             if($key === '*') {
                 // ray('ASTERISKKEY');
                 $collectionData = [];
-                foreach($data as $modelKey => $model) {
-                    // ray('COLLECTMODEL', $modelKey, $model, $rule);
-                    $collectionData[] = static::extractData($model, $rule, []);
+                if($data) {
+                    foreach($data as $modelKey => $model) {
+                        // ray('COLLECTMODEL', $modelKey, $model, $rule);
+                        $collectionData[] = static::extractData($model, $rule, []);
+                    }
                 }
 
                 $filteredData = $collectionData;
             } else {
                 // ray('PROPERTY ACCESS', $key, $rule, $data);
                 if (is_array($rule)) {
-                    data_set($filteredData, $key, static::extractData($data[$key], $rule, []));
+                    data_set($filteredData, $key, static::extractData(data_get($data, $key), $rule, []));
                 } else {
-                    data_set($filteredData, $rule, $data[$rule]);
+                    if(isset($data[$rule])) {
+                        data_set($filteredData, $rule, data_get($data, $rule));
+                    }
                 }
             }
         }
