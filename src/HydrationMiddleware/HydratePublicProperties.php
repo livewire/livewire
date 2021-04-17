@@ -240,8 +240,6 @@ class HydratePublicProperties implements HydrationMiddleware
     }
 
     public static function restructureRules($rules) {
-        // map to groups, so we have author => title,email,posts,posts,; authors => posts
-
         $rules = Collection::wrap($rules);
 
         // Map to groups
@@ -254,17 +252,21 @@ class HydratePublicProperties implements HydrationMiddleware
 
         // Go through groups and process rules
         $rules = $rules->mapWithKeys(function($rules, $group) {
-            // Split into single and plural rules
+            // Split rules into collection and model rules
             [$collectionRules, $modelRules] = $rules
+                ->map(function($rule) {
+                    // Clean up any rules that start with *. from previous level
+                    return $rule->startsWith('*.') ? $rule->after('*.') : $rule;
+                })
                 ->partition(function($rule) {
-                    return $rule->startsWith('*.');
+                    return $rule->contains('.');
                 });
 
-            $collectionRules = $collectionRules->map->after('*.');
+            // Recurse through collection rules
+            $collectionRules = static::restructureRules($collectionRules);
 
-            $collectionRules = static::processRules($collectionRules);
-
-            $modelRules = static::processRules($modelRules);
+            // Convert model rule stringable object back to string
+            $modelRules = $modelRules->map->__toString();
 
             $rules = $modelRules->merge($collectionRules);
 
@@ -272,19 +274,6 @@ class HydratePublicProperties implements HydrationMiddleware
         });
 
         return $rules;
-    }
-
-    public static function processRules($rules) {
-        [$collectionRules, $modelRules] = $rules
-            ->partition(function($rule) {
-                return $rule->contains('.');
-            });
-
-        $modelRules = $modelRules->map->__toString();
-
-        $collectionRules = static::restructureRules($collectionRules);
-
-        return $rules = $modelRules->merge($collectionRules);
     }
 
     public static function extractData($data, $rules, $filteredData)
