@@ -141,7 +141,11 @@ class HydratePublicProperties implements HydrationMiddleware
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 foreach($value as $index => $valueData) {
-                    static::setDirtyData(data_get($model[$key], $index), data_get($value, $index));
+                    if(is_array($valueData)) {
+                        static::setDirtyData(data_get($model[$key], $index), data_get($value, $index));
+                    } else {
+                        data_set($model[$key], $index, data_get($value, $index));
+                    }
                 }
             } else {
                 data_set($model, $key, data_get($data, $key));
