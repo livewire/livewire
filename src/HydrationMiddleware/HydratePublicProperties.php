@@ -232,14 +232,14 @@ class HydratePublicProperties implements HydrationMiddleware
     public static function filterData2($data, $rules) {
         $filteredData = [];
 
-        $rules = static::restructureRules($rules);
+        $rules = static::processRules($rules);
 
         $filteredData = static::extractData($data, $rules, $filteredData);
 
         return $filteredData;
     }
 
-    public static function restructureRules($rules) {
+    public static function processRules($rules) {
         $rules = Collection::wrap($rules);
 
         // Map to groups
@@ -263,7 +263,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 });
 
             // Recurse through collection rules
-            $collectionRules = static::restructureRules($collectionRules);
+            $collectionRules = static::processRules($collectionRules);
 
             // Convert model rule stringable object back to string
             $modelRules = $modelRules->map->__toString();

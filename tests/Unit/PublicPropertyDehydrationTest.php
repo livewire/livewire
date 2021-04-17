@@ -88,7 +88,7 @@ class PublicPropertyDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::restructureRules($rules)->toArray());
+        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
     }
 
     /** @test */
