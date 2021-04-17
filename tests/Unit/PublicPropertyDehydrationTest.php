@@ -160,46 +160,52 @@ class PublicPropertyDehydrationTest extends TestCase
         $this->assertEquals($expected, $results);
     }
 
-    // /** @test */
-    // public function an_eloquent_collection_properties_with_relations_can_be_serialised()
-    // {
-    //     Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
-    //     Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
+    /** @test */
+    public function an_eloquent_collection_properties_with_relations_can_be_serialised()
+    {
+        Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
+        Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
 
-    //     Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'author_id' => 1]);
-    //     Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'author_id' => 1]);
-    //     Post::create(['id' => 3, 'title' => 'Post 3', 'description' => 'Post 3 Description', 'content' => 'Post 3 Content', 'author_id' => 2]);
-    //     Post::create(['id' => 4, 'title' => 'Post 4', 'description' => 'Post 4 Description', 'content' => 'Post 4 Content', 'author_id' => 2]);
+        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'author_id' => 1]);
+        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'author_id' => 1]);
+        Post::create(['id' => 3, 'title' => 'Post 3', 'description' => 'Post 3 Description', 'content' => 'Post 3 Content', 'author_id' => 2]);
+        Post::create(['id' => 4, 'title' => 'Post 4', 'description' => 'Post 4 Description', 'content' => 'Post 4 Content', 'author_id' => 2]);
 
-    //     $models = Author::with('posts')->get();
+        $models = Author::with('posts')->get();
 
-    //     $rules = [
-    //         'users.*.title',
-    //         'users.*.email',
-    //         'users.*.posts.*.title',
-    //     ];
+        $rules = [
+            'authors.*.title',
+            'authors.*.email',
+            'authors.*.posts.*.title',
+        ];
 
-    //     $expected = [
-    //         [
-    //             'title' => 'foo',
-    //             'email' => 'baz',
-    //             'posts' => [
-    //                 ['title' => 'Post 1'],
-    //                 ['title' => 'Post 2'],
-    //             ],
-    //         ],
-    //         [
-    //             'title' => 'sample',
-    //             'email' => 'todo',
-    //             'posts' => [
-    //                 ['title' => 'Post 3'],
-    //                 ['title' => 'Post 4'],
-    //             ],
-    //         ],
-    //     ];
+        $expected = [
+            [
+                'title' => 'foo',
+                'email' => 'baz',
+                'posts' => [
+                    ['title' => 'Post 1'],
+                    ['title' => 'Post 2'],
+                ],
+            ],
+            [
+                'title' => 'sample',
+                'email' => 'todo',
+                'posts' => [
+                    ['title' => 'Post 3'],
+                    ['title' => 'Post 4'],
+                ],
+            ],
+        ];
 
-    //     $this->assertEquals($expected, HydratePublicProperties::filterData2($models, $rules));
-    // }
+        ray()->clearScreen();
+
+        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
+
+        ray($results);
+
+        $this->assertEquals($expected, $results);
+    }
 
     // /** @test */
     // public function an_eloquent_collection_properties_with_deep_relations_can_be_serialised()

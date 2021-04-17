@@ -274,7 +274,7 @@ class HydratePublicProperties implements HydrationMiddleware
 
     public static function extractData($data, $rules, $filteredData)
     {
-        ray($data, $rules, $filteredData);
+        ray('EXTRACT', $data, $rules, $filteredData);
 
         foreach($rules as $key => $rule) {
             ray('RULE', $key, $rule);
@@ -289,7 +289,12 @@ class HydratePublicProperties implements HydrationMiddleware
 
                 $filteredData = $collectionData;
             } else {
-                data_set($filteredData, $rule, $data[$rule]);
+                ray('PROPERTY ACCESS', $key, $rule, $data);
+                if (is_array($rule)) {
+                    data_set($filteredData, $key, static::extractData($data[$key], $rule, []));
+                } else {
+                    data_set($filteredData, $rule, $data[$rule]);
+                }
             }
         }
 
