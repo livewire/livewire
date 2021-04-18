@@ -38,6 +38,18 @@ class ViewMacros
         };
     }
 
+    public function params()
+    {
+        return function ($params = []) {
+
+            $this->livewireLayout = [
+                'params' => $params,
+            ];
+
+            return $this;
+        };
+    }
+
     public function section()
     {
         return function ($section) {
