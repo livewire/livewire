@@ -52,8 +52,6 @@ EOT;
             if(PHP_OS_FAMILY == 'Linux') exec('xdg-open https://github.com/livewire/livewire');
 
             $this->line("Thanks! Means the world to me!");
-        } else {
-            $this->line("I understand, but am not going to pretend I'm not sad about it...");
         }
     }
 }

@@ -129,7 +129,7 @@ trait HandlesActions
                 } else {
                     $currentValue = $this->{$prop};
                 }
-                
+
                 $this->syncInput($prop, ! $currentValue, $rehash = false);
 
                 return;
