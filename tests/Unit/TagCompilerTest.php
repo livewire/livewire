@@ -2,7 +2,9 @@
 
 namespace Tests\Unit;
 
+use Livewire\Component;
 use Livewire\Exceptions\ComponentAttributeMissingOnDynamicComponentException;
+use Livewire\Livewire;
 use Livewire\LivewireTagCompiler;
 
 class TagCompilerTest extends TestCase
@@ -98,4 +100,19 @@ class TagCompilerTest extends TestCase
 
         $this->assertEquals("@livewire('alert', ['type' => 'warning'])", $result);
     }
+
+    /** @test */
+    public function it_uses_existing_dynamic_component_if_one_exists()
+    {
+        Livewire::component('dynamic-component', DynamicComponent::class);
+
+        $alertComponent = '<livewire:dynamic-component />';
+        $result = $this->compiler->compile($alertComponent);
+
+        $this->assertEquals("@livewire('dynamic-component', [])", $result);
+    }
+}
+
+class DynamicComponent extends Component {
+
 }
