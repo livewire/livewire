@@ -259,12 +259,7 @@ export default class Component {
     handleResponse(message) {
         let response = message.response
 
-        // This means "$this->redirect()" was called in the component. let's just bail and redirect.
-        if (response.effects.redirect) {
-            this.redirect(response.effects.redirect)
 
-            return
-        }
 
         this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
 
@@ -323,8 +318,14 @@ export default class Component {
             }
         }
 
-
         store.callHook('message.processed', message, this)
+
+        // This means "$this->redirect()" was called in the component. let's just bail and redirect.
+        if (response.effects.redirect) {
+            setTimeout(() => this.redirect(response.effects.redirect), 500)
+
+            return
+        }
     }
 
     redirect(url) {
@@ -642,7 +643,7 @@ export default class Component {
                 if (typeof property === 'string' && property.match(/^emit.*/)) return function (...args) {
                     if (property === 'emitSelf') return store.emitSelf(component.id, ...args)
                     if (property === 'emitUp') return store.emitUp(component.el, ...args)
-                    
+
                     return store[property](...args)
                 }
 
