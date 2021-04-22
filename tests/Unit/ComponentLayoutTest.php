@@ -137,7 +137,7 @@ class ComponentWithCustomParams extends Component
 {
     public function render()
     {
-        return view('null-view')->params([
+        return view('null-view')->layoutData([
             'slot' => 'foo'
         ]);
     }
@@ -147,7 +147,7 @@ class ComponentWithCustomParamsAndLayout extends Component
 {
     public function render()
     {
-        return view('null-view')->layout('layouts.app-custom-slot')->params([
+        return view('null-view')->layout('layouts.app-custom-slot')->layoutData([
             'main' => 'foo',
         ]);
     }
