@@ -165,6 +165,10 @@ class LivewireServiceProvider extends ServiceProvider
     {
         // Usage: $this->assertSeeLivewire('counter');
         TestResponse::macro('assertSeeLivewire', function ($component) {
+            if (class_exists($component)) {
+                $component = (new $component())::getName();
+            }
+
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringContainsString(
@@ -178,6 +182,10 @@ class LivewireServiceProvider extends ServiceProvider
 
         // Usage: $this->assertDontSeeLivewire('counter');
         TestResponse::macro('assertDontSeeLivewire', function ($component) {
+            if (class_exists($component)) {
+                $component = (new $component())::getName();
+            }
+
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringNotContainsString(
