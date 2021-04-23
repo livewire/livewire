@@ -10,7 +10,7 @@ Awesome Livewire stuff here: https://github.com/imliam/awesome-livewire
 
 All contributions are welcomed! (but please submit an issue to make sure the PR is warranted first)
 
-Open GitHub issues for all bugs. Ideas and questions belong on the [forum](https://forum.laravel-livewire.com) or [Discord server](https://discord.gg/livewire).
+Open GitHub issues for all bugs. Ideas and questions belong in [Discussions](https://github.com/livewire/livewire/discussions) or [Discord server](https://discord.gg/livewire).
 
 Contribute to the docs here: https://github.com/livewire/docs
 

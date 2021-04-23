@@ -38,12 +38,12 @@ class ViewMacros
         };
     }
 
-    public function params()
+    public function layoutData()
     {
-        return function ($params = []) {
+        return function ($data = []) {
 
             $this->livewireLayout = [
-                'params' => $params,
+                'params' => $data,
             ];
 
             return $this;
