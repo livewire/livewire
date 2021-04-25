@@ -41,10 +41,7 @@ class ViewMacros
     public function layoutData()
     {
         return function ($data = []) {
-
-            $this->livewireLayout = [
-                'params' => $data,
-            ];
+            $this->livewireLayout['params'] = $data;
 
             return $this;
         };
