@@ -79,7 +79,7 @@ class ComponentLayoutTest extends TestCase
         Route::get('/foo', ComponentWithCustomParamsAndLayout::class);
 
         $this->withoutExceptionHandling()->get('/foo')
-            ->assertSee('foo');
+            ->assertSee('livewire');
     }
 }
 
@@ -147,8 +147,8 @@ class ComponentWithCustomParamsAndLayout extends Component
 {
     public function render()
     {
-        return view('null-view')->layout('layouts.app-custom-slot')->layoutData([
-            'main' => 'foo',
+        return view('null-view')->layout('layouts.data-test')->layoutData([
+            'title' => 'livewire',
         ]);
     }
 }
