@@ -58,6 +58,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pagination Default Theme
+    |--------------------------------------------------------------------------
+    |
+    | This value sets the default pagination theme
+    | With this value you don't need to set $paginationTheme property
+    | in Livewire Components,(first $paginationTheme property is checked)
+    |
+    | Examples: "tailwind", "bootstrap".
+    |
+    */
+
+    'pagination_theme' => 'tailwind',
+
+    /*
+    |--------------------------------------------------------------------------
     | Livewire Endpoint Middleware Group
     |--------------------------------------------------------------------------
     |
