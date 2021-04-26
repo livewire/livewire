@@ -31,12 +31,12 @@ trait WithPagination
 
     public function paginationView()
     {
-        return 'livewire::' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
+        return 'livewire::' . $this->getPaginationTheme();
     }
 
     public function paginationSimpleView()
     {
-        return 'livewire::simple-' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
+        return 'livewire::simple-' . $this->getPaginationTheme();
     }
 
     public function previousPage()
@@ -69,5 +69,11 @@ trait WithPagination
         // The "page" query string item should only be available
         // from within the original component mount run.
         return (int) request()->query('page', $this->page);
+    }
+
+    public function getPaginationTheme(){
+        return property_exists($this, 'paginationTheme')
+            ? $this->paginationTheme
+            : config('livewire.pagination_theme', 'tailwind');
     }
 }
