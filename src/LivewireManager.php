@@ -289,8 +289,22 @@ HTML;
         });
     };
 
+    let started = false
+
+    window.addEventListener('alpine:initializing', () => {
+        if (! started) {
+            window.livewire.start();
+
+            started = true
+        }
+    })
+
     document.addEventListener("DOMContentLoaded", function () {
-        window.livewire.start();
+        if (! started) {
+            window.livewire.start();
+
+            started = true
+        }
     });
 </script>
 HTML;

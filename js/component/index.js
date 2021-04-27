@@ -642,7 +642,7 @@ export default class Component {
                 if (typeof property === 'string' && property.match(/^emit.*/)) return function (...args) {
                     if (property === 'emitSelf') return store.emitSelf(component.id, ...args)
                     if (property === 'emitUp') return store.emitUp(component.el, ...args)
-                    
+
                     return store[property](...args)
                 }
 
