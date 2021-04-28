@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class TestableLivewireCanAssertStatusCodesTest extends TestCase
