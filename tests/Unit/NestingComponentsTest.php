@@ -120,12 +120,12 @@ class ParentComponentForNestingChildrenWithWireKeyStub extends Component
     public function render()
     {
         return <<<'blade'
-        <div>
-            @foreach ($children as $child)
-                <livewire:child :name="$child" :wire:key="$child" />
-            @endforeach
-        </div>
-        blade;
+            <div>
+                @foreach ($children as $child)
+                    <livewire:child :name="$child" :wire:key="$child" />
+                @endforeach
+            </div>
+blade;
     }
 }
 
