@@ -14,8 +14,8 @@ return [
     'Knowing others is intelligence; knowing yourself is true wisdom.',
     'If your happiness depends on money, you will never be happy with yourself.',
     'If you look to others for fulfillment, you will never truly be fulfilled.',
-    'To attain knowledge, add things every day; To attain wisdom, subtract things every day',
+    'To attain knowledge, add things every day; To attain wisdom, subtract things every day.',
     'Close your eyes. Count to one. That is how long forever feels.',
-    'The whole world belongs to you',
+    'The whole world belongs to you.',
     'Stop trying to control.',
 ];
