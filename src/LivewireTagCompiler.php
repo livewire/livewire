@@ -80,9 +80,10 @@ class LivewireTagCompiler extends ComponentTagCompiler
 
     protected function componentString(string $component, array $attributes)
     {
-        if (isset($attributes['key'])) {
-            $key = $attributes['key'];
+        if (isset($attributes['key']) || isset($attributes['wire:key'])) {
+            $key = $attributes['key'] ?? $attributes['wire:key'];
             unset($attributes['key']);
+            unset($attributes['wire:key']);
 
             return "@livewire({$component}, [".$this->attributesToString($attributes, $escapeBound = false)."], key({$key}))";
         }
