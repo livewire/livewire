@@ -1,3 +1,4 @@
+import { walk } from './../util/walk'
 import store from '@/Store'
 
 export default function () {
@@ -13,6 +14,18 @@ export default function () {
 }
 
 function refreshAlpineAfterEveryLivewireRequest() {
+    if (isV3()) {
+        store.registerHook('message.processed', (message, livewireComponent) => {
+            walk(livewireComponent.el, el => {
+                if (el._x_effects) {
+                    el._x_effects.forEach(effect => effect.raw())
+                }
+            })
+        })
+
+        return
+    }
+
     if (! window.Alpine.onComponentInitialized) return
 
     window.Alpine.onComponentInitialized(component => {
@@ -288,7 +301,7 @@ function alpinifyElementsForMorphdomV3(from, to) {
             .map(attr => attr.name)
             .some(name => /x-show/.test(name))
     ) {
-        if (from._x_transitioning) {
+        if (from._x_transition) {
             // This covers @entangle('something')
             from.skipElUpdatingButStillUpdateChildren = true
         } else {
@@ -307,6 +320,10 @@ function alpinifyElementsForMorphdomV3(from, to) {
 }
 
 function isHiding(from, to) {
+    if (isV3()) {
+        return from._x_is_shown && ! to._x_is_shown
+    }
+
     if (beforeAlpineTwoPointSevenPointThree()) {
         return from.style.display === '' && to.style.display === 'none'
     }
@@ -315,6 +332,10 @@ function isHiding(from, to) {
 }
 
 function isShowing(from, to) {
+    if (isV3()) {
+        return ! from._x_is_shown && to._x_is_shown
+    }
+
     if (beforeAlpineTwoPointSevenPointThree()) {
         return from.style.display === 'none' && to.style.display === ''
     }

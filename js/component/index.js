@@ -681,7 +681,7 @@ export default class Component {
             },
 
             set: function (obj, prop, value) {
-                component.set(prop, value)
+                component.se(prop, value)
 
                 return true
             },

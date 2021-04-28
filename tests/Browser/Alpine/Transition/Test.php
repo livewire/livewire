@@ -47,6 +47,7 @@ class Test extends TestCase
         $this->browse(function ($browser) {
             Livewire::visit($browser, EntangleDeferComponent::class);
 
+            $browser->tinker();
             // Because this is .defer, we want to mix Alpine and Livewire toggles.
             $this->runThroughTransitions($browser, 'button', 'button');
             $this->runThroughTransitions($browser, 'livewire-button', 'livewire-button');
