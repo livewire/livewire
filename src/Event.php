@@ -51,7 +51,19 @@ class Event
 
         if ($this->up) $output['ancestorsOnly'] = true;
         if ($this->self) $output['selfOnly'] = true;
-        if ($this->component) $output['to'] = $this->component;
+        if ($this->component) {
+            try {
+                if (app($this->component) instanceof Component) {
+                    info('entrou');
+                    $component = Str::afterLast($this->component, '\\');
+                    $this->component = Str::lower(preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $component));
+                }
+            } catch (\Exception $exception) {
+                //
+            }
+            
+            $output['to'] = $this->component;
+        }
 
         return $output;
     }
