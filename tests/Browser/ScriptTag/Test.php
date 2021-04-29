@@ -2,7 +2,6 @@
 
 namespace Tests\Browser\ScriptTag;
 
-use Laravel\Dusk\Browser;
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
 

@@ -3,7 +3,6 @@
 namespace Tests\Browser\Alpine\Transition;
 
 use Livewire\Livewire;
-use Tests\Browser\SyncHistory\ComponentWithAlpineEntangle;
 use Tests\Browser\TestCase;
 
 class Test extends TestCase
