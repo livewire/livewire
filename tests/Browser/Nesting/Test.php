@@ -36,4 +36,17 @@ class Test extends TestCase
             ;
         });
     }
+
+    /** @test */
+    public function it_returns_the_render_context_back_to_the_parent_component_after_sub_component_is_rendered()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, RenderContextComponent::class)
+                ->assertSeeIn('@output.blade-component1', 'Blade 1')
+                ->assertSeeIn('@output.blade-component2', 'Blade 2')
+                ->assertSeeIn('@output.nested', 'Sub render')
+                ->assertSeeIn('@output.blade-component3', 'Blade 3')
+            ;
+        });
+    }
 }
