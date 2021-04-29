@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Str;
+
 class Event
 {
     protected $name;
@@ -54,14 +56,17 @@ class Event
         if ($this->component) {
             try {
                 if (app($this->component) instanceof Component) {
-                    info('entrou');
-                    $component = Str::afterLast($this->component, '\\');
-                    $this->component = Str::lower(preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $component));
+                    $this->component = Str::lower(
+                        preg_replace(
+                            '/([a-zA-Z])(?=[A-Z])/', '$1-',
+                            Str::afterLast($this->component, '\\')
+                        )
+                    );
                 }
             } catch (\Exception $exception) {
                 //
             }
-            
+
             $output['to'] = $this->component;
         }
 
