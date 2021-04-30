@@ -2,8 +2,6 @@
 
 namespace Livewire;
 
-use Illuminate\Support\Str;
-
 class Event
 {
     protected $name;
