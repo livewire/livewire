@@ -110,7 +110,7 @@ class ComponentEventsTest extends TestCase
 
         $component->call('emitToComponentUsingClassname');
 
-        $this->assertTrue(in_array(['to' => 'it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->payload['effects']['emits']));
+        $this->assertTrue(in_array(['to' => 'tests.unit.it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->payload['effects']['emits']));
     }
 }
 

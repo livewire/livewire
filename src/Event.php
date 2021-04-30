@@ -54,17 +54,8 @@ class Event
         if ($this->up) $output['ancestorsOnly'] = true;
         if ($this->self) $output['selfOnly'] = true;
         if ($this->component) {
-            try {
-                if (app($this->component) instanceof Component) {
-                    $this->component = Str::lower(
-                        preg_replace(
-                            '/([a-zA-Z])(?=[A-Z])/', '$1-',
-                            Str::afterLast($this->component, '\\')
-                        )
-                    );
-                }
-            } catch (\Exception $exception) {
-                //
+            if (is_subclass_of($this->component, Component::class)) {
+                $this->component = $this->component::getName();
             }
 
             $output['to'] = $this->component;
