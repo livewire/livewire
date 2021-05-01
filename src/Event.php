@@ -51,13 +51,9 @@ class Event
 
         if ($this->up) $output['ancestorsOnly'] = true;
         if ($this->self) $output['selfOnly'] = true;
-        if ($this->component) {
-            if (is_subclass_of($this->component, Component::class)) {
-                $this->component = $this->component::getName();
-            }
-
-            $output['to'] = $this->component;
-        }
+        if ($this->component) $output['to'] = is_subclass_of($this->component, Component::class)
+            ? $this->component::getName()
+            : $this->component;
 
         return $output;
     }
