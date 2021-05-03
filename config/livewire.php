@@ -110,4 +110,20 @@ return [
 
     'manifest_path' => null,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Serverless Identifier
+    |--------------------------------------------------------------------------
+    |
+    | This value is used to check the $_ENV['SERVER_SOFTWARE'] to determine
+    | the assets and manifest paths.
+    |
+    | Examples:
+    |       - for Laravel Vapor, it would be "vapor".
+    |       - for Bref, it would be "bref".
+    |
+    */
+
+    'serverless_identifier' => 'vapor',
+
 ];

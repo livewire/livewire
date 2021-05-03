@@ -386,7 +386,12 @@ HTML;
 
     public function isOnVapor()
     {
-        return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
+        return $this->isRunningServerless();
+    }
+
+    public function isRunningServerless()
+    {
+        return ($_ENV['SERVER_SOFTWARE'] ?? null) === config('livewire.serverless_identifier');
     }
 
     public function withQueryParams($queryParams)
