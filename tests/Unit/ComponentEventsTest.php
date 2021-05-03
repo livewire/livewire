@@ -102,6 +102,16 @@ class ComponentEventsTest extends TestCase
                 ->emit('bob', 'lob')
                 ->assertSet('foo', 'lob');
     }
+
+    /** @test */
+    public function component_receives_events_emitted_using_classname()
+    {
+        $component = Livewire::test(ReceivesEvents::class);
+
+        $component->call('emitToComponentUsingClassname');
+
+        $this->assertTrue(in_array(['to' => 'tests.unit.it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->payload['effects']['emits']));
+    }
 }
 
 class ReceivesEvents extends Component
@@ -133,6 +143,11 @@ class ReceivesEvents extends Component
     public function emitToGooGone()
     {
         $this->emitTo('goo', 'gone', 'car');
+    }
+
+    public function emitToComponentUsingClassname()
+    {
+        $this->emitTo(ItCanReceiveEventUsingClassname::class, 'foo', 'test');
     }
 
     public function render()
@@ -188,6 +203,25 @@ class DispatchesBrowserEvents extends Component
     public function dispatchFoo()
     {
         $this->dispatchBrowserEvent('foo', ['bar' => 'baz']);
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class ItCanReceiveEventUsingClassname extends Component {
+
+    public $bar;
+
+    public $listeners = [
+        'foo' => 'bar'
+    ];
+
+    public function onBar($value)
+    {
+        $this->bar = $value;
     }
 
     public function render()
