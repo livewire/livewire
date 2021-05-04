@@ -4,25 +4,37 @@ import UploadBag from '../UploadBag'
 class UploadManager {
     constructor(component) {
         this.component = component
-        this.uploadBag = new UploadBag
+        this.uploadBag = new UploadBag(component)
     }
 
     registerListeners() {
         this.component.on('upload:generatedSignedUrl', (name, fileInfo, url) => {
+            this.uploadBag.ensureLoadingStateIsSet(name)
+
             this.uploadBag.get(name, fileInfo.id)
                 .startUpload?.(url)
         })
 
         this.component.on('upload:generatedSignedUrlForS3', (name, fileInfo, payload) => {
+            this.uploadBag.ensureLoadingStateIsSet(name)
+
             this.uploadBag.get(name, fileInfo.id)
                 .startS3Upload?.(payload)
         })
 
         this.component.on('upload:finished', (name, fileInfo) => {
+            this.uploadBag.ensureLoadingStateIsSet(name)
+
+            const isLastOne = this.uploadBag.remaining(name) === 1
+
             this.uploadBag.get(name, fileInfo.id)
-                .markUploadFinished?.()
+                .markUploadFinished?.(isLastOne)
 
             this.uploadBag.remove(name, fileInfo.id)
+
+            if (! this.uploadBag.hasUploads(name)) {
+                this.uploadBag.finished(name)
+            }
         })
 
         // TODO Implement these in PendingUpload as well
@@ -38,6 +50,8 @@ class UploadManager {
 
                 item.requestUpload()
             })
+
+        this.uploadBag.started(name, event.target)
     }
 }
 

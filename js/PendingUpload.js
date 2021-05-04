@@ -1,5 +1,4 @@
 import { v4 as generateUniqueId } from 'uuid'
-import { setUploadLoading, unsetUploadLoading } from './component/LoadingStates'
 import { getCsrfToken } from '@/util'
 
 export default class PendingUpload {
@@ -10,6 +9,7 @@ export default class PendingUpload {
         this.file = file
         this.id = generateUniqueId()
         this.request = null
+        this.previouslySentProgress = 0
     }
 
     fileInfo() {
@@ -23,8 +23,6 @@ export default class PendingUpload {
     }
 
     requestUpload() {
-        setUploadLoading(this.manager.component, this.name)
-
         this.emit('start')
 
         this.manager.component.call('requestUpload', this.name, this.fileInfo())
@@ -33,7 +31,7 @@ export default class PendingUpload {
     emit(event, detail = {}) {
         this.el.dispatchEvent(
             new CustomEvent(
-                `livewire-upload-${event}`,
+                `livewire-upload-file-${event}`,
                 { bubbles: true, detail: { pendingUpload: this, ...detail } }
             )
         )
@@ -41,7 +39,7 @@ export default class PendingUpload {
 
     abort() {
         // Cannot abort the request if it doesn't exist, or is not processing still.
-        if (!this.request || this.request?.status !== 0) return
+        if (! this.request || this.request?.status !== 0) return
 
         this.request?.abort()
 
@@ -49,8 +47,6 @@ export default class PendingUpload {
     }
 
     startUpload(url) {
-        setUploadLoading(this.manager.component, this.name)
-
         let formData = new FormData()
         formData.append('files[]', this.file)
 
@@ -65,7 +61,7 @@ export default class PendingUpload {
             method: 'post',
 
             success: response => {
-                if (!response.paths.length) return // Should this throw an error?
+                if (! response.paths.length) return // Should this throw an error?
 
                 this.finishUpload(response.paths[0])
             },
@@ -75,8 +71,6 @@ export default class PendingUpload {
     }
 
     startS3Upload(payload) {
-        setUploadLoading(this.manager.component, this.name)
-
         if ('Host' in payload.headers) delete payload.headers.Host
 
         this.request = this.makeRequest({
@@ -93,10 +87,12 @@ export default class PendingUpload {
         this.manager.component.call('finishUpload', this.name, this.fileInfo(), path)
     }
 
-    markUploadFinished() {
-        unsetUploadLoading(this.manager.component)
-
+    markUploadFinished(isLastOne = false) {
         this.emit('finish')
+
+        if (isLastOne) {
+            this.manager.uploadBag.emit(this.el, this.name, 'finish')
+        }
     }
 
     makeRequest({ formData, method, url, headers, success, error }) {
@@ -112,6 +108,16 @@ export default class PendingUpload {
             const progress = Math.round((event.loaded * 100) / event.total)
 
             this.emit('progress', { progress })
+
+            // We're only sending the upload bag the actual difference in bytes
+            // sent since the last `ProgressEvent` was fired by the upload. This
+            // let's us track overall progress of the upload bag.
+            let progressToSend = event.loaded
+            if (this.previouslySentProgress !== 0) progressToSend -= this.previouslySentProgress
+
+            this.manager.uploadBag.progressed(this.el, this.name, progressToSend)
+
+            this.previouslySentProgress = event.loaded
         })
 
         request.addEventListener('load', () => {
