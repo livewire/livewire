@@ -17,7 +17,7 @@ export default {
         file: 'dist/livewire.js',
     },
     plugins: [
-        resolve(),
+        resolve({ browser: true }),
         commonjs({
             // These npm packages still use common-js modules. Ugh.
             include: /node_modules\/(get-value|isobject|core-js)/,

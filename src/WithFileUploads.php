@@ -5,43 +5,31 @@ namespace Livewire;
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Illuminate\Validation\ValidationException;
-use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
 trait WithFileUploads
 {
-    public function startUpload($name, $fileInfo, $isMultiple)
+    public function requestUpload($name, $fileInfo)
     {
         if (FileUploadConfiguration::isUsingS3()) {
-            throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
+            $file = UploadedFile::fake()
+                ->create($fileInfo['name'], $fileInfo['size'] / 1024, $fileInfo['type']);
 
-            $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
-
-            $this->emit('upload:generatedSignedUrlForS3', $name, GenerateSignedUploadUrl::forS3($file))->self();
-
-            return;
+            return $this->emitSelf('upload:generatedSignedUrlForS3', $name, $fileInfo, GenerateSignedUploadUrl::forS3($file));
         }
 
-        $this->emit('upload:generatedSignedUrl', $name, GenerateSignedUploadUrl::forLocal())->self();
+        $this->emitSelf('upload:generatedSignedUrl', $name, $fileInfo, GenerateSignedUploadUrl::forLocal());
     }
 
-    public function finishUpload($name, $tmpPath, $isMultiple)
+    public function finishUpload($name, $fileInfo, $path)
     {
         $this->cleanupOldUploads();
 
-        if ($isMultiple) {
-            $file = collect($tmpPath)->map(function ($i) {
-                return TemporaryUploadedFile::createFromLivewire($i);
-            })->toArray();
-            $this->emit('upload:finished', $name, collect($file)->map->getFilename()->toArray())->self();
-        } else {
-            $file = TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
-            $this->emit('upload:finished', $name, [$file->getFilename()])->self();
+        $file = TemporaryUploadedFile::createFromLivewire($path);
 
-            // If the property is an array, but the upload ISNT set to "multiple"
-            // then APPEND the upload to the array, rather than replacing it.
-            if (is_array($value = $this->getPropertyValue($name))) {
-                $file = array_merge($value, [$file]);
-            }
+        $this->emitSelf('upload:finished', $name, $fileInfo);
+
+        if (is_array($value = $this->getPropertyValue($name)) || (bool) $fileInfo['multiple']) {
+            $file = array_merge((array) $value, [$file]);
         }
 
         $this->syncInput($name, $file);

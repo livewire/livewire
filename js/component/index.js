@@ -570,36 +570,8 @@ export default class Component {
         this.tearDownCallbacks.forEach(callback => callback())
     }
 
-    upload(
-        name,
-        file,
-        finishCallback = () => { },
-        errorCallback = () => { },
-        progressCallback = () => { }
-    ) {
-        this.uploadManager.upload(
-            name,
-            file,
-            finishCallback,
-            errorCallback,
-            progressCallback
-        )
-    }
-
-    uploadMultiple(
-        name,
-        files,
-        finishCallback = () => { },
-        errorCallback = () => { },
-        progressCallback = () => { }
-    ) {
-        this.uploadManager.uploadMultiple(
-            name,
-            files,
-            finishCallback,
-            errorCallback,
-            progressCallback
-        )
+    upload(name, event) {
+        this.uploadManager.handle(name, event)
     }
 
     removeUpload(
@@ -642,7 +614,7 @@ export default class Component {
                 if (typeof property === 'string' && property.match(/^emit.*/)) return function (...args) {
                     if (property === 'emitSelf') return store.emitSelf(component.id, ...args)
                     if (property === 'emitUp') return store.emitUp(component.el, ...args)
-                    
+
                     return store[property](...args)
                 }
 

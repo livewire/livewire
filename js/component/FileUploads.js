@@ -1,32 +1,20 @@
 import store from '@/Store'
 
+function isFileInput(el) {
+    return el.tagName.toLowerCase() === 'input'
+        && el.type === 'file'
+}
+
 export default function () {
     store.registerHook('interceptWireModelAttachListener', (directive, el, component) => {
-        if (! (el.tagName.toLowerCase() === 'input' && el.type === 'file')) return
+        if (!isFileInput(el)) return
 
-        let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true }))
-        let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true }))
-        let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
-        let progress = (progressEvent) => {
-            var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
+        let eventHandler = event => {
+            if (event.target.files.length === 0) return
 
-            el.dispatchEvent(
-                new CustomEvent('livewire-upload-progress', {
-                    bubbles: true, detail: { progress: percentCompleted }
-                })
-            )
-        }
+            // TODO Handle wire:model.defer?
 
-        let eventHandler = e => {
-            if (e.target.files.length === 0) return
-
-            start()
-
-            if (e.target.multiple) {
-                component.uploadMultiple(directive.value, e.target.files, finish, error, progress)
-            } else {
-                component.upload(directive.value, e.target.files[0], finish, error, progress)
-            }
+            component.upload(directive.value, event)
         }
 
         el.addEventListener('change', eventHandler)
