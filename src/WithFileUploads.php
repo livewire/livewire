@@ -24,7 +24,7 @@ trait WithFileUploads
     {
         $this->cleanupOldUploads();
 
-        $file = $this->createTemporaryUploadedFile($path);
+        $file = TemporaryUploadedFile::createFromLivewire($path);
 
         $this->emitSelf('upload:finished', $name, $fileInfo);
 
@@ -75,11 +75,6 @@ trait WithFileUploads
 
             if ($uploads->getFilename() === $tmpFilename) $this->syncInput($name, null);
         }
-    }
-
-    protected function createTemporaryUploadedFile($path): TemporaryUploadedFile
-    {
-        return TemporaryUploadedFile::createFromLivewire($path);
     }
 
     protected function cleanupOldUploads()
