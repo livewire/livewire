@@ -27,6 +27,11 @@ class TemporaryUploadedFile extends UploadedFile
         }
     }
 
+    public function getPath()
+    {
+        return $this->path;
+    }
+
     public function isValid()
     {
         return true;
