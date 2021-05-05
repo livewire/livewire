@@ -51,6 +51,7 @@ class LivewireServiceProvider extends ServiceProvider
     public function register()
     {
         $this->registerConfig();
+        $this->registerFacades();
         $this->registerTestMacros();
         $this->registerLivewireSingleton();
         $this->registerComponentAutoDiscovery();
@@ -80,6 +81,11 @@ class LivewireServiceProvider extends ServiceProvider
                 \App\Http\Middleware\TrimStrings::class,
             ]);
         }
+    }
+
+    protected function registerFacades()
+    {
+        $this->app->bind('livewire.temporary_uploaded_file', TemporaryUploadedFile::class);
     }
 
     protected function registerLivewireSingleton()
