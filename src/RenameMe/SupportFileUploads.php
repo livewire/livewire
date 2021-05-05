@@ -3,8 +3,8 @@
 namespace Livewire\RenameMe;
 
 use Livewire\Livewire;
+use Livewire\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
-use Livewire\Facades\TemporaryUploadedFile;
 
 class SupportFileUploads
 {
