@@ -21,6 +21,10 @@ class TemporaryUploadedFile extends UploadedFile
         $tmpFile = tmpfile();
 
         parent::__construct(stream_get_meta_data($tmpFile)['uri'], $this->path);
+
+        if ($decorator = config('livewire.temporary_file_upload.decorator')) {
+            resolve($decorator)($this);
+        }
     }
 
     public function isValid()
