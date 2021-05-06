@@ -75,7 +75,9 @@ trait HandlesActions
 
         $name = $name->__toString();
 
-        $this->updating($name, $value);
+        if ($this->updating($name, $value) === false) {
+            return;
+        }
 
         if (method_exists($this, $beforeMethod)) {
             $this->{$beforeMethod}($value, $keyAfterFirstDot);
