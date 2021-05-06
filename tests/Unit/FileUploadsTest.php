@@ -246,7 +246,7 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function a_file_can_be_valited_in_real_time()
+    public function a_file_can_be_validated_in_real_time()
     {
         Storage::fake('avatars');
 
@@ -258,7 +258,7 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function multiple_files_can_be_valited_in_real_time()
+    public function multiple_files_can_be_validated_in_real_time()
     {
         Storage::fake('avatars');
 
