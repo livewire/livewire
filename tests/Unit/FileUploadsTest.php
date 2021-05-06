@@ -271,6 +271,27 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function file_upload_global_validation_can_be_translated()
+    {
+        Storage::fake('avatars');
+
+        $translator = app()->make('translator');
+        $translator->addLines([
+            'validation.uploaded' => 'The :attribute failed to upload.',
+            'validation.attributes.file' => 'upload'
+        ], 'en');
+
+        $file = UploadedFile::fake()->create('upload.xls', 100);
+
+        $test = Livewire::test(FileUploadComponent::class)
+            ->set('file', $file)
+            ->call('uploadError', 'file')
+            ->assertHasErrors(['file']);
+
+        $this->assertEquals('The upload failed to upload.', $test->lastErrorBag->get('file')[0]);
+    }
+
+    /** @test */
     public function image_dimensions_can_be_validated()
     {
         Storage::fake('avatars');
@@ -597,6 +618,7 @@ class FileUploadComponent extends Component
 {
     use WithFileUploads;
 
+    public $file;
     public $photo;
     public $photos;
     public $photosArray = [];
@@ -659,6 +681,11 @@ class FileUploadComponent extends Component
 
     public function removePhoto($key) {
         unset($this->photos[$key]);
+    }
+
+    public function uploadError($name)
+    {
+        $this->uploadErrored($name, null, false);
     }
 
     public function render() { return app('view')->make('null-view'); }
