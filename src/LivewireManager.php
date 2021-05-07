@@ -384,6 +384,11 @@ HTML;
         $this->listeners[$event][] = $callback;
     }
 
+    public function isOnVapor()
+    {
+        return $this->isRunningServerless();
+    }
+
     public function isRunningServerless()
     {
         return in_array($_ENV['SERVER_SOFTWARE'] ?? null, [
