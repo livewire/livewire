@@ -80,11 +80,15 @@ trait HandlesActions
         }
 
         if (method_exists($this, $beforeMethod)) {
-            $this->{$beforeMethod}($value, $keyAfterFirstDot);
+            if ($this->{$beforeMethod}($value, $keyAfterFirstDot) === false) {
+                return;
+            }
         }
 
         if ($beforeNestedMethod && method_exists($this, $beforeNestedMethod)) {
-            $this->{$beforeNestedMethod}($value, $keyAfterLastDot);
+            if ($this->{$beforeNestedMethod}($value, $keyAfterLastDot) === false) {
+                return;
+            }
         }
 
         Livewire::dispatch('component.updating', $this, $name, $value);
