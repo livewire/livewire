@@ -53,6 +53,7 @@ class Component extends BaseComponent
                                 wire:model="author.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment"
                                 />
                             <span dusk='output.author.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment'>{{ $comment->comment }}</span>
+
                             Commment Author Name
                             <input
                                 dusk='author.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name'
