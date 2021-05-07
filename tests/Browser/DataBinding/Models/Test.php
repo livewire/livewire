@@ -33,16 +33,16 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
-                ->type('@author.name', 'Steve')
-                ->waitForLivewire()->assertSeeIn('@output.author.name', 'Steve')
+                ->waitForLivewire()->type('@author.name', 'Steve')
+                ->assertSeeIn('@output.author.name', 'Steve')
 
-                ->type('@author.posts.0.title', 'Article 1')
-                ->waitForLivewire()->assertSeeIn('@output.author.posts.0.title', 'Article 1')
+                ->waitForLivewire()->type('@author.posts.0.title', 'Article 1')
+                ->assertSeeIn('@output.author.posts.0.title', 'Article 1')
 
-                ->type('@author.posts.0.comments.0.comment', 'Message 1')
+                ->waitForLivewire()->type('@author.posts.0.comments.0.comment', 'Message 1')
                 ->assertSeeIn('@output.author.posts.0.comments.0.comment', 'Message 1')
 
-                ->type('@author.posts.0.comments.1.author.name', 'Mike')
+                ->waitForLivewire()->type('@author.posts.0.comments.1.author.name', 'Mike')
                 ->assertSeeIn('@output.author.posts.0.comments.1.author.name', 'Mike')
                 ;
         });
