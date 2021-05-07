@@ -11,18 +11,43 @@ use Tests\Browser\TestCase;
 class Test extends TestCase
 {
     /** @test */
-    public function something_works()
+    public function it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
-                ->tinker()
-                /**
-                 * Standard select.
-                 */
-                // ->assertDontSeeIn('@single.output', 'bar')
-                // ->waitForLivewire()->select('@single.input', 'bar')
-                // ->assertSelected('@single.input', 'bar')
-                // ->assertSeeIn('@single.output', 'bar')
+                ->assertValue('@authors.0.name', 'Bob')
+                ->assertValue('@authors.0.email', 'bob@bob.com')
+                ->assertValue('@authors.0.posts.0.title', 'Post 1')
+                ->assertValue('@authors.0.posts.0.comments.0.comment', 'Comment 1')
+                ->assertValue('@authors.0.posts.0.comments.0.author.name', 'Bob')
+                ->assertValue('@authors.0.posts.0.comments.1.comment', 'Comment 2')
+                ->assertValue('@authors.0.posts.0.comments.1.author.name', 'John')
+                ->assertValue('@authors.0.posts.1.title', 'Post 2')
+                ->assertValue('@authors.1.name', 'John')
+                ->assertValue('@authors.1.email', 'john@john.com')
+                ;
+        });
+    }
+
+    /** @test */
+    public function it_allows_nested_data_to_be_changed()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, Component::class)
+                ->waitForLivewire()->type('@authors.0.name', 'Steve')
+                ->assertSeeIn('@output.authors.0.name', 'Steve')
+
+                ->waitForLivewire()->type('@authors.0.posts.0.title', 'Article 1')
+                ->assertSeeIn('@output.authors.0.posts.0.title', 'Article 1')
+
+                ->waitForLivewire()->type('@authors.0.posts.0.comments.0.comment', 'Message 1')
+                ->assertSeeIn('@output.authors.0.posts.0.comments.0.comment', 'Message 1')
+
+                ->waitForLivewire()->type('@authors.0.posts.0.comments.1.author.name', 'Mike')
+                ->assertSeeIn('@output.authors.0.posts.0.comments.1.author.name', 'Mike')
+
+                ->waitForLivewire()->type('@authors.1.name', 'Taylor')
+                ->assertSeeIn('@output.authors.1.name', 'Taylor')
                 ;
         });
     }
