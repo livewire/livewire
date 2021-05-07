@@ -40,13 +40,6 @@ class PublicPropertyDehydrationTest extends TestCase
             $table->foreignId('author_id');
             $table->timestamps();
         });
-
-        // $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
-
-        // ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
-        // ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
-
-        // $models = ModelForSerialization::all();
     }
 
     /** @test */
