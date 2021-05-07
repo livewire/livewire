@@ -28,24 +28,24 @@ class Component extends BaseComponent
         <<<'HTML'
 <div>
     <div>
-        Author Name<input dusk='author-name' wire:model='author.name' />
-        Author Email<input dusk='author-email' wire:model='author.email' />
+        Author Name<input dusk='author.name' wire:model='author.name' />
+        Author Email<input dusk='author.email' wire:model='author.email' />
     </div>
 
     <div>
         @foreach($author->posts as $postKey => $post)
             <div>
-                Post Title<input dusk='post-{{ $post->id }}-title' wire:model="author.posts.{{ $postKey }}.title" />
+                Post Title<input dusk='author.posts.{{ $postKey }}.title' wire:model="author.posts.{{ $postKey }}.title" />
 
                 <div>
                     @foreach($post->comments as $commentKey => $comment)
                         <div>
                             Comment Comment<input
-                                dusk='comment-{{ $comment->id }}-comment'
+                                dusk='author.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment'
                                 wire:model="author.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment"
                                 />
                             Commment Author Name<input
-                                dusk='comment-{{ $comment->id }}-comment'
+                                dusk='author.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name'
                                 wire:model="author.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name"
                                 />
                         </div>
