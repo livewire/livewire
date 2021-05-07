@@ -162,7 +162,7 @@ class HydratePublicProperties implements HydrationMiddleware
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
 
-        $filteredModelData = static::filterData2($instance, $property);
+        $filteredModelData = static::filterData($instance, $property);
 
         // Only include the allowed data (defined by rules) in the response payload
         data_set($response, 'memo.data.'.$property, $filteredModelData);
@@ -175,13 +175,13 @@ class HydratePublicProperties implements HydrationMiddleware
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.modelCollections.'.$property, $serializedModel);
 
-        $filteredModelData = static::filterData2($instance, $property);
+        $filteredModelData = static::filterData($instance, $property);
 
         // Only include the allowed data (defined by rules) in the response payload
         data_set($response, 'memo.data.'.$property, $filteredModelData);
     }
 
-    public static function filterData2($instance, $property) {
+    public static function filterData($instance, $property) {
         $data = $instance->$property->toArray();
 
         $rules = $instance->rulesForModel($property)->keys();
