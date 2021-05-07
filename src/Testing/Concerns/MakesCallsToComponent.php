@@ -112,10 +112,20 @@ trait MakesCallsToComponent
         // We are going to encode the file size in the filename so that when we create
         // a new TemporaryUploadedFile instance we can fake a specific file size.
         $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
+            // Skip appending file sizes in the file name of blank file
+            // Because testing the maximum length of file name cause that throwing "File name too long" errors.
+            if ($file->getSize() === 0) {
+                return $fileHash;
+            }
+
             return (string) str($fileHash)->replaceFirst('.', "-size={$file->getSize()}.");
         })->toArray();
 
         collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
+            if ($fileHash == $newFileHash) {
+                return;
+            }
+
             $storage->move('/'.FileUploadConfiguration::path($fileHash), '/'.FileUploadConfiguration::path($newFileHash));
         });
 

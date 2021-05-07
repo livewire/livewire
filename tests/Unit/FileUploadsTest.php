@@ -597,6 +597,20 @@ class FileUploadsTest extends TestCase
         $this->assertStringStartsWith('livewire-file:', $component->get('obj.file_uploads'));
     }
 
+    /** @test */
+    public function generated_hash_names_cant_be_longer_than_256_characters()
+    {
+        Storage::fake('avatars');
+
+        // Random string(30) + '-meta'(5) + Encoded filename(216) + '-.txt'(5) = 256 characters
+        $originalFilename = str_repeat('a', 156).'.txt';
+
+        $file = UploadedFile::fake()->create($originalFilename, 0); // Blank file
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('file', $file)
+            ->assertHasErrors('file');
+    }
 }
 
 class DummyMiddleware

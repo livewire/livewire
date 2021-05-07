@@ -2,9 +2,11 @@
 
 namespace Livewire\Controllers;
 
+use function Livewire\str;
 use Livewire\TemporaryUploadedFile;
 use Livewire\FileUploadConfiguration;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class FileUploadHandler
 {
@@ -35,6 +37,10 @@ class FileUploadHandler
 
         $fileHashPaths = collect($files)->map(function ($file) use ($disk) {
             $filename = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
+
+            if (str($filename)->length() >= 256) {
+                throw ValidationException::withMessages(['files.0' => 'File name too long']);
+            }
 
             return $file->storeAs('/'.FileUploadConfiguration::path(), $filename, [
                 'disk' => $disk
