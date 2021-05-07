@@ -162,18 +162,7 @@ class HydratePublicProperties implements HydrationMiddleware
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
 
-        $filteredModelData = [];
-        if ($rules = $instance->rulesForModel($property)) {
-            $keys = $rules->keys()->map(function ($key) use ($instance) {
-                return $instance->beforeFirstDot($instance->afterFirstDot($key));
-            });
-
-            $fullModelData = $instance->$property->toArray();
-
-            foreach ($keys as $key) {
-                data_set($filteredModelData, $key, data_get($fullModelData, $key));
-            }
-        }
+        $filteredModelData = static::filterData2($instance, $property);
 
         // Only include the allowed data (defined by rules) in the response payload
         data_set($response, 'memo.data.'.$property, $filteredModelData);
@@ -186,7 +175,7 @@ class HydratePublicProperties implements HydrationMiddleware
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.modelCollections.'.$property, $serializedModel);
 
-        $filteredModelData = static::filterData($instance->$property, $instance->rulesForModel($property)->keys());
+        $filteredModelData = static::filterData2($instance, $property);
 
         // Only include the allowed data (defined by rules) in the response payload
         data_set($response, 'memo.data.'.$property, $filteredModelData);
@@ -233,14 +222,14 @@ class HydratePublicProperties implements HydrationMiddleware
         return $filteredModelData;
     }
 
-    public static function filterData2($data, $rules) {
-        $filteredData = [];
+    public static function filterData2($instance, $property) {
+        $data = $instance->$property->toArray();
 
-        $rules = static::processRules($rules);
+        $rules = $instance->rulesForModel($property)->keys();
 
-        $filteredData = static::extractData($data, $rules, $filteredData);
+        $rules = static::processRules($rules)->get($property, []);
 
-        return $filteredData;
+        return static::extractData($data, $rules, []);
     }
 
     public static function processRules($rules) {
@@ -286,7 +275,7 @@ class HydratePublicProperties implements HydrationMiddleware
                     }
                 }
             } else {
-                if (is_array($rule)) {
+                if (is_array($rule) || $rule instanceof Collection) {
                     data_set($filteredData, $key, static::extractData(data_get($data, $key), $rule, []));
                 } else {
                     if(isset($data[$rule])) {
