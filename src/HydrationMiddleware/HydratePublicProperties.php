@@ -181,47 +181,6 @@ class HydratePublicProperties implements HydrationMiddleware
         data_set($response, 'memo.data.'.$property, $filteredModelData);
     }
 
-    public static function filterData($data, $rules) {
-        $filteredModelData = [];
-
-          if ($rules) {
-            $keys = collect($rules)
-                ->mapInto(Stringable::class)
-                ->filter->contains('*.')
-                ->map->after('*.');
-
-            $fullModelData = $data->map->toArray();
-
-            foreach ($fullModelData as $index => $fullData) {
-                $filteredModelData[$index] = [];
-
-                $nestedKeys = [];
-
-                foreach ($keys as $key) {
-                  if($key->contains('.*.')) {
-                    $nestedKeys[] = $key;
-                  } else {
-                    data_fill($filteredModelData[$index], $key, data_get($fullData, $key));
-                  }
-                }
-
-                if ($nestedKeys) {
-                    $nestedKeys = collect($nestedKeys)
-                        ->mapToGroups(function($key){
-                            return [$key->before('.*.')->__toString() => $key->__toString()];
-                        });
-
-                    foreach($nestedKeys as $key => $rules) {
-                        $results = static::filterData(data_get($data[$index], $key), $rules);
-                        data_fill($filteredModelData[$index], $key, $results);
-                    }
-                }
-            }
-        }
-
-        return $filteredModelData;
-    }
-
     public static function filterData2($instance, $property) {
         $data = $instance->$property->toArray();
 
