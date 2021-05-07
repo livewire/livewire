@@ -33,29 +33,17 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
-                // ->tinker()
-                ->assertValue('@author.name', 'Bob')
-                ->assertValue('@author.email', 'bob@bob.com')
-                ->assertValue('@author.posts.0.title', 'Post 1')
-                ->assertValue('@author.posts.0.comments.0.comment', 'Comment 1')
-                ->assertValue('@author.posts.0.comments.0.author.name', 'Bob')
-                ->assertValue('@author.posts.0.comments.1.comment', 'Comment 2')
-                ->assertValue('@author.posts.0.comments.1.author.name', 'John')
-                ->assertValue('@author.posts.1.title', 'Post 2')
-
                 ->type('@author.name', 'Steve')
-                ->waitForLivewire()->assertValue('@author.name', 'Steve')
-
-                ->tinker()
+                ->waitForLivewire()->assertSeeIn('@output.author.name', 'Steve')
 
                 ->type('@author.posts.0.title', 'Article 1')
-                ->waitForLivewire()->assertValue('@author.posts.0.title', 'Article 1')
+                ->waitForLivewire()->assertSeeIn('@output.author.posts.0.title', 'Article 1')
 
                 ->type('@author.posts.0.comments.0.comment', 'Message 1')
-                ->assertValue('@author.posts.0.comments.0.comment', 'Message 1')
+                ->assertSeeIn('@output.author.posts.0.comments.0.comment', 'Message 1')
 
                 ->type('@author.posts.0.comments.1.author.name', 'Mike')
-                ->assertValue('@author.posts.0.comments.1.author.name', 'Mike')
+                ->assertSeeIn('@output.author.posts.0.comments.1.author.name', 'Mike')
                 ;
         });
     }
