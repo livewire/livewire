@@ -91,7 +91,9 @@ trait HandlesActions
             }
         }
 
-        Livewire::dispatch('component.updating', $this, $name, $value);
+        if (Livewire::dispatch('component.updating', $this, $name, $value) === false) {
+            return;
+        }
 
         $callback($name, $value);
 

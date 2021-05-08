@@ -52,11 +52,16 @@ class SupportComponentTraits
         });
 
         Livewire::listen('component.updating', function ($component, $name, $value) {
+            $continue = true;
             $methods = $this->componentIdMethodMap[$component->id]['updating'] ?? [];
 
             foreach ($methods as $method) {
-                ImplicitlyBoundMethod::call(app(), $method, [$name, $value]);
+                if (ImplicitlyBoundMethod::call(app(), $method, [$name, $value]) === false) {
+                    $continue = false;
+                }
             }
+
+            return $continue;
         });
 
         Livewire::listen('component.updated', function ($component, $name, $value) {
