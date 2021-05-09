@@ -129,7 +129,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 $models->splice($index, 0, [$model]);
             }
 
-            static::setDirtyData(data_get($models, $index), data_get($dirtyModelData, $index));
+            static::setDirtyData(data_get($models, $index), data_get($dirtyModelData, $index, []));
         }
 
         $instance->$property = $models;
