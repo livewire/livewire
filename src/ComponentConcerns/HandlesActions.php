@@ -91,7 +91,7 @@ trait HandlesActions
             }
         }
 
-        if (Livewire::dispatch('component.updating', $this, $name, $value) === false) {
+        if (Livewire::dispatchStrict('component.updating', $this, $name, $value) === false) {
             return;
         }
 

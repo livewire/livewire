@@ -374,15 +374,18 @@ HTML;
 
     public function dispatch($event, ...$params)
     {
-        $continue = true;
+        foreach ($this->listeners[$event] ?? [] as $listener) {
+            $listener(...$params);
+        }
+    }
 
+    public function dispatchStrict($event, ...$params)
+    {
         foreach ($this->listeners[$event] ?? [] as $listener) {
             if ($listener(...$params) === false) {
-                $continue = false;
+                return false;
             }
         }
-
-        return $continue;
     }
 
     public function listen($event, $callback)
