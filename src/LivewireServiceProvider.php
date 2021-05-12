@@ -183,17 +183,19 @@ class LivewireServiceProvider extends ServiceProvider
             return $this;
         });
 
-        TestView::macro('assertSeeLivewire', function ($component) {
-            (new Assertions($this->rendered, $component))->seeComponent();
+        if (class_exists(TestView::class)) {
+            TestView::macro('assertSeeLivewire', function ($component) {
+                (new Assertions($this->rendered, $component))->seeComponent();
 
-            return $this;
-        });
+                return $this;
+            });
 
-        TestView::macro('assertDontSeeLivewire', function ($component) {
-            (new Assertions($this->rendered, $component))->dontSeeComponent();
+            TestView::macro('assertDontSeeLivewire', function ($component) {
+                (new Assertions($this->rendered, $component))->dontSeeComponent();
 
-            return $this;
-        });
+                return $this;
+            });
+        }
     }
 
     protected function registerViewMacros()

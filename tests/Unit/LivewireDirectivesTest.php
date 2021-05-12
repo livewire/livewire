@@ -176,6 +176,10 @@ class LivewireDirectivesTest extends TestCase
     /** @test */
     public function can_assert_see_livewire_on_test_view()
     {
+        if(! class_exists(TestView::class)) {
+            self::markTestSkipped('Need Laravel >= 8');
+        }
+
         Artisan::call('make:livewire', ['name' => 'foo']);
 
         $testView = new TestView(view('render-component', [
@@ -188,6 +192,10 @@ class LivewireDirectivesTest extends TestCase
     /** @test */
     public function can_assert_dont_see_livewire_on_test_view()
     {
+        if(! class_exists(TestView::class)) {
+            self::markTestSkipped('Need Laravel >= 8');
+        }
+
         Artisan::call('make:livewire', ['name' => 'foo']);
 
         $testView = new TestView(view('null-view'));
