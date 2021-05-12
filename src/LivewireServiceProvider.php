@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Illuminate\View\View;
+use Illuminate\Testing\TestView;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
@@ -31,6 +32,8 @@ use Livewire\Commands\{
     S3CleanupCommand,
     MakeLivewireCommand,
 };
+use Livewire\Macros\ViewMacros;
+use Livewire\Testing\Assertions;
 use Livewire\HydrationMiddleware\{
     RenderView,
     PerformActionCalls,
@@ -44,7 +47,6 @@ use Livewire\HydrationMiddleware\{
     NormalizeServerMemoSansDataForJavaScript,
     NormalizeComponentPropertiesForJavaScript,
 };
-use Livewire\Macros\ViewMacros;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -169,34 +171,26 @@ class LivewireServiceProvider extends ServiceProvider
     {
         // Usage: $this->assertSeeLivewire('counter');
         TestResponse::macro('assertSeeLivewire', function ($component) {
-            if (is_subclass_of($component, Component::class)) {
-                $component = $component::getName();
-            }
-
-            $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
-
-            \PHPUnit\Framework\Assert::assertStringContainsString(
-                $escapedComponentName,
-                $this->getContent(),
-                'Cannot find Livewire component ['.$component.'] rendered on page.'
-            );
+            (new Assertions($this->getContent(), $component))->seeComponent();
 
             return $this;
         });
 
         // Usage: $this->assertDontSeeLivewire('counter');
         TestResponse::macro('assertDontSeeLivewire', function ($component) {
-            if (is_subclass_of($component, Component::class)) {
-                $component = $component::getName();
-            }
+            (new Assertions($this->getContent(), $component))->dontSeeComponent();
 
-            $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+            return $this;
+        });
 
-            \PHPUnit\Framework\Assert::assertStringNotContainsString(
-                $escapedComponentName,
-                $this->getContent(),
-                'Found Livewire component ['.$component.'] rendered on page.'
-            );
+        TestView::macro('assertSeeLivewire', function ($component) {
+            (new Assertions($this->rendered, $component))->seeComponent();
+
+            return $this;
+        });
+
+        TestView::macro('assertDontSeeLivewire', function ($component) {
+            (new Assertions($this->rendered, $component))->dontSeeComponent();
 
             return $this;
         });
