@@ -96,7 +96,7 @@ class LivewireServiceProvider extends ServiceProvider
         // alias. For instance: 'examples.foo' => App\Http\Livewire\Examples\Foo
 
         // We will generate a manifest file so we don't have to do the lookup every time.
-        $defaultManifestPath = $this->app['livewire']->isOnVapor()
+        $defaultManifestPath = $this->app['livewire']->isRunningServerless()
             ? '/tmp/storage/bootstrap/cache/livewire-components.php'
             : app()->bootstrapPath('cache/livewire-components.php');
 
