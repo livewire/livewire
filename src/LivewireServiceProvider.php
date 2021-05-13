@@ -33,7 +33,6 @@ use Livewire\Commands\{
     MakeLivewireCommand,
 };
 use Livewire\Macros\ViewMacros;
-use Livewire\Testing\Assertions;
 use Livewire\HydrationMiddleware\{
     RenderView,
     PerformActionCalls,
@@ -171,27 +170,67 @@ class LivewireServiceProvider extends ServiceProvider
     {
         // Usage: $this->assertSeeLivewire('counter');
         TestResponse::macro('assertSeeLivewire', function ($component) {
-            (new Assertions($this->getContent(), $component))->seeComponent();
+            if (is_subclass_of($component, Component::class)) {
+                $component = $component::getName();
+            }
+
+            $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+            \PHPUnit\Framework\Assert::assertStringContainsString(
+                $escapedComponentName,
+                $this->getContent(),
+                'Cannot find Livewire component ['.$component.'] rendered on page.'
+            );
 
             return $this;
         });
 
         // Usage: $this->assertDontSeeLivewire('counter');
         TestResponse::macro('assertDontSeeLivewire', function ($component) {
-            (new Assertions($this->getContent(), $component))->dontSeeComponent();
+            if (is_subclass_of($component, Component::class)) {
+                $component = $component::getName();
+            }
+
+            $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+            \PHPUnit\Framework\Assert::assertStringNotContainsString(
+                $escapedComponentName,
+                $this->getContent(),
+                'Found Livewire component ['.$component.'] rendered on page.'
+            );
 
             return $this;
         });
 
         if (class_exists(TestView::class)) {
             TestView::macro('assertSeeLivewire', function ($component) {
-                (new Assertions($this->rendered, $component))->seeComponent();
+                if (is_subclass_of($component, Component::class)) {
+                    $component = $component::getName();
+                }
+
+                $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+                \PHPUnit\Framework\Assert::assertStringContainsString(
+                    $escapedComponentName,
+                    $this->rendered,
+                    'Cannot find Livewire component ['.$component.'] rendered on page.'
+                );
 
                 return $this;
             });
 
             TestView::macro('assertDontSeeLivewire', function ($component) {
-                (new Assertions($this->rendered, $component))->dontSeeComponent();
+                if (is_subclass_of($component, Component::class)) {
+                    $component = $component::getName();
+                }
+
+                $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+                \PHPUnit\Framework\Assert::assertStringNotContainsString(
+                    $escapedComponentName,
+                    $this->rendered,
+                    'Found Livewire component ['.$component.'] rendered on page.'
+                );
 
                 return $this;
             });
