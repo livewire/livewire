@@ -5,3 +5,4 @@ COMMIT_MSG.aim.txt
 composer.lock
 .phpunit.result.cache
 .idea
+phpunit.xml
