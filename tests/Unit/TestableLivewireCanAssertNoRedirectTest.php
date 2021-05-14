@@ -6,31 +6,31 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
 
-class TestableLivewireCanAssertNotRedirectedTest extends TestCase
+class TestableLivewireCanAssertNoRedirectedTest extends TestCase
 {
     /** @test */
-    public function can_assert_not_redirected()
+    public function can_assert_no_redirect()
     {
-        $component = Livewire::test(NotRedirectComponent::class);
+        $component = Livewire::test(NoRedirectComponent::class);
 
         $component->call('performNoRedirect');
 
-        $component->assertNotRedirected();
+        $component->assertNoRedirect();
     }
 
     /** @test */
-    public function can_assert_not_redirected_will_if_redirected()
+    public function can_assert_no_redirect_will_fail_if_redirected()
     {
-        $component = Livewire::test(NotRedirectComponent::class);
+        $component = Livewire::test(NoRedirectComponent::class);
 
         $this->expectException(\PHPUnit\Framework\AssertionFailedError::class);
 
         $component->call('performRedirect');
-        $component->assertNotRedirected();
+        $component->assertNoRedirect();
     }
 }
 
-class NotRedirectComponent extends Component
+class NoRedirectComponent extends Component
 {
     public function performRedirect()
     {

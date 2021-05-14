@@ -260,7 +260,7 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertNotRedirected()
+    public function assertNoRedirect()
     {
         PHPUnit::assertTrue(! isset($this->payload['effects']['redirect']));
 
