@@ -2,9 +2,9 @@
 
 namespace Livewire\Testing\Concerns;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Testing\Constraints\SeeInOrder;
 use PHPUnit\Framework\Assert as PHPUnit;
 
@@ -208,7 +208,7 @@ trait MakesAssertions
                 $failed = optional($this->lastValidator)->failed() ?: [];
                 $rules = array_keys(Arr::get($failed, $key, []));
 
-                foreach ((array)$value as $rule) {
+                foreach ((array) $value as $rule) {
                     PHPUnit::assertContains(Str::studly($rule), $rules, "Component has no [{$rule}] errors for [{$key}] attribute.");
                 }
             }
@@ -222,7 +222,7 @@ trait MakesAssertions
         $errors = $this->lastErrorBag;
 
         if (empty($keys)) {
-            PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors: "' . implode('", "', $errors->keys()) . '"');
+            PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors: "'.implode('", "', $errors->keys()).'"');
 
             return $this;
         }
@@ -256,6 +256,13 @@ trait MakesAssertions
         if (! is_null($uri)) {
             PHPUnit::assertSame(url($uri), url($this->payload['effects']['redirect']));
         }
+
+        return $this;
+    }
+
+    public function assertNoRedirect()
+    {
+        PHPUnit::assertTrue(! isset($this->payload['effects']['redirect']));
 
         return $this;
     }
