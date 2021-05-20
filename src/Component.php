@@ -30,6 +30,15 @@ abstract class Component
     protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
+    
+    // TO make entanglement (child->parent) work, copy this part to your child and parent components.
+    // ----------------------------------------------------------------------------------------------
+    public $entangled = [];
+    public $entangledByChildren = [];
+    protected $listeners = ['fillEntangled', 'registerEntangled'];
+    public function fillEntangled($data) { $this->fill($data); }
+    public function registerEntangled($data) { $this->entangledByChildren = array_merge_recursive($this->entangledByChildren, $data); }
+    // ----------------------------------------------------------------------------------------------
 
     public function __construct($id = null)
     {

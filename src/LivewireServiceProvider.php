@@ -39,6 +39,7 @@ use Livewire\HydrationMiddleware\{
     HydratePublicProperties,
     PerformDataBindingUpdates,
     CallPropertyHydrationHooks,
+    HandlesEntangledProperties,
     SecureHydrationWithChecksum,
     HashDataPropertiesForDirtyDetection,
     NormalizeServerMemoSansDataForJavaScript,
@@ -295,6 +296,7 @@ class LivewireServiceProvider extends ServiceProvider
             /* ↓ */ PerformDataBindingUpdates::class, /* ----------------- ↑ */
             /* ↓ */ PerformActionCalls::class, /* ------------------------ ↑ */
             /* ↓ */ PerformEventEmissions::class, /* --------------------- ↑ */
+            /* ↓ */ HandlesEntangledProperties::class, /* ---------------- ↑ */
             /* ↓                                                           ↑ */
             /* ↓    Output Stuff                                           ↑ */
             /* ↓ */ RenderView::class, /* -------------------------------- ↑ */
@@ -307,6 +309,7 @@ class LivewireServiceProvider extends ServiceProvider
             /* Initial Response */
             /* ↑ */ [SecureHydrationWithChecksum::class, 'dehydrate'],
             /* ↑ */ [NormalizeServerMemoSansDataForJavaScript::class, 'dehydrate'],
+            /* ↑ */ [HandlesEntangledProperties::class, 'initialDehydrate'],
             /* ↑ */ [HydratePublicProperties::class, 'dehydrate'],
             /* ↑ */ [CallPropertyHydrationHooks::class, 'dehydrate'],
             /* ↑ */ [CallHydrationHooks::class, 'initialDehydrate'],
