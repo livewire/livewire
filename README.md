@@ -21,7 +21,7 @@ Livewire uses semantic versioning and will use the following release schedule st
 * Minor? New features or significant API additions
 * Major? Breaking changes and big strategy changes
 
-> Important Note: All "major" versions will be tagged alongside Laravel's major version release schedule (every 6 months). That does not mean Livewire will release a major version every 6 months, just that when it DOES release a major version, it will coincide with a Laravel release.
+> Important Note: All "major" versions will be tagged alongside Laravel's major version release schedule (every year). That does not mean Livewire will release a major version every year, just that when it DOES release a major version, it will coincide with a Laravel release.
 
 ## Roadmap
 * Add `wire:append` for appending DOM changes rather than replacing them
