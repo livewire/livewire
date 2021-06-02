@@ -8,6 +8,7 @@ use Illuminate\Contracts\Database\ModelIdentifier;
 use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -233,8 +234,8 @@ class HydratePublicProperties implements HydrationMiddleware
                 } else {
                     if($rule == "*") {
                         $filteredData = $data;
-                    }elseif($ruleData = data_get($data, $rule)) {
-                        data_set($filteredData, $rule, $ruleData);
+                    }elseif((Arr::accessible($data) && Arr::exists($data, $rule)) || (is_object($data) && isset($data->{$rule}))) {
+                        data_set($filteredData, $rule, data_get($data, $rule));
                     }
                 }
             }
