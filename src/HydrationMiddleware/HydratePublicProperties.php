@@ -231,7 +231,9 @@ class HydratePublicProperties implements HydrationMiddleware
                 if (is_array($rule) || $rule instanceof Collection) {
                     data_set($filteredData, $key, static::extractData(data_get($data, $key), $rule, []));
                 } else {
-                    if($ruleData = data_get($data, $rule)) {
+                    if($rule == "*") {
+                        $filteredData = $data;
+                    }elseif($ruleData = data_get($data, $rule)) {
                         data_set($filteredData, $rule, $ruleData);
                     }
                 }
