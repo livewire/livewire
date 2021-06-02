@@ -193,7 +193,6 @@ class HydratePublicProperties implements HydrationMiddleware
         $rules = $rules
             ->mapInto(Stringable::class)
             ->mapToGroups(function($rule) {
-                // ray($rule);
                 return [$rule->before('.')->__toString() => $rule->after('.')];
             });
 
