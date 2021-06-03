@@ -139,7 +139,7 @@ class HydratePublicProperties implements HydrationMiddleware
     public static function setDirtyData($model, $data) {
         foreach ($data as $key => $value) {
             if (is_array($value)) {
-                $updatedData = static::setDirtyData(data_get($model, $key), data_get($data, $key));
+                $updatedData = static::setDirtyData([], data_get($data, $key));
             } else {
                 $updatedData = data_get($data, $key);
             }
