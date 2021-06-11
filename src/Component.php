@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
@@ -15,7 +16,9 @@ use Livewire\Exceptions\PropertyNotFoundException;
 
 abstract class Component
 {
-    use Macroable { __call as macroCall; }
+    use Macroable {
+        __call as macroCall;
+    }
 
     use ComponentConcerns\ValidatesInput,
         ComponentConcerns\HandlesActions,
@@ -41,9 +44,15 @@ abstract class Component
 
     public function __invoke(Container $container, Route $route)
     {
-        $componentParams = (new ImplicitRouteBinding($container))
-            ->resolveAllParameters($route, $this);
-
+        try {
+            $componentParams = (new ImplicitRouteBinding($container))
+                ->resolveAllParameters($route, $this);
+        } catch (ModelNotFoundException $exception) {
+            if ($route->getMissing()) {
+                return $route->getMissing()(request());
+            }
+            throw $exception;
+        }
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
             ->mount($componentParams)
@@ -55,12 +64,12 @@ abstract class Component
 
         $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
 
-        return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
+        return app('view')->file(__DIR__ . "/Macros/livewire-view-{$layoutType}.blade.php", [
             'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout'),
             'params' => $this->initialLayoutConfiguration['params'] ?? [],
             'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
-                'extends' => 'content', 'component' => 'slot',
-            ][$layoutType],
+                    'extends' => 'content', 'component' => 'slot',
+                ][$layoutType],
             'manager' => $manager,
         ]);
     }
@@ -76,7 +85,7 @@ abstract class Component
     public function initializeTraits()
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
-            if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
+            if (method_exists($class, $method = 'initialize' . class_basename($trait))) {
                 $this->{$method}();
             }
         }
@@ -93,7 +102,7 @@ abstract class Component
             ->implode('.');
 
         if (str($fullName)->startsWith($namespace)) {
-            return (string) str($fullName)->substr(strlen($namespace) + 1);
+            return (string)str($fullName)->substr(strlen($namespace) + 1);
         }
 
         return $fullName;
@@ -126,7 +135,7 @@ abstract class Component
         }
 
         throw_unless($view instanceof View,
-            new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
+            new \Exception('"render" method on [' . get_class($this) . '] must return instance of [' . View::class . ']'));
 
         // Get the layout config from the view.
         if ($view->livewireLayout) {
@@ -166,9 +175,9 @@ abstract class Component
         );
 
         $view->with([
-            'errors' => $errors,
-            '_instance' => $this,
-        ] + $this->getPublicPropertiesDefinedBySubClass());
+                'errors' => $errors,
+                '_instance' => $this,
+            ] + $this->getPublicPropertiesDefinedBySubClass());
 
         app('view')->share('errors', $errors);
         app('view')->share('_instance', $this);
@@ -202,8 +211,8 @@ abstract class Component
     public function forgetComputed($key = null)
     {
         if (is_null($key)) {
-           $this->computedPropertyCache = [];
-           return;
+            $this->computedPropertyCache = [];
+            return;
         }
 
         $keys = is_array($key) ? $key : func_get_args();
@@ -219,7 +228,7 @@ abstract class Component
     {
         $studlyProperty = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $property)));
 
-        if (method_exists($this, $computedMethodName = 'get'.$studlyProperty.'Property')) {
+        if (method_exists($this, $computedMethodName = 'get' . $studlyProperty . 'Property')) {
             if (isset($this->computedPropertyCache[$property])) {
                 return $this->computedPropertyCache[$property];
             }

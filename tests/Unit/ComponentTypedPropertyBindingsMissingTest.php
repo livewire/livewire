@@ -18,7 +18,7 @@ class ComponentTypedPropertyBindingsMissingTest extends TestCase
             $this->markTestSkipped('Only applies to PHP 7.4 and above.');
             return;
         }
-        Schema::create('model_for_attribute_bindings', function ($table) {
+        Schema::create('model_for_property_bindings', function ($table) {
             $table->bigIncrements('id');
             $table->string('title');
             $table->timestamps();
@@ -30,11 +30,12 @@ class ComponentTypedPropertyBindingsMissingTest extends TestCase
     {
         \Route::get('/foo/{parent}/{child}', ComponentWithPropAndMountBindings::class)
             ->missing(fn(Request $request) => redirect('/bar'));
+
         $this->get('/foo/bar/zap')->assertRedirect('/bar');
     }
 }
 
-class ModelForTypedPropertyBindings extends Model
+class ModelForPropertyBinding extends Model
 {
     protected $connection = 'testbench';
     protected $guarded = [];
@@ -42,11 +43,10 @@ class ModelForTypedPropertyBindings extends Model
 
 class ComponentWithPropAndMountBindings extends Component
 {
-    public ModelForTypedPropertyBindings $child;
-
+    public ModelForPropertyBinding $child;
     public $parent;
 
-    public function mount(ModelForTypedPropertyBindings $parent)
+    public function mount(ModelForPropertyBinding $parent)
     {
         $this->parent = $parent;
     }
