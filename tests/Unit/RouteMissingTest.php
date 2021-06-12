@@ -10,6 +10,15 @@ use Illuminate\Support\Facades\Route;
 
 class RouteMissingTest extends TestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        if (PHP_VERSION_ID < 70400) {
+            $this->markTestSkipped('Only applies to PHP 7.4 and above.');
+        }
+    }
+
     /** @test */
     public function route_supports_laravels_missing_fallback_function(): void
     {
