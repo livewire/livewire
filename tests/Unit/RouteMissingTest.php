@@ -22,6 +22,16 @@ class RouteMissingTest extends TestCase
     /** @test */
     public function route_supports_laravels_missing_fallback_function(): void
     {
+        $class = <<<'PHP'
+namespace Tests\Unit;
+use Livewire\Component;
+class ComponentWithModel extends Component
+{
+    public FrameworkModel $framework;
+}
+PHP;
+        eval($class);
+
         Route::get('awesome-js/{framework}', ComponentWithModel::class)
              ->missing(function (Request $request) {
                  $this->assertEquals(request(), $request);
@@ -38,9 +48,4 @@ class FrameworkModel extends Model
     {
         throw new ModelNotFoundException;
     }
-}
-
-class ComponentWithModel extends Component
-{
-    public FrameworkModel $framework;
 }
