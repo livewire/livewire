@@ -17,6 +17,10 @@ class RouteMissingTest extends TestCase
         if (PHP_VERSION_ID < 70400) {
             $this->markTestSkipped('Only applies to PHP 7.4 and above.');
         }
+
+        if (! method_exists(\Illuminate\Routing\Route::class, 'missing')) {
+            $this->markTestSkipped('Need Laravel >= 8');
+        }
     }
 
     /** @test */
