@@ -14,15 +14,6 @@ Open GitHub issues for all bugs. Ideas and questions belong in [Discussions](htt
 
 Contribute to the docs here: https://github.com/livewire/docs
 
-## Release Schedule
-Livewire uses semantic versioning and will use the following release schedule strategy:
-* Urgent bug fix? Release as "patch" version bump right away
-* Patch? Group of small enhancements and bugfixes to be released every ~2 weeks-ish
-* Minor? New features or significant API additions
-* Major? Breaking changes and big strategy changes
-
-> Important Note: All "major" versions will be tagged alongside Laravel's major version release schedule (every year). That does not mean Livewire will release a major version every year, just that when it DOES release a major version, it will coincide with a Laravel release.
-
 ## Roadmap
 * Add `wire:append` for appending DOM changes rather than replacing them
 * Refine the "asset_url" config. Potentially change to "app_url" (https://github.com/livewire/livewire/pull/1693)
