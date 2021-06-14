@@ -14,7 +14,6 @@ class Test extends TestCase
                 /**
                  * ->dispatchBrowserEvent()
                  */
-                ->tinker()
                 ->assertDontSeeIn('@foo.output', 'bar')
                 ->waitForLivewire()->click('@foo.button')
                 ->assertSeeIn('@foo.output', 'bar')
