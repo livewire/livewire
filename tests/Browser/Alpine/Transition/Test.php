@@ -7,13 +7,6 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public function setUp(): void
-    {
-        static::$useAlpineV3 = true;
-
-        parent::setUp();
-    }
-
     public function test_dollar_sign_wire()
     {
         $this->browse(function ($browser) {
