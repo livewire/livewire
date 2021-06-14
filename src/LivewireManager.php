@@ -291,6 +291,7 @@ HTML;
 
     let started = false
 
+    // Support for Alpine V3.
     window.addEventListener('alpine:initializing', () => {
         if (! started) {
             window.livewire.start();
