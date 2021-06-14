@@ -45,7 +45,7 @@ function addDollarSignWire() {
         window.Alpine.magic('wire', function (el) {
             let wireEl = el.closest('[wire\\:id]')
 
-            if (!wireEl)
+            if (! wireEl)
                 console.warn(
                     'Alpine: Cannot reference "$wire" outside a Livewire component.'
                 )
