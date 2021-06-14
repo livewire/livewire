@@ -5,17 +5,6 @@
  */
 
 export default function morphAttrs(fromNode, toNode) {
-    // if (fromNode._x_is_shown !== undefined && toNode._x_is_shown !== undefined) return
-    // if (fromNode._x_is_shown && ! toNode._x_is_shown) {
-    //     console.log('skip attrs');
-    //     return
-    //     // fromNode._x_hide()
-    // }
-    // if (! fromNode._x_is_shown && toNode._x_is_shown) {
-    //     return
-    //     // fromNode._x_show()
-    // }
-
     var attrs = toNode.attributes;
     var i;
     var attr;
