@@ -289,8 +289,23 @@ HTML;
         });
     };
 
+    let started = false
+
+    // Support for Alpine V3.
+    window.addEventListener('alpine:initializing', () => {
+        if (! started) {
+            window.livewire.start();
+
+            started = true
+        }
+    })
+
     document.addEventListener("DOMContentLoaded", function () {
-        window.livewire.start();
+        if (! started) {
+            window.livewire.start();
+
+            started = true
+        }
     });
 </script>
 HTML;

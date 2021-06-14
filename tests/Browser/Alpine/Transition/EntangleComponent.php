@@ -18,7 +18,7 @@ class EntangleComponent extends BaseComponent
         <button wire:click="$toggle('changeDom')" dusk="change-dom">Change DOM</button>
 
         <div x-show="show" dusk="outer">
-            <div x-show.transition.duration.250ms="show" dusk="inner">
+            <div x-show.transition.duration.250ms="show" x-transition.duration.250ms dusk="inner">
                 <h1>@if ($changeDom) @json($show) @else static-filler @endif</h1>
             </div>
         </div>

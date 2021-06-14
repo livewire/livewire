@@ -1,8 +1,13 @@
 <html>
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.8.2/dist/alpine.min.js" defer></script>
-    <!-- <script src="http://alpine.test/dist/alpine.js" defer></script> -->
+
+    @if (config('use_alpine_v3'))
+        <script src="https://unpkg.com/alpinejs@3.0.6/dist/cdn.min.js" defer></script>
+    @else
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.8.2/dist/alpine.min.js" defer></script>
+    @endif
+
     @livewireStyles
 </head>
 <body>

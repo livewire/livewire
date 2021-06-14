@@ -12,7 +12,7 @@ import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
 import DeferredModelAction from '@/action/deferred-model'
 import MessageBus from '../MessageBus'
-import { alpinifyElementsForMorphdom } from './SupportAlpine'
+import { alpinifyElementsForMorphdom, getEntangleFunction } from './SupportAlpine'
 
 export default class Component {
     constructor(el, connection) {
@@ -625,15 +625,10 @@ export default class Component {
 
         return (this.dollarWireProxy = new Proxy(refObj, {
             get(object, property) {
+                if (['_x_interceptor'].includes(property)) return
+
                 if (property === 'entangle') {
-                    return (name, defer = false) => ({
-                        isDeferred: defer,
-                        livewireEntangle: name,
-                        get defer() {
-                            this.isDeferred = true
-                            return this
-                        },
-                    })
+                    return getEntangleFunction(component)
                 }
 
                 if (property === '__instance') return component
@@ -642,7 +637,7 @@ export default class Component {
                 if (typeof property === 'string' && property.match(/^emit.*/)) return function (...args) {
                     if (property === 'emitSelf') return store.emitSelf(component.id, ...args)
                     if (property === 'emitUp') return store.emitUp(component.el, ...args)
-                    
+
                     return store[property](...args)
                 }
 

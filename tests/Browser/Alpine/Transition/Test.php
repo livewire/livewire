@@ -7,14 +7,6 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        // This test is too flaky for CI unfortunately.
-        if (env('RUNNING_IN_CI')) $this->markTestSkipped();
-    }
-
     public function test_dollar_sign_wire()
     {
         $this->browse(function ($browser) {
