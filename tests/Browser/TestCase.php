@@ -33,6 +33,7 @@ class TestCase extends BaseTestCase
     use SupportsSafari;
 
     public static $useSafari = false;
+    public static $useAlpineV3 = false;
 
     public function setUp(): void
     {
@@ -53,7 +54,11 @@ class TestCase extends BaseTestCase
 
         parent::setUp();
 
-        $this->tweakApplication(function () {
+        // $thing = get_class($this);
+
+        $isUsingAlpineV3 = static::$useAlpineV3;
+
+        $this->tweakApplication(function () use ($isUsingAlpineV3) {
             // Autoload all Livewire components in this test suite.
             collect(File::allFiles(__DIR__))
                 ->map(function ($file) {
@@ -143,6 +148,7 @@ class TestCase extends BaseTestCase
 
             Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
 
+            app('config')->set('use_alpine_v3', $isUsingAlpineV3);
         });
     }
 

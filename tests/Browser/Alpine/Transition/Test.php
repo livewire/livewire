@@ -9,10 +9,9 @@ class Test extends TestCase
 {
     public function setUp(): void
     {
-        parent::setUp();
+        static::$useAlpineV3 = true;
 
-        // This test is too flaky for CI unfortunately.
-        if (env('RUNNING_IN_CI')) $this->markTestSkipped();
+        parent::setUp();
     }
 
     public function test_dollar_sign_wire()
