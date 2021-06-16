@@ -91,7 +91,7 @@ class Response
         // If 'data' is present in the response memo, diff it one level deep.
         if (isset($dirtyMemo['data']) && isset($requestMemo['data'])) {
             foreach ($dirtyMemo['data'] as $key => $value) {
-                if (!isset($requestMemo['data'][$key])) continue;
+                if (! isset($requestMemo['data'][$key])) continue;
 
                 if ($value === $requestMemo['data'][$key]) {
                     unset($dirtyMemo['data'][$key]);
