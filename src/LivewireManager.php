@@ -297,7 +297,7 @@ HTML;
         if (! started) {
             window.livewire.start();
 
-            started = true;
+            started = true
         }
     })
 
