@@ -291,7 +291,7 @@ HTML;
         });
     };
 
-    let started = false;
+    let started = false
 
     window.addEventListener('alpine:initializing', () => {
         if (! started) {
@@ -299,13 +299,13 @@ HTML;
 
             started = true;
         }
-    });
+    })
 
     document.addEventListener("DOMContentLoaded", function () {
         if (! started) {
             window.livewire.start();
 
-            started = true;
+            started = true
         }
     });
 </script>
