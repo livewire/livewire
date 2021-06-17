@@ -58,12 +58,14 @@ class LivewireManager
             // Let's first check if the user registered the component using:
             // Livewire::component('name', [Livewire component class]);
             // If not, we'll look in the auto-discovery manifest.
-            $this->componentAliases[$alias] ?? $finder->find($alias));
+            $this->componentAliases[$alias] ?? $finder->find($alias)
+        );
 
         $class = $class ?: (
             // If none of the above worked, our last-ditch effort will be
             // to re-generate the auto-discovery manifest and look again.
-            $finder->build()->find($alias));
+            $finder->build()->find($alias)
+        );
 
         throw_unless($class, new ComponentNotFoundException(
             "Unable to find component: [{$alias}]"
@@ -114,7 +116,7 @@ class LivewireManager
 
     public function visit($browser, $class, $queryString = '')
     {
-        $url = '/livewire-dusk/' . urlencode($class) . $queryString;
+        $url = '/livewire-dusk/'.urlencode($class).$queryString;
 
         return $browser->visit($url)->waitForLivewireToLoad();
     }
@@ -183,7 +185,6 @@ class LivewireManager
     {
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
-
         return <<<HTML
 <style {$nonce}>
     [wire\:loading], [wire\:loading\.delay], [wire\:loading\.inline-block], [wire\:loading\.inline], [wire\:loading\.block], [wire\:loading\.flex], [wire\:loading\.table], [wire\:loading\.grid] {
@@ -216,7 +217,7 @@ HTML;
 
         $jsLivewireToken = app()->has('session.store') ? "'" . csrf_token() . "'" : 'null';
 
-        $manifest = json_decode(file_get_contents(__DIR__ . '/../dist/manifest.json'), true);
+        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         // Default to dynamic `livewire.js` (served by a Laravel route).
@@ -230,7 +231,7 @@ HTML;
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
             $versionedFileName = $publishedManifest['/livewire.js'];
 
-            $fullAssetPath = ($this->isRunningServerless() ? config('app.asset_url') : $appUrl) . '/vendor/livewire' . $versionedFileName;
+            $fullAssetPath = ($this->isRunningServerless() ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
@@ -241,19 +242,19 @@ HTML;
             }
         }
 
-        $devTools = null;
-        $windowLivewireCheck = null;
-        $windowAlpineCheck = null;
+	    $devTools = null;
+	    $windowLivewireCheck = null;
+	    $windowAlpineCheck = null;
         if (config('app.debug')) {
-            $devTools = 'window.livewire.devTools(true);';
+	        $devTools = 'window.livewire.devTools(true);';
 
-            $windowLivewireCheck = <<<'HTML'
+	        $windowLivewireCheck = <<<'HTML'
 if (window.livewire) {
 	    console.warn('Livewire: It looks like Livewire\'s @livewireScripts JavaScript assets have already been loaded. Make sure you aren\'t loading them twice.')
 	}
 HTML;
 
-            $windowAlpineCheck = <<<'HTML'
+	        $windowAlpineCheck = <<<'HTML'
 /* Make sure Livewire loads first. */
 	if (window.Alpine) {
 	    /* Defer showing the warning so it doesn't get buried under downstream errors. */
@@ -266,6 +267,7 @@ HTML;
 
 	/* Make Alpine wait until Livewire is finished rendering to do its thing. */
 HTML;
+
         }
 
         // Adding semicolons for this JavaScript is important,
@@ -289,22 +291,21 @@ HTML;
         });
     };
 
-    let started = false
+    let started = false;
 
-    // Support for Alpine V3.
     window.addEventListener('alpine:initializing', () => {
         if (! started) {
             window.livewire.start();
 
-            started = true
+            started = true;
         }
-    })
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         if (! started) {
             window.livewire.start();
 
-            started = true
+            started = true;
         }
     });
 </script>
@@ -325,7 +326,7 @@ HTML;
     {
         $route = request()->route();
 
-        if (!$route) return false;
+        if (! $route) return false;
 
         return $route->named('livewire.message');
     }
