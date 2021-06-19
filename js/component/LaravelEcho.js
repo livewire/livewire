@@ -30,7 +30,7 @@ export default function () {
                         event_name,
                     ] = event_parts
 
-                    if (['channel', 'private'].includes(channel_type)) {
+                    if (['channel', 'private', 'encryptedPrivate'].includes(channel_type)) {
                         Echo[channel_type](channel).listen(event_name, e => {
                             store.emit(event, e)
                         })
