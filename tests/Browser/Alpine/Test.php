@@ -142,6 +142,19 @@ class Test extends TestCase
         });
     }
 
+    public function test_morphdom_can_handle_adding_at_symbol_attributes()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, MorphingAtSymbolAttributeComponent::class)
+                ->assertAttributeMissing('@span', '@click', 'hey')
+                ->waitForLivewire()->click('@button')
+                ->assertAttribute('@span', '@click', 'hey')
+                ->waitForLivewire()->click('@button')
+                ->assertAttributeMissing('@span', '@click', 'hey')
+            ;
+        });
+    }
+
     public function test_alpine_registers_click_handlers_properly_on_livewire_change()
     {
         $this->browse(function ($browser) {
