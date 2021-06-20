@@ -38,5 +38,4 @@
             <div wire:key="qux" data-qux="{{ $qux ? 'true' : 'false' }}">third</div>
         </div>
     </button>
-
 </div>
