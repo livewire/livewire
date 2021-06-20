@@ -18,6 +18,9 @@ class ComponentTypedPropertyBindingsMissingTest extends TestCase
             $this->markTestSkipped('Only applies to PHP 7.4 and above.');
             return;
         }
+        if (! method_exists(\Illuminate\Routing\Route::class, 'missing')) {
+                    $this->markTestSkipped('Need Laravel >= 8');
+        }
         Schema::create('model_for_property_bindings', function ($table) {
             $table->bigIncrements('id');
             $table->string('title');
