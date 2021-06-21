@@ -10,11 +10,11 @@ use Livewire\Response;
 
 class ResponseTest extends TestCase
 {
-    public function testToSubsequentResponseWorksWithPropertiesInComponentNotInRequest()
+    /** @test */
+    public function subsequent_response_works_with_in_component_but_not_in_request()
     {
         $request = new Request([
-            'fingerprint' => [
-            ],
+            'fingerprint' => [],
             'updates' => [],
             'serverMemo' => [
                 'data' => [
@@ -40,11 +40,11 @@ class ResponseTest extends TestCase
         );
     }
 
-    public function testToSubsequentResponseWorksWorksWithPropertiesInRequestNotInComponent()
+    /** @test */
+    public function subsequent_response_works_with_properties_in_request_but_not_in_component()
     {
         $request = new Request([
-            'fingerprint' => [
-            ],
+            'fingerprint' => [],
             'updates' => [],
             'serverMemo' => [
                 'data' => [
@@ -55,11 +55,13 @@ class ResponseTest extends TestCase
         ]);
 
         $response = new Response($request);
+
         $response->memo = [
             'data' => [
                 'count' => 1,
             ],
         ];
+
         $response->effects = [
             'dirty' => ['count', 'aNewProperty']
         ];
