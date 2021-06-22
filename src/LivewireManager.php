@@ -291,7 +291,7 @@ HTML;
 
     let started = false;
 
-    window.addEventListener('alpine:initializing', () => {
+    window.addEventListener('alpine:initializing', function () {
         if (! started) {
             window.livewire.start();
 
