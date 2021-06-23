@@ -25,17 +25,25 @@ trait WithPagination
             return (int) $this->page;
         });
 
-        Paginator::defaultView($this->paginationView());
-        Paginator::defaultSimpleView($this->paginationSimpleView());
+        Paginator::defaultView($this->getPaginationView());
+        Paginator::defaultSimpleView($this->getPaginationSimpleView());
     }
 
-    public function paginationView()
+    public function getPaginationView()
     {
+        if (method_exists($this, 'paginationView')) {
+            return $this->paginationView();
+        }
+
         return 'livewire::' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
     }
 
-    public function paginationSimpleView()
+    public function getPaginationSimpleView()
     {
+        if (method_exists($this, 'paginationSimpleView')) {
+            return $this->paginationSimpleView();
+        }
+
         return 'livewire::simple-' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
     }
 
