@@ -142,7 +142,7 @@ function monkeyPatchDomSetAttributeToAllowAtSymbols() {
 
         hostDiv.innerHTML = `<span ${name}="${value}"></span>`
 
-        let attr = hostDiv.firstElementChild.getAttributeNode('@click')
+        let attr = hostDiv.firstElementChild.getAttributeNode(name)
 
         hostDiv.firstElementChild.removeAttributeNode(attr)
 
