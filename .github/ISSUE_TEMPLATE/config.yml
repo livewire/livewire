@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Bug Report
+    url: https://github.com/livewire/livewire/discussions/new
+    about: Submit a bug or an issue
   - name: Feature request
     url: https://github.com/livewire/livewire/discussions/new
     about: For ideas or feature requests

@@ -292,21 +292,21 @@ HTML;
     };
 
     let started = false
-    
+
     // Support for Alpine V3.
-    window.addEventListener('alpine:initializing', () => {
+    window.addEventListener('alpine:initializing', function () {
         if (! started) {
             window.livewire.start();
 
-            started = true
+            started = true;
         }
-    })
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         if (! started) {
             window.livewire.start();
 
-            started = true
+            started = true;
         }
     });
 </script>
