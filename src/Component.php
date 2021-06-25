@@ -49,6 +49,7 @@ abstract class Component
             if ($route->getMissing()) {
                 return $route->getMissing()(request());
             }
+
             throw $exception;
         }
         $manager = LifecycleManager::fromInitialInstance($this)
