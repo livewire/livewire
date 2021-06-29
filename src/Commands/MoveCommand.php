@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class MoveCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:move {name} {new-name} {--force} {--inline}';
+    protected $signature = 'livewire:move {name} {new-name} {--force} {--test} {--inline}';
 
     protected $description = 'Move a Livewire component';
 
@@ -30,6 +30,10 @@ class MoveCommand extends FileManipulationCommand
         $class = $this->renameClass();
         if (! $inline) $view = $this->renameView();
 
+        $test = $this->option('test');
+        if ($test) {
+            $this->renameTest();
+        }
         $this->refreshComponentAutodiscovery();
 
         $this->line("<options=bold,reverse;fg=green> COMPONENT MOVED </> 🤙\n");
@@ -68,5 +72,18 @@ class MoveCommand extends FileManipulationCommand
         File::move($this->parser->viewPath(), $newViewPath);
 
         return $newViewPath;
+    }
+
+    protected function renameTest()
+    {
+        $newTestPath = $this->newParser->testPath();
+        if (File::exists($newTestPath)) {
+            $this->line("<fg=red;options=bold>Test already exists:</> {$this->newParser->relativeViewPath()}");
+
+            return false;
+        }
+        $this->ensureDirectoryExists($newTestPath);
+        File::move($this->parser->testPath(), $newTestPath);
+        return $newTestPath;
     }
 }
