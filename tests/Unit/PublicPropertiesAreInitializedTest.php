@@ -24,13 +24,13 @@ class PublicPropertiesAreInitializedTest extends TestCase
     /** @test */
     public function modified_initialized_public_property_should_not_revert_after_subsequent_hydration()
     {
-        $dirty = Livewire::test(InitializedPublicPropertyComponent::class)
+        $propertyValue = Livewire::test(InitializedPublicPropertyComponent::class)
             ->set('some_id', null)
             ->set('message', 'whatever')
             ->get('some_id')
         ;
 
-        $this->assertEquals(null, $dirty);
+        $this->assertEquals(null, $propertyValue);
     }
 
     /** @test */
