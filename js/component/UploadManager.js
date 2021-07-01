@@ -128,6 +128,7 @@ class UploadManager {
             this.component.call('uploadErrored', name, errors, this.uploadBag.first(name).multiple)
         })
 
+        this.uploadBag.first(name).request = request
         request.send(formData)
     }
 
