@@ -16,7 +16,7 @@ trait WithCursorPagination
             ? $this->queryString()
             : $this->queryString;
 
-        return array_merge(['cursor' => ['except' => null]], $queryString);
+        return array_merge(['cursor' => ['except' => '']], $queryString);
     }
 
     public function initializeWithCursorPagination()
