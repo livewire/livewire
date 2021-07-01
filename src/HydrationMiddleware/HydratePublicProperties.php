@@ -49,12 +49,16 @@ class HydratePublicProperties implements HydrationMiddleware
 
                 // If the value is null and the property is typed, don't set it, because all values start off as null and this
                 // will prevent Typed properties from wining about being set to null.
-
-                if((new ReflectionProperty($instance, $property))->getType()){
-                    is_null($value) || $instance->$property = $value;
-                } else {
+                if (version_compare(PHP_VERSION, '7.4', '<')) {
                     $instance->$property = $value;
+                } else {
+                    if((new ReflectionProperty($instance, $property))->getType()){
+                        is_null($value) || $instance->$property = $value;
+                    } else {
+                        $instance->$property = $value;
+                    }
                 }
+
             }
         }
     }
