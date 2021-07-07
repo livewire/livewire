@@ -37,7 +37,6 @@ class TestCase extends BaseTestCase
 
     public function setUp(): void
     {
-        // DuskOptions::withoutUI();
         if (isset($_SERVER['CI'])) {
             DuskOptions::withoutUI();
         }
