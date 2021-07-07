@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
+use ReflectionProperty;
 
 class HydratePublicProperties implements HydrationMiddleware
 {
@@ -45,9 +46,19 @@ class HydratePublicProperties implements HydrationMiddleware
             } else if (in_array($property, $stringables)) {
                 data_set($instance, $property, new Stringable($value));
             } else {
-                // If the value is null, don't set it, because all values start off as null and this
+
+                // If the value is null and the property is typed, don't set it, because all values start off as null and this
                 // will prevent Typed properties from wining about being set to null.
-                is_null($value) || $instance->$property = $value;
+                if (version_compare(PHP_VERSION, '7.4', '<')) {
+                    $instance->$property = $value;
+                } else {
+                    if((new ReflectionProperty($instance, $property))->getType()){
+                        is_null($value) || $instance->$property = $value;
+                    } else {
+                        $instance->$property = $value;
+                    }
+                }
+
             }
         }
     }
