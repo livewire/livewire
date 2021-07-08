@@ -9,22 +9,32 @@ use Illuminate\Pagination\Paginator;
 trait WithCursorPagination
 {
     public $cursor = '';
+    public $allCursor = '';
+    public $paginations = [
+        'cursor',
+        'allCursor'
+    ];
 
     public function getQueryString()
     {
         $queryString = method_exists($this, 'queryString')
             ? $this->queryString()
             : $this->queryString;
-
-        return array_merge(['cursor' => ['except' => '']], $queryString);
+        $paginationsQueryStrings = array_fill_keys($this->paginations, ['except' => '']);
+        return array_merge($paginationsQueryStrings, $queryString);
     }
 
     public function initializeWithCursorPagination()
     {
-        $this->cursor = $this->resolvePage();
 
-        CursorPaginator::currentCursorResolver(function () {
-            return Cursor::fromEncoded($this->cursor);
+        array_walk($this->paginations, function ($value, $key) {
+            if (!property_exists(this, $key))
+                return;
+            $this->{$key} = $this->resolvePage($key);
+        });
+
+        CursorPaginator::currentCursorResolver(function ($name) {
+            return Cursor::fromEncoded($this->{$name} ?? 'cursor');
         });
         Paginator::defaultSimpleView($this->cursorPaginationView());
     }
@@ -34,39 +44,41 @@ trait WithCursorPagination
         return 'livewire::cursor-' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
     }
 
-    public function previousPage($cursor)
+    public function previousPage($cursor, $name = 'cursor')
     {
-        $this->setPage($cursor);
+        $this->setPage($cursor, $name);
     }
 
-    public function nextPage($cursor)
+    public function nextPage($cursor, $name = 'cursor')
     {
-        $this->setPage($cursor);
+        $this->setPage($cursor, $name);
     }
 
-    public function gotoPage($cursor)
+    public function gotoPage($cursor, $name = 'cursor')
     {
         if ($cursor instanceof Cursor) {
-            $this->setPage($cursor->encode());
+            $this->setPage($cursor->encode(), $name);
         } else {
-            $this->setPage($page);
+            $this->setPage($page, $name);
         }
     }
 
     public function resetPage()
     {
-        $this->setPage();
+        $this->setPage('', $name);
     }
 
-    public function setPage($cursor = '')
+    public function setPage($cursor = '', $name = 'cursor')
     {
-        $this->cursor = $cursor;
+        if (!property_exists(this, $name))
+            return
+                $this->{$name} = $cursor;
     }
 
-    public function resolvePage()
+    public function resolvePage($key)
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return request()->query('cursor', $this->cursor);
+        return request()->query($key, $this->{$key});
     }
 }
