@@ -9,7 +9,6 @@ use Illuminate\Pagination\Paginator;
 trait WithCursorPagination
 {
     public $cursor = '';
-    public $allCursor = '';
     public $paginations = [
         'cursor'
     ];
