@@ -11,8 +11,7 @@ trait WithCursorPagination
     public $cursor = '';
     public $allCursor = '';
     public $paginations = [
-        'cursor',
-        'allCursor'
+        'cursor'
     ];
 
     public function getQueryString()
@@ -28,7 +27,7 @@ trait WithCursorPagination
     {
 
         array_walk($this->paginations, function ($value, $key) {
-            if (!property_exists(this, $key))
+            if (!property_exists($this, $key))
                 return;
             $this->{$key} = $this->resolvePage($key);
         });
@@ -70,9 +69,9 @@ trait WithCursorPagination
 
     public function setPage($cursor = '', $name = 'cursor')
     {
-        if (!property_exists(this, $name))
-            return
-                $this->{$name} = $cursor;
+        if (!property_exists($this, $name))
+            return;
+        $this->{$name} = $cursor;
     }
 
     public function resolvePage($key)
