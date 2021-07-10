@@ -24,6 +24,8 @@ export default class Component {
 
         this.id = this.el.getAttribute('wire:id')
 
+        this.checkForMultipleRootElements()
+
         this.connection = connection
 
         const initialData = JSON.parse(this.el.getAttribute('wire:initial-data'))
@@ -63,6 +65,48 @@ export default class Component {
 
     get childIds() {
         return Object.values(this.serverMemo.children).map(child => child.id)
+    }
+
+    checkForMultipleRootElements() {
+        this.checkPreviousNode(this.el.previousSibling)
+        
+        this.checkNextNode(this.el.nextSibling)
+    }
+
+    checkPreviousNode(el) {
+        if (! el) return
+
+        if (this.nodeIsElement(el)) return
+
+        if (this.nodeIsCommentAndContains(el, 'wire-start:'+this.id)) return
+
+        this.checkPreviousNode(el.previousSibling)
+    }
+
+    checkNextNode(el) {
+        if (! el) return
+
+        if (this.nodeIsElement(el)) return
+
+        if (this.nodeIsCommentAndContains(el, 'wire-end:'+this.id)) return
+
+        this.checkNextNode(el.nextSibling)
+    }
+
+    nodeIsElement(el) {
+        if (el.nodeType !== Node.ELEMENT_NODE) return false
+
+        console.error('Livewire Error: Make sure your Blade view only has ONE root element. See docs for more information https://laravel-livewire.com/docs/2.x/rendering-components#returning-blade')
+
+        return true
+    }
+
+    nodeIsCommentAndContains(el, message) {
+        if (el.nodeType !== Node.COMMENT_NODE) return false
+
+        if (el.textContent.includes(message)) return true
+
+        return false
     }
 
     initialize() {
