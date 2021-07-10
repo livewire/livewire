@@ -161,7 +161,7 @@ abstract class Component
         $engine->startLivewireRendering($this);
 
         $this->setErrorBag(
-            $errorBag = $errors ?: ($view->getData()['errors'] ?? $this->getErrorBag())
+            $errorBag = $errors ?: (isset($view->getData()['errors']) ? $view->getData()['errors']->getBag('default') : $this->getErrorBag())
         );
 
         $previouslySharedErrors = app('view')->getShared()['errors'] ?? new ViewErrorBag;
