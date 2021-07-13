@@ -15,7 +15,7 @@ class Response
     public static function fromRequest($request)
     {
         return new static($request);
-   }
+    }
 
     public function __construct($request)
     {
@@ -91,6 +91,8 @@ class Response
         // If 'data' is present in the response memo, diff it one level deep.
         if (isset($dirtyMemo['data']) && isset($requestMemo['data'])) {
             foreach ($dirtyMemo['data'] as $key => $value) {
+                if (! isset($requestMemo['data'][$key])) continue;
+
                 if ($value === $requestMemo['data'][$key]) {
                     unset($dirtyMemo['data'][$key]);
                 }
@@ -101,7 +103,7 @@ class Response
         foreach (data_get($this, 'effects.dirty', []) as $property) {
             $property = head(explode('.', $property));
 
-            data_set($dirtyMemo, 'data.'.$property, $responseMemo['data'][$property]);
+            data_set($dirtyMemo, 'data.'.$property, $responseMemo['data'][$property] ?? null);
         }
 
         return [
