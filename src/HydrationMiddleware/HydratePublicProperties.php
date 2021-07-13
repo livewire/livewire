@@ -52,7 +52,8 @@ class HydratePublicProperties implements HydrationMiddleware
                 if (version_compare(PHP_VERSION, '7.4', '<')) {
                     $instance->$property = $value;
                 } else {
-                    if((new ReflectionProperty($instance, $property))->getType()){
+                    // do not use reflection for virtual component properties
+                    if(property_exists($instance, $property) && (new ReflectionProperty($instance, $property))->getType()){
                         is_null($value) || $instance->$property = $value;
                     } else {
                         $instance->$property = $value;
