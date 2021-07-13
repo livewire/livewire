@@ -136,6 +136,12 @@ class TestCase extends BaseTestCase
                 return app()->call(new $class);
             })->middleware(['web', 'auth', 'can:update,post']);
 
+            Route::middleware('web')->get('/entangle-turbo', function () {
+                return view('turbo', [
+                    'link' => '/livewire-dusk/' . urlencode(\Tests\Browser\Alpine\Entangle\ToggleEntangledTurbo::class),
+                ]);
+            })->name('entangle-turbo');
+
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
             app('config')->set('view.paths', [
