@@ -28,6 +28,7 @@ class UploadManager {
         this.component.on('upload:finished', (name, tmpFilenames) => this.markUploadFinished(name, tmpFilenames))
         this.component.on('upload:errored', (name) => this.markUploadErrored(name))
         this.component.on('upload:removed', (name, tmpFilename) => this.removeBag.shift(name).finishCallback(tmpFilename))
+        this.component.on('upload:cancel', (name) => this.cancelUpload(name)
     }
 
     upload(name, file, finishCallback, errorCallback, progressCallback) {
@@ -128,6 +129,7 @@ class UploadManager {
             this.component.call('uploadErrored', name, errors, this.uploadBag.first(name).multiple)
         })
 
+        this.uploadBag.first(name).request = request
         request.send(formData)
     }
 
@@ -156,6 +158,15 @@ class UploadManager {
         this.uploadBag.shift(name).errorCallback()
 
         if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
+    }
+    
+    cancelUpload(name) {
+        if (this.uploadBag.first(name) != undefined) {
+            this.uploadBag.bag[name][0].request.abort();
+            return this.uploadBag.shift(name);
+        }
+        
+        return;
     }
 }
 
