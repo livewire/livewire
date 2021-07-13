@@ -139,9 +139,7 @@ function monkeyPatchDomSetAttributeToAllowAtSymbols() {
 
     Element.prototype.setAttribute = function newSetAttribute(name, value) {
         if (! name.includes('@')) {
-            original.call(this, name, value)
-
-            return
+            return original.call(this, name, value)
         }
 
         hostDiv.innerHTML = `<span ${name}="${value}"></span>`
