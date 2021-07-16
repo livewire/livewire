@@ -91,7 +91,8 @@ class ImplicitlyBoundMethod extends BoundMethod
 
     protected static function getImplicitBinding($container, $className, $value)
     {
-        $model = $container->make($className)->resolveRouteBinding($value);
+        $class = $container->make($className);
+        $model = $class->resolveRouteBinding($value[$class->getRouteKeyName()]);
 
         if (! $model) {
             throw (new ModelNotFoundException)->setModel($className, [$value]);
