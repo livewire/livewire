@@ -40,7 +40,7 @@ class WireableClass implements Wireable
 {
     public $message;
 
-    public $embeddedWireable;
+    public EmbeddedWireableClass $embeddedWireable;
 
     public function __construct($message, $embeddedMessage)
     {
@@ -91,7 +91,7 @@ class EmbeddedWireableClass implements Wireable
 
 class ComponentWithWireablePublicProperty extends Component
 {
-    public $wireable;
+    public WireableClass $wireable;
 
     public function mount($wireable)
     {
