@@ -12,6 +12,10 @@ class WireablesCanBeSetAsPublicPropertiesTest extends TestCase
     /** @test */
     public function a_wireable_can_be_set_as_a_public_property()
     {
+        if (version_compare(PHP_VERSION, '7.4', '<')) {
+            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
+        }
+
         $wireable = new WireableClass($message = Str::random(), $embeddedMessage = Str::random());
 
         Livewire::test(ComponentWithWireablePublicProperty::class, ['wireable' => $wireable])
@@ -25,6 +29,10 @@ class WireablesCanBeSetAsPublicPropertiesTest extends TestCase
     /** @test */
     public function a_wireable_can_be_set_then_removed_as_a_public_property()
     {
+        if (version_compare(PHP_VERSION, '7.4', '<')) {
+            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
+        }
+
         $wireable = new WireableClass($message = Str::random(), $embeddedMessage = Str::random());
 
         Livewire::test(ComponentWithWireablePublicProperty::class, ['wireable' => $wireable])

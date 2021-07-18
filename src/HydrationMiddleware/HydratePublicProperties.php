@@ -47,7 +47,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 static::hydrateModels($serialized, $property, $request, $instance);
             } else if (in_array($property, $stringables)) {
                 data_set($instance, $property, new Stringable($value));
-            } else if (in_array($property, $wireables)) {
+            } else if (in_array($property, $wireables) && version_compare(PHP_VERSION, '7.4', '>=')) {
                 $type = (new \ReflectionClass($instance))
                     ->getProperty($property)
                     ->getType()
@@ -108,7 +108,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 $response->memo['dataMeta']['stringables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->__toString());
-            } else if ($value instanceof Wireable) {
+            } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
                 $response->memo['dataMeta']['wireables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->toLivewire());
