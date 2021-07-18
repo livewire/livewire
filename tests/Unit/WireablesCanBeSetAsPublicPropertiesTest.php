@@ -93,6 +93,11 @@ class ComponentWithWireablePublicProperty extends Component
 {
     public $wireable;
 
+    public function mount($wireable)
+    {
+        $this->wireable = $wireable;
+    }
+
     public function removeWireable()
     {
         $this->wireable = null;
