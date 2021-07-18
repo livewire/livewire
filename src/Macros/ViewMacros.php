@@ -2,6 +2,8 @@
 
 namespace Livewire\Macros;
 
+use Illuminate\View\AnonymousComponent;
+
 class ViewMacros
 {
     public function extends()
@@ -25,6 +27,9 @@ class ViewMacros
                 $layout = new $view();
                 $params = array_merge($params, $layout->data());
                 $view = $layout->resolveView()->name();
+            } else {
+                $layout = new AnonymousComponent($view, $params);
+                $params = array_merge($params, $layout->data());
             }
 
             $this->livewireLayout = [

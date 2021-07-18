@@ -29,7 +29,6 @@ abstract class Component
 
     protected $queryString = [];
     protected $computedPropertyCache = [];
-    protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
 
@@ -61,14 +60,25 @@ abstract class Component
             return redirect()->response($this->redirectTo);
         }
 
-        $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
+        $layout = $this->preRenderedView->livewireLayout ?? [];
+        $hasCustomLayout = isset($layout['view']);
+
+        if (!$hasCustomLayout) {
+            $this->preRenderedView->layout(config('livewire.layout'), $layout['params'] ?? []);
+
+            if (isset($layout['slotOrSection'])) {
+                $this->preRenderedView->livewireLayout['slotOrSection'] = $layout['slotOrSection'];
+            }
+
+            $layout = $this->preRenderedView->livewireLayout;
+        }
+
+        $layoutType = $layout['type'] ?? 'component';
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
-            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout'),
-            'params' => $this->initialLayoutConfiguration['params'] ?? [],
-            'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
-                'extends' => 'content', 'component' => 'slot',
-            ][$layoutType],
+            'view' => $layout['view'],
+            'params' => $layout['params'],
+            'slotOrSection' => $layout['slotOrSection'],
             'manager' => $manager,
         ]);
     }
@@ -135,11 +145,6 @@ abstract class Component
 
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
-
-        // Get the layout config from the view.
-        if ($view->livewireLayout) {
-            $this->initialLayoutConfiguration = $view->livewireLayout;
-        }
 
         Livewire::dispatch('component.rendered', $this, $view);
 

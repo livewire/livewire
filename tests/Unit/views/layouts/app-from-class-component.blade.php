@@ -4,4 +4,6 @@
 
 {{ $foo }}
 
-{{ $bar }}
+@isset($bar)
+    {{ $bar }}
+@endisset
