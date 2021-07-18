@@ -52,15 +52,13 @@ class WireableClass implements Wireable
     {
         return [
             'message' => $this->message,
+            'embeddedWireable' => $this->embeddedWireable->toLivewire(),
         ];
     }
 
     public static function fromLivewire($value): self
     {
-        $self = new self();
-        $self->message = $value['message'];
-
-        return $self;
+        return new self($value['message'], $value['embeddedWireable']['message']);
     }
 }
 
@@ -82,16 +80,13 @@ class EmbeddedWireableClass implements Wireable
 
     public static function fromLivewire($value): self
     {
-        $self = new self();
-        $self->message = $value['message'];
-
-        return $self;
+        return new self($value['message']);
     }
 }
 
 class ComponentWithWireablePublicProperty extends Component
 {
-    public WireableClass $wireable;
+    public ?WireableClass $wireable;
 
     public function mount($wireable)
     {
