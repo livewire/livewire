@@ -60,22 +60,11 @@ abstract class Component
             return redirect()->response($this->redirectTo);
         }
 
-        $layout = $this->preRenderedView->livewireLayout ?? [];
-        $hasCustomLayout = isset($layout['view']);
+        $this->ensureViewHasValidLivewireLayout($this->preRenderedView);
 
-        if (!$hasCustomLayout) {
-            $this->preRenderedView->layout(config('livewire.layout'), $layout['params'] ?? []);
+        $layout = $this->preRenderedView->livewireLayout;
 
-            if (isset($layout['slotOrSection'])) {
-                $this->preRenderedView->livewireLayout['slotOrSection'] = $layout['slotOrSection'];
-            }
-
-            $layout = $this->preRenderedView->livewireLayout;
-        }
-
-        $layoutType = $layout['type'] ?? 'component';
-
-        return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
+        return app('view')->file(__DIR__."/Macros/livewire-view-{$layout['type']}.blade.php", [
             'view' => $layout['view'],
             'params' => $layout['params'],
             'slotOrSection' => $layout['slotOrSection'],
@@ -149,6 +138,18 @@ abstract class Component
         Livewire::dispatch('component.rendered', $this, $view);
 
         return $this->preRenderedView = $view;
+    }
+
+    protected function ensureViewHasValidLivewireLayout(View $view)
+    {
+        $layout = $view->livewireLayout ?? [];
+
+        $isValid = isset($layout['view'], $layout['type'], $layout['params'], $layout['slotOrSection']);
+
+        if (!$isValid) {
+            $view->layout($layout['view'] ?? config('livewire.layout'), $layout['params'] ?? []);
+            $view->slot($layout['slotOrSection'] ?? $view->livewireLayout['slotOrSection']);
+        }
     }
 
     public function output($errors = null)
