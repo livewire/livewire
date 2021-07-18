@@ -3,7 +3,7 @@
         @if ($wireable)
             {{ $wireable->message }}
 
-            @if ($wireable->embeddedWireable)
+            @if ($wireable->embeddedWireable ?? false)
                 {{ $wireable->embeddedWireable->message }}
             @endif
         @endif
