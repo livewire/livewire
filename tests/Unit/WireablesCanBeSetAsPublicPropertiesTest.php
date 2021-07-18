@@ -34,23 +34,10 @@ class WireablesCanBeSetAsPublicPropertiesTest extends TestCase
             ->assertDontSee($message)
             ->assertDontSee($embeddedMessage);
     }
-
-    /** @test */
-    public function a_wireable_can_use_custom_serialization()
-    {
-        $wireable = new WireableClassWithCustomSerialization($message = Str::random());
-
-        Livewire::test(ComponentWithWireablePublicProperty::class, ['wireable' => $wireable])
-            ->assertSee($message)
-            ->call('$refresh')
-            ->assertSee($message);
-    }
 }
 
-class WireableClass
+class WireableClass implements Wireable
 {
-    use Wireable;
-
     public $message;
 
     public $embeddedWireable;
@@ -60,25 +47,31 @@ class WireableClass
         $this->message = $message;
         $this->embeddedWireable = new EmbeddedWireableClass($embeddedMessage);
     }
+
+    public function toLivewire()
+    {
+        return [
+            'message' => $this->message,
+        ];
+    }
+
+    public static function fromLivewire($value): self
+    {
+        $self = new self();
+        $self->message = $value['message'];
+
+        return $self;
+    }
 }
 
-class EmbeddedWireableClass
+class EmbeddedWireableClass implements Wireable
 {
-    use Wireable;
-
     public $message;
 
     public function __construct($message)
     {
         $this->message = $message;
     }
-}
-
-class WireableClassWithCustomSerialization
-{
-    use Wireable;
-
-    public $message;
 
     public function toLivewire()
     {
