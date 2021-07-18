@@ -141,6 +141,31 @@ class ConfigurableLayoutTest extends TestCase
             ->assertDontSee('bar')
             ->assertSee('baz');
     }
+
+    /** @test */
+    public function can_pass_attributes_to_a_configured_class_based_component_layout()
+    {
+        config()->set('livewire.layout', AppLayout::class);
+
+        Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomAttributes::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertSee('class="foo"', false)
+            ->assertSee('id="foo"', false);
+    }
+
+    /** @test */
+    public function can_pass_attributes_to_a_configured_anonymous_component_layout()
+    {
+        config()->set('livewire.layout', 'layouts.app-anonymous-component');
+
+        Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomAttributes::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertSee('class="foo"', false);
+    }
 }
 
 class ComponentForConfigurableLayoutTest extends Component
@@ -183,6 +208,20 @@ class ComponentForConfigurableLayoutTestWithCustomFooParam extends Component
     {
         return view('show-name')->layoutData([
             'foo' => 'baz',
+        ]);
+    }
+}
+
+class ComponentForConfigurableLayoutTestWithCustomAttributes extends Component
+{
+    public $name = 'foo';
+
+    public function render()
+    {
+        return view('show-name')->layoutData([
+            'attributes' => [
+                'class' => 'foo',
+            ]
         ]);
     }
 }

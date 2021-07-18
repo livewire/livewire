@@ -25,18 +25,18 @@ class ViewMacros
         return function ($view, $params = []) {
             if (is_subclass_of($view, \Illuminate\View\Component::class)) {
                 $layout = new $view();
-                $params = array_merge($params, $layout->data());
                 $view = $layout->resolveView()->name();
             } else {
                 $layout = new AnonymousComponent($view, $params);
-                $params = array_merge($params, $layout->data());
             }
+
+            $layout->withAttributes($params['attributes'] ?? []);
 
             $this->livewireLayout = [
                 'type' => 'component',
                 'slotOrSection' => 'slot',
                 'view' => $view,
-                'params' => $params,
+                'params' => array_merge($params, $layout->data()),
             ];
 
             return $this;

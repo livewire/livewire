@@ -2,7 +2,7 @@
     'foo' => 'bar',
 ])
 
-<div {{$attributes}}>
+<div {{ $attributes->merge(['id' => 'foo']) }}>
     {{ $foo }}
 </div>
 
