@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
+use Livewire\Wireable;
 use ReflectionProperty;
 
 class HydratePublicProperties implements HydrationMiddleware
@@ -27,6 +28,7 @@ class HydratePublicProperties implements HydrationMiddleware
         $models = data_get($request, 'memo.dataMeta.models', []);
         $modelCollections = data_get($request, 'memo.dataMeta.modelCollections', []);
         $stringables = data_get($request, 'memo.dataMeta.stringables', []);
+        $wireables = data_get($request, 'memo.dataMeta.wireables', []);
 
         foreach ($publicProperties as $property => $value) {
             if ($type = data_get($dates, $property)) {
@@ -45,6 +47,13 @@ class HydratePublicProperties implements HydrationMiddleware
                 static::hydrateModels($serialized, $property, $request, $instance);
             } else if (in_array($property, $stringables)) {
                 data_set($instance, $property, new Stringable($value));
+            } else if (in_array($property, $wireables)) {
+                $type = (new \ReflectionClass($instance))
+                    ->getProperty($property)
+                    ->getType()
+                    ->getName();
+
+                data_set($instance, $property, $type::fromLivewire($value));
             } else {
 
                 // If the value is null and the property is typed, don't set it, because all values start off as null and this
@@ -99,6 +108,10 @@ class HydratePublicProperties implements HydrationMiddleware
                 $response->memo['dataMeta']['stringables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->__toString());
+            } else if ($value instanceof Wireable) {
+                $response->memo['dataMeta']['wireables'][] = $key;
+
+                data_set($response, 'memo.data.'.$key, $value->toLivewire());
             } else {
                 throw new PublicPropertyTypeNotAllowedException($instance::getName(), $key, $value);
             }
