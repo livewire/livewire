@@ -2,15 +2,9 @@
 
 namespace Livewire;
 
-trait Wireable
+interface Wireable
 {
-    public function toLivewire()
-    {
-        return serialize($this);
-    }
+    public function toLivewire();
 
-    public static function fromLivewire($value): self
-    {
-        return unserialize($value);
-    }
+    public static function fromLivewire($value): self;
 }
