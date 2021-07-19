@@ -14,7 +14,7 @@ class MakeCommand extends FileManipulationCommand
     {
         $this->parser = new ComponentParser(
             config('livewire.class_namespace'),
-            config('livewire.view_path'),
+            config('livewire.custom_view_path') ? resource_path() : config('livewire.view_path'),
             $this->argument('name')
         );
 

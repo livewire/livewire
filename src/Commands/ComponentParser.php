@@ -119,13 +119,22 @@ class ComponentParser
 
     public function viewName()
     {
-        return collect()
-            ->concat(explode('/',str($this->baseViewPath)->after(resource_path('views'))))
-            ->filter()
-            ->concat($this->directories)
-            ->map([Str::class, 'kebab'])
-            ->push($this->component)
-            ->implode('.');
+        if (config('livewire.custom_view_path')) {
+            return collect()
+                ->filter()
+                ->concat($this->directories)
+                ->map([Str::class, 'kebab'])
+                ->push($this->component)
+                ->implode('.');
+        } else {
+            return collect()
+                ->concat(explode('/',str($this->baseViewPath)->after(resource_path('views'))))
+                ->filter()
+                ->concat($this->directories)
+                ->map([Str::class, 'kebab'])
+                ->push($this->component)
+                ->implode('.');
+        }
     }
 
     public function viewContents()
