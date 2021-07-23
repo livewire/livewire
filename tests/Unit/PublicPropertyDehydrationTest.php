@@ -97,6 +97,29 @@ class PublicPropertyDehydrationTest extends TestCase
     }
 
     /** @test */
+    public function array_rules_get_extracted_properly()
+    {
+        $rules = [
+            'foo.lob.law.*',
+            'foo.lob.law.*.blog',
+        ];
+
+        $expected = [
+            'foo' => [
+                'lob' => [
+                    'law' => [
+                        '*' => [
+                            'blog',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
+    }
+
+    /** @test */
     public function an_eloquent_model_properties_can_be_serialised()
     {
         $model = Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);

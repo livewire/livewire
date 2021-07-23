@@ -211,6 +211,13 @@ class HydratePublicProperties implements HydrationMiddleware
                     return $rule->contains('.');
                 });
 
+            // If collection rules exist, and value of * in model rules, remove * from model rule
+            if($collectionRules->count()) {
+                $modelRules = $modelRules->reject(function($value) {
+                    return $value == "*";
+                });
+            }
+
             // Recurse through collection rules
             $collectionRules = static::processRules($collectionRules);
 
