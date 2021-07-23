@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
+use stdClass;
 
 class HydratePublicProperties implements HydrationMiddleware
 {
@@ -243,7 +244,8 @@ class HydratePublicProperties implements HydrationMiddleware
                 }
             } else {
                 if (is_array($rule) || $rule instanceof Collection) {
-                    data_set($filteredData, $key, static::extractData(data_get($data, $key), $rule, []));
+                    $newFilteredData = data_get($data, $key) instanceof stdClass ? new stdClass : [];
+                    data_set($filteredData, $key, static::extractData(data_get($data, $key), $rule, $newFilteredData));
                 } else {
                     if($rule == "*") {
                         $filteredData = $data;
