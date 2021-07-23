@@ -10,7 +10,7 @@ use Livewire\Exceptions\CorruptComponentPayloadException;
 use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 use Livewire\HydrationMiddleware\HydratePublicProperties;
 
-class PublicPropertyDehydrationTest extends TestCase
+class PublicPropertyHydrationAndDehydrationTest extends TestCase
 {
     public function setUp(): void
     {
@@ -40,6 +40,56 @@ class PublicPropertyDehydrationTest extends TestCase
             $table->foreignId('author_id');
             $table->timestamps();
         });
+    }
+
+    /** @test */
+    public function an_eloquent_model_properties_with_deep_relations_and_single_relations_can_have_dirty_data_reapplied()
+    {
+        Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
+        Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
+
+        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'author_id' => 1]);
+        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'author_id' => 1]);
+
+        Comment::create(['id' => 1, 'comment' => 'Comment 1', 'post_id' => 1, 'author_id' => 1]);
+        Comment::create(['id' => 2, 'comment' => 'Comment 2', 'post_id' => 1, 'author_id' => 2]);
+
+        $model = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
+
+        $dirtyData = [
+            'title' => 'oof',
+            'name' => 'rab',
+            'email' => 'zab',
+            'posts' => [
+                [
+                    'title' => '1 Post',
+                    'description' => 'Description 1 Post',
+                    'content' => 'Content 1 Post',
+                    'comments' => [
+                        [],
+                        [
+                            'comment' => '2 Comment',
+                            'author' => [
+                                'name' => 'gniht'
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $results = HydratePublicProperties::setDirtyData($model, $dirtyData);
+
+        ray($model->toArray());
+
+        $this->assertEquals($model->title, 'oof');
+        $this->assertEquals($model->name, 'rab');
+        $this->assertEquals($model->email, 'zab');
+        $this->assertEquals($model->posts[0]->title, '1 Post');
+        $this->assertEquals($model->posts[0]->description, 'Description 1 Post');
+        $this->assertEquals($model->posts[0]->content, 'Content 1 Post');
+        $this->assertEquals($model->posts[0]->comments[1]->comment, '2 Comment');
+        $this->assertEquals($model->posts[0]->comments[1]->author->name, 'gniht');
     }
 
     /** @test */
