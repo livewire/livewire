@@ -27,84 +27,103 @@ class MakeCommandTest extends TestCase
     }
 
     /** @test */
-    public function component_is_created_by_livewire_make_command()
+    public function component_test_is_created_by_make_command_with_test_option()
     {
-        Artisan::call('livewire:make', ['name' => 'foo']);
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('FooTest.php')));
+    }
+
+    /** @test */
+    public function component_is_created_by_livewire_make_command()
+    {
+        Artisan::call('livewire:make', ['name' => 'foo', '--test' => true]);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('FooTest.php')));
     }
 
     /** @test */
     public function component_is_created_by_touch_command()
     {
-        Artisan::call('livewire:touch', ['name' => 'foo']);
+        Artisan::call('livewire:touch', ['name' => 'foo', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('FooTest.php')));
     }
 
     /** @test */
     public function dot_nested_component_is_created_by_make_command()
     {
-        Artisan::call('make:livewire', ['name' => 'foo.bar']);
+        Artisan::call('make:livewire', ['name' => 'foo.bar', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo/Bar.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo/bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('Foo/BarTest.php')));
     }
 
     /** @test */
     public function forward_slash_nested_component_is_created_by_make_command()
     {
-        Artisan::call('make:livewire', ['name' => 'foo/bar']);
+        Artisan::call('make:livewire', ['name' => 'foo/bar', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo/Bar.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo/bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('Foo/BarTest.php')));
     }
 
     /** @test */
     public function multiword_component_is_created_by_make_command()
     {
-        Artisan::call('make:livewire', ['name' => 'foo-bar']);
+        Artisan::call('make:livewire', ['name' => 'foo-bar', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('FooBar.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo-bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('FooBarTest.php')));
     }
 
     /** @test */
     public function pascal_case_component_is_automatically_converted_by_make_command()
     {
-        Artisan::call('make:livewire', ['name' => 'FooBar.FooBar']);
+        Artisan::call('make:livewire', ['name' => 'FooBar.FooBar', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('FooBar/FooBar.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo-bar/foo-bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('FooBar/FooBarTest.php')));
     }
 
     /** @test */
     public function pascal_case_component_with_double_backslashes_is_automatically_converted_by_make_command()
     {
-        Artisan::call('make:livewire', ['name' => 'FooBar\\FooBar']);
+        Artisan::call('make:livewire', ['name' => 'FooBar\\FooBar', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('FooBar/FooBar.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo-bar/foo-bar.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('FooBar/FooBarTest.php')));
     }
 
     /** @test */
     public function snake_case_component_is_automatically_converted_by_make_command()
     {
-        Artisan::call('make:livewire', ['name' => 'text_replace']);
+        Artisan::call('make:livewire', ['name' => 'text_replace', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('TextReplace.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('text-replace.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('TextReplaceTest.php')));
     }
 
     /** @test */
     public function snake_case_component_is_automatically_converted_by_make_command_on_nested_component()
     {
-        Artisan::call('make:livewire', ['name' => 'TextManager.text_replace']);
+        Artisan::call('make:livewire', ['name' => 'TextManager.text_replace', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('TextManager/TextReplace.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('text-manager/text-replace.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('TextManager/TextReplaceTest.php')));
     }
 
     /** @test */
@@ -128,5 +147,10 @@ class MakeCommandTest extends TestCase
 
         $this->assertFalse(File::exists($this->livewireClassesPath('Component.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('component.blade.php')));
+
+        Artisan::call('make:livewire', ['name' => 'list']);
+
+        $this->assertFalse(File::exists($this->livewireClassesPath('List.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('list.blade.php')));
     }
 }

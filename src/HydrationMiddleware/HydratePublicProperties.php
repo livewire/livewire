@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 use stdClass;
+use Livewire\Wireable;
+use ReflectionProperty;
 
 class HydratePublicProperties implements HydrationMiddleware
 {
@@ -29,6 +31,7 @@ class HydratePublicProperties implements HydrationMiddleware
         $models = data_get($request, 'memo.dataMeta.models', []);
         $modelCollections = data_get($request, 'memo.dataMeta.modelCollections', []);
         $stringables = data_get($request, 'memo.dataMeta.stringables', []);
+        $wireables = data_get($request, 'memo.dataMeta.wireables', []);
 
         foreach ($publicProperties as $property => $value) {
             if ($type = data_get($dates, $property)) {
@@ -47,10 +50,28 @@ class HydratePublicProperties implements HydrationMiddleware
                 static::hydrateModels($serialized, $property, $request, $instance);
             } else if (in_array($property, $stringables)) {
                 data_set($instance, $property, new Stringable($value));
+            } else if (in_array($property, $wireables) && version_compare(PHP_VERSION, '7.4', '>=')) {
+                $type = (new \ReflectionClass($instance))
+                    ->getProperty($property)
+                    ->getType()
+                    ->getName();
+
+                data_set($instance, $property, $type::fromLivewire($value));
             } else {
-                // If the value is null, don't set it, because all values start off as null and this
+
+                // If the value is null and the property is typed, don't set it, because all values start off as null and this
                 // will prevent Typed properties from wining about being set to null.
-                is_null($value) || $instance->$property = $value;
+                if (version_compare(PHP_VERSION, '7.4', '<')) {
+                    $instance->$property = $value;
+                } else {
+                    // do not use reflection for virtual component properties
+                    if(property_exists($instance, $property) && (new ReflectionProperty($instance, $property))->getType()){
+                        is_null($value) || $instance->$property = $value;
+                    } else {
+                        $instance->$property = $value;
+                    }
+                }
+
             }
         }
     }
@@ -90,6 +111,10 @@ class HydratePublicProperties implements HydrationMiddleware
                 $response->memo['dataMeta']['stringables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->__toString());
+            } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
+                $response->memo['dataMeta']['wireables'][] = $key;
+
+                data_set($response, 'memo.data.'.$key, $value->toLivewire());
             } else {
                 throw new PublicPropertyTypeNotAllowedException($instance::getName(), $key, $value);
             }
@@ -121,6 +146,10 @@ class HydratePublicProperties implements HydrationMiddleware
             new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
         );
 
+        /*
+         * Use `loadMissing` here incase loading collection relations gets fixed in Laravel framework,
+         * in which case we don't want to load relations again.
+         */
         $models->loadMissing($serialized['relations']);
 
         $dirtyModelData = $request->memo['data'][$property];

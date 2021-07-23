@@ -27,12 +27,14 @@ class HttpConnectionHandler extends ConnectionHandler
     public function applyPersistentMiddleware()
     {
         try {
-            $request = $this->makeRequestFromUrl(
-                Livewire::originalUrl()
+            $request = $this->makeRequestFromUrlAndMethod(
+                Livewire::originalUrl(),
+                Livewire::originalMethod()
             );
         } catch (NotFoundHttpException $e) {
-            $request = $this->makeRequestFromUrl(
-                Str::replaceFirst(Livewire::originalUrl(), request('fingerprint')['locale'].'/', '')
+            $request = $this->makeRequestFromUrlAndMethod(
+                Str::replaceFirst(Livewire::originalUrl(), request('fingerprint')['locale'].'/', ''),
+                Livewire::originalMethod()
             );
         }
 
@@ -58,9 +60,9 @@ class HttpConnectionHandler extends ConnectionHandler
             });
     }
 
-    protected function makeRequestFromUrl($url)
+    protected function makeRequestFromUrlAndMethod($url, $method = 'GET')
     {
-        $request = Request::create($url, 'GET');
+        $request = Request::create($url, $method);
 
         if ($session = request()->getSession()) {
             $request->setLaravelSession($session);

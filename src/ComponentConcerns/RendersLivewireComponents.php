@@ -12,28 +12,26 @@ use Throwable;
 
 trait RendersLivewireComponents
 {
-    protected $livewireComponent;
-    protected $isRenderingLivewireComponent = false;
+    protected $livewireComponents = [];
 
     public function startLivewireRendering($component)
     {
-        $this->livewireComponent = $component;
-        $this->isRenderingLivewireComponent = true;
+        $this->livewireComponents[] = $component;
     }
 
     public function endLivewireRendering()
     {
-        $this->isRenderingLivewireComponent = false;
+        array_pop($this->livewireComponents);
     }
 
-    public function setLivewireComponent($component)
+    public function isRenderingLivewireComponent()
     {
-        $this->livewireComponent = $component;
+        return ! empty($this->livewireComponents);
     }
 
     protected function evaluatePath($__path, $__data)
     {
-        if (! $this->isRenderingLivewireComponent) {
+        if (! $this->isRenderingLivewireComponent()) {
             return parent::evaluatePath($__path, $__data);
         }
 
@@ -48,7 +46,7 @@ trait RendersLivewireComponents
             \Closure::bind(function () use ($__path, $__data) {
                 extract($__data, EXTR_SKIP);
                 include $__path;
-            }, $this->livewireComponent ? $this->livewireComponent : $this)();
+            }, end($this->livewireComponents))();
         } catch (Exception $e) {
             $this->handleViewException($e, $obLevel);
         } catch (Throwable $e) {

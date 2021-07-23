@@ -47,6 +47,40 @@ class ComponentLayoutTest extends TestCase
 
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
+
+    /** @test */
+    public function can_load_dynamic_layout_properties()
+    {
+        Livewire::component(ComponentWithClassBasedComponentLayout::class);
+
+        Route::get('/foo', ComponentWithClassBasedComponentLayout::class);
+
+        $this->withoutExceptionHandling()->get('/foo')
+            ->assertSee('bar')
+            ->assertSee('baz');
+    }
+
+    /** @test */
+    public function can_show_the_params()
+    {
+        Livewire::component(ComponentWithCustomParams::class);
+
+        Route::get('/foo', ComponentWithCustomParams::class);
+
+        $this->withoutExceptionHandling()->get('/foo')
+            ->assertSee('foo');
+    }
+
+    /** @test */
+    public function can_show_params_with_custom_layout()
+    {
+        Livewire::component(ComponentWithCustomParamsAndLayout::class);
+
+        Route::get('/foo', ComponentWithCustomParamsAndLayout::class);
+
+        $this->withoutExceptionHandling()->get('/foo')
+            ->assertSee('livewire');
+    }
 }
 
 class ComponentWithExtendsLayout extends Component
@@ -86,5 +120,35 @@ class ComponentWithCustomSlotForLayout extends Component
     public function render()
     {
         return view('show-name')->layout('layouts.app-custom-slot')->slot('main');
+    }
+}
+
+class ComponentWithClassBasedComponentLayout extends Component
+{
+    public function render()
+    {
+        return view('null-view')->layout(\Tests\AppLayout::class, [
+            'bar' => 'baz'
+        ]);
+    }
+}
+
+class ComponentWithCustomParams extends Component
+{
+    public function render()
+    {
+        return view('null-view')->layoutData([
+            'slot' => 'foo'
+        ]);
+    }
+}
+
+class ComponentWithCustomParamsAndLayout extends Component
+{
+    public function render()
+    {
+        return view('null-view')->layout('layouts.data-test')->layoutData([
+            'title' => 'livewire',
+        ]);
     }
 }

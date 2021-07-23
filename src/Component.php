@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
@@ -9,6 +10,7 @@ use Illuminate\Routing\Route;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 use Livewire\Exceptions\PropertyNotFoundException;
 
@@ -40,9 +42,16 @@ abstract class Component
 
     public function __invoke(Container $container, Route $route)
     {
-        $componentParams = (new ImplicitRouteBinding($container))
-            ->resolveAllParameters($route, $this);
+        try {
+            $componentParams = (new ImplicitRouteBinding($container))
+                ->resolveAllParameters($route, $this);
+        } catch (ModelNotFoundException $exception) {
+            if ($route->getMissing()) {
+                return $route->getMissing()(request());
+            }
 
+            throw $exception;
+        }
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
             ->mount($componentParams)
@@ -100,7 +109,9 @@ abstract class Component
 
     public function getQueryString()
     {
-        return $this->queryString;
+        return method_exists($this, 'queryString')
+            ? $this->queryString()
+            : $this->queryString;
     }
 
     public function skipRender()

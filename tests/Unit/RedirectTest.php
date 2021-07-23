@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
 

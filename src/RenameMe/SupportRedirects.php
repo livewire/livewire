@@ -20,7 +20,7 @@ class SupportRedirects
             app()->bind('redirect', function () use ($component) {
                 $redirector = app(Redirector::class)->component($component);
 
-                if (app('session.store')) {
+                if (app()->has('session.store')) {
                     $redirector->setSession(app('session.store'));
                 }
 
@@ -32,15 +32,21 @@ class SupportRedirects
             // Put the old redirector back into the container.
             app()->instance('redirect', array_pop(static::$redirectorCacheStack));
 
-            // If there was no redirect. Clear flash session data.
             if (empty($component->redirectTo)) {
-                session()->forget(session()->get('_flash.new'));
-
                 return;
             }
 
             $response->effects['redirect'] = $component->redirectTo;
             $response->effects['html'] = $response->effects['html'] ?? '<div></div>';
+        });
+
+        Livewire::listen('component.dehydrate.subsequent', function ($component, $response) {
+            // If there was no redirect. Clear flash session data.
+            if (empty($component->redirectTo) && app()->has('session.store')) {
+                session()->forget(session()->get('_flash.new'));
+
+                return;
+            }
         });
     }
 }

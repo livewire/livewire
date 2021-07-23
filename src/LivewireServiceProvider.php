@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Illuminate\View\View;
+use Illuminate\Testing\TestView;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
@@ -31,6 +32,7 @@ use Livewire\Commands\{
     S3CleanupCommand,
     MakeLivewireCommand,
 };
+use Livewire\Macros\ViewMacros;
 use Livewire\HydrationMiddleware\{
     RenderView,
     PerformActionCalls,
@@ -44,7 +46,6 @@ use Livewire\HydrationMiddleware\{
     NormalizeServerMemoSansDataForJavaScript,
     NormalizeComponentPropertiesForJavaScript,
 };
-use Livewire\Macros\ViewMacros;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -72,17 +73,21 @@ class LivewireServiceProvider extends ServiceProvider
         // Bypass specific middlewares during Livewire requests.
         // These are usually helpful during a typical request, but
         // during Livewire requests, they can damage data properties.
-        $this->bypassTheseMiddlewaresDuringLivewireRequests([
-            TrimStrings::class,
-            ConvertEmptyStringsToNull::class,
-            // If the app overrode "TrimStrings".
-            \App\Http\Middleware\TrimStrings::class,
-        ]);
+        if (! $this->attemptToBypassRequestModifyingMiddlewareViaCallbacks()) {
+            $this->bypassTheseMiddlewaresDuringLivewireRequests([
+                TrimStrings::class,
+                ConvertEmptyStringsToNull::class,
+                // If the app overrode "TrimStrings".
+                \App\Http\Middleware\TrimStrings::class,
+            ]);
+        }
     }
 
     protected function registerLivewireSingleton()
     {
-        $this->app->singleton('livewire', LivewireManager::class);
+        $this->app->singleton(LivewireManager::class);
+
+        $this->app->alias(LivewireManager::class, 'livewire');
     }
 
     protected function registerComponentAutoDiscovery()
@@ -92,7 +97,7 @@ class LivewireServiceProvider extends ServiceProvider
         // alias. For instance: 'examples.foo' => App\Http\Livewire\Examples\Foo
 
         // We will generate a manifest file so we don't have to do the lookup every time.
-        $defaultManifestPath = $this->app['livewire']->isOnVapor()
+        $defaultManifestPath = $this->app['livewire']->isRunningServerless()
             ? '/tmp/storage/bootstrap/cache/livewire-components.php'
             : app()->bootstrapPath('cache/livewire-components.php');
 
@@ -165,6 +170,10 @@ class LivewireServiceProvider extends ServiceProvider
     {
         // Usage: $this->assertSeeLivewire('counter');
         TestResponse::macro('assertSeeLivewire', function ($component) {
+            if (is_subclass_of($component, Component::class)) {
+                $component = $component::getName();
+            }
+
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringContainsString(
@@ -178,6 +187,10 @@ class LivewireServiceProvider extends ServiceProvider
 
         // Usage: $this->assertDontSeeLivewire('counter');
         TestResponse::macro('assertDontSeeLivewire', function ($component) {
+            if (is_subclass_of($component, Component::class)) {
+                $component = $component::getName();
+            }
+
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringNotContainsString(
@@ -188,6 +201,40 @@ class LivewireServiceProvider extends ServiceProvider
 
             return $this;
         });
+
+        if (class_exists(TestView::class)) {
+            TestView::macro('assertSeeLivewire', function ($component) {
+                if (is_subclass_of($component, Component::class)) {
+                    $component = $component::getName();
+                }
+
+                $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+                \PHPUnit\Framework\Assert::assertStringContainsString(
+                    $escapedComponentName,
+                    $this->rendered,
+                    'Cannot find Livewire component ['.$component.'] rendered on page.'
+                );
+
+                return $this;
+            });
+
+            TestView::macro('assertDontSeeLivewire', function ($component) {
+                if (is_subclass_of($component, Component::class)) {
+                    $component = $component::getName();
+                }
+
+                $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+                \PHPUnit\Framework\Assert::assertStringNotContainsString(
+                    $escapedComponentName,
+                    $this->rendered,
+                    'Found Livewire component ['.$component.'] rendered on page.'
+                );
+
+                return $this;
+            });
+        }
     }
 
     protected function registerViewMacros()
@@ -250,7 +297,7 @@ class LivewireServiceProvider extends ServiceProvider
             // If the application is using Ignition, make sure Livewire's view compiler
             // uses a version that extends Ignition's so it can continue to report errors
             // correctly. Don't change this class without first submitting a PR to Ignition.
-            if (class_exists(\Facade\Ignition\IgnitionServiceProvider::class)) {
+            if (class_exists('Facade\Ignition\IgnitionServiceProvider')) {
                 return new CompilerEngineForIgnition($this->app['blade.compiler']);
             }
 
@@ -322,6 +369,24 @@ class LivewireServiceProvider extends ServiceProvider
                 [CallHydrationHooks::class, 'initialHydrate'],
 
         ]);
+    }
+
+    protected function attemptToBypassRequestModifyingMiddlewareViaCallbacks()
+    {
+        if (method_exists(TrimStrings::class, 'skipWhen') &&
+            method_exists(ConvertEmptyStringsToNull::class, 'skipWhen')) {
+            TrimStrings::skipWhen(function () {
+                return Livewire::isProbablyLivewireRequest();
+            });
+
+            ConvertEmptyStringsToNull::skipWhen(function () {
+                return Livewire::isProbablyLivewireRequest();
+            });
+
+            return true;
+        }
+
+        return false;
     }
 
     protected function bypassTheseMiddlewaresDuringLivewireRequests(array $middlewareToExclude)

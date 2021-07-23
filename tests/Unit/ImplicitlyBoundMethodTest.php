@@ -7,8 +7,6 @@ use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\ImplicitlyBoundMethod;
-use Error;
-use ReflectionException;
 use stdClass;
 
 class ImplicitlyBoundMethodTest extends TestCase

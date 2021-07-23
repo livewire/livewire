@@ -43,6 +43,11 @@ class LivewireManager
         return $alias === false ? $default : $alias;
     }
 
+    public function getComponentAliases()
+    {
+        return $this->componentAliases;
+    }
+
     public function getClass($alias)
     {
         $finder = app(LivewireComponentsFinder::class);
@@ -150,7 +155,7 @@ class LivewireManager
     {
         $debug = config('app.debug');
 
-        $styles = $this->cssAssets();
+        $styles = $this->cssAssets($options);
 
         // HTML Label.
         $html = $debug ? ['<!-- Livewire Styles -->'] : [];
@@ -176,10 +181,12 @@ class LivewireManager
         return implode("\n", $html);
     }
 
-    protected function cssAssets()
+    protected function cssAssets($options = [])
     {
+        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
+
         return <<<HTML
-<style>
+<style {$nonce}>
     [wire\:loading], [wire\:loading\.delay], [wire\:loading\.inline-block], [wire\:loading\.inline], [wire\:loading\.block], [wire\:loading\.flex], [wire\:loading\.table], [wire\:loading\.grid] {
         display: none;
     }
@@ -206,15 +213,9 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
-        $devTools = null;
-
-        if (config('app.debug')) {
-            $devTools = 'window.livewire.devTools(true);';
-        }
-
         $appUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
 
-        $csrf = csrf_token();
+        $jsLivewireToken = app()->has('session.store') ? "'" . csrf_token() . "'" : 'null';
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
@@ -230,7 +231,7 @@ HTML;
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
             $versionedFileName = $publishedManifest['/livewire.js'];
 
-            $fullAssetPath = ($this->isOnVapor() ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
+            $fullAssetPath = ($this->isRunningServerless() ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
@@ -241,41 +242,71 @@ HTML;
             }
         }
 
+	    $devTools = null;
+	    $windowLivewireCheck = null;
+	    $windowAlpineCheck = null;
+        if (config('app.debug')) {
+	        $devTools = 'window.livewire.devTools(true);';
+
+	        $windowLivewireCheck = <<<'HTML'
+if (window.livewire) {
+	    console.warn('Livewire: It looks like Livewire\'s @livewireScripts JavaScript assets have already been loaded. Make sure you aren\'t loading them twice.')
+	}
+HTML;
+
+	        $windowAlpineCheck = <<<'HTML'
+/* Make sure Livewire loads first. */
+	if (window.Alpine) {
+	    /* Defer showing the warning so it doesn't get buried under downstream errors. */
+	    document.addEventListener("DOMContentLoaded", function () {
+	        setTimeout(function() {
+	            console.warn("Livewire: It looks like AlpineJS has already been loaded. Make sure Livewire\'s scripts are loaded before Alpine.\\n\\n Reference docs for more info: http://laravel-livewire.com/docs/alpine-js")
+	        })
+	    });
+	}
+
+	/* Make Alpine wait until Livewire is finished rendering to do its thing. */
+HTML;
+
+        }
+
         // Adding semicolons for this JavaScript is important,
         // because it will be minified in production.
         return <<<HTML
 {$assetWarning}
-<script src="{$fullAssetPath}" data-turbo-eval="false" data-turbolinks-eval="false"></script>
+<script src="{$fullAssetPath}" data-turbo-eval="false" data-turbolinks-eval="false"{$nonce}></script>
 <script data-turbo-eval="false" data-turbolinks-eval="false"{$nonce}>
-    if (window.livewire) {
-        console.warn('Livewire: It looks like Livewire\'s @livewireScripts JavaScript assets have already been loaded. Make sure you aren\'t loading them twice.')
-    }
+    {$windowLivewireCheck}
 
     window.livewire = new Livewire({$jsonEncodedOptions});
     {$devTools}
     window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
-    window.livewire_token = '{$csrf}';
+    window.livewire_token = {$jsLivewireToken};
 
-    /* Make sure Livewire loads first. */
-    if (window.Alpine) {
-        /* Defer showing the warning so it doesn't get buried under downstream errors. */
-        document.addEventListener("DOMContentLoaded", function () {
-            setTimeout(function() {
-                console.warn("Livewire: It looks like AlpineJS has already been loaded. Make sure Livewire\'s scripts are loaded before Alpine.\\n\\n Reference docs for more info: http://laravel-livewire.com/docs/alpine-js")
-            })
-        });
-    }
-
-    /* Make Alpine wait until Livewire is finished rendering to do its thing. */
+	{$windowAlpineCheck}
     window.deferLoadingAlpine = function (callback) {
         window.addEventListener('livewire:load', function () {
             callback();
         });
     };
 
+    let started = false;
+
+    window.addEventListener('alpine:initializing', function () {
+        if (! started) {
+            window.livewire.start();
+
+            started = true;
+        }
+    });
+
     document.addEventListener("DOMContentLoaded", function () {
-        window.livewire.start();
+        if (! started) {
+            window.livewire.start();
+
+            started = true;
+        }
     });
 </script>
 HTML;
@@ -310,10 +341,44 @@ HTML;
     public function originalUrl()
     {
         if ($this->isDefinitelyLivewireRequest()) {
-            return request('fingerprint')['url'];
+            return url()->to($this->originalPath());
         }
 
         return url()->current();
+    }
+
+    public function originalPath()
+    {
+        if ($this->isDefinitelyLivewireRequest()) {
+            // @depricted: "url" usage was removed in v2.3.17
+            // This can be removed after a period of time
+            // as users will have refreshed all pages
+            // that still used "url".
+            if (isset(request('fingerprint')['url'])) {
+                return str(request('fingerprint')['url'])->after(request()->root());
+            }
+
+            return request('fingerprint')['path'];
+        }
+
+        return request()->path();
+    }
+
+    public function originalMethod()
+    {
+        if ($this->isDefinitelyLivewireRequest()) {
+            // @depricted: "url" usage was removed in v2.3.17
+            // This can be removed after a period of time
+            // as users will have refreshed all pages
+            // that still used "url".
+            if (isset(request('fingerprint')['url'])) {
+                return 'GET';
+            }
+
+            return request('fingerprint')['method'];
+        }
+
+        return request()->method();
     }
 
     public function getRootElementTagName($dom)
@@ -337,7 +402,15 @@ HTML;
 
     public function isOnVapor()
     {
-        return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
+        return $this->isRunningServerless();
+    }
+
+    public function isRunningServerless()
+    {
+        return in_array($_ENV['SERVER_SOFTWARE'] ?? null, [
+            'vapor',
+            'bref',
+        ]);
     }
 
     public function withQueryParams($queryParams)

@@ -1,5 +1,5 @@
 import MethodAction from '@/action/method'
-import { wireDirectives} from '@/util'
+import { wireDirectives } from '@/util'
 import store from '@/Store'
 
 export default function () {
@@ -56,9 +56,26 @@ function fireActionOnInterval(node, component) {
             if (Math.random() < .95) return
         }
 
+        // Only poll visible elements. Visible elements are elements that
+        // are visible in the current viewport.
+        if (directive.modifiers.includes('visible') && ! inViewport(directive.el)) {
+            return
+        }
+
         // Don't poll if livewire is offline as well.
         if (store.livewireIsOffline) return
 
         component.addAction(new MethodAction(method, directive.params, node))
     }, interval);
+}
+
+function inViewport(el) {
+    var bounding = el.getBoundingClientRect();
+
+    return (
+        bounding.top < (window.innerHeight || document.documentElement.clientHeight) &&
+        bounding.left < (window.innerWidth || document.documentElement.clientWidth) &&
+        bounding.bottom > 0 &&
+        bounding.right > 0
+    );
 }

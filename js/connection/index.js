@@ -13,8 +13,16 @@ export default class Connection {
         return componentStore.onErrorCallback(status)
     }
 
+    showExpiredMessage() {
+        confirm(
+            'This page has expired due to inactivity.\nWould you like to refresh the page?'
+        ) && window.location.reload()
+    }
+
     sendMessage(message) {
         let payload = message.payload()
+        let csrfToken = getCsrfToken()
+        let socketId = this.getSocketId()
 
         if (window.__testing_request_interceptor) {
             return window.__testing_request_interceptor(payload, this)
@@ -31,12 +39,12 @@ export default class Connection {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'text/html, application/xhtml+xml',
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'X-Socket-ID': this.getSocketId(),
                     'X-Livewire': true,
 
                     // We'll set this explicitly to mitigate potential interference from ad-blockers/etc.
                     'Referer': window.location.href,
+                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
+                    ...(socketId && { 'X-Socket-ID': socketId })
                 },
             }
         )
@@ -58,9 +66,7 @@ export default class Connection {
 
                         store.sessionHasExpired = true
 
-                        confirm(
-                            'This page has expired due to inactivity.\nWould you like to refresh the page?'
-                        ) && window.location.reload()
+                        this.showExpiredMessage()
                     } else {
                         response.text().then(response => {
                             this.showHtmlModal(response)

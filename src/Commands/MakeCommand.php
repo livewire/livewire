@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class MakeCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:make {name} {--force} {--inline}';
+    protected $signature = 'livewire:make {name} {--force} {--inline} {--test}';
 
     protected $description = 'Create a new Livewire component';
 
@@ -26,11 +26,16 @@ class MakeCommand extends FileManipulationCommand
 
         $force = $this->option('force');
         $inline = $this->option('inline');
+        $test = $this->option('test');
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
 
         $class = $this->createClass($force, $inline);
         $view = $this->createView($force, $inline);
+
+        if ($test) {
+            $test = $this->createTest($force);
+        }
 
         $this->refreshComponentAutodiscovery();
 
@@ -40,6 +45,10 @@ class MakeCommand extends FileManipulationCommand
 
             if (! $inline) {
                 $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
+            }
+
+            if ($test) {
+                $test && $this->line("<options=bold;fg=green>TEST:</>  {$this->parser->relativeTestPath()}");
             }
 
             if ($showWelcomeMessage && ! app()->environment('testing')) {
@@ -86,8 +95,104 @@ class MakeCommand extends FileManipulationCommand
         return $viewPath;
     }
 
+    protected function createTest($force = false)
+    {
+        $testPath = $this->parser->testPath();
+
+        if (File::exists($testPath) && ! $force) {
+            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
+            $this->line("<fg=red;options=bold>Test class already exists:</> {$this->parser->relativeTestPath()}");
+
+            return false;
+        }
+
+        $this->ensureDirectoryExists($testPath);
+
+        File::put($testPath, $this->parser->testContents());
+
+        return $testPath;
+    }
+
     public function isReservedClassName($name)
     {
-        return array_search($name, ['Parent', 'Component', 'Interface']) !== false;
+        return array_search(strtolower($name), $this->getReservedName()) !== false;
     }
+
+    private function getReservedName()
+    {
+        return [
+            'parent',
+            'component',
+            'interface',
+            '__halt_compiler',
+            'abstract',
+            'and',
+            'array',
+            'as',
+            'break',
+            'callable',
+            'case',
+            'catch',
+            'class',
+            'clone',
+            'const',
+            'continue',
+            'declare',
+            'default',
+            'die',
+            'do',
+            'echo',
+            'else',
+            'elseif',
+            'empty',
+            'enddeclare',
+            'endfor',
+            'endforeach',
+            'endif',
+            'endswitch',
+            'endwhile',
+            'eval',
+            'exit',
+            'extends',
+            'final',
+            'finally',
+            'fn',
+            'for',
+            'foreach',
+            'function',
+            'global',
+            'goto',
+            'if',
+            'implements',
+            'include',
+            'include_once',
+            'instanceof',
+            'insteadof',
+            'interface',
+            'isset',
+            'list',
+            'namespace',
+            'new',
+            'or',
+            'print',
+            'private',
+            'protected',
+            'public',
+            'require',
+            'require_once',
+            'return',
+            'static',
+            'switch',
+            'throw',
+            'trait',
+            'try',
+            'unset',
+            'use',
+            'var',
+            'while',
+            'xor',
+            'yield',
+        ];
+    }
+
 }

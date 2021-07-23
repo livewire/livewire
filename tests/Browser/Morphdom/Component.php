@@ -13,6 +13,7 @@ class Component extends BaseComponent
     public $bob = false;
     public $lob = false;
     public $law = false;
+    public $qux = false;
 
     public function render()
     {

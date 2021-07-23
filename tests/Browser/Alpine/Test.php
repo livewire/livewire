@@ -48,6 +48,26 @@ class Test extends TestCase
                 ->assertSeeIn('@baz.output', '6')
 
                 /**
+                 * get, set, and call with special characters
+                 */
+                ->assertSeeIn('@special.output', 'abc')
+                ->assertSeeIn('@special.get', 'abc')
+                ->assertSeeIn('@special.get.proxy', 'abc')
+                ->assertSeeIn('@special.get.proxy.magic', 'abc')
+                ->waitForLivewire()->click('@special.set')
+                ->assertSeeIn('@special.output', 'ž')
+                ->waitForLivewire()->click('@special.set.proxy')
+                ->assertSeeIn('@special.output', 'žž')
+                ->waitForLivewire()->click('@special.set.proxy.magic')
+                ->assertSeeIn('@special.output', 'žžž')
+                ->waitForLivewire()->click('@special.call')
+                ->assertSeeIn('@special.output', 'žžžž')
+                ->waitForLivewire()->click('@special.call.proxy')
+                ->assertSeeIn('@special.output', 'žžžžž')
+                ->waitForLivewire()->click('@special.call.proxy.magic')
+                ->assertSeeIn('@special.output', 'žžžžžž')
+
+                /**
                  * .call() return value
                  */
                 ->assertDontSeeIn('@bob.output', '1')
@@ -118,6 +138,40 @@ class Test extends TestCase
                 ->assertSeeIn('@output', '0')
                 ->waitForLivewire()->click('@button')
                 ->assertSeeIn('@output', '1')
+            ;
+        });
+    }
+
+    public function test_morphdom_can_handle_adding_at_symbol_attributes()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, MorphingAtSymbolAttributeComponent::class)
+                ->assertAttributeMissing('@span', '@click', 'hey')
+                ->waitForLivewire()->click('@button')
+                ->assertAttribute('@span', '@click', 'hey')
+                ->waitForLivewire()->click('@button')
+                ->assertAttributeMissing('@span', '@click', 'hey')
+            ;
+        });
+    }
+
+    public function test_alpine_registers_click_handlers_properly_on_livewire_change()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ClickComponent::class)
+                ->waitForLivewire()->click('@show')
+                ->click('@click')
+                ->assertSeeIn('@alpineClicksFired', 1)
+                ->click('@click')
+                ->assertSeeIn('@alpineClicksFired', 2)
+                ->click('@click')
+                ->assertSeeIn('@alpineClicksFired', 3)
+                ->click('@componentClick')
+                ->assertSeeIn('@alpineComponentClicksFired', 1)
+                ->click('@componentClick')
+                ->assertSeeIn('@alpineComponentClicksFired', 2)
+                ->click('@componentClick')
+                ->assertSeeIn('@alpineComponentClicksFired', 3)
             ;
         });
     }

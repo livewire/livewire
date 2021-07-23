@@ -28,4 +28,15 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_magic_event_works()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, Component::class)
+                ->assertDontSeeIn('@outputEvent', 'baz')
+                ->waitForLivewire()->click('@fillBar')
+                ->assertSeeIn('@outputEvent', 'baz')
+            ;
+        });
+    }
 }

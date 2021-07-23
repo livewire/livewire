@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Route;
 
