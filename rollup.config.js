@@ -1,11 +1,11 @@
 import md5 from 'md5';
 import fs from 'fs-extra';
-import babel from 'rollup-plugin-babel';
+import babel from '@rollup/plugin-babel';
 import alias from '@rollup/plugin-alias';
 import filesize from 'rollup-plugin-filesize';
 import { terser } from 'rollup-plugin-terser';
 import commonjs from '@rollup/plugin-commonjs';
-import resolve from 'rollup-plugin-node-resolve';
+import resolve from '@rollup/plugin-node-resolve';
 import outputManifest from 'rollup-plugin-output-manifest';
 
 export default {

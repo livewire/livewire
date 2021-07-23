@@ -67,7 +67,7 @@ class TemporaryUploadedFile extends UploadedFile
             );
         }
 
-        if (! $this->isPreviewable()) {
+        if (method_exists($this->storage->getAdapter(), 'getTemporaryUrl') || ! $this->isPreviewable()) {
             // This will throw an error because it's not used with S3.
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }

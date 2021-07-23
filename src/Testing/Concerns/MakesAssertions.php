@@ -119,7 +119,7 @@ trait MakesAssertions
 
     protected function stripOutInitialData($subject)
     {
-        return preg_replace('(wire:initial-data=\".+}")', '', $subject);
+        return preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
     }
 
     public function assertEmitted($value, ...$params)

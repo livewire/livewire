@@ -2,8 +2,9 @@
 
 namespace Livewire\Macros;
 
-use PHPUnit\Framework\Assert as PHPUnit;
 use function Livewire\str;
+use Facebook\WebDriver\WebDriverBy;
+use PHPUnit\Framework\Assert as PHPUnit;
 
 class DuskBrowserMacros
 {
@@ -179,6 +180,32 @@ class DuskBrowserMacros
         return function () {
             /** @var \Laravel\Dusk\Browser $this */
             return tap($this)->script("window.dispatchEvent(new Event('offline'))");
+        };
+    }
+
+    public function selectMultiple()
+    {
+        return function ($field, $values = []) {
+            $element = $this->resolver->resolveForSelection($field);
+
+            $options = $element->findElements(WebDriverBy::tagName('option'));
+
+            if (empty($values)) {
+                $maxSelectValues = sizeof($options) - 1;
+                $minSelectValues = rand(0, $maxSelectValues);
+                foreach (range($minSelectValues, $maxSelectValues) as $optValue) {
+                    $options[$optValue]->click();
+                }
+            } else {
+                foreach ($options as $option) {
+                    $optValue = (string)$option->getAttribute('value');
+                    if (in_array($optValue, $values)) {
+                        $option->click();
+                    }
+                }
+            }
+
+            return $this;
         };
     }
 }

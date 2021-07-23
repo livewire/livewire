@@ -8,9 +8,9 @@ See the docs for everything: https://laravel-livewire.com/docs/quickstart
 
 Awesome Livewire stuff here: https://github.com/imliam/awesome-livewire
 
-All contributions are welcomed! (but please submit an issue to make sure the PR is warranted first)
+All contributions are welcomed! (but please start a discussion to make sure the PR is warranted first)
 
-Open GitHub issues for all bugs. Ideas and questions belong in [Discussions](https://github.com/livewire/livewire/discussions) or [Discord server](https://discord.gg/livewire).
+Ideas, questions and bugs belong in [Discussions](https://github.com/livewire/livewire/discussions) or [Discord server](https://discord.gg/livewire).
 
 Contribute to the docs here: https://github.com/livewire/docs
 
