@@ -46,7 +46,7 @@ abstract class Component
             $componentParams = (new ImplicitRouteBinding($container))
                 ->resolveAllParameters($route, $this);
         } catch (ModelNotFoundException $exception) {
-            if ($route->getMissing()) {
+            if (method_exists($route,'getMissing') && $route->getMissing()) {
                 return $route->getMissing()(request());
             }
 
