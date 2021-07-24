@@ -80,8 +80,6 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
 
         $results = HydratePublicProperties::setDirtyData($model, $dirtyData);
 
-        ray($model->toArray());
-
         $this->assertEquals($model->title, 'oof');
         $this->assertEquals($model->name, 'rab');
         $this->assertEquals($model->email, 'zab');
