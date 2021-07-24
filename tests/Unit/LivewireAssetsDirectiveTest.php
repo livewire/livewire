@@ -91,7 +91,7 @@ class LivewireAssetsDirectiveTest extends TestCase
         ])->render();
 
         $this->assertStringContainsString(
-            'nonce="foobarnonce">',
+            ' nonce="foobarnonce">',
             $output
         );
     }
