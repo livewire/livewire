@@ -2,21 +2,21 @@
 
 namespace Livewire\HydrationMiddleware;
 
+use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
+use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
+use Illuminate\Contracts\Queue\QueueableCollection;
+use Illuminate\Contracts\Database\ModelIdentifier;
+use Illuminate\Support\Carbon as IlluminateCarbon;
+use Illuminate\Contracts\Queue\QueueableEntity;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Stringable;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use ReflectionProperty;
+use Livewire\Wireable;
 use Carbon\Carbon;
 use DateTime;
-use Illuminate\Contracts\Database\ModelIdentifier;
-use Illuminate\Contracts\Queue\QueueableCollection;
-use Illuminate\Contracts\Queue\QueueableEntity;
-use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon as IlluminateCarbon;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
-use Illuminate\Support\Stringable;
-use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 use stdClass;
-use Livewire\Wireable;
-use ReflectionProperty;
 
 class HydratePublicProperties implements HydrationMiddleware
 {
@@ -58,14 +58,13 @@ class HydratePublicProperties implements HydrationMiddleware
 
                 data_set($instance, $property, $type::fromLivewire($value));
             } else {
-
                 // If the value is null and the property is typed, don't set it, because all values start off as null and this
                 // will prevent Typed properties from wining about being set to null.
                 if (version_compare(PHP_VERSION, '7.4', '<')) {
                     $instance->$property = $value;
                 } else {
-                    // do not use reflection for virtual component properties
-                    if(property_exists($instance, $property) && (new ReflectionProperty($instance, $property))->getType()){
+                    // Do not use reflection for virtual component properties.
+                    if (property_exists($instance, $property) && (new ReflectionProperty($instance, $property))->getType()){
                         is_null($value) || $instance->$property = $value;
                     } else {
                         $instance->$property = $value;
@@ -146,10 +145,8 @@ class HydratePublicProperties implements HydrationMiddleware
             new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
         );
 
-        /*
-         * Use `loadMissing` here incase loading collection relations gets fixed in Laravel framework,
-         * in which case we don't want to load relations again.
-         */
+        // Use `loadMissing` here incase loading collection relations gets fixed in Laravel framework,
+        // in which case we don't want to load relations again.
         $models->loadMissing($serialized['relations']);
 
         $dirtyModelData = $request->memo['data'][$property];
@@ -171,7 +168,7 @@ class HydratePublicProperties implements HydrationMiddleware
             if (is_array($value)) {
                 $existingData = data_get($model, $key);
 
-                if(is_array($existingData)) {
+                if (is_array($existingData)) {
                     $updatedData = static::setDirtyData([], data_get($data, $key));
                 } else {
                     $updatedData = static::setDirtyData($existingData, data_get($data, $key));
@@ -242,9 +239,9 @@ class HydratePublicProperties implements HydrationMiddleware
                 });
 
             // If collection rules exist, and value of * in model rules, remove * from model rule
-            if($collectionRules->count()) {
+            if ($collectionRules->count()) {
                 $modelRules = $modelRules->reject(function($value) {
-                    return $value == "*";
+                    return $value === '*';
                 });
             }
 
@@ -265,8 +262,8 @@ class HydratePublicProperties implements HydrationMiddleware
     public static function extractData($data, $rules, $filteredData)
     {
         foreach($rules as $key => $rule) {
-            if($key === '*') {
-                if($data) {
+            if ($key === '*') {
+                if ($data) {
                     foreach($data as $item) {
                         $filteredData[] = static::extractData($item, $rule, []);
                     }
@@ -276,9 +273,9 @@ class HydratePublicProperties implements HydrationMiddleware
                     $newFilteredData = data_get($data, $key) instanceof stdClass ? new stdClass : [];
                     data_set($filteredData, $key, static::extractData(data_get($data, $key), $rule, $newFilteredData));
                 } else {
-                    if($rule == "*") {
+                    if ($rule == "*") {
                         $filteredData = $data;
-                    }elseif((Arr::accessible($data) && Arr::exists($data, $rule)) || (is_object($data) && isset($data->{$rule}))) {
+                    } elseif ((Arr::accessible($data) && Arr::exists($data, $rule)) || (is_object($data) && isset($data->{$rule}))) {
                         data_set($filteredData, $rule, data_get($data, $rule));
                     }
                 }
