@@ -2,16 +2,19 @@
 
 namespace Livewire\HydrationMiddleware;
 
-use DateTime;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Stringable;
-use Illuminate\Contracts\Queue\QueueableEntity;
+use DateTime;
 use Illuminate\Contracts\Database\ModelIdentifier;
-use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Contracts\Queue\QueueableCollection;
+use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon as IlluminateCarbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Illuminate\Support\Stringable;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
+use stdClass;
 use Livewire\Wireable;
 use ReflectionProperty;
 
@@ -128,11 +131,9 @@ class HydratePublicProperties implements HydrationMiddleware
             $model = new $serialized['class'];
         }
 
-        $modelData = $request->memo['data'][$property];
+        $dirtyModelData = $request->memo['data'][$property];
 
-        foreach ($modelData as $key => $value) {
-            data_set($model, $key, $value);
-        }
+        static::setDirtyData($model, $dirtyModelData);
 
         $instance->$property = $model;
     }
@@ -154,26 +155,34 @@ class HydratePublicProperties implements HydrationMiddleware
         $dirtyModelData = $request->memo['data'][$property];
 
         foreach ($idsWithNullsIntersparsed as $index => $id) {
-            if ($rules = $instance->rulesForModel($property)) {
-                $keys = $rules->keys()
-                    ->map([$instance, 'ruleWithNumbersReplacedByStars'])
-                    ->mapInto(Stringable::class)
-                    ->filter->contains('*.')
-                    ->map->after('*.')
-                    ->map->__toString();
-
-                if (is_null($id)) {
-                    $model = new $serialized['class'];
-                    $models->splice($index, 0, [$model]);
-                }
-
-                foreach ($keys as $key) {
-                    data_set($models[$index], $key, data_get($dirtyModelData[$index], $key));
-                }
+            if (is_null($id)) {
+                $model = new $serialized['class'];
+                $models->splice($index, 0, [$model]);
             }
+
+            static::setDirtyData(data_get($models, $index), data_get($dirtyModelData, $index, []));
         }
 
         $instance->$property = $models;
+    }
+
+    public static function setDirtyData($model, $data) {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $existingData = data_get($model, $key);
+
+                if(is_array($existingData)) {
+                    $updatedData = static::setDirtyData([], data_get($data, $key));
+                } else {
+                    $updatedData = static::setDirtyData($existingData, data_get($data, $key));
+                }
+            } else {
+                $updatedData = data_get($data, $key);
+            }
+            data_set($model, $key, $updatedData);
+        }
+
+        return $model;
     }
 
     protected static function dehydrateModel($value, $property, $response, $instance)
@@ -185,18 +194,7 @@ class HydratePublicProperties implements HydrationMiddleware
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
 
-        $filteredModelData = [];
-        if ($rules = $instance->rulesForModel($property)) {
-            $keys = $rules->keys()->map(function ($key) use ($instance) {
-                return $instance->beforeFirstDot($instance->afterFirstDot($key));
-            });
-
-            $fullModelData = $instance->$property->toArray();
-
-            foreach ($keys as $key) {
-                data_set($filteredModelData, $key, data_get($fullModelData, $key));
-            }
-        }
+        $filteredModelData = static::filterData($instance, $property);
 
         // Only include the allowed data (defined by rules) in the response payload
         data_set($response, 'memo.data.'.$property, $filteredModelData);
@@ -209,27 +207,84 @@ class HydratePublicProperties implements HydrationMiddleware
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.modelCollections.'.$property, $serializedModel);
 
-        $filteredModelData = [];
-        if ($rules = $instance->rulesForModel($property)) {
-            $keys = $rules->keys()
-                ->map([$instance, 'ruleWithNumbersReplacedByStars'])
-                ->mapInto(Stringable::class)
-                ->filter->contains('*.')
-                ->map->after('*.')
-                ->map->__toString();
+        $filteredModelData = static::filterData($instance, $property);
 
-            $fullModelData = $instance->$property->map->toArray();
+        // Only include the allowed data (defined by rules) in the response payload
+        data_set($response, 'memo.data.'.$property, $filteredModelData);
+    }
 
-            foreach ($fullModelData as $index => $data) {
-                $filteredModelData[$index] = [];
+    public static function filterData($instance, $property) {
+        $data = $instance->$property->toArray();
 
-                foreach ($keys as $key) {
-                    data_set($filteredModelData[$index], $key, data_get($data, $key));
+        $rules = $instance->rulesForModel($property)->keys();
+
+        $rules = static::processRules($rules)->get($property, []);
+
+        return static::extractData($data, $rules, []);
+    }
+
+    public static function processRules($rules) {
+        $rules = Collection::wrap($rules);
+
+        // Map to groups
+        $rules = $rules
+            ->mapInto(Stringable::class)
+            ->mapToGroups(function($rule) {
+                return [$rule->before('.')->__toString() => $rule->after('.')];
+            });
+
+        // Go through groups and process rules
+        $rules = $rules->mapWithKeys(function($rules, $group) {
+            // Split rules into collection and model rules
+            [$collectionRules, $modelRules] = $rules
+                ->partition(function($rule) {
+                    return $rule->contains('.');
+                });
+
+            // If collection rules exist, and value of * in model rules, remove * from model rule
+            if($collectionRules->count()) {
+                $modelRules = $modelRules->reject(function($value) {
+                    return $value == "*";
+                });
+            }
+
+            // Recurse through collection rules
+            $collectionRules = static::processRules($collectionRules);
+
+            // Convert model rule stringable object back to string
+            $modelRules = $modelRules->map->__toString();
+
+            $rules = $modelRules->merge($collectionRules);
+
+            return [$group => $rules];
+        });
+
+        return $rules;
+    }
+
+    public static function extractData($data, $rules, $filteredData)
+    {
+        foreach($rules as $key => $rule) {
+            if($key === '*') {
+                if($data) {
+                    foreach($data as $item) {
+                        $filteredData[] = static::extractData($item, $rule, []);
+                    }
+                }
+            } else {
+                if (is_array($rule) || $rule instanceof Collection) {
+                    $newFilteredData = data_get($data, $key) instanceof stdClass ? new stdClass : [];
+                    data_set($filteredData, $key, static::extractData(data_get($data, $key), $rule, $newFilteredData));
+                } else {
+                    if($rule == "*") {
+                        $filteredData = $data;
+                    }elseif((Arr::accessible($data) && Arr::exists($data, $rule)) || (is_object($data) && isset($data->{$rule}))) {
+                        data_set($filteredData, $rule, data_get($data, $rule));
+                    }
                 }
             }
         }
 
-        // Only include the allowed data (defined by rules) in the response payload
-        data_set($response, 'memo.data.'.$property, $filteredModelData);
+        return $filteredData;
     }
 }
