@@ -28,9 +28,9 @@ class SupportDateTimes
                 $response->memo['dataMeta']['dates'][$name] = 'carbon';
             } elseif ($value instanceof CarbonImmutable) {
                 $response->memo['dataMeta']['dates'][$name] = 'carbonImmutable';
-            }elseif ($value instanceof DateTimeImmutable) {
+            } elseif ($value instanceof DateTimeImmutable) {
                 $response->memo['dataMeta']['dates'][$name] = 'nativeImmutable';
-            }else {
+            } else {
                 $response->memo['dataMeta']['dates'][$name] = 'native';
             }
         });

@@ -105,12 +105,11 @@ class HydratePublicProperties implements HydrationMiddleware
                     $response->memo['dataMeta']['dates'][$key] = 'illuminate';
                 } elseif ($value instanceof Carbon) {
                     $response->memo['dataMeta']['dates'][$key] = 'carbon';
-                }elseif ($value instanceof CarbonImmutable) {
+                } elseif ($value instanceof CarbonImmutable) {
                     $response->memo['dataMeta']['dates'][$key] = 'carbonImmutable';
-                }elseif ($value instanceof DateTimeImmutable) {
+                } elseif ($value instanceof DateTimeImmutable) {
                     $response->memo['dataMeta']['dates'][$key] = 'nativeImmutable';
-                }
-                else {
+                } else {
                     $response->memo['dataMeta']['dates'][$key] = 'native';
                 }
 
