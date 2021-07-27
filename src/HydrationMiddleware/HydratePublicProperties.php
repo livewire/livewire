@@ -183,7 +183,6 @@ class HydratePublicProperties implements HydrationMiddleware
             } else {
                 data_set($model, $key, $updatedData);
             }
-            
         }
 
         return $model;
