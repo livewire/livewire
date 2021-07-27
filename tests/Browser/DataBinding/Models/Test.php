@@ -29,7 +29,7 @@ class Test extends TestCase
     }
 
     /** @test */
-    public function it_allows_nested_data_to_be_changed()
+    public function it_enables_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
