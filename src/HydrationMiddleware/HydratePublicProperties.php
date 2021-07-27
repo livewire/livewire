@@ -15,7 +15,9 @@ use Illuminate\Support\Str;
 use ReflectionProperty;
 use Livewire\Wireable;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use DateTime;
+use DateTimeImmutable;
 use stdClass;
 
 class HydratePublicProperties implements HydrationMiddleware
@@ -37,7 +39,9 @@ class HydratePublicProperties implements HydrationMiddleware
             if ($type = data_get($dates, $property)) {
                 $types = [
                     'native' => DateTime::class,
+                    'nativeImmutable' => DateTimeImmutable::class,
                     'carbon' => Carbon::class,
+                    'carbonImmutable' => CarbonImmutable::class,
                     'illuminate' => IlluminateCarbon::class,
                 ];
 
@@ -101,7 +105,12 @@ class HydratePublicProperties implements HydrationMiddleware
                     $response->memo['dataMeta']['dates'][$key] = 'illuminate';
                 } elseif ($value instanceof Carbon) {
                     $response->memo['dataMeta']['dates'][$key] = 'carbon';
-                } else {
+                }elseif ($value instanceof CarbonImmutable) {
+                    $response->memo['dataMeta']['dates'][$key] = 'carbonImmutable';
+                }elseif ($value instanceof DateTimeImmutable) {
+                    $response->memo['dataMeta']['dates'][$key] = 'nativeImmutable';
+                }
+                else {
                     $response->memo['dataMeta']['dates'][$key] = 'native';
                 }
 
