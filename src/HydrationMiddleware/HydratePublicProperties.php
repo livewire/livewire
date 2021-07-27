@@ -16,6 +16,7 @@ use ReflectionProperty;
 use Livewire\Wireable;
 use Carbon\Carbon;
 use DateTime;
+use Illuminate\Database\Eloquent\Model;
 use stdClass;
 
 class HydratePublicProperties implements HydrationMiddleware
@@ -176,7 +177,13 @@ class HydratePublicProperties implements HydrationMiddleware
             } else {
                 $updatedData = data_get($data, $key);
             }
-            data_set($model, $key, $updatedData);
+
+            if ($model instanceof Model && $model->relationLoaded($key)) {
+                $model->setRelation($key, $updatedData);
+            } else {
+                data_set($model, $key, $updatedData);
+            }
+            
         }
 
         return $model;
