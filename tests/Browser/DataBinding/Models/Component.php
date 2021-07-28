@@ -2,7 +2,6 @@
 
 namespace Tests\Browser\DataBinding\Models;
 
-use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
@@ -20,6 +19,11 @@ class Component extends BaseComponent
     public function mount()
     {
         $this->author = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
+    }
+
+    public function save()
+    {
+        $this->author->push();
     }
 
     public function render()
@@ -66,6 +70,8 @@ class Component extends BaseComponent
             </div>
         @endforeach
     </div>
+
+    <button wire:click="save" type="button" dusk="save">Save</button>
 </div>
 HTML;
     }
