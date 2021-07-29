@@ -119,7 +119,13 @@ trait MakesAssertions
 
     protected function stripOutInitialData($subject)
     {
-        return preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
+        $content = preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
+
+        if (Str::startsWith($content, '<div>')) {
+            $content = preg_replace('/^<div>\n?([\S\s]*)\n?<\/div>\n?$/m', '$1', $content);
+        }
+
+        return $content;
     }
 
     public function assertEmitted($value, ...$params)
