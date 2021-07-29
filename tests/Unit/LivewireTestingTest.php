@@ -96,15 +96,50 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
-    public function assert_see_doesnt_include_wire_id_and_wire_data_attribute()
+    public function assert_see_doesnt_include_wire_data_attribute()
     {
         /*
         * See for more info: https://github.com/calebporzio/livewire/issues/62
-        * Regex test: https://regex101.com/r/UhjREC/2/
         */
         app(LivewireManager::class)
             ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => 'shouldnt see me'])
             ->assertDontSee('shouldnt see me');
+    }
+
+    /** @test */
+    public function assert_see_doesnt_include_wire_id()
+    {
+        /*
+        * Regex test: https://regex101.com/r/UhjREC
+        */
+        app(LivewireManager::class)
+            ->test(HasHtml::class)
+            ->assertSeeHtml('<p style="display: none">Hello HTML</p>')
+            ->assertDontSee('wire:id="');
+    }
+
+    /** @test */
+    public function assert_see_doesnt_include_wrapper_div()
+    {
+        /*
+        * Regex test: https://regex101.com/r/XKeZYf
+        */
+        app(LivewireManager::class)
+            ->test(HasHtml::class)
+            ->assertSeeHtml('<p style="display: none">Hello HTML</p>')
+            ->assertDontSeeHtml('<div>')
+            ->assertDontSeeHtml('</div>');
+    }
+
+    /** @test */
+    public function assert_see_include_wrapper_div()
+    {
+        /*
+        * Regex test: https://regex101.com/r/XKeZYf
+        */
+        app(LivewireManager::class)
+            ->test(HasHtmlWithWrapperAttributes::class)
+            ->assertSeeHtml('<div class="alpine"><p style="display: none">Hello HTML</p></div>');
     }
 
     /** @test */
@@ -224,6 +259,14 @@ class HasHtml extends Component
     public function render()
     {
         return app('view')->make('show-html');
+    }
+}
+
+class HasHtmlWithWrapperAttributes extends Component
+{
+    public function render()
+    {
+        return app('view')->make('show-html-with-wrapper-attr');
     }
 }
 
