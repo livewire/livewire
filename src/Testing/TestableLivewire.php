@@ -26,6 +26,7 @@ class TestableLivewire
     public $lastErrorBag;
     public $lastRenderedView;
     public $lastRenderedDom;
+    public $lastRenderedCleanDom;
     public $lastResponse;
     public $rawMountedResponse;
 
@@ -95,6 +96,7 @@ class TestableLivewire
         // the last known one.
         if ($output['effects']['html'] ?? false) {
             $this->lastRenderedDom = $output['effects']['html'];
+            $this->lastRenderedCleanDom = $this->stripOutInitialData($this->lastRenderedDom);
         }
 
         if ($output['fingerprint'] ?? false) {
