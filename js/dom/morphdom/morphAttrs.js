@@ -5,6 +5,11 @@
  */
 
 export default function morphAttrs(fromNode, toNode) {
+    // @alpinejs
+    if (fromNode._x_isShown !== undefined && toNode._x_isShown !== undefined) return
+    if (fromNode._x_isShown && ! toNode._x_isShown) return
+    if (! fromNode._x_isShown && toNode._x_isShown) return
+
     var attrs = toNode.attributes;
     var i;
     var attr;

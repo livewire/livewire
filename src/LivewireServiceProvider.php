@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Illuminate\View\View;
+use Illuminate\Testing\TestView;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
@@ -31,6 +32,7 @@ use Livewire\Commands\{
     S3CleanupCommand,
     MakeLivewireCommand,
 };
+use Livewire\Macros\ViewMacros;
 use Livewire\HydrationMiddleware\{
     RenderView,
     PerformActionCalls,
@@ -44,7 +46,6 @@ use Livewire\HydrationMiddleware\{
     NormalizeServerMemoSansDataForJavaScript,
     NormalizeComponentPropertiesForJavaScript,
 };
-use Livewire\Macros\ViewMacros;
 
 class LivewireServiceProvider extends ServiceProvider
 {
@@ -96,7 +97,7 @@ class LivewireServiceProvider extends ServiceProvider
         // alias. For instance: 'examples.foo' => App\Http\Livewire\Examples\Foo
 
         // We will generate a manifest file so we don't have to do the lookup every time.
-        $defaultManifestPath = $this->app['livewire']->isOnVapor()
+        $defaultManifestPath = $this->app['livewire']->isRunningServerless()
             ? '/tmp/storage/bootstrap/cache/livewire-components.php'
             : app()->bootstrapPath('cache/livewire-components.php');
 
@@ -169,6 +170,10 @@ class LivewireServiceProvider extends ServiceProvider
     {
         // Usage: $this->assertSeeLivewire('counter');
         TestResponse::macro('assertSeeLivewire', function ($component) {
+            if (is_subclass_of($component, Component::class)) {
+                $component = $component::getName();
+            }
+
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringContainsString(
@@ -182,6 +187,10 @@ class LivewireServiceProvider extends ServiceProvider
 
         // Usage: $this->assertDontSeeLivewire('counter');
         TestResponse::macro('assertDontSeeLivewire', function ($component) {
+            if (is_subclass_of($component, Component::class)) {
+                $component = $component::getName();
+            }
+
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringNotContainsString(
@@ -192,6 +201,40 @@ class LivewireServiceProvider extends ServiceProvider
 
             return $this;
         });
+
+        if (class_exists(TestView::class)) {
+            TestView::macro('assertSeeLivewire', function ($component) {
+                if (is_subclass_of($component, Component::class)) {
+                    $component = $component::getName();
+                }
+
+                $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+                \PHPUnit\Framework\Assert::assertStringContainsString(
+                    $escapedComponentName,
+                    $this->rendered,
+                    'Cannot find Livewire component ['.$component.'] rendered on page.'
+                );
+
+                return $this;
+            });
+
+            TestView::macro('assertDontSeeLivewire', function ($component) {
+                if (is_subclass_of($component, Component::class)) {
+                    $component = $component::getName();
+                }
+
+                $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+                \PHPUnit\Framework\Assert::assertStringNotContainsString(
+                    $escapedComponentName,
+                    $this->rendered,
+                    'Found Livewire component ['.$component.'] rendered on page.'
+                );
+
+                return $this;
+            });
+        }
     }
 
     protected function registerViewMacros()

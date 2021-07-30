@@ -50,10 +50,10 @@ class Test extends TestCase
                  * Select multiple.
                  */
                 ->assertDontSeeIn('@multiple.output', 'bar')
-                ->waitForLivewire()->select('@multiple.input', 'bar')
+                ->waitForLivewire()->select('@multiple.input', ['bar'])
                 ->assertSelected('@multiple.input', 'bar')
                 ->assertSeeIn('@multiple.output', 'bar')
-                ->waitForLivewire()->select('@multiple.input', 'baz')
+                ->waitForLivewire()->select('@multiple.input', ['bar', 'baz'])
                 ->assertSelected('@multiple.input', 'baz')
                 ->assertSeeIn('@multiple.output', 'bar')
                 ->assertSeeIn('@multiple.output', 'baz');

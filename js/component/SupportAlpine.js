@@ -1,3 +1,4 @@
+import { walk } from './../util/walk'
 import store from '@/Store'
 
 export default function () {
@@ -13,6 +14,17 @@ export default function () {
 }
 
 function refreshAlpineAfterEveryLivewireRequest() {
+    if (isV3()) {
+        store.registerHook('message.processed', (message, livewireComponent) => {
+            walk(livewireComponent.el, el => {
+                if (el._x_hidePromise) return
+                if (el._x_runEffects) el._x_runEffects()
+            })
+        })
+
+        return
+    }
+
     if (! window.Alpine.onComponentInitialized) return
 
     window.Alpine.onComponentInitialized(component => {
@@ -29,6 +41,22 @@ function refreshAlpineAfterEveryLivewireRequest() {
 }
 
 function addDollarSignWire() {
+    if (isV3()) {
+        window.Alpine.magic('wire', function (el) {
+            let wireEl = el.closest('[wire\\:id]')
+
+            if (! wireEl)
+                console.warn(
+                    'Alpine: Cannot reference "$wire" outside a Livewire component.'
+                )
+
+            let component = wireEl.__livewire
+
+            return component.$wire
+        })
+        return
+    }
+
     if (! window.Alpine.addMagicProperty) return
 
     window.Alpine.addMagicProperty('wire', function (componentEl) {
@@ -46,6 +74,8 @@ function addDollarSignWire() {
 }
 
 function supportEntangle() {
+    if (isV3()) return
+
     if (! window.Alpine.onBeforeComponentInitialized) return
 
     window.Alpine.onBeforeComponentInitialized(component => {
@@ -130,7 +160,96 @@ function supportEntangle() {
     })
 }
 
+export function getEntangleFunction(component) {
+    if (isV3()) {
+        return (name, defer = false) => {
+            let isDeferred = defer
+            let livewireProperty = name
+            let livewireComponent = component
+            let livewirePropertyValue = component.get(livewireProperty)
+
+            let interceptor = Alpine.interceptor((initialValue, getter, setter, path, key) => {
+                // Check to see if the Livewire property exists and if not log a console error
+                // and return so everything else keeps running.
+                if (typeof livewirePropertyValue === 'undefined') {
+                    console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`)
+                    return
+                }
+
+                // Let's set the initial value of the Alpine prop to the Livewire prop's value.
+                let value
+                    // We need to stringify and parse it though to get a deep clone.
+                    = JSON.parse(JSON.stringify(livewirePropertyValue))
+
+                setter(value)
+
+                // Now, we'll watch for changes to the Alpine prop, and fire the update to Livewire.
+                window.Alpine.effect(() => {
+                    let value = getter()
+
+                    if (
+                        JSON.stringify(value) ==
+                        JSON.stringify(
+                            livewireComponent.getPropertyValueIncludingDefers(
+                                livewireProperty
+                            )
+                        )
+                    ) return
+
+                    // We'll tell Livewire to update the property, but we'll also tell Livewire
+                    // to not call the normal property watchers on the way back to prevent another
+                    // circular dependancy.
+                    livewireComponent.set(
+                        livewireProperty,
+                        value,
+                        isDeferred,
+                        // Block firing of Livewire watchers for this data key when the request comes back.
+                        // Unless it is deferred, in which cause we don't know if the state will be the same, so let it run.
+                        isDeferred ? false : true
+                    )
+                })
+
+                // We'll also listen for changes to the Livewire prop, and set them in Alpine.
+                livewireComponent.watch(
+                    livewireProperty,
+                    value => {
+                        // Ensure data is deep cloned otherwise Alpine mutates Livewire data
+                        window.Alpine.disableEffectScheduling(() => {
+                            setter(typeof value !== 'undefined' ? JSON.parse(JSON.stringify(value)) : value)
+                        })
+                    }
+                )
+
+                return value
+            }, obj => {
+                Object.defineProperty(obj, 'defer', {
+                    get() {
+                        isDeferred = true
+
+                        return obj
+                    }
+                })
+            })
+
+            return interceptor(livewirePropertyValue)
+        }
+    }
+
+    return (name, defer = false) => ({
+        isDeferred: defer,
+        livewireEntangle: name,
+        get defer() {
+            this.isDeferred = true
+            return this
+        },
+    })
+}
+
 export function alpinifyElementsForMorphdom(from, to) {
+    if (isV3()) {
+        return alpinifyElementsForMorphdomV3(from, to)
+    }
+
     // If the element we are updating is an Alpine component...
     if (from.__x) {
         // Then temporarily clone it (with it's data) to the "to" element.
@@ -154,7 +273,7 @@ export function alpinifyElementsForMorphdom(from, to) {
             // so that if/when the element has a transition on it, it will occur naturally.
             if (isHiding(from, to)) {
                 let style = to.getAttribute('style')
-                
+
                 if (style) {
                     to.setAttribute('style', style.replace('display: none;', ''))
                 }
@@ -162,6 +281,17 @@ export function alpinifyElementsForMorphdom(from, to) {
                 to.style.display = from.style.display
             }
         }
+    }
+}
+
+function alpinifyElementsForMorphdomV3(from, to) {
+    if (from.nodeType !== 1) return
+
+    // If the element we are updating is an Alpine component...
+    if (from._x_dataStack) {
+        // Then temporarily clone it (with it's data) to the "to" element.
+        // This should simulate backend Livewire being aware of Alpine changes.
+        window.Alpine.clone(from, to)
     }
 }
 
@@ -185,4 +315,8 @@ function beforeAlpineTwoPointSevenPointThree() {
     let [major, minor, patch] = window.Alpine.version.split('.').map(i => Number(i))
 
     return major <= 2 && minor <= 7 && patch <= 2
+}
+
+function isV3() {
+    return window.Alpine && window.Alpine.version && /^3\..+\..+$/.test(window.Alpine.version)
 }

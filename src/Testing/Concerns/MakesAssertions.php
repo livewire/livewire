@@ -2,9 +2,9 @@
 
 namespace Livewire\Testing\Concerns;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Testing\Constraints\SeeInOrder;
 use PHPUnit\Framework\Assert as PHPUnit;
 
@@ -119,7 +119,7 @@ trait MakesAssertions
 
     protected function stripOutInitialData($subject)
     {
-        return preg_replace('(wire:initial-data=\".+}")', '', $subject);
+        return preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
     }
 
     public function assertEmitted($value, ...$params)
@@ -208,7 +208,7 @@ trait MakesAssertions
                 $failed = optional($this->lastValidator)->failed() ?: [];
                 $rules = array_keys(Arr::get($failed, $key, []));
 
-                foreach ((array)$value as $rule) {
+                foreach ((array) $value as $rule) {
                     PHPUnit::assertContains(Str::studly($rule), $rules, "Component has no [{$rule}] errors for [{$key}] attribute.");
                 }
             }
@@ -222,7 +222,7 @@ trait MakesAssertions
         $errors = $this->lastErrorBag;
 
         if (empty($keys)) {
-            PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors: "' . implode('", "', $errors->keys()) . '"');
+            PHPUnit::assertTrue($errors->isEmpty(), 'Component has errors: "'.implode('", "', $errors->keys()).'"');
 
             return $this;
         }
@@ -260,6 +260,13 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertNoRedirect()
+    {
+        PHPUnit::assertTrue(! isset($this->payload['effects']['redirect']));
+
+        return $this;
+    }
+
     public function assertViewIs($name)
     {
         PHPUnit::assertEquals($name, $this->lastRenderedView->getName());
@@ -277,6 +284,25 @@ trait MakesAssertions
             PHPUnit::assertTrue($value->is($this->lastRenderedView->gatherData()[$key]));
         } else {
             PHPUnit::assertEquals($value, $this->lastRenderedView->gatherData()[$key]);
+        }
+
+        return $this;
+    }
+
+    public function assertFileDownloaded($filename, $content = null)
+    {
+        PHPUnit::assertEquals(
+            $filename,
+            data_get($this->lastResponse, 'original.effects.download.name')
+        );
+
+        if ($content) {
+            $downloadedContent = data_get($this->lastResponse, 'original.effects.download.content');
+
+            PHPUnit::assertEquals(
+                $content,
+                base64_decode($downloadedContent)
+            );
         }
 
         return $this;

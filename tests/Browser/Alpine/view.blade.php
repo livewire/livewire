@@ -50,7 +50,7 @@
         <span dusk="bob.output" x-text="count"></span>
     </div>
 
-    <!-- Concatonating inside @@entangle to make sure full PHP expressions work. -->
+    {{-- Concatenating inside @entangle to make sure full PHP expressions work. --}}
     <div x-data="{ count: @entangle('co' . 'unt') }">
         <button wire:click="$set('count', 100)" dusk="lob.reset">Reset</button>
         <button type="button" dusk="lob.increment" x-on:click="count++"></button>

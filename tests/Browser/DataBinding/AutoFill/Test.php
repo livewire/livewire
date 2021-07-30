@@ -3,7 +3,6 @@
 namespace Tests\Browser\DataBinding\AutoFill;
 
 use Livewire\Livewire;
-use Laravel\Dusk\Browser;
 use Tests\Browser\TestCase;
 
 class Test extends TestCase

@@ -28,13 +28,15 @@ class SupportBrowserHistory
             foreach ($properties as $property) {
                 $fromQueryString = Arr::get($queryParams, $property);
 
+                if ($fromQueryString === null) {
+                    continue;
+                }
+
                 $decoded = is_array($fromQueryString)
                     ? json_decode(json_encode($fromQueryString), true)
                     : json_decode($fromQueryString, true);
 
-                if ($fromQueryString !== null) {
-                    $component->$property = $decoded === null ? $fromQueryString : $decoded;
-                }
+                $component->$property = $decoded === null ? $fromQueryString : $decoded;
             }
         });
 

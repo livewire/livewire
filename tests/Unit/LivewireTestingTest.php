@@ -96,9 +96,12 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
-    public function assert_see_doesnt_include_json_encoded_data_put_in_wire_data_attribute()
+    public function assert_see_doesnt_include_wire_id_and_wire_data_attribute()
     {
-        // See for more info: https://github.com/calebporzio/livewire/issues/62
+        /*
+        * See for more info: https://github.com/calebporzio/livewire/issues/62
+        * Regex test: https://regex101.com/r/UhjREC/2/
+        */
         app(LivewireManager::class)
             ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => 'shouldnt see me'])
             ->assertDontSee('shouldnt see me');

@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use Livewire\Component;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 
 class ComponentHasIdAsPublicPropertyTest extends TestCase
 {

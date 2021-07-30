@@ -8,20 +8,11 @@ See the docs for everything: https://laravel-livewire.com/docs/quickstart
 
 Awesome Livewire stuff here: https://github.com/imliam/awesome-livewire
 
-All contributions are welcomed! (but please submit an issue to make sure the PR is warranted first)
+All contributions are welcomed! (but please start a discussion to make sure the PR is warranted first)
 
-Open GitHub issues for all bugs. Ideas and questions belong on the [forum](https://forum.laravel-livewire.com) or [Discord server](https://discord.gg/livewire).
+Ideas, questions and bugs belong in [Discussions](https://github.com/livewire/livewire/discussions) or [Discord server](https://discord.gg/livewire).
 
 Contribute to the docs here: https://github.com/livewire/docs
-
-## Release Schedule
-Livewire uses semantic versioning and will use the following release schedule strategy:
-* Urgent bug fix? Release as "patch" version bump right away
-* Patch? Group of small enhancements and bugfixes to be released every ~2 weeks-ish
-* Minor? New features or significant API additions
-* Major? Breaking changes and big strategy changes
-
-> Important Note: All "major" versions will be tagged alongside Laravel's major version release schedule (every 6 months). That does not mean Livewire will release a major version every 6 months, just that when it DOES release a major version, it will coincide with a Laravel release.
 
 ## Roadmap
 * Add `wire:append` for appending DOM changes rather than replacing them

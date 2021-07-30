@@ -23,7 +23,7 @@ class OptimizeRenderedDom
         Livewire::listen('component.dehydrate.subsequent', function ($component, $response) {
             $oldHash = $this->htmlHashesByComponent[$component->id] ?? null;
 
-            $response->memo['htmlHash'] = $newHash = hash('crc32b', $response->effects['html']);
+            $response->memo['htmlHash'] = $newHash = hash('crc32b', $response->effects['html'] ?? '');
 
             if ($oldHash === $newHash) {
                 $response->effects['html'] = null;

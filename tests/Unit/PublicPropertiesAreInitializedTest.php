@@ -22,6 +22,18 @@ class PublicPropertiesAreInitializedTest extends TestCase
     }
 
     /** @test */
+    public function modified_initialized_public_property_should_not_revert_after_subsequent_hydration()
+    {
+        $propertyValue = Livewire::test(InitializedPublicPropertyComponent::class)
+            ->set('some_id', null)
+            ->set('message', 'whatever')
+            ->get('some_id')
+        ;
+
+        $this->assertEquals(null, $propertyValue);
+    }
+
+    /** @test */
     public function uninitialized_public_typed_property_is_null()
     {
         if (version_compare(PHP_VERSION, '7.4', '<')) {
@@ -98,6 +110,7 @@ PHP;
 
         Livewire::test(InitializedPublicTypedPropertyComponent::class)
             ->assertSee('Typed Properties FTW!');
+
     }
 }
 
@@ -114,6 +127,7 @@ class UninitializedPublicPropertyComponent extends Component
 class InitializedPublicPropertyComponent extends Component
 {
     public $message = 'Non-typed Properties are boring';
+    public $some_id = 3;
 
     public function render()
     {

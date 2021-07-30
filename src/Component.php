@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
@@ -41,9 +42,16 @@ abstract class Component
 
     public function __invoke(Container $container, Route $route)
     {
-        $componentParams = (new ImplicitRouteBinding($container))
-            ->resolveAllParameters($route, $this);
+        try {
+            $componentParams = (new ImplicitRouteBinding($container))
+                ->resolveAllParameters($route, $this);
+        } catch (ModelNotFoundException $exception) {
+            if (method_exists($route,'getMissing') && $route->getMissing()) {
+                return $route->getMissing()(request());
+            }
 
+            throw $exception;
+        }
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
             ->mount($componentParams)
