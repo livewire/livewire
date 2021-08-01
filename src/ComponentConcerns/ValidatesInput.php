@@ -75,6 +75,11 @@ trait ValidatesInput
     {
         if (method_exists($this, 'rules')) return $this->rules();
         if (property_exists($this, 'rules')) return $this->rules;
+        if (property_exists($this, 'formRequest')) {
+            $formRequestInstance = $this->formRequest::createFrom(request());
+
+            return (new \ReflectionMethod($this->formRequest, 'rules'))->invoke($formRequestInstance);
+        }
 
         return [];
     }
@@ -83,6 +88,11 @@ trait ValidatesInput
     {
         if (method_exists($this, 'messages')) return $this->messages();
         if (property_exists($this, 'messages')) return $this->messages;
+        if (property_exists($this, 'formRequest')) {
+            $formRequestInstance = $this->formRequest::createFrom(request());
+
+            return (new \ReflectionMethod($this->formRequest, 'messages'))->invoke($formRequestInstance);
+        }
 
         return [];
     }
@@ -91,6 +101,11 @@ trait ValidatesInput
     {
         if (method_exists($this, 'validationAttributes')) return $this->validationAttributes();
         if (property_exists($this, 'validationAttributes')) return $this->validationAttributes;
+        if (property_exists($this, 'formRequest')) {
+            $formRequestInstance = $this->formRequest::createFrom(request());
+
+            return (new \ReflectionMethod($this->formRequest, 'attributes'))->invoke($formRequestInstance);
+        }
 
         return [];
     }
@@ -138,7 +153,7 @@ trait ValidatesInput
 
     public function missingRuleFor($dotNotatedProperty)
     {
-        return ! $this->hasRuleFor($dotNotatedProperty);
+        return !$this->hasRuleFor($dotNotatedProperty);
     }
 
     public function validate($rules = null, $messages = [], $attributes = [])
@@ -236,7 +251,7 @@ trait ValidatesInput
             ->each(function ($ruleKey) use ($properties) {
                 $propertyName = $this->beforeFirstDot($ruleKey);
 
-                throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: ['.$ruleKey.']'));
+                throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: [' . $ruleKey . ']'));
             });
 
         return collect($properties)->map(function ($value) {
