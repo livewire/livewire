@@ -8,6 +8,16 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $message = 'foo';
+    public $foo;
+
+    protected $rules = [
+        'foo.name' => '',
+    ];
+
+    public function mount()
+    {
+        $this->foo = Foo::first();
+    }
 
     public function flashMessage()
     {
@@ -24,8 +34,9 @@ class Component extends BaseComponent
     public function redirectPage()
     {
         $this->message = 'bar';
+        $this->foo->update(['name' => $this->foo->name == 'foo2' ? 'bar2' : 'foo2']);
 
-        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent');
+        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc');
     }
 
     public function render()

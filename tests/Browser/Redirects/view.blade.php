@@ -4,8 +4,10 @@
     <button wire:click="redirectWithFlash" dusk="redirect-with-flash">Redirect With Flash</button>
 
     <button wire:click="redirectPage" dusk="redirect.button">Redirect Page</button>
-    <span dusk="redirect.blade.output">{{ $message }}</span>
-    <span x-data="{ message: @entangle('message') }" x-text="message" dusk="redirect.alpine.output"></span>
+    {{-- <span dusk="redirect.blade.output">{{ $message }}</span> --}}
+    <span dusk="redirect.blade.output2">{{ $foo->name }}</span>
+    {{-- <span x-data="{ message: @entangle('message') }" x-text="message" dusk="redirect.alpine.output"></span> --}}
+    <span x-data="{ message: @entangle('foo.name') }" x-text="message" dusk="redirect.alpine.output2"></span>
 
     <div>
         @if (session()->has('message'))
