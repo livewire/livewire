@@ -13,6 +13,8 @@ class LivewireManager
     protected $componentAliases = [];
     protected $queryParamsForTesting = [];
 
+    public static $shouldDisableCache = false;
+
     protected $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,

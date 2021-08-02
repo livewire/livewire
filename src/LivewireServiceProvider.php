@@ -41,6 +41,7 @@ use Livewire\HydrationMiddleware\{
     HydratePublicProperties,
     PerformDataBindingUpdates,
     CallPropertyHydrationHooks,
+    DisableRouteCache,
     SecureHydrationWithChecksum,
     HashDataPropertiesForDirtyDetection,
     NormalizeServerMemoSansDataForJavaScript,
@@ -81,6 +82,14 @@ class LivewireServiceProvider extends ServiceProvider
                 \App\Http\Middleware\TrimStrings::class,
             ]);
         }
+
+        // if (Livewire::isProbablyLivewireRequest()) {
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+        $kernel->pushMiddleware(DisableRouteCache::class);
+        // }
+        // /** @var Router $router */
+        // $router = $this->app['router'];
+        // $router->pushMiddlewareToGroup('web', DisableRouteCache::class);        
     }
 
     protected function registerLivewireSingleton()

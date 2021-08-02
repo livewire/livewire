@@ -42,6 +42,7 @@ abstract class Component
 
     public function __invoke(Container $container, Route $route)
     {
+        // LivewireManager::$shouldDisableCache = true;
         try {
             $componentParams = (new ImplicitRouteBinding($container))
                 ->resolveAllParameters($route, $this);
