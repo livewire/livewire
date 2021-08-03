@@ -69,6 +69,14 @@ return [
 
     'middleware_group' => 'web',
 
+
+    //
+    'disable_back_button_cache' => true,
+
+    //
+    'should_skip_render_on_redirect' => true,
+
+
     /*
     |--------------------------------------------------------------------------
     | Livewire Temporary File Uploads Endpoint Configuration
