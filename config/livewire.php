@@ -69,14 +69,6 @@ return [
 
     'middleware_group' => 'web',
 
-
-    //
-    'disable_back_button_cache' => true,
-
-    //
-    'should_skip_render_on_redirect' => true,
-
-
     /*
     |--------------------------------------------------------------------------
     | Livewire Temporary File Uploads Endpoint Configuration
@@ -117,5 +109,38 @@ return [
     */
 
     'manifest_path' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Back Button Cache
+    |--------------------------------------------------------------------------
+    |
+    | This value disables browser cache for pages that contain Livewire.
+    | This is to ensure that the back button correctly restores the previous
+    | state of Livewire components instead of, potentially stale, cached data.
+    | Setting it to "false" will re-enable browser cache.
+    |
+    | It is set to "true" by default.
+    |
+    */
+
+    'disable_back_button_cache' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Should Skip Render On Redirect
+    |--------------------------------------------------------------------------
+    |
+    | This value skips Livewire's render step when redirect happens if enabled
+    | as a performance optimisation.
+    | But if you want browsers back button cache to work correctly this needs
+    | to be set to "false", to ensure the latest view is rendered to the browser
+    | before the redirect happens.
+    |
+    | It is set to "true" by default.
+    |
+    */
+
+    'should_skip_render_on_redirect' => true,
 
 ];
