@@ -422,6 +422,11 @@ HTML;
         return $this;
     }
 
+    public function setBackButtonCache()
+    {
+        $this->shouldDisableBackButtonCache = config('livewire.disable_back_button_cache', true);
+    }
+
     public function disableBackButtonCache()
     {
         $this->shouldDisableBackButtonCache = true;
