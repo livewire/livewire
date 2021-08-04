@@ -38,11 +38,12 @@ abstract class Component
         $this->id = $id ?? str()->random(20);
 
         $this->ensureIdPropertyIsntOverridden();
+
+        Livewire::setBackButtonCache();
     }
 
     public function __invoke(Container $container, Route $route)
     {
-        // LivewireManager::$shouldDisableCache = true;
         try {
             $componentParams = (new ImplicitRouteBinding($container))
                 ->resolveAllParameters($route, $this);
