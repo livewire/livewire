@@ -120,6 +120,16 @@ abstract class Component
         $this->shouldSkipRender = true;
     }
 
+    public function disableBackButtonCache()
+    {
+        Livewire::disableBackButtonCache();
+    }
+
+    public function enableBackButtonCache()
+    {
+        Livewire::enableBackButtonCache();
+    }
+
     public function renderToView()
     {
         if ($this->shouldSkipRender) return null;
