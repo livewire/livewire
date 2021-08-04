@@ -431,4 +431,9 @@ HTML;
     {
         $this->shouldDisableBackButtonCache = false;
     }
+
+    public function shouldDisableBackButtonCache()
+    {
+        return $this->shouldDisableBackButtonCache;
+    }
 }
