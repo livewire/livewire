@@ -13,7 +13,7 @@ class LivewireManager
     protected $componentAliases = [];
     protected $queryParamsForTesting = [];
 
-    protected $shouldDisableBackButtonCache = true;
+    protected $shouldDisableBackButtonCache = false;
 
     protected $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
