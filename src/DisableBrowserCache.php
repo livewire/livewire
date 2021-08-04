@@ -1,12 +1,10 @@
 <?php
 
-namespace Livewire\HydrationMiddleware;
+namespace Livewire;
 
 use Closure;
-use Livewire\Livewire;
-use Livewire\LivewireManager;
 
-class DisableRouteCache
+class DisableBrowserCache
 {
     /**
      * Handle an incoming request.
@@ -17,12 +15,9 @@ class DisableRouteCache
      */
     public function handle($request, Closure $next)
     {
-        ray('thing');
-
         $response = $next($request);
 
-        if(LivewireManager::$shouldDisableCache){
-            ray($response);
+        if(Livewire::shouldDisableBackButtonCache()){
             return $response->withHeaders([
                 "Pragma" => "no-cache",
                 "Expires" => "Fri, 01 Jan 1990 00:00:00 GMT",
