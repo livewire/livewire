@@ -41,7 +41,6 @@ use Livewire\HydrationMiddleware\{
     HydratePublicProperties,
     PerformDataBindingUpdates,
     CallPropertyHydrationHooks,
-    DisableRouteCache,
     SecureHydrationWithChecksum,
     HashDataPropertiesForDirtyDetection,
     NormalizeServerMemoSansDataForJavaScript,
@@ -70,6 +69,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerBladeDirectives();
         $this->registerViewCompilerEngine();
         $this->registerHydrationMiddleware();
+        $this->registerDisableBrowserCacheMiddleware();
 
         // Bypass specific middlewares during Livewire requests.
         // These are usually helpful during a typical request, but
@@ -81,15 +81,7 @@ class LivewireServiceProvider extends ServiceProvider
                 // If the app overrode "TrimStrings".
                 \App\Http\Middleware\TrimStrings::class,
             ]);
-        }
-
-        // if (Livewire::isProbablyLivewireRequest()) {
-        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
-        $kernel->pushMiddleware(DisableRouteCache::class);
-        // }
-        // /** @var Router $router */
-        // $router = $this->app['router'];
-        // $router->pushMiddlewareToGroup('web', DisableRouteCache::class);        
+        }   
     }
 
     protected function registerLivewireSingleton()
@@ -378,6 +370,17 @@ class LivewireServiceProvider extends ServiceProvider
                 [CallHydrationHooks::class, 'initialHydrate'],
 
         ]);
+    }
+
+    protected function registerDisableBrowserCacheMiddleware()
+    {
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+
+        if ($kernel->hasMiddleware(DisableBrowserCache::class)) {
+            return;
+        }
+
+        $kernel->pushMiddleware(DisableBrowserCache::class);
     }
 
     protected function attemptToBypassRequestModifyingMiddlewareViaCallbacks()
