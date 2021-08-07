@@ -33,6 +33,7 @@ class SupportFileDownloads
             $this->downloadsById[$component->id] = [
                 'name' => $name,
                 'content' => $content,
+                'contentType' => $response->headers->get('Content-Type'),
             ];
 
             $component->skipRender();
