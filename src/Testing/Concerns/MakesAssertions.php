@@ -289,21 +289,48 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertFileDownloaded($filename, $content = null)
+    public function assertFileDownloaded($filename = null, $content = null, $contentType = null)
     {
-        PHPUnit::assertEquals(
-            $filename,
-            data_get($this->lastResponse, 'original.effects.download.name')
-        );
+        $downloadEffect = data_get($this->lastResponse, 'original.effects.download');
+
+        if ($filename) {
+            PHPUnit::assertEquals(
+                $filename,
+                data_get($downloadEffect, 'name')
+            );
+        } else {
+            PHPUnit::assertNotNull($downloadEffect);
+        }
 
         if ($content) {
-            $downloadedContent = data_get($this->lastResponse, 'original.effects.download.content');
-
-            PHPUnit::assertEquals(
-                $content,
-                base64_decode($downloadedContent)
-            );
+            $this->assertDownloadedFileContent($content);
         }
+
+        if ($contentType) {
+            $this->assertDownloadedFileType($contentType);
+        }
+
+        return $this;
+    }
+
+    public function assertDownloadedFileContent($content = null)
+    {
+        $downloadedContent = data_get($this->lastResponse, 'original.effects.download.content');
+
+        PHPUnit::assertEquals(
+            $content,
+            base64_decode($downloadedContent)
+        );
+
+        return $this;
+    }
+
+    public function assertDownloadedFileType($contentType = null)
+    {
+        PHPUnit::assertEquals(
+            $contentType,
+            data_get($this->lastResponse, 'original.effects.download.contentType')
+        );
 
         return $this;
     }
