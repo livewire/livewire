@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MissingRulesException;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 trait ValidatesInput
@@ -164,6 +165,10 @@ trait ValidatesInput
             $this->getDataForValidation($rules)
         );
 
+        if (!$this->passesAuthorization()) {
+            $this->failedAuthorization();
+        }
+
         $validator = Validator::make($data, $rules, $messages, $attributes);
 
         $this->shortenModelAttributes($data, $rules, $validator);
@@ -189,6 +194,10 @@ trait ValidatesInput
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
         );
+
+        if (!$this->passesAuthorization()) {
+            $this->failedAuthorization();
+        }
 
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
 
@@ -264,5 +273,23 @@ trait ValidatesInput
     protected function prepareForValidation($attributes)
     {
         return $attributes;
+    }
+
+    protected function passesAuthorization()
+    {
+        if (property_exists($this, 'formRequest')) {
+            $reflectedMethod = new \ReflectionMethod($this->formRequest, 'authorize');
+
+            $reflectedMethod->setAccessible(true);
+
+            return $reflectedMethod->invoke($this->formRequest::createFrom(request()));
+        }
+
+        return true;
+    }
+
+    protected function failedAuthorization()
+    {
+        (throw new AuthorizationException());
     }
 }
