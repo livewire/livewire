@@ -175,4 +175,17 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_alpine_handles_responses_from_multiple_simultaneous_calls_to_livewire()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, SimultaneousCallsComponent::class)
+                ->click('@button1')->click('@button2')->waitForLivewire();
+
+            $this->assertNotSame(
+                $browser->text('@button1'),
+                $browser->text('@button2')
+            );
+        });
+    }
 }
