@@ -8,16 +8,17 @@ use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Contracts\Database\ModelIdentifier;
 use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Contracts\Queue\QueueableEntity;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Stringable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
 use ReflectionProperty;
 use Livewire\Wireable;
-use Carbon\Carbon;
-use Carbon\CarbonImmutable;
-use DateTime;
 use DateTimeImmutable;
+use Carbon\Carbon;
+use DateTime;
 use stdClass;
 
 class HydratePublicProperties implements HydrationMiddleware
@@ -184,7 +185,12 @@ class HydratePublicProperties implements HydrationMiddleware
             } else {
                 $updatedData = data_get($data, $key);
             }
-            data_set($model, $key, $updatedData);
+
+            if ($model instanceof Model && $model->relationLoaded($key)) {
+                $model->setRelation($key, $updatedData);
+            } else {
+                data_set($model, $key, $updatedData);
+            }
         }
 
         return $model;
