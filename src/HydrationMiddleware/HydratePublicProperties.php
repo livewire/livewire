@@ -8,15 +8,17 @@ use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Contracts\Database\ModelIdentifier;
 use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Contracts\Queue\QueueableEntity;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Stringable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
 use ReflectionProperty;
 use Livewire\Wireable;
+use DateTimeImmutable;
 use Carbon\Carbon;
 use DateTime;
-use Illuminate\Database\Eloquent\Model;
 use stdClass;
 
 class HydratePublicProperties implements HydrationMiddleware
@@ -38,7 +40,9 @@ class HydratePublicProperties implements HydrationMiddleware
             if ($type = data_get($dates, $property)) {
                 $types = [
                     'native' => DateTime::class,
+                    'nativeImmutable' => DateTimeImmutable::class,
                     'carbon' => Carbon::class,
+                    'carbonImmutable' => CarbonImmutable::class,
                     'illuminate' => IlluminateCarbon::class,
                 ];
 
@@ -102,6 +106,10 @@ class HydratePublicProperties implements HydrationMiddleware
                     $response->memo['dataMeta']['dates'][$key] = 'illuminate';
                 } elseif ($value instanceof Carbon) {
                     $response->memo['dataMeta']['dates'][$key] = 'carbon';
+                } elseif ($value instanceof CarbonImmutable) {
+                    $response->memo['dataMeta']['dates'][$key] = 'carbonImmutable';
+                } elseif ($value instanceof DateTimeImmutable) {
+                    $response->memo['dataMeta']['dates'][$key] = 'nativeImmutable';
                 } else {
                     $response->memo['dataMeta']['dates'][$key] = 'native';
                 }

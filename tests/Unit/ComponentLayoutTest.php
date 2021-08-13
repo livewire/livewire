@@ -49,7 +49,7 @@ class ComponentLayoutTest extends TestCase
     }
 
     /** @test */
-    public function can_load_dynamic_layout_properties()
+    public function can_show_params_with_a_custom_class_based_component_layout()
     {
         Livewire::component(ComponentWithClassBasedComponentLayout::class);
 
@@ -58,6 +58,41 @@ class ComponentLayoutTest extends TestCase
         $this->withoutExceptionHandling()->get('/foo')
             ->assertSee('bar')
             ->assertSee('baz');
+    }
+
+    /** @test */
+    public function can_show_attributes_with_a_custom_class_based_component_layout()
+    {
+        Livewire::component(ComponentWithClassBasedComponentLayoutAndAttributes::class);
+
+        Route::get('/foo', ComponentWithClassBasedComponentLayoutAndAttributes::class);
+
+        $this->withoutExceptionHandling()->get('/foo')
+            ->assertSee('class="foo"', false);
+    }
+
+    /** @test */
+    public function can_show_params_with_a_custom_anonymous_component_layout()
+    {
+        Livewire::component(ComponentWithAnonymousComponentLayout::class);
+
+        Route::get('/foo', ComponentWithAnonymousComponentLayout::class);
+
+        $this->withoutExceptionHandling()->get('/foo')
+            ->assertSee('bar')
+            ->assertSee('baz');
+    }
+
+    /** @test */
+    public function can_show_attributes_with_a_custom_anonymous_component_layout()
+    {
+        Livewire::component(ComponentWithAnonymousComponentLayoutAndAttributes::class);
+
+        Route::get('/foo', ComponentWithAnonymousComponentLayoutAndAttributes::class);
+
+        $this->withoutExceptionHandling()->get('/foo')
+            ->assertSee('class="foo"', false)
+            ->assertSee('id="foo"', false);
     }
 
     /** @test */
@@ -129,6 +164,40 @@ class ComponentWithClassBasedComponentLayout extends Component
     {
         return view('null-view')->layout(\Tests\AppLayout::class, [
             'bar' => 'baz'
+        ]);
+    }
+}
+
+class ComponentWithClassBasedComponentLayoutAndAttributes extends Component
+{
+    public function render()
+    {
+        return view('null-view')->layout(\Tests\AppLayout::class, [
+            'attributes' => [
+                'class' => 'foo',
+            ],
+        ]);
+    }
+}
+
+class ComponentWithAnonymousComponentLayout extends Component
+{
+    public function render()
+    {
+        return view('null-view')->layout('layouts.app-anonymous-component', [
+            'bar' => 'baz'
+        ]);
+    }
+}
+
+class ComponentWithAnonymousComponentLayoutAndAttributes extends Component
+{
+    public function render()
+    {
+        return view('null-view')->layout('layouts.app-anonymous-component', [
+            'attributes' => [
+                'class' => 'foo',
+            ],
         ]);
     }
 }
