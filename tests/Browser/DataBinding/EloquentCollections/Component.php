@@ -22,6 +22,11 @@ class Component extends BaseComponent
         $this->authors = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->get();
     }
 
+    public function save()
+    {
+        $this->authors->each->push();
+    }
+
     public function render()
     {
         return
@@ -71,6 +76,8 @@ class Component extends BaseComponent
             </div>
         </div>
     @endforeach
+
+    <button wire:click="save" type="button" dusk="save">Save</button>
 </div>
 HTML;
     }

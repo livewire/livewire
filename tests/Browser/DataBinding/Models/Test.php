@@ -55,6 +55,13 @@ class Test extends TestCase
         $this->assertEquals('Article 1', $author->posts[0]->title);
         $this->assertEquals('Message 1', $author->posts[0]->comments[0]->comment);
         $this->assertEquals('Mike', $author->posts[0]->comments[1]->author->name);
+
+        // Reset back after finished.
+        $author->name = 'Bob';
+        $author->posts[0]->title = 'Post 1';
+        $author->posts[0]->comments[0]->comment = 'Comment 1';
+        $author->posts[0]->comments[1]->author->name = 'John';
+        $author->push();
     }
 }
 

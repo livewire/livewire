@@ -57,22 +57,34 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertSee($value)
+    public function assertSee($value, $escape = true)
     {
-        PHPUnit::assertStringContainsString(
-            e($value),
-            $this->stripOutInitialData($this->lastRenderedDom)
-        );
+        $value = static::wrapInArray($value);
+
+        $values = $escape ? array_map('e', ($value)) : $value;
+
+        foreach ($values as $value) {
+            PHPUnit::assertStringContainsString(
+                e($value),
+                $this->stripOutInitialData($this->lastRenderedDom)
+            );
+        }
 
         return $this;
     }
 
-    public function assertDontSee($value)
+    public function assertDontSee($value, $escape = true)
     {
-        PHPUnit::assertStringNotContainsString(
-            e($value),
-            $this->stripOutInitialData($this->lastRenderedDom)
-        );
+        $value = static::wrapInArray($value);
+
+        $values = $escape ? array_map('e', ($value)) : $value;
+
+        foreach ($values as $value) {
+            PHPUnit::assertStringNotContainsString(
+                e($value),
+                $this->stripOutInitialData($this->lastRenderedDom)
+            );
+        }
 
         return $this;
     }
@@ -120,6 +132,15 @@ trait MakesAssertions
     protected function stripOutInitialData($subject)
     {
         return preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
+    }
+
+    protected function wrapInArray($value)
+    {
+        if (is_null($value)) {
+            return [];
+        }
+
+        return is_array($value) ? $value : [$value];
     }
 
     public function assertEmitted($value, ...$params)
