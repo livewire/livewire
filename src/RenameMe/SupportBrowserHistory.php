@@ -171,6 +171,10 @@ class SupportBrowserHistory
 
     protected function getQueryParamsFromComponentProperties($component)
     {
+        if (method_exists($component, 'queryParams')) {
+            return $component->queryParams();
+        }
+
         return collect($component->getQueryString())
             ->mapWithKeys(function($value, $key) use ($component) {
                 $key = is_string($key) ? $key : $value;
