@@ -147,6 +147,7 @@ let LivewireStateManager = {
         store.callHook('before'+capitalize(method), fullstateObject, url, component)
 
         try {
+            url = decodeURIComponent(url).replaceAll(' ', '+')
             history[method](fullstateObject, '', url)
         } catch (error) {
             // Firefox has a 160kb limit to history state entries.
