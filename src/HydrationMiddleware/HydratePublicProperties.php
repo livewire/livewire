@@ -19,6 +19,7 @@ use Livewire\Wireable;
 use DateTimeImmutable;
 use Carbon\Carbon;
 use DateTime;
+use DateTimeInterface;
 use stdClass;
 
 class HydratePublicProperties implements HydrationMiddleware
@@ -101,7 +102,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 $response->memo['dataMeta']['collections'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->toArray());
-            } else if ($value instanceof DateTime) {
+            } else if ($value instanceof DateTimeInterface) {
                 if ($value instanceof IlluminateCarbon) {
                     $response->memo['dataMeta']['dates'][$key] = 'illuminate';
                 } elseif ($value instanceof Carbon) {
