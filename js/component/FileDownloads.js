@@ -6,11 +6,11 @@ export default function () {
 
         if (! response.effects.download) return
 
-        // We need to use window.webkitURL so downloads work on iOS Sarfari.
+        // We need to use window.webkitURL so downloads work on iOS Safari.
         let urlObject = window.webkitURL || window.URL
 
         let url = urlObject.createObjectURL(
-            base64toBlob(response.effects.download.content)
+            base64toBlob(response.effects.download.content, response.effects.download.contentType)
         )
 
         let invisibleLink = document.createElement('a')
