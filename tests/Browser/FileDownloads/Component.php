@@ -18,24 +18,24 @@ class Component extends BaseComponent
         return Storage::disk('dusk-tmp')->download('download-target.txt');
     }
 
-    public function downloadWithContentTypeHeader()
+    public function downloadWithContentTypeHeader($contentType = null)
     {
         config()->set('filesystems.disks.dusk-tmp', [
             'driver' => 'local',
             'root' => __DIR__,
         ]);
 
-        return Storage::disk('dusk-tmp')->download('download-target.txt', null, ['Content-Type' => 'text/html']);
+        return Storage::disk('dusk-tmp')->download('download-target.txt', null, ['Content-Type' => $contentType]);
     }
 
-    public function downloadAnUntitledFileWithContentTypeHeader()
+    public function downloadAnUntitledFileWithContentTypeHeader($contentType = 'text/html')
     {
         config()->set('filesystems.disks.dusk-tmp', [
             'driver' => 'local',
             'root' => __DIR__,
         ]);
 
-        return Storage::disk('dusk-tmp')->download('download-target.txt', '', ['Content-Type' => 'text/html']);
+        return Storage::disk('dusk-tmp')->download('download-target.txt', '', ['Content-Type' => $contentType]);
     }
 
     public function downloadFromResponse()

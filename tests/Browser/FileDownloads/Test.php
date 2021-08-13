@@ -70,6 +70,7 @@ class Test extends TestCase
 
         $this->browse(function ($browser) {
 
+            // Download with content-type header.
             Livewire::visit($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
@@ -91,6 +92,56 @@ class Test extends TestCase
                 Storage::disk('dusk-downloads')->get('download-target.txt')
             );
 
+            // Download with null content-type header.
+            Livewire::visit($browser, Component::class)
+                ->tap(function ($b) {
+                    $b->script([
+                        "window.livewire.hook('message.received', (message, component) => {
+                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        })",
+                    ]);
+                })
+                ->waitForLivewire()->click('@download-with-null-content-type-header')
+                ->tap(function ($b) {
+                    $this->assertEquals(null, $b->value('@content-type'));
+                })
+                ->waitUsing(5, 75, function () {
+                    return Storage::disk('dusk-downloads')->exists('download-target.txt');
+                });
+
+            $this->assertStringContainsString(
+                'I\'m the file you should download.',
+                Storage::disk('dusk-downloads')->get('download-target.txt')
+            );
+
+            /**
+             * Download an untitled file with "invalid" content-type header.
+             * It mimics this test: dusk="download-an-untitled-file-with-content-type-header"
+             */
+            Livewire::visit($browser, Component::class)
+                ->tap(function ($b) {
+                    $b->script([
+                        "window.livewire.hook('message.received', (message, component) => {
+                        document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                    })",
+                    ]);
+                })
+                ->waitForLivewire()->click('@download-an-untitled-file-with-invalid-content-type-header')
+                ->tap(function ($b) {
+                    $this->assertEquals('foo', $b->value('@content-type'));
+                })
+                ->waitUsing(5, 75, function () {
+                    // Normally it should have been __.html --But the content type is invalid...
+                    return Storage::disk('dusk-downloads')->exists('__.txt');
+                });
+
+            // ...But the file is still readable.
+            $this->assertStringContainsString(
+                'I\'m the file you should download.',
+                Storage::disk('dusk-downloads')->get('__.txt')
+            );
+
+            // Download an untitled file with content-type header.
             Livewire::visit($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
