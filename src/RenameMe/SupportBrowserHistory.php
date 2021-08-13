@@ -181,6 +181,10 @@ class SupportBrowserHistory
 
     protected function stringifyQueryParams($queryParams)
     {
-        return $queryParams->isEmpty() ? '' : '?'.Arr::query($queryParams->toArray());
+        if ($queryParams->isEmpty()) {
+            return '';
+        }
+
+        return '?'.http_build_query($queryParams->toArray(), '', '&', config('livewire.url_encoding_type'));
     }
 }
