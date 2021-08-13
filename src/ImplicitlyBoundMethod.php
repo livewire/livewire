@@ -99,10 +99,24 @@ class ImplicitlyBoundMethod extends BoundMethod
 
         return $model;
     }
-
+    
     public static function getParameterClassName($parameter)
     {
         $type = $parameter->getType();
+
+        if ($type === null){
+            return null;
+        }
+
+        if ($type instanceof \ReflectionNamedType){
+            return $type->isBuiltin() ? null : $type->getName();
+        }
+
+        if ($type instanceof \ReflectionUnionType){
+            foreach ($type->getTypes() as $union_type){
+                return $union_type->isBuiltin() ? null : $union_type->getName();
+            }
+        }
 
         return ($type && ! $type->isBuiltin()) ? $type->getName() : null;
     }
