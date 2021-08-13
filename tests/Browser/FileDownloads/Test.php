@@ -62,4 +62,80 @@ class Test extends TestCase
             );
         });
     }
+
+    /** @test */
+    public function trigger_downloads_from_livewire_component_with_headers()
+    {
+        $this->onlyRunOnChrome();
+
+        $this->browse(function ($browser) {
+
+            Livewire::visit($browser, Component::class)
+                ->tap(function ($b) {
+                    $b->script([
+                        "window.livewire.hook('message.received', (message, component) => {
+                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        })",
+                    ]);
+                })
+                ->waitForLivewire()->click('@download-with-content-type-header')
+                ->tap(function ($b) {
+                    $this->assertEquals('text/html', $b->value('@content-type'));
+                })
+                ->waitUsing(5, 75, function () {
+                    return Storage::disk('dusk-downloads')->exists('download-target.txt');
+                });
+
+            $this->assertStringContainsString(
+                'I\'m the file you should download.',
+                Storage::disk('dusk-downloads')->get('download-target.txt')
+            );
+
+            Livewire::visit($browser, Component::class)
+                ->tap(function ($b) {
+                    $b->script([
+                        "window.livewire.hook('message.received', (message, component) => {
+                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        })",
+                    ]);
+                })
+                ->waitForLivewire()->click('@download-an-untitled-file-with-content-type-header')
+                ->tap(function ($b) {
+                    $this->assertEquals('text/html', $b->value('@content-type'));
+                })
+                ->waitUsing(5, 75, function () {
+                    return Storage::disk('dusk-downloads')->exists('__.html');
+                });
+
+            $this->assertStringContainsString(
+                'I\'m the file you should download.',
+                Storage::disk('dusk-downloads')->get('__.html')
+            );
+
+            /**
+             * Trigger download with a response return.
+             */
+
+            Livewire::visit($browser, Component::class)
+                ->tap(function ($b) {
+                    $b->script([
+                        "window.livewire.hook('message.received', (message, component) => {
+                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        })",
+                    ]);
+                })
+                ->waitForLivewire()->click('@download-from-response-with-content-type-header')
+                ->tap(function ($b) {
+                    $this->assertEquals('text/csv', $b->value('@content-type'));
+                })
+                ->waitUsing(5, 75, function () {
+                    return Storage::disk('dusk-downloads')->exists('download-target2.txt');
+                });
+
+            $this->assertStringContainsString(
+                'I\'m the file you should download.',
+                Storage::disk('dusk-downloads')->get('download-target2.txt')
+            );
+        });
+    }
 }
