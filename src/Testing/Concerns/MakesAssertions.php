@@ -324,34 +324,20 @@ trait MakesAssertions
         }
 
         if ($content) {
-            $this->assertDownloadedFileContent($content);
+            $downloadedContent = data_get($this->lastResponse, 'original.effects.download.content');
+
+            PHPUnit::assertEquals(
+                $content,
+                base64_decode($downloadedContent)
+            );
         }
 
         if ($contentType) {
-            $this->assertDownloadedFileType($contentType);
+            PHPUnit::assertEquals(
+                $contentType,
+                data_get($this->lastResponse, 'original.effects.download.contentType')
+            );
         }
-
-        return $this;
-    }
-
-    public function assertDownloadedFileContent($content = null)
-    {
-        $downloadedContent = data_get($this->lastResponse, 'original.effects.download.content');
-
-        PHPUnit::assertEquals(
-            $content,
-            base64_decode($downloadedContent)
-        );
-
-        return $this;
-    }
-
-    public function assertDownloadedFileType($contentType = null)
-    {
-        PHPUnit::assertEquals(
-            $contentType,
-            data_get($this->lastResponse, 'original.effects.download.contentType')
-        );
 
         return $this;
     }

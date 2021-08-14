@@ -29,13 +29,11 @@ export default function () {
     })
 }
 
-function base64toBlob(b64Data, contentType='', sliceSize=512) {
+function base64toBlob(b64Data, contentType = '', sliceSize = 512) {
     const byteCharacters = atob(b64Data)
     const byteArrays = []
 
-    if (contentType === null) {
-        contentType = '';
-    }
+    if (contentType === null) contentType = ''
 
     for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
         let slice = byteCharacters.slice(offset, offset + sliceSize)
