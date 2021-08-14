@@ -46,10 +46,27 @@ class Test extends TestCase
                 ->waitForLivewire()->type('@authors.0.posts.0.comments.1.author.name', 'Mike')
                 ->assertSeeIn('@output.authors.0.posts.0.comments.1.author.name', 'Mike')
 
+                ->waitForLivewire()->click('@save')
+
                 ->waitForLivewire()->type('@authors.1.name', 'Taylor')
                 ->assertSeeIn('@output.authors.1.name', 'Taylor')
                 ;
         });
+
+        $author = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
+
+        $this->assertEquals('Steve', $author->name);
+        $this->assertEquals('Article 1', $author->posts[0]->title);
+        $this->assertEquals('Message 1', $author->posts[0]->comments[0]->comment);
+        $this->assertEquals('Mike', $author->posts[0]->comments[1]->author->name);
+
+        // Reset back after finished.
+        $author->name = 'Bob';
+        $author->posts[0]->title = 'Post 1';
+        $author->posts[0]->comments[0]->comment = 'Comment 1';
+        $author->posts[0]->comments[1]->author->name = 'John';
+        $author->push();
+
     }
 }
 

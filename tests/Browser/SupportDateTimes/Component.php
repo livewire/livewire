@@ -25,9 +25,9 @@ class Component extends BaseComponent
     public function addDay()
     {
         $this->native->modify('+1 day');
-        $this->nativeImmutable->modify('+1 day');
+        $this->nativeImmutable = $this->nativeImmutable->modify('+1 day');
         $this->carbon->addDay(1);
-        $this->carbonImmutable->addDay(1);
+        $this->carbonImmutable = $this->carbonImmutable->addDay(1);
         $this->illuminate->addDay(1);
     }
 

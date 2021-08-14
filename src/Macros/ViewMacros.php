@@ -23,6 +23,9 @@ class ViewMacros
     public function layout()
     {
         return function ($view, $params = []) {
+            $attributes = $params['attributes'] ?? [];
+            unset($params['attributes']);
+
             if (is_subclass_of($view, \Illuminate\View\Component::class)) {
                 $layout = new $view();
                 $view = $layout->resolveView()->name();
@@ -30,7 +33,7 @@ class ViewMacros
                 $layout = new AnonymousComponent($view, $params);
             }
 
-            $layout->withAttributes($params['attributes'] ?? []);
+            $layout->withAttributes($attributes);
 
             $this->livewireLayout = [
                 'type' => 'component',
