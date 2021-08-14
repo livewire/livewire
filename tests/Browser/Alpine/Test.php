@@ -180,12 +180,12 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, SimultaneousCallsComponent::class)
-                ->click('@button1')->click('@button2')->waitForLivewire();
-
-            $this->assertNotSame(
-                $browser->text('@button1'),
-                $browser->text('@button2')
-            );
+                ->assertDontSeeIn('@foo', 'foo')
+                ->assertDontSeeIn('@bar', 'bar')
+                ->waitForLivewire()->click('@update-foo-and-bar')
+                ->assertSeeIn('@foo', 'foo')
+                ->assertSeeIn('@bar', 'bar')
+            ;
         });
     }
 }
