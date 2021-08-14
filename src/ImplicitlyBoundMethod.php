@@ -104,21 +104,22 @@ class ImplicitlyBoundMethod extends BoundMethod
     {
         $type = $parameter->getType();
 
-        if ($type === null){
+        if ($type == null){
             return null;
         }
 
         if ($type instanceof \ReflectionNamedType){
-            return $type->isBuiltin() ? null : $type->getName();
+            return !$type->isBuiltin() ? $type->getName() : null;
         }
 
         if ($type instanceof \ReflectionUnionType){
             foreach ($type->getTypes() as $union_type){
-                return $union_type->isBuiltin() ? null : $union_type->getName();
+                if(!$union_type->isBuiltin()) return $union_type->getName();
             }
+            return null;
         }
 
-        return ($type && ! $type->isBuiltin()) ? $type->getName() : null;
+        return !$type->isBuiltin() ? $type->getName() : null;
     }
 
     public static function implementsInterface($parameter)
