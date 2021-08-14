@@ -24,6 +24,7 @@ class PerformActionCalls implements HydrationMiddleware
             foreach ($request->updates as $update) {
                 if ($update['type'] !== 'callMethod') continue;
 
+                $id = $update['payload']['id'];
                 $method = $update['payload']['method'];
                 $params = $update['payload']['params'];
 
@@ -32,7 +33,9 @@ class PerformActionCalls implements HydrationMiddleware
                     new DirectlyCallingLifecycleHooksNotAllowedException($method, $unHydratedInstance->getName())
                 );
 
-                $unHydratedInstance->callMethod($method, $params);
+                $unHydratedInstance->callMethod($method, $params, function ($returned) use ($unHydratedInstance,$method, $id) {
+                    Livewire::dispatch('action.returned', $unHydratedInstance, $method, $returned, $id);
+                });
             }
         } catch (ValidationException $e) {
             Livewire::dispatch('failed-validation', $e->validator);
