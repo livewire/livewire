@@ -105,7 +105,7 @@ class ImplicitlyBoundMethod extends BoundMethod
         $type = $parameter->getType();
 
         if ($type == null) return null;
-        if ($type instanceof \ReflectionNamedType) return !$type->isBuiltin() ? $type->getName() : null;
+
         if ($type instanceof \ReflectionUnionType) return static::getFirstReflectionUnionTypeName($type);
 
         return !$type->isBuiltin() ? $type->getName() : null;
