@@ -112,11 +112,8 @@ class ImplicitlyBoundMethod extends BoundMethod
             return !$type->isBuiltin() ? $type->getName() : null;
         }
 
-        if ($type instanceof \ReflectionUnionType){
-            foreach ($type->getTypes() as $union_type){
-                if(!$union_type->isBuiltin()) return $union_type->getName();
-            }
-            return null;
+        if ($type instanceof \ReflectionUnionType) {
+            return static::getReflectionUnionTypeName($type);
         }
 
         return !$type->isBuiltin() ? $type->getName() : null;
@@ -124,6 +121,27 @@ class ImplicitlyBoundMethod extends BoundMethod
 
     public static function implementsInterface($parameter)
     {
-        return (new ReflectionClass($parameter->getType()->getName()))->implementsInterface(ImplicitlyBindable::class);
+        $type = $parameter->getType();
+        if ($type instanceof \ReflectionUnionType) {
+            $name = static::getReflectionUnionTypeName($type);
+        } else {
+            $name = $type->getName();
+        }
+        if ($name !== null) {
+            return (new ReflectionClass($name))->implementsInterface(ImplicitlyBindable::class);
+        } else {
+            return false;
+        }
+    }
+
+    public static function getReflectionUnionTypeName($type)
+    {
+        $union_types = [];
+        foreach ($type->getTypes() as $union_type) {
+            if(!$union_type->isBuiltin()) $union_types[] = $union_type->getName();
+        }
+        if (count($union_types) == 1) return $union_types[0]; //string
+        if (count($union_types) > 1) throw new \Exception('Livewire does not support multiple, non-builtin union types');
+        return null;
     }
 }
