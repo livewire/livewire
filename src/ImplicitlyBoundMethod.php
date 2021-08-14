@@ -104,17 +104,9 @@ class ImplicitlyBoundMethod extends BoundMethod
     {
         $type = $parameter->getType();
 
-        if ($type == null){
-            return null;
-        }
-
-        if ($type instanceof \ReflectionNamedType){
-            return !$type->isBuiltin() ? $type->getName() : null;
-        }
-
-        if ($type instanceof \ReflectionUnionType) {
-            return static::getReflectionUnionTypeName($type);
-        }
+        if ($type == null) return null;
+        if ($type instanceof \ReflectionNamedType) return !$type->isBuiltin() ? $type->getName() : null;
+        if ($type instanceof \ReflectionUnionType) return static::getFirstReflectionUnionTypeName($type);
 
         return !$type->isBuiltin() ? $type->getName() : null;
     }
@@ -122,26 +114,27 @@ class ImplicitlyBoundMethod extends BoundMethod
     public static function implementsInterface($parameter)
     {
         $type = $parameter->getType();
-        if ($type instanceof \ReflectionUnionType) {
-            $name = static::getReflectionUnionTypeName($type);
-        } else {
-            $name = $type->getName();
-        }
-        if ($name !== null) {
-            return (new ReflectionClass($name))->implementsInterface(ImplicitlyBindable::class);
-        } else {
-            return false;
-        }
+
+        $name = ($type instanceof \ReflectionUnionType)
+            ? static::getFirstReflectionUnionTypeName($type)
+            : $type->getName();
+
+        return $name !== null
+            ? (new ReflectionClass($name))->implementsInterface(ImplicitlyBindable::class)
+            : false;
     }
 
-    public static function getReflectionUnionTypeName($type)
+    public static function getFirstReflectionUnionTypeName($type)
     {
         $union_types = [];
+
         foreach ($type->getTypes() as $union_type) {
             if(!$union_type->isBuiltin()) $union_types[] = $union_type->getName();
         }
+
         if (count($union_types) == 1) return $union_types[0]; //string
         if (count($union_types) > 1) throw new \Exception('Livewire does not support multiple, non-builtin union types');
+
         return null;
     }
 }
