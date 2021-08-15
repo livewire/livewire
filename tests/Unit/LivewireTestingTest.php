@@ -80,6 +80,14 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_see_multiple()
+    {
+        app(LivewireManager::class)
+            ->test(HasMountArguments::class, ['name' => 'should see me'])
+            ->assertSee(['should', 'see', 'me']);
+    }
+
+    /** @test */
     public function assert_see_html()
     {
         app(LivewireManager::class)
@@ -96,9 +104,28 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
-    public function assert_see_doesnt_include_json_encoded_data_put_in_wire_data_attribute()
+    public function assert_dont_see()
     {
-        // See for more info: https://github.com/calebporzio/livewire/issues/62
+        app(LivewireManager::class)
+            ->test(HasMountArguments::class, ['name' => 'should see me'])
+            ->assertDontSee('no one should see this');
+    }
+
+    /** @test */
+    public function assert_dont_see_multiple()
+    {
+        app(LivewireManager::class)
+            ->test(HasMountArguments::class, ['name' => 'should see me'])
+            ->assertDontSee(['no', 'one', 'really']);
+    }
+
+    /** @test */
+    public function assert_see_doesnt_include_wire_id_and_wire_data_attribute()
+    {
+        /*
+        * See for more info: https://github.com/calebporzio/livewire/issues/62
+        * Regex test: https://regex101.com/r/UhjREC/2/
+        */
         app(LivewireManager::class)
             ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => 'shouldnt see me'])
             ->assertDontSee('shouldnt see me');
