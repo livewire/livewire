@@ -67,20 +67,8 @@ export default class Component {
         return Object.values(this.serverMemo.children).map(child => child.id)
     }
 
-    checkForMultipleRootElements() {
-        this.checkPreviousNode(this.el.previousSibling)
-        
+    checkForMultipleRootElements() {        
         this.checkNextNode(this.el.nextSibling)
-    }
-
-    checkPreviousNode(el) {
-        if (! el) return
-
-        if (this.nodeIsElement(el)) return
-
-        if (this.nodeIsCommentAndContains(el, 'wire-start:'+this.id)) return
-
-        this.checkPreviousNode(el.previousSibling)
     }
 
     checkNextNode(el) {
