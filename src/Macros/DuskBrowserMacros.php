@@ -208,4 +208,46 @@ class DuskBrowserMacros
             return $this;
         };
     }
+
+    public function assertConsoleLogHasError()
+    {
+        return function($expectedMessage){
+            /** @var \Laravel\Dusk\Browser $this */
+            $logs = $this->driver->manage()->getLog('browser');
+
+            $containsError = false;
+
+            foreach ($logs as $log) {
+                if (!isset($log['message']) || !isset($log['level']) || $log['level'] !== 'SEVERE') continue;
+                
+                
+                if(str($log['message'])->contains($expectedMessage)) {
+                    $containsError = true;
+                }
+            }
+
+            PHPUnit::assertTrue($containsError, "Console log error message \"{$expectedMessage}\" not found");
+        };
+    }
+
+    public function assertConsoleLogMissingError()
+    {
+        return function($expectedMessage){
+            /** @var \Laravel\Dusk\Browser $this */
+            $logs = $this->driver->manage()->getLog('browser');
+
+            $containsError = false;
+
+            foreach ($logs as $log) {
+                if (!isset($log['message']) || !isset($log['level']) || $log['level'] !== 'SEVERE') continue;
+                
+                
+                if(str($log['message'])->contains($expectedMessage)) {
+                    $containsError = true;
+                }
+            }
+
+            PHPUnit::assertFalse($containsError, "Console log error message \"{$expectedMessage}\" was found");
+        };
+    }
 }
