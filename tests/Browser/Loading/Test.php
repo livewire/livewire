@@ -53,6 +53,22 @@ class Test extends TestCase
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@button');
+
+                    $browser->pause(200);
+
+                    $browser->assertNotVisible('@show-w-custom-delay');
+                })
+                ->tap($this->assertInitialState())
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@button');
+
+                    $browser->pause(250);
+
+                    $browser->assertVisible('@show-w-custom-delay');
+                })
+                ->tap($this->assertInitialState())
+                ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@target-button');
 
                     $browser->waitFor('@targeting');

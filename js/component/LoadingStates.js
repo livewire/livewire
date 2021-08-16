@@ -94,6 +94,7 @@ function processLoadingDirective(component, el, directive) {
             'dirty',
             'offline',
             'target',
+            'duration',
             'loading',
             'poll',
             'ignore',
@@ -235,10 +236,20 @@ function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
         [doCallback, undoCallback] = [undoCallback, doCallback]
 
     if (directive.modifiers.includes('delay')) {
+        let directives = wireDirectives(el)
+
+        let duration = 200
+
+        if(directives.has('duration')) {
+            duration = directives.get('duration').durationOr(duration)
+        }
+
+        console.log(duration)
+
         let timeout = setTimeout(() => {
             doCallback()
             el.__livewire_on_finish_loading.push(() => undoCallback())
-        }, 200)
+        }, duration)
 
         el.__livewire_on_finish_loading.push(() => clearTimeout(timeout))
     } else {

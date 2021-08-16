@@ -11,7 +11,7 @@ class Component extends BaseComponent
 
     public function hydrate()
     {
-        usleep(1000 * 250);
+        usleep(1000 * 300);
     }
 
     public function throwError()
