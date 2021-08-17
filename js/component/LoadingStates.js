@@ -244,8 +244,6 @@ function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
             duration = directives.get('duration').durationOr(duration)
         }
 
-        console.log(duration)
-
         let timeout = setTimeout(() => {
             doCallback()
             el.__livewire_on_finish_loading.push(() => undoCallback())
