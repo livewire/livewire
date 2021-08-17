@@ -71,6 +71,8 @@ export default class Component {
         // Count the number of elements between the first element in the component and the
         // injected "component-end" marker. This is an HTML comment with notation.
         let countElementsBeforeMarker = (el, carryCount = 0) => {
+            if (! el) return carryCount
+
             // If we see the "end" marker, we can return the number of elements in between we've seen.
             if (el.nodeType === Node.COMMENT_NODE && el.textContent.includes(`wire-end:${this.id}`)) return carryCount
 
