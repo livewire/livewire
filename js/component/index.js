@@ -67,34 +67,21 @@ export default class Component {
         return Object.values(this.serverMemo.children).map(child => child.id)
     }
 
-    checkForMultipleRootElements() {        
-        this.checkNextNode(this.el.nextSibling)
-    }
+    checkForMultipleRootElements() {
+        // Count the number of elements between the first element in the component and the
+        // injected "component-end" marker. This is an HTML comment with notation.
+        let countElementsBeforeMarker = (el, carryCount = 0) => {
+            // If we see the "end" marker, we can return the number of elements in between we've seen.
+            if (el.nodeType === Node.COMMENT_NODE && el.textContent.includes(`wire-end:${this.id}`)) return carryCount
 
-    checkNextNode(el) {
-        if (! el) return
+            let newlyDiscoveredEls = el.nodeType === Node.ELEMENT_NODE ? 1 : 0
 
-        if (this.nodeIsElement(el)) return
+            return countElementsBeforeMarker(el.nextSibling, carryCount + newlyDiscoveredEls)
+        }
 
-        if (this.nodeIsCommentAndContains(el, 'wire-end:'+this.id)) return
-
-        this.checkNextNode(el.nextSibling)
-    }
-
-    nodeIsElement(el) {
-        if (el.nodeType !== Node.ELEMENT_NODE) return false
-
-        console.error('Livewire Error: Make sure your Blade view only has ONE root element. See docs for more information https://laravel-livewire.com/docs/2.x/rendering-components#returning-blade')
-
-        return true
-    }
-
-    nodeIsCommentAndContains(el, message) {
-        if (el.nodeType !== Node.COMMENT_NODE) return false
-
-        if (el.textContent.includes(message)) return true
-
-        return false
+        if (countElementsBeforeMarker(this.el.nextSibling) > 0) {
+            console.warn(`Livewire: Multiple root elements detected. This is not supported. See docs for more information https://laravel-livewire.com/docs/2.x/rendering-components#returning-blade`, this.el)
+        }
     }
 
     initialize() {
