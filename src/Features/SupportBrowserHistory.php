@@ -143,15 +143,11 @@ class SupportBrowserHistory
             $this->mergedQueryParamsFromDehydratedComponents = collect($this->getExistingQueryParams());
         }
 
-        $componentParams = $this->getQueryParamsFromComponentProperties($component);
         $excepts = $this->getExceptsFromComponent($component);
 
         $this->mergedQueryParamsFromDehydratedComponents = collect(request()->query())
             ->merge($this->mergedQueryParamsFromDehydratedComponents)
-            ->merge($componentParams)
-            ->reject(function ($value, $key) use ($componentParams) {
-                return empty($componentParams[$key]);
-            })
+            ->merge($this->getQueryParamsFromComponentProperties($component))
             ->reject(function ($value, $key) use ($excepts) {
                 return isset($excepts[$key]) && $excepts[$key] === $value;
             })
@@ -175,10 +171,6 @@ class SupportBrowserHistory
 
     protected function getQueryParamsFromComponentProperties($component)
     {
-        if (method_exists($component, 'queryParams')) {
-            return $component->queryParams();
-        }
-
         return collect($component->getQueryString())
             ->mapWithKeys(function($value, $key) use ($component) {
                 $key = is_string($key) ? $key : $value;
