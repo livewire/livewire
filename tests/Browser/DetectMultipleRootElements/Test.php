@@ -12,7 +12,7 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, ComponentWithMultipleRootElements::class)
-                ->assertConsoleLogHasError('Make sure your Blade view only has ONE root element')
+                ->assertConsoleLogHasWarning('Multiple root elements detected')
                 ;
         });
     }
@@ -22,7 +22,7 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, ComponentWithCommentAsFirstElement::class)
-                ->assertConsoleLogMissingError('Make sure your Blade view only has ONE root element')
+                ->assertConsoleLogMissingWarning('Multiple root elements detected')
                 ;
         });
     }
