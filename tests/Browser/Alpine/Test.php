@@ -175,4 +175,17 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_alpine_handles_responses_from_multiple_simultaneous_calls_to_livewire()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, SimultaneousCallsComponent::class)
+                ->assertDontSeeIn('@foo', 'foo')
+                ->assertDontSeeIn('@bar', 'bar')
+                ->waitForLivewire()->click('@update-foo-and-bar')
+                ->assertSeeIn('@foo', 'foo')
+                ->assertSeeIn('@bar', 'bar')
+            ;
+        });
+    }
 }

@@ -6,5 +6,5 @@ interface Wireable
 {
     public function toLivewire();
 
-    public static function fromLivewire($value): self;
+    public static function fromLivewire($value);
 }

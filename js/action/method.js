@@ -7,6 +7,7 @@ export default class extends Action {
         this.type = 'callMethod'
         this.method = method
         this.payload = {
+            id: this.signature,
             method,
             params,
         }

@@ -19,6 +19,7 @@ use Livewire\Wireable;
 use DateTimeImmutable;
 use Carbon\Carbon;
 use DateTime;
+use DateTimeInterface;
 use stdClass;
 
 class HydratePublicProperties implements HydrationMiddleware
@@ -101,7 +102,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 $response->memo['dataMeta']['collections'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->toArray());
-            } else if ($value instanceof DateTime) {
+            } else if ($value instanceof DateTimeInterface) {
                 if ($value instanceof IlluminateCarbon) {
                     $response->memo['dataMeta']['dates'][$key] = 'illuminate';
                 } elseif ($value instanceof Carbon) {
@@ -237,32 +238,29 @@ class HydratePublicProperties implements HydrationMiddleware
     public static function processRules($rules) {
         $rules = Collection::wrap($rules);
 
-        // Map to groups
         $rules = $rules
             ->mapInto(Stringable::class)
             ->mapToGroups(function($rule) {
                 return [$rule->before('.')->__toString() => $rule->after('.')];
             });
 
-        // Go through groups and process rules
         $rules = $rules->mapWithKeys(function($rules, $group) {
-            // Split rules into collection and model rules
+            // Split rules into collection and model rules.
             [$collectionRules, $modelRules] = $rules
                 ->partition(function($rule) {
                     return $rule->contains('.');
                 });
 
-            // If collection rules exist, and value of * in model rules, remove * from model rule
+            // If collection rules exist, and value of * in model rules, remove * from model rule.
             if ($collectionRules->count()) {
                 $modelRules = $modelRules->reject(function($value) {
                     return ((string) $value) === '*';
                 });
             }
 
-            // Recurse through collection rules
+            // Recurse through collection rules.
             $collectionRules = static::processRules($collectionRules);
 
-            // Convert model rule stringable object back to string
             $modelRules = $modelRules->map->__toString();
 
             $rules = $modelRules->merge($collectionRules);

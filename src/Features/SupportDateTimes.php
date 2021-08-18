@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\RenameMe;
+namespace Livewire\Features;
 
 use DateTime;
 use Carbon\Carbon;
