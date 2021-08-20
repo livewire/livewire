@@ -66,6 +66,15 @@ class TagCompilerTest extends TestCase
     }
 
     /** @test */
+    public function it_converts_snake_cased_attribute_names_to_camel_case()
+    {
+        $alertComponent = '<livewire:alert alert_type="success" />';
+        $result = $this->compiler->compile($alertComponent);
+
+        $this->assertEquals("@livewire('alert', ['alertType' => 'success','alert_type' => 'success'])", $result);
+    }
+
+    /** @test */
     public function it_compiles_livewire_dynamic_component_self_closing_tags()
     {
         $alertComponent = '<livewire:dynamic-component component="alert" type="warning" />';
