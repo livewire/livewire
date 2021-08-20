@@ -66,12 +66,12 @@ class TagCompilerTest extends TestCase
     }
 
     /** @test */
-    public function it_does_not_convert_snake_case_attributes_names_to_camel_case()
+    public function it_converts_snake_cased_attribute_names_to_camel_case()
     {
         $alertComponent = '<livewire:alert alert_type="success" />';
         $result = $this->compiler->compile($alertComponent);
 
-        $this->assertEquals("@livewire('alert', ['alert_type' => 'success'])", $result);
+        $this->assertEquals("@livewire('alert', ['alertType' => 'success','alert_type' => 'success'])", $result);
     }
 
     /** @test */

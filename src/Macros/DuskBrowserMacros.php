@@ -208,4 +208,44 @@ class DuskBrowserMacros
             return $this;
         };
     }
+
+    public function assertConsoleLogHasWarning()
+    {
+        return function($expectedMessage){
+            $logs = $this->driver->manage()->getLog('browser');
+
+            $containsError = false;
+
+            foreach ($logs as $log) {
+                if (! isset($log['message']) || ! isset($log['level']) || $log['level'] !== 'WARNING') continue;
+
+
+                if(str($log['message'])->contains($expectedMessage)) {
+                    $containsError = true;
+                }
+            }
+
+            PHPUnit::assertTrue($containsError, "Console log error message \"{$expectedMessage}\" not found");
+        };
+    }
+
+    public function assertConsoleLogMissingWarning()
+    {
+        return function($expectedMessage){
+            $logs = $this->driver->manage()->getLog('browser');
+
+            $containsError = false;
+
+            foreach ($logs as $log) {
+                if (! isset($log['message']) || ! isset($log['level']) || $log['level'] !== 'WARNING') continue;
+
+
+                if(str($log['message'])->contains($expectedMessage)) {
+                    $containsError = true;
+                }
+            }
+
+            PHPUnit::assertFalse($containsError, "Console log error message \"{$expectedMessage}\" was found");
+        };
+    }
 }
