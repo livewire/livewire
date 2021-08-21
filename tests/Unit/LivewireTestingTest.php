@@ -73,6 +73,13 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_see_unescaped()
+    {
+        Livewire::test(HasHtml::class)
+                ->assertSee('<div><p style', false);
+    }
+
+    /** @test */
     public function assert_see_multiple()
     {
         Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
@@ -98,6 +105,13 @@ class LivewireTestingTest extends TestCase
     {
         Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertDontSee('no one should see this');
+    }
+
+    /** @test */
+    public function assert_dont_see_unescaped()
+    {
+        Livewire::test(HasHtml::class)
+                ->assertDontSee('<span>', false);
     }
 
     /** @test */
