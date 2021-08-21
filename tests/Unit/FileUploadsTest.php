@@ -404,6 +404,11 @@ class FileUploadsTest extends TestCase
             ->set('photo', $file)
             ->viewData('photo');
 
+        // Due to Livewire object still being in memory, we need to
+        // reset the "shouldDisableBackButtonCache" property back to it's default
+        // which is false to ensure it's not applied to the below route
+        Livewire::enableBackButtonCache();
+
         ob_start();
         $this->get($photo->temporaryUrl())->sendContent();
         $rawFileContents = ob_get_clean();
@@ -443,6 +448,11 @@ class FileUploadsTest extends TestCase
         $photo = Livewire::test(FileUploadComponent::class)
             ->set('photo', $file)
             ->viewData('photo');
+
+        // Due to Livewire object still being in memory, we need to
+        // reset the "shouldDisableBackButtonCache" property back to it's default
+        // which is false to ensure it's not applied to the below route
+        Livewire::enableBackButtonCache();
 
         ob_start();
         $this->get($photo->temporaryUrl())->sendContent();
@@ -488,6 +498,11 @@ class FileUploadsTest extends TestCase
         $photo = Livewire::test(FileUploadComponent::class)
             ->set('photo', $file)
             ->viewData('photo');
+
+        // Due to Livewire object still being in memory, we need to
+        // reset the "shouldDisableBackButtonCache" property back to it's default
+        // which is false to ensure it's not applied to the below route
+        Livewire::enableBackButtonCache();
 
         // When testing, rather than trying to hit an s3 server, we just serve
         // the local driver preview URL.
