@@ -343,7 +343,7 @@ export default class Component {
 
         // This means "$this->redirect()" was called in the component. let's just bail and redirect.
         if (response.effects.redirect) {
-            setTimeout(() => this.redirect(response.effects.redirect), 500)
+            setTimeout(() => this.redirect(response.effects.redirect), 50)
 
             return
         }

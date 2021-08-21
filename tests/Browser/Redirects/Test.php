@@ -49,7 +49,7 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@redirect.button')
                 ->assertSeeIn('@redirect.blade.output', 'foo')
                 ->assertSeeIn('@redirect.alpine.output', 'bar')
-                ->pause(500)
+                ->pause(50)
                 ->assertSeeIn('@redirect.blade.output', 'foo')
                 ->assertSeeIn('@redirect.alpine.output', 'foo')
             ;
@@ -70,7 +70,7 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@redirect.button')
                 ->assertSeeIn('@redirect.blade.output', 'bar')
                 ->assertSeeIn('@redirect.alpine.output', 'bar')
-                ->pause(500)
+                ->pause(50)
                 ->assertSeeIn('@redirect.blade.output', 'foo')
                 ->assertSeeIn('@redirect.alpine.output', 'foo')
             ;
