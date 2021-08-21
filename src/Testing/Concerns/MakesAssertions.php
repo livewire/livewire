@@ -57,15 +57,11 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertSee($value, $escape = true)
+    public function assertSee($values, $escape = true)
     {
-        $value = Arr::wrap($value);
-
-        $values = $escape ? array_map('e', ($value)) : $value;
-
-        foreach ($values as $value) {
+        foreach (Arr::wrap($values) as $value) {
             PHPUnit::assertStringContainsString(
-                e($value),
+                $escape ? e($value): $value,
                 $this->stripOutInitialData($this->lastRenderedDom)
             );
         }
@@ -73,15 +69,11 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertDontSee($value, $escape = true)
+    public function assertDontSee($values, $escape = true)
     {
-        $value = Arr::wrap($value);
-
-        $values = $escape ? array_map('e', ($value)) : $value;
-
-        foreach ($values as $value) {
+        foreach (Arr::wrap($values) as $value) {
             PHPUnit::assertStringNotContainsString(
-                e($value),
+                $escape ? e($value): $value,
                 $this->stripOutInitialData($this->lastRenderedDom)
             );
         }
