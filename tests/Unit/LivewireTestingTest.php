@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 class LivewireTestingTest extends TestCase
 {
     /** @test */
-    public function testing_livewire_route_works_with_user_route_with_the_same_signature()
+    public function livewire_route_works_with_user_route_with_the_same_signature()
     {
         Route::get('/{param1}/{param2}', function() {
             throw new \Exception('I shouldn\'t get executed!');
