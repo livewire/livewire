@@ -10,6 +10,14 @@ class Component extends BaseComponent
     public $message = 'foo';
     public $foo;
 
+    public $shouldSkipRenderOnRedirect = true;
+    public $disableBackButtonCache = true;
+
+    protected $queryString = [
+        'shouldSkipRenderOnRedirect',
+        'disableBackButtonCache',
+    ];
+
     protected $rules = [
         'foo.name' => '',
     ];
@@ -17,6 +25,8 @@ class Component extends BaseComponent
     public function mount()
     {
         $this->foo = Foo::first();
+
+        $this->disableBackButtonCache ? $this->disableBackButtonCache() : $this->enableBackButtonCache();
     }
 
     public function flashMessage()
@@ -34,7 +44,18 @@ class Component extends BaseComponent
     public function redirectPage()
     {
         $this->message = 'bar';
-        $this->foo->update(['name' => $this->foo->name == 'foo2' ? 'bar2' : 'foo2']);
+
+        config()->set('livewire.should_skip_render_on_redirect', $this->shouldSkipRenderOnRedirect);
+
+        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc');
+    }
+
+    public function redirectPageWithModel()
+    {
+        $this->foo->update(['name' => 'bar']);
+
+        // overriding config here like for skip render won't work as the config value is loaded in the constructor
+        // config()->set('livewire.disable_back_button_cache', $this->disableBackButtonCache);
 
         return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc');
     }
