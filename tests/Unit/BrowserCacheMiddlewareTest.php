@@ -36,7 +36,6 @@ class DisableBrowserCache extends Component
 {
     public function mount()
     {
-        ray('mount');
         $this->disableBackButtonCache();
     }
 
