@@ -59,7 +59,7 @@ trait MakesAssertions
 
     public function assertSee($value, $escape = true)
     {
-        $value = static::wrapInArray($value);
+        $value = Arr::wrap($value);
 
         $values = $escape ? array_map('e', ($value)) : $value;
 
@@ -75,7 +75,7 @@ trait MakesAssertions
 
     public function assertDontSee($value, $escape = true)
     {
-        $value = static::wrapInArray($value);
+        $value = Arr::wrap($value);
 
         $values = $escape ? array_map('e', ($value)) : $value;
 
@@ -132,15 +132,6 @@ trait MakesAssertions
     protected function stripOutInitialData($subject)
     {
         return preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
-    }
-
-    protected function wrapInArray($value)
-    {
-        if (is_null($value)) {
-            return [];
-        }
-
-        return is_array($value) ? $value : [$value];
     }
 
     public function assertEmitted($value, ...$params)
