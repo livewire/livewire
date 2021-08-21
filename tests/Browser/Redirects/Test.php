@@ -41,9 +41,8 @@ class Test extends TestCase
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class, '?shouldSkipRenderOnRedirect=true')
                 /*
-                 * Livewire response is still handled event if redirecting.
-                 * (Otherwise, the browser cache after a back button press
-                 * won't be up to date.)
+                 * This test skips render on redirect, which means
+                 * the latest render won't be written to bfcache
                  */
                 ->assertSeeIn('@redirect.blade.output', 'foo')
                 ->assertSeeIn('@redirect.alpine.output', 'foo')
@@ -63,9 +62,8 @@ class Test extends TestCase
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class, '?shouldSkipRenderOnRedirect=false')
                 /*
-                 * Livewire response is still handled event if redirecting.
-                 * (Otherwise, the browser cache after a back button press
-                 * won't be up to date.)
+                 * This test runs render on redirect, which means
+                 * the latest render will be written to bfcache
                  */
                 ->assertSeeIn('@redirect.blade.output', 'foo')
                 ->assertSeeIn('@redirect.alpine.output', 'foo')
