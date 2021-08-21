@@ -81,7 +81,7 @@ class Test extends TestCase
         });
     }
 
-    public function test_query_string_format_in_rfc_3986()
+    public function test_query_string_format_in_rfc_1738()
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
@@ -89,7 +89,7 @@ class Test extends TestCase
                 ->assertSeeIn('@output', 'foo bar')
                 ->assertInputValue('@input', 'foo bar')
                 ->assertQueryStringHas('foo', 'foo bar')
-                ->assertScript('return !! window.location.search.match(/foo=foo%20bar/)')
+                ->assertScript('return !! window.location.search.match(/foo=foo\+bar/)')
             ;
         });
     }
