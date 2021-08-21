@@ -10,7 +10,7 @@ class BrowserCacheMiddlewareTest extends TestCase
     /** @test */
     public function ensure_disable_browser_cache_middleware_is_not_applied_to_a_route_that_does_not_contain_a_component()
     {
-        Route::get('test-route-without-livewire-component', fn () => 'ok');
+        Route::get('test-route-without-livewire-component', function () { return 'ok'; });
 
         $response = $this->get('test-route-without-livewire-component');
 
