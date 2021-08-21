@@ -137,10 +137,10 @@ return [
     | to be set to "false", to ensure the latest view is rendered to the browser
     | before the redirect happens.
     |
-    | It is set to "true" by default.
+    | It is set to "false" by default to ensure bfcache works correctly.
     |
     */
 
-    'should_skip_render_on_redirect' => true,
+    'should_skip_render_on_redirect' => false,
 
 ];
