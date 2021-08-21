@@ -308,17 +308,17 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerRenameMes()
     {
-        RenameMe\SupportEvents::init();
-        RenameMe\SupportLocales::init();
-        RenameMe\SupportChildren::init();
-        RenameMe\SupportRedirects::init();
-        RenameMe\SupportValidation::init();
-        RenameMe\SupportFileUploads::init();
-        RenameMe\OptimizeRenderedDom::init();
-        RenameMe\SupportFileDownloads::init();
-        RenameMe\SupportActionReturns::init();
-        RenameMe\SupportBrowserHistory::init();
-        RenameMe\SupportComponentTraits::init();
+        Features\SupportEvents::init();
+        Features\SupportLocales::init();
+        Features\SupportChildren::init();
+        Features\SupportRedirects::init();
+        Features\SupportValidation::init();
+        Features\SupportFileUploads::init();
+        Features\OptimizeRenderedDom::init();
+        Features\SupportFileDownloads::init();
+        Features\SupportActionReturns::init();
+        Features\SupportBrowserHistory::init();
+        Features\SupportComponentTraits::init();
     }
 
     protected function registerHydrationMiddleware()

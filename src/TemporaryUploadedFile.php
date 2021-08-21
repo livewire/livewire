@@ -59,7 +59,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function temporaryUrl()
     {
-        if (FileUploadConfiguration::isUsingS3() && ! app()->environment('testing')) {
+        if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->environment('testing')) {
             return $this->storage->temporaryUrl(
                 $this->path,
                 now()->addDay(),

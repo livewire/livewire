@@ -102,7 +102,7 @@ trait HandlesActions
         Livewire::dispatch('component.updated', $this, $name, $value);
     }
 
-    public function callMethod($method, $params = [])
+    public function callMethod($method, $params = [], $captureReturnValueCallback = null)
     {
         $method = trim($method);
 
@@ -148,7 +148,7 @@ trait HandlesActions
 
         $returned = ImplicitlyBoundMethod::call(app(), [$this, $method], $params);
 
-        Livewire::dispatch('action.returned', $this, $method, $returned);
+        $captureReturnValueCallback && $captureReturnValueCallback($returned);
     }
 
     protected function methodIsPublicAndNotDefinedOnBaseClass($methodName)

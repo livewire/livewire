@@ -24,6 +24,8 @@ export default class Component {
 
         this.id = this.el.getAttribute('wire:id')
 
+        this.checkForMultipleRootElements()
+
         this.connection = connection
 
         const initialData = JSON.parse(this.el.getAttribute('wire:initial-data'))
@@ -63,6 +65,25 @@ export default class Component {
 
     get childIds() {
         return Object.values(this.serverMemo.children).map(child => child.id)
+    }
+
+    checkForMultipleRootElements() {
+        // Count the number of elements between the first element in the component and the
+        // injected "component-end" marker. This is an HTML comment with notation.
+        let countElementsBeforeMarker = (el, carryCount = 0) => {
+            if (! el) return carryCount
+
+            // If we see the "end" marker, we can return the number of elements in between we've seen.
+            if (el.nodeType === Node.COMMENT_NODE && el.textContent.includes(`wire-end:${this.id}`)) return carryCount
+
+            let newlyDiscoveredEls = el.nodeType === Node.ELEMENT_NODE ? 1 : 0
+
+            return countElementsBeforeMarker(el.nextSibling, carryCount + newlyDiscoveredEls)
+        }
+
+        if (countElementsBeforeMarker(this.el.nextSibling) > 0) {
+            console.warn(`Livewire: Multiple root elements detected. This is not supported. See docs for more information https://laravel-livewire.com/docs/2.x/rendering-components#returning-blade`, this.el)
+        }
     }
 
     initialize() {

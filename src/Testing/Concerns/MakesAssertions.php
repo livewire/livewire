@@ -57,22 +57,34 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertSee($value)
+    public function assertSee($value, $escape = true)
     {
-        PHPUnit::assertStringContainsString(
-            e($value),
-            $this->stripOutInitialData($this->lastRenderedDom)
-        );
+        $value = static::wrapInArray($value);
+
+        $values = $escape ? array_map('e', ($value)) : $value;
+
+        foreach ($values as $value) {
+            PHPUnit::assertStringContainsString(
+                e($value),
+                $this->stripOutInitialData($this->lastRenderedDom)
+            );
+        }
 
         return $this;
     }
 
-    public function assertDontSee($value)
+    public function assertDontSee($value, $escape = true)
     {
-        PHPUnit::assertStringNotContainsString(
-            e($value),
-            $this->stripOutInitialData($this->lastRenderedDom)
-        );
+        $value = static::wrapInArray($value);
+
+        $values = $escape ? array_map('e', ($value)) : $value;
+
+        foreach ($values as $value) {
+            PHPUnit::assertStringNotContainsString(
+                e($value),
+                $this->stripOutInitialData($this->lastRenderedDom)
+            );
+        }
 
         return $this;
     }
@@ -120,6 +132,15 @@ trait MakesAssertions
     protected function stripOutInitialData($subject)
     {
         return preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
+    }
+
+    protected function wrapInArray($value)
+    {
+        if (is_null($value)) {
+            return [];
+        }
+
+        return is_array($value) ? $value : [$value];
     }
 
     public function assertEmitted($value, ...$params)
@@ -289,12 +310,18 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertFileDownloaded($filename, $content = null)
+    public function assertFileDownloaded($filename = null, $content = null, $contentType = null)
     {
-        PHPUnit::assertEquals(
-            $filename,
-            data_get($this->lastResponse, 'original.effects.download.name')
-        );
+        $downloadEffect = data_get($this->lastResponse, 'original.effects.download');
+
+        if ($filename) {
+            PHPUnit::assertEquals(
+                $filename,
+                data_get($downloadEffect, 'name')
+            );
+        } else {
+            PHPUnit::assertNotNull($downloadEffect);
+        }
 
         if ($content) {
             $downloadedContent = data_get($this->lastResponse, 'original.effects.download.content');
@@ -302,6 +329,13 @@ trait MakesAssertions
             PHPUnit::assertEquals(
                 $content,
                 base64_decode($downloadedContent)
+            );
+        }
+
+        if ($contentType) {
+            PHPUnit::assertEquals(
+                $contentType,
+                data_get($this->lastResponse, 'original.effects.download.contentType')
             );
         }
 

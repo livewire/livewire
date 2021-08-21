@@ -80,6 +80,14 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_see_multiple()
+    {
+        app(LivewireManager::class)
+            ->test(HasMountArguments::class, ['name' => 'should see me'])
+            ->assertSee(['should', 'see', 'me']);
+    }
+
+    /** @test */
     public function assert_see_html()
     {
         app(LivewireManager::class)
@@ -93,6 +101,22 @@ class LivewireTestingTest extends TestCase
         app(LivewireManager::class)
             ->test(HasHtml::class)
             ->assertDontSeeHtml('<span style="display: none">Hello HTML</span>');
+    }
+
+    /** @test */
+    public function assert_dont_see()
+    {
+        app(LivewireManager::class)
+            ->test(HasMountArguments::class, ['name' => 'should see me'])
+            ->assertDontSee('no one should see this');
+    }
+
+    /** @test */
+    public function assert_dont_see_multiple()
+    {
+        app(LivewireManager::class)
+            ->test(HasMountArguments::class, ['name' => 'should see me'])
+            ->assertDontSee(['no', 'one', 'really']);
     }
 
     /** @test */
