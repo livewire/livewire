@@ -94,6 +94,34 @@ class Test extends TestCase
         });
     }
 
+    public function test_query_string_with_rfc_1738_bookmarked_url()
+    {
+        $this->browse(function (Browser $browser) {
+            $queryString = '?qux[hyphen]=foo-bar&qux[comma]=foo,bar&qux[ampersand]=foo%26bar&qux[space]=foo+bar';
+
+            Livewire::visit($browser, Component::class, $queryString)
+                ->assertSeeIn('@qux.hyphen', 'foo-bar')
+                ->assertSeeIn('@qux.comma', 'foo,bar')
+                ->assertSeeIn('@qux.ampersand', 'foo&bar')
+                ->assertSeeIn('@qux.space', 'foo bar')
+            ;
+        });
+    }
+
+    public function test_query_string_backwards_compatibility_with_bookmarked_rfc_3986_urls()
+    {
+        $this->browse(function (Browser $browser) {
+            $queryString = '?qux%5Bhyphen%5D=foo-bar&qux%5Bcomma%5D=foo%2Cbar&qux%5Bampersand%5D=foo%26bar&qux%5Bspace%5D=foo%20bar';
+
+            Livewire::visit($browser, Component::class, $queryString)
+                ->assertSeeIn('@qux.hyphen', 'foo-bar')
+                ->assertSeeIn('@qux.comma', 'foo,bar')
+                ->assertSeeIn('@qux.ampersand', 'foo&bar')
+                ->assertSeeIn('@qux.space', 'foo bar')
+            ;
+        });
+    }
+
     public function test_back_button_after_refresh_works_with_nested_components()
     {
         $this->browse(function (Browser $browser) {
