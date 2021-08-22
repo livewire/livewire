@@ -3,13 +3,10 @@
 namespace Livewire\Features;
 
 use Livewire\Livewire;
-use Livewire\ImplicitlyBoundMethod;
 
 class SupportRootElementTracking
 {
     static function init() { return new static; }
-
-    protected $componentIdMethodMap = [];
 
     function __construct()
     {
