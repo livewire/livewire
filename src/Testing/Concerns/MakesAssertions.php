@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Testing\Constraints\SeeInOrder;
+use Livewire\Features\SupportRootElementTracking;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MakesAssertions
@@ -123,7 +124,9 @@ trait MakesAssertions
 
     protected function stripOutInitialData($subject)
     {
-        return preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
+        $subject = preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
+
+        return SupportRootElementTracking::stripOutEndingMarker($subject);
     }
 
     public function assertEmitted($value, ...$params)

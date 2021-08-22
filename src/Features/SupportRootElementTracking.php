@@ -21,4 +21,9 @@ class SupportRootElementTracking
     {
         return $html."\n<!-- Livewire Component wire-end:".$component->id.' -->';
     }
+
+    public static function stripOutEndingMarker($html)
+    {
+        return preg_replace('/<!-- Livewire Component wire-end:.*? -->/', '', $html);
+    }
 }
