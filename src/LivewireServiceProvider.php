@@ -62,7 +62,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerViews();
         $this->registerRoutes();
         $this->registerCommands();
-        $this->registerRenameMes();
+        $this->registerFeatures();
         $this->registerViewMacros();
         $this->registerTagCompiler();
         $this->registerPublishables();
@@ -305,7 +305,7 @@ class LivewireServiceProvider extends ServiceProvider
         });
     }
 
-    protected function registerRenameMes()
+    protected function registerFeatures()
     {
         Features\SupportEvents::init();
         Features\SupportLocales::init();
@@ -318,6 +318,7 @@ class LivewireServiceProvider extends ServiceProvider
         Features\SupportActionReturns::init();
         Features\SupportBrowserHistory::init();
         Features\SupportComponentTraits::init();
+        Features\SupportRootElementTracking::init();
     }
 
     protected function registerHydrationMiddleware()
