@@ -211,20 +211,6 @@ abstract class Component
         return $output;
     }
 
-    public function normalizePublicPropertiesForJavaScript()
-    {
-        foreach ($this->getPublicPropertiesDefinedBySubClass() as $key => $value) {
-            if (is_array($value)) {
-                $this->$key = $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
-            }
-
-            if ($value instanceof EloquentCollection) {
-                // Preserve collection items order by reindexing underlying array.
-                $this->$key = $value->values();
-            }
-        }
-    }
-
     public function forgetComputed($key = null)
     {
         if (is_null($key)) {

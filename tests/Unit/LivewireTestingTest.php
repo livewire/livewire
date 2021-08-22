@@ -4,13 +4,12 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 use Illuminate\Support\Facades\Route;
 
 class LivewireTestingTest extends TestCase
 {
     /** @test */
-    public function testing_livewire_route_works_with_user_route_with_the_same_signature()
+    public function livewire_route_works_with_user_route_with_the_same_signature()
     {
         Route::get('/{param1}/{param2}', function() {
             throw new \Exception('I shouldn\'t get executed!');
@@ -22,8 +21,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function method_accepts_arguments_to_pass_to_mount()
     {
-        $component = app(LivewireManager::class)
-            ->test(HasMountArguments::class, ['name' => 'foo']);
+        $component = Livewire::test(HasMountArguments::class, ['name' => 'foo']);
 
         $this->assertStringContainsString('foo', $component->payload['effects']['html']);
     }
@@ -31,8 +29,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function set_multiple_with_array()
     {
-        app(LivewireManager::class)
-            ->test(HasMountArguments::class, ['name' => 'foo'])
+        Livewire::test(HasMountArguments::class, ['name' => 'foo'])
             ->set(['name' => 'bar'])
             ->assertSet('name', 'bar');
     }
@@ -40,8 +37,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_set()
     {
-        app(LivewireManager::class)
-            ->test(HasMountArguments::class, ['name' => 'foo'])
+        Livewire::test(HasMountArguments::class, ['name' => 'foo'])
             ->assertSet('name', 'foo')
             ->set('name', 'info')
             ->assertSet('name', 'info')
@@ -52,16 +48,14 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_not_set()
     {
-        app(LivewireManager::class)
-            ->test(HasMountArguments::class, ['name' => 'bar'])
+        Livewire::test(HasMountArguments::class, ['name' => 'bar'])
             ->assertNotSet('name', 'foo');
     }
 
     /** @test */
     public function assert_count()
     {
-        app(LivewireManager::class)
-            ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => ['foo']])
+        Livewire::test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => ['foo']])
             ->assertCount('name', 1)
             ->set('name', ['foo', 'bar'])
             ->assertCount('name', 2)
@@ -74,48 +68,56 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_see()
     {
-        app(LivewireManager::class)
-            ->test(HasMountArguments::class, ['name' => 'should see me'])
+        Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertSee('should see me');
+    }
+
+    /** @test */
+    public function assert_see_unescaped()
+    {
+        Livewire::test(HasHtml::class)
+                ->assertSee('<div><p style', false);
     }
 
     /** @test */
     public function assert_see_multiple()
     {
-        app(LivewireManager::class)
-            ->test(HasMountArguments::class, ['name' => 'should see me'])
+        Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertSee(['should', 'see', 'me']);
     }
 
     /** @test */
     public function assert_see_html()
     {
-        app(LivewireManager::class)
-            ->test(HasHtml::class)
+        Livewire::test(HasHtml::class)
             ->assertSeeHtml('<p style="display: none">Hello HTML</p>');
     }
 
     /** @test */
     public function assert_dont_see_html()
     {
-        app(LivewireManager::class)
-            ->test(HasHtml::class)
+        Livewire::test(HasHtml::class)
             ->assertDontSeeHtml('<span style="display: none">Hello HTML</span>');
     }
 
     /** @test */
     public function assert_dont_see()
     {
-        app(LivewireManager::class)
-            ->test(HasMountArguments::class, ['name' => 'should see me'])
+        Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertDontSee('no one should see this');
+    }
+
+    /** @test */
+    public function assert_dont_see_unescaped()
+    {
+        Livewire::test(HasHtml::class)
+                ->assertDontSee('<span>', false);
     }
 
     /** @test */
     public function assert_dont_see_multiple()
     {
-        app(LivewireManager::class)
-            ->test(HasMountArguments::class, ['name' => 'should see me'])
+        Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertDontSee(['no', 'one', 'really']);
     }
 
@@ -126,16 +128,14 @@ class LivewireTestingTest extends TestCase
         * See for more info: https://github.com/calebporzio/livewire/issues/62
         * Regex test: https://regex101.com/r/UhjREC/2/
         */
-        app(LivewireManager::class)
-            ->test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => 'shouldnt see me'])
+        Livewire::test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => 'shouldnt see me'])
             ->assertDontSee('shouldnt see me');
     }
 
     /** @test */
     public function assert_emitted()
     {
-        app(LivewireManager::class)
-            ->test(EmitsEventsComponentStub::class)
+        Livewire::test(EmitsEventsComponentStub::class)
             ->call('emitFoo')
             ->assertEmitted('foo')
             ->call('emitFooWithParam', 'bar')
@@ -149,8 +149,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_not_emitted()
     {
-        app(LivewireManager::class)
-            ->test(EmitsEventsComponentStub::class)
+        Livewire::test(EmitsEventsComponentStub::class)
             ->assertNotEmitted('foo')
             ->call('emitFoo')
             ->assertNotEmitted('bar')
@@ -171,8 +170,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_dispatched()
     {
-        app(LivewireManager::class)
-            ->test(DispatchesBrowserEventsComponentStub::class)
+        Livewire::test(DispatchesBrowserEventsComponentStub::class)
             ->call('dispatchFoo')
             ->assertDispatchedBrowserEvent('foo')
             ->call('dispatchFooWithData', ['bar' => 'baz'])
@@ -186,8 +184,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_has_error_with_manually_added_error()
     {
-        app(LivewireManager::class)
-            ->test(ValidatesDataWithSubmitStub::class)
+        Livewire::test(ValidatesDataWithSubmitStub::class)
             ->call('manuallyAddError')
             ->assertHasErrors('bob');
     }
@@ -195,8 +192,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_has_error_with_submit_validation()
     {
-        app(LivewireManager::class)
-            ->test(ValidatesDataWithSubmitStub::class)
+        Livewire::test(ValidatesDataWithSubmitStub::class)
             ->call('submit')
             ->assertHasErrors('foo')
             ->assertHasErrors(['foo', 'bar'])
@@ -209,8 +205,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_has_error_with_real_time_validation()
     {
-        app(LivewireManager::class)
-            ->test(ValidatesDataWithRealTimeStub::class)
+        Livewire::test(ValidatesDataWithRealTimeStub::class)
             // ->set('foo', 'bar-baz')
             // ->assertHasNoErrors()
             ->set('foo', 'bar')

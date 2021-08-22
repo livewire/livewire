@@ -11,10 +11,16 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
-                ->assertSee('foo')
-                ->assertDontSee('bar')
+                ->assertSeeIn('@things', 'foo')
+                ->assertDontSeeIn('@things', 'bar')
+                ->assertSeeIn('@unordered', 'foo')
+                ->assertSeeIn('@unordered', 'bar')
                 ->waitForLivewire()->click('@add-bar')
-                ->assertSee('bar');
+                ->assertSeeIn('@things', 'bar')
+                ->assertSeeIn('@unordered', 'foo')
+                ->assertSeeIn('@unordered', 'bar')
+                ->assertSeeIn('@unordered', 'baz')
+            ;
         });
     }
 }
