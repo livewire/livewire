@@ -7,7 +7,7 @@ use Illuminate\Filesystem\Filesystem;
 
 class StubsCommand extends Command
 {
-    protected $signature = 'livewire:stubs';
+    protected $signature = 'livewire:stubs {--subDirectory=}';
 
     protected $description = 'Publish Livewire stubs';
 
@@ -15,8 +15,12 @@ class StubsCommand extends Command
 
     public function handle()
     {
-        if (! is_dir($stubsPath = base_path('stubs'))) {
-            (new Filesystem)->makeDirectory($stubsPath);
+        $subDirectory='';
+        if(!empty($this->option('subDirectory'))){
+            $subDirectory = '/'.$this->option('subDirectory');
+        }
+        if (! is_dir($stubsPath = base_path('stubs'.$subDirectory))) {
+            (new Filesystem)->makeDirectory($stubsPath,0755,true);
         }
 
         file_put_contents(
