@@ -2,6 +2,10 @@
 
 {{ $slot }}
 
-{{ $foo }}
+<div {{ $attributes->merge(['id' => 'foo']) }}>
+    {{ $foo }}
+</div>
 
-{{ $bar }}
+@isset($bar)
+    {{ $bar }}
+@endisset

@@ -4,6 +4,7 @@ export default class {
         this.skipWatcher = skipWatcher
         this.resolveCallback = () => { }
         this.rejectCallback = () => { }
+        this.signature = (Math.random() + 1).toString(36).substring(8)
     }
 
     toId() {

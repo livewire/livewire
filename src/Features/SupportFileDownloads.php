@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\RenameMe;
+namespace Livewire\Features;
 
 use Livewire\Livewire;
 use Illuminate\Support\Str;
@@ -33,6 +33,7 @@ class SupportFileDownloads
             $this->downloadsById[$component->id] = [
                 'name' => $name,
                 'content' => $content,
+                'contentType' => $response->headers->get('Content-Type'),
             ];
 
             $component->skipRender();

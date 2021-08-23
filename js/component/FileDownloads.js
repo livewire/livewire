@@ -6,11 +6,11 @@ export default function () {
 
         if (! response.effects.download) return
 
-        // We need to use window.webkitURL so downloads work on iOS Sarfari.
+        // We need to use window.webkitURL so downloads work on iOS Safari.
         let urlObject = window.webkitURL || window.URL
 
         let url = urlObject.createObjectURL(
-            base64toBlob(response.effects.download.content)
+            base64toBlob(response.effects.download.content, response.effects.download.contentType)
         )
 
         let invisibleLink = document.createElement('a')
@@ -29,9 +29,11 @@ export default function () {
     })
 }
 
-function base64toBlob(b64Data, contentType='', sliceSize=512) {
+function base64toBlob(b64Data, contentType = '', sliceSize = 512) {
     const byteCharacters = atob(b64Data)
     const byteArrays = []
+
+    if (contentType === null) contentType = ''
 
     for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
         let slice = byteCharacters.slice(offset, offset + sliceSize)
