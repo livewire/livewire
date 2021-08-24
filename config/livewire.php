@@ -110,16 +110,4 @@ return [
 
     'manifest_path' => null,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Url Encoding Type
-    |--------------------------------------------------------------------------
-    |
-    | This value sets the url encoding type for query parameters.
-    |
-    | More information: https://www.php.net/manual/en/function.http-build-query.php#encoding_type
-    |
-    */
-
-    'url_encoding_type' => PHP_QUERY_RFC3986,
 ];

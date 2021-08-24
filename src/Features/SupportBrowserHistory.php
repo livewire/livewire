@@ -185,6 +185,6 @@ class SupportBrowserHistory
             return '';
         }
 
-        return '?'.http_build_query($queryParams->toArray(), '', '&', config('livewire.url_encoding_type'));
+        return '?'.http_build_query($queryParams->toArray(), '', '&', PHP_QUERY_RFC1738);
     }
 }
