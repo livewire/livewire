@@ -97,27 +97,27 @@ class Test extends TestCase
     public function test_query_string_with_rfc_1738_bookmarked_url()
     {
         $this->browse(function (Browser $browser) {
-            $queryString = '?qux[hyphen]=foo-bar&qux[comma]=foo,bar&qux[ampersand]=foo%26bar&qux[space]=foo+bar';
+            $queryString = '?qux[hyphen]=quux-quuz&qux[comma]=quux,quuz&qux[ampersand]=quux%26quuz&qux[space]=quux+quuz';
 
             Livewire::visit($browser, Component::class, $queryString)
-                ->assertSeeIn('@qux.hyphen', 'foo-bar')
-                ->assertSeeIn('@qux.comma', 'foo,bar')
-                ->assertSeeIn('@qux.ampersand', 'foo&bar')
-                ->assertSeeIn('@qux.space', 'foo bar')
+                ->assertSeeIn('@qux.hyphen', 'quux-quuz')
+                ->assertSeeIn('@qux.comma', 'quux,quuz')
+                ->assertSeeIn('@qux.ampersand', 'quux&quuz')
+                ->assertSeeIn('@qux.space', 'quux quuz')
             ;
         });
     }
 
-    public function test_query_string_backwards_compatibility_with_bookmarked_rfc_3986_urls()
+    public function test_query_string_with_rfc_3986_bookmarked_url_forbackwards_compatibility()
     {
         $this->browse(function (Browser $browser) {
-            $queryString = '?qux%5Bhyphen%5D=foo-bar&qux%5Bcomma%5D=foo%2Cbar&qux%5Bampersand%5D=foo%26bar&qux%5Bspace%5D=foo%20bar';
+            $queryString = '?qux%5Bhyphen%5D=quux-quuz&qux%5Bcomma%5D=quux%2Cquuz&qux%5Bampersand%5D=quux%26quuz&qux%5Bspace%5D=quux%20quuz';
 
             Livewire::visit($browser, Component::class, $queryString)
-                ->assertSeeIn('@qux.hyphen', 'foo-bar')
-                ->assertSeeIn('@qux.comma', 'foo,bar')
-                ->assertSeeIn('@qux.ampersand', 'foo&bar')
-                ->assertSeeIn('@qux.space', 'foo bar')
+                ->assertSeeIn('@qux.hyphen', 'quux-quuz')
+                ->assertSeeIn('@qux.comma', 'quux,quuz')
+                ->assertSeeIn('@qux.ampersand', 'quux&quuz')
+                ->assertSeeIn('@qux.space', 'quux quuz')
             ;
         });
     }

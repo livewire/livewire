@@ -11,10 +11,10 @@ class Component extends BaseComponent
     public $bar = 'baz';
     public $bob = ['foo', 'bar'];
     public $qux = [
-        'hyphen' => 'foo-bar',
-        'comma' => 'foo,bar',
-        'ampersand' => 'foo&bar',
-        'space' => 'foo bar'
+        'hyphen' => 'quux-quuz',
+        'comma' => 'quux,quuz',
+        'ampersand' => 'quux&quuz',
+        'space' => 'quux quuz'
     ];
 
     public $showNestedComponent = false;
