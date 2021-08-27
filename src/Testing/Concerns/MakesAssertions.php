@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Testing\Constraints\SeeInOrder;
+use Livewire\Features\SupportRootElementTracking;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MakesAssertions
@@ -57,15 +58,11 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertSee($value, $escape = true)
+    public function assertSee($values, $escape = true)
     {
-        $value = static::wrapInArray($value);
-
-        $values = $escape ? array_map('e', ($value)) : $value;
-
-        foreach ($values as $value) {
+        foreach (Arr::wrap($values) as $value) {
             PHPUnit::assertStringContainsString(
-                e($value),
+                $escape ? e($value): $value,
                 $this->stripOutInitialData($this->lastRenderedDom)
             );
         }
@@ -73,15 +70,11 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertDontSee($value, $escape = true)
+    public function assertDontSee($values, $escape = true)
     {
-        $value = static::wrapInArray($value);
-
-        $values = $escape ? array_map('e', ($value)) : $value;
-
-        foreach ($values as $value) {
+        foreach (Arr::wrap($values) as $value) {
             PHPUnit::assertStringNotContainsString(
-                e($value),
+                $escape ? e($value): $value,
                 $this->stripOutInitialData($this->lastRenderedDom)
             );
         }
@@ -131,16 +124,9 @@ trait MakesAssertions
 
     protected function stripOutInitialData($subject)
     {
-        return preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
-    }
+        $subject = preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $subject);
 
-    protected function wrapInArray($value)
-    {
-        if (is_null($value)) {
-            return [];
-        }
-
-        return is_array($value) ? $value : [$value];
+        return SupportRootElementTracking::stripOutEndingMarker($subject);
     }
 
     public function assertEmitted($value, ...$params)
