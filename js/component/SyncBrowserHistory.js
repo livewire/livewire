@@ -147,11 +147,8 @@ let LivewireStateManager = {
         store.callHook('before'+capitalize(method), fullstateObject, url, component)
 
         try {
-            let encodedCharacters = ['%20', '%2C', '%5B', '%5C']
-
-            if (! encodedCharacters.some(value => url.includes(value))) {
-                url = url.replaceAll('\\', '%5C')
-                url = decodeURIComponent(url).replaceAll(' ', '+')
+            if (decodeURIComponent(url) != 'undefined') {
+                url = decodeURIComponent(url).replaceAll(' ', '+').replaceAll('\\', '%5C')
             }
 
             history[method](fullstateObject, '', url)
