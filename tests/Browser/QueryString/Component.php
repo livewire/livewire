@@ -14,7 +14,11 @@ class Component extends BaseComponent
         'hyphen' => 'quux-quuz',
         'comma' => 'quux,quuz',
         'ampersand' => 'quux&quuz',
-        'space' => 'quux quuz'
+        'space' => 'quux quuz',
+        'array' => [
+            'quux',
+            'quuz'
+        ],
     ];
 
     public $showNestedComponent = false;

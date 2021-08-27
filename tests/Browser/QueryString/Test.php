@@ -97,13 +97,14 @@ class Test extends TestCase
     public function test_query_string_with_rfc_1738_bookmarked_url()
     {
         $this->browse(function (Browser $browser) {
-            $queryString = '?qux[hyphen]=quux-quuz&qux[comma]=quux,quuz&qux[ampersand]=quux%26quuz&qux[space]=quux+quuz';
+            $queryString = '?qux[hyphen]=quux-quuz&qux[comma]=quux,quuz&qux[ampersand]=quux%26quuz&qux[space]=quux+quuz&qux[array][]=quux&qux[array][]=quuz';
 
             Livewire::visit($browser, Component::class, $queryString)
                 ->assertSeeIn('@qux.hyphen', 'quux-quuz')
                 ->assertSeeIn('@qux.comma', 'quux,quuz')
                 ->assertSeeIn('@qux.ampersand', 'quux&quuz')
                 ->assertSeeIn('@qux.space', 'quux quuz')
+                ->assertSeeIn('@qux.array', '["quux","quuz"]')
             ;
         });
     }
@@ -111,13 +112,14 @@ class Test extends TestCase
     public function test_query_string_with_rfc_3986_bookmarked_url_forbackwards_compatibility()
     {
         $this->browse(function (Browser $browser) {
-            $queryString = '?qux%5Bhyphen%5D=quux-quuz&qux%5Bcomma%5D=quux%2Cquuz&qux%5Bampersand%5D=quux%26quuz&qux%5Bspace%5D=quux%20quuz';
+            $queryString = '?qux%5Bhyphen%5D=quux-quuz&qux%5Bcomma%5D=quux%2Cquuz&qux%5Bampersand%5D=quux%26quuz&qux%5Bspace%5D=quux%20quuz&qux%5Barray%5D%5B%5D=quux&qux%5Barray%5D%5B%5D=quuz';
 
             Livewire::visit($browser, Component::class, $queryString)
                 ->assertSeeIn('@qux.hyphen', 'quux-quuz')
                 ->assertSeeIn('@qux.comma', 'quux,quuz')
                 ->assertSeeIn('@qux.ampersand', 'quux&quuz')
                 ->assertSeeIn('@qux.space', 'quux quuz')
+                ->assertSeeIn('@qux.array', '["quux","quuz"]')
             ;
         });
     }
