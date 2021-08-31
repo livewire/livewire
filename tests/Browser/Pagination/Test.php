@@ -169,4 +169,77 @@ class Test extends TestCase
             ;
         });
     }
+    
+    /** @test */
+    public function it_can_have_two_pagination_instances_on_a_page()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithTwoPaginators::class)
+                ->tinker()
+                /**
+                 * Test that going to page 2, then back to page 1 removes "page" from the query string.
+                 */
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertDontSee('Item #4')
+
+                ->waitForLivewire()->click('@nextPagePost.before')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+                ->assertQueryStringHas('page', '2')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertDontSee('Item #4')
+                ->assertQueryStringMissing('item-page')
+
+                ->waitForLivewire()->click('@previousPagePost.before')
+
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringMissing('page')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertDontSee('Item #4')
+                ->assertQueryStringMissing('itemPage')
+
+                ->waitForLivewire()->click('@nextPageItem.before')
+
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertQueryStringMissing('page')
+                ->assertDontSee('Item #3')
+                ->assertSee('Item #4')
+                ->assertSee('Item #5')
+                ->assertSee('Item #6')
+                ->assertQueryStringHas('item-page', '2')
+
+                ->waitForLivewire()->click('@previousPageItem.before')
+
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertQueryStringMissing('page')
+                ->assertDontSee('Item #6')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertQueryStringMissing('itemPage')
+            ;
+        });
+    }
 }
