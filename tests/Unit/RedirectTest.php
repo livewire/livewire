@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,30 @@ class RedirectTest extends TestCase
         $component->runAction('triggerRedirectHelper');
 
         $this->assertEquals(url('foo'), $component->payload['effects']['redirect']);
+    }
+
+    /** @test */
+    public function redirect_helper_using_key_value_with()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectHelperUsingKeyValueWith');
+
+        $this->assertEquals(url('foo'), $component->payload['effects']['redirect']);
+
+        $this->assertEquals('livewire-is-awesome',Session::get('success'));
+    }
+
+    /** @test */
+    public function redirect_helper_using_array_with()
+    {
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectHelperUsingArrayWith');
+
+        $this->assertEquals(url('foo'), $component->payload['effects']['redirect']);
+
+        $this->assertEquals('livewire-is-awesome',Session::get('success'));
     }
 
     /** @test */
@@ -140,6 +165,18 @@ class TriggersRedirectStub extends Component
     public function triggerRedirectHelper()
     {
         return redirect('foo');
+    }
+
+    public function triggerRedirectHelperUsingKeyValueWith()
+    {
+        return redirect('foo')->with('success', 'livewire-is-awesome');
+    }
+
+    public function triggerRedirectHelperUsingArrayWith()
+    {
+        return redirect('foo')->with([
+            'success' => 'livewire-is-awesome'
+        ]);
     }
 
     public function triggerRedirectFacadeUsingTo()
