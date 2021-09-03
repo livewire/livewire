@@ -209,18 +209,17 @@ class DuskBrowserMacros
         };
     }
 
-    public function assertConsoleLogHasError()
+    public function assertConsoleLogHasWarning()
     {
         return function($expectedMessage){
-            /** @var \Laravel\Dusk\Browser $this */
             $logs = $this->driver->manage()->getLog('browser');
 
             $containsError = false;
 
             foreach ($logs as $log) {
-                if (!isset($log['message']) || !isset($log['level']) || $log['level'] !== 'SEVERE') continue;
-                
-                
+                if (! isset($log['message']) || ! isset($log['level']) || $log['level'] !== 'WARNING') continue;
+
+
                 if(str($log['message'])->contains($expectedMessage)) {
                     $containsError = true;
                 }
@@ -230,18 +229,17 @@ class DuskBrowserMacros
         };
     }
 
-    public function assertConsoleLogMissingError()
+    public function assertConsoleLogMissingWarning()
     {
         return function($expectedMessage){
-            /** @var \Laravel\Dusk\Browser $this */
             $logs = $this->driver->manage()->getLog('browser');
 
             $containsError = false;
 
             foreach ($logs as $log) {
-                if (!isset($log['message']) || !isset($log['level']) || $log['level'] !== 'SEVERE') continue;
-                
-                
+                if (! isset($log['message']) || ! isset($log['level']) || $log['level'] !== 'WARNING') continue;
+
+
                 if(str($log['message'])->contains($expectedMessage)) {
                     $containsError = true;
                 }
