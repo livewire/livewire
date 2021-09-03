@@ -41,11 +41,31 @@ class SupportBrowserHistory
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
-            if (! $this->shouldSendPath($component)) return;
+            if ($referer = request()->header('Referer')) {
+                $route = $this->getRouteFromReferer($referer);
 
-            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
+                if ( ! $this->shouldSendPath($component, $route)) return;
 
-            $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
+                $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
+
+                if ($route && false !== strpos($route->getActionName(), get_class($component))) {
+                    $path = $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
+                } else {
+                    $path = $this->buildPathFromReferer($referer, $queryParams);
+                }
+
+                if ($referer !== $path) {
+                    $response->effects['path'] = $path;
+                }
+            } else {
+                if (! $this->shouldSendPath($component)) return;
+
+                $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
+
+                $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
+            }
+
+            ray('initial.dehydrate', $queryParams, $response->effects['path'] ?? null);
         });
 
         Livewire::listen('component.dehydrate.subsequent', function (Component $component, Response $response) {
@@ -66,6 +86,8 @@ class SupportBrowserHistory
             if ($referer !== $path) {
                 $response->effects['path'] = $path;
             }
+
+            ray('subsequent.dehydrate', $queryParams, $response->effects['path']);
         });
     }
 
