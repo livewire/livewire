@@ -4,6 +4,7 @@ namespace Tests\Browser\DetectMultipleRootElements;
 
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
+use Tests\Browser\DetectMultipleRootElements\ComponentWithNestedSingleRootElement;
 
 class Test extends TestCase
 {
@@ -12,7 +13,17 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, ComponentWithMultipleRootElements::class)
-                ->assertConsoleLogHasError('Make sure your Blade view only has ONE root element')
+                ->assertConsoleLogHasWarning('Multiple root elements detected')
+                ;
+        });
+    }
+
+    /** @test */
+    public function it_doesnt_throw_an_error_when_a_single_root_component_is_included_from_the_livewire_directive()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithNestedSingleRootElement::class)
+                ->assertConsoleLogMissingWarning('Multiple root elements detected')
                 ;
         });
     }
@@ -22,7 +33,7 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, ComponentWithCommentAsFirstElement::class)
-                ->assertConsoleLogMissingError('Make sure your Blade view only has ONE root element')
+                ->assertConsoleLogMissingWarning('Multiple root elements detected')
                 ;
         });
     }
