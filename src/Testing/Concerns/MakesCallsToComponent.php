@@ -56,6 +56,11 @@ trait MakesCallsToComponent
         return $this->updateProperty($name, $value);
     }
 
+    public function toggle($name)
+    {
+        return $this->set($name, ! $this->get($name));
+    }
+
     public function updateProperty($name, $value = null)
     {
         if (is_array($name)) {
