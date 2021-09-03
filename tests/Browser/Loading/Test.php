@@ -53,22 +53,6 @@ class Test extends TestCase
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
-                    $browser->click('@button');
-
-                    $browser->pause(200);
-
-                    $browser->assertNotVisible('@show-w-custom-delay');
-                })
-                ->tap($this->assertInitialState())
-                ->waitForLivewire(function (Browser $browser) {
-                    $browser->click('@button');
-
-                    $browser->pause(250);
-
-                    $browser->assertVisible('@show-w-custom-delay');
-                })
-                ->tap($this->assertInitialState())
-                ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@target-button');
 
                     $browser->waitFor('@targeting');
@@ -127,6 +111,119 @@ class Test extends TestCase
                     $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="flex"]\')).display', 'flex');
                     $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="table"]\')).display', 'table');
                     $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="grid"]\')).display', 'grid');
+                })
+            ;
+        });
+    }
+
+    public function test_different_delay_durations()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithLoadingDelays::class)
+                ->assertNotVisible('@delay-shortest')
+                ->assertNotVisible('@delay-shorter')
+                ->assertNotVisible('@delay-short')
+                ->assertNotVisible('@delay')
+                ->assertNotVisible('@delay-long')
+                ->assertNotVisible('@delay-longer')
+                ->assertNotVisible('@delay-longest')
+
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@load');
+
+                    $browser->pause(50);
+
+                    $browser->assertVisible('@delay-shortest');
+                    $browser->assertNotVisible('@delay-shorter');
+                    $browser->assertNotVisible('@delay-short');
+                    $browser->assertNotVisible('@delay');
+                    $browser->assertNotVisible('@delay-long');
+                    $browser->assertNotVisible('@delay-longer');
+                    $browser->assertNotVisible('@delay-longest');
+                })
+
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@load');
+                    
+                    $browser->pause(100);
+
+                    $browser->assertVisible('@delay-shortest');
+                    $browser->assertVisible('@delay-shorter');
+                    $browser->assertNotVisible('@delay-short');
+                    $browser->assertNotVisible('@delay');
+                    $browser->assertNotVisible('@delay-long');
+                    $browser->assertNotVisible('@delay-longer');
+                    $browser->assertNotVisible('@delay-longest');
+                })
+
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@load');
+                    
+                    $browser->pause(150);
+
+                    $browser->assertVisible('@delay-shortest');
+                    $browser->assertVisible('@delay-shorter');
+                    $browser->assertVisible('@delay-short');
+                    $browser->assertNotVisible('@delay');
+                    $browser->assertNotVisible('@delay-long');
+                    $browser->assertNotVisible('@delay-longer');
+                    $browser->assertNotVisible('@delay-longest');
+                })
+
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@load');
+                    
+                    $browser->pause(200);
+
+                    $browser->assertVisible('@delay-shortest');
+                    $browser->assertVisible('@delay-shorter');
+                    $browser->assertVisible('@delay-short');
+                    $browser->assertVisible('@delay');
+                    $browser->assertNotVisible('@delay-long');
+                    $browser->assertNotVisible('@delay-longer');
+                    $browser->assertNotVisible('@delay-longest');
+                })
+
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@load');
+                    
+                    $browser->pause(300);
+
+                    $browser->assertVisible('@delay-shortest');
+                    $browser->assertVisible('@delay-shorter');
+                    $browser->assertVisible('@delay-short');
+                    $browser->assertVisible('@delay');
+                    $browser->assertVisible('@delay-long');
+                    $browser->assertNotVisible('@delay-longer');
+                    $browser->assertNotVisible('@delay-longest');
+                })
+
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@load');
+                    
+                    $browser->pause(400);
+
+                    $browser->assertVisible('@delay-shortest');
+                    $browser->assertVisible('@delay-shorter');
+                    $browser->assertVisible('@delay-short');
+                    $browser->assertVisible('@delay');
+                    $browser->assertVisible('@delay-long');
+                    $browser->assertVisible('@delay-longer');
+                    $browser->assertNotVisible('@delay-longest');
+                })
+
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@load');
+                    
+                    $browser->pause(500);
+
+                    $browser->assertVisible('@delay-shortest');
+                    $browser->assertVisible('@delay-shorter');
+                    $browser->assertVisible('@delay-short');
+                    $browser->assertVisible('@delay');
+                    $browser->assertVisible('@delay-long');
+                    $browser->assertVisible('@delay-longer');
+                    $browser->assertVisible('@delay-longest');
                 })
             ;
         });

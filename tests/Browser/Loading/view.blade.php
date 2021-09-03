@@ -20,8 +20,6 @@
 
     <h1 wire:loading.delay dusk="show-w-delay">Loading with delay...</h1>
 
-    <h1 wire:loading.delay wire:duration.250ms dusk="show-w-custom-delay">Loading with custom delay...</h1>
-
     <button wire:click="foo" dusk="target-button">targeted button</button>
     <button wire:click="foo('bar')" dusk="target-button-w-param">targeted button with param</button>
 
