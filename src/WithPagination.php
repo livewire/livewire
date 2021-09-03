@@ -39,12 +39,6 @@ trait WithPagination
         return 'livewire::simple-' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
     }
 
-    public function paginationPageChanged($page)
-    {
-        // This is a stub method that can be overwritten
-        // to perform actions when pagination changes
-    }
-
     public function previousPage()
     {
         $this->setPage(max($this->page - 1, 1));
