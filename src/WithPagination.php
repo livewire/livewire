@@ -67,9 +67,7 @@ trait WithPagination
 
     public function setPage($page)
     {
-        $this->page = $page;
-
-        $this->paginationPageChanged($page);
+        $this->syncInput('page', $page);
     }
 
     public function resolvePage()

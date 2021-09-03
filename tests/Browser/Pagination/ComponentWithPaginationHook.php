@@ -12,7 +12,7 @@ class ComponentWithPaginationHook extends BaseComponent
 
     public $hookOutput = null;
 
-    public function paginationPageChanged($page)
+    public function updatedPage($page)
     {
         $this->hookOutput = 'page-is-set-to-' . $page;
     }
