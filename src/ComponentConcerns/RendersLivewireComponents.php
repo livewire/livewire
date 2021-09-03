@@ -43,10 +43,11 @@ trait RendersLivewireComponents
         // flush out any stray output that might get out before an error occurs or
         // an exception is thrown. This prevents any partial views from leaking.
         try {
+            $component = end($this->livewireComponents);
             \Closure::bind(function () use ($__path, $__data) {
                 extract($__data, EXTR_SKIP);
                 include $__path;
-            }, end($this->livewireComponents))();
+            }, $component, $component)();
         } catch (Exception $e) {
             $this->handleViewException($e, $obLevel);
         } catch (Throwable $e) {

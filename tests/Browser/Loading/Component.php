@@ -9,6 +9,8 @@ class Component extends BaseComponent
 {
     public $baz = '';
 
+    public $bob = ['name' => ''];
+
     public function hydrate()
     {
         usleep(1000 * 250);

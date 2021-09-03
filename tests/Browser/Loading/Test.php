@@ -57,6 +57,7 @@ class Test extends TestCase
 
                     $browser->waitFor('@targeting');
                     $browser->assertVisible('@targeting-both');
+                    $browser->assertNotVisible('@target-top-level-property');
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
@@ -65,6 +66,7 @@ class Test extends TestCase
                     $browser->waitFor('@targeting');
                     $browser->assertVisible('@targeting-both');
                     $browser->assertVisible('@targeting-param');
+                    $browser->assertNotVisible('@target-top-level-property');
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
@@ -72,6 +74,7 @@ class Test extends TestCase
 
                     $browser->assertNotVisible('@targeting');
                     $browser->assertVisible('@targeting-both');
+                    $browser->assertNotVisible('@target-top-level-property');
                     $browser->assertHasClass('@self-target-button', 'foo');
                 })
                 ->tap($this->assertInitialState())
@@ -80,12 +83,22 @@ class Test extends TestCase
 
                     $browser->assertNotVisible('@targeting');
                     $browser->assertNotVisible('@targeting-both');
+                    $browser->assertNotVisible('@target-top-level-property');
                     $browser->assertHasClass('@self-target-model', 'foo');
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire()->click('@error-button')
                 ->click('#livewire-error')
                 ->tap($this->assertInitialState())
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->type('@nested-property-input', 'a');
+
+                    $browser->waitFor('@target-top-level-property');
+
+                    $browser->assertNotVisible('@targeting');
+                    $browser->assertNotVisible('@targeting-both');
+                    $browser->assertVisible('@target-top-level-property');
+                })
             ;
         });
     }
