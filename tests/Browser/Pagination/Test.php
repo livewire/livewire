@@ -103,4 +103,42 @@ class Test extends TestCase
             ;
         });
     }
+
+    /** @test */
+    public function it_calls_pagination_hook_method_when_pagination_changes()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithPaginationHook::class)
+                /**
+                 * Test that going to page 2, then back to page 1 removes "page" from the query string.
+                 */
+                ->assertSeeNothingIn('@pagination-hook')
+
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage.before')
+
+                ->assertSeeIn('@pagination-hook', 'page-is-set-to-2')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+                ->assertQueryStringHas('page', '2')
+
+                ->waitForLivewire()->click('@previousPage.before')
+
+                ->assertSeeIn('@pagination-hook', 'page-is-set-to-1')
+
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringMissing('page')
+            ;
+        });
+    }
 }

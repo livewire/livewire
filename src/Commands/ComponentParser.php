@@ -97,7 +97,7 @@ class ComponentParser
             $template = preg_replace('/\[quote\]/', $this->wisdomOfTheTao(), $template);
         }
 
-        return preg_replace_array(
+        return preg_replace(
             ['/\[namespace\]/', '/\[class\]/', '/\[view\]/'],
             [$this->classNamespace(), $this->className(), $this->viewName()],
             $template
@@ -190,7 +190,7 @@ class ComponentParser
             $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.$stubName);
         }
 
-        return preg_replace_array(
+        return preg_replace(
             ['/\[testnamespace\]/', '/\[classwithnamespace\]/', '/\[testclass\]/', '/\[class\]/'],
             [$this->testNamespace(), $this->classNamespace() . '\\' . $this->className(), $this->testClassName(), $this->className()],
             $template

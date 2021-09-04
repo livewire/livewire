@@ -45,7 +45,25 @@ export default function () {
             .filter(action => {
                 return action.type === 'syncInput'
             })
-            .map(action => action.payload.name)
+            .map(action => {
+                let name = action.payload.name
+                if (! name.includes('.')) {
+                    return name
+                }
+
+                let modelActions = []
+
+                modelActions.push(
+                    name.split('.').reduce((fullAction, part) => {
+                        modelActions.push(fullAction)
+
+                        return fullAction + '.' + part
+                    })
+                )
+
+                return modelActions
+            })
+            .flat()
 
         setLoading(component, actions.concat(actionsWithParams).concat(models))
     })
