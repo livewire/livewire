@@ -24,15 +24,15 @@ class ComponentParser
         $classPath = static::generatePathFromNamespace($classNamespace);
         $testPath = static::generateTestPathFromNamespace($this->baseTestNamespace);
 
-        $this->baseClassPath = $this->getPathWithCleanedEnd($classPath);
-        $this->baseViewPath = $this->getPathWithCleanedEnd($viewPath);
-        $this->baseTestPath = $this->getPathWithCleanedEnd($testPath);
+        $this->baseClassPath = rtrim($classPath, DIRECTORY_SEPARATOR).'/';
+        $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
+        $this->baseTestPath = rtrim($testPath, DIRECTORY_SEPARATOR).'/';
 
         if(!empty($stubSubDirectory) && str($stubSubDirectory)->startsWith('..')){
-            $this->stubDirectory = $this->getPathWithCleanedEnd(str($stubSubDirectory)->replaceFirst('..' . DIRECTORY_SEPARATOR, ''));
+            $this->stubDirectory = rtrim(str($stubSubDirectory)->replaceFirst('..' . DIRECTORY_SEPARATOR, ''), DIRECTORY_SEPARATOR).'/';
         }
         else{
-            $this->stubDirectory = $this->getPathWithCleanedEnd('stubs'.DIRECTORY_SEPARATOR.$stubSubDirectory);
+            $this->stubDirectory = rtrim('stubs'.DIRECTORY_SEPARATOR.$stubSubDirectory, DIRECTORY_SEPARATOR).'/';
         }
         $directories = preg_split('/[.\/(\\\\)]+/', $rawCommand);
 
@@ -215,11 +215,5 @@ class ComponentParser
         return str(base_path($namespace))
             ->replace('\\', '/', $namespace)
             ->replaceFirst('T', 't');
-    }
-
-
-    protected function getPathWithCleanedEnd($testPath)
-    {
-        return rtrim($testPath, DIRECTORY_SEPARATOR) . '/';
     }
 }
