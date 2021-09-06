@@ -253,10 +253,28 @@ function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
         [doCallback, undoCallback] = [undoCallback, doCallback]
 
     if (directive.modifiers.includes('delay')) {
+        let duration = 200
+
+        let delayModifiers = {
+            'shortest': 50,
+            'shorter': 100,
+            'short': 150,
+            'long': 300,
+            'longer': 400,
+            'longest': 500,
+        }
+
+        Object.keys(delayModifiers).some(key => {
+            if(directive.modifiers.includes(key)) {
+                duration = delayModifiers[key]
+                return true
+            }
+        })
+
         let timeout = setTimeout(() => {
             doCallback()
             el.__livewire_on_finish_loading.push(() => undoCallback())
-        }, 200)
+        }, duration)
 
         el.__livewire_on_finish_loading.push(() => clearTimeout(timeout))
     } else {
