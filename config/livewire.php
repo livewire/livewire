@@ -31,20 +31,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Custom View Path
-    |--------------------------------------------------------------------------
-    |
-    | This value sets the custom path for Livewire component views.
-    | This will disable the path defined to the "view_path" value.
-    |
-    | Examples: "resources/component.blade.php".
-    |
-    */
-
-    'custom_view_path' => false,
-
-    /*
-    |--------------------------------------------------------------------------
     | Layout
     |--------------------------------------------------------------------------
     | The default layout view that will be used when rendering a component via
