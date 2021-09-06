@@ -119,7 +119,7 @@ class ComponentParser
 
     public function viewName()
     {
-        if (config('livewire.view_path') === '') {
+        if (config('livewire.view_path') === resource_path()) {
             return collect()
                 ->filter()
                 ->concat($this->directories)
