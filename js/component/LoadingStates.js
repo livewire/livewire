@@ -260,8 +260,8 @@ function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
             'shorter': 100,
             'short': 150,
             'long': 300,
-            'longer': 400,
-            'longest': 500,
+            'longer': 500,
+            'longest': 1000,
         }
 
         Object.keys(delayModifiers).some(key => {

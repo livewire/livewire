@@ -214,7 +214,7 @@ class Test extends TestCase
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@load');
                     
-                    $browser->pause(400);
+                    $browser->pause(500);
 
                     $browser->assertVisible('@delay-shortest');
                     $browser->assertVisible('@delay-shorter');
@@ -228,7 +228,7 @@ class Test extends TestCase
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@load');
                     
-                    $browser->pause(500);
+                    $browser->pause(1000);
 
                     $browser->assertVisible('@delay-shortest');
                     $browser->assertVisible('@delay-shorter');
