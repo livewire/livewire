@@ -115,7 +115,7 @@ return [
     |
     | This value sets the path to the Livewire manifest file.
     | The default should work for most cases (which is
-    | "<app_root>/bootstrap/cache/livewire-components.php)", but for specific
+    | "<app_root>/bootstrap/cache/livewire-components.php"), but for specific
     | cases like when hosting on Laravel Vapor, it could be set to a different value.
     |
     | Example: for Laravel Vapor, it would be "/tmp/storage/bootstrap/cache/livewire-components.php".

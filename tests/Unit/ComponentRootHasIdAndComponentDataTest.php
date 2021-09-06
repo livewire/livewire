@@ -43,6 +43,34 @@ EOT
     }
 
     /** @test */
+    public function if_element_is_a_comment_it_is_skipped_and_id_and_data_inserted_on_next_elemenet()
+    {
+        $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
+
+        $this->assertStringContainsString(
+            <<<EOT
+<!-- Test comment <div>Commented out code</div> -->
+<span wire:id="{$component->id}" wire:initial-data
+EOT
+            , $component->payload['effects']['html']
+        );
+    }
+
+    /** @test */
+    public function if_element_is_a_comment_and_contains_html_it_is_skipped_and_id_and_data_inserted_on_next_elemenet()
+    {
+        $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
+
+        $this->assertStringContainsString(
+            <<<EOT
+<!-- Test comment <div>Commented out code</div> -->
+<span wire:id="{$component->id}" wire:initial-data
+EOT
+            , $component->payload['effects']['html']
+        );
+    }
+
+    /** @test */
     public function on_subsequent_renders_root_element_has_id_but_not_component_id()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);

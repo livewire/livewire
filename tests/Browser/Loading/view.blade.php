@@ -26,4 +26,8 @@
     <button wire:click="bar" wire:loading.class="foo" dusk="self-target-button">self-targeted button</button>
 
     <input type="checkbox" wire:model="baz" wire:loading.class="foo" dusk="self-target-model">self-targeted-model input</input>
+
+    <h1 wire:loading wire:target='bob' dusk="target-top-level-property">Loading with top level property target</h1>
+
+    <input type="name" wire:model='bob.name' dusk="nested-property-input" />Nested property input
 </div>
