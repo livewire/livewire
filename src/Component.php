@@ -39,8 +39,10 @@ abstract class Component
         $this->ensureIdPropertyIsntOverridden();
     }
 
-    public function __invoke(Container $container, Route $route)
+    public function __invoke(Container $container)
     {
+        $route = request()->route();
+
         try {
             $componentParams = (new ImplicitRouteBinding($container))
                 ->resolveAllParameters($route, $this);
