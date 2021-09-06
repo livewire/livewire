@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Routing\UrlGenerator;
-use Tests\Unit\Components\ComponentWithUnionTypes;
 
 class ComponentDependencyInjectionTest extends TestCase
 {
@@ -120,13 +119,41 @@ class ComponentDependencyInjectionTest extends TestCase
         $component->assertSee('Results from the service');
     }
 
-    /**
-     * @test
-     * @requires php 8.0
-     */
+    /** @test */
     public function component_mount_action_with_primitive_union_types()
     {
-        $component = Livewire::test(ComponentWithUnionTypes::class);
+        $php_version = phpversion();
+        $php_major_version = explode('.', $php_version)[0];
+        if ($php_major_version < 8) {
+            $this->markTestSkipped("Feature not available in php version < 8.0");
+        }
+
+        eval('
+                class ComponentWithUnionTypes extends Livewire\Component
+                {
+                    public $foo;
+                    public $bar;
+
+                    public function mount(Illuminate\Routing\UrlGenerator $generator, string|int $id = 123)
+                    {
+                        $this->foo = $generator->to("/some-url", $id);
+                        $this->bar = $id;
+                    }
+
+                    public function injection(Illuminate\Routing\UrlGenerator $generator, $bar)
+                    {
+                        $this->foo = $generator->to("/");
+                        $this->bar = $bar;
+                    }
+
+                    public function render()
+                    {
+                        return view("null-view");
+                    }
+                }
+            ');
+
+        $component = Livewire::test(\ComponentWithUnionTypes::class);
 
         $this->assertEquals('http://localhost/some-url/123', $component->foo);
         $this->assertEquals(123, $component->bar);
