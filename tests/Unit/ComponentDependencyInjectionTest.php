@@ -120,15 +120,12 @@ class ComponentDependencyInjectionTest extends TestCase
         $component->assertSee('Results from the service');
     }
 
-    /** @test */
+    /**
+     * @test
+     * @requires PHP >= 8.0
+     */
     public function component_mount_action_with_primitive_union_types()
     {
-        $php_version = phpversion();
-        $php_major_version = explode('.', $php_version)[0];
-        if ($php_major_version < 8) {
-            $this->markTestSkipped("Feature not available in php version < 8.0");
-        }
-
         $component = Livewire::test(ComponentWithUnionTypes::class);
 
         $this->assertEquals('http://localhost/some-url/123', $component->foo);
