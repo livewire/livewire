@@ -215,10 +215,10 @@ class ValidationTest extends TestCase
         $component = Livewire::test(ForValidation::class);
 
         $component
-            ->runAction('runDeeplyNestedValidationOnly', 'items.0.baz')
+            ->runAction('runDeeplyNestedValidationOnly', 'items.1.baz')
             ->assertSee('items.1.baz field is required')
             ->set('items.1.baz', 'blab')
-            ->runAction('runDeeplyNestedValidationOnly', 'items.0.baz')
+            ->runAction('runDeeplyNestedValidationOnly', 'items.1.baz')
             ->assertDontSee('items.1.baz field is required');
     }
 
@@ -228,11 +228,11 @@ class ValidationTest extends TestCase
         $component = Livewire::test(ForValidation::class);
 
         $component
-            ->runAction('runDeeplyNestedValidationOnly', 'items.0.baz')
+            ->runAction('runDeeplyNestedValidationOnly', 'items.1.baz')
             ->assertSee('items.1.baz field is required')
             ->set('items.1.baz', 'blab')
             ->set('items.0.baz', '')
-            ->runAction('runDeeplyNestedValidationOnly', 'items.0.baz')
+            ->runAction('runDeeplyNestedValidationOnly', 'items.*.baz')
             ->assertDontSee('items.1.baz field is required')
             ->assertSee('items.0.baz field is required');
     }

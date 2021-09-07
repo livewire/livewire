@@ -15,7 +15,7 @@ class ComponentParser
     protected $componentClass;
     protected $directories;
 
-    public function __construct($classNamespace, $viewPath, $rawCommand)
+    public function __construct($classNamespace, $viewPath, $rawCommand, $stubSubDirectory='')
     {
 
         $this->baseClassNamespace = $classNamespace;
@@ -28,6 +28,12 @@ class ComponentParser
         $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
         $this->baseTestPath = rtrim($testPath, DIRECTORY_SEPARATOR).'/';
 
+        if(!empty($stubSubDirectory) && str($stubSubDirectory)->startsWith('..')){
+            $this->stubDirectory = rtrim(str($stubSubDirectory)->replaceFirst('..' . DIRECTORY_SEPARATOR, ''), DIRECTORY_SEPARATOR).'/';
+        }
+        else{
+            $this->stubDirectory = rtrim('stubs'.DIRECTORY_SEPARATOR.$stubSubDirectory, DIRECTORY_SEPARATOR).'/';
+        }
         $directories = preg_split('/[.\/(\\\\)]+/', $rawCommand);
 
         $camelCase = str(array_pop($directories))->camel();
@@ -81,7 +87,7 @@ class ComponentParser
     {
         $stubName = $inline ? 'livewire.inline.stub' : 'livewire.stub';
 
-        if(File::exists($stubPath = base_path('stubs/'.$stubName))) {
+        if(File::exists($stubPath = base_path($this->stubDirectory.$stubName))) {
             $template = file_get_contents($stubPath);
         } else {
             $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.$stubName);
@@ -91,7 +97,7 @@ class ComponentParser
             $template = preg_replace('/\[quote\]/', $this->wisdomOfTheTao(), $template);
         }
 
-        return preg_replace_array(
+        return preg_replace(
             ['/\[namespace\]/', '/\[class\]/', '/\[view\]/'],
             [$this->classNamespace(), $this->className(), $this->viewName()],
             $template
@@ -130,7 +136,7 @@ class ComponentParser
 
     public function viewContents()
     {
-        if( ! File::exists($stubPath = base_path('stubs/livewire.view.stub'))) {
+        if( ! File::exists($stubPath = base_path($this->stubDirectory.'livewire.view.stub'))) {
             $stubPath = __DIR__.DIRECTORY_SEPARATOR.'livewire.view.stub';
         }
 
@@ -178,13 +184,13 @@ class ComponentParser
     {
         $stubName = 'livewire.test.stub';
 
-        if(File::exists($stubPath = base_path('stubs/'.$stubName))) {
+        if(File::exists($stubPath = base_path($this->stubDirectory.$stubName))) {
             $template = file_get_contents($stubPath);
         } else {
             $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.$stubName);
         }
 
-        return preg_replace_array(
+        return preg_replace(
             ['/\[testnamespace\]/', '/\[classwithnamespace\]/', '/\[testclass\]/', '/\[class\]/'],
             [$this->testNamespace(), $this->classNamespace() . '\\' . $this->className(), $this->testClassName(), $this->className()],
             $template

@@ -9,7 +9,7 @@ class FileUploadConfiguration
 {
     public static function storage()
     {
-        if (app()->environment('testing')) {
+        if (app()->runningUnitTests()) {
             // We want to "fake" the first time in a test run, but not again because
             // ::fake() whipes the storage directory every time its called.
             rescue(function () {
@@ -26,7 +26,7 @@ class FileUploadConfiguration
 
     public static function disk()
     {
-        if (app()->environment('testing')) {
+        if (app()->runningUnitTests()) {
             return 'tmp-for-tests';
         }
 

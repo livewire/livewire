@@ -41,8 +41,10 @@ abstract class Component
         Livewire::setBackButtonCache();
     }
 
-    public function __invoke(Container $container, Route $route)
+    public function __invoke(Container $container)
     {
+        $route = request()->route();
+
         try {
             $componentParams = (new ImplicitRouteBinding($container))
                 ->resolveAllParameters($route, $this);
