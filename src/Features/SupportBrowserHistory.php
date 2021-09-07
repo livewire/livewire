@@ -154,13 +154,7 @@ class SupportBrowserHistory
                     return false;
                 }
 
-                foreach ($component->queryString as $param) {
-                    if (is_array($param) && isset($param[$key])) {
-                        return empty($componentParams[$key]);
-                    }
-
-                    return empty($componentParams[$key]);
-                }
+                return empty($componentParams[$key]);
             })
             ->reject(function ($value, $key) use ($excepts) {
                 return isset($excepts[$key]) && $excepts[$key] === $value;
