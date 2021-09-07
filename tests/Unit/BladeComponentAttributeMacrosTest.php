@@ -35,8 +35,8 @@ class BladeComponentAttributeMacrosTest extends TestCase
             ->lastRenderedDom;
 
         $this->assertStringContainsString("{ foo: window.Livewire.find('", $dom);
-        $this->assertStringContainsString("').entangle('foo').defer  }", $dom);
-        $this->assertStringContainsString("').entangle('bar')  }", $dom);
+        $this->assertStringContainsString("').entangle('foo').defer }", $dom);
+        $this->assertStringContainsString("').entangle('bar') }", $dom);
     }
 }
 

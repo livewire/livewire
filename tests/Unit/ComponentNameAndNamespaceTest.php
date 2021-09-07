@@ -3,7 +3,6 @@
 namespace Tests\Unit;
 
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 use Illuminate\Support\Facades\File;
 use Illuminate\Filesystem\Filesystem;
 use Livewire\Commands\ComponentParser;

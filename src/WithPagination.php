@@ -8,6 +8,8 @@ trait WithPagination
 {
     public $page = 1;
 
+    protected $numberOfPaginatorsRendered = 0;
+
     public function getQueryString()
     {
         $queryString = method_exists($this, 'queryString')
@@ -22,7 +24,7 @@ trait WithPagination
         $this->page = $this->resolvePage();
 
         Paginator::currentPageResolver(function () {
-            return $this->page;
+            return (int) $this->page;
         });
 
         Paginator::defaultView($this->paginationView());
@@ -61,13 +63,13 @@ trait WithPagination
 
     public function setPage($page)
     {
-        $this->page = $page;
+        $this->syncInput('page', $page);
     }
 
     public function resolvePage()
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return request()->query('page', $this->page);
+        return (int) request()->query('page', $this->page);
     }
 }

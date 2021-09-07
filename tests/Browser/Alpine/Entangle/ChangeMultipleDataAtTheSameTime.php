@@ -2,7 +2,6 @@
 
 namespace Tests\Browser\Alpine\Entangle;
 
-use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class ChangeMultipleDataAtTheSameTime extends BaseComponent

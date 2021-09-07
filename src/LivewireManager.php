@@ -43,6 +43,11 @@ class LivewireManager
         return $alias === false ? $default : $alias;
     }
 
+    public function getComponentAliases()
+    {
+        return $this->componentAliases;
+    }
+
     public function getClass($alias)
     {
         $finder = app(LivewireComponentsFinder::class);
@@ -150,7 +155,7 @@ class LivewireManager
     {
         $debug = config('app.debug');
 
-        $styles = $this->cssAssets();
+        $styles = $this->cssAssets($options);
 
         // HTML Label.
         $html = $debug ? ['<!-- Livewire Styles -->'] : [];
@@ -176,12 +181,18 @@ class LivewireManager
         return implode("\n", $html);
     }
 
-    protected function cssAssets()
+    protected function cssAssets($options = [])
     {
+        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
+
         return <<<HTML
-<style>
+<style {$nonce}>
     [wire\:loading], [wire\:loading\.delay], [wire\:loading\.inline-block], [wire\:loading\.inline], [wire\:loading\.block], [wire\:loading\.flex], [wire\:loading\.table], [wire\:loading\.grid] {
         display: none;
+    }
+
+    [wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short], [wire\:loading\.delay\.long], [wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest] {
+        display:none;
     }
 
     [wire\:offline] {
@@ -208,7 +219,7 @@ HTML;
 
         $appUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
 
-        $csrf = csrf_token();
+        $jsLivewireToken = app()->has('session.store') ? "'" . csrf_token() . "'" : 'null';
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
@@ -224,7 +235,7 @@ HTML;
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
             $versionedFileName = $publishedManifest['/livewire.js'];
 
-            $fullAssetPath = ($this->isOnVapor() ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
+            $fullAssetPath = ($this->isRunningServerless() ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
@@ -267,15 +278,15 @@ HTML;
         // because it will be minified in production.
         return <<<HTML
 {$assetWarning}
-<script src="{$fullAssetPath}" data-turbo-eval="false" data-turbolinks-eval="false"></script>
-<script data-turbo-eval="false" data-turbolinks-eval="false"{$nonce}>
+<script src="{$fullAssetPath}" data-turbo-eval="false" data-turbolinks-eval="false" {$nonce}></script>
+<script data-turbo-eval="false" data-turbolinks-eval="false" {$nonce}>
     {$windowLivewireCheck}
 
     window.livewire = new Livewire({$jsonEncodedOptions});
     {$devTools}
     window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
-    window.livewire_token = '{$csrf}';
+    window.livewire_token = {$jsLivewireToken};
 
 	{$windowAlpineCheck}
     window.deferLoadingAlpine = function (callback) {
@@ -284,8 +295,22 @@ HTML;
         });
     };
 
+    let started = false;
+
+    window.addEventListener('alpine:initializing', function () {
+        if (! started) {
+            window.livewire.start();
+
+            started = true;
+        }
+    });
+
     document.addEventListener("DOMContentLoaded", function () {
-        window.livewire.start();
+        if (! started) {
+            window.livewire.start();
+
+            started = true;
+        }
     });
 </script>
 HTML;
@@ -381,7 +406,15 @@ HTML;
 
     public function isOnVapor()
     {
-        return ($_ENV['SERVER_SOFTWARE'] ?? null) === 'vapor';
+        return $this->isRunningServerless();
+    }
+
+    public function isRunningServerless()
+    {
+        return in_array($_ENV['SERVER_SOFTWARE'] ?? null, [
+            'vapor',
+            'bref',
+        ]);
     }
 
     public function withQueryParams($queryParams)

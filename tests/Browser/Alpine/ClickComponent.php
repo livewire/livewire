@@ -2,7 +2,6 @@
 
 namespace Tests\Browser\Alpine;
 
-use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class ClickComponent extends BaseComponent

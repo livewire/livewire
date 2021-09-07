@@ -12,28 +12,26 @@ use Throwable;
 
 trait RendersLivewireComponents
 {
-    protected $livewireComponent;
-    protected $isRenderingLivewireComponent = false;
+    protected $livewireComponents = [];
 
     public function startLivewireRendering($component)
     {
-        $this->livewireComponent = $component;
-        $this->isRenderingLivewireComponent = true;
+        $this->livewireComponents[] = $component;
     }
 
     public function endLivewireRendering()
     {
-        $this->isRenderingLivewireComponent = false;
+        array_pop($this->livewireComponents);
     }
 
-    public function setLivewireComponent($component)
+    public function isRenderingLivewireComponent()
     {
-        $this->livewireComponent = $component;
+        return ! empty($this->livewireComponents);
     }
 
     protected function evaluatePath($__path, $__data)
     {
-        if (! $this->isRenderingLivewireComponent) {
+        if (! $this->isRenderingLivewireComponent()) {
             return parent::evaluatePath($__path, $__data);
         }
 
@@ -45,10 +43,11 @@ trait RendersLivewireComponents
         // flush out any stray output that might get out before an error occurs or
         // an exception is thrown. This prevents any partial views from leaking.
         try {
+            $component = end($this->livewireComponents);
             \Closure::bind(function () use ($__path, $__data) {
                 extract($__data, EXTR_SKIP);
                 include $__path;
-            }, $this->livewireComponent ? $this->livewireComponent : $this)();
+            }, $component, $component)();
         } catch (Exception $e) {
             $this->handleViewException($e, $obLevel);
         } catch (Throwable $e) {

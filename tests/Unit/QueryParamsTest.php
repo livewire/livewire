@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
-use Livewire\LivewireManager;
+use Livewire\Livewire;
 
 class QueryParamsTest extends TestCase
 {
@@ -12,8 +12,7 @@ class QueryParamsTest extends TestCase
     {
         $name = 'Livewire';
 
-        app(LivewireManager::class)
-            ->withQueryParams(['name' => $name])
+        Livewire::withQueryParams(['name' => $name])
             ->test(QueryParamsComponent::class)
             ->assertSet('name', $name);
     }
@@ -21,8 +20,7 @@ class QueryParamsTest extends TestCase
     /** @test */
     public function it_does_not_set_name_when_no_query_params_are_provided()
     {
-        app(LivewireManager::class)
-            ->test(QueryParamsComponent::class)
+        Livewire::test(QueryParamsComponent::class)
             ->assertSet('name', null);
     }
 }
@@ -33,7 +31,7 @@ class QueryParamsComponent extends Component
 
     public function mount()
     {
-        $this->name = app('request')->get('name');
+        $this->name = request('name');
     }
 
     public function render()

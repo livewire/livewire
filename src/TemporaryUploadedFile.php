@@ -30,7 +30,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getSize()
     {
-        if (app()->environment('testing') && str($this->getfilename())->contains('-size=')) {
+        if (app()->runningUnitTests() && str($this->getfilename())->contains('-size=')) {
             return (int) str($this->getFilename())->between('-size=', '.')->__toString();
         }
 
@@ -59,7 +59,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function temporaryUrl()
     {
-        if (FileUploadConfiguration::isUsingS3() && ! app()->environment('testing')) {
+        if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
             return $this->storage->temporaryUrl(
                 $this->path,
                 now()->addDay(),
@@ -67,13 +67,7 @@ class TemporaryUploadedFile extends UploadedFile
             );
         }
 
-        $supportedPreviewTypes = config('livewire.temporary_file_upload.preview_mimes', [
-            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
-            'mov', 'avi', 'wmv', 'mp3', 'm4a',
-            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
-        ]);
-
-        if (! in_array($this->guessExtension(),  $supportedPreviewTypes)) {
+        if (method_exists($this->storage->getAdapter(), 'getTemporaryUrl') || ! $this->isPreviewable()) {
             // This will throw an error because it's not used with S3.
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
@@ -81,6 +75,17 @@ class TemporaryUploadedFile extends UploadedFile
         return URL::temporarySignedRoute(
             'livewire.preview-file', now()->addMinutes(30), ['filename' => $this->getFilename()]
         );
+    }
+
+    public function isPreviewable()
+    {
+        $supportedPreviewTypes = config('livewire.temporary_file_upload.preview_mimes', [
+            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
+            'mov', 'avi', 'wmv', 'mp3', 'm4a',
+            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
+        ]);
+
+        return in_array($this->guessExtension(),  $supportedPreviewTypes);
     }
 
     public function readStream()

@@ -23,6 +23,7 @@ use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Illuminate\Support\Facades\View;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
 use Tests\Browser\Security\Component as SecurityComponent;
@@ -32,10 +33,10 @@ class TestCase extends BaseTestCase
     use SupportsSafari;
 
     public static $useSafari = false;
+    public static $useAlpineV3 = false;
 
     public function setUp(): void
     {
-        // DuskOptions::withoutUI();
         if (isset($_SERVER['CI'])) {
             DuskOptions::withoutUI();
         }
@@ -52,7 +53,11 @@ class TestCase extends BaseTestCase
 
         parent::setUp();
 
-        $this->tweakApplication(function () {
+        // $thing = get_class($this);
+
+        $isUsingAlpineV3 = static::$useAlpineV3;
+
+        $this->tweakApplication(function () use ($isUsingAlpineV3) {
             // Autoload all Livewire components in this test suite.
             collect(File::allFiles(__DIR__))
                 ->map(function ($file) {
@@ -83,6 +88,21 @@ class TestCase extends BaseTestCase
                 '/livewire-dusk/tests/browser/sync-history-without-query-string/{step}',
                 \Tests\Browser\SyncHistory\ComponentWithoutQueryString::class
             )->middleware('web')->name('sync-history-without-query-string');
+
+            Route::get(
+                '/livewire-dusk/tests/browser/sync-history-with-optional-parameter/{step?}',
+                \Tests\Browser\SyncHistory\ComponentWithOptionalParameter::class
+            )->middleware('web')->name('sync-history-with-optional-parameter');
+
+            // The following two routes belong together. The first one serves a view which in return
+            // loads and renders a component dynamically. There may not be a POST route for the first one.
+            Route::get('/livewire-dusk/tests/browser/load-dynamic-component', function () {
+                return View::file(__DIR__ . '/DynamicComponentLoading/view-load-dynamic-component.blade.php');
+            })->middleware('web')->name('load-dynamic-component');
+
+            Route::post('/livewire-dusk/tests/browser/dynamic-component', function () {
+                return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
+            })->middleware('web')->name('dynamic-component');
 
             Route::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
@@ -127,6 +147,7 @@ class TestCase extends BaseTestCase
 
             Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
 
+            app('config')->set('use_alpine_v3', $isUsingAlpineV3);
         });
     }
 

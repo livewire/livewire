@@ -55,6 +55,6 @@ class HashDataPropertiesForDirtyDetection implements HydrationMiddleware
         }
 
         // Using crc32 because it's fast, and this doesn't have to be secure.
-        return crc32($value);
+        return crc32($value ?? '');
     }
 }

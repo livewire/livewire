@@ -2,7 +2,6 @@
 
 namespace Tests\Browser\Alpine\Transition;
 
-use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class DollarSignWireComponent extends BaseComponent
@@ -19,7 +18,7 @@ class DollarSignWireComponent extends BaseComponent
         <button wire:click="$toggle('changeDom')" dusk="change-dom">Change DOM</button>
 
         <div x-show="$wire.show" dusk="outer">
-            <div x-show.transition.duration.250ms="$wire.show" dusk="inner">
+            <div x-show.transition.duration.250ms="$wire.show" x-transition.duration.250ms dusk="inner">
                 <h1>@if ($changeDom) @json($show) @else static-filler @endif</h1>
             </div>
         </div>

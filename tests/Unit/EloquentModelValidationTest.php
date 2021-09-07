@@ -214,6 +214,18 @@ class EloquentModelValidationTest extends TestCase
             ->assertHasErrors('foos.0.bar_baz')
             ->assertHasErrors('foos.1.bar_baz');
     }
+
+    public function array_with_deep_nested_model_relationship_validation()
+    {
+        Livewire::test(ComponentForEloquentModelNestedHydrationMiddleware::class, [
+            'carts' => $carts = Cart::with('items')->get(),
+        ])
+            ->set('carts.1.items.0.title', 'sparkling')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals('sparkling', $carts[1]->fresh()->items[0]->title);
+    }
 }
 
 class Foo extends Model
@@ -307,6 +319,76 @@ class ComponentForEloquentModelCollectionHydrationMiddleware extends Component
         'foos.*.bar_baz' => 'required|min:10',
         'foos.*.bar' => 'required|min:10',
     ];
+
+    public function performValidateOnly($field)
+    {
+        $this->validateOnly($field);
+    }
+
+    public function render()
+    {
+        return view('dump-errors');
+    }
+}
+
+class Items extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['title' => 'Lawn Mower', 'price' => '226.99', 'cart_id' => 1],
+        ['title' => 'Leaf Blower', 'price' => '134.99', 'cart_id' => 1],
+        ['title' => 'Rake', 'price' => '9.99', 'cart_id' => 1],
+        ['title' => 'Lawn Mower', 'price' => '226.99', 'cart_id' => 2],
+        ['title' => 'Leaf Blower', 'price' => '134.99', 'cart_id' => 2],
+        ['title' => 'Lawn Mower', 'price' => '226.99', 'cart_id' => 3],
+        ['title' => 'Leaf Blower', 'price' => '134.99', 'cart_id' => 3],
+        ['title' => 'Rake', 'price' => '9.99', 'cart_id' => 3],
+
+    ];
+
+    protected $schema = [
+        'price' => 'float',
+    ];
+
+}
+
+class Cart extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'name' => 'Bob'],
+        ['id' => 2, 'name' => 'John'],
+        ['id' => 3, 'name' => 'Mark'],
+    ];
+
+    public function items()
+    {
+
+        return $this->hasMany(Items::class, 'cart_id', 'id');
+
+    }
+}
+
+class ComponentForEloquentModelNestedHydrationMiddleware extends Component
+{
+    public $carts;
+    protected $rules = [
+        'carts.*.items.*.title' => 'required',
+    ];
+
+
+    public function save()
+    {
+        $this->validate();
+
+        foreach($this->carts as $cart) {
+            foreach($cart->items as $item) {
+                   $item->save();
+            }
+        }
+    }
 
     public function performValidateOnly($field)
     {

@@ -142,6 +142,19 @@ class Test extends TestCase
         });
     }
 
+    public function test_morphdom_can_handle_adding_at_symbol_attributes()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, MorphingAtSymbolAttributeComponent::class)
+                ->assertAttributeMissing('@span', '@click', 'hey')
+                ->waitForLivewire()->click('@button')
+                ->assertAttribute('@span', '@click', 'hey')
+                ->waitForLivewire()->click('@button')
+                ->assertAttributeMissing('@span', '@click', 'hey')
+            ;
+        });
+    }
+
     public function test_alpine_registers_click_handlers_properly_on_livewire_change()
     {
         $this->browse(function ($browser) {
@@ -159,6 +172,19 @@ class Test extends TestCase
                 ->assertSeeIn('@alpineComponentClicksFired', 2)
                 ->click('@componentClick')
                 ->assertSeeIn('@alpineComponentClicksFired', 3)
+            ;
+        });
+    }
+
+    public function test_alpine_handles_responses_from_multiple_simultaneous_calls_to_livewire()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, SimultaneousCallsComponent::class)
+                ->assertDontSeeIn('@foo', 'foo')
+                ->assertDontSeeIn('@bar', 'bar')
+                ->waitForLivewire()->click('@update-foo-and-bar')
+                ->assertSeeIn('@foo', 'foo')
+                ->assertSeeIn('@bar', 'bar')
             ;
         });
     }

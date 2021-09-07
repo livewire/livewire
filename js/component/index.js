@@ -12,7 +12,7 @@ import MethodAction from '@/action/method'
 import ModelAction from '@/action/model'
 import DeferredModelAction from '@/action/deferred-model'
 import MessageBus from '../MessageBus'
-import { alpinifyElementsForMorphdom } from './SupportAlpine'
+import { alpinifyElementsForMorphdom, getEntangleFunction } from './SupportAlpine'
 
 export default class Component {
     constructor(el, connection) {
@@ -23,6 +23,8 @@ export default class Component {
         this.lastFreshHtml = this.el.outerHTML
 
         this.id = this.el.getAttribute('wire:id')
+
+        this.checkForMultipleRootElements()
 
         this.connection = connection
 
@@ -63,6 +65,25 @@ export default class Component {
 
     get childIds() {
         return Object.values(this.serverMemo.children).map(child => child.id)
+    }
+
+    checkForMultipleRootElements() {
+        // Count the number of elements between the first element in the component and the
+        // injected "component-end" marker. This is an HTML comment with notation.
+        let countElementsBeforeMarker = (el, carryCount = 0) => {
+            if (! el) return carryCount
+
+            // If we see the "end" marker, we can return the number of elements in between we've seen.
+            if (el.nodeType === Node.COMMENT_NODE && el.textContent.includes(`wire-end:${this.id}`)) return carryCount
+
+            let newlyDiscoveredEls = el.nodeType === Node.ELEMENT_NODE ? 1 : 0
+
+            return countElementsBeforeMarker(el.nextSibling, carryCount + newlyDiscoveredEls)
+        }
+
+        if (countElementsBeforeMarker(this.el.nextSibling) > 0) {
+            console.warn(`Livewire: Multiple root elements detected. This is not supported. See docs for more information https://laravel-livewire.com/docs/2.x/rendering-components#returning-blade`, this.el)
+        }
     }
 
     initialize() {
@@ -625,15 +646,10 @@ export default class Component {
 
         return (this.dollarWireProxy = new Proxy(refObj, {
             get(object, property) {
+                if (['_x_interceptor'].includes(property)) return
+
                 if (property === 'entangle') {
-                    return (name, defer = false) => ({
-                        isDeferred: defer,
-                        livewireEntangle: name,
-                        get defer() {
-                            this.isDeferred = true
-                            return this
-                        },
-                    })
+                    return getEntangleFunction(component)
                 }
 
                 if (property === '__instance') return component
@@ -641,8 +657,9 @@ export default class Component {
                 // Forward "emits" to base Livewire object.
                 if (typeof property === 'string' && property.match(/^emit.*/)) return function (...args) {
                     if (property === 'emitSelf') return store.emitSelf(component.id, ...args)
+                    if (property === 'emitUp') return store.emitUp(component.el, ...args)
 
-                    return store[property].apply(component, args)
+                    return store[property](...args)
                 }
 
                 if (
