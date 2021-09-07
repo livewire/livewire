@@ -38,10 +38,6 @@ class SupportBrowserHistory
 
                 $component->$property = $decoded === null ? $fromQueryString : $decoded;
             }
-
-            if (method_exists($component, 'hydratePropertiesFromQueryParams')) {
-                $component->hydratePropertiesFromQueryParams($properties);
-            }
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {

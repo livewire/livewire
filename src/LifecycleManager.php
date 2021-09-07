@@ -96,9 +96,13 @@ class LifecycleManager
 
     public function mount($params = [])
     {
+        $properties = collect(array_intersect_key(
+            $params, 
+            $this->instance->getPublicPropertiesDefinedBySubClass()
+        ));
+
         // Assign all public component properties that have matching parameters.
-        collect(array_intersect_key($params, $this->instance->getPublicPropertiesDefinedBySubClass()))
-            ->each(function ($value, $property) {
+        $properties->each(function ($value, $property) {
                 $this->instance->{$property} = $value;
             });
 
@@ -113,6 +117,10 @@ class LifecycleManager
         }
 
         Livewire::dispatch('component.mount', $this->instance, $params);
+
+        if (method_exists($this->instance, 'hydratePropertiesFromQueryParams')) {
+            $this->instance->hydratePropertiesFromQueryParams();
+        }
 
         return $this;
     }
