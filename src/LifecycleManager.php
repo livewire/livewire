@@ -96,13 +96,9 @@ class LifecycleManager
 
     public function mount($params = [])
     {
-        $properties = collect(array_intersect_key(
-            $params, 
-            $this->instance->getPublicPropertiesDefinedBySubClass()
-        ));
-
         // Assign all public component properties that have matching parameters.
-        $properties->each(function ($value, $property) {
+        collect(array_intersect_key($params, $this->instance->getPublicPropertiesDefinedBySubClass()))
+            ->each(function ($value, $property) {
                 $this->instance->{$property} = $value;
             });
 
