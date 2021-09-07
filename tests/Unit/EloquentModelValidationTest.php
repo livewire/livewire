@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
+use function collect;
+use function view;
 
 class EloquentModelValidationTest extends TestCase
 {
@@ -187,6 +189,32 @@ class EloquentModelValidationTest extends TestCase
     }
 
     /** @test */
+    public function collection_model_property_validation_only_includes_relevant_error()
+    {   $test = Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
+        'foos' => collect()->pad(3, Foo::first())]);
+        $test  ->call('performValidateOnly', 'foos.0.bar_baz')
+            ->assertHasErrors('foos.0.bar_baz')
+            ->assertHasNoErrors('foos.1.bar_baz');
+    }
+
+    /** @test */
+    public function collection_model_property_validation_includes_all_errors_when_using_base_wildcard()
+    {   $test = Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
+        'foos' => collect()->pad(3, Foo::first())]);
+        $test  ->call('performValidateOnly', 'foos.*')
+            ->assertHasErrors('foos.0.bar_baz')
+            ->assertHasErrors('foos.1.bar_baz');
+    }
+
+    /** @test */
+    public function collection_model_property_validation_only_includes_all_errors_when_using_wildcard()
+    {   $test = Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
+        'foos' => collect()->pad(3, Foo::first())]);
+        $test  ->call('performValidateOnly', 'foos.*.bar_baz')
+            ->assertHasErrors('foos.0.bar_baz')
+            ->assertHasErrors('foos.1.bar_baz');
+    }
+
     public function array_with_deep_nested_model_relationship_validation()
     {
         Livewire::test(ComponentForEloquentModelNestedHydrationMiddleware::class, [
@@ -269,6 +297,28 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
 
         $this->foo->save();
     }
+
+    public function performValidateOnly($field)
+    {
+        $this->validateOnly($field);
+    }
+
+    public function render()
+    {
+        return view('dump-errors');
+    }
+}
+
+class ComponentForEloquentModelCollectionHydrationMiddleware extends Component
+{
+    public $foos;
+
+    protected $rules = [
+        'foos' => 'required',
+        'foos.*' => 'max:20',
+        'foos.*.bar_baz' => 'required|min:10',
+        'foos.*.bar' => 'required|min:10',
+    ];
 
     public function performValidateOnly($field)
     {
