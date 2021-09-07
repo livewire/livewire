@@ -8,6 +8,8 @@ trait WithPagination
 {
     public $page = 1;
 
+    protected $numberOfPaginatorsRendered = 0;
+
     public function getQueryString()
     {
         $queryString = method_exists($this, 'queryString')

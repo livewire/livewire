@@ -105,6 +105,35 @@ class Test extends TestCase
     }
 
     /** @test */
+    public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithTwoLinksForOnePaginator::class)
+                /**
+                 * Ensure everything is good to start with
+                 */
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                // Assert page 6 can be seen in both sets of links
+                ->assertPresent('[dusk="first-links"] [wire\\:click="gotoPage(6)"]')
+                ->assertPresent('[dusk="second-links"] [wire\\:click="gotoPage(6)"]')
+
+                // Click either of the page 10 links, it doesn't matter which
+                ->waitForLivewire()->click('[wire\\:click="gotoPage(10)"]')
+
+                /**
+                 * Typically it is the first set of links that break due to morphdom
+                 * So we will test the second set of links first, to make sure everything is ok
+                 * Then we will check the first set of links
+                 */
+                ->assertNotPresent('[dusk="second-links"] [wire\\:click="gotoPage(6)"]')
+                ->assertNotPresent('[dusk="first-links"] [wire\\:click="gotoPage(6)"]')
+                ;
+        });
+    }
+
     public function it_calls_pagination_hook_method_when_pagination_changes()
     {
         $this->browse(function ($browser) {
@@ -113,7 +142,6 @@ class Test extends TestCase
                  * Test that going to page 2, then back to page 1 removes "page" from the query string.
                  */
                 ->assertSeeNothingIn('@pagination-hook')
-
                 ->assertSee('Post #1')
                 ->assertSee('Post #2')
                 ->assertSee('Post #3')
