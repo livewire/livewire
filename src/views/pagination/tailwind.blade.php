@@ -1,5 +1,7 @@
 <div>
     @if ($paginator->hasPages())
+        @php($this->numberOfPaginatorsRendered++)
+        
         <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center justify-between">
             <div class="flex justify-between flex-1 sm:hidden">
                 <span>
@@ -72,8 +74,6 @@
 
                             {{-- Array Of Links --}}
                             @if (is_array($element))
-                                @php($this->numberOfPaginatorsRendered++)
-
                                 @foreach ($element as $page => $url)
                                     <span wire:key="paginator-{{ $this->numberOfPaginatorsRendered }}-page{{ $page }}">
                                         @if ($page == $paginator->currentPage())
