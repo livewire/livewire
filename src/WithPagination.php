@@ -33,6 +33,8 @@ trait WithPagination
     {
         $this->page = $this->resolvePage();
 
+        $this->paginators['page'] = $this->page;
+
         Paginator::currentPageResolver(function ($pageName) {
             if (! isset($this->paginators[$pageName])) {
                 $this->paginators[$pageName] = request()->query($pageName, 1);
