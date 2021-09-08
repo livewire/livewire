@@ -81,7 +81,7 @@ trait WithPagination
     {
         $this->syncInput('paginators.' . $pageName, $page);
 
-        if($pageName === 'page') {
+        if ($pageName === 'page') {
             $this->syncInput('page', $page);
         }
     }
