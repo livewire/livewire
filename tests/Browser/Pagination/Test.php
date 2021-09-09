@@ -2,6 +2,7 @@
 
 namespace Tests\Browser\Pagination;
 
+use Illuminate\Pagination\CursorPaginator;
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
 
@@ -9,6 +10,7 @@ class Test extends TestCase
 {
     public function test_tailwind()
     {
+
         $this->browse(function ($browser) {
             Livewire::visit($browser, Tailwind::class)
                 /**
@@ -106,6 +108,9 @@ class Test extends TestCase
 
     public function test_cursor_tailwind()
     {
+        if (! class_exists(CursorPaginator::class)) {
+            $this->markTestSkipped('Need Laravel >= 8');
+        }
         $this->browse(function ($browser){
             Livewire::visit($browser,ComponentWithCursorPaginationTailwind::class)
                 /**
@@ -155,6 +160,9 @@ class Test extends TestCase
     }
     public function test_cursor_bootstrap()
     {
+        if (! class_exists(CursorPaginator::class)) {
+            $this->markTestSkipped('Need Laravel >= 8');
+        }
         $this->browse(function ($browser){
             Livewire::visit($browser,ComponentWithCursorPaginationBootstrap::class)
                 /**
