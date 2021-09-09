@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Routing\UrlGenerator;
+use Tests\Unit\Components\ComponentWithUnionTypes;
 
 class ComponentDependencyInjectionTest extends TestCase
 {
@@ -117,6 +118,23 @@ class ComponentDependencyInjectionTest extends TestCase
         $component = Livewire::test(CustomComponent::class);
 
         $component->assertSee('Results from the service');
+    }
+
+    /**
+     * @test
+     * @requires PHP >= 8.0
+     */
+    public function component_mount_action_with_primitive_union_types()
+    {
+        $component = Livewire::test(ComponentWithUnionTypes::class);
+
+        $this->assertEquals('http://localhost/some-url/123', $component->foo);
+        $this->assertEquals(123, $component->bar);
+
+        $component->runAction('injection', 'foobar');
+
+        $this->assertEquals('http://localhost', $component->foo);
+        $this->assertEquals('foobar', $component->bar);
     }
 }
 

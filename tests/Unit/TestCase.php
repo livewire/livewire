@@ -54,6 +54,11 @@ class TestCase extends BaseTestCase
             'database' => ':memory:',
             'prefix'   => '',
         ]);
+
+        $app['config']->set('filesystems.disks.unit-downloads', [
+            'driver' => 'local',
+            'root' => __DIR__.'/fixtures',
+        ]);
     }
 
     protected function resolveApplicationHttpKernel($app)

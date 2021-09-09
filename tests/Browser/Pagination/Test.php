@@ -103,4 +103,254 @@ class Test extends TestCase
             ;
         });
     }
+
+    /** @test */
+    public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithTwoLinksForOnePaginator::class)
+                /**
+                 * Ensure everything is good to start with
+                 */
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                // Assert page 6 can be seen in both sets of links
+                ->assertPresent('[dusk="first-links"] [wire\\:click="gotoPage(6, \'page\')"]')
+                ->assertPresent('[dusk="second-links"] [wire\\:click="gotoPage(6, \'page\')"]')
+
+                // Click either of the page 10 links, it doesn't matter which
+                ->waitForLivewire()->click('[wire\\:click="gotoPage(10, \'page\')"]')
+
+                /**
+                 * Typically it is the first set of links that break due to morphdom
+                 * So we will test the second set of links first, to make sure everything is ok
+                 * Then we will check the first set of links
+                 */
+                ->assertNotPresent('[dusk="second-links"] [wire\\:click="gotoPage(6, \'page\')"]')
+                ->assertNotPresent('[dusk="first-links"] [wire\\:click="gotoPage(6, \'page\')"]')
+                ;
+        });
+    }
+
+    public function it_calls_pagination_hook_method_when_pagination_changes()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithPaginationHook::class)
+                /**
+                 * Test that going to page 2, then back to page 1 removes "page" from the query string.
+                 */
+                ->assertSeeNothingIn('@pagination-hook')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage.before')
+
+                ->assertSeeIn('@pagination-hook', 'page-is-set-to-2')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+                ->assertQueryStringHas('page', '2')
+
+                ->waitForLivewire()->click('@previousPage.before')
+
+                ->assertSeeIn('@pagination-hook', 'page-is-set-to-1')
+
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringMissing('page')
+            ;
+        });
+    }
+    
+    /** @test */
+    public function it_can_have_two_pagination_instances_on_a_page_tailwind()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithTwoPaginatorsTailwind::class)
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertDontSee('Item #4')
+
+                // Test Posts paginator
+                ->waitForLivewire()->click('@nextPage.before')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+                ->assertQueryStringHas('page', '2')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertDontSee('Item #4')
+                ->assertQueryStringMissing('itemPage')
+
+                ->waitForLivewire()->click('@previousPage.before')
+
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringMissing('page')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertDontSee('Item #4')
+                ->assertQueryStringMissing('itemPage')
+
+                // Test Items paginator
+                ->waitForLivewire()->click('@nextPage.itemPage.before')
+
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertQueryStringMissing('page')
+                ->assertDontSee('Item #3')
+                ->assertSee('Item #4')
+                ->assertSee('Item #5')
+                ->assertSee('Item #6')
+                ->assertQueryStringHas('itemPage', '2')
+
+                ->waitForLivewire()->click('@previousPage.itemPage.before')
+
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertQueryStringMissing('page')
+                ->assertDontSee('Item #6')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertQueryStringMissing('itemPage')
+            ;
+        });
+    }
+
+    /** @test */
+    public function it_can_have_two_pagination_instances_on_a_page_bootstrap()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithTwoPaginatorsBootstrap::class)
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertDontSee('Item #4')
+
+                // Test Posts paginator
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+                ->assertQueryStringHas('page', '2')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertDontSee('Item #4')
+                ->assertQueryStringMissing('itemPage')
+
+                ->waitForLivewire()->click('@previousPage')
+
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringMissing('page')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertDontSee('Item #4')
+                ->assertQueryStringMissing('itemPage')
+
+                // Test Items paginator
+                ->waitForLivewire()->click('@nextPage.itemPage')
+
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertQueryStringMissing('page')
+                ->assertDontSee('Item #3')
+                ->assertSee('Item #4')
+                ->assertSee('Item #5')
+                ->assertSee('Item #6')
+                ->assertQueryStringHas('itemPage', '2')
+
+                ->waitForLivewire()->click('@previousPage.itemPage')
+
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertQueryStringMissing('page')
+                ->assertDontSee('Item #6')
+                ->assertSee('Item #1')
+                ->assertSee('Item #2')
+                ->assertSee('Item #3')
+                ->assertQueryStringMissing('itemPage')
+            ;
+        });
+    }
+
+    /** @test */
+    public function it_calls_pagination_hook_methods_when_pagination_changes_with_multiple_paginators()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithTwoPaginatorsTailwind::class)
+                // ->tinker()
+                ->assertSeeNothingIn('@page-pagination-hook')
+                ->assertSeeNothingIn('@item-page-pagination-hook')
+                ->assertSee('Post #1')
+                ->assertSee('Item #1')
+
+                ->waitForLivewire()->click('@nextPage.before')
+
+                ->assertSeeNothingIn('@item-page-pagination-hook')
+                ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
+                ->assertSee('Post #4')
+                ->assertSee('Item #1')
+
+                ->waitForLivewire()->click('@nextPage.itemPage.before')
+
+                ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
+                ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-2')
+                ->assertSee('Post #4')
+                ->assertSee('Item #4')
+
+                ->waitForLivewire()->click('@previousPage.itemPage.before')
+
+                ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
+                ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-1')
+                ->assertSee('Post #4')
+                ->assertSee('Item #1')
+
+                ->waitForLivewire()->click('@previousPage.before')
+
+                ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-1')
+                ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-1')
+                ->assertSee('Post #1')
+                ->assertSee('Item #1')
+            ;
+        });
+    }
 }

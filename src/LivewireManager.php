@@ -191,6 +191,10 @@ class LivewireManager
         display: none;
     }
 
+    [wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short], [wire\:loading\.delay\.long], [wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest] {
+        display:none;
+    }
+
     [wire\:offline] {
         display: none;
     }
@@ -274,8 +278,8 @@ HTML;
         // because it will be minified in production.
         return <<<HTML
 {$assetWarning}
-<script src="{$fullAssetPath}" data-turbo-eval="false" data-turbolinks-eval="false"{$nonce}></script>
-<script data-turbo-eval="false" data-turbolinks-eval="false"{$nonce}>
+<script src="{$fullAssetPath}" data-turbo-eval="false" data-turbolinks-eval="false" {$nonce}></script>
+<script data-turbo-eval="false" data-turbolinks-eval="false" {$nonce}>
     {$windowLivewireCheck}
 
     window.livewire = new Livewire({$jsonEncodedOptions});
@@ -291,9 +295,8 @@ HTML;
         });
     };
 
-    let started = false
+    let started = false;
 
-    // Support for Alpine V3.
     window.addEventListener('alpine:initializing', function () {
         if (! started) {
             window.livewire.start();

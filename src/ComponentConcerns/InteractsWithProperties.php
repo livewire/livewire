@@ -47,7 +47,7 @@ trait InteractsWithProperties
 
     public function getPublicPropertiesDefinedBySubClass()
     {
-        $publicProperties = array_filter((new \ReflectionClass($this))->getProperties(), function ($property) {
+        $publicProperties = array_filter((new \ReflectionObject($this))->getProperties(), function ($property) {
             return $property->isPublic() && ! $property->isStatic();
         });
 
@@ -64,7 +64,7 @@ trait InteractsWithProperties
 
     public function getProtectedOrPrivatePropertiesDefinedBySubClass()
     {
-        $properties = (new \ReflectionClass($this))->getProperties(\ReflectionProperty::IS_PROTECTED | \ReflectionProperty::IS_PRIVATE);
+        $properties = (new \ReflectionObject($this))->getProperties(\ReflectionProperty::IS_PROTECTED | \ReflectionProperty::IS_PRIVATE);
         $data = [];
 
         foreach ($properties as $property) {
@@ -128,7 +128,7 @@ trait InteractsWithProperties
 
     public function propertyIsPublicAndNotDefinedOnBaseClass($propertyName)
     {
-        return collect((new \ReflectionClass($this))->getProperties(\ReflectionMethod::IS_PUBLIC))
+        return collect((new \ReflectionObject($this))->getProperties(\ReflectionMethod::IS_PUBLIC))
             ->reject(function ($property) {
                 return $property->class === self::class;
             })

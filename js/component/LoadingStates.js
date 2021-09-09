@@ -45,7 +45,25 @@ export default function () {
             .filter(action => {
                 return action.type === 'syncInput'
             })
-            .map(action => action.payload.name)
+            .map(action => {
+                let name = action.payload.name
+                if (! name.includes('.')) {
+                    return name
+                }
+
+                let modelActions = []
+
+                modelActions.push(
+                    name.split('.').reduce((fullAction, part) => {
+                        modelActions.push(fullAction)
+
+                        return fullAction + '.' + part
+                    })
+                )
+
+                return modelActions
+            })
+            .flat()
 
         setLoading(component, actions.concat(actionsWithParams).concat(models))
     })
@@ -235,10 +253,28 @@ function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
         [doCallback, undoCallback] = [undoCallback, doCallback]
 
     if (directive.modifiers.includes('delay')) {
+        let duration = 200
+
+        let delayModifiers = {
+            'shortest': 50,
+            'shorter': 100,
+            'short': 150,
+            'long': 300,
+            'longer': 500,
+            'longest': 1000,
+        }
+
+        Object.keys(delayModifiers).some(key => {
+            if(directive.modifiers.includes(key)) {
+                duration = delayModifiers[key]
+                return true
+            }
+        })
+
         let timeout = setTimeout(() => {
             doCallback()
             el.__livewire_on_finish_loading.push(() => undoCallback())
-        }, 200)
+        }, duration)
 
         el.__livewire_on_finish_loading.push(() => clearTimeout(timeout))
     } else {

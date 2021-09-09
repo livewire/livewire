@@ -6,6 +6,7 @@ export default class extends Action {
 
         this.type = 'fireEvent'
         this.payload = {
+            id: this.signature,
             event,
             params,
         }

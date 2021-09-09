@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
 
-class TestableLivewireCanAssertNoRedirectedTest extends TestCase
+class TestableLivewireCanAssertNoRedirectTest extends TestCase
 {
     /** @test */
     public function can_assert_no_redirect()

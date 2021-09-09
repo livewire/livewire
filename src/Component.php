@@ -2,17 +2,18 @@
 
 namespace Livewire;
 
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Route;
+use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
+use Livewire\Exceptions\PropertyNotFoundException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
-use Livewire\Exceptions\PropertyNotFoundException;
 
 abstract class Component
 {
@@ -29,7 +30,6 @@ abstract class Component
 
     protected $queryString = [];
     protected $computedPropertyCache = [];
-    protected $initialLayoutConfiguration = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
 
@@ -40,18 +40,21 @@ abstract class Component
         $this->ensureIdPropertyIsntOverridden();
     }
 
-    public function __invoke(Container $container, Route $route)
+    public function __invoke(Container $container)
     {
+        $route = request()->route();
+
         try {
             $componentParams = (new ImplicitRouteBinding($container))
                 ->resolveAllParameters($route, $this);
         } catch (ModelNotFoundException $exception) {
-            if ($route->getMissing()) {
+            if (method_exists($route,'getMissing') && $route->getMissing()) {
                 return $route->getMissing()(request());
             }
 
             throw $exception;
         }
+
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
             ->mount($componentParams)
@@ -61,14 +64,14 @@ abstract class Component
             return redirect()->response($this->redirectTo);
         }
 
-        $layoutType = $this->initialLayoutConfiguration['type'] ?? 'component';
+        $this->ensureViewHasValidLivewireLayout($this->preRenderedView);
 
-        return app('view')->file(__DIR__."/Macros/livewire-view-{$layoutType}.blade.php", [
-            'view' => $this->initialLayoutConfiguration['view'] ?? config('livewire.layout'),
-            'params' => $this->initialLayoutConfiguration['params'] ?? [],
-            'slotOrSection' => $this->initialLayoutConfiguration['slotOrSection'] ?? [
-                'extends' => 'content', 'component' => 'slot',
-            ][$layoutType],
+        $layout = $this->preRenderedView->livewireLayout;
+
+        return app('view')->file(__DIR__."/Macros/livewire-view-{$layout['type']}.blade.php", [
+            'view' => $layout['view'],
+            'params' => $layout['params'],
+            'slotOrSection' => $layout['slotOrSection'],
             'manager' => $manager,
         ]);
     }
@@ -81,11 +84,22 @@ abstract class Component
         );
     }
 
+    public function bootIfNotBooted()
+    {
+        if (method_exists($this, $method = 'boot')) {
+            ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+        }
+    }
+
     public function initializeTraits()
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
+            if (method_exists($class, $method = 'boot'.class_basename($trait))) {
+                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+            }
+
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
-                $this->{$method}();
+                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
             }
         }
     }
@@ -136,14 +150,21 @@ abstract class Component
         throw_unless($view instanceof View,
             new \Exception('"render" method on ['.get_class($this).'] must return instance of ['.View::class.']'));
 
-        // Get the layout config from the view.
-        if ($view->livewireLayout) {
-            $this->initialLayoutConfiguration = $view->livewireLayout;
-        }
-
         Livewire::dispatch('component.rendered', $this, $view);
 
         return $this->preRenderedView = $view;
+    }
+
+    protected function ensureViewHasValidLivewireLayout(View $view)
+    {
+        $layout = $view->livewireLayout ?? [];
+
+        $isValid = isset($layout['view'], $layout['type'], $layout['params'], $layout['slotOrSection']);
+
+        if (!$isValid) {
+            $view->layout($layout['view'] ?? config('livewire.layout'), $layout['params'] ?? []);
+            $view->slot($layout['slotOrSection'] ?? $view->livewireLayout['slotOrSection']);
+        }
     }
 
     public function output($errors = null)
@@ -161,7 +182,7 @@ abstract class Component
         $engine->startLivewireRendering($this);
 
         $this->setErrorBag(
-            $errorBag = $errors ?: ($view->getData()['errors'] ?? $this->getErrorBag())
+            $errorBag = $errors ?: (isset($view->getData()['errors']) ? $view->getData()['errors']->getBag('default') : $this->getErrorBag())
         );
 
         $previouslySharedErrors = app('view')->getShared()['errors'] ?? new ViewErrorBag;
@@ -191,20 +212,6 @@ abstract class Component
         $engine->endLivewireRendering();
 
         return $output;
-    }
-
-    public function normalizePublicPropertiesForJavaScript()
-    {
-        foreach ($this->getPublicPropertiesDefinedBySubClass() as $key => $value) {
-            if (is_array($value)) {
-                $this->$key = $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
-            }
-
-            if ($value instanceof EloquentCollection) {
-                // Preserve collection items order by reindexing underlying array.
-                $this->$key = $value->values();
-            }
-        }
     }
 
     public function forgetComputed($key = null)
