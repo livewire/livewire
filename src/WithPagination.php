@@ -15,7 +15,7 @@ trait WithPagination
     public function getQueryString()
     {
         foreach ($this->paginators as $key => $value) {
-            if (! isset($this->$key)) $this->$key = $value;
+            $this->$key = $value;
         }
 
         $queryString = method_exists($this, 'queryString')
@@ -31,6 +31,10 @@ trait WithPagination
 
     public function initializeWithPagination()
     {
+        foreach ($this->paginators as $key => $value) {
+            $this->$key = $value;
+        }
+
         $this->page = $this->resolvePage();
 
         $this->paginators['page'] = $this->page;
@@ -81,9 +85,7 @@ trait WithPagination
     {
         $this->syncInput('paginators.' . $pageName, $page);
 
-        if ($pageName === 'page') {
-            $this->syncInput('page', $page);
-        }
+        $this->syncInput($pageName, $page);
     }
 
     public function resolvePage()

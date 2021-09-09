@@ -240,7 +240,7 @@ class Test extends TestCase
             ;
         });
     }
-    
+
     /** @test */
     public function it_can_have_two_pagination_instances_on_a_page_bootstrap()
     {
@@ -308,6 +308,48 @@ class Test extends TestCase
                 ->assertSee('Item #2')
                 ->assertSee('Item #3')
                 ->assertQueryStringMissing('itemPage')
+            ;
+        });
+    }
+
+    /** @test */
+    public function it_calls_pagination_hook_methods_when_pagination_changes_with_multiple_paginators()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ComponentWithTwoPaginatorsTailwind::class)
+                // ->tinker()
+                ->assertSeeNothingIn('@page-pagination-hook')
+                ->assertSeeNothingIn('@item-page-pagination-hook')
+                ->assertSee('Post #1')
+                ->assertSee('Item #1')
+
+                ->waitForLivewire()->click('@nextPage.before')
+
+                ->assertSeeNothingIn('@item-page-pagination-hook')
+                ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
+                ->assertSee('Post #4')
+                ->assertSee('Item #1')
+
+                ->waitForLivewire()->click('@nextPage.itemPage.before')
+
+                ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
+                ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-2')
+                ->assertSee('Post #4')
+                ->assertSee('Item #4')
+
+                ->waitForLivewire()->click('@previousPage.itemPage.before')
+
+                ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
+                ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-1')
+                ->assertSee('Post #4')
+                ->assertSee('Item #1')
+
+                ->waitForLivewire()->click('@previousPage.before')
+
+                ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-1')
+                ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-1')
+                ->assertSee('Post #1')
+                ->assertSee('Item #1')
             ;
         });
     }

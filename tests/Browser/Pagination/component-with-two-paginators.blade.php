@@ -9,6 +9,8 @@
         {{ $posts->links() }}
     </div>
 
+    <span dusk="page-pagination-hook">{{ $pageHookOutput }}</span>
+
     <div>
         <div>
             @foreach ($items as $item)
@@ -18,4 +20,6 @@
 
         {{ $items->links() }}
     </div>
+
+    <span dusk="item-page-pagination-hook">{{ $itemPageHookOutput }}</span>
 </div>

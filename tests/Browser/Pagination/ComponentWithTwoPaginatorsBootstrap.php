@@ -12,6 +12,9 @@ class ComponentWithTwoPaginatorsBootstrap extends BaseComponent
 
     protected $paginationTheme = 'bootstrap';
 
+    public $pageHookOutput = null;
+    public $itemPageHookOutput = null;
+
     public function render()
     {
         return View::file(__DIR__.'/component-with-two-paginators.blade.php', [
