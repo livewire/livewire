@@ -116,14 +116,14 @@ class Test extends TestCase
                 ->assertSee('Post #3')
                 ->assertDontSee('Post #4')
 
-                ->waitForLivewire()->click('@nextPage.before')
+                ->waitForLivewire()->click('@nextPage')
 
                 ->assertDontSee('Post #3')
                 ->assertSee('Post #4')
                 ->assertSee('Post #5')
                 ->assertSee('Post #6')
 
-                ->waitForLivewire()->click('@previousPage.before')
+                ->waitForLivewire()->click('@previousPage')
 
                 ->assertDontSee('Post #6')
                 ->assertSee('Post #1')
@@ -137,19 +137,18 @@ class Test extends TestCase
                 ->assertSee('Post #1')
                 ->assertDontSee('Post #4')
 
-                ->waitForLivewire()->click('@nextPage.after')
+                ->waitForLivewire()->click('@nextPage')
 
                 ->assertDontSee('Post #1')
                 ->assertSee('Post #4')
 
-                ->waitForLivewire()->click('@nextPage.after')
+                ->waitForLivewire()->click('@nextPage')
 
                 ->assertDontSee('Post #4')
                 ->assertSee('Post #7')
 
                 ->refresh()
                 ->back()
-                ->assertQueryStringHas('page', '2')
                 ->assertDontSee('Post #7')
                 ->assertSee('Post #4');
         });
@@ -166,14 +165,14 @@ class Test extends TestCase
                 ->assertSee('Post #3')
                 ->assertDontSee('Post #4')
 
-                ->waitForLivewire()->click('@nextPage.before')
+                ->waitForLivewire()->click('@nextPage')
 
                 ->assertDontSee('Post #3')
                 ->assertSee('Post #4')
                 ->assertSee('Post #5')
                 ->assertSee('Post #6')
 
-                ->waitForLivewire()->click('@previousPage.before')
+                ->waitForLivewire()->click('@previousPage')
 
                 ->assertDontSee('Post #6')
                 ->assertSee('Post #1')
@@ -187,19 +186,18 @@ class Test extends TestCase
                 ->assertSee('Post #1')
                 ->assertDontSee('Post #4')
 
-                ->waitForLivewire()->click('@nextPage.after')
+                ->waitForLivewire()->click('@nextPage')
 
                 ->assertDontSee('Post #1')
                 ->assertSee('Post #4')
 
-                ->waitForLivewire()->click('@nextPage.after')
+                ->waitForLivewire()->click('@nextPage')
 
                 ->assertDontSee('Post #4')
                 ->assertSee('Post #7')
 
                 ->refresh()
                 ->back()
-                ->assertQueryStringHas('page', '2')
                 ->assertDontSee('Post #7')
                 ->assertSee('Post #4');
         });
