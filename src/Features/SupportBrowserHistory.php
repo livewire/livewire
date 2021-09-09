@@ -41,31 +41,21 @@ class SupportBrowserHistory
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
-            if (! $this->shouldSendPath($component)) return;
+            if ($referer = request()->header('Referer')) {
+                $this->getPathFromReferer($referer, $component, $response);
+            } else {
+                if (! $this->shouldSendPath($component)) return;
 
-            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
+                $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
-            $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
+                $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
+            }
         });
 
         Livewire::listen('component.dehydrate.subsequent', function (Component $component, Response $response) {
             if (! $referer = request()->header('Referer')) return;
 
-            $route = $this->getRouteFromReferer($referer);
-
-            if ( ! $this->shouldSendPath($component, $route)) return;
-
-            $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
-
-            if ($route && false !== strpos($route->getActionName(), get_class($component))) {
-                $path = $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
-            } else {
-                $path = $this->buildPathFromReferer($referer, $queryParams);
-            }
-
-            if ($referer !== $path) {
-                $response->effects['path'] = $path;
-            }
+            $this->getPathFromReferer($referer, $component, $response);
         });
     }
 
@@ -79,6 +69,25 @@ class SupportBrowserHistory
         } catch (NotFoundHttpException|MethodNotAllowedHttpException $e) {
             // If not, use the current route.
             return app('router')->current();
+        }
+    }
+
+    protected function getPathFromReferer($referer, $component, $response)
+    {
+        $route = $this->getRouteFromReferer($referer);
+
+        if ( ! $this->shouldSendPath($component, $route)) return;
+
+        $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
+
+        if ($route && false !== strpos($route->getActionName(), get_class($component))) {
+            $path = $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
+        } else {
+            $path = $this->buildPathFromReferer($referer, $queryParams);
+        }
+
+        if ($referer !== $path) {
+            $response->effects['path'] = $path;
         }
     }
 
