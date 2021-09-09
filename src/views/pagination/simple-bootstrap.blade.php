@@ -10,7 +10,7 @@
                 @else
                     @if(method_exists($paginator,'getCursorName'))
                         <li class="page-item">
-                            <button type="button" class="page-link" wire:click="setPage('{{$paginator->previousCursor()->encode()}}','{{ $paginator->getCursorName() }}')" wire:loading.attr="disabled" rel="prev" aria-label="@lang('pagination.previous')">&lsaquo;</button>
+                            <button dusk="previousPage{{ $paginator->getCursorName() == 'page' ? '' : '.' . $paginator->getPageName() }}" type="button" class="page-link" wire:click="setPage('{{$paginator->previousCursor()->encode()}}','{{ $paginator->getCursorName() }}')" wire:loading.attr="disabled" rel="prev" aria-label="@lang('pagination.previous')">&lsaquo;</button>
                         </li>
                     @else
                         <li class="page-item">
@@ -23,7 +23,7 @@
                 @if ($paginator->hasMorePages())
                     @if(method_exists($paginator,'getCursorName'))
                         <li class="page-item">
-                            <button type="button" class="page-link" wire:click="setPage('{{$paginator->nextCursor()->encode()}}','{{ $paginator->getCursorName() }}')" wire:loading.attr="disabled" rel="next" aria-label="@lang('pagination.next')">&rsaquo;</button>
+                            <button dusk="nextPage{{ $paginator->getCursorName() == 'page' ? '' : '.' . $paginator->getPageName() }}" type="button" class="page-link" wire:click="setPage('{{$paginator->nextCursor()->encode()}}','{{ $paginator->getCursorName() }}')" wire:loading.attr="disabled" rel="next" aria-label="@lang('pagination.next')">&rsaquo;</button>
                         </li>
                     @else
                         <li class="page-item">

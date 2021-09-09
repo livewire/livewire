@@ -137,7 +137,7 @@ class Test extends TestCase
     public function it_calls_pagination_hook_method_when_pagination_changes()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, ComponentWithPaginationHook::class)
+            Livewire::visit($browser, ComponentWithCursorPaginationTailwind::class)
                 /**
                  * Test that going to page 2, then back to page 1 removes "page" from the query string.
                  */
@@ -169,7 +169,7 @@ class Test extends TestCase
             ;
         });
     }
-    
+
     /** @test */
     public function it_can_have_two_pagination_instances_on_a_page_tailwind()
     {
@@ -312,6 +312,56 @@ class Test extends TestCase
         });
     }
 
+    public function test_cursor_tailwind()
+    {
+        $this->browse(function ($browser){
+            Livewire::visit($browser,ComponentWithCursorPaginationTailwind::class)
+                /**
+                 * Test it can go to second page and return to first one
+                 */
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage.before')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+
+                ->waitForLivewire()->click('@previousPage.before')
+
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+
+                /**
+                 * Test that hitting the back button takes you back to the previous page after a refresh.
+                 */
+                ->refresh()
+                ->assertSee('Post #1')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage.after')
+
+                ->assertDontSee('Post #1')
+                ->assertSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage.after')
+
+                ->assertDontSee('Post #4')
+                ->assertSee('Post #7')
+
+                ->refresh()
+                ->back()
+                ->assertQueryStringHas('page', '2')
+                ->assertDontSee('Post #7')
+                ->assertSee('Post #4');
+        });
+    }
     /** @test */
     public function it_calls_pagination_hook_methods_when_pagination_changes_with_multiple_paginators()
     {
