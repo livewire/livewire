@@ -74,7 +74,6 @@ class SupportBrowserHistory
 
     protected function getPathFromReferer($referer, $component, $response)
     {
-        
         $route = $this->getRouteFromReferer($referer);
 
         if ( ! $this->shouldSendPath($component, $route)) return;
