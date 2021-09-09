@@ -312,6 +312,7 @@ class LivewireServiceProvider extends ServiceProvider
         Features\SupportChildren::init();
         Features\SupportRedirects::init();
         Features\SupportValidation::init();
+        Features\SupportBootMethod::init();
         Features\SupportFileUploads::init();
         Features\OptimizeRenderedDom::init();
         Features\SupportFileDownloads::init();

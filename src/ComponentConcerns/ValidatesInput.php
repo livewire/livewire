@@ -2,6 +2,9 @@
 
 namespace Livewire\ComponentConcerns;
 
+use function collect;
+use function count;
+use function explode;
 use function Livewire\str;
 use Livewire\ObjectPrybar;
 use Illuminate\Support\Collection;
@@ -164,10 +167,26 @@ trait ValidatesInput
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
-        // If the field is "items.0.foo", validation rules for "items.*.foo", "items.*", etc. are applied.
-        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
-            return str($field)->is($fullFieldKey);
-        })->toArray();
+        // If the field is "items.0.foo", validation rules for "items.*.foo" is applied.
+        // if the field is "items.0", validation rules for "items.*" and "items.*.foo" etc are applied.
+        $rulesForField = collect($rules)
+            ->filter(function ($rule, $fullFieldKey) use ($field) {
+                return str($field)->is($fullFieldKey);
+            })->keys()
+            ->flatMap(function($key) use ($rules) {
+                return collect($rules)->filter(function($rule, $ruleKey) use ($key) {
+                    return str($ruleKey)->is($key);
+                });
+            })->mapWithKeys(function ($value, $key) use ($field) {
+                $fieldArray = str($field)->explode('.');
+                $result = str($key)->explode('.');
+
+                $result->splice(0, $fieldArray->count(), $fieldArray->toArray());
+
+                return [
+                    $result->join('.') => $value,
+                ];
+            })->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
 

@@ -2,17 +2,18 @@
 
 namespace Livewire;
 
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Route;
+use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
+use Livewire\Exceptions\PropertyNotFoundException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
-use Livewire\Exceptions\PropertyNotFoundException;
 
 abstract class Component
 {
@@ -39,8 +40,10 @@ abstract class Component
         $this->ensureIdPropertyIsntOverridden();
     }
 
-    public function __invoke(Container $container, Route $route)
+    public function __invoke(Container $container)
     {
+        $route = request()->route();
+
         try {
             $componentParams = (new ImplicitRouteBinding($container))
                 ->resolveAllParameters($route, $this);
@@ -51,6 +54,7 @@ abstract class Component
 
             throw $exception;
         }
+
         $manager = LifecycleManager::fromInitialInstance($this)
             ->initialHydrate()
             ->mount($componentParams)
@@ -80,11 +84,22 @@ abstract class Component
         );
     }
 
+    public function bootIfNotBooted()
+    {
+        if (method_exists($this, $method = 'boot')) {
+            ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+        }
+    }
+
     public function initializeTraits()
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
+            if (method_exists($class, $method = 'boot'.class_basename($trait))) {
+                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+            }
+
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
-                $this->{$method}();
+                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
             }
         }
     }
