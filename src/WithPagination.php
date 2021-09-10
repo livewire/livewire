@@ -12,21 +12,13 @@ trait WithPagination
 
     protected $numberOfPaginatorsRendered = [];
 
-    public function getQueryString()
+    public function queryStringWithPagination()
     {
         foreach ($this->paginators as $key => $value) {
             $this->$key = $value;
         }
 
-        $queryString = method_exists($this, 'queryString')
-            ? $this->queryString()
-            : $this->queryString;
-
-        foreach ($this->paginators as $key => $value) {
-            $queryString[$key] = ['except' => 1];
-        }
-
-        return $queryString;
+        return array_fill_keys(array_keys($this->paginators), ['except' => 1]);
     }
 
     public function initializeWithPagination()
