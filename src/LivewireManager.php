@@ -428,8 +428,10 @@ HTML;
 
     public function setBackButtonCache()
     {
-        // This is set to false if no config found, as this was the default for Livewire
-        $this->shouldDisableBackButtonCache = config('livewire.disable_back_button_cache', false);
+        /**
+         * Reverse this boolean so that the middleware is only applied when it is disabled.
+         */
+        $this->shouldDisableBackButtonCache = ! config('livewire.back_button_cache', false);
     }
 
     public function disableBackButtonCache()

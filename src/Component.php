@@ -29,7 +29,7 @@ abstract class Component
 
     protected $queryString = [];
     protected $computedPropertyCache = [];
-    protected $shouldSkipRender = null;
+    protected $shouldSkipRender = false;
     protected $preRenderedView;
 
     public function __construct($id = null)
@@ -120,16 +120,6 @@ abstract class Component
     public function skipRender()
     {
         $this->shouldSkipRender = true;
-    }
-
-    public function disableBackButtonCache()
-    {
-        Livewire::disableBackButtonCache();
-    }
-
-    public function enableBackButtonCache()
-    {
-        Livewire::enableBackButtonCache();
     }
 
     public function renderToView()

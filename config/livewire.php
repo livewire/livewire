@@ -115,32 +115,15 @@ return [
     | Back Button Cache
     |--------------------------------------------------------------------------
     |
-    | This value disables browser cache for pages that contain Livewire.
-    | This is to ensure that the back button correctly restores the previous
-    | state of Livewire components instead of, potentially stale, cached data.
-    | Setting it to "false" will re-enable browser cache.
+    | This value determines whether the back button cache will be used on pages
+    | that contain Livewire. By disabling back button cache, it ensures that
+    | the back button shows the correct state of components, instead of
+    | potentially stale, cached data.
     |
-    | It is set to "true" by default.
-    |
-    */
-
-    'disable_back_button_cache' => true,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Should Skip Render On Redirect
-    |--------------------------------------------------------------------------
-    |
-    | This value skips Livewire's render step when redirect happens if enabled
-    | as a performance optimisation.
-    | But if you want browsers back button cache to work correctly this needs
-    | to be set to "false", to ensure the latest view is rendered to the browser
-    | before the redirect happens.
-    |
-    | It is set to "false" by default to ensure bfcache works correctly.
+    | Setting it to "false" (default) will disable back button cache.
     |
     */
 
-    'should_skip_render_on_redirect' => false,
+    'back_button_cache' => false,
 
 ];

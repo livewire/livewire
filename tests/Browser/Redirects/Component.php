@@ -4,17 +4,16 @@ namespace Tests\Browser\Redirects;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
+use Livewire\Livewire;
 
 class Component extends BaseComponent
 {
     public $message = 'foo';
     public $foo;
 
-    public $shouldSkipRenderOnRedirect = true;
     public $disableBackButtonCache = true;
 
     protected $queryString = [
-        'shouldSkipRenderOnRedirect',
         'disableBackButtonCache',
     ];
 
@@ -27,7 +26,7 @@ class Component extends BaseComponent
         $this->foo = Foo::first();
 
         // Set "disable back button cache" flag based off of query string
-        $this->disableBackButtonCache ? $this->disableBackButtonCache() : $this->enableBackButtonCache();
+        $this->disableBackButtonCache ? Livewire::disableBackButtonCache() : Livewire::enableBackButtonCache();
     }
 
     public function flashMessage()
@@ -46,17 +45,12 @@ class Component extends BaseComponent
     {
         $this->message = 'bar';
 
-        config()->set('livewire.should_skip_render_on_redirect', $this->shouldSkipRenderOnRedirect);
-
-        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc&shouldSkipRenderOnRedirect='. ($this->shouldSkipRenderOnRedirect ? 'true' : 'false'));
+        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc');
     }
 
     public function redirectPageWithModel()
     {
         $this->foo->update(['name' => 'bar']);
-
-        // overriding config here like for skip render won't work as the config value is loaded in the constructor
-        // config()->set('livewire.disable_back_button_cache', $this->disableBackButtonCache);
 
         return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc&disableBackButtonCache='. ($this->disableBackButtonCache ? 'true' : 'false'));
     }

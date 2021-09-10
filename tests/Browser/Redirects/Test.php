@@ -36,67 +36,21 @@ class Test extends TestCase
     }
 
     /** @test */
-    public function it_should_not_re_render_before_redirect_when_config_should_skip_render_on_redirect_is_set_to_true()
-    {
-        $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class, '?shouldSkipRenderOnRedirect=true')
-                /*
-                 * This test skips render on redirect, which means
-                 * the latest render won't be written to bfcache
-                 */
-                ->assertSeeIn('@redirect.blade.output', 'foo')
-                ->assertSeeIn('@redirect.alpine.output', 'foo')
-                ->waitForLivewire()->click('@redirect.button')
-                ->assertSeeIn('@redirect.blade.output', 'foo')
-                ->assertSeeIn('@redirect.alpine.output', 'bar')
-                ->pause(50)
-                ->assertSeeIn('@redirect.blade.output', 'foo')
-                ->assertSeeIn('@redirect.alpine.output', 'foo')
-            ;
-        });
-    }
-
-    /** @test */
-    public function it_should_re_render_before_redirect_when_config_should_skip_render_on_redirect_is_set_to_false()
-    {
-        $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class, '?shouldSkipRenderOnRedirect=false')
-                /*
-                 * This test runs render on redirect, which means
-                 * the latest render will be written to bfcache
-                 */
-                ->assertSeeIn('@redirect.blade.output', 'foo')
-                ->assertSeeIn('@redirect.alpine.output', 'foo')
-                ->waitForLivewire()->click('@redirect.button')
-                ->assertSeeIn('@redirect.blade.output', 'bar')
-                ->assertSeeIn('@redirect.alpine.output', 'bar')
-                ->pause(50)
-                ->assertSeeIn('@redirect.blade.output', 'foo')
-                ->assertSeeIn('@redirect.alpine.output', 'foo')
-            ;
-        });
-    }
-
-    /** @test */
-    public function it_should_disable_browser_cache_when_config_disable_back_button_cache_is_set_to_true()
+    public function it_should_disable_browser_cache_when_disable_back_button_cache_is_set_to_true()
     {
         Foo::first()->update(['name' => 'foo']);
 
         $this->browse(function ($browser) {
-            // Need to also set should skip render to false for this test to work properly
-            Livewire::visit($browser, Component::class, '?disableBackButtonCache=true&shouldSkipRenderOnRedirect=false')
-                /*
-                 * Livewire response is still handled event if redirecting.
-                 * (Otherwise, the browser cache after a back button press
-                 * won't be up to date.)
-                 */
+            Livewire::visit($browser, Component::class, '?disableBackButtonCache=true')
                 ->assertSeeIn('@redirect.blade.model-output', 'foo')
                 ->assertSeeIn('@redirect.alpine.model-output', 'foo')
+
                 ->waitForLivewire()->click('@redirect-with-model.button')
                 // Because we are not skipping render we should see new value
                 ->assertSeeIn('@redirect.blade.model-output', 'bar')
                 ->assertSeeIn('@redirect.alpine.model-output', 'bar')
                 ->pause(500)
+
                 ->back()
                 ->assertSeeIn('@redirect.blade.model-output', 'bar')
                 ->assertSeeIn('@redirect.alpine.model-output', 'bar')
@@ -105,13 +59,12 @@ class Test extends TestCase
     }
 
     /** @test */
-    public function it_should_not_disable_browser_cache_when_config_disable_back_button_cache_is_set_to_false()
+    public function it_should_not_disable_browser_cache_when_disable_back_button_cache_is_set_to_false()
     {
         Foo::first()->update(['name' => 'foo']);
 
         $this->browse(function ($browser) {
-            // Need to also set should skip render on redirect to false for this test to work properly
-            Livewire::visit($browser, Component::class, '?disableBackButtonCache=false&shouldSkipRenderOnRedirect=false')
+            Livewire::visit($browser, Component::class, '?disableBackButtonCache=false')
                 /*
                  * Livewire response is still handled event if redirecting.
                  * (Otherwise, the browser cache after a back button press
@@ -119,13 +72,14 @@ class Test extends TestCase
                  */
                 ->assertSeeIn('@redirect.blade.model-output', 'foo')
                 ->assertSeeIn('@redirect.alpine.model-output', 'foo')
-                // ->tinker()
+                
                 ->waitForLivewire()->click('@redirect-with-model.button')
                 // Because we are not skipping render we should see new value
                 ->assertSeeIn('@redirect.blade.model-output', 'bar')
                 ->assertSeeIn('@redirect.alpine.model-output', 'bar')
                 ->pause(500)
                 ->back()
+
                 ->pause(500)
                 ->assertSeeIn('@redirect.blade.model-output', 'foo')
                 ->assertSeeIn('@redirect.alpine.model-output', 'foo')

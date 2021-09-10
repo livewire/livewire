@@ -17,7 +17,7 @@ class DisableBrowserCache
     {
         $response = $next($request);
 
-        if(Livewire::shouldDisableBackButtonCache()){
+        if (Livewire::shouldDisableBackButtonCache()){
             return $response->withHeaders([
                 "Pragma" => "no-cache",
                 "Expires" => "Fri, 01 Jan 1990 00:00:00 GMT",
