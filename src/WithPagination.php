@@ -10,13 +10,9 @@ trait WithPagination
 
     protected $numberOfPaginatorsRendered = 0;
 
-    public function getQueryString()
+    public function queryStringWithPagination()
     {
-        $queryString = method_exists($this, 'queryString')
-            ? $this->queryString()
-            : $this->queryString;
-
-        return array_merge(['page' => ['except' => 1]], $queryString);
+        return ['page' => ['except' => 1]];
     }
 
     public function initializeWithPagination()

@@ -205,4 +205,38 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_query_string_hooks_from_traits()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithTraits::class)
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringMissing('page')
+                ->assertQueryStringMissing('search')
+                // Search for posts where title contains "1".
+                ->waitForLivewire()->type('@search', '1')
+                ->assertSee('Post #1')
+                ->assertSee('Post #10')
+                ->assertSee('Post #11')
+                ->assertDontSee('Post #2')
+                ->assertDontSee('Post #3')
+                ->assertQueryStringHas('search', '1')
+                ->assertQueryStringMissing('page')
+                // Navigate to page 2.
+                ->waitForLivewire()->click('@nextPage.before')
+                ->assertSee('Post #12')
+                ->assertSee('Post #13')
+                ->assertSee('Post #14')
+                ->assertQueryStringHas('search', '1')
+                ->assertQueryStringHas('page', 2)
+                // Search for posts where title contains "42".
+                ->waitForLivewire()->type('@search', '42')
+                ->assertSee('Post #42')
+                ->assertQueryStringHas('search', '42')
+                ->assertQueryStringMissing('page')
+            ;
+        });
+    }
 }
