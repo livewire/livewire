@@ -182,4 +182,10 @@ trait InteractsWithProperties
 
         return $results;
     }
+    
+    public function except($properties)
+    {
+        return array_diff_key($this->getPublicPropertiesDefinedBySubClass(), array_flip($properties));
+        //return \Arr::except($this->getPublicPropertiesDefinedBySubClass(), $properties); // Alternative
+    }
 }
