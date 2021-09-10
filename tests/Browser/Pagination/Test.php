@@ -243,7 +243,7 @@ class Test extends TestCase
     public function it_calls_pagination_hook_method_when_pagination_changes()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, ComponentWithCursorPaginationBootstrap::class)
+            Livewire::visit($browser, ComponentWithPaginationHook::class)
                 /**
                  * Test that going to page 2, then back to page 1 removes "page" from the query string.
                  */
