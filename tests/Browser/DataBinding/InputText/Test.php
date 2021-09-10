@@ -85,7 +85,7 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, EmptyWireModelComponent::class)
-                ->assertConsoleLogHasWarning('wire:model is missing value on')
+                ->assertConsoleLogHasWarning('Livewire: [wire:model] is missing a value.')
                 ;
         });
     }
