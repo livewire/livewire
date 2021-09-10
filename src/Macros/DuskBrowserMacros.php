@@ -220,7 +220,6 @@ class DuskBrowserMacros
                 if (! isset($log['message']) || ! isset($log['level']) || $log['level'] !== 'WARNING') continue;
 
 
-                ray(str($log['message'])->contains($expectedMessage), $log['message'], $expectedMessage);
                 if(str($log['message'])->contains($expectedMessage)) {
                     $containsError = true;
                 }
