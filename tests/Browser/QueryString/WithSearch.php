@@ -10,12 +10,9 @@ trait WithSearch
     public $search = '';
 
     /**
-     * @return array
+     * @var array
      */
-    public function queryStringWithSearch()
-    {
-        return ['search' => ['except' => '']];
-    }
+    protected $queryStringWithSearch = ['search' => ['except' => '']];
 
     /**
      * @return void
