@@ -259,7 +259,7 @@ trait ValidatesInput
             });
 
         return collect($properties)->map(function ($value) {
-            if ($value instanceof Collection || $value instanceof EloquentCollection) return $value->toArray();
+            if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
 
             return $value;
         })->all();
