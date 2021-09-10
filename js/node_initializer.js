@@ -19,6 +19,11 @@ export default {
                     break
 
                 case 'model':
+                    if (! directive.value) {
+                        console.warn('wire:model is missing value on', el)
+                        break
+                    }
+                    
                     DOM.setInputValueFromModel(el, component)
 
                     this.attachModelListener(el, directive, component)
