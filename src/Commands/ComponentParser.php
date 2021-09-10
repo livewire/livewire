@@ -126,7 +126,9 @@ class ComponentParser
     public function viewName()
     {
         return collect()
-            ->concat(explode('/',str($this->baseViewPath)->after(resource_path('views'))))
+            ->when(config('livewire.view_path') != resource_path(), function ($collection) {
+                return $collection->concat(explode('/',str($this->baseViewPath)->after(resource_path('views'))));
+            })
             ->filter()
             ->concat($this->directories)
             ->map([Str::class, 'kebab'])

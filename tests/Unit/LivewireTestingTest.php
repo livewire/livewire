@@ -9,6 +9,14 @@ use Illuminate\Support\Facades\Route;
 class LivewireTestingTest extends TestCase
 {
     /** @test */
+    public function cant_test_non_livewire_components()
+    {
+        $this->expectException(\Exception::class);
+
+        Livewire::test(\StdClass::class);
+    }
+
+    /** @test */
     public function livewire_route_works_with_user_route_with_the_same_signature()
     {
         Route::get('/{param1}/{param2}', function() {
