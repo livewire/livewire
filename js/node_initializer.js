@@ -20,7 +20,7 @@ export default {
 
                 case 'model':
                     if (! directive.value) {
-                        console.warn('wire:model is missing value on', el)
+                        console.warn('Livewire: [wire:model] is missing a value.', el)
                         break
                     }
                     
