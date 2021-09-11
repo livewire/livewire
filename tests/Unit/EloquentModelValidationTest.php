@@ -215,16 +215,18 @@ class EloquentModelValidationTest extends TestCase
             ->assertHasErrors('foos.1.bar_baz');
     }
 
+    /** @test */
     public function array_with_deep_nested_model_relationship_validation()
     {
         Livewire::test(ComponentForEloquentModelNestedHydrationMiddleware::class, [
-            'carts' => $carts = Cart::with('items')->get(),
+            'cart' => $cart = Cart::with('items')->first(),
         ])
-            ->set('carts.1.items.0.title', 'sparkling')
+            ->set('cart.items.0.title', 'sparkling')
+            ->set('cart.items.1.title', 'sparkling')
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertEquals('sparkling', $carts[1]->fresh()->items[0]->title);
+        $this->assertEquals('sparkling', $cart->fresh()->items[0]->title);
     }
 }
 
@@ -373,26 +375,17 @@ class Cart extends Model
 
 class ComponentForEloquentModelNestedHydrationMiddleware extends Component
 {
-    public $carts;
+    public $cart;
+    
     protected $rules = [
-        'carts.*.items.*.title' => 'required',
+        'cart.items.*.title' => 'required',
     ];
-
 
     public function save()
     {
         $this->validate();
 
-        foreach($this->carts as $cart) {
-            foreach($cart->items as $item) {
-                   $item->save();
-            }
-        }
-    }
-
-    public function performValidateOnly($field)
-    {
-        $this->validateOnly($field);
+        $this->cart->items->each->save();
     }
 
     public function render()
