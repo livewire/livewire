@@ -110,4 +110,20 @@ return [
 
     'manifest_path' => null,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Back Button Cache
+    |--------------------------------------------------------------------------
+    |
+    | This value determines whether the back button cache will be used on pages
+    | that contain Livewire. By disabling back button cache, it ensures that
+    | the back button shows the correct state of components, instead of
+    | potentially stale, cached data.
+    |
+    | Setting it to "false" (default) will disable back button cache.
+    |
+    */
+
+    'back_button_cache' => false,
+
 ];

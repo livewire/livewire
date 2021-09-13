@@ -38,6 +38,8 @@ abstract class Component
         $this->id = $id ?? str()->random(20);
 
         $this->ensureIdPropertyIsntOverridden();
+
+        Livewire::setBackButtonCache();
     }
 
     public function __invoke(Container $container)
