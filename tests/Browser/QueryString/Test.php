@@ -205,4 +205,18 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_nested_component_query_string_works_when_parent_is_not_using_query_string()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ParentComponentWithNoQueryString::class)
+                ->assertPathBeginsWith('/livewire-dusk')
+                ->waitForLivewire()->click('@toggle-nested')
+
+                // assert the path hasn't change to /livewire/message
+                ->assertPathBeginsWith('/livewire-dusk')
+                ->assertQueryStringHas('baz', 'bop')
+            ;
+        });
+    }
 }
