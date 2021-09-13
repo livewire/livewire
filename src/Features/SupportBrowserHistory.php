@@ -80,7 +80,7 @@ class SupportBrowserHistory
 
         $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
-        if ($route && false !== strpos($route->getActionName(), get_class($component))) {
+        if ($route && ! $route->getActionName() instanceof \Closure && false !== strpos($route->getActionName(), get_class($component))) {
             $path = $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
         } else {
             $path = $this->buildPathFromReferer($referer, $queryParams);
