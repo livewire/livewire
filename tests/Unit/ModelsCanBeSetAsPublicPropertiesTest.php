@@ -97,11 +97,7 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
         $models = ModelForSerialization::all()->toBase();
 
         Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models])
-            ->assertSee('foo')
-            ->assertSee('bar')
-            ->call('refresh')
-            ->assertSee('foo')
-            ->assertSee('bar');
+            ->assertSet('models', $models);
     }
 
     /** @test */
