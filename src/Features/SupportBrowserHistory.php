@@ -41,7 +41,7 @@ class SupportBrowserHistory
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
-            if ($referer = request()->header('Referer')) {
+            if (($referer = request()->header('Referer')) && request()->header('x-livewire')) {
                 $this->getPathFromReferer($referer, $component, $response);
             } else {
                 if (! $this->shouldSendPath($component)) return;
