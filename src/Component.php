@@ -101,7 +101,7 @@ abstract class Component
             }
 
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
-                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+                $this->{$method}();
             }
         }
     }
