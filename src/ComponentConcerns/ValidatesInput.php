@@ -158,6 +158,10 @@ trait ValidatesInput
 
         $validator = Validator::make($data, $rules, $messages, $attributes);
 
+        if (method_exists($this, 'withValidator')) {
+            $this->withValidator($validator);
+        }
+
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 
         $validatedData = $validator->validate();
@@ -193,7 +197,7 @@ trait ValidatesInput
             })->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
-        
+
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
         );

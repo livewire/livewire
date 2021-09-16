@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
@@ -380,6 +381,14 @@ class ValidationTest extends TestCase
 
         $component->call('failFooOnCustomValidator')->assertHasErrors('plop');
     }
+
+    /** @test */
+    public function can_use_withvalidator_method()
+    {
+        $component = Livewire::test(HasWithValidationMethod::class);
+
+        $component->assertSet('count', 0)->call('runValidation')->assertSet('count', 1);
+    }
 }
 
 class ForValidation extends Component
@@ -556,5 +565,31 @@ class ValueEqualsFoobar implements Rule
     public function message()
     {
         return '';
+    }
+}
+
+class HasWithValidationMethod extends Component
+{
+    public $foo = 'bar';
+
+    public $count = 0;
+
+    public function runValidation()
+    {
+        $this->validate([
+            'foo' => 'required',
+        ]);
+    }
+
+    protected function withValidator(ValidatorContract $validator)
+    {
+        $validator->after(function ($validator) {
+            $this->count++;
+        });
+    }
+
+    public function render()
+    {
+        return app('view')->make('dump-errors');
     }
 }
