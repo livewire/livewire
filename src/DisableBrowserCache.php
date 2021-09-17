@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Closure;
+use Symfony\Component\HttpFoundation\Response;
 
 class DisableBrowserCache
 {
@@ -17,14 +18,12 @@ class DisableBrowserCache
     {
         $response = $next($request);
 
-        if (Livewire::shouldDisableBackButtonCache()){
-            if ($response instanceof \Symfony\Component\HttpFoundation\Response) {
-                $response->headers->add([
-                    "Pragma" => "no-cache",
-                    "Expires" => "Fri, 01 Jan 1990 00:00:00 GMT",
-                    "Cache-Control" => "no-cache, must-revalidate, no-store, max-age=0, private",
-                ]);
-            }
+        if ($response instanceof Response && Livewire::shouldDisableBackButtonCache()){
+            $response->headers->add([
+                "Pragma" => "no-cache",
+                "Expires" => "Fri, 01 Jan 1990 00:00:00 GMT",
+                "Cache-Control" => "no-cache, must-revalidate, no-store, max-age=0, private",
+            ]);
         }
 
         return $response;
