@@ -18,15 +18,17 @@ trait WithPagination
             $this->$key = $value;
         }
 
+        $paginationQueryString = [];
+
+        foreach ($this->paginators as $key => $value) {
+            $paginationQueryString[$key] = ['except' => 1];
+        }
+
         $queryString = method_exists($this, 'queryString')
             ? $this->queryString()
             : $this->queryString;
 
-        foreach ($this->paginators as $key => $value) {
-            $queryString[$key] = ['except' => 1];
-        }
-
-        return $queryString;
+        return array_merge($paginationQueryString, $queryString);
     }
 
     public function initializeWithPagination()
