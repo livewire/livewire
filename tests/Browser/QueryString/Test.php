@@ -243,7 +243,7 @@ class Test extends TestCase
                 ->assertSee('Post #1')
                 ->assertSee('Post #2')
                 ->assertSee('Post #3')
-                ->assertQueryStringMissing('page')
+                ->assertQueryStringHas('page', 1)
                 ->assertQueryStringMissing('search')
                 // Search for posts where title contains "1".
                 ->waitForLivewire()->type('@search', '1')
@@ -253,19 +253,19 @@ class Test extends TestCase
                 ->assertDontSee('Post #2')
                 ->assertDontSee('Post #3')
                 ->assertQueryStringHas('search', '1')
-                ->assertQueryStringMissing('page')
+                ->assertQueryStringHas('page', 1)
                 // Navigate to page 2.
                 ->waitForLivewire()->click('@nextPage.before')
                 ->assertSee('Post #12')
                 ->assertSee('Post #13')
                 ->assertSee('Post #14')
                 ->assertQueryStringHas('search', '1')
-                ->assertQueryStringHas('page', 2)
+                ->assertQueryStringMissing('page')
                 // Search for posts where title contains "42".
                 ->waitForLivewire()->type('@search', '42')
                 ->assertSee('Post #42')
                 ->assertQueryStringHas('search', '42')
-                ->assertQueryStringMissing('page')
+                ->assertQueryStringHas('page', 1)
             ;
         });
     }

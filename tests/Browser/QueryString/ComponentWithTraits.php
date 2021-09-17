@@ -12,6 +12,15 @@ class ComponentWithTraits extends Component
     use WithPagination;
     use WithSearch;
 
+    /**
+     * Override WithPagination query string.
+     *
+     * @var array
+     */
+    protected $queryString = [
+        'page' => ['except' => 2]
+    ];
+
     public function render()
     {
         return View::file(__DIR__.'/component-with-traits.blade.php', [
