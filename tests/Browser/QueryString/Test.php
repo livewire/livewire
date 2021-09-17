@@ -220,6 +220,22 @@ class Test extends TestCase
         });
     }
 
+    /** @test */
+    public function it_does_not_build_query_string_from_referer_if_it_is_coming_from_a_full_page_redirect()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, RedirectLinkToQueryStringComponent::class)
+                ->assertPathBeginsWith('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CRedirectLinkToQueryStringComponent')
+                ->click('@link')
+
+                ->pause(200)
+                // assert the path has changed to new component path
+                ->assertPathBeginsWith('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CNestedComponent')
+                ->assertQueryStringHas('baz', 'bop')
+            ;
+        });
+    }
+
     public function test_query_string_hooks_from_traits()
     {
         $this->browse(function (Browser $browser) {

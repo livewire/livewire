@@ -4,10 +4,30 @@ namespace Tests\Browser\Redirects;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
+use Livewire\Livewire;
 
 class Component extends BaseComponent
 {
     public $message = 'foo';
+    public $foo;
+
+    public $disableBackButtonCache = true;
+
+    protected $queryString = [
+        'disableBackButtonCache',
+    ];
+
+    protected $rules = [
+        'foo.name' => '',
+    ];
+
+    public function mount()
+    {
+        $this->foo = Foo::first();
+
+        // Set "disable back button cache" flag based off of query string
+        $this->disableBackButtonCache ? Livewire::disableBackButtonCache() : Livewire::enableBackButtonCache();
+    }
 
     public function flashMessage()
     {
@@ -25,7 +45,14 @@ class Component extends BaseComponent
     {
         $this->message = 'bar';
 
-        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent');
+        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc');
+    }
+
+    public function redirectPageWithModel()
+    {
+        $this->foo->update(['name' => 'bar']);
+
+        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc&disableBackButtonCache='. ($this->disableBackButtonCache ? 'true' : 'false'));
     }
 
     public function render()

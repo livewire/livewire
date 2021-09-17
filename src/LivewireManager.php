@@ -13,6 +13,8 @@ class LivewireManager
     protected $componentAliases = [];
     protected $queryParamsForTesting = [];
 
+    protected $shouldDisableBackButtonCache = false;
+
     protected $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
@@ -422,5 +424,28 @@ HTML;
         $this->queryParamsForTesting = $queryParams;
 
         return $this;
+    }
+
+    public function setBackButtonCache()
+    {
+        /**
+         * Reverse this boolean so that the middleware is only applied when it is disabled.
+         */
+        $this->shouldDisableBackButtonCache = ! config('livewire.back_button_cache', false);
+    }
+
+    public function disableBackButtonCache()
+    {
+        $this->shouldDisableBackButtonCache = true;
+    }
+
+    public function enableBackButtonCache()
+    {
+        $this->shouldDisableBackButtonCache = false;
+    }
+
+    public function shouldDisableBackButtonCache()
+    {
+        return $this->shouldDisableBackButtonCache;
     }
 }

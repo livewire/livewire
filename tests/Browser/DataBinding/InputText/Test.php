@@ -79,4 +79,14 @@ class Test extends TestCase
                 ;
         });
     }
+
+    /** @test */
+    public function it_provides_a_nice_warning_in_console_for_an_empty_wire_model()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, EmptyWireModelComponent::class)
+                ->assertConsoleLogHasWarning('Livewire: [wire:model] is missing a value.')
+                ;
+        });
+    }
 }

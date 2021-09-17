@@ -38,10 +38,15 @@ abstract class Component
         $this->id = $id ?? str()->random(20);
 
         $this->ensureIdPropertyIsntOverridden();
+
+        Livewire::setBackButtonCache();
     }
 
-    public function __invoke(Container $container)
+    public function __invoke(Container $container, Route $route)
     {
+        // For some reason Octane doesn't play nice with the injected $route.
+        // We need to override it here. However, we can't remove the actual
+        // param from the method signature as it would break inheritance.
         $route = request()->route();
 
         try {
@@ -99,7 +104,7 @@ abstract class Component
             }
 
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
-                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+                $this->{$method}();
             }
         }
     }
@@ -203,7 +208,7 @@ abstract class Component
         $engine->startLivewireRendering($this);
 
         $this->setErrorBag(
-            $errorBag = $errors ?: (isset($view->getData()['errors']) ? $view->getData()['errors']->getBag('default') : $this->getErrorBag())
+            $errorBag = $errors ?: ($view->getData()['errors'] ?? $this->getErrorBag())
         );
 
         $previouslySharedErrors = app('view')->getShared()['errors'] ?? new ViewErrorBag;
