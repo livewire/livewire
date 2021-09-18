@@ -85,9 +85,31 @@ trait WithPagination
 
     public function setPage($page, $pageName = 'page')
     {
-        $this->syncInput('paginators.' . $pageName, $page);
+        $beforePaginatorMethod = 'updatingPaginators';
+        $afterPaginatorMethod = 'updatedPaginators';
 
-        $this->syncInput($pageName, $page);
+        $beforeMethod = 'updating' . $pageName;
+        $afterMethod = 'updated' . $pageName;
+
+        if (method_exists($this, $beforePaginatorMethod)) {
+            $this->{$beforePaginatorMethod}($page, $pageName);
+        }
+
+        if (method_exists($this, $beforeMethod)) {
+            $this->{$beforeMethod}($page, null);
+        }
+
+        $this->paginators[$pageName] =  $page;
+
+        $this->{$pageName} = $page;
+
+        if (method_exists($this, $afterPaginatorMethod)) {
+            $this->{$afterPaginatorMethod}($page, $pageName);
+        }
+
+        if (method_exists($this, $afterMethod)) {
+            $this->{$afterMethod}($page, null);
+        }
     }
 
     public function resolvePage()

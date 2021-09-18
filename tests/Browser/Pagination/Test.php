@@ -134,6 +134,7 @@ class Test extends TestCase
         });
     }
 
+    /** @test */
     public function it_calls_pagination_hook_method_when_pagination_changes()
     {
         $this->browse(function ($browser) {
