@@ -287,7 +287,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 } else {
                     if ($rule == "*") {
                         $filteredData = $data;
-                    } elseif ((Arr::accessible($data) && Arr::exists($data, $rule)) || (is_object($data) && isset($data->{$rule}))) {
+                    } elseif (Arr::accessible($data) || is_object($data)) {
                         data_set($filteredData, $rule, data_get($data, $rule));
                     }
                 }
