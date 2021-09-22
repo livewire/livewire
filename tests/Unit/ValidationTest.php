@@ -385,9 +385,11 @@ class ValidationTest extends TestCase
     /** @test */
     public function can_use_withvalidator_method()
     {
-        $component = Livewire::test(HasWithValidationMethod::class);
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('runValidationWithClosure')->assertSet('count', 1);
 
-        $component->assertSet('count', 0)->call('runValidation')->assertSet('count', 1);
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('runValidationWithThisMethod')->assertSet('count', 1);
     }
 }
 
@@ -568,20 +570,31 @@ class ValueEqualsFoobar implements Rule
     }
 }
 
-class HasWithValidationMethod extends Component
+class WithValidationMethod extends Component
 {
     public $foo = 'bar';
 
     public $count = 0;
 
-    public function runValidation()
+    public function runValidationWithClosure()
     {
-        $this->validate([
+        $this->withValidator(function ($validator) {
+            $validator->after(function ($validator) {
+                $this->count++;
+            });
+        })->validate([
             'foo' => 'required',
         ]);
     }
 
-    protected function withValidator(ValidatorContract $validator)
+    public function runValidationWithThisMethod()
+    {
+        $this->withValidator([$this, 'doSomethingWithValidator'])->validate([
+            'foo' => 'required',
+        ]);
+    }
+
+    protected function doSomethingWithValidator($validator)
     {
         $validator->after(function ($validator) {
             $this->count++;

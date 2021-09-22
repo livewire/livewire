@@ -19,6 +19,8 @@ trait ValidatesInput
 {
     protected $errorBag;
 
+    protected $withValidatorCallback;
+
     public function getErrorBag()
     {
         return $this->errorBag ?? new MessageBag;
@@ -144,6 +146,13 @@ trait ValidatesInput
         return ! $this->hasRuleFor($dotNotatedProperty);
     }
 
+    public function withValidator($callback) : self
+    {
+        $this->withValidatorCallback = $callback;
+
+        return $this;
+    }
+
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
@@ -158,8 +167,8 @@ trait ValidatesInput
 
         $validator = Validator::make($data, $rules, $messages, $attributes);
 
-        if (method_exists($this, 'withValidator')) {
-            $this->withValidator($validator);
+        if ($this->withValidatorCallback) {
+            call_user_func($this->withValidatorCallback, $validator);
         }
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
