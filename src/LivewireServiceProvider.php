@@ -248,7 +248,7 @@ class LivewireServiceProvider extends ServiceProvider
                 }
 
                 throw new InvalidArgument('Missing wire:'.$name.' attribute');
-            });;
+            });
         }
 
         View::mixin(new ViewMacros);
