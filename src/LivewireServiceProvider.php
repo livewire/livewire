@@ -243,13 +243,12 @@ class LivewireServiceProvider extends ServiceProvider
         // Early versions of Laravel 7.x don't have this method.
         if (method_exists(ComponentAttributeBag::class, 'macro')) {
             ComponentAttributeBag::macro('wire', function ($name) {
-                $entries = iterator_to_array($this->whereStartsWith('wire:'.$name));
+                foreach ($this->whereStartsWith('wire:'.$name) as $directive => $value) {
+                    return new WireDirective($name, $directive, $value);
+                }
 
-                $directive = head(array_keys($entries));
-                $value = head(array_values($entries));
-
-                return new WireDirective($name, $directive, $value);
-            });
+                throw new InvalidArgument('Missing wire:'.$name.' attribute');
+            });;
         }
 
         View::mixin(new ViewMacros);
