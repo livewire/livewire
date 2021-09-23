@@ -2,7 +2,7 @@
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <script src="https://unpkg.com/alpinejs@3.0.6/dist/cdn.min.js" defer></script>
+    <script src="https://unpkg.com/alpinejs@3.4.1/dist/cdn.min.js" defer></script>
 
     <script type="module">
         import hotwiredTurbo from 'https://cdn.skypack.dev/@hotwired/turbo';
@@ -14,7 +14,7 @@
     {{ $slot }}
 
     @livewireScripts
-    <script src="https://cdn.jsdelivr.net/gh/livewire/turbolinks@v0.1.x/dist/livewire-turbolinks.js" data-turbolinks-eval="false" data-turbo-eval="false"></script>
+    <script src="https://cdn.jsdelivr.net/gh/livewire/turbolinks@v0.1.4/dist/livewire-turbolinks.js" data-turbolinks-eval="false" data-turbo-eval="false"></script>
     <script data-turbo-eval="false">
         document.addEventListener('turbo:before-render', () => {
             let permanents = document.querySelectorAll('[data-turbo-permanent]')
