@@ -94,6 +94,10 @@ class HydratePublicProperties implements HydrationMiddleware
                 is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value)
             ) {
                 data_set($response, 'memo.data.'.$key, $value);
+            } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
+                $response->memo['dataMeta']['wireables'][] = $key;
+
+                data_set($response, 'memo.data.'.$key, $value->toLivewire());
             } else if ($value instanceof QueueableEntity) {
                 static::dehydrateModel($value, $key, $response, $instance);
             } else if ($value instanceof QueueableCollection) {
@@ -120,10 +124,6 @@ class HydratePublicProperties implements HydrationMiddleware
                 $response->memo['dataMeta']['stringables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->__toString());
-            } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
-                $response->memo['dataMeta']['wireables'][] = $key;
-
-                data_set($response, 'memo.data.'.$key, $value->toLivewire());
             } else {
                 throw new PublicPropertyTypeNotAllowedException($instance::getName(), $key, $value);
             }
