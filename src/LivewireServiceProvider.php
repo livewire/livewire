@@ -32,6 +32,7 @@ use Livewire\Commands\{
     S3CleanupCommand,
     MakeLivewireCommand,
 };
+use Livewire\Hydration\PublicPropertyManager;
 use Livewire\Macros\ViewMacros;
 use Livewire\Hydration\Middleware\{
     RenderView,
@@ -54,6 +55,7 @@ class LivewireServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerTestMacros();
         $this->registerLivewireSingleton();
+        $this->registerPublicPropertyManager();
         $this->registerComponentAutoDiscovery();
     }
 
@@ -89,6 +91,11 @@ class LivewireServiceProvider extends ServiceProvider
         $this->app->singleton(LivewireManager::class);
 
         $this->app->alias(LivewireManager::class, 'livewire');
+    }
+
+    protected function registerPublicPropertyManager()
+    {
+        $this->app->singleton(PublicPropertyManager::class);
     }
 
     protected function registerComponentAutoDiscovery()
