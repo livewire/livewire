@@ -189,4 +189,23 @@ class Test extends TestCase
             );
         });
     }
+    
+    /** @test */
+    public function trigger_downloads_from_event_listener()
+    {
+        $this->onlyRunOnChrome();
+
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, Component::class)
+                ->waitForLivewire()->click('@emit-download')
+                ->waitUsing(5, 75, function () {
+                    return Storage::disk('dusk-downloads')->exists('download-target.txt');
+                });
+
+            $this->assertStringContainsString(
+                'I\'m the file you should download.',
+                Storage::disk('dusk-downloads')->get('download-target.txt')
+            );
+        });
+    }
 }
