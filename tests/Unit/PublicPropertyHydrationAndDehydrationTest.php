@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Exceptions\CorruptComponentPayloadException;
 use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
-use Livewire\HydrationMiddleware\HydratePublicProperties;
+use Livewire\Hydration\Middleware\HydratePublicProperties;
 
 class PublicPropertyHydrationAndDehydrationTest extends TestCase
 {

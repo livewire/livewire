@@ -33,7 +33,7 @@ use Livewire\Commands\{
     MakeLivewireCommand,
 };
 use Livewire\Macros\ViewMacros;
-use Livewire\HydrationMiddleware\{
+use Livewire\Hydration\Middleware\{
     RenderView,
     PerformActionCalls,
     CallHydrationHooks,
@@ -81,7 +81,7 @@ class LivewireServiceProvider extends ServiceProvider
                 // If the app overrode "TrimStrings".
                 \App\Http\Middleware\TrimStrings::class,
             ]);
-        }   
+        }
     }
 
     protected function registerLivewireSingleton()

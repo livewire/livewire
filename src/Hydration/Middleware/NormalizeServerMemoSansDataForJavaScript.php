@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\HydrationMiddleware;
+namespace Livewire\Hydration\Middleware;
 
 class NormalizeServerMemoSansDataForJavaScript extends NormalizeDataForJavaScript implements HydrationMiddleware
 {
