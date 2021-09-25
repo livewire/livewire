@@ -1,4 +1,5 @@
 <div>
+    <button wire:click="$emit('download')" dusk="emit-download">Emit Download</button>
     <button wire:click="download" dusk="download">Download</button>
     <button wire:click="downloadFromResponse" dusk="download-from-response">Download</button>
     <button wire:click="downloadQuotedContentDispositionFilename" dusk="download-quoted-disposition-filename">Download</button>
