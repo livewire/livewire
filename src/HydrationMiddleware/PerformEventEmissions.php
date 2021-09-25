@@ -13,10 +13,11 @@ class PerformEventEmissions implements HydrationMiddleware
             foreach ($request->updates as $update) {
                 if ($update['type'] !== 'fireEvent') continue;
 
+                $id = $update['payload']['id'];
                 $event = $update['payload']['event'];
                 $params = $update['payload']['params'];
 
-                $unHydratedInstance->fireEvent($event, $params);
+                $unHydratedInstance->fireEvent($event, $params, $id);
             }
         } catch (ValidationException $e) {
             Livewire::dispatch('failed-validation', $e->validator);
