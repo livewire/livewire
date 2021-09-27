@@ -9,13 +9,13 @@ class PublicPropertyManager
 {
     public $properties;
 
-    public function register($class)
+    public function register($class, $resolver)
     {
-        if (! $class instanceof Wireable) {
+        if (! $resolver instanceof Wireable) {
             throw new CannotRegisterPublicPropertyWithoutImplementingWireableException(get_class($class));
         }
 
-        $this->properties[] = $class;
+        $this->properties[$class] = $resolver;
 
         return $this;
     }
