@@ -7,19 +7,16 @@ use Livewire\Wireable;
 
 class PublicPropertyManager
 {
-    public $publicPropertyClasses;
-
-    public function __construct($publicPropertyClasses)
-    {
-           $this->publicPropertyClasses = $publicPropertyClasses ?? [];
-    }
+    public $properties;
 
     public function register($class)
     {
         if (! $class instanceof Wireable) {
-            throw new CannotRegisterPublicPropertyWithoutImplementingWireableException($class);
+            throw new CannotRegisterPublicPropertyWithoutImplementingWireableException(get_class($class));
         }
 
-        $this->publicPropertyClasses[] = $class;
+        $this->properties[] = $class;
+
+        return $this;
     }
 }

@@ -95,7 +95,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerPublicPropertyManager()
     {
-        $this->app->singleton(PublicPropertyManager::class);
+        $this->app->singleton(PublicPropertyManager::class, function() {
+            return new PublicPropertyManager();
+        });
     }
 
     protected function registerComponentAutoDiscovery()
