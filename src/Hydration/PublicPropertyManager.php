@@ -2,6 +2,7 @@
 
 namespace Livewire\Hydration;
 
+use Livewire\Exceptions\CannotRegisterPublicPropertyWithoutImplementingWireableException;
 use Livewire\Wireable;
 
 class PublicPropertyManager
@@ -16,7 +17,7 @@ class PublicPropertyManager
     public function register($class)
     {
         if (! $class instanceof Wireable) {
-            // Throw a proper exception
+            throw new CannotRegisterPublicPropertyWithoutImplementingWireableException($class);
         }
 
         $this->publicPropertyClasses[] = $class;
