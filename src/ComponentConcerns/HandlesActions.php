@@ -24,6 +24,8 @@ trait HandlesActions
             ($this->{$propertyName} instanceof Model || $this->{$propertyName} instanceof EloquentCollection) && $this->missingRuleFor($name),
             new CannotBindToModelDataWithoutValidationRuleException($name, $this::getName())
         );
+        
+        if (isset($this->readOnly) && in_array($propertyName, $this->readOnly)) return;
 
         $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName, $rehash) {
             throw_unless(
