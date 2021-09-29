@@ -10,9 +10,8 @@ trait WithFileUploads
 {
     public function startUpload($name, $fileInfo, $isMultiple)
     {
-        $urls = [];
-
         if (FileUploadConfiguration::isUsingS3()) {
+            $urls = [];
 
             foreach ($fileInfo as $file) {
                 $file = UploadedFile::fake()->create($file['name'], $file['size'] / 1024, $file['type']);
@@ -51,8 +50,7 @@ trait WithFileUploads
         $this->syncInput($name, $file);
     }
 
-    public function uploadErrored($name, $errorsInJson, $isMultiple)
-    {
+    public function uploadErrored($name, $errorsInJson, $isMultiple) {
         $this->emit('upload:errored', $name)->self();
 
         if (is_null($errorsInJson)) {
@@ -110,7 +108,7 @@ trait WithFileUploads
         foreach ($storage->allFiles(FileUploadConfiguration::path()) as $filePathname) {
             // On busy websites, this cleanup code can run in multiple threads causing part of the output
             // of allFiles() to have already been deleted by another thread.
-            if (!$storage->exists($filePathname)) continue;
+            if (! $storage->exists($filePathname)) continue;
 
             $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
