@@ -2,6 +2,7 @@
 
 namespace Livewire\Testing\Concerns;
 
+use Illuminate\Support\Arr;
 use function Livewire\str;
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
@@ -46,6 +47,17 @@ trait MakesCallsToComponent
     {
         foreach ($values as $name => $value) {
             $this->set($name, $value);
+        }
+
+        return $this;
+    }
+
+    public function fillFactory($modelFactory, $prefix, $except = [])
+    {
+        $factory = Arr::except($modelFactory->toArray(), $except);
+
+        foreach ($factory as $name => $value) {
+            $this->set("$prefix.$name", $value);
         }
 
         return $this;
