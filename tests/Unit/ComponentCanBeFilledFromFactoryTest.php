@@ -13,6 +13,10 @@ class ComponentCanBeFilledFromFactoryTest extends TestCase
     /** @test */
     public function can_fill_from_factory()
     {
+        if(! class_exists(Factory::class)) {
+            $this->markTestSkipped('Need Laravel >= 8');
+        }
+
         $userFactory = User::factory()->make();
         $component = Livewire::test(ComponentWithFactoryFillableProperties::class);
 
@@ -48,7 +52,7 @@ class User extends Model {
 
 class ComponentWithFactoryFillableProperties extends Component
 {
-    public User $user;
+    public $user;
 
     protected $rules = [
         'user.name' => 'required',
