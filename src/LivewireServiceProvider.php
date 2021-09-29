@@ -81,12 +81,12 @@ class LivewireServiceProvider extends ServiceProvider
                 // If the app overrode "TrimStrings".
                 \App\Http\Middleware\TrimStrings::class,
             ]);
-        }   
+        }
     }
 
     protected function registerLivewireSingleton()
     {
-        $this->app->singleton(LivewireManager::class);
+        $this->app->bind(LivewireManager::class);
 
         $this->app->alias(LivewireManager::class, 'livewire');
     }
@@ -102,12 +102,12 @@ class LivewireServiceProvider extends ServiceProvider
             ? '/tmp/storage/bootstrap/cache/livewire-components.php'
             : app()->bootstrapPath('cache/livewire-components.php');
 
-        $this->app->singleton(LivewireComponentsFinder::class, function () use ($defaultManifestPath) {
+        $this->app->bind(LivewireComponentsFinder::class, function ($app) use ($defaultManifestPath) {
             return new LivewireComponentsFinder(
                 new Filesystem,
-                config('livewire.manifest_path') ?: $defaultManifestPath,
+                $app['config']->get('livewire.manifest_path') ?: $defaultManifestPath,
                 ComponentParser::generatePathFromNamespace(
-                    config('livewire.class_namespace')
+                    $app['config']->get('livewire.class_namespace')
                 )
             );
         });
