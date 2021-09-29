@@ -10,19 +10,14 @@ use Livewire\Livewire;
 
 class ComponentCanBeFilledFromFactoryTest extends TestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        if(! class_exists(Factory::class)) {
-            $this->markTestSkipped('Need Laravel >= 8');
-        }
-    }
-
     /** @test */
     public function can_fill_from_factory()
     {
-        $userFactory = User::factory()->make();
+        if(! class_exists(Factory::class)) {
+            $this->markTestSkipped('Need Laravel >= 8');
+        }
+
+        $userFactory = ExampleUser::factory()->make();
         $component = Livewire::test(ComponentWithFactoryFillableProperties::class);
 
         $component->fillFactory($userFactory, 'user', ['password']);
@@ -33,44 +28,48 @@ class ComponentCanBeFilledFromFactoryTest extends TestCase
     }
 }
 
-class UserFactory extends Factory {
-    protected $model = User::class;
-
-    public function definition()
+if(class_exists(Factory::class)) {
+    class UserFactory extends Factory
     {
-        return [
-            'name' => 'Caleb',
-            'email' => 'example@laravel-livewire.com',
-            'password' => 'test',
+        protected $model = ExampleUser::class;
+
+        public function definition()
+        {
+            return [
+                'name' => 'Caleb',
+                'email' => 'example@laravel-livewire.com',
+                'password' => 'test',
+            ];
+        }
+    }
+
+    class ExampleUser extends Model
+    {
+        use HasFactory;
+
+        protected static function newFactory()
+        {
+            return UserFactory::new();
+        }
+    }
+
+    class ComponentWithFactoryFillableProperties extends Component
+    {
+        public $user;
+
+        protected $rules = [
+            'user.name' => 'required',
+            'user.email' => 'required|email',
         ];
-    }
-}
 
-class User extends Model {
-    use HasFactory;
+        public function mount()
+        {
+            $this->user = new ExampleUser;
+        }
 
-    protected static function newFactory()
-    {
-        return UserFactory::new();
-    }
-}
-
-class ComponentWithFactoryFillableProperties extends Component
-{
-    public $user;
-
-    protected $rules = [
-        'user.name' => 'required',
-        'user.email' => 'required|email',
-    ];
-
-    public function mount()
-    {
-        $this->user = new User;
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
+        public function render()
+        {
+            return app('view')->make('null-view');
+        }
     }
 }
