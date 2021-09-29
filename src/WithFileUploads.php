@@ -5,18 +5,22 @@ namespace Livewire;
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Illuminate\Validation\ValidationException;
-use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
 trait WithFileUploads
 {
     public function startUpload($name, $fileInfo, $isMultiple)
     {
+        $urls = [];
+
         if (FileUploadConfiguration::isUsingS3()) {
-            throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
 
-            $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
+            foreach ($fileInfo as $file) {
+                $file = UploadedFile::fake()->create($file['name'], $file['size'] / 1024, $file['type']);
 
-            $this->emit('upload:generatedSignedUrlForS3', $name, GenerateSignedUploadUrl::forS3($file))->self();
+                $urls[] = GenerateSignedUploadUrl::forS3($file);
+            }
+
+            $this->emit('upload:generatedSignedUrlForS3', $name, $urls)->self();
 
             return;
         }
@@ -47,7 +51,8 @@ trait WithFileUploads
         $this->syncInput($name, $file);
     }
 
-    public function uploadErrored($name, $errorsInJson, $isMultiple) {
+    public function uploadErrored($name, $errorsInJson, $isMultiple)
+    {
         $this->emit('upload:errored', $name)->self();
 
         if (is_null($errorsInJson)) {
@@ -105,7 +110,7 @@ trait WithFileUploads
         foreach ($storage->allFiles(FileUploadConfiguration::path()) as $filePathname) {
             // On busy websites, this cleanup code can run in multiple threads causing part of the output
             // of allFiles() to have already been deleted by another thread.
-            if (! $storage->exists($filePathname)) continue;
+            if (!$storage->exists($filePathname)) continue;
 
             $yesterdaysStamp = now()->subDay()->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {

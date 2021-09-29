@@ -78,57 +78,79 @@ class UploadManager {
 
         if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken
 
-        this.makeRequest(name, formData, 'post', url, headers, response => {
-            return response.paths
+        let promise = this.makeRequest(name, formData, 'post', url, headers,)
+
+        promise.then(result => {
+            this.component.call('finishUpload', name, result.response.paths, this.uploadBag.first(name).multiple)
+        }).catch(error => {
+            this.component.call('uploadErrored', name, error, this.uploadBag.first(name).multiple)
         })
     }
 
-    handleS3PreSignedUrl(name, payload) {
-        let formData = this.uploadBag.first(name).files[0]
+    handleS3PreSignedUrl(name, payloads) {
+        let promises = []
+        payloads.forEach((payload, index) => {
+            let formData = this.uploadBag.first(name).files[index]
 
-        let headers = payload.headers
-        if ('Host' in headers) delete headers.Host
-        let url = payload.url
+            let headers = payload.headers
+            if ('Host' in headers) delete headers.Host
+            let url = payload.url
 
-        this.makeRequest(name, formData, 'put', url, headers, response => {
-            return [payload.path]
-        })
+            promises.push(this.makeRequest(name, formData, 'put', url, headers))
+        });
+
+        Promise.all(promises)
+            .then(results => {
+                let fulfilled = []
+
+                results.forEach(response => {
+                    fulfilled.push(response.url)
+                })
+
+                let fulfilledPaths = payloads.filter(payload => fulfilled.includes(payload.url)).map(payload => payload.path)
+
+                this.component.call('finishUpload', name, fulfilledPaths, this.uploadBag.first(name).multiple)
+
+            }).catch(error => {
+                this.component.call('uploadErrored', name, error, this.uploadBag.first(name).multiple)
+            })
+
     }
 
-    makeRequest(name, formData, method, url, headers, retrievePaths) {
-        let request = new XMLHttpRequest()
-        request.open(method, url)
+    makeRequest(name, formData, method, url, headers) {
 
-        Object.entries(headers).forEach(([key, value]) => {
-            request.setRequestHeader(key, value)
+        return new Promise((resolve, reject) => {
+            let request = new XMLHttpRequest()
+            request.open(method, url)
+
+            Object.entries(headers).forEach(([key, value]) => {
+                request.setRequestHeader(key, value)
+            })
+
+            request.upload.addEventListener('progress', e => {
+                e.detail = {}
+                e.detail.progress = Math.round((e.loaded * 100) / e.total)
+
+                this.uploadBag.first(name).progressCallback(e)
+            })
+
+            request.addEventListener('load', () => {
+                if ((request.status + '')[0] === '2') {
+                    resolve({ response: request.response && JSON.parse(request.response), url: url })
+
+                    return
+                }
+
+                let errors
+
+                if (request.status === 422) {
+                    errors = request.response
+                }
+
+                reject(errors ?? {})
+            })
+            request.send(formData)
         })
-
-        request.upload.addEventListener('progress', e => {
-            e.detail = {}
-            e.detail.progress = Math.round((e.loaded * 100) / e.total)
-
-            this.uploadBag.first(name).progressCallback(e)
-        })
-
-        request.addEventListener('load', () => {
-            if ((request.status+'')[0] === '2') {
-                let paths = retrievePaths(request.response && JSON.parse(request.response))
-
-                this.component.call('finishUpload', name, paths, this.uploadBag.first(name).multiple)
-
-                return
-            }
-
-            let errors = null
-
-            if (request.status === 422) {
-                errors = request.response
-            }
-
-            this.component.call('uploadErrored', name, errors, this.uploadBag.first(name).multiple)
-        })
-
-        request.send(formData)
     }
 
     startUpload(name, uploadObject) {
