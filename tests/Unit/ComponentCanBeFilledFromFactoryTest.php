@@ -10,13 +10,18 @@ use Livewire\Livewire;
 
 class ComponentCanBeFilledFromFactoryTest extends TestCase
 {
-    /** @test */
-    public function can_fill_from_factory()
+    public function setUp(): void
     {
+        parent::setUp();
+
         if(! class_exists(Factory::class)) {
             $this->markTestSkipped('Need Laravel >= 8');
         }
+    }
 
+    /** @test */
+    public function can_fill_from_factory()
+    {
         $userFactory = User::factory()->make();
         $component = Livewire::test(ComponentWithFactoryFillableProperties::class);
 
