@@ -7,6 +7,8 @@
 
     <button wire:click="$emitUp('foo', 'lob')" dusk="emit.lob"></button>
 
+    <button wire:click="$emitDown('foo', 'lod')" dusk="emit.lod"></button>
+
     <button wire:click="$emitSelf('foo', 'law')" dusk="emit.law"></button>
 
     <button wire:click="$emitTo('tests.browser.events.nested-component-b', 'foo', 'blog')" dusk="emit.blog"></button>

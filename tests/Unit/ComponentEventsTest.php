@@ -68,6 +68,16 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
+    public function server_emitted_down_events_are_provided_to_frontend()
+    {
+        $component = Livewire::test(ReceivesEvents::class);
+
+        $component->call('emitDownGoo');
+
+        $this->assertTrue(in_array(['descendantsOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->payload['effects']['emits']));
+    }
+
+    /** @test */
     public function server_emitted_self_events_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -133,6 +143,11 @@ class ReceivesEvents extends Component
     public function emitUpGoo()
     {
         $this->emitUp('goo', 'car');
+    }
+
+    public function emitDownGoo()
+    {
+        $this->emitDown('goo', 'car');
     }
 
     public function emitSelfGoo()

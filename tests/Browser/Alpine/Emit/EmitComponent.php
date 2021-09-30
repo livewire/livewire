@@ -8,6 +8,7 @@ class EmitComponent extends BaseComponent
 {
     public $emit = false;
     public $emitUp = false;
+    public $emitDown = false;
     public $emitTo = false;
     public $emitSelf = false;
 
@@ -43,6 +44,10 @@ class EmitComponent extends BaseComponent
 
     @if ($emitUp)
         emit up worked!
+    @endif
+
+    @if ($emitDown)
+        emit down worked!
     @endif
 
     @if ($emitTo)

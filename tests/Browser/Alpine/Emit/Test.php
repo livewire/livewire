@@ -26,6 +26,11 @@ class Test extends TestCase
                 ->click('@emitUp')
                 ->assertSee('emit up worked')
 
+                ->assertDontSee('emit down worked')
+                ->waitForLivewire()
+                ->click('@emitDown')
+                ->assertSee('emit down worked')
+
                 ->assertDontSee('emit to worked')
                 ->waitForLivewire()
                 ->click('@emitTo')

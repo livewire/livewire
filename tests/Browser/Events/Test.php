@@ -56,7 +56,18 @@ class Test extends TestCase
                 })
 
                 /**
-                 * receive event from action fired only to ancestors, and make sure global listener doesnt receive it
+                 * receive event from component fired only to descendants, and make sure global listener doesnt receive it
+                 */
+                ->waitForLivewire()->click('@emit.lod')
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertSeeIn('@lastEventForParent', 'lod')
+                                   ->assertSeeIn('@lastEventForChildA', 'lod')
+                                   ->assertSeeIn('@lastEventForChildB', 'lod')
+                                   ->assertScript('window.lastFooEventValue', 'bob');
+                })
+
+                /**
+                 * receive event from action fired only to self, and make sure global listener doesnt receive it
                  */
                 ->waitForLivewire()->click('@emit.law')
                 ->waitUsing(5, 75, function () use ($browser) {
