@@ -7,6 +7,7 @@ class Event
     protected $name;
     protected $params;
     protected $up;
+    protected $down;
     protected $self;
     protected $component;
 
@@ -19,6 +20,13 @@ class Event
     public function up()
     {
         $this->up = true;
+
+        return $this;
+    }
+
+    public function down()
+    {
+        $this->down = true;
 
         return $this;
     }
@@ -50,6 +58,7 @@ class Event
         ];
 
         if ($this->up) $output['ancestorsOnly'] = true;
+        if ($this->down) $output['descendantsOnly'] = true;
         if ($this->self) $output['selfOnly'] = true;
         if ($this->component) $output['to'] = is_subclass_of($this->component, Component::class)
             ? $this->component::getName()

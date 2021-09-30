@@ -318,6 +318,8 @@ export default class Component {
                         store.emitTo(event.to, event.event, ...event.params)
                     } else if (event.ancestorsOnly) {
                         store.emitUp(this.el, event.event, ...event.params)
+                    } else if (event.descendantsOnly) {
+                        store.emitDown(this.el, event.event, ...event.params)
                     } else {
                         store.emit(event.event, ...event.params)
                     }

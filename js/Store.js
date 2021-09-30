@@ -65,6 +65,15 @@ const store = {
         )
     },
 
+    emitDown(el, event, ...params) {
+        this.componentsListeningForEventThatAreTreeDescendants(
+            el,
+            event
+        ).forEach(component =>
+            component.addAction(new EventAction(event, params))
+        )
+    },
+
     emitSelf(componentId, event, ...params) {
         let component = this.findComponent(componentId)
 
@@ -98,6 +107,23 @@ const store = {
             return (
                 component.listeners.includes(event) &&
                 parentIds.includes(component.id)
+            )
+        })
+    },
+
+    componentsListeningForEventThatAreTreeDescendants(el, event) {
+        var childIds = []
+
+        var children = el.querySelectorAll('[wire\\:id]')
+
+        children.forEach(child => {
+            childIds.push(child.getAttribute('wire:id'))
+        });
+
+        return this.components().filter(component => {
+            return (
+                component.listeners.includes(event) &&
+                childIds.includes(component.id)
             )
         })
     },

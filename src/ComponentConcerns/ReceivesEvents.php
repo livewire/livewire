@@ -25,6 +25,11 @@ trait ReceivesEvents
         $this->emit($event, ...$params)->up();
     }
 
+    public function emitDown($event, ...$params)
+    {
+        $this->emit($event, ...$params)->down();
+    }
+
     public function emitSelf($event, ...$params)
     {
         $this->emit($event, ...$params)->self();
