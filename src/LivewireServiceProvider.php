@@ -86,7 +86,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerLivewireSingleton()
     {
-        $this->app->bind(LivewireManager::class);
+        $this->app->singleton(LivewireManager::class);
 
         $this->app->alias(LivewireManager::class, 'livewire');
     }
@@ -102,12 +102,12 @@ class LivewireServiceProvider extends ServiceProvider
             ? '/tmp/storage/bootstrap/cache/livewire-components.php'
             : app()->bootstrapPath('cache/livewire-components.php');
 
-        $this->app->bind(LivewireComponentsFinder::class, function ($app) use ($defaultManifestPath) {
+        $this->app->singleton(LivewireComponentsFinder::class, function () use ($defaultManifestPath) {
             return new LivewireComponentsFinder(
                 new Filesystem,
-                $app['config']->get('livewire.manifest_path') ?: $defaultManifestPath,
+                config('livewire.manifest_path') ?: $defaultManifestPath,
                 ComponentParser::generatePathFromNamespace(
-                    $app['config']->get('livewire.class_namespace')
+                    config('livewire.class_namespace')
                 )
             );
         });
