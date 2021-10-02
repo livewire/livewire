@@ -219,7 +219,8 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
-        $appUrl = config('app.url') ?: rtrim($options['app_url'] ?? '', '/');;
+        $appUrl = (config('livewire.app_url') ?? config('livewire.asset_url'))
+            ?: rtrim($options['app_url'] ?? '', '/');;
 
         $assetsUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
 
