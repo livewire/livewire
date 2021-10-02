@@ -5,14 +5,12 @@ namespace Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
-use Illuminate\Routing\Route;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
 abstract class Component
@@ -33,6 +31,8 @@ abstract class Component
     protected $shouldSkipRender = false;
     protected $preRenderedView;
 
+    protected $_state = [];
+
     public function __construct($id = null)
     {
         $this->id = $id ?? str()->random(20);
@@ -42,8 +42,12 @@ abstract class Component
         Livewire::setBackButtonCache();
     }
 
-    public function __invoke(Container $container, Route $route)
+    public function __invoke(Container $container)
     {
+        // With octane and full page components the route is caching the
+        // component, so always create a fresh instance.
+        $instance = new static;
+
         // For some reason Octane doesn't play nice with the injected $route.
         // We need to override it here. However, we can't remove the actual
         // param from the method signature as it would break inheritance.
@@ -51,7 +55,7 @@ abstract class Component
 
         try {
             $componentParams = (new ImplicitRouteBinding($container))
-                ->resolveAllParameters($route, $this);
+                ->resolveAllParameters($route, $instance);
         } catch (ModelNotFoundException $exception) {
             if (method_exists($route,'getMissing') && $route->getMissing()) {
                 return $route->getMissing()(request());
@@ -60,18 +64,18 @@ abstract class Component
             throw $exception;
         }
 
-        $manager = LifecycleManager::fromInitialInstance($this)
+        $manager = LifecycleManager::fromInitialInstance($instance)
             ->initialHydrate()
             ->mount($componentParams)
             ->renderToView();
 
-        if ($this->redirectTo) {
-            return redirect()->response($this->redirectTo);
+        if ($instance->redirectTo) {
+            return redirect()->response($instance->redirectTo);
         }
 
-        $this->ensureViewHasValidLivewireLayout($this->preRenderedView);
+        $instance->ensureViewHasValidLivewireLayout($instance->preRenderedView);
 
-        $layout = $this->preRenderedView->livewireLayout;
+        $layout = $instance->preRenderedView->livewireLayout;
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layout['type']}.blade.php", [
             'view' => $layout['view'],
@@ -92,7 +96,7 @@ abstract class Component
     public function bootIfNotBooted()
     {
         if (method_exists($this, $method = 'boot')) {
-            ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+            ImplicitlyBoundMethod::call(app(), [$this, $method]);
         }
     }
 
@@ -100,7 +104,7 @@ abstract class Component
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
             if (method_exists($class, $method = 'boot'.class_basename($trait))) {
-                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+                ImplicitlyBoundMethod::call(app(), [$this, $method]);
             }
 
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
@@ -254,6 +258,29 @@ abstract class Component
                 unset($this->computedPropertyCache[$i]);
             }
         });
+    }
+
+    public function getState($group, $key = null, $default = null)
+    {
+        $values = $this->_state[$group] ?? [];
+
+        if ($key) {
+            return $values[$key] ?? $default;
+        }
+
+        return $values;
+    }
+
+    public function setState($group, $key, $value)
+    {
+        $this->_state[$group][$key] = $value;
+    }
+
+    public function pushState($group, $key, $value)
+    {
+        $old = $this->getState($group, $key);
+
+        $this->setState($group, $key, array_merge($old, [$value]));
     }
 
     public function __get($property)
