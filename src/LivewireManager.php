@@ -219,7 +219,9 @@ HTML;
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
-        $appUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
+        $appUrl = config('app.url');
+
+        $assetsUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
 
         $jsLivewireToken = app()->has('session.store') ? "'" . csrf_token() . "'" : 'null';
 
@@ -227,7 +229,7 @@ HTML;
         $versionedFileName = $manifest['/livewire.js'];
 
         // Default to dynamic `livewire.js` (served by a Laravel route).
-        $fullAssetPath = "{$appUrl}/livewire{$versionedFileName}";
+        $fullAssetPath = "{$assetsUrl}/livewire{$versionedFileName}";
         $assetWarning = null;
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
@@ -237,7 +239,7 @@ HTML;
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
             $versionedFileName = $publishedManifest['/livewire.js'];
 
-            $fullAssetPath = ($this->isRunningServerless() ? config('app.asset_url') : $appUrl).'/vendor/livewire'.$versionedFileName;
+            $fullAssetPath = ($this->isRunningServerless() ? config('app.asset_url') : $assetsUrl).'/vendor/livewire'.$versionedFileName;
 
             if ($manifest !== $publishedManifest) {
                 $assetWarning = <<<'HTML'
