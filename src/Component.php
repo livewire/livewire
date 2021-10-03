@@ -11,6 +11,7 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Routing\Route;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
 abstract class Component
@@ -42,7 +43,7 @@ abstract class Component
         Livewire::setBackButtonCache();
     }
 
-    public function __invoke(Container $container)
+    public function __invoke(Container $container, Route $route)
     {
         // With octane and full page components the route is caching the
         // component, so always create a fresh instance.
