@@ -278,7 +278,7 @@ abstract class Component
 
     public function pushState($group, $key, $value)
     {
-        $old = $this->getState($group, $key);
+        $old = $this->getState($group, $key, []);
 
         $this->setState($group, $key, array_merge($old, [$value]));
     }
