@@ -38,9 +38,14 @@ class HttpConnectionHandler extends ConnectionHandler
             );
         }
 
+        $route = $request->route();
+
+        // For some reason without this octane breaks the route parameter binding.
+        $route->setContainer(app());
+
         // Gather all the middleware for the original route, and filter it by
         // the ones we have designated for persistence on Livewire requests.
-        $originalRouteMiddleware = app('router')->gatherRouteMiddleware($request->route());
+        $originalRouteMiddleware = app('router')->gatherRouteMiddleware($route);
 
         $persistentMiddleware = Livewire::getPersistentMiddleware();
 
