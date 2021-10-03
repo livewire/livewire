@@ -18,7 +18,7 @@ class SupportComponentTraits
         });
 
         Livewire::listen('component.mount', function ($component, $params) {
-            $this->callHook('hydrate', $component, $params);
+            $this->callHook('mount', $component, $params);
         });
 
         Livewire::listen('component.updating', function ($component, $name, $value) {
