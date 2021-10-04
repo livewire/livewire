@@ -3,12 +3,15 @@
 namespace Livewire\Features;
 
 use Livewire\Livewire;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SupportFileDownloads
 {
     static function init() { return new static; }
+
+    protected $downloadsById = [];
 
     function __construct()
     {
@@ -27,18 +30,17 @@ class SupportFileDownloads
 
             $content = base64_encode($binary);
 
-            $component->setState('file', 'download', [
+            $this->downloadsById[$component->id] = [
                 'name' => $name,
                 'content' => $content,
                 'contentType' => $response->headers->get('Content-Type'),
-            ]);
+            ];
 
             $component->skipRender();
         });
 
         Livewire::listen('component.dehydrate.subsequent', function ($component, $response) {
-            $download = $component->getState('file', 'download');
-            if (! $download) return;
+            if (! $download = $this->downloadsById[$component->id] ?? false) return;
 
             $response->effects['download'] = $download;
         });

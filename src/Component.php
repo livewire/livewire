@@ -5,13 +5,13 @@ namespace Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
+use Illuminate\Routing\Route;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Routing\Route;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
 abstract class Component
@@ -31,8 +31,6 @@ abstract class Component
     protected $computedPropertyCache = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
-
-    protected $_state = [];
 
     public function __construct($id = null)
     {
@@ -259,29 +257,6 @@ abstract class Component
                 unset($this->computedPropertyCache[$i]);
             }
         });
-    }
-
-    public function getState($group, $key = null, $default = null)
-    {
-        $values = $this->_state[$group] ?? [];
-
-        if ($key) {
-            return $values[$key] ?? $default;
-        }
-
-        return $values;
-    }
-
-    public function setState($group, $key, $value)
-    {
-        $this->_state[$group][$key] = $value;
-    }
-
-    public function pushState($group, $key, $value)
-    {
-        $old = $this->getState($group, $key, []);
-
-        $this->setState($group, $key, array_merge($old, [$value]));
     }
 
     public function __get($property)

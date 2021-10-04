@@ -9,11 +9,13 @@ class SupportRedirects
 {
     static function init() { return new static; }
 
+    public static $redirectorCacheStack = [];
+
     function __construct()
     {
         Livewire::listen('component.hydrate', function ($component, $request) {
             // Put Laravel's redirector aside and replace it with our own custom one.
-            $component->setState('redirector', 'original', app('redirect'));
+            static::$redirectorCacheStack[] = app('redirect');
 
             app()->bind('redirect', function () use ($component) {
                 $redirector = app(Redirector::class)->component($component);
@@ -28,7 +30,7 @@ class SupportRedirects
 
         Livewire::listen('component.dehydrate', function ($component, $response) {
             // Put the old redirector back into the container.
-            app()->instance('redirect', $component->getState('redirector', 'original'));
+            app()->instance('redirect', array_pop(static::$redirectorCacheStack));
 
             if (empty($component->redirectTo)) {
                 return;

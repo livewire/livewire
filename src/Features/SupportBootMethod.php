@@ -3,6 +3,7 @@
 namespace Livewire\Features;
 
 use Livewire\Livewire;
+use Illuminate\Support\Facades\App;
 
 class SupportBootMethod
 {
