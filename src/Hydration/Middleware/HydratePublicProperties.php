@@ -14,6 +14,7 @@ use Illuminate\Support\Stringable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Carbon\CarbonImmutable;
+use Livewire\Hydration\PublicPropertyManager;
 use ReflectionProperty;
 use Livewire\Wireable;
 use DateTimeImmutable;
@@ -36,6 +37,7 @@ class HydratePublicProperties implements HydrationMiddleware
         $modelCollections = data_get($request, 'memo.dataMeta.modelCollections', []);
         $stringables = data_get($request, 'memo.dataMeta.stringables', []);
         $wireables = data_get($request, 'memo.dataMeta.wireables', []);
+        $customProperties = data_get($request, 'memo.dataMeta.customProperties', []);
 
         foreach ($publicProperties as $property => $value) {
             if ($type = data_get($dates, $property)) {
@@ -63,6 +65,10 @@ class HydratePublicProperties implements HydrationMiddleware
                     ->getName();
 
                 data_set($instance, $property, $type::fromLivewire($value));
+            } else if (app(PublicPropertyManager::class)->contains($value)) {
+                // Convert somehow
+
+                // data_set($instance, $property, $type::fromLivewire($value));
             } else {
                 // If the value is null and the property is typed, don't set it, because all values start off as null and this
                 // will prevent Typed properties from wining about being set to null.
@@ -94,6 +100,10 @@ class HydratePublicProperties implements HydrationMiddleware
                 is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value)
             ) {
                 data_set($response, 'memo.data.'.$key, $value);
+            } else if (app(PublicPropertyManager::class)->contains($value)) {
+                $response->memo['dataMeta']['customProperties'][] = $key;
+
+//                 data_set($response, 'memo.data.'.$key, $value->toLivewire());
             } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
                 $response->memo['dataMeta']['wireables'][] = $key;
 
