@@ -8,8 +8,6 @@ class OptimizeRenderedDom
 {
     static function init() { return new static; }
 
-    protected $htmlHashesByComponent = [];
-
     function __construct()
     {
         Livewire::listen('component.dehydrate.initial', function ($component, $response) {
@@ -17,11 +15,11 @@ class OptimizeRenderedDom
         });
 
         Livewire::listen('component.hydrate.subsequent', function ($component, $request) {
-            $this->htmlHashesByComponent[$component->id] = $request->memo['htmlHash'];
+            $component->setState('html', 'hash', $request->memo['htmlHash']);
         });
 
         Livewire::listen('component.dehydrate.subsequent', function ($component, $response) {
-            $oldHash = $this->htmlHashesByComponent[$component->id] ?? null;
+            $oldHash = $component->getState('html', 'hash');
 
             $response->memo['htmlHash'] = $newHash = hash('crc32b', $response->effects['html'] ?? '');
 

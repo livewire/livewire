@@ -16,8 +16,6 @@ class SupportBrowserHistory
 {
     static function init() { return new static; }
 
-    protected $mergedQueryParamsFromDehydratedComponents;
-
     function __construct()
     {
         Livewire::listen('component.hydrate.initial', function ($component) {
@@ -148,14 +146,16 @@ class SupportBrowserHistory
 
     protected function mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component)
     {
-        if (! $this->mergedQueryParamsFromDehydratedComponents) {
-            $this->mergedQueryParamsFromDehydratedComponents = collect($this->getExistingQueryParams());
+        $parameters = $component->getState('query', 'parameters');
+
+        if (! $parameters) {
+            $parameters = collect($this->getExistingQueryParams());
         }
 
         $excepts = $this->getExceptsFromComponent($component);
 
-        $this->mergedQueryParamsFromDehydratedComponents = collect(request()->query())
-            ->merge($this->mergedQueryParamsFromDehydratedComponents)
+        $parameters = collect(request()->query())
+            ->merge($parameters)
             ->merge($this->getQueryParamsFromComponentProperties($component))
             ->reject(function ($value, $key) use ($excepts) {
                 return isset($excepts[$key]) && $excepts[$key] === $value;
@@ -164,7 +164,9 @@ class SupportBrowserHistory
                 return is_bool($property) ? json_encode($property) : $property;
             });
 
-        return $this->mergedQueryParamsFromDehydratedComponents;
+        $component->setState('query', 'parameters', $parameters);
+
+        return $parameters;
     }
 
     protected function getExceptsFromComponent($component)

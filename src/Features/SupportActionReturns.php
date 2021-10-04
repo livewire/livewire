@@ -10,23 +10,20 @@ class SupportActionReturns
 {
     static function init() { return new static; }
 
-    protected $returnsByIdAndAction = [];
-
     function __construct()
     {
         Livewire::listen('action.returned', function ($component, $action, $returned, $id) {
             if (is_array($returned) || is_numeric($returned) || is_bool($returned) || is_string($returned)) {
-                if (! isset($this->returnsByIdAndAction[$component->id])) $this->returnsByIdAndAction[$component->id] = [];
-
-
-                $this->returnsByIdAndAction[$component->id][$id] = $returned;
+                $component->setState('action.returns', $id, $returned);
             }
         });
 
         Livewire::listen('component.dehydrate.subsequent', function ($component, $response) {
-            if (! isset($this->returnsByIdAndAction[$component->id])) return;
+            $returns = $component->getState('action.returns');
 
-            $response->effects['returns'] = $this->returnsByIdAndAction[$component->id];
+            if (empty($returns)) return;
+
+            $response->effects['returns'] = $returns;
         });
     }
 
