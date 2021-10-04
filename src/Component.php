@@ -5,13 +5,14 @@ namespace Livewire;
 use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
+use Illuminate\Routing\Route;
 use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Routing\Route;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
 abstract class Component
@@ -93,7 +94,7 @@ abstract class Component
     public function bootIfNotBooted()
     {
         if (method_exists($this, $method = 'boot')) {
-            ImplicitlyBoundMethod::call(app(), [$this, $method]);
+            ImplicitlyBoundMethod::call(app(), [$this, $method]); 
         }
     }
 
@@ -101,7 +102,7 @@ abstract class Component
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
             if (method_exists($class, $method = 'boot'.class_basename($trait))) {
-                ImplicitlyBoundMethod::call(app(), [$this, $method]);
+                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
             }
 
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
