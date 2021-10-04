@@ -144,7 +144,7 @@ trait ValidatesInput
         return ! $this->hasRuleFor($dotNotatedProperty);
     }
 
-    public function validate($rules = null, $messages = [], $attributes = [])
+    public function validate($rules = null, $messages = [], $attributes = [], $after = null)
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
@@ -157,6 +157,10 @@ trait ValidatesInput
         $data = $this->unwrapDataForValidation($data);
 
         $validator = Validator::make($data, $rules, $messages, $attributes);
+
+        if ($after) {
+            $validator->after($after);
+        }
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 
@@ -193,7 +197,7 @@ trait ValidatesInput
             })->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
-        
+
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
         );

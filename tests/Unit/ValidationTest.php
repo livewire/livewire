@@ -380,6 +380,17 @@ class ValidationTest extends TestCase
 
         $component->call('failFooOnCustomValidator')->assertHasErrors('plop');
     }
+
+    /** @test */
+    public function validate_component_with_after()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->runAction('runValidationWithAfter');
+
+        $this->assertStringNotContainsString('The foo field is required', $component->payload['effects']['html']);
+        $this->assertStringContainsString('Fails after validation!', $component->payload['effects']['html']);
+    }
 }
 
 class ForValidation extends Component
@@ -528,6 +539,15 @@ class ForValidation extends Component
         $this->validate([
             'password' => 'same:passwordConfirmation',
         ]);
+    }
+
+    public function runValidationWithAfter()
+    {
+        $this->validate([
+            'foo' => 'required',
+        ],[],[],function($validator) {
+            $validator->errors()->add('foo','Fails after validation!');
+        });
     }
 
     public function runValidationWithoutAllPublicPropertiesAndReturnValidatedData()
