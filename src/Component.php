@@ -44,6 +44,10 @@ abstract class Component
 
     public function __invoke(Container $container, Route $route)
     {
+        // With octane and full page components the route is caching the
+        // component, so always create a fresh instance.
+        $instance = new static;
+
         // For some reason Octane doesn't play nice with the injected $route.
         // We need to override it here. However, we can't remove the actual
         // param from the method signature as it would break inheritance.
@@ -51,7 +55,7 @@ abstract class Component
 
         try {
             $componentParams = (new ImplicitRouteBinding($container))
-                ->resolveAllParameters($route, $this);
+                ->resolveAllParameters($route, $instance);
         } catch (ModelNotFoundException $exception) {
             if (method_exists($route,'getMissing') && $route->getMissing()) {
                 return $route->getMissing()(request());
@@ -60,18 +64,18 @@ abstract class Component
             throw $exception;
         }
 
-        $manager = LifecycleManager::fromInitialInstance($this)
+        $manager = LifecycleManager::fromInitialInstance($instance)
             ->initialHydrate()
             ->mount($componentParams)
             ->renderToView();
 
-        if ($this->redirectTo) {
-            return redirect()->response($this->redirectTo);
+        if ($instance->redirectTo) {
+            return redirect()->response($instance->redirectTo);
         }
 
-        $this->ensureViewHasValidLivewireLayout($this->preRenderedView);
+        $instance->ensureViewHasValidLivewireLayout($instance->preRenderedView);
 
-        $layout = $this->preRenderedView->livewireLayout;
+        $layout = $instance->preRenderedView->livewireLayout;
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layout['type']}.blade.php", [
             'view' => $layout['view'],
