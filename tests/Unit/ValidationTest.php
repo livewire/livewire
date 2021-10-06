@@ -390,6 +390,12 @@ class ValidationTest extends TestCase
 
         $component = Livewire::test(WithValidationMethod::class);
         $component->assertSet('count', 0)->call('runValidationWithThisMethod')->assertSet('count', 1);
+
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('runValidateOnlyWithClosure')->assertSet('count', 1);
+
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('runValidateOnlyWithThisMethod')->assertSet('count', 1);
     }
 }
 
@@ -587,9 +593,27 @@ class WithValidationMethod extends Component
         ]);
     }
 
+    public function runValidateOnlyWithClosure()
+    {
+        $this->withValidator(function ($validator) {
+            $validator->after(function ($validator) {
+                $this->count++;
+            });
+        })->validateOnly('foo', [
+            'foo' => 'required',
+        ]);
+    }
+
     public function runValidationWithThisMethod()
     {
         $this->withValidator([$this, 'doSomethingWithValidator'])->validate([
+            'foo' => 'required',
+        ]);
+    }
+
+    public function runValidateOnlyWithThisMethod()
+    {
+        $this->withValidator([$this, 'doSomethingWithValidator'])->validateOnly('foo', [
             'foo' => 'required',
         ]);
     }

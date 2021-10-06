@@ -146,7 +146,7 @@ trait ValidatesInput
         return ! $this->hasRuleFor($dotNotatedProperty);
     }
 
-    public function withValidator($callback) : self
+    public function withValidator($callback)
     {
         $this->withValidatorCallback = $callback;
 
@@ -216,6 +216,10 @@ trait ValidatesInput
         $data = $this->unwrapDataForValidation($data);
 
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
+
+        if ($this->withValidatorCallback) {
+            call_user_func($this->withValidatorCallback, $validator);
+        }
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 
