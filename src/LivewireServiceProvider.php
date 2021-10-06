@@ -281,6 +281,31 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
+        Blade::directive('push', function ($expression) {
+            return "<?php
+                \$things = [{$expression}];
+
+                \$name = \$things[0];
+                \$content = null;
+                if (isset(\$things[1])) \$content = \$things[1];
+
+                if (\$content) {
+                    \$__env->startPush(\$name, '<div livewire=\"'.\$this->id.'\">'.\$content.'</div>');
+                } else {
+                    \$__env->startPush(\$name);
+                    echo '<div livewire=\"'.\$this->id.'\">';
+                }
+            ?>";
+        });    
+
+        Blade::directive('endpush', function () {
+            return "<?php
+                echo '</div>';
+
+                \$__env->stopPush();
+            ?>";
+        });    
+
         Blade::directive('this', [LivewireBladeDirectives::class, 'this']);
         Blade::directive('entangle', [LivewireBladeDirectives::class, 'entangle']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
@@ -309,6 +334,7 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerFeatures()
     {
         Features\SupportEvents::init();
+        Features\SupportStacks::init();
         Features\SupportLocales::init();
         Features\SupportChildren::init();
         Features\SupportRedirects::init();
