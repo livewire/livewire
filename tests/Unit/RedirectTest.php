@@ -132,6 +132,37 @@ class RedirectTest extends TestCase
         $this->assertEquals(route('foo'), $component->payload['effects']['redirect']);
     }
 
+    /** @test */
+    public function skip_render_on_redirect_by_default()
+    {
+        $component = Livewire::test(SkipsRenderOnRedirect::class);
+
+        $this->assertEquals('/local', $component->payload['effects']['redirect']);
+        $this->assertNull($component->payload['effects']['html']);
+    }
+
+    /** @test */
+    public function dont_skip_render_on_redirect_if_config_set()
+    {
+        config()->set('livewire.render_on_redirect', true);
+
+        $component = Livewire::test(SkipsRenderOnRedirect::class);
+
+        $this->assertEquals('/local', $component->payload['effects']['redirect']);
+        $this->assertStringContainsString('Render has run', $component->payload['effects']['html']);
+    }
+
+    /** @test */
+    public function manually_override_dont_skip_render_on_redirect_using_skip_render_method()
+    {
+        config()->set('livewire.render_on_redirect', true);
+
+        $component = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
+
+        $this->assertEquals('/local', $component->payload['effects']['redirect']);
+        $this->assertNull($component->payload['effects']['html']);
+    }
+
     protected function registerNamedRoute()
     {
         Route::get('foo', function () {
@@ -215,5 +246,40 @@ class TriggersRedirectOnMountStub extends Component
     public function render()
     {
         return app('view')->make('null-view');
+    }
+}
+
+class SkipsRenderOnRedirect extends Component
+{
+    public function mount()
+    {
+        return $this->redirect('/local');
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+<div>
+    Render has run
+</div>
+HTML;
+    }
+}
+
+class RenderOnRedirectWithSkipRenderMethod extends Component
+{
+    public function mount()
+    {
+        $this->skipRender();
+        return $this->redirect('/local');
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+<div>
+    Render has run
+</div>
+HTML;
     }
 }
