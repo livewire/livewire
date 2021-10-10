@@ -448,4 +448,11 @@ HTML;
     {
         return $this->shouldDisableBackButtonCache;
     }
+
+    public function flushState()
+    {
+        $this->shouldDisableBackButtonCache = false;
+
+        $this->dispatch('flush-state');
+    }
 }

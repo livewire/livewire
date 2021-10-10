@@ -28,6 +28,10 @@ class SupportActionReturns
 
             $response->effects['returns'] = $this->returnsByIdAndAction[$component->id];
         });
+
+        Livewire::listen('flush-state', function() {
+            $this->returnsByIdAndAction = [];
+        });
     }
 
     function valueIsntAFileResponse($value)
