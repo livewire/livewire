@@ -169,6 +169,8 @@ trait ValidatesInput
 
         if ($this->withValidatorCallback) {
             call_user_func($this->withValidatorCallback, $validator);
+
+            $this->withValidatorCallback = null;
         }
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
@@ -219,6 +221,8 @@ trait ValidatesInput
 
         if ($this->withValidatorCallback) {
             call_user_func($this->withValidatorCallback, $validator);
+
+            $this->withValidatorCallback = null;
         }
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
