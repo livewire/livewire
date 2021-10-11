@@ -89,6 +89,18 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
     }
 
     /** @test */
+    public function a_support_collection_of_models_can_be_preserved_as_a_public_property()
+    {
+        ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
+        ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
+
+        $models = ModelForSerialization::all()->toBase();
+
+        Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models])
+            ->assertSet('models', $models);
+    }
+
+    /** @test */
     public function a_sorted_eloquent_model_collection_can_be_set_as_a_public_property()
     {
         ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
