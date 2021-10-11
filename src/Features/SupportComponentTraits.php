@@ -90,5 +90,9 @@ class SupportComponentTraits
                 ImplicitlyBoundMethod::call(app(), $method);
             }
         });
+
+        Livewire::listen('flush-state', function() {
+            $this->componentIdMethodMap = [];
+        });
     }
 }
