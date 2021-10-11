@@ -26,7 +26,7 @@ class LivewireAssetsDirectiveTest extends TestCase
     public function livewire_js_should_use_configured_app_url()
     {
         config()->set('app.debug', true);
-        config()->set('app.url', 'https://foo.com');
+        config()->set('livewire.app_url', 'https://foo.com');
 
         $this->assertStringContainsString(
             '<script src="/livewire/livewire.js?',
