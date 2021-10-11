@@ -21,5 +21,9 @@ class SupportStacks
         Livewire::listen('component.dehydrate.subsequent', function ($component, $response) {
             $response->effects['forStack'] = $this->forStack;
         });
+
+        Livewire::listen('flush-state', function() {
+            $this->forStack = [];
+        });
     }
 }
