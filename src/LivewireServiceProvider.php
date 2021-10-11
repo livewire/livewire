@@ -281,36 +281,18 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
-        Blade::directive('push', function ($expression) {
-            return "<?php
-                \$things = [{$expression}];
-
-                \$name = \$things[0];
-                \$content = null;
-                if (isset(\$things[1])) \$content = \$things[1];
-
-                if (\$content) {
-                    \$__env->startPush(\$name, '<div livewire=\"'.\$this->id.'\">'.\$content.'</div>');
-                } else {
-                    \$__env->startPush(\$name);
-                    echo '<div livewire=\"'.\$this->id.'\">';
-                }
-            ?>";
-        });    
-
-        Blade::directive('endpush', function () {
-            return "<?php
-                echo '</div>';
-
-                \$__env->stopPush();
-            ?>";
-        });    
-
         Blade::directive('this', [LivewireBladeDirectives::class, 'this']);
         Blade::directive('entangle', [LivewireBladeDirectives::class, 'entangle']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
         Blade::directive('livewireStyles', [LivewireBladeDirectives::class, 'livewireStyles']);
         Blade::directive('livewireScripts', [LivewireBladeDirectives::class, 'livewireScripts']);
+        Blade::directive('stack', [LivewireBladeDirectives::class, 'stack']);
+        Blade::directive('once', [LivewireBladeDirectives::class, 'once']);
+        Blade::directive('endonce', [LivewireBladeDirectives::class, 'endonce']);
+        Blade::directive('push', [LivewireBladeDirectives::class, 'push']);
+        Blade::directive('endpush', [LivewireBladeDirectives::class, 'endpush']);
+        Blade::directive('prepend', [LivewireBladeDirectives::class, 'prepend']);
+        Blade::directive('endprepend', [LivewireBladeDirectives::class, 'endprepend']);
     }
 
     protected function registerViewCompilerEngine()

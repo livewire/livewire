@@ -8,20 +8,23 @@ use Livewire\Component as BaseComponent;
 
 class ChildComponent extends BaseComponent
 {
-    public function mount()
-    {
-        
-    }
-
     public function render()
     {
         return <<<'HTML'
 <div>
-    The Child
+    The Child component
 </div>
 
 @once
-    @push('scripts', 'yo')
+    @push('scripts')
+        <div dusk="child-stack-push">From child push</div>
+    @endpush
+@endonce
+
+@once
+    @prepend('scripts')
+        <div dusk="child-stack-prepend">From child prepend</div>
+    @endprepend
 @endonce
 HTML;
     }

@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Str;
+
 class LivewireBladeDirectives
 {
     public static function this()
@@ -56,5 +58,115 @@ if (! isset(\$_instance)) {
 echo \$html;
 ?>
 EOT;
+    }
+
+    public static function stack($name, $default = '') {
+        return "
+            <template livewire-stack=\"<?php echo {$name}; ?>\"></template>
+            <?php echo \$__env->yieldPushContent({$name}, ${default}); ?>
+            <template livewire-end-stack=\"<?php echo {$name}; ?>\"></template>
+        ";
+    }
+
+    public static function once($id = null) {
+        $id = $id ?: "'".(string) Str::uuid()."'";
+
+        return "<?php
+            if (isset(\$_instance)) \$_started_once = true;
+
+            if (! \$__env->hasRenderedOnce({$id})): \$__env->markAsRenderedOnce({$id});
+        ?>";
+    }
+
+    public static function endonce() {
+        return "<?php
+            endif;
+
+            if (isset(\$_instance) && isset(\$_started_once)) unset(\$_started_once);
+        ?>";
+    }
+
+    public static function push($name, $content = '') {
+        return "<?php
+            if (isset(\$_instance)) {
+                \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
+
+                \$__env->startPush({$name}, {$content});
+
+                \$_push_name = {$name};
+
+                ob_start();
+
+                echo '<template livewire-stack-key=\"'.\$_key.'\"></template>';
+
+                unset(\$_key);
+            } else {
+                \$__env->startPush({$name}, {$content});
+            }
+        ?>";
+    }
+
+    public static function prepend($name, $content = '') {
+        return "<?php
+            if (isset(\$_instance)) {
+                \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
+
+                \$__env->startPrepend({$name}, {$content});
+
+                \$_push_name = {$name};
+
+                ob_start();
+
+                echo '<template livewire-stack-key=\"'.\$_key.'\"></template>';
+
+                unset(\$_key);
+            } else {
+                \$__env->startPrepend({$name}, {$content});
+            }
+        ?>";
+    }
+
+    public static function endpush() {
+        return "<?php
+            if (isset(\$_instance)) {
+                \$__contents = ob_get_clean();
+                
+                \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
+                
+                \$_instance->addToStack(\$_push_name, 'push', \$__contents, \$_key);
+
+                echo \$__contents;
+                unset(\$__contents);
+
+                unset(\$_key);
+                unset(\$_push_name);
+
+                \$__env->stopPush();
+            } else {
+                \$__env->stopPush();
+            }
+        ?>";
+    }
+
+    public static function endprepend() {
+        return "<?php
+            if (isset(\$_instance)) {
+                \$__contents = ob_get_clean();
+                
+                \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
+                
+                \$_instance->addToStack(\$_push_name, 'prepend', \$__contents, \$_key);
+
+                echo \$__contents;
+                unset(\$__contents);
+
+                unset(\$_key);
+                unset(\$_push_name);
+
+                \$__env->stopPrepend();
+            } else {
+                \$__env->stopPrepend();
+            }
+        ?>";
     }
 }

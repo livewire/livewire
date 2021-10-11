@@ -32,7 +32,8 @@ abstract class Component
     protected $computedPropertyCache = [];
     protected $shouldSkipRender = false;
     protected $preRenderedView;
-
+    protected $forStack = [];
+    
     public function __construct($id = null)
     {
         $this->id = $id ?? str()->random(20);
@@ -258,6 +259,21 @@ abstract class Component
                 unset($this->computedPropertyCache[$i]);
             }
         });
+    }
+
+    public function addToStack($stack, $type, $contents, $key = null)
+    {
+        $this->forStack[] = [
+            'id' => $key ?: $this->id,
+            'stack' => $stack,
+            'type' => $type,
+            'contents' => $contents,
+        ];
+    }
+
+    public function getForStack()
+    {
+        return $this->forStack;
     }
 
     public function __get($property)

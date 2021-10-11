@@ -22,8 +22,14 @@ class Component extends BaseComponent
 
 @once
     @push('scripts')
-        foo
+        <div dusk="parent-stack-push">From parent push</div>
     @endpush
+@endonce
+
+@once
+    @prepend('scripts')
+        <div dusk="parent-stack-prepend">From parent prepend</div>
+    @endprepend
 @endonce
 HTML;
     }
