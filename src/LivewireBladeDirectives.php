@@ -21,7 +21,7 @@ EOT;
         return <<<EOT
 <?php
     if (is_object({$expression}) || is_array({$expression})) {
-        echo "JSON.parse('".json_encode({$expression}, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)."')";
+        echo "atob('".base64_encode(json_encode({$expression}))."')";
     } elseif (is_string({$expression})) {
         echo "'".str_replace("'", "\'", {$expression})."'";
     } else {
