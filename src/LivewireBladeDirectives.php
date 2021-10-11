@@ -16,6 +16,21 @@ class LivewireBladeDirectives
 EOT;
     }
 
+    public static function js($expression)
+    {
+        return <<<EOT
+<?php
+    if (is_object({$expression}) || is_array({$expression})) {
+        echo "JSON.parse('".json_encode({$expression}, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)."')";
+    } elseif (is_string({$expression})) {
+        echo "'".str_replace("'", "\'", {$expression})."'";
+    } else {
+        echo json_encode({$expression});
+    }
+?>
+EOT;
+    }
+
     public static function livewireStyles($expression)
     {
         return '{!! \Livewire\Livewire::styles('.$expression.') !!}';

@@ -281,6 +281,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
+        Blade::directive('js', [LivewireBladeDirectives::class, 'js']);
         Blade::directive('this', [LivewireBladeDirectives::class, 'this']);
         Blade::directive('entangle', [LivewireBladeDirectives::class, 'entangle']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
