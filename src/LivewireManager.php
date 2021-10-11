@@ -221,7 +221,7 @@ HTML;
 
         $assetsUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
 
-        $appUrl = config('app.url')
+        $appUrl = config('livewire.app_url')
             ?: rtrim($options['app_url'] ?? '', '/')
             ?: $assetsUrl;
 
