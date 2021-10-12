@@ -104,7 +104,7 @@ EOT;
     public static function push($name, $content = '') {
         return "<?php
             if (isset(\$_instance)) {
-                \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
+                \$_key = isset(\$_started_once) ? \$_instance->getName() : \$_instance->id;
 
                 \$__env->startPush({$name}, {$content});
 
@@ -124,7 +124,7 @@ EOT;
     public static function prepend($name, $content = '') {
         return "<?php
             if (isset(\$_instance)) {
-                \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
+                \$_key = isset(\$_started_once) ? \$_instance->getName() : \$_instance->id;
 
                 \$__env->startPrepend({$name}, {$content});
 

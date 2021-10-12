@@ -264,7 +264,7 @@ abstract class Component
     public function addToStack($stack, $type, $contents, $key = null)
     {
         $this->forStack[] = [
-            'id' => $key ?: $this->id,
+            'key' => $key ?: $this->id,
             'stack' => $stack,
             'type' => $type,
             'contents' => $contents,
