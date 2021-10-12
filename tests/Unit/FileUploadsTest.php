@@ -612,6 +612,23 @@ class FileUploadsTest extends TestCase
         $this->assertStringStartsWith('livewire-file:', $component->get('obj.file_uploads'));
     }
 
+    /** @test */
+    public function it_returns_temporary_path_set_by_livewire()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image($fileName = 'avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('upload', $fileName)
+            ->viewData('photo');
+
+        $this->assertEquals(
+            FileUploadConfiguration::storage()->path(FileUploadConfiguration::directory()),
+            $photo->getPath()
+        );
+    }
 }
 
 class DummyMiddleware
