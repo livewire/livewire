@@ -150,8 +150,6 @@ EOT;
             if (isset(\$_instance)) {
                 \$__contents = ob_get_clean();
 
-
-
                 \$_instance->addToStack(\$__stack_name, 'push', \$__contents, \$__stack_item_key);
 
                 echo \$__contents;
@@ -171,8 +169,6 @@ EOT;
         return "<?php
             if (isset(\$_instance)) {
                 \$__contents = ob_get_clean();
-
-
 
                 \$_instance->addToStack(\$__stack_name, 'prepend', \$__contents, \$__stack_item_key);
 
