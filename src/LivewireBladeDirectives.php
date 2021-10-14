@@ -76,9 +76,11 @@ EOT;
     }
 
     public static function stack($name, $default = '') {
+        $expression = rtrim("{$name}, {$default}", ', ');
+
         return "
             <template livewire-stack=\"<?php echo {$name}; ?>\"></template>
-            <?php echo \$__env->yieldPushContent({$name}, ${default}); ?>
+            <?php echo \$__env->yieldPushContent($expression); ?>
             <template livewire-end-stack=\"<?php echo {$name}; ?>\"></template>
         ";
     }
@@ -102,11 +104,13 @@ EOT;
     }
 
     public static function push($name, $content = '') {
+        $expression = rtrim("{$name}, {$content}", ', ');
+
         return "<?php
             if (isset(\$_instance)) {
                 \$_key = isset(\$_started_once) ? \$_instance->getName() : \$_instance->id;
 
-                \$__env->startPush({$name}, {$content});
+                \$__env->startPush({$expression});
 
                 \$_push_name = {$name};
 
@@ -116,17 +120,19 @@ EOT;
 
                 unset(\$_key);
             } else {
-                \$__env->startPush({$name}, {$content});
+                \$__env->startPush({$expression});
             }
         ?>";
     }
 
     public static function prepend($name, $content = '') {
+        $expression = rtrim("{$name}, {$content}", ', ');
+
         return "<?php
             if (isset(\$_instance)) {
                 \$_key = isset(\$_started_once) ? \$_instance->getName() : \$_instance->id;
 
-                \$__env->startPrepend({$name}, {$content});
+                \$__env->startPrepend({$expression});
 
                 \$_push_name = {$name};
 
@@ -136,7 +142,7 @@ EOT;
 
                 unset(\$_key);
             } else {
-                \$__env->startPrepend({$name}, {$content});
+                \$__env->startPrepend({$expression});
             }
         ?>";
     }
@@ -145,9 +151,9 @@ EOT;
         return "<?php
             if (isset(\$_instance)) {
                 \$__contents = ob_get_clean();
-                
+
                 \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
-                
+
                 \$_instance->addToStack(\$_push_name, 'push', \$__contents, \$_key);
 
                 echo \$__contents;
@@ -167,9 +173,9 @@ EOT;
         return "<?php
             if (isset(\$_instance)) {
                 \$__contents = ob_get_clean();
-                
+
                 \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
-                
+
                 \$_instance->addToStack(\$_push_name, 'prepend', \$__contents, \$_key);
 
                 echo \$__contents;
