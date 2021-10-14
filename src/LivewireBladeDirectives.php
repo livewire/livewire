@@ -89,7 +89,7 @@ EOT;
         $id = $id ?: "'".(string) Str::uuid()."'";
 
         return "<?php
-            if (isset(\$_instance)) \$_started_once = true;
+            if (isset(\$_instance)) \$__stack_once = true;
 
             if (! \$__env->hasRenderedOnce({$id})): \$__env->markAsRenderedOnce({$id});
         ?>";
@@ -99,26 +99,25 @@ EOT;
         return "<?php
             endif;
 
-            if (isset(\$_instance) && isset(\$_started_once)) unset(\$_started_once);
+            if (isset(\$_instance) && isset(\$__stack_once)) unset(\$__stack_once);
         ?>";
     }
 
     public static function push($name, $content = '') {
+        $randomKey = Str::random(9);
         $expression = rtrim("{$name}, {$content}", ', ');
 
         return "<?php
             if (isset(\$_instance)) {
-                \$_key = isset(\$_started_once) ? \$_instance->getName() : \$_instance->id;
+                \$__stack_item_key = isset(\$__stack_once) ? crc32(\$__path) : '{$randomKey}';
 
                 \$__env->startPush({$expression});
 
-                \$_push_name = {$name};
+                \$__stack_name = {$name};
 
                 ob_start();
 
-                echo '<template livewire-stack-key=\"'.\$_key.'\"></template>';
-
-                unset(\$_key);
+                echo '<template livewire-stack-key=\"'.\$__stack_item_key.'\"></template>';
             } else {
                 \$__env->startPush({$expression});
             }
@@ -126,21 +125,20 @@ EOT;
     }
 
     public static function prepend($name, $content = '') {
+        $randomKey = Str::random(9);
         $expression = rtrim("{$name}, {$content}", ', ');
 
         return "<?php
             if (isset(\$_instance)) {
-                \$_key = isset(\$_started_once) ? \$_instance->getName() : \$_instance->id;
+                \$__stack_item_key = isset(\$__stack_once) ? crc32(\$__path) : '{$randomKey}';
 
                 \$__env->startPrepend({$expression});
 
-                \$_push_name = {$name};
+                \$__stack_name = {$name};
 
                 ob_start();
 
-                echo '<template livewire-stack-key=\"'.\$_key.'\"></template>';
-
-                unset(\$_key);
+                echo '<template livewire-stack-key=\"'.\$__stack_item_key.'\"></template>';
             } else {
                 \$__env->startPrepend({$expression});
             }
@@ -152,15 +150,15 @@ EOT;
             if (isset(\$_instance)) {
                 \$__contents = ob_get_clean();
 
-                \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
 
-                \$_instance->addToStack(\$_push_name, 'push', \$__contents, \$_key);
+
+                \$_instance->addToStack(\$__stack_name, 'push', \$__contents, \$__stack_item_key);
 
                 echo \$__contents;
                 unset(\$__contents);
 
-                unset(\$_key);
-                unset(\$_push_name);
+                unset(\$__stack_item_key);
+                unset(\$__stack_name);
 
                 \$__env->stopPush();
             } else {
@@ -174,15 +172,15 @@ EOT;
             if (isset(\$_instance)) {
                 \$__contents = ob_get_clean();
 
-                \$_key = isset(\$_started_once) ? \$_instance->getName() : null;
 
-                \$_instance->addToStack(\$_push_name, 'prepend', \$__contents, \$_key);
+
+                \$_instance->addToStack(\$__stack_name, 'prepend', \$__contents, \$__stack_item_key);
 
                 echo \$__contents;
                 unset(\$__contents);
 
-                unset(\$_key);
-                unset(\$_push_name);
+                unset(\$__stack_item_key);
+                unset(\$__stack_name);
 
                 \$__env->stopPrepend();
             } else {

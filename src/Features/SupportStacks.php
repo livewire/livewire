@@ -12,9 +12,7 @@ class SupportStacks
 
     function __construct()
     {
-        // We only want to get pushed stacks from new Livewire components.
-        // Existing ones (that use .subsequent) have already rendered.
-        Livewire::listen('component.dehydrate.initial', function ($component, $response) {
+        Livewire::listen('component.dehydrate', function ($component, $response) {
             $this->forStack = array_merge($this->forStack, $component->getForStack());
         });
 

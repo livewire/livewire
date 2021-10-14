@@ -13,7 +13,10 @@ class Component extends BaseComponent
     {
         return <<<'HTML'
 <div>
-    <button wire:click="$toggle('show')" dusk="show-child">Show Child</button>
+    <button wire:click="$toggle('show')" dusk="toggle-child">Toggle Child</button>
+    <button wire:click="$refresh" dusk="refresh-parent">Refresh</button>
+
+    <script>window.stack_output = []</script>
 
     @if ($show)
         @livewire(\Tests\Browser\Stacks\ChildComponent::class)
@@ -21,14 +24,14 @@ class Component extends BaseComponent
 </div>
 
 @once
-    @push('scripts')
-        <div dusk="parent-stack-push">From parent push</div>
+    @push('styles')
+        <script>window.stack_output.push('parent-styles')</script>
     @endpush
 @endonce
 
 @once
     @prepend('scripts')
-        <div dusk="parent-stack-prepend">From parent prepend</div>
+        <script>window.stack_output.push('parent-scripts')</script>
     @endprepend
 @endonce
 HTML;

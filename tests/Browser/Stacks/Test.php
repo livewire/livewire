@@ -11,15 +11,32 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
-                ->assertPresent('@parent-stack-push')
-                ->assertPresent('@parent-stack-prepend')
-                ->assertNotPresent('@child-stack-push')
-                ->assertNotPresent('@child-stack-prepend')
-                ->waitForLivewire()->click('@show-child')
-                ->assertPresent('@parent-stack-push')
-                ->assertPresent('@parent-stack-prepend')
-                ->assertPresent('@child-stack-push')
-                ->assertPresent('@child-stack-prepend')
+                ->assertScript('JSON.stringify(window.stack_output)', json_encode([
+                    'parent-scripts',
+                ]))
+                ->waitForLivewire()->click('@toggle-child')
+                ->assertScript('JSON.stringify(window.stack_output)', json_encode([
+                    'parent-scripts', 'child-scripts',
+                ]))
+                ->waitForLivewire()->click('@toggle-child')
+                ->waitForLivewire()->click('@toggle-child')
+                ->assertScript('JSON.stringify(window.stack_output)', json_encode([
+                    'parent-scripts', 'child-scripts',
+                ]))
+                ->waitForLivewire()->click('@refresh-parent')
+                ->assertScript('JSON.stringify(window.stack_output)', json_encode([
+                    'parent-scripts', 'child-scripts',
+                ]))
+                ->waitForLivewire()->click('@toggle-blade-child')
+                ->assertScript('JSON.stringify(window.stack_output)', json_encode([
+                    'parent-scripts', 'child-scripts', 'child-blade-scripts', 'child-blade-scripts-no-once', 'child-blade-scripts-no-once',
+                ]))
+                ->waitForLivewire()->click('@toggle-blade-child')
+                ->waitForLivewire()->click('@toggle-blade-child')
+                ->waitForLivewire()->click('@refresh-child')
+                ->assertScript('JSON.stringify(window.stack_output)', json_encode([
+                    'parent-scripts', 'child-scripts', 'child-blade-scripts', 'child-blade-scripts-no-once', 'child-blade-scripts-no-once',
+                ]))
             ;
         });
     }
