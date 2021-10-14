@@ -52,7 +52,7 @@ class FileUploadConfiguration
         return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 'gcs';
     }
 
-    protected static function directory()
+    public static function directory()
     {
         return Util::normalizeRelativePath(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
     }
