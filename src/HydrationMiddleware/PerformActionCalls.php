@@ -3,6 +3,7 @@
 namespace Livewire\HydrationMiddleware;
 
 use Livewire\Livewire;
+use Throwable;
 use function Livewire\str;
 
 use Illuminate\Validation\ValidationException;
@@ -41,6 +42,14 @@ class PerformActionCalls implements HydrationMiddleware
             Livewire::dispatch('failed-validation', $e->validator, $unHydratedInstance);
 
             $unHydratedInstance->setErrorBag($e->validator->errors());
+        } catch (Throwable $e) {
+            $exceptionClassName = str(get_class($e))->split('/\\\/')->last();
+
+            if (method_exists($unHydratedInstance, $method = "handle$exceptionClassName")) {
+                $unHydratedInstance->$method($e);
+            } else {
+                throw $e;
+            }
         }
     }
 
