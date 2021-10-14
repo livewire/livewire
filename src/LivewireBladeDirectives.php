@@ -76,9 +76,11 @@ EOT;
     }
 
     public static function stack($name, $default = '') {
+        $expression = rtrim("{$name}, {$default}", ', ');
+
         return "
             <template livewire-stack=\"<?php echo {$name}; ?>\"></template>
-            <?php echo \$__env->yieldPushContent({$name}, ${default}); ?>
+            <?php echo \$__env->yieldPushContent($expression); ?>
             <template livewire-end-stack=\"<?php echo {$name}; ?>\"></template>
         ";
     }
@@ -103,12 +105,13 @@ EOT;
 
     public static function push($name, $content = '') {
         $randomKey = Str::random(9);
+        $expression = rtrim("{$name}, {$content}", ', ');
 
         return "<?php
             if (isset(\$_instance)) {
                 \$__stack_item_key = isset(\$__stack_once) ? crc32(\$__path) : '{$randomKey}';
 
-                \$__env->startPush({$name}, {$content});
+                \$__env->startPush({$expression});
 
                 \$__stack_name = {$name};
 
@@ -116,19 +119,20 @@ EOT;
 
                 echo '<template livewire-stack-key=\"'.\$__stack_item_key.'\"></template>';
             } else {
-                \$__env->startPush({$name}, {$content});
+                \$__env->startPush({$expression});
             }
         ?>";
     }
 
     public static function prepend($name, $content = '') {
         $randomKey = Str::random(9);
+        $expression = rtrim("{$name}, {$content}", ', ');
 
         return "<?php
             if (isset(\$_instance)) {
                 \$__stack_item_key = isset(\$__stack_once) ? crc32(\$__path) : '{$randomKey}';
 
-                \$__env->startPrepend({$name}, {$content});
+                \$__env->startPrepend({$expression});
 
                 \$__stack_name = {$name};
 
@@ -136,7 +140,7 @@ EOT;
 
                 echo '<template livewire-stack-key=\"'.\$__stack_item_key.'\"></template>';
             } else {
-                \$__env->startPrepend({$name}, {$content});
+                \$__env->startPrepend({$expression});
             }
         ?>";
     }
@@ -145,7 +149,7 @@ EOT;
         return "<?php
             if (isset(\$_instance)) {
                 \$__contents = ob_get_clean();
-                
+
                 \$_instance->addToStack(\$__stack_name, 'push', \$__contents, \$__stack_item_key);
 
                 echo \$__contents;
@@ -165,7 +169,7 @@ EOT;
         return "<?php
             if (isset(\$_instance)) {
                 \$__contents = ob_get_clean();
-                
+
                 \$_instance->addToStack(\$__stack_name, 'prepend', \$__contents, \$__stack_item_key);
 
                 echo \$__contents;
