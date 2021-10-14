@@ -106,7 +106,7 @@ class LifecycleManager
             try {
                 ImplicitlyBoundMethod::call(app(), [$this->instance, 'mount'], $params);
             } catch (ValidationException $e) {
-                Livewire::dispatch('failed-validation', $e->validator);
+                Livewire::dispatch('failed-validation', $e->validator, $this->instance);
 
                 $this->instance->setErrorBag($e->validator->errors());
             }
