@@ -76,6 +76,13 @@ class LifecycleManager
         static::$initialDehydrationMiddleware += $callables;
     }
 
+    public function boot()
+    {
+        Livewire::dispatch('component.boot', $this->instance);
+
+        return $this;
+    }
+
     public function hydrate()
     {
         foreach (static::$hydrationMiddleware as $class) {
