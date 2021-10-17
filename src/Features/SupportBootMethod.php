@@ -11,7 +11,7 @@ class SupportBootMethod
 
     function __construct()
     {
-        Livewire::listen('component.hydrate', function ($component, $response) {
+        Livewire::listen('component.boot', function ($component) {
             $component->bootIfNotBooted();
         });
     }

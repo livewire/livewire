@@ -14,7 +14,7 @@ class BootComponentTest extends TestCase
         Livewire::test(ComponentWithBootMethod::class)
             ->assertSet('memo', 'bootmount')
             ->call('$refresh')
-            ->assertSet('memo', 'bootmountboothydrate');
+            ->assertSet('memo', 'boothydrate');
     }
 
     /** @test */
@@ -23,7 +23,7 @@ class BootComponentTest extends TestCase
         Livewire::test(ComponentWithBootTrait::class)
             ->assertSet('memo', 'boottraitinitializemount')
             ->call('$refresh')
-            ->assertSet('memo', 'boottraitinitializemountboottraitinitializehydrate');
+            ->assertSet('memo', 'boottraitinitializehydrate');
     }
 
     /** @test */
@@ -32,31 +32,36 @@ class BootComponentTest extends TestCase
         Livewire::test(ComponentWithBootMethodDI::class)
             ->assertSet('memo', 'boottrait')
             ->call('$refresh')
-            ->assertSet('memo', 'boottraitboottrait');
+            ->assertSet('memo', 'boottrait');
     }
 }
 
 class ComponentWithBootMethod extends Component
 {
+    // Use protected property to record all memo's
+    // as hydrating memo wipes out changes from boot
+    protected $_memo = '';
     public $memo = '';
+
+    public function boot()
+    {
+        $this->_memo .= 'boot';
+    }
 
     public function mount()
     {
-        $this->memo .= 'mount';
+        $this->_memo .= 'mount';
     }
 
     public function hydrate()
     {
-        $this->memo .= 'hydrate';
-    }
-
-    public function boot()
-    {
-        $this->memo .= 'boot';
+        $this->_memo .= 'hydrate';
     }
 
     public function render()
     {
+        $this->memo = $this->_memo;
+
         return view('null-view');
     }
 }
@@ -65,45 +70,51 @@ class ComponentWithBootTrait extends Component
 {
     use BootMethodTrait;
 
+    // Use protected property to record all memo's
+    // as hydrating memo wipes out changes from boot
+    protected $_memo = '';
     public $memo = '';
+
+    public function boot()
+    {
+        $this->_memo .= 'boot';
+    }
 
     public function mount()
     {
-        $this->memo .= 'mount';
+        $this->_memo .= 'mount';
     }
 
     public function hydrate()
     {
-        $this->memo .= 'hydrate';
-    }
-
-    public function boot()
-    {
-        $this->memo .= 'boot';
+        $this->_memo .= 'hydrate';
     }
 
     public function render()
     {
+        $this->memo = $this->_memo;
         return view('null-view');
     }
 }
 
-trait BootMethodTrait {
+trait BootMethodTrait
+{
     public function bootBootMethodTrait()
     {
-        $this->memo .= 'trait';
+        $this->_memo .= 'trait';
     }
 
     public function initializeBootMethodTrait()
     {
-        $this->memo .= 'initialize';
+        $this->_memo .= 'initialize';
     }
 }
 
-trait BootMethodTraitWithDI {
+trait BootMethodTraitWithDI
+{
     public function bootBootMethodTraitWithDI(Stringable $string)
     {
-        $this->memo .= $string->append('trait');
+        $this->_memo .= $string->append('trait');
     }
 }
 
@@ -111,15 +122,19 @@ class ComponentWithBootMethodDI extends Component
 {
     use BootMethodTraitWithDI;
 
+    // Use protected property to record all memo's
+    // as hydrating memo wipes out changes from boot
+    protected $_memo = '';
     public $memo = '';
 
     public function boot(Stringable $string)
     {
-        $this->memo .= $string->append('boot');
+        $this->_memo .= $string->append('boot');
     }
 
     public function render()
     {
+        $this->memo = $this->_memo;
         return view('null-view');
     }
 }

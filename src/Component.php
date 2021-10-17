@@ -66,6 +66,7 @@ abstract class Component
         }
 
         $manager = LifecycleManager::fromInitialInstance($instance)
+            ->boot()
             ->initialHydrate()
             ->mount($componentParams)
             ->renderToView();
@@ -104,10 +105,6 @@ abstract class Component
     public function initializeTraits()
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
-            if (method_exists($class, $method = 'boot'.class_basename($trait))) {
-                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
-            }
-
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
                 $this->{$method}();
             }

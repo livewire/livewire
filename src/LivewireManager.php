@@ -99,6 +99,7 @@ class LivewireManager
         }
 
         return LifecycleManager::fromInitialRequest($name, $id)
+            ->boot()
             ->initialHydrate()
             ->mount($params)
             ->renderToView()
