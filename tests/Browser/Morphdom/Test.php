@@ -57,4 +57,24 @@ class Test extends TestCase
             ;
         });
     }
+
+    /** @test */
+    public function it_does_not_move_elements_from_a_child_component()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, ParentComponent::class)
+                ->assertSeeIn('@parent-numbers', 1)
+                ->assertSeeIn('@child-numbers', 1)
+                ->assertSeeIn('@parent-numbers', 2)
+                ->assertSeeIn('@child-numbers', 2)
+                ->waitForLivewire()->click('@add-number')
+                ->assertSeeIn('@parent-numbers', 1)
+                ->assertSeeIn('@child-numbers', 1)
+                ->assertSeeIn('@parent-numbers', 2)
+                ->assertSeeIn('@child-numbers', 2)
+                ->assertSeeIn('@parent-numbers', 3)
+                ->assertSeeIn('@child-numbers', 3)
+                ;
+        });
+    }
 }
