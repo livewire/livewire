@@ -7,6 +7,7 @@ use function count;
 use function explode;
 use function Livewire\str;
 use Livewire\ObjectPrybar;
+use Livewire\Wireable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
@@ -306,6 +307,7 @@ trait ValidatesInput
     {
         return collect($data)->map(function ($value) {
             if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
+            else if ($value instanceof Wireable) return $value->toLivewire();
 
             return $value;
         })->all();
