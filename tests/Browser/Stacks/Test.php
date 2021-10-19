@@ -7,7 +7,7 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public function test_conditionally_loaded_component_can_push_and_preppend_to_stack()
+    public function conditionally_loaded_component_can_push_and_preppend_to_stack()
     {
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
