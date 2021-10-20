@@ -41,7 +41,7 @@ class LivewireJsDirectiveTest extends TestCase
             'string' => '@js($data)',
             'data' => ['hey' => 'there'],
         ])
-            ->assertSee("atob('eyJoZXkiOiJ0aGVyZSJ9')", false);
+            ->assertSee("JSON.parse(atob('eyJoZXkiOiJ0aGVyZSJ9'))", false);
     }
 
     /** @test */
@@ -51,7 +51,7 @@ class LivewireJsDirectiveTest extends TestCase
             'string' => '@js($data)',
             'data' => ['hey', 'there'],
         ])
-            ->assertSee("atob('WyJoZXkiLCJ0aGVyZSJd')", false);
+            ->assertSee("JSON.parse(atob('WyJoZXkiLCJ0aGVyZSJd'))", false);
     }
 }
 
