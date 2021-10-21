@@ -14,6 +14,7 @@ import LoadingStates from '@/component/LoadingStates'
 import OfflineStates from '@/component/OfflineStates'
 import SyncBrowserHistory from '@/component/SyncBrowserHistory'
 import SupportAlpine from '@/component/SupportAlpine'
+import SupportStacks from '@/component/SupportStacks'
 
 class Livewire {
     constructor() {
@@ -116,6 +117,7 @@ monkeyPatchDomSetAttributeToAllowAtSymbols()
 
 SyncBrowserHistory()
 SupportAlpine()
+SupportStacks()
 FileDownloads()
 OfflineStates()
 LoadingStates()

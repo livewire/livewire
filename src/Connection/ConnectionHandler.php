@@ -9,6 +9,7 @@ abstract class ConnectionHandler
     public function handle($payload)
     {
         return LifecycleManager::fromSubsequentRequest($payload)
+            ->boot()
             ->hydrate()
             ->renderToView()
             ->dehydrate()

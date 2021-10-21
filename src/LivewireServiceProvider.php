@@ -281,11 +281,21 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
+        Blade::directive('js', [LivewireBladeDirectives::class, 'js']);
         Blade::directive('this', [LivewireBladeDirectives::class, 'this']);
         Blade::directive('entangle', [LivewireBladeDirectives::class, 'entangle']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
         Blade::directive('livewireStyles', [LivewireBladeDirectives::class, 'livewireStyles']);
         Blade::directive('livewireScripts', [LivewireBladeDirectives::class, 'livewireScripts']);
+
+        // Uncomment to get @stacks working in Livewire.
+        // Blade::directive('stack', [LivewireBladeDirectives::class, 'stack']);
+        // Blade::directive('once', [LivewireBladeDirectives::class, 'once']);
+        // Blade::directive('endonce', [LivewireBladeDirectives::class, 'endonce']);
+        // Blade::directive('push', [LivewireBladeDirectives::class, 'push']);
+        // Blade::directive('endpush', [LivewireBladeDirectives::class, 'endpush']);
+        // Blade::directive('prepend', [LivewireBladeDirectives::class, 'prepend']);
+        // Blade::directive('endprepend', [LivewireBladeDirectives::class, 'endprepend']);
     }
 
     protected function registerViewCompilerEngine()
@@ -309,6 +319,7 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerFeatures()
     {
         Features\SupportEvents::init();
+        Features\SupportStacks::init();
         Features\SupportLocales::init();
         Features\SupportChildren::init();
         Features\SupportRedirects::init();

@@ -20,7 +20,7 @@ class PerformEventEmissions implements HydrationMiddleware
                 $unHydratedInstance->fireEvent($event, $params, $id);
             }
         } catch (ValidationException $e) {
-            Livewire::dispatch('failed-validation', $e->validator);
+            Livewire::dispatch('failed-validation', $e->validator, $unHydratedInstance);
 
             $unHydratedInstance->setErrorBag($e->validator->errors());
         }

@@ -17,5 +17,9 @@ class Placeholder
         Livewire::listen('component.dehydrate', function ($component, $response) {
             //
         });
+
+        Livewire::listen('flush-state', function() {
+            //
+        });
     }
 }

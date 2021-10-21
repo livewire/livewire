@@ -57,6 +57,10 @@ class SupportBrowserHistory
 
             $this->getPathFromReferer($referer, $component, $response);
         });
+
+        Livewire::listen('flush-state', function() {
+            $this->mergedQueryParamsFromDehydratedComponents = [];
+        });
     }
 
     protected function getRouteFromReferer($referer)

@@ -13,13 +13,13 @@ class SupportComponentTraits
 
     function __construct()
     {
-        Livewire::listen('component.hydrate', function ($component) {
-            $component->initializeTraits();
-
+        Livewire::listen('component.boot', function ($component) {
             foreach (class_uses_recursive($component) as $trait) {
                 $hooks = [
+                    'boot',
                     'hydrate',
                     'mount',
+                    'booted',
                     'updating',
                     'updated',
                     'rendering',
@@ -36,6 +36,16 @@ class SupportComponentTraits
                 }
             }
 
+            $methods = $this->componentIdMethodMap[$component->id]['boot'] ?? [];
+
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method);
+            }
+        });
+
+        Livewire::listen('component.hydrate', function ($component) {
+            $component->initializeTraits();
+
             $methods = $this->componentIdMethodMap[$component->id]['hydrate'] ?? [];
 
             foreach ($methods as $method) {
@@ -48,6 +58,14 @@ class SupportComponentTraits
 
             foreach ($methods as $method) {
                 ImplicitlyBoundMethod::call(app(), $method, $params);
+            }
+        });
+
+        Livewire::listen('component.booted', function ($component, $request) {
+            $methods = $this->componentIdMethodMap[$component->id]['booted'] ?? [];
+
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method, [$request]);
             }
         });
 
@@ -89,6 +107,10 @@ class SupportComponentTraits
             foreach ($methods as $method) {
                 ImplicitlyBoundMethod::call(app(), $method);
             }
+        });
+
+        Livewire::listen('flush-state', function() {
+            $this->componentIdMethodMap = [];
         });
     }
 }

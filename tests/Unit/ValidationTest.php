@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
@@ -380,6 +381,28 @@ class ValidationTest extends TestCase
 
         $component->call('failFooOnCustomValidator')->assertHasErrors('plop');
     }
+
+    /** @test */
+    public function can_use_withvalidator_method()
+    {
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('runValidationWithClosure')->assertSet('count', 1);
+
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('runValidationWithThisMethod')->assertSet('count', 1);
+
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('runValidateOnlyWithClosure')->assertSet('count', 1);
+
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('runValidateOnlyWithThisMethod')->assertSet('count', 1);
+
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('clearWithValidatorAfterRunningValidateMethod')->assertSet('count', 1);
+
+        $component = Livewire::test(WithValidationMethod::class);
+        $component->assertSet('count', 0)->call('clearWithValidatorAfterRunningValidateOnlyMethod')->assertSet('count', 1);
+    }
 }
 
 class ForValidation extends Component
@@ -556,5 +579,86 @@ class ValueEqualsFoobar implements Rule
     public function message()
     {
         return '';
+    }
+}
+
+class WithValidationMethod extends Component
+{
+    public $foo = 'bar';
+
+    public $count = 0;
+
+    public function runValidationWithClosure()
+    {
+        $this->withValidator(function ($validator) {
+            $validator->after(function ($validator) {
+                $this->count++;
+            });
+        })->validate([
+            'foo' => 'required',
+        ]);
+    }
+
+    public function runValidateOnlyWithClosure()
+    {
+        $this->withValidator(function ($validator) {
+            $validator->after(function ($validator) {
+                $this->count++;
+            });
+        })->validateOnly('foo', [
+            'foo' => 'required',
+        ]);
+    }
+
+    public function runValidationWithThisMethod()
+    {
+        $this->withValidator([$this, 'doSomethingWithValidator'])->validate([
+            'foo' => 'required',
+        ]);
+    }
+
+    public function runValidateOnlyWithThisMethod()
+    {
+        $this->withValidator([$this, 'doSomethingWithValidator'])->validateOnly('foo', [
+            'foo' => 'required',
+        ]);
+    }
+
+    public function clearWithValidatorAfterRunningValidateMethod()
+    {
+        $this->withValidator(function ($validator) {
+            $validator->after(function ($validator) {
+                $this->count++;
+            });
+        })->validate([
+            'foo' => 'required',
+        ]);
+
+        $this->validate(['foo' => 'required']);
+    }
+
+    public function clearWithValidatorAfterRunningValidateOnlyMethod()
+    {
+        $this->withValidator(function ($validator) {
+            $validator->after(function ($validator) {
+                $this->count++;
+            });
+        })->validateOnly('foo', [
+            'foo' => 'required',
+        ]);
+
+        $this->validateOnly('foo', ['foo' => 'required']);
+    }
+
+    protected function doSomethingWithValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $this->count++;
+        });
+    }
+
+    public function render()
+    {
+        return app('view')->make('dump-errors');
     }
 }
