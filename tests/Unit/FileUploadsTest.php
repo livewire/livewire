@@ -13,7 +13,6 @@ use Livewire\FileUploadConfiguration;
 use Illuminate\Support\Facades\Storage;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
-use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 use function Livewire\str;
 
 class FileUploadsTest extends TestCase
@@ -25,17 +24,6 @@ class FileUploadsTest extends TestCase
 
         Livewire::test(NonFileUploadComponent::class)
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
-    }
-
-    /** @test */
-    public function s3_driver_only_supports_single_file_uploads()
-    {
-        config()->set('livewire.temporary_file_upload.disk', 's3');
-
-        $this->expectException(S3DoesntSupportMultipleFileUploads::class);
-
-        Livewire::test(FileUploadComponent::class)
-            ->set('photos', [UploadedFile::fake()->image('avatar.jpg')]);
     }
 
     /** @test */
@@ -165,6 +153,24 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function can_set_multiple_files_as_a_property_and_store_them()
     {
+        Storage::fake('avatars');
+
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photos', [$file1, $file2])
+            ->call('uploadMultiple', 'uploaded-avatar');
+
+        Storage::disk('avatars')->assertExists('uploaded-avatar1.png');
+        Storage::disk('avatars')->assertExists('uploaded-avatar2.png');
+    }
+
+    /** @test */
+    public function can_set_multiple_files_as_a_property_using_the_s3_driver_and_store_them()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 's3');
+
         Storage::fake('avatars');
 
         $file1 = UploadedFile::fake()->image('avatar1.jpg');
@@ -522,7 +528,7 @@ class FileUploadsTest extends TestCase
         $file4 = UploadedFile::fake()->image('avatar4.jpg');
 
         $component = Livewire::test(FileUploadComponent::class)
-                             ->set('photos', [$file1, $file2, $file3, $file4]);
+            ->set('photos', [$file1, $file2, $file3, $file4]);
 
         $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
 
@@ -542,9 +548,9 @@ class FileUploadsTest extends TestCase
         $file4 = UploadedFile::fake()->image('avatar4.jpg');
 
         $component = Livewire::test(FileUploadInArrayComponent::class)
-                             ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
-                             ->set('obj.first_name', 'john')
-                             ->set('obj.last_name', 'doe');
+            ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
+            ->set('obj.first_name', 'john')
+            ->set('obj.last_name', 'doe');
 
         $this->assertSame($component->get('obj.first_name'), 'john');
 
@@ -568,9 +574,9 @@ class FileUploadsTest extends TestCase
         $file4 = UploadedFile::fake()->image('avatar4.jpg');
 
         $component = Livewire::test(FileUploadInArrayComponent::class)
-                             ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
-                             ->set('obj.first_name', 'john')
-                             ->set('obj.last_name', 'doe');
+            ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
+            ->set('obj.first_name', 'john')
+            ->set('obj.last_name', 'doe');
 
         $tmpFiles = $component->viewData('obj')['file_uploads'];
 
@@ -595,9 +601,9 @@ class FileUploadsTest extends TestCase
         $file1 = UploadedFile::fake()->image('avatar1.jpg');
 
         $component = Livewire::test(FileUploadInArrayComponent::class)
-                             ->set('obj.file_uploads', $file1)
-                             ->set('obj.first_name', 'john')
-                             ->set('obj.last_name', 'doe');
+            ->set('obj.file_uploads', $file1)
+            ->set('obj.first_name', 'john')
+            ->set('obj.last_name', 'doe');
 
         $this->assertSame($component->get('obj.first_name'), 'john');
 
@@ -643,7 +649,10 @@ class NonFileUploadComponent extends Component
 {
     public $photo;
 
-    public function render() { return app('view')->make('null-view'); }
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
 }
 
 class FileUploadComponent extends Component
@@ -676,7 +685,7 @@ class FileUploadComponent extends Component
         $number = 1;
 
         foreach ($this->photos as $photo) {
-            $photo->storeAs('/', $baseName.$number++.'.png', $disk = 'avatars');
+            $photo->storeAs('/', $baseName . $number++ . '.png', $disk = 'avatars');
         }
     }
 
@@ -685,7 +694,7 @@ class FileUploadComponent extends Component
         $number = 1;
 
         foreach ($this->photosArray as $photo) {
-            $photo->storeAs('/', $baseName.$number++.'.png', $disk = 'avatars');
+            $photo->storeAs('/', $baseName . $number++ . '.png', $disk = 'avatars');
         }
     }
 
@@ -711,7 +720,8 @@ class FileUploadComponent extends Component
         ]);
     }
 
-    public function removePhoto($key) {
+    public function removePhoto($key)
+    {
         unset($this->photos[$key]);
     }
 
@@ -720,7 +730,10 @@ class FileUploadComponent extends Component
         $this->uploadErrored($name, null, false);
     }
 
-    public function render() { return app('view')->make('null-view'); }
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
 }
 
 class FileUploadInArrayComponent extends FileUploadComponent
@@ -733,7 +746,8 @@ class FileUploadInArrayComponent extends FileUploadComponent
         'file_uploads' => null
     ];
 
-    public function removePhoto($key) {
+    public function removePhoto($key)
+    {
         unset($this->obj['file_uploads'][$key]);
     }
 }
