@@ -26,4 +26,12 @@ trait PerformsRedirects
 
         $this->shouldSkipRender = $this->shouldSkipRender ?? ! config('livewire.render_on_redirect', false);
     }
+    
+    
+    public function redirectIntended($default)
+    {
+        $this->redirectTo = session()->pull('url.intended', $default);
+
+        $this->shouldSkipRender = $this->shouldSkipRender ?? ! config('livewire.render_on_redirect', false);
+    }
 }
