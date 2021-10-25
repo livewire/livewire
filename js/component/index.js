@@ -288,7 +288,14 @@ export default class Component {
             // If we get HTML from the server, store it for the next time we might not.
             this.lastFreshHtml = response.effects.html
 
-            this.handleMorph(response.effects.html.trim())
+			let html = response.effects.html;
+
+			// If the html is a string trim it, otherwise it should be a html node
+			if (typeof response.effects.html === 'string') {
+				html = response.effects.html.trim();
+			}
+
+            this.handleMorph(html);
         } else {
             // It's important to still "morphdom" even when the server HTML hasn't changed,
             // because Alpine needs to be given the chance to update.
