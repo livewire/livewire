@@ -82,22 +82,26 @@ trait MakesAssertions
         return $this;
     }
 
-    public function assertSeeHtml($value)
+    public function assertSeeHtml($values)
     {
-        PHPUnit::assertStringContainsString(
-            $value,
-            $this->stripOutInitialData($this->lastRenderedDom)
-        );
+        foreach (Arr::wrap($values) as $value) {
+            PHPUnit::assertStringContainsString(
+                $value,
+                $this->stripOutInitialData($this->lastRenderedDom)
+            );
+        }
 
         return $this;
     }
 
-    public function assertDontSeeHtml($value)
+    public function assertDontSeeHtml($values)
     {
-        PHPUnit::assertStringNotContainsString(
-            $value,
-            $this->stripOutInitialData($this->lastRenderedDom)
-        );
+        foreach (Arr::wrap($values) as $value) {
+            PHPUnit::assertStringNotContainsString(
+                $value,
+                $this->stripOutInitialData($this->lastRenderedDom)
+            );
+        }
 
         return $this;
     }
