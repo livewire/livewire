@@ -36,7 +36,7 @@ trait WithPagination
                 $this->paginators[$pageName] = request()->query($pageName, 1);
             }
 
-            return (int) $this->paginators[$pageName];
+            return (double) $this->paginators[$pageName];
         });
 
         Paginator::defaultView($this->paginationView());
@@ -106,6 +106,6 @@ trait WithPagination
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return (int) request()->query('page', $this->page);
+        return (double) request()->query('page', $this->page);
     }
 }
