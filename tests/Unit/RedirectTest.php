@@ -40,6 +40,25 @@ class RedirectTest extends TestCase
         $this->assertEquals('http://localhost/foo', $component->payload['effects']['redirect']);
     }
 
+    /** @test **/
+    public function route_intended_pulls_url_from_session(){
+        session()->put('url.intended', '/foo');
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectIntended', '/baz');
+
+        $this->assertEquals('/foo', $component->payload['effects']['redirect']);
+    }
+
+    /** @test **/
+    public function route_intended_uses_fallback_url_when_session_key_is_empty(){
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        $component->runAction('triggerRedirectIntended', '/baz');
+
+        $this->assertEquals('/baz', $component->payload['effects']['redirect']);
+    }
+
     /** @test */
     public function action_redirect()
     {
@@ -181,6 +200,11 @@ class TriggersRedirectStub extends Component
     public function triggerRedirect()
     {
         return $this->redirect('/local');
+    }
+
+    public function triggerRedirectIntended($default)
+    {
+        return $this->redirectIntended($default);
     }
 
     public function triggerRedirectRoute()
