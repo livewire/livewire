@@ -45,10 +45,10 @@ EOT;
 
     public static function livewire($expression)
     {
-        $cachedKey  = "'" . Str::random(7) . "'";
+        $cachedKey = "'" . Str::random(7) . "'";
 
-        $pattren    = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
-        $expression = preg_replace_callback($pattren, function ($match) use (&$cachedKey) {
+        $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
+        $expression = preg_replace_callback($pattern, function ($match) use (&$cachedKey) {
             $cachedKey = trim($match[1]) ?: $cachedKey;
             return "";
         }, $expression);
