@@ -19,6 +19,8 @@ trait ValidatesInput
 {
     protected $errorBag;
 
+    protected $withValidatorCallback;
+
     public function getErrorBag()
     {
         return $this->errorBag ?? new MessageBag;
@@ -144,6 +146,13 @@ trait ValidatesInput
         return ! $this->hasRuleFor($dotNotatedProperty);
     }
 
+    public function withValidator($callback)
+    {
+        $this->withValidatorCallback = $callback;
+
+        return $this;
+    }
+
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
@@ -152,9 +161,19 @@ trait ValidatesInput
             $this->getDataForValidation($rules)
         );
 
+        $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
+
+        $data = $this->unwrapDataForValidation($data);
+
         $validator = Validator::make($data, $rules, $messages, $attributes);
 
-        $this->shortenModelAttributes($data, $rules, $validator);
+        if ($this->withValidatorCallback) {
+            call_user_func($this->withValidatorCallback, $validator);
+
+            $this->withValidatorCallback = null;
+        }
+
+        $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 
         $validatedData = $validator->validate();
 
@@ -194,9 +213,19 @@ trait ValidatesInput
             $this->getDataForValidation($rules)
         );
 
+        $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
+
+        $data = $this->unwrapDataForValidation($data);
+
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
 
-        $this->shortenModelAttributes($data, $rulesForField, $validator);
+        if ($this->withValidatorCallback) {
+            call_user_func($this->withValidatorCallback, $validator);
+
+            $this->withValidatorCallback = null;
+        }
+
+        $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 
         try {
             $result = $validator->validate();
@@ -219,18 +248,30 @@ trait ValidatesInput
         return $result;
     }
 
-    protected function shortenModelAttributes($data, $rules, $validator)
+    protected function getModelAttributeRuleKeysToShorten($data, $rules)
     {
         // If a model ($foo) is a property, and the validation rule is
         // "foo.bar", then set the attribute to just "bar", so that
         // the validation message is shortened and more readable.
+
+        $toShorten = [];
+
         foreach ($rules as $key => $value) {
             $propertyName = $this->beforeFirstDot($key);
 
             if ($data[$propertyName] instanceof Model) {
-                if (str($key)->snake()->replace('_', ' ')->is($validator->getDisplayableAttribute($key))) {
-                    $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute($this->afterFirstDot($key))]);
-                }
+                $toShorten[] = $key;
+            }
+        }
+
+        return $toShorten;
+    }
+
+    protected function shortenModelAttributesInsideValidator($ruleKeys, $validator)
+    {
+        foreach ($ruleKeys as $key) {
+            if (str($key)->snake()->replace('_', ' ')->is($validator->getDisplayableAttribute($key))) {
+                $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute($this->afterFirstDot($key))]);
             }
         }
     }
@@ -258,7 +299,12 @@ trait ValidatesInput
                 throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: ['.$ruleKey.']'));
             });
 
-        return collect($properties)->map(function ($value) {
+        return $properties;
+    }
+
+    protected function unwrapDataForValidation($data)
+    {
+        return collect($data)->map(function ($value) {
             if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
 
             return $value;

@@ -38,7 +38,7 @@ class PerformActionCalls implements HydrationMiddleware
                 });
             }
         } catch (ValidationException $e) {
-            Livewire::dispatch('failed-validation', $e->validator);
+            Livewire::dispatch('failed-validation', $e->validator, $unHydratedInstance);
 
             $unHydratedInstance->setErrorBag($e->validator->errors());
         }

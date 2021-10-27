@@ -6,6 +6,10 @@
     <button wire:click="redirectPage" dusk="redirect.button">Redirect Page</button>
     <span dusk="redirect.blade.output">{{ $message }}</span>
     <span x-data="{ message: @entangle('message') }" x-text="message" dusk="redirect.alpine.output"></span>
+    
+    <button wire:click="redirectPageWithModel" dusk="redirect-with-model.button">Redirect PageWithModel</button>
+    <span dusk="redirect.blade.model-output">{{ $foo->name }}</span>
+    <span x-data="{ message: @entangle('foo.name') }" x-text="message" dusk="redirect.alpine.model-output"></span>
 
     <div>
         @if (session()->has('message'))

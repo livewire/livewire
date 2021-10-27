@@ -30,23 +30,33 @@ abstract class Component
 
     protected $queryString = [];
     protected $computedPropertyCache = [];
-    protected $shouldSkipRender = false;
+    protected $shouldSkipRender = null;
     protected $preRenderedView;
-
+    protected $forStack = [];
+    
     public function __construct($id = null)
     {
         $this->id = $id ?? str()->random(20);
 
         $this->ensureIdPropertyIsntOverridden();
+
+        Livewire::setBackButtonCache();
     }
 
-    public function __invoke(Container $container)
+    public function __invoke(Container $container, Route $route)
     {
+        // With octane and full page components the route is caching the
+        // component, so always create a fresh instance.
+        $instance = new static;
+
+        // For some reason Octane doesn't play nice with the injected $route.
+        // We need to override it here. However, we can't remove the actual
+        // param from the method signature as it would break inheritance.
         $route = request()->route();
 
         try {
             $componentParams = (new ImplicitRouteBinding($container))
-                ->resolveAllParameters($route, $this);
+                ->resolveAllParameters($route, $instance);
         } catch (ModelNotFoundException $exception) {
             if (method_exists($route,'getMissing') && $route->getMissing()) {
                 return $route->getMissing()(request());
@@ -55,18 +65,19 @@ abstract class Component
             throw $exception;
         }
 
-        $manager = LifecycleManager::fromInitialInstance($this)
+        $manager = LifecycleManager::fromInitialInstance($instance)
+            ->boot()
             ->initialHydrate()
             ->mount($componentParams)
             ->renderToView();
 
-        if ($this->redirectTo) {
-            return redirect()->response($this->redirectTo);
+        if ($instance->redirectTo) {
+            return redirect()->response($instance->redirectTo);
         }
 
-        $this->ensureViewHasValidLivewireLayout($this->preRenderedView);
+        $instance->ensureViewHasValidLivewireLayout($instance->preRenderedView);
 
-        $layout = $this->preRenderedView->livewireLayout;
+        $layout = $instance->preRenderedView->livewireLayout;
 
         return app('view')->file(__DIR__."/Macros/livewire-view-{$layout['type']}.blade.php", [
             'view' => $layout['view'],
@@ -94,12 +105,8 @@ abstract class Component
     public function initializeTraits()
     {
         foreach (class_uses_recursive($class = static::class) as $trait) {
-            if (method_exists($class, $method = 'boot'.class_basename($trait))) {
-                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
-            }
-
             if (method_exists($class, $method = 'initialize'.class_basename($trait))) {
-                ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+                $this->{$method}();
             }
         }
     }
@@ -123,9 +130,30 @@ abstract class Component
 
     public function getQueryString()
     {
-        return method_exists($this, 'queryString')
+        $componentQueryString = method_exists($this, 'queryString')
             ? $this->queryString()
             : $this->queryString;
+
+        return collect(class_uses_recursive($class = static::class))
+            ->map(function ($trait) use ($class) {
+                $member = 'queryString' . class_basename($trait);
+
+                if (method_exists($class, $member)) {
+                    return $this->{$member}();
+                }
+
+                if (property_exists($class, $member)) {
+                    return $this->{$member};
+                }
+
+                return [];
+            })
+            ->values()
+            ->mapWithKeys(function ($value) {
+                return $value;
+            })
+            ->merge($componentQueryString)
+            ->toArray();
     }
 
     public function skipRender()
@@ -182,7 +210,7 @@ abstract class Component
         $engine->startLivewireRendering($this);
 
         $this->setErrorBag(
-            $errorBag = $errors ?: (isset($view->getData()['errors']) ? $view->getData()['errors']->getBag('default') : $this->getErrorBag())
+            $errorBag = $errors ?: ($view->getData()['errors'] ?? $this->getErrorBag())
         );
 
         $previouslySharedErrors = app('view')->getShared()['errors'] ?? new ViewErrorBag;
@@ -228,6 +256,21 @@ abstract class Component
                 unset($this->computedPropertyCache[$i]);
             }
         });
+    }
+
+    public function addToStack($stack, $type, $contents, $key = null)
+    {
+        $this->forStack[] = [
+            'key' => $key ?: $this->id,
+            'stack' => $stack,
+            'type' => $type,
+            'contents' => $contents,
+        ];
+    }
+
+    public function getForStack()
+    {
+        return $this->forStack;
     }
 
     public function __get($property)

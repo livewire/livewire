@@ -153,4 +153,18 @@ class MakeCommandTest extends TestCase
         $this->assertFalse(File::exists($this->livewireClassesPath('List.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('list.blade.php')));
     }
+    /** @test */
+    public function a_component_is_not_created_with_a_invalid_class_name()
+    {
+        Artisan::call('make:livewire', ['name' => '1Class']);
+
+        $this->assertFalse(File::exists($this->livewireClassesPath('1Class.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('1Class.blade.php')));
+
+        Artisan::call('make:livewire', ['name' => '!Class']);
+
+        $this->assertFalse(File::exists($this->livewireClassesPath('!Class.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('!Class.blade.php')));
+
+    }
 }

@@ -8,6 +8,10 @@ use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
+    protected $listeners = [
+        'download'
+    ];
+
     public function download()
     {
         config()->set('filesystems.disks.dusk-tmp', [

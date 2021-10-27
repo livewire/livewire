@@ -219,4 +219,54 @@ class Test extends TestCase
             ;
         });
     }
+
+    /** @test */
+    public function it_does_not_build_query_string_from_referer_if_it_is_coming_from_a_full_page_redirect()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, RedirectLinkToQueryStringComponent::class)
+                ->assertPathBeginsWith('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CRedirectLinkToQueryStringComponent')
+                ->click('@link')
+
+                ->pause(200)
+                // assert the path has changed to new component path
+                ->assertPathBeginsWith('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CNestedComponent')
+                ->assertQueryStringHas('baz', 'bop')
+            ;
+        });
+    }
+
+    public function test_query_string_hooks_from_traits()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithTraits::class)
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringHas('page', 1)
+                ->assertQueryStringMissing('search')
+                // Search for posts where title contains "1".
+                ->waitForLivewire()->type('@search', '1')
+                ->assertSee('Post #1')
+                ->assertSee('Post #10')
+                ->assertSee('Post #11')
+                ->assertDontSee('Post #2')
+                ->assertDontSee('Post #3')
+                ->assertQueryStringHas('search', '1')
+                ->assertQueryStringHas('page', 1)
+                // Navigate to page 2.
+                ->waitForLivewire()->click('@nextPage.before')
+                ->assertSee('Post #12')
+                ->assertSee('Post #13')
+                ->assertSee('Post #14')
+                ->assertQueryStringHas('search', '1')
+                ->assertQueryStringMissing('page')
+                // Search for posts where title contains "42".
+                ->waitForLivewire()->type('@search', '42')
+                ->assertSee('Post #42')
+                ->assertQueryStringHas('search', '42')
+                ->assertQueryStringHas('page', 1)
+            ;
+        });
+    }
 }

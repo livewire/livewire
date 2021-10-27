@@ -555,6 +555,25 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
         $expected = [
             'title' => 'foo',
             'email' => 'baz',
+            'foo' => null,
+        ];
+
+        $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);
+
+        $this->assertEquals($expected, $results);
+    }
+
+    /** @test */
+    public function it_serialises_properties_from_model_that_has_not_been_persisted()
+    {
+        $model = Author::make();
+
+        $rules = [
+            'author.name',
+        ];
+
+        $expected = [
+            'name' => null,
         ];
 
         $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);

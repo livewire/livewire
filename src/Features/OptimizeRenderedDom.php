@@ -29,5 +29,9 @@ class OptimizeRenderedDom
                 $response->effects['html'] = null;
             }
         });
+
+        Livewire::listen('flush-state', function() {
+            $this->htmlHashesByComponent = [];
+        });
     }
 }

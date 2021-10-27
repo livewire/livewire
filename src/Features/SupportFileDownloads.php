@@ -44,6 +44,10 @@ class SupportFileDownloads
 
             $response->effects['download'] = $download;
         });
+
+        Livewire::listen('flush-state', function() {
+            $this->downloadsById = [];
+        });
     }
 
     function valueIsntAFileResponse($value)
