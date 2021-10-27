@@ -82,7 +82,7 @@ class CustomResolverClass implements Wireable
 
 class ComponentWithCustomPublicProperty extends Component
 {
-    public CustomPublicClass $wireable;
+    public $wireable;
 
     public function mount($wireable)
     {
