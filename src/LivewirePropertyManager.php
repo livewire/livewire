@@ -1,13 +1,10 @@
 <?php
 
-namespace Livewire\Hydration;
+namespace Livewire;
 
 use Livewire\Exceptions\CannotRegisterPublicPropertyWithoutImplementingWireableException;
-use Livewire\Wireable;
-use phpDocumentor\Reflection\Types\Object_;
-use Tests\Unit\CustomPublicClass;
 
-class PublicPropertyManager
+class LivewirePropertyManager
 {
     private $properties = [];
 
