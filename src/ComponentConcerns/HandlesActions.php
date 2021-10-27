@@ -10,7 +10,7 @@ use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Livewire\Hydration\Middleware\HashDataPropertiesForDirtyDetection;
+use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
 use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 use function Livewire\str;
 

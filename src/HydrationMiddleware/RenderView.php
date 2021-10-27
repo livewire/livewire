@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Hydration\Middleware;
+namespace Livewire\HydrationMiddleware;
 
 class RenderView implements HydrationMiddleware
 {

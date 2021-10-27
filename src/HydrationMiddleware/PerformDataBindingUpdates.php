@@ -1,22 +1,21 @@
 <?php
 
-namespace Livewire\Hydration\Middleware;
+namespace Livewire\HydrationMiddleware;
 
 use Livewire\Livewire;
 use Illuminate\Validation\ValidationException;
 
-class PerformEventEmissions implements HydrationMiddleware
+class PerformDataBindingUpdates implements HydrationMiddleware
 {
     public static function hydrate($unHydratedInstance, $request)
     {
         try {
             foreach ($request->updates as $update) {
-                if ($update['type'] !== 'fireEvent') continue;
+                if ($update['type'] !== 'syncInput') continue;
 
-                $event = $update['payload']['event'];
-                $params = $update['payload']['params'];
+                $data = $update['payload'];
 
-                $unHydratedInstance->fireEvent($event, $params);
+                $unHydratedInstance->syncInput($data['name'], $data['value']);
             }
         } catch (ValidationException $e) {
             Livewire::dispatch('failed-validation', $e->validator);

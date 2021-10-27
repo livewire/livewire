@@ -32,9 +32,8 @@ use Livewire\Commands\{
     S3CleanupCommand,
     MakeLivewireCommand,
 };
-use Livewire\Hydration\PublicPropertyManager;
 use Livewire\Macros\ViewMacros;
-use Livewire\Hydration\Middleware\{
+use Livewire\HydrationMiddleware\{
     RenderView,
     PerformActionCalls,
     CallHydrationHooks,
@@ -95,8 +94,8 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerPublicPropertyManager()
     {
-        $this->app->singleton(PublicPropertyManager::class, function() {
-            return new PublicPropertyManager();
+        $this->app->singleton(LivewirePropertyManager::class, function() {
+            return new LivewirePropertyManager();
         });
     }
 

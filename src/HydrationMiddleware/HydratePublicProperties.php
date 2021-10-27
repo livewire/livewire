@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Hydration\Middleware;
+namespace Livewire\HydrationMiddleware;
 
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
@@ -14,7 +14,7 @@ use Illuminate\Support\Stringable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Carbon\CarbonImmutable;
-use Livewire\Hydration\PublicPropertyManager;
+use Livewire\LivewirePropertyManager;
 use ReflectionProperty;
 use Livewire\Wireable;
 use DateTimeImmutable;
@@ -65,7 +65,7 @@ class HydratePublicProperties implements HydrationMiddleware
                     ->getName();
 
                 data_set($instance, $property, $type::fromLivewire($value));
-            } else if (app(PublicPropertyManager::class)->contains($value)) {
+            } else if (app(LivewirePropertyManager::class)->contains($value)) {
                 // Convert somehow
 
                 // data_set($instance, $property, $type::fromLivewire($value));
@@ -100,7 +100,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value)
             ) {
                 data_set($response, 'memo.data.'.$key, $value);
-            } else if (app(PublicPropertyManager::class)->contains($value)) {
+            } else if (app(LivewirePropertyManager::class)->contains($value)) {
                 $response->memo['dataMeta']['customProperties'][] = $key;
 
 //                 data_set($response, 'memo.data.'.$key, $value->toLivewire());

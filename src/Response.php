@@ -2,7 +2,7 @@
 
 namespace Livewire;
 
-use Livewire\Hydration\Middleware\AddAttributesToRootTagOfHtml;
+use Livewire\HydrationMiddleware\AddAttributesToRootTagOfHtml;
 
 class Response
 {

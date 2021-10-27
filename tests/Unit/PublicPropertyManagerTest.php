@@ -5,7 +5,7 @@ namespace Tests\Unit;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Exceptions\CannotRegisterPublicPropertyWithoutImplementingWireableException;
-use Livewire\Hydration\PublicPropertyManager;
+use Livewire\LivewirePropertyManager;
 use Livewire\Livewire;
 use Livewire\Wireable;
 
@@ -14,7 +14,7 @@ class PublicPropertyManagerTest extends TestCase
     /** @test */
     public function the_manager_will_be_available_inside_the_service_provider()
     {
-        $this->assertInstanceOf(PublicPropertyManager::class, app(PublicPropertyManager::class));
+        $this->assertInstanceOf(LivewirePropertyManager::class, app(LivewirePropertyManager::class));
     }
 
     /** @test */
@@ -24,13 +24,13 @@ class PublicPropertyManagerTest extends TestCase
 
         $resolver = new class() {};
 
-        app(PublicPropertyManager::class)->register('className', $resolver);
+        app(LivewirePropertyManager::class)->register('className', $resolver);
     }
 
     /** @test */
     public function a_custom_property_class_does_take_affect()
     {
-        app(PublicPropertyManager::class)->register(CustomPublicClass::class, CustomResolverClass::class);
+        app(LivewirePropertyManager::class)->register(CustomPublicClass::class, CustomResolverClass::class);
 
         $custom = new CustomPublicClass($message = Str::random(), $embeddedMessage = Str::random());
 
@@ -48,12 +48,12 @@ class PublicPropertyManagerTest extends TestCase
     /** @test */
     public function a_registered_custom_public_property_will_be_registered()
     {
-        app(PublicPropertyManager::class)->register(
+        app(LivewirePropertyManager::class)->register(
             CustomPublicClass::class,
             CustomResolverClass::class
         );
 
-        $this->assertCount(1, app(PublicPropertyManager::class)->properties());
+        $this->assertCount(1, app(LivewirePropertyManager::class)->properties());
     }
 }
 
