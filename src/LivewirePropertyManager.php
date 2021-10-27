@@ -37,8 +37,8 @@ class LivewirePropertyManager
 
     public function get($class)
     {
-        if (! $this->has($class)) {
-            // Should we throw a error?
+        if (! $this->contains($class)) {
+            return null;
         }
 
         return $this->properties[$class];
