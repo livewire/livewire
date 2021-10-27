@@ -36,7 +36,7 @@ trait WithPagination
                 $this->paginators[$pageName] = request()->query($pageName, 1);
             }
 
-            return (double) $this->paginators[$pageName];
+            return (int) $this->paginators[$pageName];
         });
 
         Paginator::defaultView($this->paginationView());
@@ -75,6 +75,8 @@ trait WithPagination
 
     public function setPage($page, $pageName = 'page')
     {
+        $page = intval($page);
+        $page = $page <= 0 ? 1 : $page ;
         $beforePaginatorMethod = 'updatingPaginators';
         $afterPaginatorMethod = 'updatedPaginators';
 
@@ -106,6 +108,7 @@ trait WithPagination
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return (double) request()->query('page', $this->page);
+        // Avoid cast to integer to prevent hydrate error
+        return request()->query('page', $this->page);
     }
 }
