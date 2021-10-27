@@ -37,7 +37,7 @@ class PublicPropertyManagerTest extends TestCase
         Livewire::test(ComponentWithCustomPublicProperty::class, ['wireable' => $custom])
             ->assertSee($message);
 //            ->assertSee($embeddedMessage)
-//            ->call('$refresh')
+//            ->call('$refresh');
 //            ->assertSee($message);
 //            ->assertSee($embeddedMessage)
 //            ->call('removeWireable')
@@ -67,11 +67,17 @@ class CustomPublicClass
     }
 }
 
-class CustomResolverClass implements Wireable
+class CustomResolverClass
 {
+    public $class;
+
+    public function __construct($class) {
+        $this->class = $class;
+    }
+
     public function toLivewire()
     {
-        dd('toLivewire');
+        return $this->class->message;
     }
 
     public static function fromLivewire($value)

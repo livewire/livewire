@@ -10,9 +10,9 @@ class LivewirePropertyManager
 
     public function register($class, $resolver)
     {
-        if (! new $resolver instanceof Wireable) {
-            throw new CannotRegisterPublicPropertyWithoutImplementingWireableException();
-        }
+//        if (! new $resolver instanceof Wireable) {
+//            throw new CannotRegisterPublicPropertyWithoutImplementingWireableException();
+//        }
 
         $this->properties[$class] = $resolver;
 
@@ -41,6 +41,8 @@ class LivewirePropertyManager
             return null;
         }
 
-        return $this->properties[$class];
+        $resolver = $this->properties[get_class($class)];
+
+        return new $resolver($class);
     }
 }
