@@ -26,8 +26,10 @@ class LivewirePropertyManager
 
     public function contains($value)
     {
+        $value = (new \ReflectionClass($value))->getName();
+
         foreach ($this->properties as $class => $resolver) {
-            if ($value instanceof $class) {
+            if ($value === $class) {
                 return true;
             }
         }
@@ -44,5 +46,14 @@ class LivewirePropertyManager
         $resolver = $this->properties[get_class($class)];
 
         return new $resolver($class);
+    }
+
+    public function getResolver($class)
+    {
+        if (! $this->contains($class)) {
+            return null;
+        }
+
+        return $this->properties[$class];
     }
 }

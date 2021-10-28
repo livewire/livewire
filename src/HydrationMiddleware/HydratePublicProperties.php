@@ -65,10 +65,13 @@ class HydratePublicProperties implements HydrationMiddleware
                     ->getName();
 
                 data_set($instance, $property, $type::fromLivewire($value));
-            } else if (app(LivewirePropertyManager::class)->contains($value)) {
-                // Convert somehow
+            } else if (in_array($property, $customProperties) && version_compare(PHP_VERSION, '7.4', '>=')) {
+                $type = (new \ReflectionClass($instance))
+                    ->getProperty($property)
+                    ->getType()
+                    ->getName();
 
-                // data_set($instance, $property, $type::fromLivewire($value));
+                 data_set($instance, $property, app(LivewirePropertyManager::class)->getResolver($type)::fromLivewire($value));
             } else {
                 // If the value is null and the property is typed, don't set it, because all values start off as null and this
                 // will prevent Typed properties from wining about being set to null.
