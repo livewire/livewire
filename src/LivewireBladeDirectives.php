@@ -20,17 +20,7 @@ EOT;
 
     public static function js($expression)
     {
-        return <<<EOT
-<?php
-    if (is_object({$expression}) || is_array({$expression})) {
-        echo "JSON.parse(atob('".base64_encode(json_encode({$expression}))."'))";
-    } elseif (is_string({$expression})) {
-        echo "'".str_replace("'", "\'", {$expression})."'";
-    } else {
-        echo json_encode({$expression});
-    }
-?>
-EOT;
+        return '{!! Livewire\js('.$expression.') !!}';
     }
 
     public static function livewireStyles($expression)

@@ -14,6 +14,11 @@ class LivewireJsDirectiveTest extends TestCase
             'string' => "@js('hey')",
         ])
             ->assertSee("'hey'", false);
+
+        Livewire::test(ComponentForTestingJsFunction::class, [
+            'data' => 'hey',
+        ])
+            ->assertSee("'hey'");
     }
 
     /** @test */
@@ -42,6 +47,11 @@ class LivewireJsDirectiveTest extends TestCase
             'data' => ['hey' => 'there'],
         ])
             ->assertSee("JSON.parse(atob('eyJoZXkiOiJ0aGVyZSJ9'))", false);
+
+        Livewire::test(ComponentForTestingJsFunction::class, [
+            'data' => ['hey' => 'there'],
+        ])
+            ->assertSee("JSON.parse(atob('eyJoZXkiOiJ0aGVyZSJ9'))");
     }
 
     /** @test */
@@ -52,6 +62,11 @@ class LivewireJsDirectiveTest extends TestCase
             'data' => ['hey', 'there'],
         ])
             ->assertSee("JSON.parse(atob('WyJoZXkiLCJ0aGVyZSJd'))", false);
+
+        Livewire::test(ComponentForTestingJsFunction::class, [
+            'data' => ['hey', 'there'],
+        ])
+            ->assertSee("JSON.parse(atob('WyJoZXkiLCJ0aGVyZSJd'))");
     }
 }
 
@@ -70,5 +85,22 @@ class ComponentForTestingJsDirective extends Component
     public function render()
     {
         return '<div>'.$this->expression.'</div>';
+    }
+}
+
+class ComponentForTestingJsFunction extends Component
+{
+    public $data = [];
+
+    public function mount($data = null)
+    {
+        $this->data = $data;
+    }
+
+    public function render()
+    {
+        return <<<'BLADE'
+<button x-on:click="$dispatch('notify-errors', {{ Livewire\js($data) }} )"></button>
+BLADE;
     }
 }
