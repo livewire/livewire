@@ -19,6 +19,8 @@ trait ValidatesInput
 {
     protected $errorBag;
 
+    protected $withValidatorCallback;
+
     public function getErrorBag()
     {
         return $this->errorBag ?? new MessageBag;
@@ -144,6 +146,13 @@ trait ValidatesInput
         return ! $this->hasRuleFor($dotNotatedProperty);
     }
 
+    public function withValidator($callback)
+    {
+        $this->withValidatorCallback = $callback;
+
+        return $this;
+    }
+
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
@@ -157,6 +166,12 @@ trait ValidatesInput
         $data = $this->unwrapDataForValidation($data);
 
         $validator = Validator::make($data, $rules, $messages, $attributes);
+
+        if ($this->withValidatorCallback) {
+            call_user_func($this->withValidatorCallback, $validator);
+
+            $this->withValidatorCallback = null;
+        }
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 
@@ -193,7 +208,7 @@ trait ValidatesInput
             })->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
-        
+
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
         );
@@ -203,6 +218,12 @@ trait ValidatesInput
         $data = $this->unwrapDataForValidation($data);
 
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
+
+        if ($this->withValidatorCallback) {
+            call_user_func($this->withValidatorCallback, $validator);
+
+            $this->withValidatorCallback = null;
+        }
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 

@@ -279,9 +279,7 @@ export default class Component {
 
     handleResponse(message) {
         let response = message.response
-
-
-
+        
         this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
 
         store.callHook('message.received', message, this)

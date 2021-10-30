@@ -207,4 +207,16 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_entangle_works_with_turbo()
+    {
+        $this->browse(function ($browser) {
+            $browser->visit(route('entangle-turbo', [], false))
+                ->assertSeeIn('@page.title', 'Testing Entangle with Turbo')
+                ->click('@turbo.link')
+                ->waitForTextIn('@page.title', 'Showing Livewire&Alpine Component after a Turbo Visit')
+                ->assertSeeIn('@output.livewire', 'false')
+                ->assertSeeIn('@output.alpine', 'false');
+        });
+    }
 }

@@ -3,6 +3,7 @@
 namespace Livewire\ComponentConcerns;
 
 use Livewire\Event;
+use Livewire\Livewire;
 
 trait ReceivesEvents
 {
@@ -67,10 +68,12 @@ trait ReceivesEvents
         return array_keys($this->getEventsAndHandlers());
     }
 
-    public function fireEvent($event, $params)
+    public function fireEvent($event, $params, $id)
     {
         $method = $this->getEventsAndHandlers()[$event];
 
-        $this->callMethod($method, $params);
+        $this->callMethod($method, $params, function ($returned) use ($event, $id) {
+            Livewire::dispatch('action.returned', $this, $event, $returned, $id);
+        });
     }
 }

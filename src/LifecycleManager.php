@@ -76,6 +76,13 @@ class LifecycleManager
         static::$initialDehydrationMiddleware += $callables;
     }
 
+    public function boot()
+    {
+        Livewire::dispatch('component.boot', $this->instance);
+
+        return $this;
+    }
+
     public function hydrate()
     {
         foreach (static::$hydrationMiddleware as $class) {
@@ -106,13 +113,15 @@ class LifecycleManager
             try {
                 ImplicitlyBoundMethod::call(app(), [$this->instance, 'mount'], $params);
             } catch (ValidationException $e) {
-                Livewire::dispatch('failed-validation', $e->validator);
+                Livewire::dispatch('failed-validation', $e->validator, $this->instance);
 
                 $this->instance->setErrorBag($e->validator->errors());
             }
         }
 
         Livewire::dispatch('component.mount', $this->instance, $params);
+
+        Livewire::dispatch('component.booted', $this->instance, $this->request);
 
         return $this;
     }

@@ -47,5 +47,9 @@ class SupportRedirects
                 return;
             }
         });
+
+        Livewire::listen('flush-state', function() {
+            static::$redirectorCacheStack = [];
+        });
     }
 }

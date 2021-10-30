@@ -72,6 +72,9 @@ class HttpConnectionHandler extends ConnectionHandler
 
         $route = app('router')->getRoutes()->match($request);
 
+        // For some reason without this octane breaks the route parameter binding.
+        $route->setContainer(app());
+
         $request->setRouteResolver(function () use ($route) {
             return $route;
         });

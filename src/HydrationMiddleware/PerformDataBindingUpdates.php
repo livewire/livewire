@@ -18,7 +18,7 @@ class PerformDataBindingUpdates implements HydrationMiddleware
                 $unHydratedInstance->syncInput($data['name'], $data['value']);
             }
         } catch (ValidationException $e) {
-            Livewire::dispatch('failed-validation', $e->validator);
+            Livewire::dispatch('failed-validation', $e->validator, $unHydratedInstance);
 
             $unHydratedInstance->setErrorBag($e->validator->errors());
         }
