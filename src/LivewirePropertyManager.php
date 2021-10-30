@@ -22,7 +22,7 @@ class LivewirePropertyManager
         return $this->properties;
     }
 
-    public function contains($value)
+    public function has($value)
     {
         $value = (new \ReflectionClass($value))->getName();
 
@@ -37,7 +37,7 @@ class LivewirePropertyManager
 
     public function get($class)
     {
-        if (! $this->contains($class)) {
+        if (! $this->has($class)) {
             return null;
         }
 
@@ -48,7 +48,7 @@ class LivewirePropertyManager
 
     public function getResolver($class)
     {
-        if (! $this->contains($class)) {
+        if (! $this->has($class)) {
             return null;
         }
 

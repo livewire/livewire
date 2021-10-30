@@ -102,7 +102,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value)
             ) {
                 data_set($response, 'memo.data.'.$key, $value);
-            } else if (version_compare(PHP_VERSION, '7.4', '>=') && app(LivewirePropertyManager::class)->contains($value)) {
+            } else if (version_compare(PHP_VERSION, '7.4', '>=') && app(LivewirePropertyManager::class)->has($value)) {
                 $response->memo['dataMeta']['customProperties'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, app(LivewirePropertyManager::class)->get($value)->dehydrate());
