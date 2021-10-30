@@ -2,7 +2,7 @@
 
 namespace Livewire;
 
-use Livewire\Exceptions\CannotRegisterPublicPropertyWithoutImplementingWireableException;
+use Livewire\Exceptions\CannotRegisterPublicPropertyWithoutExtendingThePropertyHandlerException;
 
 class LivewirePropertyManager
 {
@@ -10,9 +10,7 @@ class LivewirePropertyManager
 
     public function register($class, $resolver)
     {
-//        if (! new $resolver instanceof Wireable) {
-//            throw new CannotRegisterPublicPropertyWithoutImplementingWireableException();
-//        }
+        throw_unless(is_subclass_of($resolver, PropertyHandler::class), new CannotRegisterPublicPropertyWithoutExtendingThePropertyHandlerException());
 
         $this->properties[$class] = $resolver;
 

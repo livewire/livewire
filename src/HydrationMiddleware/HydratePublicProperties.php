@@ -71,7 +71,7 @@ class HydratePublicProperties implements HydrationMiddleware
                     ->getType()
                     ->getName();
 
-                 data_set($instance, $property, app(LivewirePropertyManager::class)->getResolver($type)::fromLivewire($value));
+                 data_set($instance, $property, app(LivewirePropertyManager::class)->getResolver($type)::hydrate($value));
             } else {
                 // If the value is null and the property is typed, don't set it, because all values start off as null and this
                 // will prevent Typed properties from wining about being set to null.
@@ -106,7 +106,7 @@ class HydratePublicProperties implements HydrationMiddleware
             } else if (version_compare(PHP_VERSION, '7.4', '>=') && app(LivewirePropertyManager::class)->contains($value)) {
                 $response->memo['dataMeta']['customProperties'][] = $key;
 
-                data_set($response, 'memo.data.'.$key, app(LivewirePropertyManager::class)->get($value)->toLivewire());
+                data_set($response, 'memo.data.'.$key, app(LivewirePropertyManager::class)->get($value)->dehydrate());
             } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
                 $response->memo['dataMeta']['wireables'][] = $key;
 

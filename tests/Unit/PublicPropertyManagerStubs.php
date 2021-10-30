@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\PropertyHandler;
 
 class CustomPublicClass
 {
@@ -14,7 +15,7 @@ class CustomPublicClass
     }
 }
 
-class CustomResolverClass
+class CustomResolverClass extends PropertyHandler
 {
     public ?CustomPublicClass $class;
 
@@ -23,16 +24,16 @@ class CustomResolverClass
         $this->class = $class;
     }
 
-    public static function fromLivewire($value)
-    {
-        return new CustomPublicClass($value['message']);
-    }
-
-    public function toLivewire()
+    public function dehydrate()
     {
         return [
             'message' => $this->class->message,
         ];
+    }
+
+    public static function hydrate($value)
+    {
+        return new CustomPublicClass($value['message']);
     }
 }
 

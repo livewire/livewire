@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Illuminate\Support\Str;
-use Livewire\Exceptions\CannotRegisterPublicPropertyWithoutImplementingWireableException;
+use Livewire\Exceptions\CannotRegisterPublicPropertyWithoutExtendingThePropertyHandlerException;
 use Livewire\LivewirePropertyManager;
 use Livewire\Livewire;
 
@@ -27,11 +27,9 @@ class PublicPropertyManagerTest extends TestCase
     }
 
     /** @test */
-    public function it_will_throw_an_exception_if_registering_a_class_not_implementing_the_wireable_interface()
+    public function it_will_throw_an_exception_if_registering_a_class_not_implementing_the_property_handler_interface()
     {
-        $this->markTestSkipped("We will throw an exception, but I guess we'll need a new interface. Until then, do nothing.");
-
-        $this->expectException(CannotRegisterPublicPropertyWithoutImplementingWireableException::class);
+        $this->expectException(CannotRegisterPublicPropertyWithoutExtendingThePropertyHandlerException::class);
 
         $resolver = new class() {};
 
