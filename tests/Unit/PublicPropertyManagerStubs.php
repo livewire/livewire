@@ -8,7 +8,7 @@ class CustomPublicClass
 {
     public $message;
 
-    public function __construct($message, $embeddedMessage)
+    public function __construct($message)
     {
         $this->message = $message;
     }
@@ -25,7 +25,7 @@ class CustomResolverClass
 
     public static function fromLivewire($value)
     {
-        return new CustomPublicClass($value['message'], 'embedded message which is missing right now');
+        return new CustomPublicClass($value['message']);
     }
 
     public function toLivewire()

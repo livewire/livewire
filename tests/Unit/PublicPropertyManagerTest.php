@@ -43,17 +43,14 @@ class PublicPropertyManagerTest extends TestCase
     {
         app(LivewirePropertyManager::class)->register(CustomPublicClass::class, CustomResolverClass::class);
 
-        $custom = new CustomPublicClass($message = Str::random(), $embeddedMessage = Str::random());
+        $custom = new CustomPublicClass($message = Str::random());
 
         Livewire::test(ComponentWithCustomPublicProperty::class, ['wireable' => $custom])
             ->assertSee($message)
-//            ->assertSee($embeddedMessage)
             ->call('$refresh')
             ->assertSee($message)
-//            ->assertSee($embeddedMessage)
             ->call('removeWireable')
             ->assertDontSee($message);
-//            ->assertDontSee($embeddedMessage);
     }
 
     /** @test */
