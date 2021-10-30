@@ -39,7 +39,9 @@ class HydratePublicProperties implements HydrationMiddleware
         $customProperties = data_get($request, 'memo.dataMeta.customProperties', []);
 
         foreach ($publicProperties as $property => $value) {
-            if ($type = data_get($dates, $property)) {
+            if (in_array($property, $customProperties) && version_compare(PHP_VERSION, '7.4', '>=')) {
+                data_set($instance, $property, app(LivewirePropertyManager::class)->hydrate($instance, $property, $value));
+            } else if ($type = data_get($dates, $property)) {
                 $types = [
                     'native' => DateTime::class,
                     'nativeImmutable' => DateTimeImmutable::class,
@@ -64,9 +66,6 @@ class HydratePublicProperties implements HydrationMiddleware
                     ->getName();
 
                 data_set($instance, $property, $type::fromLivewire($value));
-            } else if (in_array($property, $customProperties) && version_compare(PHP_VERSION, '7.4', '>=')) {
-
-                 data_set($instance, $property, app(LivewirePropertyManager::class)->hydrate($instance, $property, $value));
             } else {
                 // If the value is null and the property is typed, don't set it, because all values start off as null and this
                 // will prevent Typed properties from wining about being set to null.
