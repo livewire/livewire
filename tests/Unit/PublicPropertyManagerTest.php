@@ -14,7 +14,7 @@ class PublicPropertyManagerTest extends TestCase
         parent::setUp();
 
         if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkippede('Skip public property tests if the version is below PHP 7.4');
+            $this->markTestSkipped('Skip public property tests if the version is below PHP 7.4');
         }
 
         require_once __DIR__.'/PublicPropertyManagerStubs.php';
