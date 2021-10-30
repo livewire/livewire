@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Stringable;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Carbon\CarbonImmutable;
 use Livewire\LivewirePropertyManager;
 use ReflectionProperty;
