@@ -182,6 +182,40 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
     }
 
     /** @test */
+    public function single_property_rules_with_specific_instance_get_extracted_properly()
+    {
+        $rules = [
+            'foo',
+            'bar',
+        ];
+
+        $expected = [
+            'foo',
+            'bar',
+        ];
+
+        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
+    }
+
+    /** @test */
+    public function collection_rules_with_specific_instance_get_extracted_properly()
+    {
+        $rules = [
+            'foo.1.bar',
+        ];
+
+        $expected = [
+            'foo' => [
+                1 => [
+                    'bar',
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
+    }
+
+    /** @test */
     public function an_eloquent_model_properties_can_be_serialised()
     {
         $model = Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
