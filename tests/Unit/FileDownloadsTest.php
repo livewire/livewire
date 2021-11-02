@@ -92,6 +92,7 @@ class FileDownloadComponent extends Component
 class DownloadableResponse implements Responsable
 {
     public function toResponse($request)
-    {   return  Storage::disk('unit-downloads')->download('download.txt');
+    {
+        return  Storage::disk('unit-downloads')->download('download.txt');
     }
 }
