@@ -89,7 +89,8 @@ class Test extends TestCase
                 ->assertSeeIn('@output', 'foo bar')
                 ->assertInputValue('@input', 'foo bar')
                 ->assertQueryStringHas('foo', 'foo bar')
-                ->assertScript('return !! window.location.search.match(/foo=foo\+bar/)')
+                //->assertScript('return !! window.location.search.match(/foo=foo\+bar/)')
+                ->assertScript('return !! window.location.search.match(/quux%26quuz/)')
             ;
         });
     }
@@ -120,6 +121,19 @@ class Test extends TestCase
                 ->assertSeeIn('@qux.ampersand', 'quux&quuz')
                 ->assertSeeIn('@qux.space', 'quux quuz')
                 ->assertSeeIn('@qux.array', '["quux","quuz"]')
+            ;
+        });
+    }
+
+    public function test_query_string_with_property_values_containing_ampersand_characters()
+    {
+        $this->browse(function (Browser $browser) {
+            $queryString = '?foo=bar%26quux%26quuz';
+
+            Livewire::visit($browser, Component::class, $queryString)
+                ->assertQueryStringHas('foo', 'bar&quux&quuz')
+                ->refresh()
+                ->assertQueryStringHas('foo', 'bar&quux&quuz')
             ;
         });
     }
