@@ -172,6 +172,13 @@ export default function morphdomFactory(morphAttrs) {
             // to be removed
             while (curFromNodeChild) {
                 var fromNextSibling = curFromNodeChild.nextSibling;
+
+                // if the from node is a wire end comment, leave it in the dom
+                if (curFromNodeChild.nodeType === Node.COMMENT_NODE && curFromNodeChild.textContent.includes(`wire-end:`)) {
+                    curFromNodeChild = fromNextSibling;
+                    continue;
+                }
+
                 if ((curFromNodeKey = callHook(getNodeKey, curFromNodeChild))) {
                     // Since the node is keyed it might be matched up later so we defer
                     // the actual removal to later
@@ -365,6 +372,12 @@ export default function morphdomFactory(morphAttrs) {
                         curFromNodeChild = fromNextSibling;
                         continue outer;
                     } else {
+                        // if the from node is a wire end comment, leave it in the DOM and continue to the next node
+                        if (curFromNodeType === Node.COMMENT_NODE && curFromNodeChild.textContent.includes(`wire-end:`)){
+                            curFromNodeChild = fromNextSibling;
+                            continue;
+                        }
+
                         // No compatible match so remove the old node from the DOM and continue trying to find a
                         // match in the original DOM. However, we only do this if the from node is not keyed
                         // since it is possible that a keyed node might match up with a node somewhere else in the
