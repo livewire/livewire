@@ -66,7 +66,7 @@ class LivewirePropertyManager
 
         $resolver = $this->properties[get_class($value)];
 
-        return (new $resolver($value))->dehydrate();
+        return (new $resolver($value))->dehydrate($value);
     }
 
     /**

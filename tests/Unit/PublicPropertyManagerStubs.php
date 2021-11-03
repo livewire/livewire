@@ -19,21 +19,14 @@ class CustomResolverClass extends PropertyHandler
 {
     public ?CustomPublicClass $class;
 
-    public function __construct(CustomPublicClass $class)
+    public function dehydrate($value)
     {
-        $this->class = $class;
-    }
-
-    public function dehydrate()
-    {
-        return [
-            'message' => $this->class->message,
-        ];
+        return $value;
     }
 
     public static function hydrate($value)
     {
-        return new CustomPublicClass($value['message']);
+        return new CustomPublicClass($value->message);
     }
 }
 

@@ -14,7 +14,7 @@ abstract class PropertyHandler
      * In addition to render HTML, Livewire "dehydrates" or "serializes" the component's state
      * of a public property, so it can be passed to the front-end.
      */
-    abstract public function dehydrate();
+    abstract public function dehydrate($value);
 
     /**
      * Some Properties like fx Carbon does need some information if the property does get updated.
