@@ -89,7 +89,7 @@ class Test extends TestCase
                 ->assertSeeIn('@output', 'foo bar')
                 ->assertInputValue('@input', 'foo bar')
                 ->assertQueryStringHas('foo', 'foo bar')
-                //->assertScript('return !! window.location.search.match(/foo=foo\+bar/)')
+                ->assertScript('return !! window.location.search.match(/foo=foo\+bar/)')
                 ->assertScript('return !! window.location.search.match(/quux%26quuz/)')
             ;
         });
