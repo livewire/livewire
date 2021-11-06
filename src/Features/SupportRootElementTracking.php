@@ -19,11 +19,14 @@ class SupportRootElementTracking
 
     public function addComponentEndingMarker($html, $component)
     {
-        return $html."\n<!-- Livewire Component wire-end:".$component->id.' -->';
+        // The use of conditional comments https://en.wikipedia.org/wiki/Conditional_comment
+        // is to prevent minification services like Cloudflare's Auto Minify from stripping the
+        // comments (https://community.cloudflare.com/t/omit-formatted-comments-from-minification/18572/21)
+        return $html."\n<!--[if false]><![endif] Livewire Component wire-end:".$component->id.' -->';
     }
 
     public static function stripOutEndingMarker($html)
     {
-        return preg_replace('/<!-- Livewire Component wire-end:.*? -->/', '', $html);
+        return preg_replace('/<!--\[if false\]><!\[endif\] Livewire Component wire-end:.*? -->/', '', $html);
     }
 }
