@@ -12,8 +12,8 @@ class LivewirePropertyManager
     protected $properties = [];
 
     /**
-     * Register custom properties and providing a class on how to resolve this property.
-     * There are two ways to register a property:
+     * Register custom properties and provide a belonging resolver to resolve a property type.
+     * There are two ways to register properties:
      *
      * LivewireProperty::register(CustomPublicClass::class, CustomResolverClass::class);
      *
@@ -37,7 +37,7 @@ class LivewirePropertyManager
     }
 
     /**
-     * Return all registered properties available.
+     * Return all available properties and their resolver classes.
      */
     public function properties()
     {
@@ -45,7 +45,7 @@ class LivewirePropertyManager
     }
 
     /**
-     * Return all registered properties available.
+     * Simply an alternative method name to return all properties.
      */
     public function all()
     {
@@ -53,15 +53,15 @@ class LivewirePropertyManager
     }
 
     /**
-     * Check if the property manager has a resolver for a specific class.
+     * Check if the property class exists as a property.
      */
-    public function has($class)
+    public function exists($class)
     {
         if (empty($class) || is_array($class)) {
             return false;
         }
 
-        try { // In case an error will be thrown, we know that we can return false.
+        try { // In case an error will be thrown, we know that a property does not exist.
             $className = (new \ReflectionClass($class))->getName();
         } catch (\Exception $e) {
             return false;
@@ -73,11 +73,11 @@ class LivewirePropertyManager
     }
 
     /**
-     * Some syntactic sugar to check if a resolver has not been registered.
+     * Some syntactic sugar to check if a class does not exist.
      */
     public function hasNot($class)
     {
-        return ! $this->has($class);
+        return ! $this->exists($class);
     }
 
     /**

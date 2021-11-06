@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Stringable;
 use Illuminate\Support\Arr;
 use Carbon\CarbonImmutable;
-use Livewire\LivewirePropertyManager;
+use Livewire\LivewireProperty;
 use ReflectionProperty;
 use Livewire\Wireable;
 use DateTimeImmutable;
@@ -40,7 +40,7 @@ class HydratePublicProperties implements HydrationMiddleware
 
         foreach ($publicProperties as $property => $value) {
             if (in_array($property, $customProperties) && version_compare(PHP_VERSION, '7.4', '>=')) {
-                data_set($instance, $property, app(LivewirePropertyManager::class)->hydrate($instance, $property, $value));
+                data_set($instance, $property, LivewireProperty::hydrate($instance, $property, $value));
             } else if ($type = data_get($dates, $property)) {
                 $types = [
                     'native' => DateTime::class,
@@ -97,10 +97,10 @@ class HydratePublicProperties implements HydrationMiddleware
                 is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value)
             ) {
                 data_set($response, 'memo.data.'.$key, $value);
-            } else if (version_compare(PHP_VERSION, '7.4', '>=') && app(LivewirePropertyManager::class)->has($value)) {
+            } else if (version_compare(PHP_VERSION, '7.4', '>=') && LivewireProperty::exists($value)) {
                 $response->memo['dataMeta']['customProperties'][] = $key;
 
-                data_set($response, 'memo.data.'.$key, app(LivewirePropertyManager::class)->dehydrate($value));
+                data_set($response, 'memo.data.'.$key, LivewireProperty::dehydrate($value));
             } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
                 $response->memo['dataMeta']['wireables'][] = $key;
 
