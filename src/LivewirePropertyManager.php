@@ -55,14 +55,14 @@ class LivewirePropertyManager
     /**
      * Check if the property manager has a resolver for a specific class.
      */
-    public function has($classToCheck)
+    public function has($class)
     {
-        if (empty($classToCheck) || is_array($classToCheck)) {
+        if (empty($class) || is_array($class)) {
             return false;
         }
 
         try { // In case an error will be thrown, we know that we can return false.
-            $className = (new \ReflectionClass($classToCheck))->getName();
+            $className = (new \ReflectionClass($class))->getName();
         } catch (\Exception $e) {
             return false;
         }
@@ -75,9 +75,9 @@ class LivewirePropertyManager
     /**
      * Some syntactic sugar to check if a resolver has not been registered.
      */
-    public function hasNot($classToCheck)
+    public function hasNot($class)
     {
-        return ! $this->has($classToCheck);
+        return ! $this->has($class);
     }
 
     /**
