@@ -55,4 +55,15 @@ class PublicPropertyManagerTest extends TestCase
 
         $this->assertCount(1, LivewireProperty::properties());
     }
+
+    /** @test */
+    public function multiple_custom_public_property_can_be_registered_at_once()
+    {
+        LivewireProperty::register([
+            CustomPublicClass::class => CustomResolverClass::class,
+            CustomPublicClass2::class => CustomResolverClass::class,
+        ]);
+
+        $this->assertCount(2, LivewireProperty::properties());
+    }
 }

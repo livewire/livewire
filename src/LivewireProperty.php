@@ -5,7 +5,7 @@ namespace Livewire;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static self register($class, $resolver)
+ * @method static self register(...$args)
  * @method static array properties()
  * @method static bool has($classToCheck)
  * @method static bool hasNot($classToCheck)

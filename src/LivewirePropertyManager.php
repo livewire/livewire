@@ -12,13 +12,26 @@ class LivewirePropertyManager
     protected $properties = [];
 
     /**
-     * To
+     * Register custom properties and providing a class on how to resolve this property.
+     * There are two ways to register a property:
+     *
+     * LivewireProperty::register(CustomPublicClass::class, CustomResolverClass::class);
+     *
+     * // OR
+     *
+     * LivewireProperty::register([
+     *     CustomPublicClass::class => CustomResolverClass::class,
+     *     CustomPublicClass2::class => CustomResolverClass::class,
+     * ]);
      */
-    public function register($class, $resolver)
+    public function register(...$args)
     {
-        throw_unless(is_subclass_of($resolver, PropertyHandler::class), new CannotRegisterPublicPropertyWithoutExtendingThePropertyHandlerException());
-
-        $this->properties[$class] = $resolver;
+        if ($this->containsMultipleInstances($args)) {
+            $this->registerMultipleProperties($args[0]);
+        } else {
+            [$class, $resolver] = $args;
+            $this->registerSingleProperty($class, $resolver);
+        }
 
         return $this;
     }
@@ -91,5 +104,24 @@ class LivewirePropertyManager
         $resolver = $this->properties[$class];
 
         return $resolver::hydrate($value);
+    }
+
+    private function containsMultipleInstances($args)
+    {
+        return is_array($args[0]);
+    }
+
+    private function registerSingleProperty($class, $resolver)
+    {
+        throw_unless(is_subclass_of($resolver, PropertyHandler::class), new CannotRegisterPublicPropertyWithoutExtendingThePropertyHandlerException());
+
+        $this->properties[$class] = $resolver;
+    }
+
+    private function registerMultipleProperties($properties)
+    {
+        foreach ($properties as $class => $resolver) {
+            $this->register($class, $resolver);
+        }
     }
 }

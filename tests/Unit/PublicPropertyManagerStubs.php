@@ -15,6 +15,16 @@ class CustomPublicClass
     }
 }
 
+class CustomPublicClass2
+{
+    public $message;
+
+    public function __construct($message)
+    {
+        $this->message = $message;
+    }
+}
+
 class CustomResolverClass extends PropertyHandler
 {
     public ?CustomPublicClass $class;
