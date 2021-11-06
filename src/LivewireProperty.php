@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @method static array all()
  * @method static self register(...$args)
- * @method static bool has($classToCheck)
- * @method static bool hasNot($classToCheck)
+ * @method static bool has($class)
+ * @method static bool hasNot($class)
  * @method static mixed dehyrdate($value)
  * @method static mixed hydrate($instance, $property, $value)
  *
