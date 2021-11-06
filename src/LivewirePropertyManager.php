@@ -57,7 +57,11 @@ class LivewirePropertyManager
      */
     public function has($classToCheck)
     {
-        try {
+        if (empty($classToCheck) || is_array($classToCheck)) {
+            return false;
+        }
+
+        try { // In case an error will be thrown, we know that we can return false.
             $className = (new \ReflectionClass($classToCheck))->getName();
         } catch (\Exception $e) {
             return false;
