@@ -21,28 +21,13 @@ class PublicPropertyManagerTest extends TestCase
     }
 
     /** @test */
-    public function it_will_throw_an_exception_if_registering_a_class_not_implementing_the_property_handler_interface()
+    public function it_will_throw_an_exception_if_registering_a_class_not_implementing_the_property_handler_class()
     {
         $this->expectException(CannotRegisterPublicPropertyWithoutExtendingThePropertyHandlerException::class);
 
         $resolver = new class() {};
 
         LivewireProperty::register('className', $resolver);
-    }
-
-    /** @test */
-    public function a_custom_property_class_does_take_affect()
-    {
-        LivewireProperty::register(CustomPublicClass::class, CustomResolverClass::class);
-
-        $custom = new CustomPublicClass($message = Str::random());
-
-        Livewire::test(ComponentWithCustomPublicProperty::class, ['wireable' => $custom])
-            ->assertSee($message)
-            ->call('$refresh')
-            ->assertSee($message)
-            ->call('removeWireable')
-            ->assertDontSee($message);
     }
 
     /** @test */
@@ -65,5 +50,20 @@ class PublicPropertyManagerTest extends TestCase
         ]);
 
         $this->assertCount(2, LivewireProperty::all());
+    }
+
+    /** @test */
+    public function a_custom_property_class_does_take_affect()
+    {
+        LivewireProperty::register(CustomPublicClass::class, CustomResolverClass::class);
+
+        $custom = new CustomPublicClass($message = Str::random());
+
+        Livewire::test(ComponentWithCustomPublicProperty::class, ['wireable' => $custom])
+            ->assertSee($message)
+            ->call('$refresh')
+            ->assertSee($message)
+            ->call('removeWireable')
+            ->assertDontSee($message);
     }
 }
