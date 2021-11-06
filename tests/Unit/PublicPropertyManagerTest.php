@@ -53,7 +53,7 @@ class PublicPropertyManagerTest extends TestCase
             CustomResolverClass::class
         );
 
-        $this->assertCount(1, LivewireProperty::properties());
+        $this->assertCount(1, LivewireProperty::all());
     }
 
     /** @test */
@@ -64,6 +64,6 @@ class PublicPropertyManagerTest extends TestCase
             CustomPublicClass2::class => CustomResolverClass::class,
         ]);
 
-        $this->assertCount(2, LivewireProperty::properties());
+        $this->assertCount(2, LivewireProperty::all());
     }
 }
