@@ -57,11 +57,11 @@ class LivewirePropertyManager
      */
     public function has($classToCheck)
     {
-        if (is_array($classToCheck)) {
+        try {
+            $className = (new \ReflectionClass($classToCheck))->getName();
+        } catch (\Exception $e) {
             return false;
         }
-
-        $className = (new \ReflectionClass($classToCheck))->getName();
 
         return collect($this->properties())->contains(function($value, $key) use ($className) {
             return $className === $key;
