@@ -45,6 +45,14 @@ class LivewirePropertyManager
     }
 
     /**
+     * Return all registered properties available.
+     */
+    public function all()
+    {
+        return $this->properties();
+    }
+
+    /**
      * Check if the property manager has a resolver for a specific class.
      */
     public function has($classToCheck)
