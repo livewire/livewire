@@ -44,6 +44,10 @@ class ComponentWithCustomPublicProperty extends Component
 {
     public ?CustomPublicClass $wireable;
 
+    public $rules = [
+        'wireable.message' => 'string|required',
+    ];
+
     public function mount($wireable)
     {
         $this->wireable = $wireable;
@@ -52,6 +56,11 @@ class ComponentWithCustomPublicProperty extends Component
     public function removeWireable()
     {
         $this->wireable = null;
+    }
+
+    public function runValidation()
+    {
+        $this->validate();
     }
 
     public function render()

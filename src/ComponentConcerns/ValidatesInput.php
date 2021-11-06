@@ -2,6 +2,7 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Livewire\LivewireProperty;
 use function collect;
 use function count;
 use function explode;
@@ -306,6 +307,7 @@ trait ValidatesInput
     {
         return collect($data)->map(function ($value) {
             if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
+            else if (LivewireProperty::has($value)) return (array) $value;
 
             return $value;
         })->all();

@@ -53,7 +53,7 @@ class PublicPropertyManagerTest extends TestCase
     }
 
     /** @test */
-    public function a_custom_property_class_does_take_affect()
+    public function a_custom_property_can_be_registered_and_can_pass_validation()
     {
         LivewireProperty::register(CustomPublicClass::class, CustomResolverClass::class);
 
@@ -63,7 +63,22 @@ class PublicPropertyManagerTest extends TestCase
             ->assertSee($message)
             ->call('$refresh')
             ->assertSee($message)
+            ->call('runValidation')
+            ->assertHasNoErrors(['wireable.message'])
             ->call('removeWireable')
             ->assertDontSee($message);
+    }
+
+    /** @test */
+    public function it_can_have_a_single_validation_error()
+    {
+        LivewireProperty::register(CustomPublicClass::class, CustomResolverClass::class);
+
+        $custom = new CustomPublicClass($message = '');
+
+        Livewire::test(ComponentWithCustomPublicProperty::class, ['wireable' => $custom])
+            ->assertSee($message)
+            ->call('runValidation')
+            ->assertHasErrors(['wireable.message' => 'required']);
     }
 }
