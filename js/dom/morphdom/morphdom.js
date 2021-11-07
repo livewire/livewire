@@ -110,7 +110,11 @@ export default function morphdomFactory(morphAttrs) {
             }
 
             if (parentNode) {
-                parentNode.removeChild(node);
+                if (node.hasAttribute && node.hasAttribute('wire:transition.leave')) {
+                    node.classList.add(node.getAttribute('wire:transition.leave'))
+                }
+
+                requestAnimationFrame(() => parentNode.removeChild(node))
             }
 
             callHook(onNodeDiscarded, node);
@@ -405,6 +409,10 @@ export default function morphdomFactory(morphAttrs) {
                         }
                         fromEl.appendChild(curToNodeChild);
                         handleNodeAdded(curToNodeChild);
+
+                        if (curToNodeChild.hasAttribute && curToNodeChild.hasAttribute('wire:transition.enter')) {
+                            curToNodeChild.classList.add(curToNodeChild.getAttribute('wire:transition.enter'))
+                        }
                     }
                 }
 
