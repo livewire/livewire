@@ -10,7 +10,7 @@ export default class Connection {
     onError(message, status) {
         message.component.messageSendFailed()
 
-        return componentStore.onErrorCallback(status)
+        return componentStore.onErrorCallback(status, message)
     }
 
     showExpiredMessage() {
