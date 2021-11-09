@@ -53,6 +53,20 @@ class PublicPropertyManagerTest extends TestCase
     }
 
     /** @test */
+    public function a_custom_public_property_can_be_overwritten()
+    {
+        LivewireProperty::register(CustomPublicClass::class, CustomResolverClass::class);
+
+        $this->assertEquals(CustomResolverClass::class, LivewireProperty::get(CustomPublicClass::class));
+        $this->assertCount(1, LivewireProperty::all());
+
+        LivewireProperty::register(CustomPublicClass::class, CustomResolverClass2::class);
+
+        $this->assertEquals(CustomResolverClass2::class, LivewireProperty::get(CustomPublicClass::class));
+        $this->assertCount(1, LivewireProperty::all());
+    }
+
+    /** @test */
     public function a_custom_property_can_be_registered_and_can_pass_validation()
     {
         LivewireProperty::register(CustomPublicClass::class, CustomResolverClass::class);

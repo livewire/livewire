@@ -40,6 +40,21 @@ class CustomResolverClass extends PropertyHandler
     }
 }
 
+class CustomResolverClass2 extends PropertyHandler
+{
+    public ?CustomPublicClass $class;
+
+    public function dehydrate($value)
+    {
+        return $value;
+    }
+
+    public static function hydrate($value)
+    {
+        return new CustomPublicClass($value->message);
+    }
+}
+
 class ComponentWithCustomPublicProperty extends Component
 {
     public ?CustomPublicClass $wireable;
