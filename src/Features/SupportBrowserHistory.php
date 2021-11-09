@@ -187,13 +187,10 @@ class SupportBrowserHistory
     {
         return collect($component->getQueryString())
             ->mapWithKeys(function($value, $key) use ($component) {
-                if (is_string($key)) {
-                    $alias = $value['as'] ?? null;
-                } else {
-                    $key = $value;
-                }
+                $key = is_string($key) ? $key : $value;
+                $alias = $value['as'] ?? $key;
 
-                return [($alias ?? $key) => $component->{$key}];
+                return [$alias => $component->{$key}];
             });
     }
 
