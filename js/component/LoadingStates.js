@@ -174,7 +174,7 @@ function setLoading(component, actions) {
         .filter(el => el)
         .flat()
 
-    const allEls = component.genericLoadingEls.concat(actionTargetedEls)
+    const allEls = removeDuplicates(component.genericLoadingEls.concat(actionTargetedEls))
 
     startLoading(allEls)
 
@@ -185,7 +185,7 @@ export function setUploadLoading(component, modelName) {
     const actionTargetedEls =
         component.targetedLoadingElsByAction[modelName] || []
 
-    const allEls = component.genericLoadingEls.concat(actionTargetedEls)
+    const allEls = removeDuplicates(component.genericLoadingEls.concat(actionTargetedEls))
 
     startLoading(allEls)
 
@@ -293,4 +293,8 @@ function endLoading(els) {
 
 function generateSignatureFromMethodAndParams(method, params) {
     return method + btoa(encodeURIComponent(params.toString()))
+}
+
+function removeDuplicates(arr) {
+    return Array.from(new Set(arr))
 }
