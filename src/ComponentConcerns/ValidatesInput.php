@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MissingRulesException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Livewire\HydrationMiddleware\HydratePublicProperties;
 
 trait ValidatesInput
 {
@@ -199,34 +200,20 @@ trait ValidatesInput
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
-        // If the field is "items.0.foo", validation rules for "items.*.foo" is applied.
-        // if the field is "items.0", validation rules for "items.*" and "items.*.foo" etc are applied.
-        $rulesForField = collect($rules)
-            ->filter(function ($rule, $fullFieldKey) use ($field) {
-                return str($field)->is($fullFieldKey);
-            })->keys()
-            ->flatMap(function($key) use ($rules) {
-                return collect($rules)->filter(function($rule, $ruleKey) use ($key) {
-                    return str($ruleKey)->is($key);
-                });
-            })->mapWithKeys(function ($value, $key) use ($field) {
-                $fieldArray = str($field)->explode('.');
-                $result = str($key)->explode('.');
-
-                $result->splice(0, $fieldArray->count(), $fieldArray->toArray());
-
-                return [
-                    $result->join('.') => $value,
-                ];
-            })->toArray();
+        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
+            return str($field)->is($fullFieldKey) || str($fullFieldKey)->startsWith($field);
+        })->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
-
-        $data = $this->prepareForValidation(
-            $this->getDataForValidation($rules)
-        );
+        
+        $data = $this->getDataForValidation($rules);
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
+        
+        $processedRules = HydratePublicProperties::processRules([$field]);
+        $data = HydratePublicProperties::extractData($data, $processedRules, []);
+
+        $data = $this->prepareForValidation($data);
 
         $data = $this->unwrapDataForValidation($data);
 
