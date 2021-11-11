@@ -178,6 +178,7 @@ class SupportBrowserHistory
                 return isset($value['except']);
             })
             ->mapWithKeys(function ($value, $key) {
+                $key = $value['as'] ?? $key;
                 return [$key => $value['except']];
             });
     }
@@ -187,8 +188,9 @@ class SupportBrowserHistory
         return collect($component->getQueryString())
             ->mapWithKeys(function($value, $key) use ($component) {
                 $key = is_string($key) ? $key : $value;
+                $alias = $value['as'] ?? $key;
 
-                return [$key => $component->{$key}];
+                return [$alias => $component->{$key}];
             });
     }
 

@@ -100,6 +100,14 @@ trait ValidatesInput
         return [];
     }
 
+    protected function getValidationCustomValues()
+    {
+        if (method_exists($this, 'validationCustomValues')) return $this->validationCustomValues();
+        if (property_exists($this, 'validationCustomValues')) return $this->validationCustomValues;
+
+        return [];
+    }
+
     public function rulesForModel($name)
     {
         if (empty($this->getRules())) return collect();
@@ -175,6 +183,11 @@ trait ValidatesInput
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 
+        $customValues = $this->getValidationCustomValues();
+        if (!empty($customValues)) {
+            $validator->addCustomValues($customValues);
+        }
+
         $validatedData = $validator->validate();
 
         $this->resetErrorBag();
@@ -226,6 +239,11 @@ trait ValidatesInput
         }
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
+
+        $customValues = $this->getValidationCustomValues();
+        if (!empty($customValues)) {
+            $validator->addCustomValues($customValues);
+        }
 
         try {
             $result = $validator->validate();
