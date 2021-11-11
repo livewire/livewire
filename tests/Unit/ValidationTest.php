@@ -181,6 +181,21 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function can_validate_only_a_specific_field_with_custom_attributes_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->call('runValidationOnlyWithAttributesProperty', 'bar')
+            ->assertSee('The foobar field is required.')
+            ->call('runValidationOnlyWithAttributesProperty', 'items.*.baz') // Test wildcard works
+            ->assertSee('The Items Baz field is required.')
+            ->call('runValidationOnlyWithAttributesProperty', 'items.1.baz') // Test specific instance works
+            ->assertSee('The Items Baz field is required.')
+            ;
+    }
+
+    /** @test */
     public function can_validate_only_a_specific_field_with_deeply_nested_array()
     {
         $component = Livewire::test(ForValidation::class);
@@ -491,6 +506,19 @@ class ForValidation extends Component
         $this->validateOnly($field, [
             'foo' => 'required',
             'bar' => 'required',
+        ]);
+    }
+
+    public function runValidationOnlyWithAttributesProperty($field)
+    {
+        $this->validationAttributes = [
+            'bar' => 'foobar',
+            'items.*.baz' => 'Items Baz',
+        ];
+
+        $this->validateOnly($field, [
+            'bar' => 'required',
+            'items.*.baz' => 'required',
         ]);
     }
 
