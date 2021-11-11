@@ -175,7 +175,7 @@ class HydratePublicProperties implements HydrationMiddleware
 
     public static function setDirtyData($model, $data) {
         foreach ($data as $key => $value) {
-            if (is_array($value)) {
+            if (is_array($value) && !empty($value)) {
                 $existingData = data_get($model, $key);
 
                 if (is_array($existingData)) {

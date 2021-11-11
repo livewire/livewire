@@ -91,6 +91,20 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
     }
 
     /** @test */
+    public function an_eloquent_model_with_a_properties_dirty_data_set_to_an_empty_array_gets_hydrated_properly()
+    {
+        $model = new Author();
+
+        $dirtyData = [
+            'name' => [],
+        ];
+
+        HydratePublicProperties::setDirtyData($model, $dirtyData);
+
+        $this->assertEquals([], $model->name);
+    }
+
+    /** @test */
     public function rules_get_extracted_properly()
     {
         $rules = [
