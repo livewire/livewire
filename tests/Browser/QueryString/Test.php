@@ -269,4 +269,29 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_query_string_aliases()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithAliases::class)
+                ->assertQueryStringMissing('p')
+                ->assertQueryStringMissing('s')
+                // Search for posts where title contains "1".
+                ->waitForLivewire()->type('@search', '1')
+                ->assertQueryStringMissing('p')
+                ->assertQueryStringHas('s', '1')
+                ->assertInputValue('@search', '1')
+                // Navigate to page 2.
+                ->waitForLivewire()->click('@nextPage.before')
+                ->assertQueryStringHas('p', 2)
+                ->assertQueryStringHas('s', '1')
+                ->assertInputValue('@search', '1')
+                // Search for posts where title contains "qwerty".
+                ->waitForLivewire()->type('@search', 'qwerty')
+                ->assertQueryStringMissing('p')
+                ->assertQueryStringHas('s', 'qwerty')
+                ->assertInputValue('@search', 'qwerty')
+            ;
+        });
+    }
 }
