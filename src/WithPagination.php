@@ -75,6 +75,8 @@ trait WithPagination
 
     public function setPage($page, $pageName = 'page')
     {
+        $page = intval($page);
+        $page = $page <= 0 ? 1 : $page ;
         $beforePaginatorMethod = 'updatingPaginators';
         $afterPaginatorMethod = 'updatedPaginators';
 
@@ -106,6 +108,7 @@ trait WithPagination
     {
         // The "page" query string item should only be available
         // from within the original component mount run.
-        return (int) request()->query('page', $this->page);
+        // Avoid cast to integer to prevent hydrate error
+        return request()->query('page', $this->page);
     }
 }

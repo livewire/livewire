@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Contracts\Support\Responsable;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +24,13 @@ class FileDownloadsTest extends TestCase
         Livewire::test(FileDownloadComponent::class)
             ->call('streamDownload', 'download.txt')
             ->assertFileDownloaded('download.txt', 'alpinejs');
+    }
+
+    public function can_download_a_responsable(){
+        Livewire::test(FileDownloadComponent::class)
+            ->call('responsableDownload')
+            ->assertFileDownloaded()
+            ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
     }
 
     /** @test */
@@ -84,9 +92,23 @@ class FileDownloadComponent extends Component
             echo 'alpinejs';
         }, $filename, $headers);
     }
+  
+    public function responsableDownload()
+    {
+        return new DownloadableResponse();
+    }
 
+  
     public function render()
     {
         return app('view')->make('file-download-component');
+    }
+}
+
+class DownloadableResponse implements Responsable
+{
+    public function toResponse($request)
+    {
+        return  Storage::disk('unit-downloads')->download('download.txt');
     }
 }
