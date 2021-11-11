@@ -50,6 +50,7 @@ class ValidationTest extends TestCase
         $component->runAction('runValidationWithAttributesProperty');
 
         $this->assertStringContainsString('The foobar field is required.', $component->payload['effects']['html']);
+        $this->assertStringContainsString('The Items Baz field is required.', $component->payload['effects']['html']);
     }
 
     /** @test */
@@ -552,10 +553,14 @@ class ForValidation extends Component
 
     public function runValidationWithAttributesProperty()
     {
-        $this->validationAttributes = ['bar' => 'foobar'];
+        $this->validationAttributes = [
+            'bar' => 'foobar',
+            'items.*.baz' => 'Items Baz'
+        ];
 
         $this->validate([
             'bar' => 'required',
+            'items.*.baz' => 'required',
         ]);
     }
 
