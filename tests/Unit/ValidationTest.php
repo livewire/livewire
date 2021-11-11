@@ -63,6 +63,16 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validate_component_properties_with_custom_value_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->runAction('runValidationWithCustomValuesProperty');
+
+        $this->assertStringContainsString('The bar field is required when foo is my custom value.', $component->payload['effects']['html']);
+    }
+
+    /** @test */
     public function validate_nested_component_properties()
     {
         $component = Livewire::test(ForValidation::class);
@@ -526,6 +536,21 @@ class ForValidation extends Component
         $this->validate([
             'bar' => 'required',
         ], [], ['bar' => 'foobar']);
+    }
+
+    public function runValidationWithCustomValuesProperty()
+    {
+        $this->foo = 'my';
+
+        $this->validationCustomValues = [
+            'foo' => [
+                'my' => 'my custom value',
+            ],
+        ];
+
+        $this->validate([
+            'bar' => 'required_if:foo,my',
+        ]);
     }
 
     public function runNestedValidation()

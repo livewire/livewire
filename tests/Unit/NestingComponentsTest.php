@@ -79,6 +79,24 @@ class NestingComponentsTest extends TestCase
         $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
         $this->assertStringNotContainsString('bar', $component->payload['effects']['html']);
     }
+
+    /** @test */
+    public function parent_tracks_subsequent_renders_of_children_inside_a_loop_with_colon_wire_key_having_comma()
+    {
+        app('livewire')->component('parent', ParentComponentForNestingChildrenWithWireKeyHavingCommaStub::class);
+        app('livewire')->component('child', ChildComponentForNestingStub::class);
+        $component = app('livewire')->test('parent');
+
+        $this->assertStringContainsString('foo', $component->payload['effects']['html'] );
+
+        $component->runAction('setChildren', ['foo', 'bar']);
+        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
+        $this->assertStringContainsString('bar', $component->payload['effects']['html'] );
+
+        $component->runAction('setChildren', ['foo', 'bar']);
+        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
+        $this->assertStringNotContainsString('bar', $component->payload['effects']['html']);
+    }
 }
 
 class ParentComponentForNestingChildStub extends Component
@@ -123,6 +141,27 @@ class ParentComponentForNestingChildrenWithWireKeyStub extends Component
             <div>
                 @foreach ($children as $child)
                     <livewire:child :name="$child" :wire:key="$child" />
+                @endforeach
+            </div>
+blade;
+    }
+}
+
+class ParentComponentForNestingChildrenWithWireKeyHavingCommaStub extends Component
+{
+    public $children = ['foo'];
+
+    public function setChildren($children)
+    {
+        $this->children = $children;
+    }
+
+    public function render()
+    {
+        return <<<'blade'
+            <div>
+                @foreach ($children as $child)
+                    <livewire:child :name="$child" :wire:key="str_pad($child, 5, '_', STR_PAD_BOTH)" />
                 @endforeach
             </div>
 blade;
