@@ -16,6 +16,7 @@ class Test extends TestCase
                  */
                 ->waitForLivewire()->click('@foo')
                 ->assertSeeIn('@output', 'Bar')
+                ->assertSeeIn('@altoutput', 'Bazz')
             ;
         });
     }

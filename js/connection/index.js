@@ -3,8 +3,9 @@ import componentStore from '../Store'
 import { getCsrfToken } from '@/util'
 
 export default class Connection {
-    // custom Headers, can be set with window.livewire.connection.headers = { ... }
-    headers = {}
+    constructor() {
+        this.headers = {}
+    }
 
     onMessage(message, payload) {
         message.component.receiveMessage(message, payload)
