@@ -10,10 +10,10 @@ export default class Connection {
         message.component.receiveMessage(message, payload)
     }
 
-    onError(message, status) {
+    onError(message, status, response) {
         message.component.messageSendFailed()
 
-        return componentStore.onErrorCallback(status)
+        return componentStore.onErrorCallback(status, response)
     }
 
     showExpiredMessage() {
@@ -65,7 +65,7 @@ export default class Connection {
                         }
                     })
                 } else {
-                    if (this.onError(message, response.status) === false) return
+                    if (this.onError(message, response.status, response) === false) return
 
                     if (response.status === 419) {
                         if (store.sessionHasExpired) return

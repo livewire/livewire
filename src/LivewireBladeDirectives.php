@@ -45,16 +45,13 @@ EOT;
 
     public static function livewire($expression)
     {
-        $lastArg = str(last(explode(',', $expression)))->trim();
+        $cachedKey = "'" . Str::random(7) . "'";
 
-        if ($lastArg->startsWith('key(') && $lastArg->endsWith(')')) {
-            $cachedKey = $lastArg->replaceFirst('key(', '')->replaceLast(')', '');
-            $args = explode(',', $expression);
-            array_pop($args);
-            $expression = implode(',', $args);
-        } else {
-            $cachedKey = "'".str()->random(7)."'";
-        }
+        $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
+        $expression = preg_replace_callback($pattern, function ($match) use (&$cachedKey) {
+            $cachedKey = trim($match[1]) ?: $cachedKey;
+            return "";
+        }, $expression);
 
         return <<<EOT
 <?php

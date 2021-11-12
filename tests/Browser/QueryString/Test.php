@@ -90,6 +90,7 @@ class Test extends TestCase
                 ->assertInputValue('@input', 'foo bar')
                 ->assertQueryStringHas('foo', 'foo bar')
                 ->assertScript('return !! window.location.search.match(/foo=foo\+bar/)')
+                ->assertScript('return !! window.location.search.match(/quux%26quuz/)')
             ;
         });
     }
@@ -120,6 +121,19 @@ class Test extends TestCase
                 ->assertSeeIn('@qux.ampersand', 'quux&quuz')
                 ->assertSeeIn('@qux.space', 'quux quuz')
                 ->assertSeeIn('@qux.array', '["quux","quuz"]')
+            ;
+        });
+    }
+
+    public function test_query_string_with_property_values_containing_ampersand_characters()
+    {
+        $this->browse(function (Browser $browser) {
+            $queryString = '?foo=bar%26quux%26quuz';
+
+            Livewire::visit($browser, Component::class, $queryString)
+                ->assertQueryStringHas('foo', 'bar&quux&quuz')
+                ->refresh()
+                ->assertQueryStringHas('foo', 'bar&quux&quuz')
             ;
         });
     }
@@ -266,6 +280,31 @@ class Test extends TestCase
                 ->assertSee('Post #42')
                 ->assertQueryStringHas('search', '42')
                 ->assertQueryStringHas('page', 1)
+            ;
+        });
+    }
+
+    public function test_query_string_aliases()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithAliases::class)
+                ->assertQueryStringMissing('p')
+                ->assertQueryStringMissing('s')
+                // Search for posts where title contains "1".
+                ->waitForLivewire()->type('@search', '1')
+                ->assertQueryStringMissing('p')
+                ->assertQueryStringHas('s', '1')
+                ->assertInputValue('@search', '1')
+                // Navigate to page 2.
+                ->waitForLivewire()->click('@nextPage.before')
+                ->assertQueryStringHas('p', 2)
+                ->assertQueryStringHas('s', '1')
+                ->assertInputValue('@search', '1')
+                // Search for posts where title contains "qwerty".
+                ->waitForLivewire()->type('@search', 'qwerty')
+                ->assertQueryStringMissing('p')
+                ->assertQueryStringHas('s', 'qwerty')
+                ->assertInputValue('@search', 'qwerty')
             ;
         });
     }
