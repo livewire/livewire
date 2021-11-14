@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Support\Facades\Artisan;
 use Livewire\Component;
 
 class NestingComponentsTest extends TestCase
@@ -25,6 +26,21 @@ class NestingComponentsTest extends TestCase
 
         $this->assertStringContainsString('foo', $component->payload['effects']['html']);
 
+        $component->runAction('$refresh');
+
+        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
+    }
+
+    /** @test */
+    public function parent_renders_stub_element_in_place_of_child_on_subsequent_renders_even_if_view_cache_cleared()
+    {
+        app('livewire')->component('parent', ParentComponentForNestingChildStub::class);
+        app('livewire')->component('child', ChildComponentForNestingStub::class);
+        $component = app('livewire')->test('parent');
+
+        $this->assertStringContainsString('foo', $component->payload['effects']['html']);
+
+        Artisan::call('view:clear');
         $component->runAction('$refresh');
 
         $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
