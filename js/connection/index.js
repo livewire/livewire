@@ -3,6 +3,10 @@ import componentStore from '../Store'
 import { getCsrfToken } from '@/util'
 
 export default class Connection {
+    constructor() {
+        this.headers = {}
+    }
+
     onMessage(message, payload) {
         message.component.receiveMessage(message, payload)
     }
@@ -40,6 +44,9 @@ export default class Connection {
                     'Content-Type': 'application/json',
                     'Accept': 'text/html, application/xhtml+xml',
                     'X-Livewire': true,
+
+                    // set Custom Headers
+                    ...(this.headers),
 
                     // We'll set this explicitly to mitigate potential interference from ad-blockers/etc.
                     'Referer': window.location.href,
