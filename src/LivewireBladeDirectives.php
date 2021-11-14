@@ -45,7 +45,7 @@ EOT;
 
     public static function livewire($expression)
     {
-        $cachedKey = "'" . Str::random(7) . "'";
+        $cachedKey = "'" . sha1($expression) . "'";
 
         $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
         $expression = preg_replace_callback($pattern, function ($match) use (&$cachedKey) {
