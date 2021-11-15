@@ -113,6 +113,25 @@ class NestingComponentsTest extends TestCase
         $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
         $this->assertStringNotContainsString('bar', $component->payload['effects']['html']);
     }
+
+    /** @test */
+    public function parent_tracks_subsequent_renders_of_duplicate_children()
+    {
+        app('livewire')->component('parent', ParentComponentForNestingDuplicateChildrenStub::class);
+        app('livewire')->component('child', ChildComponentForNestingStub::class);
+        $component = app('livewire')->test('parent');
+
+        // $name appears twice per component
+        $this->assertEquals(2 * 2, substr_count($component->payload['effects']['html'], 'foo'));
+
+        $component->runAction('$refresh');
+
+        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
+
+        preg_match_all('/<span wire:id="(\w+)"/', $component->payload['effects']['html'], $matches);
+        $childComponentIds = $matches[1];
+        $this->assertEquals(array_unique($childComponentIds), $childComponentIds);
+    }
 }
 
 class ParentComponentForNestingChildStub extends Component
@@ -181,6 +200,16 @@ class ParentComponentForNestingChildrenWithWireKeyHavingCommaStub extends Compon
                 @endforeach
             </div>
 blade;
+    }
+}
+
+class ParentComponentForNestingDuplicateChildrenStub extends Component
+{
+    public function render()
+    {
+        return app('view')->make('show-duplicate-children', [
+            'childName' => 'foo',
+        ]);
     }
 }
 
