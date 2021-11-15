@@ -45,11 +45,12 @@ EOT;
 
     public static function livewire($expression)
     {
-        $cachedKey = "'" . sha1($expression) . "'";
+        $userDefinedCachedKey = 'null';
+        $expressionHash = "'" . sha1($expression) . "'";
 
         $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
-        $expression = preg_replace_callback($pattern, function ($match) use (&$cachedKey) {
-            $cachedKey = trim($match[1]) ?: $cachedKey;
+        $expression = preg_replace_callback($pattern, function ($match) use (&$userDefinedCachedKey) {
+            $userDefinedCachedKey = trim($match[1]) ?: $userDefinedCachedKey;
             return "";
         }, $expression);
 
@@ -57,15 +58,18 @@ EOT;
 <?php
 if (! isset(\$_instance)) {
     \$html = \Livewire\Livewire::mount({$expression})->html();
-} elseif (\$_instance->childHasBeenRendered($cachedKey)) {
-    \$componentId = \$_instance->getRenderedChildComponentId($cachedKey);
-    \$componentTag = \$_instance->getRenderedChildComponentTagName($cachedKey);
-    \$html = \Livewire\Livewire::dummyMount(\$componentId, \$componentTag);
-    \$_instance->preserveRenderedChild($cachedKey);
 } else {
-    \$response = \Livewire\Livewire::mount({$expression});
-    \$html = \$response->html();
-    \$_instance->logRenderedChild($cachedKey, \$response->id(), \Livewire\Livewire::getRootElementTagName(\$html));
+    \$cachedKey = $userDefinedCachedKey ?: implode('-', [$expressionHash, count(\$_instance->getRenderedChildren())]);
+    if (\$_instance->childHasBeenRendered(\$cachedKey)) {
+        \$componentId = \$_instance->getRenderedChildComponentId(\$cachedKey);
+        \$componentTag = \$_instance->getRenderedChildComponentTagName(\$cachedKey);
+        \$html = \Livewire\Livewire::dummyMount(\$componentId, \$componentTag);
+        \$_instance->preserveRenderedChild(\$cachedKey);
+    } else {
+        \$response = \Livewire\Livewire::mount({$expression});
+        \$html = \$response->html();
+        \$_instance->logRenderedChild(\$cachedKey, \$response->id(), \Livewire\Livewire::getRootElementTagName(\$html));
+    }
 }
 echo \$html;
 ?>
