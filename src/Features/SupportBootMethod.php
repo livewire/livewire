@@ -2,8 +2,9 @@
 
 namespace Livewire\Features;
 
-use Livewire\Livewire;
 use Illuminate\Support\Facades\App;
+use Livewire\ImplicitlyBoundMethod;
+use Livewire\Livewire;
 
 class SupportBootMethod
 {
@@ -13,6 +14,12 @@ class SupportBootMethod
     {
         Livewire::listen('component.boot', function ($component) {
             $component->bootIfNotBooted();
+        });
+
+        Livewire::listen('component.booted', function ($component, $request) {
+            if (method_exists($component, $method = 'booted')) {
+                ImplicitlyBoundMethod::call(app(), [$component, $method], [$request]); 
+            }
         });
     }
 }

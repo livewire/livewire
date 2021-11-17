@@ -175,7 +175,7 @@ class HydratePublicProperties implements HydrationMiddleware
 
     public static function setDirtyData($model, $data) {
         foreach ($data as $key => $value) {
-            if (is_array($value)) {
+            if (is_array($value) && !empty($value)) {
                 $existingData = data_get($model, $key);
 
                 if (is_array($existingData)) {
@@ -237,14 +237,23 @@ class HydratePublicProperties implements HydrationMiddleware
 
     public static function processRules($rules) {
         $rules = Collection::wrap($rules);
-
+        
         $rules = $rules
-            ->mapInto(Stringable::class)
-            ->mapToGroups(function($rule) {
+            ->mapInto(Stringable::class);
+
+        [$groupedRules, $singleRules] = $rules->partition(function($rule) {
+            return $rule->contains('.');
+        });
+
+        $singleRules = $singleRules->map(function(Stringable $rule) {
+            return $rule->__toString();
+        });
+
+        $groupedRules = $groupedRules->mapToGroups(function(Stringable $rule) {
                 return [$rule->before('.')->__toString() => $rule->after('.')];
             });
 
-        $rules = $rules->mapWithKeys(function($rules, $group) {
+        $groupedRules = $groupedRules->mapWithKeys(function($rules, $group) {
             // Split rules into collection and model rules.
             [$collectionRules, $modelRules] = $rules
                 ->partition(function($rule) {
@@ -263,10 +272,12 @@ class HydratePublicProperties implements HydrationMiddleware
 
             $modelRules = $modelRules->map->__toString();
 
-            $rules = $modelRules->merge($collectionRules);
+            $rules = $modelRules->union($collectionRules);
 
             return [$group => $rules];
         });
+
+        $rules = $singleRules->union($groupedRules);
 
         return $rules;
     }

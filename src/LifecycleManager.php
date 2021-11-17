@@ -121,6 +121,8 @@ class LifecycleManager
 
         Livewire::dispatch('component.mount', $this->instance, $params);
 
+        Livewire::dispatch('component.booted', $this->instance, $this->request);
+
         return $this;
     }
 

@@ -15,12 +15,11 @@ jobs:
       matrix:
         php: [7.2, 7.3, 7.4, 8.0]
         laravel: [7.*, 8.*]
-        dependency-version: [prefer-stable]
         exclude:
           - php: 7.2
             laravel: 8.*
 
-    name: PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}(${{ matrix.dependency-version }})
+    name: PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}
 
     steps:
       - name: Checkout
@@ -30,7 +29,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
+          extensions: dom, curl, libxml, mbstring, iconv, intl, zip, pdo_sqlite
           tools: composer:v2
           coverage: none
 
@@ -48,7 +47,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
-          composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest
+          composer update --prefer-stable --no-interaction --no-suggest
 
       - name: Run Unit tests
         run: vendor/bin/phpunit --testsuite Unit

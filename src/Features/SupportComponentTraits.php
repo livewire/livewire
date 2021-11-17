@@ -19,6 +19,7 @@ class SupportComponentTraits
                     'boot',
                     'hydrate',
                     'mount',
+                    'booted',
                     'updating',
                     'updated',
                     'rendering',
@@ -57,6 +58,14 @@ class SupportComponentTraits
 
             foreach ($methods as $method) {
                 ImplicitlyBoundMethod::call(app(), $method, $params);
+            }
+        });
+
+        Livewire::listen('component.booted', function ($component, $request) {
+            $methods = $this->componentIdMethodMap[$component->id]['booted'] ?? [];
+
+            foreach ($methods as $method) {
+                ImplicitlyBoundMethod::call(app(), $method, [$request]);
             }
         });
 

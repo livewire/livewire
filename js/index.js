@@ -66,6 +66,10 @@ class Livewire {
         this.components.on(event, callback)
     }
 
+    addHeaders(headers) {
+        this.connection.headers = { ...this.connection.headers, ...headers}
+    }
+
     devTools(enableDevtools) {
         this.devToolsEnabled = enableDevtools
     }

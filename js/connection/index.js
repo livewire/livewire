@@ -3,14 +3,18 @@ import componentStore from '../Store'
 import { getCsrfToken } from '@/util'
 
 export default class Connection {
+    constructor() {
+        this.headers = {}
+    }
+
     onMessage(message, payload) {
         message.component.receiveMessage(message, payload)
     }
 
-    onError(message, status) {
+    onError(message, status, response) {
         message.component.messageSendFailed()
 
-        return componentStore.onErrorCallback(status)
+        return componentStore.onErrorCallback(status, response)
     }
 
     showExpiredMessage() {
@@ -41,6 +45,9 @@ export default class Connection {
                     'Accept': 'text/html, application/xhtml+xml',
                     'X-Livewire': true,
 
+                    // set Custom Headers
+                    ...(this.headers),
+
                     // We'll set this explicitly to mitigate potential interference from ad-blockers/etc.
                     'Referer': window.location.href,
                     ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
@@ -59,7 +66,7 @@ export default class Connection {
                         }
                     })
                 } else {
-                    if (this.onError(message, response.status) === false) return
+                    if (this.onError(message, response.status, response) === false) return
 
                     if (response.status === 419) {
                         if (store.sessionHasExpired) return
