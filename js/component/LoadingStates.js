@@ -244,7 +244,7 @@ function startLoading(els) {
 }
 
 function getDisplayProperty(directive) {
-    return (['inline', 'block', 'table', 'flex', 'grid']
+    return (['inline', 'block', 'table', 'flex', 'grid', 'inline-flex']
         .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
 }
 

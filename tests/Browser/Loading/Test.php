@@ -114,6 +114,7 @@ class Test extends TestCase
                 ->assertScript('getComputedStyle(document.querySelector(\'[dusk="flex"]\')).display', 'none')
                 ->assertScript('getComputedStyle(document.querySelector(\'[dusk="table"]\')).display', 'none')
                 ->assertScript('getComputedStyle(document.querySelector(\'[dusk="grid"]\')).display', 'none')
+                ->assertScript('getComputedStyle(document.querySelector(\'[dusk="inline-flex"]\')).display', 'none')
                 ->waitForLivewire(function ($b) {
                     $b->click('@refresh');
                     $b->pause(50);
@@ -124,6 +125,7 @@ class Test extends TestCase
                     $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="flex"]\')).display', 'flex');
                     $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="table"]\')).display', 'table');
                     $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="grid"]\')).display', 'grid');
+                    $b->assertScript('getComputedStyle(document.querySelector(\'[dusk="inline-flex"]\')).display', 'inline-flex');
                 })
             ;
         });
