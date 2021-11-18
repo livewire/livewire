@@ -72,9 +72,20 @@ class ComponentWithWireablePublicProperty extends Component
         $this->validate();
     }
 
+    public function runValidateOnly($propertyName)
+    {
+        $this->validateOnly($propertyName);
+    }
+
     public function removeWireable()
     {
+        $this->resetErrorBag();
         $this->wireable = null;
+    }
+
+    public function runResetValidation()
+    {
+        $this->resetValidation();
     }
 
     public function render()
