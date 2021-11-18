@@ -49,7 +49,7 @@ class WireablesCanBeSetAsPublicPropertiesTest extends TestCase
             ->assertSee($message)
             ->assertSee($embeddedMessage)
             ->call('runValidateOnly', 'wireable.message')
-            ->assertHasNoErrors('wireable.message',)
+            ->assertHasNoErrors('wireable.message')
             ->call('runValidateOnly', 'wireable.embeddedWireable.message')
             ->assertHasNoErrors('wireable.embeddedWireable.message')
             ->call('removeWireable')
