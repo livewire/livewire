@@ -70,8 +70,10 @@ class DehydratePropertyFromWithFileUploadsTest extends TestCase
         ];
 
         $outputFileStr = $uploader->dehydratePropertyFromWithFileUploads($tmpFileArray);
+        $imageListArr = explode(',', str_replace(array('livewire-files:','[', ']'), '', $outputFileStr));
 
         $this->assertTrue(str_contains($outputFileStr, 'livewire-files:'));
+        $this->assertTrue(count($imageListArr) === count($tmpFileArray));
     }
 
     /** @test */
@@ -98,9 +100,12 @@ class DehydratePropertyFromWithFileUploadsTest extends TestCase
         $wireableInput = new DehydrateTestWireable($tmpFile, $tmpFileArray, 'test string', 1);
 
         $wireableOutput = $uploader->dehydratePropertyFromWithFileUploads($wireableInput);
+        $imageListArr = explode(',', str_replace(array('livewire-files:','[', ']'), '', $wireableOutput->imageList));
+
 
         $this->assertTrue(str_contains($wireableOutput->image, 'livewire-file:'));
         $this->assertTrue(str_contains($wireableOutput->imageList, 'livewire-files:'));
+        $this->assertTrue(count($imageListArr) === count($tmpFileArray));
         $this->assertTrue($wireableOutput->text === 'test string');
         $this->assertTrue($wireableOutput->number === 1);
     }
