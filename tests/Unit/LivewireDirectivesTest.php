@@ -190,6 +190,22 @@ class LivewireDirectivesTest extends TestCase
     }
 
     /** @test */
+    public function can_assert_see_livewire_on_test_view_refering_by_subfolder_without_dot_index()
+    {
+        if(! class_exists(TestView::class)) {
+            self::markTestSkipped('Need Laravel >= 8');
+        }
+
+        Artisan::call('make:livewire', ['name' => 'foo.index']);
+
+        $testView = new TestView(view('render-component', [
+            'component' => 'foo',
+        ]));
+
+        $testView->assertSeeLivewire('foo');
+    }
+
+    /** @test */
     public function can_assert_dont_see_livewire_on_test_view()
     {
         if(! class_exists(TestView::class)) {
