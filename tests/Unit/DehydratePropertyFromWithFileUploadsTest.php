@@ -12,14 +12,6 @@ use Livewire\Wireable;
 
 class DehydratePropertyFromWithFileUploadsTest extends TestCase
 {
-    /**
-     * Tests needed
-     * 
-     * Text
-     * Image
-     * Array
-     * Wireable
-     */
 
     /** @test */
     public function a_text_variable_should_return_with_no_changes()
