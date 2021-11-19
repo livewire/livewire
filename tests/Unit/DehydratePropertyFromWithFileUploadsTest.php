@@ -13,10 +13,6 @@ class DehydratePropertyFromWithFileUploadsTest extends TestCase
     /** @test */
     public function a_text_variable_should_return_with_no_changes()
     {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
-        }
-
         $uploader = SupportFileUploads::init();
         $inputValue = 'File Upload';
         $outputValue = $uploader->dehydratePropertyFromWithFileUploads($inputValue);
@@ -27,10 +23,6 @@ class DehydratePropertyFromWithFileUploadsTest extends TestCase
     public function an_image_should_return_a_serialized_version_of_itself()
     {
         Storage::fake('tmp-for-tests');
-
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
-        }
 
         $file = UploadedFile::fake()->image('avatar.jpg');
 
@@ -44,10 +36,6 @@ class DehydratePropertyFromWithFileUploadsTest extends TestCase
     public function an_array_should_serialize_all_images_within_it()
     {
         Storage::fake('tmp-for-tests');
-
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
-        }
 
         $file1 = UploadedFile::fake()->image('avatar.jpg');
         $file2 = UploadedFile::fake()->image('avatar.jpg');
@@ -69,10 +57,6 @@ class DehydratePropertyFromWithFileUploadsTest extends TestCase
     public function a_wireable_object_serialize_all_images_within_it()
     {
         Storage::fake('tmp-for-tests');
-
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
-        }
 
         $file1 = UploadedFile::fake()->image('avatar.jpg');
         $file2 = UploadedFile::fake()->image('avatar.jpg');
@@ -104,10 +88,6 @@ class DehydratePropertyFromWithFileUploadsTest extends TestCase
     public function serialize_mixed_arrays_with_uploaded_files()
     {
         Storage::fake('tmp-for-tests');
-
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
-        }
 
         $file = UploadedFile::fake()->image('avatar.jpg');
 
