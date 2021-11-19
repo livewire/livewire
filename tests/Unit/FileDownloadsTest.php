@@ -28,9 +28,9 @@ class FileDownloadsTest extends TestCase
 
     public function can_download_a_responsable(){
         Livewire::test(FileDownloadComponent::class)
-            ->call('responsableDownload')
-            ->assertFileDownloaded()
-            ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
+                ->call('responsableDownload')
+                ->assertFileDownloaded()
+                ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
     }
 
     /** @test */
@@ -64,18 +64,30 @@ class FileDownloadsTest extends TestCase
                 ->call('streamDownload', 'download.csv', ['Content-Type' => 'text/csv'])
                 ->assertFileDownloaded('download.csv', 'alpinejs', 'text/csv');
     }
+
+    /** @test */
+    public function it_refreshes_html_after_download()
+    {
+        Livewire::test(FileDownloadComponent::class)
+            ->call('download')
+            ->assertFileDownloaded()
+            ->assertSeeText('Thanks!');
+    }
 }
 
 class FileDownloadComponent extends Component
 {
+    public $downloaded = false;
 
     public function download($filename = null, $headers = [])
     {
+        $this->downloaded = true;
         return Storage::disk('unit-downloads')->download('download.txt', $filename, $headers);
     }
 
     public function streamDownload($filename = null, $headers = [])
     {
+        $this->downloaded = true;
         return response()->streamDownload(function () {
             echo 'alpinejs';
         }, $filename, $headers);
@@ -86,7 +98,11 @@ class FileDownloadComponent extends Component
         return new DownloadableResponse();
     }
 
-    public function render() { return app('view')->make('null-view'); }
+
+    public function render()
+    {
+        return app('view')->make('file-download-component');
+    }
 }
 
 class DownloadableResponse implements Responsable

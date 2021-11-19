@@ -157,7 +157,7 @@ trait MakesAssertions
 
         if (empty($params)) {
             $test = collect(data_get($this->payload, 'effects.emits'))->contains('event', '=', $value);
-        } elseif (is_callable($params[0])) {
+        } elseif (! is_string($params[0]) && is_callable($params[0])) {
             $event = collect(data_get($this->payload, 'effects.emits'))->first(function ($item) use ($value) {
                 return $item['event'] === $value;
             });
@@ -168,6 +168,7 @@ trait MakesAssertions
                 return $item['event'] === $value
                     && $item['params'] === $params;
             });
+            
             $encodedParams = json_encode($params);
             $assertionSuffix = " with parameters: {$encodedParams}";
         }
