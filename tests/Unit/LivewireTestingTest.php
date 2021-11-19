@@ -50,7 +50,13 @@ class LivewireTestingTest extends TestCase
             ->set('name', 'info')
             ->assertSet('name', 'info')
             ->set('name', 'is_array')
-            ->assertSet('name', 'is_array');
+            ->assertSet('name', 'is_array')
+            ->assertSet(
+                'name',
+                function ($propertyValue) {
+                    return $propertyValue === 'is_array';
+                }
+            );
 
         $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
 
