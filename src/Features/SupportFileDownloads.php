@@ -40,8 +40,6 @@ class SupportFileDownloads
                 'content' => $content,
                 'contentType' => $response->headers->get('Content-Type'),
             ];
-
-            $component->skipRender();
         });
 
         Livewire::listen('component.dehydrate.subsequent', function ($component, $response) {
