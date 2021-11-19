@@ -45,19 +45,27 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_set()
     {
-        Livewire::test(HasMountArguments::class, ['name' => 'foo'])
+        $livewire = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
             ->assertSet('name', 'foo')
             ->set('name', 'info')
             ->assertSet('name', 'info')
             ->set('name', 'is_array')
             ->assertSet('name', 'is_array');
+
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+
+        $livewire->set('name', 0)->assertSet('name', null);
     }
 
     /** @test */
     public function assert_not_set()
     {
-        Livewire::test(HasMountArguments::class, ['name' => 'bar'])
-            ->assertNotSet('name', 'foo');
+        Livewire::test(HasMountArguments::class, ['name' => null])
+            ->assertNotSet('name', false)
+            ->assertNotSet('name', '')
+            ->assertNotSet('name', 0)
+            ->set('name', 100)
+            ->assertNotSet('name', "1e2");
     }
 
     /** @test */

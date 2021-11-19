@@ -16,7 +16,7 @@ trait MakesAssertions
         if (! is_string($value) && is_callable($value)) {
             PHPUnit::assertTrue($value($this->get($name)));
         } else {
-            PHPUnit::assertEquals($value, $this->get($name));
+            PHPUnit::assertSame($value, $this->get($name));
         }
 
         return $this;
@@ -24,7 +24,7 @@ trait MakesAssertions
 
     public function assertNotSet($name, $value)
     {
-        PHPUnit::assertNotEquals($value, $this->get($name));
+        PHPUnit::assertNotSame($value, $this->get($name));
 
         return $this;
     }
