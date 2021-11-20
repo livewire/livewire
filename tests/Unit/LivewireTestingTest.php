@@ -45,7 +45,7 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_set()
     {
-        $livewire = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
+        $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
             ->assertSet('name', 'foo')
             ->set('name', 'info')
             ->assertSet('name', 'info')
@@ -60,7 +60,7 @@ class LivewireTestingTest extends TestCase
 
         $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
 
-        $livewire->set('name', 0)->assertSet('name', null);
+        $component->set('name', 0)->assertSet('name', null);
     }
 
     /** @test */
