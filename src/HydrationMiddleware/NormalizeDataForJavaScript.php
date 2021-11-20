@@ -18,7 +18,7 @@ abstract class NormalizeDataForJavaScript
             $isCollection = true;
             $collectionClass = get_class($value);
 
-            $value = $value->toArray();
+            $value = $value->all();
         }
 
         if (! is_array($value)) {

@@ -94,6 +94,10 @@ class HydratePublicProperties implements HydrationMiddleware
                 is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value)
             ) {
                 data_set($response, 'memo.data.'.$key, $value);
+            } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
+                $response->memo['dataMeta']['wireables'][] = $key;
+
+                data_set($response, 'memo.data.'.$key, $value->toLivewire());
             } else if ($value instanceof QueueableEntity) {
                 static::dehydrateModel($value, $key, $response, $instance);
             } else if ($value instanceof QueueableCollection) {
@@ -120,10 +124,6 @@ class HydratePublicProperties implements HydrationMiddleware
                 $response->memo['dataMeta']['stringables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->__toString());
-            } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
-                $response->memo['dataMeta']['wireables'][] = $key;
-
-                data_set($response, 'memo.data.'.$key, $value->toLivewire());
             } else {
                 throw new PublicPropertyTypeNotAllowedException($instance::getName(), $key, $value);
             }
@@ -175,7 +175,7 @@ class HydratePublicProperties implements HydrationMiddleware
 
     public static function setDirtyData($model, $data) {
         foreach ($data as $key => $value) {
-            if (is_array($value)) {
+            if (is_array($value) && !empty($value)) {
                 $existingData = data_get($model, $key);
 
                 if (is_array($existingData)) {
@@ -237,14 +237,23 @@ class HydratePublicProperties implements HydrationMiddleware
 
     public static function processRules($rules) {
         $rules = Collection::wrap($rules);
-
+        
         $rules = $rules
-            ->mapInto(Stringable::class)
-            ->mapToGroups(function($rule) {
+            ->mapInto(Stringable::class);
+
+        [$groupedRules, $singleRules] = $rules->partition(function($rule) {
+            return $rule->contains('.');
+        });
+
+        $singleRules = $singleRules->map(function(Stringable $rule) {
+            return $rule->__toString();
+        });
+
+        $groupedRules = $groupedRules->mapToGroups(function(Stringable $rule) {
                 return [$rule->before('.')->__toString() => $rule->after('.')];
             });
 
-        $rules = $rules->mapWithKeys(function($rules, $group) {
+        $groupedRules = $groupedRules->mapWithKeys(function($rules, $group) {
             // Split rules into collection and model rules.
             [$collectionRules, $modelRules] = $rules
                 ->partition(function($rule) {
@@ -263,10 +272,12 @@ class HydratePublicProperties implements HydrationMiddleware
 
             $modelRules = $modelRules->map->__toString();
 
-            $rules = $modelRules->merge($collectionRules);
+            $rules = $modelRules->union($collectionRules);
 
             return [$group => $rules];
         });
+
+        $rules = $singleRules->union($groupedRules);
 
         return $rules;
     }
@@ -287,7 +298,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 } else {
                     if ($rule == "*") {
                         $filteredData = $data;
-                    } elseif ((Arr::accessible($data) && Arr::exists($data, $rule)) || (is_object($data) && isset($data->{$rule}))) {
+                    } elseif (Arr::accessible($data) || is_object($data)) {
                         data_set($filteredData, $rule, data_get($data, $rule));
                     }
                 }

@@ -90,6 +90,7 @@ class Test extends TestCase
                 ->assertInputValue('@input', 'foo bar')
                 ->assertQueryStringHas('foo', 'foo bar')
                 ->assertScript('return !! window.location.search.match(/foo=foo\+bar/)')
+                ->assertScript('return !! window.location.search.match(/quux%26quuz/)')
             ;
         });
     }
@@ -120,6 +121,19 @@ class Test extends TestCase
                 ->assertSeeIn('@qux.ampersand', 'quux&quuz')
                 ->assertSeeIn('@qux.space', 'quux quuz')
                 ->assertSeeIn('@qux.array', '["quux","quuz"]')
+            ;
+        });
+    }
+
+    public function test_query_string_with_property_values_containing_ampersand_characters()
+    {
+        $this->browse(function (Browser $browser) {
+            $queryString = '?foo=bar%26quux%26quuz';
+
+            Livewire::visit($browser, Component::class, $queryString)
+                ->assertQueryStringHas('foo', 'bar&quux&quuz')
+                ->refresh()
+                ->assertQueryStringHas('foo', 'bar&quux&quuz')
             ;
         });
     }
@@ -216,6 +230,81 @@ class Test extends TestCase
                 // assert the path hasn't change to /livewire/message
                 ->assertPathBeginsWith('/livewire-dusk')
                 ->assertQueryStringHas('baz', 'bop')
+            ;
+        });
+    }
+
+    /** @test */
+    public function it_does_not_build_query_string_from_referer_if_it_is_coming_from_a_full_page_redirect()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, RedirectLinkToQueryStringComponent::class)
+                ->assertPathBeginsWith('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CRedirectLinkToQueryStringComponent')
+                ->click('@link')
+
+                ->pause(200)
+                // assert the path has changed to new component path
+                ->assertPathBeginsWith('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CNestedComponent')
+                ->assertQueryStringHas('baz', 'bop')
+            ;
+        });
+    }
+
+    public function test_query_string_hooks_from_traits()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithTraits::class)
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringHas('page', 1)
+                ->assertQueryStringMissing('search')
+                // Search for posts where title contains "1".
+                ->waitForLivewire()->type('@search', '1')
+                ->assertSee('Post #1')
+                ->assertSee('Post #10')
+                ->assertSee('Post #11')
+                ->assertDontSee('Post #2')
+                ->assertDontSee('Post #3')
+                ->assertQueryStringHas('search', '1')
+                ->assertQueryStringHas('page', 1)
+                // Navigate to page 2.
+                ->waitForLivewire()->click('@nextPage.before')
+                ->assertSee('Post #12')
+                ->assertSee('Post #13')
+                ->assertSee('Post #14')
+                ->assertQueryStringHas('search', '1')
+                ->assertQueryStringMissing('page')
+                // Search for posts where title contains "42".
+                ->waitForLivewire()->type('@search', '42')
+                ->assertSee('Post #42')
+                ->assertQueryStringHas('search', '42')
+                ->assertQueryStringHas('page', 1)
+            ;
+        });
+    }
+
+    public function test_query_string_aliases()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithAliases::class)
+                ->assertQueryStringMissing('p')
+                ->assertQueryStringMissing('s')
+                // Search for posts where title contains "1".
+                ->waitForLivewire()->type('@search', '1')
+                ->assertQueryStringMissing('p')
+                ->assertQueryStringHas('s', '1')
+                ->assertInputValue('@search', '1')
+                // Navigate to page 2.
+                ->waitForLivewire()->click('@nextPage.before')
+                ->assertQueryStringHas('p', 2)
+                ->assertQueryStringHas('s', '1')
+                ->assertInputValue('@search', '1')
+                // Search for posts where title contains "qwerty".
+                ->waitForLivewire()->type('@search', 'qwerty')
+                ->assertQueryStringMissing('p')
+                ->assertQueryStringHas('s', 'qwerty')
+                ->assertInputValue('@search', 'qwerty')
             ;
         });
     }

@@ -41,7 +41,7 @@ class SupportBrowserHistory
         });
 
         Livewire::listen('component.dehydrate.initial', function (Component $component, Response $response) {
-            if ($referer = request()->header('Referer')) {
+            if (($referer = request()->header('Referer')) && request()->header('x-livewire')) {
                 $this->getPathFromReferer($referer, $component, $response);
             } else {
                 if (! $this->shouldSendPath($component)) return;
@@ -56,6 +56,10 @@ class SupportBrowserHistory
             if (! $referer = request()->header('Referer')) return;
 
             $this->getPathFromReferer($referer, $component, $response);
+        });
+
+        Livewire::listen('flush-state', function() {
+            $this->mergedQueryParamsFromDehydratedComponents = [];
         });
     }
 
@@ -80,7 +84,7 @@ class SupportBrowserHistory
 
         $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
-        if ($route && false !== strpos($route->getActionName(), get_class($component))) {
+        if ($route && ! $route->getActionName() instanceof \Closure && false !== strpos($route->getActionName(), get_class($component))) {
             $path = $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
         } else {
             $path = $this->buildPathFromReferer($referer, $queryParams);
@@ -174,6 +178,7 @@ class SupportBrowserHistory
                 return isset($value['except']);
             })
             ->mapWithKeys(function ($value, $key) {
+                $key = $value['as'] ?? $key;
                 return [$key => $value['except']];
             });
     }
@@ -183,8 +188,9 @@ class SupportBrowserHistory
         return collect($component->getQueryString())
             ->mapWithKeys(function($value, $key) use ($component) {
                 $key = is_string($key) ? $key : $value;
+                $alias = $value['as'] ?? $key;
 
-                return [$key => $component->{$key}];
+                return [$alias => $component->{$key}];
             });
     }
 

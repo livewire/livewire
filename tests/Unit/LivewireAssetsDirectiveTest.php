@@ -23,6 +23,22 @@ class LivewireAssetsDirectiveTest extends TestCase
         );
     }
 
+    public function livewire_js_should_use_configured_app_url()
+    {
+        config()->set('app.debug', true);
+        config()->set('livewire.app_url', 'https://foo.com');
+
+        $this->assertStringContainsString(
+            '<script src="/livewire/livewire.js?',
+            Livewire::scripts()
+        );
+
+        $this->assertStringContainsString(
+            "window.livewire_app_url = 'https://foo.com';",
+            Livewire::scripts()
+        );
+    }
+
     /** @test */
     public function livewire_js_calls_reference_relative_root()
     {
@@ -46,8 +62,8 @@ class LivewireAssetsDirectiveTest extends TestCase
         );
 
         $this->assertStringContainsString(
-            "window.livewire_app_url = 'https://foo.com/assets';",
-            Livewire::scripts(['asset_url' => 'https://foo.com/assets'])
+            "window.livewire_app_url = 'https://foo-bar.com/path';",
+            Livewire::scripts(['app_url' => 'https://foo-bar.com/path'])
         );
     }
 
@@ -61,7 +77,7 @@ class LivewireAssetsDirectiveTest extends TestCase
 
         $this->assertStringContainsString(
             "window.livewire_app_url = 'https://foo.com/assets';",
-            Livewire::scripts(['asset_url' => 'https://foo.com/assets/'])
+            Livewire::scripts(['app_url' => 'https://foo.com/assets/'])
         );
     }
 
@@ -69,7 +85,7 @@ class LivewireAssetsDirectiveTest extends TestCase
     public function asset_url_passed_into_blade_assets_directive()
     {
         $output = View::make('assets-directive', [
-            'options' => ['asset_url' => 'https://foo.com/assets/'],
+            'options' => ['asset_url' => 'https://foo.com/assets/', 'app_url' => 'https://bar.com/'],
         ])->render();
 
         $this->assertStringContainsString(
@@ -78,7 +94,7 @@ class LivewireAssetsDirectiveTest extends TestCase
         );
 
         $this->assertStringContainsString(
-            "window.livewire_app_url = 'https://foo.com/assets';",
+            "window.livewire_app_url = 'https://bar.com';",
             $output
         );
     }

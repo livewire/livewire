@@ -91,6 +91,20 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
     }
 
     /** @test */
+    public function an_eloquent_model_with_a_properties_dirty_data_set_to_an_empty_array_gets_hydrated_properly()
+    {
+        $model = new Author();
+
+        $dirtyData = [
+            'name' => [],
+        ];
+
+        HydratePublicProperties::setDirtyData($model, $dirtyData);
+
+        $this->assertEquals([], $model->name);
+    }
+
+    /** @test */
     public function rules_get_extracted_properly()
     {
         $rules = [
@@ -160,6 +174,40 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
                             'blog',
                         ],
                     ],
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
+    }
+
+    /** @test */
+    public function single_property_rules_with_specific_instance_get_extracted_properly()
+    {
+        $rules = [
+            'foo',
+            'bar',
+        ];
+
+        $expected = [
+            'foo',
+            'bar',
+        ];
+
+        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
+    }
+
+    /** @test */
+    public function collection_rules_with_specific_instance_get_extracted_properly()
+    {
+        $rules = [
+            'foo.1.bar',
+        ];
+
+        $expected = [
+            'foo' => [
+                1 => [
+                    'bar',
                 ],
             ],
         ];
@@ -555,6 +603,25 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
         $expected = [
             'title' => 'foo',
             'email' => 'baz',
+            'foo' => null,
+        ];
+
+        $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);
+
+        $this->assertEquals($expected, $results);
+    }
+
+    /** @test */
+    public function it_serialises_properties_from_model_that_has_not_been_persisted()
+    {
+        $model = Author::make();
+
+        $rules = [
+            'author.name',
+        ];
+
+        $expected = [
+            'name' => null,
         ];
 
         $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);

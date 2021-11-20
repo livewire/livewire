@@ -134,6 +134,7 @@ class Test extends TestCase
         });
     }
 
+    /** @test */
     public function it_calls_pagination_hook_method_when_pagination_changes()
     {
         $this->browse(function ($browser) {
@@ -169,7 +170,7 @@ class Test extends TestCase
             ;
         });
     }
-    
+
     /** @test */
     public function it_can_have_two_pagination_instances_on_a_page_tailwind()
     {
@@ -350,6 +351,31 @@ class Test extends TestCase
                 ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-1')
                 ->assertSee('Post #1')
                 ->assertSee('Item #1')
+            ;
+        });
+    }
+
+    /** @test */
+    public function pagination_trait_doesnt_overwrite_query_string_from_component()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, PaginationComponentWithCustomQueryString::class)
+                /**
+                 * Test that going to page 2 removes "page" from the query string due to the custom "except" in the component.
+                 */
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                ->assertQueryStringHas('page', '1')
+
+                ->waitForLivewire()->click('@nextPage.before')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+                ->assertQueryStringMissing('page')
             ;
         });
     }

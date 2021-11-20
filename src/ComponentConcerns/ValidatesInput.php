@@ -7,6 +7,7 @@ use function count;
 use function explode;
 use function Livewire\str;
 use Livewire\ObjectPrybar;
+use Livewire\Wireable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
@@ -14,10 +15,13 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MissingRulesException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Livewire\HydrationMiddleware\HydratePublicProperties;
 
 trait ValidatesInput
 {
     protected $errorBag;
+
+    protected $withValidatorCallback;
 
     public function getErrorBag()
     {
@@ -98,6 +102,14 @@ trait ValidatesInput
         return [];
     }
 
+    protected function getValidationCustomValues()
+    {
+        if (method_exists($this, 'validationCustomValues')) return $this->validationCustomValues();
+        if (property_exists($this, 'validationCustomValues')) return $this->validationCustomValues;
+
+        return [];
+    }
+
     public function rulesForModel($name)
     {
         if (empty($this->getRules())) return collect();
@@ -144,6 +156,13 @@ trait ValidatesInput
         return ! $this->hasRuleFor($dotNotatedProperty);
     }
 
+    public function withValidator($callback)
+    {
+        $this->withValidatorCallback = $callback;
+
+        return $this;
+    }
+
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
@@ -152,9 +171,24 @@ trait ValidatesInput
             $this->getDataForValidation($rules)
         );
 
+        $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
+
+        $data = $this->unwrapDataForValidation($data);
+
         $validator = Validator::make($data, $rules, $messages, $attributes);
 
-        $this->shortenModelAttributes($data, $rules, $validator);
+        if ($this->withValidatorCallback) {
+            call_user_func($this->withValidatorCallback, $validator);
+
+            $this->withValidatorCallback = null;
+        }
+
+        $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
+
+        $customValues = $this->getValidationCustomValues();
+        if (!empty($customValues)) {
+            $validator->addCustomValues($customValues);
+        }
 
         $validatedData = $validator->validate();
 
@@ -167,36 +201,37 @@ trait ValidatesInput
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
-        // If the field is "items.0.foo", validation rules for "items.*.foo" is applied.
-        // if the field is "items.0", validation rules for "items.*" and "items.*.foo" etc are applied.
-        $rulesForField = collect($rules)
-            ->filter(function ($rule, $fullFieldKey) use ($field) {
-                return str($field)->is($fullFieldKey);
-            })->keys()
-            ->flatMap(function($key) use ($rules) {
-                return collect($rules)->filter(function($rule, $ruleKey) use ($key) {
-                    return str($ruleKey)->is($key);
-                });
-            })->mapWithKeys(function ($value, $key) use ($field) {
-                $fieldArray = str($field)->explode('.');
-                $result = str($key)->explode('.');
-
-                $result->splice(0, $fieldArray->count(), $fieldArray->toArray());
-
-                return [
-                    $result->join('.') => $value,
-                ];
-            })->toArray();
+        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
+            return str($field)->is($fullFieldKey) || str($fullFieldKey)->startsWith($field);
+        })->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
+        
+        $data = $this->getDataForValidation($rules);
 
-        $data = $this->prepareForValidation(
-            $this->getDataForValidation($rules)
-        );
+        $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
+        
+        $processedRules = HydratePublicProperties::processRules([$field]);
+        $data = HydratePublicProperties::extractData($data, $processedRules, []);
+
+        $data = $this->prepareForValidation($data);
+
+        $data = $this->unwrapDataForValidation($data);
 
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
 
-        $this->shortenModelAttributes($data, $rulesForField, $validator);
+        if ($this->withValidatorCallback) {
+            call_user_func($this->withValidatorCallback, $validator);
+
+            $this->withValidatorCallback = null;
+        }
+
+        $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
+
+        $customValues = $this->getValidationCustomValues();
+        if (!empty($customValues)) {
+            $validator->addCustomValues($customValues);
+        }
 
         try {
             $result = $validator->validate();
@@ -219,18 +254,30 @@ trait ValidatesInput
         return $result;
     }
 
-    protected function shortenModelAttributes($data, $rules, $validator)
+    protected function getModelAttributeRuleKeysToShorten($data, $rules)
     {
         // If a model ($foo) is a property, and the validation rule is
         // "foo.bar", then set the attribute to just "bar", so that
         // the validation message is shortened and more readable.
+
+        $toShorten = [];
+
         foreach ($rules as $key => $value) {
             $propertyName = $this->beforeFirstDot($key);
 
             if ($data[$propertyName] instanceof Model) {
-                if (str($key)->snake()->replace('_', ' ')->is($validator->getDisplayableAttribute($key))) {
-                    $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute($this->afterFirstDot($key))]);
-                }
+                $toShorten[] = $key;
+            }
+        }
+
+        return $toShorten;
+    }
+
+    protected function shortenModelAttributesInsideValidator($ruleKeys, $validator)
+    {
+        foreach ($ruleKeys as $key) {
+            if (str($key)->snake()->replace('_', ' ')->is($validator->getDisplayableAttribute($key))) {
+                $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute($this->afterFirstDot($key))]);
             }
         }
     }
@@ -258,8 +305,14 @@ trait ValidatesInput
                 throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: ['.$ruleKey.']'));
             });
 
-        return collect($properties)->map(function ($value) {
-            if ($value instanceof Collection || $value instanceof EloquentCollection) return $value->toArray();
+        return $properties;
+    }
+
+    protected function unwrapDataForValidation($data)
+    {
+        return collect($data)->map(function ($value) {
+            if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
+            else if ($value instanceof Wireable) return $value->toLivewire();
 
             return $value;
         })->all();

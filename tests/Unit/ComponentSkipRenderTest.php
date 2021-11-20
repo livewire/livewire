@@ -75,6 +75,8 @@ class ComponentSkipRenderOnRedirectInMountStub extends Component
 {
     public function mount()
     {
+        $this->skipRender();
+        
         $this->redirect('/foo');
     }
 
@@ -88,6 +90,8 @@ class ComponentSkipRenderOnRedirectHelperInMountStub extends Component
 {
     public function mount()
     {
+        $this->skipRender();
+
         return redirect('/bar');
     }
 
