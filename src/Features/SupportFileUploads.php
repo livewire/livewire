@@ -46,8 +46,19 @@ class SupportFileUploads
             return  $value->serializeForLivewireResponse();
         }
 
-        if (is_array($value) && isset(array_values($value)[0]) && array_values($value)[0] instanceof TemporaryUploadedFile && is_numeric(key($value))) {
-            return array_values($value)[0]::serializeMultipleForLivewireResponse($value);
+        if (is_array($value) && isset(array_values($value)[0])) {
+            $isValid = true;
+
+            foreach (array_values($value) as $key => $arrayValue) {
+                if (!($arrayValue instanceof TemporaryUploadedFile) || !is_numeric($key)) {
+                    $isValid = false;
+                    break;
+                }
+            }
+
+            if ($isValid) {
+                return array_values($value)[0]::serializeMultipleForLivewireResponse($value);
+            }
         }
 
         if (is_array($value)) {
