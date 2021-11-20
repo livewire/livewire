@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
@@ -158,19 +159,19 @@ class ModelAttributesCanBeCastTest extends TestCase
     public function can_cast_decimal_attributes_with_one_digit_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.decimal_with_one_digit', 5.0)
+            ->assertSet('model.decimal_with_one_digit', '5.0')
             ->assertPayloadSet('model.decimal_with_one_digit', 5.0)
 
             ->set('model.decimal_with_one_digit', 5.120983)
             ->call('validateAttribute', 'model.decimal_with_one_digit')
             ->assertHasNoErrors('model.decimal_with_one_digit')
-            ->assertSet('model.decimal_with_one_digit', 5.1)
+            ->assertSet('model.decimal_with_one_digit', '5.1')
             ->assertPayloadSet('model.decimal_with_one_digit', 5.1)
 
             ->set('model.decimal_with_one_digit', '5.55')
             ->call('validateAttribute', 'model.decimal_with_one_digit')
             ->assertHasNoErrors('model.decimal_with_one_digit')
-            ->assertSet('model.decimal_with_one_digit', 5.6)
+            ->assertSet('model.decimal_with_one_digit', '5.6')
             ->assertPayloadSet('model.decimal_with_one_digit', 5.6);
     }
 
@@ -178,19 +179,19 @@ class ModelAttributesCanBeCastTest extends TestCase
     public function can_cast_decimal_attributes_with_two_digits_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.decimal_with_two_digits', 6.0)
+            ->assertSet('model.decimal_with_two_digits', '6.00')
             ->assertPayloadSet('model.decimal_with_two_digits', 6.0)
 
             ->set('model.decimal_with_two_digits', 6.4567)
             ->call('validateAttribute', 'model.decimal_with_two_digits')
             ->assertHasNoErrors('model.decimal_with_two_digits')
-            ->assertSet('model.decimal_with_two_digits', 6.46)
+            ->assertSet('model.decimal_with_two_digits', '6.46')
             ->assertPayloadSet('model.decimal_with_two_digits', 6.46)
 
             ->set('model.decimal_with_two_digits', '6.212')
             ->call('validateAttribute', 'model.decimal_with_two_digits')
             ->assertHasNoErrors('model.decimal_with_two_digits')
-            ->assertSet('model.decimal_with_two_digits', 6.21)
+            ->assertSet('model.decimal_with_two_digits', '6.21')
             ->assertPayloadSet('model.decimal_with_two_digits', 6.21);
     }
 

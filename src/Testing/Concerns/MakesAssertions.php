@@ -13,10 +13,14 @@ trait MakesAssertions
 {
     public function assertSet($name, $value)
     {
+        $actualValue = $this->get($name);
+
         if (! is_string($value) && is_callable($value)) {
-            PHPUnit::assertTrue($value($this->get($name)));
+            PHPUnit::assertTrue($value($actualValue));
+        } elseif (is_object($actualValue)) {
+            PHPUnit::assertEquals($value, $actualValue);
         } else {
-            PHPUnit::assertSame($value, $this->get($name));
+            PHPUnit::assertSame($value, $actualValue);
         }
 
         return $this;
@@ -24,7 +28,13 @@ trait MakesAssertions
 
     public function assertNotSet($name, $value)
     {
-        PHPUnit::assertNotSame($value, $this->get($name));
+        $actualValue = $this->get($name);
+
+        if (is_object($actualValue)) {
+            PHPUnit::assertNotEquals($value, $actualValue);
+        } else {
+            PHPUnit::assertNotSame($value, $actualValue);
+        }
 
         return $this;
     }
