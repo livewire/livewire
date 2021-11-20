@@ -11,30 +11,24 @@ use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MakesAssertions
 {
-    public function assertSet($name, $value)
+    public function assertSet($name, $value, $strict = false)
     {
-        $actualValue = $this->get($name);
+        $actual = $this->get($name);
 
         if (! is_string($value) && is_callable($value)) {
-            PHPUnit::assertTrue($value($actualValue));
-        } elseif (is_object($actualValue)) {
-            PHPUnit::assertEquals($value, $actualValue);
+            PHPUnit::assertTrue($value($actual));
         } else {
-            PHPUnit::assertSame($value, $actualValue);
+            $strict ? PHPUnit::assertSame($value, $actual) : PHPUnit::assertEquals($value, $actual);
         }
 
         return $this;
     }
 
-    public function assertNotSet($name, $value)
+    public function assertNotSet($name, $value, $strict = false)
     {
-        $actualValue = $this->get($name);
+        $actual = $this->get($name);
 
-        if (is_object($actualValue)) {
-            PHPUnit::assertNotEquals($value, $actualValue);
-        } else {
-            PHPUnit::assertNotSame($value, $actualValue);
-        }
+        $strict ? PHPUnit::assertNotSame($value, $actual) : PHPUnit::assertNotEquals($value, $actual);
 
         return $this;
     }
