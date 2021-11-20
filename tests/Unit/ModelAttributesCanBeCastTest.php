@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
