@@ -86,8 +86,10 @@ trait WithPagination
 
     public function setPage($page, $pageName = 'page')
     {
-        $page = intval($page);
-        $page = $page <= 0 ? 1 : $page ;
+        if (is_numeric($page)){
+            $page = (int)$page;
+            $page = $page <= 0 ? 1 : $page ;
+        }
         $beforePaginatorMethod = 'updatingPaginators';
         $afterPaginatorMethod = 'updatedPaginators';
 
