@@ -167,7 +167,9 @@ class SupportBrowserHistory
             ->map(function ($property) {
                 return is_bool($property) ? json_encode($property) : $property;
             });
-
+        if (config('livewire.force_querystring_sort')){
+            return $this->mergedQueryParamsFromDehydratedComponents->sortKeys();
+        }
         return $this->mergedQueryParamsFromDehydratedComponents;
     }
 
