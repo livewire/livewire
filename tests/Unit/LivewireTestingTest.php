@@ -53,7 +53,7 @@ class LivewireTestingTest extends TestCase
             ->assertSet('name', 'is_array')
             ->set('name', 0)
             ->assertSet('name', null)
-            ->assertSet('name', 0, true)
+            ->assertSetStrict('name', 0)
             ->assertSet(
                 'name',
                 function ($propertyValue) {
@@ -63,7 +63,7 @@ class LivewireTestingTest extends TestCase
 
         $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
 
-        $component->assertSet('name', null, true);
+        $component->assertSetStrict('name', null);
     }
 
     /** @test */
@@ -72,10 +72,10 @@ class LivewireTestingTest extends TestCase
         $component = Livewire::test(HasMountArguments::class, ['name' => 'bar'])
             ->assertNotSet('name', 'foo')
             ->set('name', 100)
-            ->assertNotSet('name', "1e2", true)
+            ->assertNotSetStrict('name', "1e2")
             ->set('name', 0)
-            ->assertNotSet('name', false, true)
-            ->assertNotSet('name', null, true);
+            ->assertNotSetStrict('name', false)
+            ->assertNotSetStrict('name', null);
 
         $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
 

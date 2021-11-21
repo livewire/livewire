@@ -24,11 +24,25 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertSetStrict($name, $value)
+    {
+        $this->assertSet($name, $value, true);
+
+        return $this;
+    }
+
     public function assertNotSet($name, $value, $strict = false)
     {
         $actual = $this->get($name);
 
         $strict ? PHPUnit::assertNotSame($value, $actual) : PHPUnit::assertNotEquals($value, $actual);
+
+        return $this;
+    }
+
+    public function assertNotSetStrict($name, $value)
+    {
+        $this->assertNotSet($name, $value, true);
 
         return $this;
     }
