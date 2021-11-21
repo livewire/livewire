@@ -48,20 +48,12 @@ class ComponentPaginationTest extends TestCase
             ->call('gotoPage', 2.5)
             ->assertSet('page', 2);
     }
-
-    /** @test */
-    public function string_page_value_should_be_reset()
-    {
-        Livewire::test(ComponentWithPaginationStub::class)
-            ->call('gotoPage', "M")
-            ->assertSet('page', 1);
-    }
 }
 
 class ComponentWithPaginationStub extends Component
 {
     use WithPagination;
-    
+
     public function render()
     {
         return view('show-name', ['name' => 'example']);
