@@ -154,5 +154,5 @@ return [
     */
 
     'render_on_redirect' => false,
-
+    'force_querystring_sort' => false
 ];
