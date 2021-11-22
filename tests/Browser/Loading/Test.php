@@ -87,8 +87,17 @@ class Test extends TestCase
                     $browser->assertHasClass('@self-target-model', 'foo');
                 })
                 ->tap($this->assertInitialState())
-                ->waitForLivewire()->click('@error-button')
-                ->click('#livewire-error')
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@error-button');
+
+                    $browser->assertNotVisible('@hide');
+                    $browser->assertVisible('@show');
+
+                    $browser->waitFor('#livewire-error');
+
+                    $browser->assertVisible('@hide');
+                    $browser->assertNotVisible('@show');
+                })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->type('@nested-property-input', 'a');

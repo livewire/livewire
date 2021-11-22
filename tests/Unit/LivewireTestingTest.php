@@ -148,6 +148,12 @@ class LivewireTestingTest extends TestCase
             ->assertEmitted('foo')
             ->call('emitFooWithParam', 'bar')
             ->assertEmitted('foo', 'bar')
+            ->call('emitFooWithParam', 'info')
+            ->assertEmitted('foo', 'info')
+            ->call('emitFooWithParam', 'last')
+            ->assertEmitted('foo', 'last')
+            ->call('emitFooWithParam', 'retry')
+            ->assertEmitted('foo', 'retry')
             ->call('emitFooWithParam', 'baz')
             ->assertEmitted('foo', function ($event, $params) {
                 return $event === 'foo' && $params === ['baz'];
