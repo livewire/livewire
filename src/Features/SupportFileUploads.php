@@ -5,6 +5,7 @@ namespace Livewire\Features;
 use Livewire\Livewire;
 use Livewire\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
+use Livewire\Wireable;
 
 class SupportFileUploads
 {
@@ -63,6 +64,14 @@ class SupportFileUploads
         if (is_array($value)) {
             foreach ($value as $key => $item) {
                 $value[$key] = $this->dehydratePropertyFromWithFileUploads($item);
+            }
+        }
+
+        if ($value instanceof Wireable) {
+            $keys = array_keys((array) get_object_vars($value));
+
+            foreach ($keys as $key) {
+                $value->{$key} = $this->dehydratePropertyFromWithFileUploads($value->{$key});
             }
         }
 
