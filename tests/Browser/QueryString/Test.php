@@ -2,12 +2,23 @@
 
 namespace Tests\Browser\QueryString;
 
+use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
+    public function test_query_string_sorting_mode()
+    {
+        Config::set('livewire.force_querystring_sort',true);
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, Component::class, '?foo=baz&eoo=lob')
+                ->assertScript('return !! window.location.search.match(/eoo=lob&foo=baz/)')
+            ;
+        });
+    }
+
     public function test_core_query_string_pushstate_logic()
     {
         $this->browse(function (Browser $browser) {
