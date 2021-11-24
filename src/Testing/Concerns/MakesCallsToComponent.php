@@ -139,6 +139,10 @@ trait MakesCallsToComponent
     {
         $payload['id'] = Str::random(4);
 
+        if (array_key_exists('method', $payload)) {
+            $payload['id'] = $payload['method'] . '-' . $payload['id'];
+        }
+
         $this->lastResponse = $this->pretendWereSendingAComponentUpdateRequest($message, $payload);
 
         if (! $this->lastResponse->exception) {
