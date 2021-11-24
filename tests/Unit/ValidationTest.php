@@ -429,6 +429,18 @@ class ValidationTest extends TestCase
         $component = Livewire::test(WithValidationMethod::class);
         $component->assertSet('count', 0)->call('clearWithValidatorAfterRunningValidateOnlyMethod')->assertSet('count', 1);
     }
+
+    /** @test */
+    public function a_set_of_items_will_validate_individually()
+    {
+        Livewire::test(ValidatesOnlyTestComponent::class, ['image' => 'image', 'imageAlt' => 'This is an image'])
+            ->call('runValidateOnly', 'image_alt')
+            ->assertHasNoErrors(['image_alt', 'image_url', 'image'])
+            ->call('runValidateOnly', 'image_url')
+            ->assertHasNoErrors(['image', 'image_url', 'image_alt'])
+            ->call('runValidateOnly', 'image')
+            ->assertHasNoErrors(['image', 'image_url', 'image_alt']);
+    }
 }
 
 class ForValidation extends Component
@@ -718,5 +730,45 @@ class WithValidationMethod extends Component
     public function render()
     {
         return app('view')->make('dump-errors');
+    }
+}
+
+class ValidatesOnlyTestComponent extends Component
+{
+    public string $image = '';
+    public string $image_alt = '';
+    public string $image_url = '';
+
+    public $rules = [
+        'image' => 'required_without:image_url|string',
+        'image_alt' => 'required|string',
+        'image_url' => 'required_without:image|string'
+    ];
+
+    public function mount($image, $imageAlt, $imageUrl = '')
+    {
+        $this->image = $image;
+        $this->image_alt = $imageAlt;
+        $this->image_url = $imageUrl;
+    }
+
+    public function runValidation()
+    {
+        $this->validate();
+    }
+
+    public function runValidateOnly($propertyName)
+    {
+        $this->validateOnly($propertyName);
+    }
+
+    public function runResetValidation()
+    {
+        $this->resetValidation();
+    }
+
+    public function render()
+    {
+        return view('null-view');
     }
 }
