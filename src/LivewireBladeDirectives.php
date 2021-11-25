@@ -25,7 +25,7 @@ EOT;
     if (is_object({$expression}) || is_array({$expression})) {
         echo "JSON.parse(atob('".base64_encode(json_encode({$expression}))."'))";
     } elseif (is_string({$expression})) {
-        echo "'".str_replace("'", "\'", {$expression})."'";
+        echo "'".str_replace("'", "\'", str_replace('\\', '\\\\', {$expression}))."'";
     } else {
         echo json_encode({$expression});
     }
