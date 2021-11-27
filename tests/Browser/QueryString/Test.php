@@ -13,8 +13,8 @@ class Test extends TestCase
     {
         Config::set('livewire.force_querystring_sort',true);
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class, '?foo=baz&eoo=lob')
-                ->assertScript('return !! window.location.search.match(/eoo=lob&foo=baz/)')
+            Livewire::visit($browser, SortQueryStringComponent::class, '?foo=bar&bar=baz')
+                ->assertScript('return !! window.location.search.match(/bar=baz&foo=bar/)')
             ;
         });
     }
