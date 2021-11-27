@@ -102,8 +102,17 @@ trait WithPagination
         if (method_exists($this, $afterMethod)) {
             $this->{$afterMethod}($page, null);
         }
+        
+        $this->setPageafter();
     }
 
+    /*
+    * For listen after change page
+    */
+    public function setPageafter(){
+    
+    }
+    
     public function resolvePage()
     {
         // The "page" query string item should only be available
