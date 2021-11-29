@@ -52,7 +52,7 @@ abstract class Component
         // For some reason Octane doesn't play nice with the injected $route.
         // We need to override it here. However, we can't remove the actual
         // param from the method signature as it would break inheritance.
-        $route = request()->route();
+        $route = request()->route() ?? $route;
 
         try {
             $componentParams = (new ImplicitRouteBinding($container))
