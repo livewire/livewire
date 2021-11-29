@@ -77,15 +77,11 @@ class LivewirePropertyManager
             return false;
         }
 
-        try { // In case an error will be thrown, we know that a property does not exist.
-            $className = (new \ReflectionClass($class))->getName();
-        } catch (\Exception $e) {
-            return false;
+        if (is_object($class)) {
+            $class = (new \ReflectionClass($class))->getName();
         }
 
-        return collect($this->properties())->contains(function($value, $key) use ($className) {
-            return $className === $key;
-        });
+        return (bool) $this->get($class);
     }
 
     /**
