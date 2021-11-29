@@ -40,6 +40,22 @@ class ComponentPaginationTest extends TestCase
             ->call('previousPage')
             ->assertSet('page', 1);
     }
+
+    /** @test */
+    public function double_page_value_should_be_casted_to_int()
+    {
+        Livewire::test(ComponentWithPaginationStub::class)
+            ->call('gotoPage', 2.5)
+            ->assertSet('page', 2);
+    }
+
+    /** @test */
+    public function string_page_value_should_be_reset()
+    {
+        Livewire::test(ComponentWithPaginationStub::class)
+            ->call('gotoPage', "M")
+            ->assertSet('page', 1);
+    }
 }
 
 class ComponentWithPaginationStub extends Component

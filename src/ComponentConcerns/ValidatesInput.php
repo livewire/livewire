@@ -6,6 +6,7 @@ use function collect;
 use function Livewire\str;
 use Livewire\ObjectPrybar;
 use Livewire\LivewireProperty;
+use Livewire\Wireable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\MissingRulesException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Livewire\HydrationMiddleware\HydratePublicProperties;
 
 trait ValidatesInput
 {
@@ -99,6 +101,14 @@ trait ValidatesInput
         return [];
     }
 
+    protected function getValidationCustomValues()
+    {
+        if (method_exists($this, 'validationCustomValues')) return $this->validationCustomValues();
+        if (property_exists($this, 'validationCustomValues')) return $this->validationCustomValues;
+
+        return [];
+    }
+
     public function rulesForModel($name)
     {
         if (empty($this->getRules())) return collect();
@@ -174,6 +184,11 @@ trait ValidatesInput
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 
+        $customValues = $this->getValidationCustomValues();
+        if (!empty($customValues)) {
+            $validator->addCustomValues($customValues);
+        }
+
         $validatedData = $validator->validate();
 
         $this->resetErrorBag();
@@ -185,34 +200,20 @@ trait ValidatesInput
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
-        // If the field is "items.0.foo", validation rules for "items.*.foo" is applied.
-        // if the field is "items.0", validation rules for "items.*" and "items.*.foo" etc are applied.
-        $rulesForField = collect($rules)
-            ->filter(function ($rule, $fullFieldKey) use ($field) {
-                return str($field)->is($fullFieldKey);
-            })->keys()
-            ->flatMap(function($key) use ($rules) {
-                return collect($rules)->filter(function($rule, $ruleKey) use ($key) {
-                    return str($ruleKey)->is($key);
-                });
-            })->mapWithKeys(function ($value, $key) use ($field) {
-                $fieldArray = str($field)->explode('.');
-                $result = str($key)->explode('.');
-
-                $result->splice(0, $fieldArray->count(), $fieldArray->toArray());
-
-                return [
-                    $result->join('.') => $value,
-                ];
-            })->toArray();
+        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
+            return str($field)->is($fullFieldKey) || str($fullFieldKey)->startsWith($field);
+        })->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
 
-        $data = $this->prepareForValidation(
-            $this->getDataForValidation($rules)
-        );
+        $data = $this->getDataForValidation($rules);
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
+
+        $processedRules = HydratePublicProperties::processRules([$field]);
+        $data = HydratePublicProperties::extractData($data, $processedRules, []);
+
+        $data = $this->prepareForValidation($data);
 
         $data = $this->unwrapDataForValidation($data);
 
@@ -225,6 +226,11 @@ trait ValidatesInput
         }
 
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
+
+        $customValues = $this->getValidationCustomValues();
+        if (!empty($customValues)) {
+            $validator->addCustomValues($customValues);
+        }
 
         try {
             $result = $validator->validate();
@@ -305,6 +311,7 @@ trait ValidatesInput
     {
         return collect($data)->map(function ($value) {
             if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
+            else if ($value instanceof Wireable) return $value->toLivewire();
             else if (LivewireProperty::exists($value)) return (array) $value;
 
             return $value;

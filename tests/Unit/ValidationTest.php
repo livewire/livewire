@@ -50,6 +50,7 @@ class ValidationTest extends TestCase
         $component->runAction('runValidationWithAttributesProperty');
 
         $this->assertStringContainsString('The foobar field is required.', $component->payload['effects']['html']);
+        $this->assertStringContainsString('The Items Baz field is required.', $component->payload['effects']['html']);
     }
 
     /** @test */
@@ -60,6 +61,16 @@ class ValidationTest extends TestCase
         $component->runAction('runValidationWithCustomAttribute');
 
         $this->assertStringContainsString('The foobar field is required.', $component->payload['effects']['html']);
+    }
+
+    /** @test */
+    public function validate_component_properties_with_custom_value_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component->runAction('runValidationWithCustomValuesProperty');
+
+        $this->assertStringContainsString('The bar field is required when foo is my custom value.', $component->payload['effects']['html']);
     }
 
     /** @test */
@@ -168,6 +179,21 @@ class ValidationTest extends TestCase
             ->call('runValidationOnlyWithMessageProperty', 'bar')
             ->assertDontSee('Foo Message') // Foo is not being validated, don't show
             ->assertSee('Bar Message'); // Bar is not set, show message
+    }
+
+    /** @test */
+    public function can_validate_only_a_specific_field_with_custom_attributes_property()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->call('runValidationOnlyWithAttributesProperty', 'bar')
+            ->assertSee('The foobar field is required.')
+            ->call('runValidationOnlyWithAttributesProperty', 'items.*.baz') // Test wildcard works
+            ->assertSee('The Items Baz field is required.')
+            ->call('runValidationOnlyWithAttributesProperty', 'items.1.baz') // Test specific instance works
+            ->assertSee('The Items Baz field is required.')
+            ;
     }
 
     /** @test */
@@ -484,6 +510,19 @@ class ForValidation extends Component
         ]);
     }
 
+    public function runValidationOnlyWithAttributesProperty($field)
+    {
+        $this->validationAttributes = [
+            'bar' => 'foobar',
+            'items.*.baz' => 'Items Baz',
+        ];
+
+        $this->validateOnly($field, [
+            'bar' => 'required',
+            'items.*.baz' => 'required',
+        ]);
+    }
+
     public function runDeeplyNestedValidationOnly($field)
     {
         $this->validateOnly($field, [
@@ -514,10 +553,14 @@ class ForValidation extends Component
 
     public function runValidationWithAttributesProperty()
     {
-        $this->validationAttributes = ['bar' => 'foobar'];
+        $this->validationAttributes = [
+            'bar' => 'foobar',
+            'items.*.baz' => 'Items Baz'
+        ];
 
         $this->validate([
             'bar' => 'required',
+            'items.*.baz' => 'required',
         ]);
     }
 
@@ -526,6 +569,21 @@ class ForValidation extends Component
         $this->validate([
             'bar' => 'required',
         ], [], ['bar' => 'foobar']);
+    }
+
+    public function runValidationWithCustomValuesProperty()
+    {
+        $this->foo = 'my';
+
+        $this->validationCustomValues = [
+            'foo' => [
+                'my' => 'my custom value',
+            ],
+        ];
+
+        $this->validate([
+            'bar' => 'required_if:foo,my',
+        ]);
     }
 
     public function runNestedValidation()

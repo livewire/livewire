@@ -57,14 +57,35 @@ class ComponentWithWireablePublicProperty extends Component
 {
     public ?WireableClass $wireable;
 
+    public $rules = [
+        'wireable.message' => 'string|required',
+        'wireable.embeddedWireable.message' => 'string|required'
+    ];
+
     public function mount($wireable)
     {
         $this->wireable = $wireable;
     }
 
+    public function runValidation()
+    {
+        $this->validate();
+    }
+
+    public function runValidateOnly($propertyName)
+    {
+        $this->validateOnly($propertyName);
+    }
+
     public function removeWireable()
     {
+        $this->resetErrorBag();
         $this->wireable = null;
+    }
+
+    public function runResetValidation()
+    {
+        $this->resetValidation();
     }
 
     public function render()
