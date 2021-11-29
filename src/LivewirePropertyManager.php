@@ -55,8 +55,12 @@ class LivewirePropertyManager
     /**
      * Get a belonging resovler from the given class.
      */
-    public function get(string $class)
+    public function get(?string $class)
     {
+        if (is_null($class)) {
+            return null;
+        }
+
         if (! array_key_exists($class, $this->properties)) {
             return null;
         }
