@@ -15,13 +15,4 @@ abstract class PropertyHandler
      * of a public property, so it can be passed to the front-end.
      */
     abstract public function dehydrate($value);
-
-    /**
-     * Some Properties like fx Carbon does need some information if the property does get updated.
-     * As this is only needed for some properties, you can overwrite this method if needed.
-     */
-    public function update($value)
-    {
-        return $value;
-    }
 }
