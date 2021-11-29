@@ -33,7 +33,7 @@ trait HandlesActions
             $property = $propertyType ? $propertyType->getName() : null;
             $propertyHandler = LivewireProperty::get($property);
 
-            if ($property && $propertyHandler && method_exists($propertyHandler, 'update')) {
+            if ($property && method_exists($propertyHandler, 'update')) {
                 $originalData = data_get($this, $propertyName);
 
                 // Name and value are what is passed into the syncInput method
