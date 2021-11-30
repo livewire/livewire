@@ -69,9 +69,9 @@ class LivewirePropertyManager
     }
 
     /**
-     * Check if the property class exists as a property.
+     * Check if the property class has as a property.
      */
-    public function exists($class)
+    public function has($class)
     {
         if (empty($class) || is_array($class)) {
             return false;
@@ -89,7 +89,7 @@ class LivewirePropertyManager
      */
     public function hasNot($class)
     {
-        return ! $this->exists($class);
+        return ! $this->has($class);
     }
 
     /**
