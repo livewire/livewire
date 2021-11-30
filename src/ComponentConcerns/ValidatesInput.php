@@ -312,7 +312,7 @@ trait ValidatesInput
         return collect($data)->map(function ($value) {
             if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
             else if ($value instanceof Wireable) return $value->toLivewire();
-            else if (LivewireProperty::exists($value)) return (array) $value;
+            else if (LivewireProperty::has($value)) return (array) $value;
 
             return $value;
         })->all();
