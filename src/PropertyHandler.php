@@ -15,4 +15,15 @@ abstract class PropertyHandler
      * of a public property, so it can be passed to the front-end.
      */
     abstract public function dehydrate($value);
+
+    /**
+     * In some special cases, you might need to update a value. You can do that by adding an update method.
+     * The update method will be called in the HandlesActions trait.
+     *
+     * @see \Livewire\ComponentConcerns\HandlesActions
+     */
+    // public function update($name, $originalData, $value); {
+    // Do you magic for your property.
+    // return $value;
+    // }
 }
