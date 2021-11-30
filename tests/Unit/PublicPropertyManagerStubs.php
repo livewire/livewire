@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Livewire\PropertyHandler;
 
@@ -54,6 +55,8 @@ class CustomResolverClass2 extends PropertyHandler
         return new CustomPublicClass($value->message);
     }
 }
+
+class TestUser extends Model {}
 
 class ComponentWithCustomPublicProperty extends Component
 {

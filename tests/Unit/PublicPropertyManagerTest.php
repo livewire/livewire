@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Livewire\Exceptions\CannotRegisterPublicPropertyWithoutExtendingThePropertyHandlerException;
 use Livewire\LivewireProperty;
@@ -64,6 +65,25 @@ class PublicPropertyManagerTest extends TestCase
 
         $this->assertEquals(CustomResolverClass2::class, LivewireProperty::get(CustomPublicClass::class));
         $this->assertCount(1, LivewireProperty::all());
+    }
+
+    /** @test */
+    public function a_custom_public_property_can_detect_subclasses()
+    {
+        $this->assertFalse(LivewireProperty::has(TestUser::class));
+
+        LivewireProperty::register(Model::class, CustomResolverClass::class);
+
+        // Returns true as it `is_a` subclass of Model - and get would return ModelResolver
+        $this->assertTrue(LivewireProperty::has(TestUser::class));
+        $this->assertEquals(CustomResolverClass::class, LivewireProperty::get(TestUser::class));
+
+        // But if we also had this registered after ModelResolver
+        LivewireProperty::register(TestUser::class, CustomResolverClass2::class);
+
+        // Returns true as it `is_a` class of User - and get would return UserResolver if registered after ModelResolver
+        $this->assertTrue(LivewireProperty::has(TestUser::class));
+        $this->assertEquals(CustomResolverClass2::class, LivewireProperty::get(TestUser::class));
     }
 
     /** @test */

@@ -41,7 +41,7 @@ class LivewirePropertyManager
      */
     public function properties()
     {
-        return $this->properties;
+        return collect($this->properties);
     }
 
     /**
@@ -61,11 +61,9 @@ class LivewirePropertyManager
             return null;
         }
 
-        if (! array_key_exists($class, $this->properties)) {
-            return null;
-        }
-
-        return $this->properties[$class];
+        return $this->properties()->reverse()->filter(function ($resolver, $property) use ($class) {
+            return is_a($class, $property, true);
+        })->first();
     }
 
     /**
