@@ -82,6 +82,14 @@ class LivewirePropertyManager
         return (bool) $this->get($class);
     }
 
+    /*
+     * An alias for the `has` method.
+     */
+    public function exists($class)
+    {
+        return $this->has($class);
+    }
+
     /**
      * Some syntactic sugar to check if a class does not exist.
      */
