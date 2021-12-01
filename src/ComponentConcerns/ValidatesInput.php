@@ -200,10 +200,27 @@ trait ValidatesInput
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
+        
+        $rulesForField = collect($rules)
+            ->filter(function($value, $rule) use ($field) {
+                if(! str($field)->is($rule)) {
+                    return false;
+                }
 
-        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
-            return str($field)->is($fullFieldKey) || str($fullFieldKey)->startsWith($field);
-        })->toArray();
+                $fieldArray = str($field)->explode('.');
+                $ruleArray = str($rule)->explode('.');
+                
+                for($i = 0; $i < count($fieldArray); $i++) {
+                    if(isset($ruleArray[$i]) && $ruleArray[$i] === '*') {
+                        $ruleArray[$i] = $fieldArray[$i];
+                    }
+                }
+
+                $rule = $ruleArray->join('.');
+
+                return $field === $rule;
+            })
+            ->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
         
