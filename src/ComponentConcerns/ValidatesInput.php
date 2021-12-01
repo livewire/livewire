@@ -239,7 +239,7 @@ trait ValidatesInput
             $ruleArray = str($ruleForField)->explode('.');
             $fieldArray = str($field)->explode('.');
 
-            $data = $this->filterData($data, $ruleArray, $fieldArray);
+            $data = $this->filterCollectionDataDownToSpecificKeys($data, $ruleArray, $fieldArray);
         }
 
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
@@ -278,7 +278,7 @@ trait ValidatesInput
         return $result;
     }
 
-    protected function filterData($data, $ruleKeys, $fieldKeys)
+    protected function filterCollectionDataDownToSpecificKeys($data, $ruleKeys, $fieldKeys)
     {
         if (count($ruleKeys)) {
             $ruleKey = $ruleKeys->shift();
@@ -286,7 +286,7 @@ trait ValidatesInput
 
             if ($fieldKey == '*') {
                 foreach ($data as $key => $value) {
-                    $data[$key] = $this->filterData($value, $ruleKeys, $fieldKeys);
+                    $data[$key] = $this->filterCollectionDataDownToSpecificKeys($value, $ruleKeys, $fieldKeys);
                 }
             } else {
                 $keyData = $data[$fieldKey];
@@ -295,7 +295,7 @@ trait ValidatesInput
                     $data = [];
                 }
 
-                $data[$fieldKey] = $this->filterData($keyData, $ruleKeys, $fieldKeys);
+                $data[$fieldKey] = $this->filterCollectionDataDownToSpecificKeys($keyData, $ruleKeys, $fieldKeys);
             }
         }
 
