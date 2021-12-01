@@ -735,9 +735,9 @@ class WithValidationMethod extends Component
 
 class ValidatesOnlyTestComponent extends Component
 {
-    public string $image = '';
-    public string $image_alt = '';
-    public string $image_url = '';
+    public $image = '';
+    public $image_alt = '';
+    public $image_url = '';
 
     public $rules = [
         'image' => 'required_without:image_url|string',
