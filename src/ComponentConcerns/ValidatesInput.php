@@ -282,13 +282,19 @@ trait ValidatesInput
             $ruleKey = $ruleKeys->shift();
             $fieldKey = $fieldKeys->shift();
 
-            $keyData = $data[$fieldKey];
+            if ($fieldKey == '*') {
+                foreach ($data as $key => $value) {
+                    $data[$key] = $this->filterData($value, $ruleKeys, $fieldKeys);
+                }
+            } else {
+                $keyData = $data[$fieldKey];
 
-            if($ruleKey == '*') {
-                $data = [];
+                if ($ruleKey == '*') {
+                    $data = [];
+                }
+
+                $data[$fieldKey] = $this->filterData($keyData, $ruleKeys, $fieldKeys);
             }
-
-            $data[$fieldKey] = $this->filterData($keyData, $ruleKeys, $fieldKeys);
         }
 
         return $data;
