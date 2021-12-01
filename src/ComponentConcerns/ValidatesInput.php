@@ -200,7 +200,7 @@ trait ValidatesInput
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
-        
+
         $rulesForField = collect($rules)
             ->filter(function($value, $rule) use ($field) {
                 if(! str($field)->is($rule)) {
@@ -209,7 +209,7 @@ trait ValidatesInput
 
                 $fieldArray = str($field)->explode('.');
                 $ruleArray = str($rule)->explode('.');
-                
+
                 for($i = 0; $i < count($fieldArray); $i++) {
                     if(isset($ruleArray[$i]) && $ruleArray[$i] === '*') {
                         $ruleArray[$i] = $fieldArray[$i];
@@ -219,21 +219,26 @@ trait ValidatesInput
                 $rule = $ruleArray->join('.');
 
                 return $field === $rule;
-            })
-            ->toArray();
+            });
+
+        $ruleForField = $rulesForField->keys()->first();
+
+        $rulesForField = $rulesForField->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
-        
+
         $data = $this->getDataForValidation($rules);
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
-        
-        $processedRules = HydratePublicProperties::processRules([$field]);
-        $data = HydratePublicProperties::extractData($data, $processedRules, []);
 
         $data = $this->prepareForValidation($data);
 
         $data = $this->unwrapDataForValidation($data);
+
+        $ruleArray = str($ruleForField)->explode('.');
+        $fieldArray = str($field)->explode('.');
+
+        $data = $this->filterData($data, $ruleArray, $fieldArray);
 
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
 
@@ -269,6 +274,24 @@ trait ValidatesInput
         $this->resetErrorBag($ruleKeysForField);
 
         return $result;
+    }
+
+    protected function filterData($data, $ruleKeys, $fieldKeys)
+    {
+        if (count($ruleKeys)) {
+            $ruleKey = $ruleKeys->shift();
+            $fieldKey = $fieldKeys->shift();
+
+            $keyData = $data[$fieldKey];
+
+            if($ruleKey == '*') {
+                $data = [];
+            }
+
+            $data[$fieldKey] = $this->filterData($keyData, $ruleKeys, $fieldKeys);
+        }
+
+        return $data;
     }
 
     protected function getModelAttributeRuleKeysToShorten($data, $rules)
