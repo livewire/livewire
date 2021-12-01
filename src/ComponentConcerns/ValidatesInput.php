@@ -235,10 +235,12 @@ trait ValidatesInput
 
         $data = $this->unwrapDataForValidation($data);
 
-        $ruleArray = str($ruleForField)->explode('.');
-        $fieldArray = str($field)->explode('.');
+        if ($ruleForField) {
+            $ruleArray = str($ruleForField)->explode('.');
+            $fieldArray = str($field)->explode('.');
 
-        $data = $this->filterData($data, $ruleArray, $fieldArray);
+            $data = $this->filterData($data, $ruleArray, $fieldArray);
+        }
 
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
 
