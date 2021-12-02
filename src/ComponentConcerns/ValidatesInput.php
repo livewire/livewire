@@ -201,6 +201,9 @@ trait ValidatesInput
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
+        // Loop through rules and swap any wildcard '*' with keys from field, then filter down to only
+        // rules that match the field, but return the rules without wildcard characters replaced,
+        // so that custom attributes and messages still work as they need wildcards to work.
         $rulesForField = collect($rules)
             ->filter(function($value, $rule) use ($field) {
                 if(! str($field)->is($rule)) {
@@ -235,6 +238,10 @@ trait ValidatesInput
 
         $data = $this->unwrapDataForValidation($data);
 
+        // If a matching rule is found, then filter collections down to keys specified in the field,
+        // while leaving all other data intact. If a key isn't specified and instead there is a 
+        // wildcard '*' then leave that whole collection intact. This ensures that any rules
+        // that depend on other fields/ properties still work.
         if ($ruleForField) {
             $ruleArray = str($ruleForField)->explode('.');
             $fieldArray = str($field)->explode('.');
@@ -280,15 +287,18 @@ trait ValidatesInput
 
     protected function filterCollectionDataDownToSpecificKeys($data, $ruleKeys, $fieldKeys)
     {
+        // Filter data down to specified keys in collections, but leave all other data intact
         if (count($ruleKeys)) {
             $ruleKey = $ruleKeys->shift();
             $fieldKey = $fieldKeys->shift();
 
             if ($fieldKey == '*') {
+                // If the specified field has a '*', then loop through the collection and keep the whole collection intact.
                 foreach ($data as $key => $value) {
                     $data[$key] = $this->filterCollectionDataDownToSpecificKeys($value, $ruleKeys, $fieldKeys);
                 }
             } else {
+                // Otherwise filter collection down to a specific key
                 $keyData = $data[$fieldKey];
 
                 if ($ruleKey == '*') {
