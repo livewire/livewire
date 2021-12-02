@@ -201,22 +201,46 @@ trait ValidatesInput
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
-        $rulesForField = collect($rules)->filter(function ($rule, $fullFieldKey) use ($field) {
-            return str($field)->is($fullFieldKey) || str($fullFieldKey)->startsWith($field);
-        })->toArray();
+        $rulesForField = collect($rules)
+            ->filter(function($value, $rule) use ($field) {
+                if(! str($field)->is($rule)) {
+                    return false;
+                }
+
+                $fieldArray = str($field)->explode('.');
+                $ruleArray = str($rule)->explode('.');
+
+                for($i = 0; $i < count($fieldArray); $i++) {
+                    if(isset($ruleArray[$i]) && $ruleArray[$i] === '*') {
+                        $ruleArray[$i] = $fieldArray[$i];
+                    }
+                }
+
+                $rule = $ruleArray->join('.');
+
+                return $field === $rule;
+            });
+
+        $ruleForField = $rulesForField->keys()->first();
+
+        $rulesForField = $rulesForField->toArray();
 
         $ruleKeysForField = array_keys($rulesForField);
-        
+
         $data = $this->getDataForValidation($rules);
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
-        
-        $processedRules = HydratePublicProperties::processRules([$field]);
-        $data = HydratePublicProperties::extractData($data, $processedRules, []);
 
         $data = $this->prepareForValidation($data);
 
         $data = $this->unwrapDataForValidation($data);
+
+        if ($ruleForField) {
+            $ruleArray = str($ruleForField)->explode('.');
+            $fieldArray = str($field)->explode('.');
+
+            $data = $this->filterCollectionDataDownToSpecificKeys($data, $ruleArray, $fieldArray);
+        }
 
         $validator = Validator::make($data, $rulesForField, $messages, $attributes);
 
@@ -252,6 +276,30 @@ trait ValidatesInput
         $this->resetErrorBag($ruleKeysForField);
 
         return $result;
+    }
+
+    protected function filterCollectionDataDownToSpecificKeys($data, $ruleKeys, $fieldKeys)
+    {
+        if (count($ruleKeys)) {
+            $ruleKey = $ruleKeys->shift();
+            $fieldKey = $fieldKeys->shift();
+
+            if ($fieldKey == '*') {
+                foreach ($data as $key => $value) {
+                    $data[$key] = $this->filterCollectionDataDownToSpecificKeys($value, $ruleKeys, $fieldKeys);
+                }
+            } else {
+                $keyData = $data[$fieldKey];
+
+                if ($ruleKey == '*') {
+                    $data = [];
+                }
+
+                $data[$fieldKey] = $this->filterCollectionDataDownToSpecificKeys($keyData, $ruleKeys, $fieldKeys);
+            }
+        }
+
+        return $data;
     }
 
     protected function getModelAttributeRuleKeysToShorten($data, $rules)
