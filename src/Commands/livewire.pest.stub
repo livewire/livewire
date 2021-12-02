@@ -1,0 +1,7 @@
+<?php
+
+test('the_component_can_render', function () {
+    $component = Livewire::test([class]::class);
+
+    $component->assertStatus(200);
+});
