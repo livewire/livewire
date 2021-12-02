@@ -7,6 +7,15 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
+    public function setUp(): void
+    {
+        if (isset($_SERVER['CI'])) {
+            $this->markTestSkipped('These tests can be flaky during CI. Have skipped, but need to ensure we run locally before release.');
+        }
+
+        parent::setUp();
+    }
+
     public function test_dollar_sign_wire()
     {
         $this->browse(function ($browser) {
