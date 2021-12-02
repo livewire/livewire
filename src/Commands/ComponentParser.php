@@ -24,14 +24,14 @@ class ComponentParser
         $classPath = static::generatePathFromNamespace($classNamespace);
         $testPath = static::generateTestPathFromNamespace($this->baseTestNamespace);
 
-        $this->baseClassPath = rtrim($classPath, DIRECTORY_SEPARATOR).'/';
-        $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
-        $this->baseTestPath = rtrim($testPath, DIRECTORY_SEPARATOR).'/';
+        $this->baseClassPath = rtrim($classPath, DIRECTORY_SEPARATOR) . '/';
+        $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR) . '/';
+        $this->baseTestPath = rtrim($testPath, DIRECTORY_SEPARATOR) . '/';
 
-        if(! empty($stubSubDirectory) && str($stubSubDirectory)->startsWith('..')) {
-            $this->stubDirectory = rtrim(str($stubSubDirectory)->replaceFirst('..' . DIRECTORY_SEPARATOR, ''), DIRECTORY_SEPARATOR).'/';
+        if (!empty($stubSubDirectory) && str($stubSubDirectory)->startsWith('..')) {
+            $this->stubDirectory = rtrim(str($stubSubDirectory)->replaceFirst('..' . DIRECTORY_SEPARATOR, ''), DIRECTORY_SEPARATOR) . '/';
         } else {
-            $this->stubDirectory = rtrim('stubs'.DIRECTORY_SEPARATOR.$stubSubDirectory, DIRECTORY_SEPARATOR).'/';
+            $this->stubDirectory = rtrim('stubs' . DIRECTORY_SEPARATOR . $stubSubDirectory, DIRECTORY_SEPARATOR) . '/';
         }
 
         $directories = preg_split('/[.\/(\\\\)]+/', $rawCommand);
@@ -52,27 +52,27 @@ class ComponentParser
 
     public function classPath()
     {
-        return $this->baseClassPath.collect()
-            ->concat($this->directories)
-            ->push($this->classFile())
-            ->implode('/');
+        return $this->baseClassPath . collect()
+                ->concat($this->directories)
+                ->push($this->classFile())
+                ->implode('/');
     }
 
-    public function relativeClassPath() : string
+    public function relativeClassPath(): string
     {
-        return str($this->classPath())->replaceFirst(base_path().DIRECTORY_SEPARATOR, '');
+        return str($this->classPath())->replaceFirst(base_path() . DIRECTORY_SEPARATOR, '');
     }
 
     public function classFile()
     {
-        return $this->componentClass.'.php';
+        return $this->componentClass . '.php';
     }
 
     public function classNamespace()
     {
         return empty($this->directories)
             ? $this->baseClassNamespace
-            : $this->baseClassNamespace.'\\'.collect()
+            : $this->baseClassNamespace . '\\' . collect()
                 ->concat($this->directories)
                 ->map([Str::class, 'studly'])
                 ->implode('\\');
@@ -87,10 +87,10 @@ class ComponentParser
     {
         $stubName = $inline ? 'livewire.inline.stub' : 'livewire.stub';
 
-        if (File::exists($stubPath = base_path($this->stubDirectory.$stubName))) {
+        if (File::exists($stubPath = base_path($this->stubDirectory . $stubName))) {
             $template = file_get_contents($stubPath);
         } else {
-            $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.$stubName);
+            $template = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . $stubName);
         }
 
         if ($inline) {
@@ -106,28 +106,28 @@ class ComponentParser
 
     public function viewPath()
     {
-        return $this->baseViewPath.collect()
-            ->concat($this->directories)
-            ->map([Str::class, 'kebab'])
-            ->push($this->viewFile())
-            ->implode(DIRECTORY_SEPARATOR);
+        return $this->baseViewPath . collect()
+                ->concat($this->directories)
+                ->map([Str::class, 'kebab'])
+                ->push($this->viewFile())
+                ->implode(DIRECTORY_SEPARATOR);
     }
 
-    public function relativeViewPath() : string
+    public function relativeViewPath(): string
     {
-        return str($this->viewPath())->replaceFirst(base_path().'/', '');
+        return str($this->viewPath())->replaceFirst(base_path() . '/', '');
     }
 
     public function viewFile()
     {
-        return $this->component.'.blade.php';
+        return $this->component . '.blade.php';
     }
 
     public function viewName()
     {
         return collect()
             ->when(config('livewire.view_path') != resource_path(), function ($collection) {
-                return $collection->concat(explode('/',str($this->baseViewPath)->after(resource_path('views'))));
+                return $collection->concat(explode('/', str($this->baseViewPath)->after(resource_path('views'))));
             })
             ->filter()
             ->concat($this->directories)
@@ -138,8 +138,8 @@ class ComponentParser
 
     public function viewContents()
     {
-        if( ! File::exists($stubPath = base_path($this->stubDirectory.'livewire.view.stub'))) {
-            $stubPath = __DIR__.DIRECTORY_SEPARATOR.'livewire.view.stub';
+        if (!File::exists($stubPath = base_path($this->stubDirectory . 'livewire.view.stub'))) {
+            $stubPath = __DIR__ . DIRECTORY_SEPARATOR . 'livewire.view.stub';
         }
 
         return preg_replace(
@@ -153,7 +153,7 @@ class ComponentParser
     {
         return empty($this->directories)
             ? $this->baseTestNamespace
-            : $this->baseTestNamespace.'\\'.collect()
+            : $this->baseTestNamespace . '\\' . collect()
                 ->concat($this->directories)
                 ->map([Str::class, 'studly'])
                 ->implode('\\');
@@ -161,35 +161,35 @@ class ComponentParser
 
     public function testClassName()
     {
-        return $this->componentClass.'Test';
+        return $this->componentClass . 'Test';
     }
 
     public function testFile()
     {
-        return $this->componentClass.'Test.php';
+        return $this->componentClass . 'Test.php';
     }
 
     public function testPath()
     {
-        return $this->baseTestPath.collect()
-        ->concat($this->directories)
-        ->push($this->testFile())
-        ->implode('/');
+        return $this->baseTestPath . collect()
+                ->concat($this->directories)
+                ->push($this->testFile())
+                ->implode('/');
     }
 
-    public function relativeTestPath() : string
+    public function relativeTestPath(): string
     {
-        return str($this->testPath())->replaceFirst(base_path().'/', '');
+        return str($this->testPath())->replaceFirst(base_path() . '/', '');
     }
 
     public function testContents()
     {
         $stubName = 'livewire.test.stub';
 
-        if(File::exists($stubPath = base_path($this->stubDirectory.$stubName))) {
+        if (File::exists($stubPath = base_path($this->stubDirectory . $stubName))) {
             $template = file_get_contents($stubPath);
         } else {
-            $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.$stubName);
+            $template = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . $stubName);
         }
 
         return preg_replace(
@@ -199,9 +199,25 @@ class ComponentParser
         );
     }
 
+    public function pestContents()
+    {
+        $stubName = 'livewire.pest.stub';
+        if (File::exists($stubPath = base_path($this->stubDirectory . $stubName))) {
+            $template = file_get_contents($stubPath);
+        } else {
+            $template = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . $stubName);
+        }
+
+        return preg_replace(
+            ['/\[classwithnamespace\]/', '/\[class\]/'],
+            [$this->classNamespace() . '\\' . $this->className(), $this->className()],
+            $template
+        );
+    }
+
     public function wisdomOfTheTao()
     {
-        $wisdom = require __DIR__.DIRECTORY_SEPARATOR.'the-tao.php';
+        $wisdom = require __DIR__ . DIRECTORY_SEPARATOR . 'the-tao.php';
 
         return Arr::random($wisdom);
     }
@@ -209,7 +225,7 @@ class ComponentParser
     public static function generatePathFromNamespace($namespace)
     {
         $name = str($namespace)->finish('\\')->replaceFirst(app()->getNamespace(), '');
-        return app('path').'/'.str_replace('\\', '/', $name);
+        return app('path') . '/' . str_replace('\\', '/', $name);
     }
 
     public static function generateTestPathFromNamespace($namespace)

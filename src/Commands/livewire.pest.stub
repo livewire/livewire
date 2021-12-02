@@ -1,5 +1,6 @@
 <?php
 use Livewire\Livewire;
+use [classwithnamespace];
 
 test('the_component_can_render', function () {
     $component = Livewire::test([class]::class);

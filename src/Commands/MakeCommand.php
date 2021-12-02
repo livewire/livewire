@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class MakeCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--stub= : If you have several stubs, stored in subfolders }';
+    protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--pest} {--stub= : If you have several stubs, stored in subfolders }';
 
     protected $description = 'Create a new Livewire component';
 
@@ -36,6 +36,7 @@ class MakeCommand extends FileManipulationCommand
         $force = $this->option('force');
         $inline = $this->option('inline');
         $test = $this->option('test');
+        $pest = $this->option('pest');
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
 
@@ -44,6 +45,8 @@ class MakeCommand extends FileManipulationCommand
 
         if ($test) {
             $test = $this->createTest($force);
+        }elseif($pest){
+            $pest = $this->createPest($force);
         }
 
         $this->refreshComponentAutodiscovery();
@@ -58,6 +61,10 @@ class MakeCommand extends FileManipulationCommand
 
             if ($test) {
                 $test && $this->line("<options=bold;fg=green>TEST:</>  {$this->parser->relativeTestPath()}");
+            }
+
+            if ($pest) {
+                $pest && $this->line("<options=bold;fg=green>PEST:</>  {$this->parser->relativeTestPath()}");
             }
 
             if ($showWelcomeMessage && ! app()->runningUnitTests()) {
@@ -122,11 +129,29 @@ class MakeCommand extends FileManipulationCommand
         return $testPath;
     }
 
+    protected function createPest($force = false)
+    {
+        $pestPath = $this->parser->testPath();
+
+        if (File::exists($pestPath) && ! $force) {
+            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
+            $this->line("<fg=red;options=bold>Pest file already exists:</> {$this->parser->relativeTestPath()}");
+
+            return false;
+        }
+
+        $this->ensureDirectoryExists($pestPath);
+
+        File::put($pestPath, $this->parser->pestContents());
+
+        return $pestPath;
+    }
+
     public function isClassNameValid($name)
     {
         return preg_match("/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/", $name);
     }
-    
+
     public function isReservedClassName($name)
     {
         return array_search(strtolower($name), $this->getReservedName()) !== false;
