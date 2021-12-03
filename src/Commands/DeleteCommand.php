@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class DeleteCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:delete {name} {--inline} {--force} {--test}';
+    protected $signature = 'livewire:delete {name} {--inline} {--force} {--test} {--pest}';
 
     protected $description = 'Delete a Livewire component';
 
@@ -29,7 +29,7 @@ class DeleteCommand extends FileManipulationCommand
         }
 
         $inline = $this->option('inline');
-        $test = $this->option('test');
+        $test = $this->option('test') || $this->option('pest');
 
         $class = $this->removeClass($force);
         if (! $inline) $view = $this->removeView($force);

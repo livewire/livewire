@@ -61,6 +61,25 @@ class DeleteCommandTest extends TestCase
         $this->assertFalse(File::exists($testPath));
     }
     /** @test */
+    public function component_with_pest_is_removed_by_delete_command()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo','--pest'=>true]);
+
+        $classPath = $this->livewireClassesPath('Foo.php');
+        $viewPath = $this->livewireViewsPath('foo.blade.php');
+        $testPath = $this->livewireTestsPath('FooTest.php');
+
+        $this->assertTrue(File::exists($classPath));
+        $this->assertTrue(File::exists($viewPath));
+        $this->assertTrue(File::exists($testPath));
+
+        Artisan::call('livewire:delete', ['name' => 'foo', '--force' => true,'--pest'=>true]);
+
+        $this->assertFalse(File::exists($classPath));
+        $this->assertFalse(File::exists($viewPath));
+        $this->assertFalse(File::exists($testPath));
+    }
+    /** @test */
     public function component_is_removed_by_rm_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo','--test'=>true]);
