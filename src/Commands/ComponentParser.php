@@ -28,8 +28,8 @@ class ComponentParser
         $this->baseViewPath = rtrim($viewPath, DIRECTORY_SEPARATOR).'/';
         $this->baseTestPath = rtrim($testPath, DIRECTORY_SEPARATOR).'/';
 
-        if (!empty($stubSubDirectory) && str($stubSubDirectory)->startsWith('..')) {
-            $this->stubDirectory = rtrim(str($stubSubDirectory)->replaceFirst('..'.DIRECTORY_SEPARATOR, ''), DIRECTORY_SEPARATOR).'/';
+        if(! empty($stubSubDirectory) && str($stubSubDirectory)->startsWith('..')) {
+            $this->stubDirectory = rtrim(str($stubSubDirectory)->replaceFirst('..' . DIRECTORY_SEPARATOR, ''), DIRECTORY_SEPARATOR).'/';
         } else {
             $this->stubDirectory = rtrim('stubs'.DIRECTORY_SEPARATOR.$stubSubDirectory, DIRECTORY_SEPARATOR).'/';
         }
@@ -58,7 +58,7 @@ class ComponentParser
                 ->implode('/');
     }
 
-    public function relativeClassPath(): string
+    public function relativeClassPath() : string
     {
         return str($this->classPath())->replaceFirst(base_path().DIRECTORY_SEPARATOR, '');
     }
@@ -113,7 +113,7 @@ class ComponentParser
                 ->implode(DIRECTORY_SEPARATOR);
     }
 
-    public function relativeViewPath(): string
+    public function relativeViewPath() : string
     {
         return str($this->viewPath())->replaceFirst(base_path().'/', '');
     }
@@ -127,7 +127,7 @@ class ComponentParser
     {
         return collect()
             ->when(config('livewire.view_path') != resource_path(), function ($collection) {
-                return $collection->concat(explode('/', str($this->baseViewPath)->after(resource_path('views'))));
+                return $collection->concat(explode('/',str($this->baseViewPath)->after(resource_path('views'))));
             })
             ->filter()
             ->concat($this->directories)
@@ -138,7 +138,7 @@ class ComponentParser
 
     public function viewContents()
     {
-        if (!File::exists($stubPath = base_path($this->stubDirectory.'livewire.view.stub'))) {
+        if( ! File::exists($stubPath = base_path($this->stubDirectory.'livewire.view.stub'))) {
             $stubPath = __DIR__.DIRECTORY_SEPARATOR.'livewire.view.stub';
         }
 
@@ -177,7 +177,7 @@ class ComponentParser
                 ->implode('/');
     }
 
-    public function relativeTestPath(): string
+    public function relativeTestPath() : string
     {
         return str($this->testPath())->replaceFirst(base_path().'/', '');
     }
@@ -186,7 +186,7 @@ class ComponentParser
     {
         $stubName = 'livewire.test.stub';
 
-        if (File::exists($stubPath = base_path($this->stubDirectory.$stubName))) {
+        if(File::exists($stubPath = base_path($this->stubDirectory.$stubName))) {
             $template = file_get_contents($stubPath);
         } else {
             $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.$stubName);
@@ -194,7 +194,7 @@ class ComponentParser
 
         return preg_replace(
             ['/\[testnamespace\]/', '/\[classwithnamespace\]/', '/\[testclass\]/', '/\[class\]/'],
-            [$this->testNamespace(), $this->classNamespace().'\\'.$this->className(), $this->testClassName(), $this->className()],
+            [$this->testNamespace(), $this->classNamespace() . '\\' . $this->className(), $this->testClassName(), $this->className()],
             $template
         );
     }
@@ -202,15 +202,15 @@ class ComponentParser
     public function pestContents()
     {
         $stubName = 'livewire.pest.stub';
-        if (File::exists($stubPath = base_path($this->stubDirectory.$stubName))) {
+        if (File::exists($stubPath = base_path($this->stubDirectory . $stubName))) {
             $template = file_get_contents($stubPath);
         } else {
-            $template = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.$stubName);
+            $template = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . $stubName);
         }
 
         return preg_replace(
             ['/\[classwithnamespace\]/', '/\[class\]/'],
-            [$this->classNamespace().'\\'.$this->className(), $this->className()],
+            [$this->classNamespace() . '\\' . $this->className(), $this->className()],
             $template
         );
     }
