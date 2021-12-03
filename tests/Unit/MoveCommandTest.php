@@ -59,6 +59,27 @@ class MoveCommandTest extends TestCase
         $this->assertFalse(File::exists($this->livewireTestsPath('BobTest.php')));
 
     }
+
+    /** @test */
+    public function component_with_pest_is_renamed_by_move_command()
+    {
+        Artisan::call('make:livewire', ['name' => 'bob','--pest'=>true]);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('bob.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('BobTest.php')));
+
+        Artisan::call('livewire:move', ['name' => 'bob', 'new-name' => 'lob','--pest'=>true]);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Lob.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('lob.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('LobTest.php')));
+
+        $this->assertFalse(File::exists($this->livewireClassesPath('Bob.php')));
+        $this->assertFalse(File::exists($this->livewireViewsPath('bob.blade.php')));
+        $this->assertFalse(File::exists($this->livewireTestsPath('BobTest.php')));
+
+    }
     /** @test */
     public function component_is_renamed_by_mv_command()
     {

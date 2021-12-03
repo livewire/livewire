@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class CopyCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:copy {name} {new-name} {--inline} {--force} {--test}';
+    protected $signature = 'livewire:copy {name} {new-name} {--inline} {--force} {--test} {--pest}';
 
     protected $description = 'Copy a Livewire component';
 
@@ -27,7 +27,7 @@ class CopyCommand extends FileManipulationCommand
 
         $force = $this->option('force');
         $inline = $this->option('inline');
-        $test = $this->option('test');
+        $test = $this->option('test') || $this->option('pest');
 
         $class = $this->copyClass($force, $inline);
         if (! $inline) $view = $this->copyView($force);
