@@ -45,7 +45,30 @@ class ResetPropertiesTest extends TestCase
             // Reset only foo.
             ->call('resetKeys', 'foo')
             ->assertSet('foo', 'bar')
-            ->assertSet('bob', 'law');
+            ->assertSet('bob', 'law')
+            ->assertSet('mwa', 'aha')
+            ->set('foo', 'baz')
+            ->set('bob', 'law')
+            ->set('mwa', 'aha')
+            ->assertSet('foo', 'baz')
+            ->assertSet('bob', 'law')
+            ->assertSet('mwa', 'aha')
+            // Reset all except foo.
+            ->call('resetKeysExcept', 'foo')
+            ->assertSet('foo', 'baz')
+            ->assertSet('bob', 'lob')
+            ->assertSet('mwa', 'hah')
+            ->set('foo', 'baz')
+            ->set('bob', 'law')
+            ->set('mwa', 'aha')
+            ->assertSet('foo', 'baz')
+            ->assertSet('bob', 'law')
+            ->assertSet('mwa', 'aha')
+            // Reset all except foo and bob.
+            ->call('resetKeysExcept', ['foo', 'bob'])
+            ->assertSet('foo', 'baz')
+            ->assertSet('bob', 'law')
+            ->assertSet('mwa', 'hah');
     }
 }
 
@@ -63,6 +86,11 @@ class ResetPropertiesComponent extends Component
     public function resetKeys($keys)
     {
         $this->reset($keys);
+    }
+    
+    public function resetKeysExcept($keys)
+    {
+        $this->resetExcept($keys);
     }
 
     public function render()

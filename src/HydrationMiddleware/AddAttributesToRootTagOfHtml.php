@@ -37,9 +37,9 @@ class AddAttributesToRootTagOfHtml
     protected function escapeStringForHtml($subject)
     {
         if (is_string($subject) || is_numeric($subject)) {
-            return htmlspecialchars($subject);
+            return htmlspecialchars($subject, ENT_QUOTES|ENT_SUBSTITUTE);
         }
 
-        return htmlspecialchars(json_encode($subject));
+        return htmlspecialchars(json_encode($subject), ENT_QUOTES|ENT_SUBSTITUTE);
     }
 }
