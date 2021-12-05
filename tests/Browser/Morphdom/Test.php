@@ -10,7 +10,7 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            Livewire::visit($browser, Component::class, '?showChild=false')
                 /**
                  * element root is DOM diffed
                  */
@@ -55,6 +55,40 @@ class Test extends TestCase
                 ->assertScript('window.lastAddedElement.innerText', 'second')
                 ->assertScript('window.lastUpdatedElement.innerText', 'third')
             ;
+        });
+    }
+
+    /** @test */
+    public function it_keeps_wire_end_comments_of_children_if_parent_updates()
+    {    
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, Component::class, '?showChild=true')
+            ->tap(function ($b) { 
+                $parentId = $b->script('return document.querySelector("[dusk=\'root\']").getAttribute("wire:id")')[0];
+                $child1Id = $b->script('return document.querySelectorAll("[dusk=\'child\']")[0].getAttribute("wire:id")')[0];
+                $child2Id = $b->script('return document.querySelectorAll("[dusk=\'child\']")[1].getAttribute("wire:id")')[0];
+
+                $b->assertSourceHas('<!--[if false]><![endif] Livewire Component wire-end:'.$parentId.' -->');
+                $b->assertSourceHas('<!--[if false]><![endif] Livewire Component wire-end:'.$child1Id.' -->');
+                $b->assertSourceHas('<!--[if false]><![endif] Livewire Component wire-end:'.$child2Id.' -->');
+
+            })
+            /**
+             * Update parent element
+             */
+            ->waitForLivewire()->click('@foo')
+            /**
+             * Validate that children comments are still there
+             */
+            ->tap(function ($b) { 
+                $parentId = $b->script('return document.querySelector("[dusk=\'root\']").getAttribute("wire:id")')[0];
+                $child1Id = $b->script('return document.querySelectorAll("[dusk=\'child\']")[0].getAttribute("wire:id")')[0];
+                $child2Id = $b->script('return document.querySelectorAll("[dusk=\'child\']")[1].getAttribute("wire:id")')[0];
+
+                $b->assertSourceHas('<!--[if false]><![endif] Livewire Component wire-end:'.$parentId.' -->');
+                $b->assertSourceHas('<!--[if false]><![endif] Livewire Component wire-end:'.$child1Id.' -->');
+                $b->assertSourceHas('<!--[if false]><![endif] Livewire Component wire-end:'.$child2Id.' -->');
+            });
         });
     }
 }

@@ -38,4 +38,12 @@
             <div wire:key="qux" data-qux="{{ $qux ? 'true' : 'false' }}">third</div>
         </div>
     </button>
+
+    @if ($showChild)
+        <div>Child component that is not the last element in the parent</div>
+        @livewire(Tests\Browser\Morphdom\NestedComponent::class)
+
+        <div>Child component that is the last element in the parent</div>
+        @livewire(Tests\Browser\Morphdom\NestedComponent::class)
+    @endif
 </div>

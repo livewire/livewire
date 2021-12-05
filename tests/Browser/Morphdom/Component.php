@@ -15,6 +15,10 @@ class Component extends BaseComponent
     public $law = false;
     public $qux = false;
 
+    protected $queryString = ['showChild'];
+
+    public $showChild = false;
+    
     public function render()
     {
         return View::file(__DIR__.'/view.blade.php');
