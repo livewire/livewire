@@ -6,6 +6,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\View\Engines\CompilerEngine;
 use Illuminate\View\Engines\PhpEngine;
 use Livewire\Exceptions\BypassViewHandler;
+use Livewire\LivewireManager;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
@@ -27,6 +28,39 @@ trait RendersLivewireComponents
     public function isRenderingLivewireComponent()
     {
         return ! empty($this->livewireComponents);
+    }
+   
+    public function get($path, array $data = [])
+    {
+        if (! $this->isRenderingLivewireComponent()) return parent::get($path, $data); 
+
+        $this->lastCompiled[] = $path;
+
+        // If this given view has expired, which means it has simply been edited since
+        // it was last compiled, we will re-compile the views so we can evaluate a
+        // fresh copy of the view. We'll pass the compiler the path of the view.
+        if ($this->compiler->isExpired($path)) {
+            // @note: this is the only modification of this overladed Laravel method:
+            // We are globally setting the current view path being compiled for
+            // reference from the @livewire Blade directive.
+            LivewireManager::$currentCompilingViewPath = $path;
+            LivewireManager::$currentCompilingChildCounter = 0;
+            
+            $this->compiler->compile($path);
+
+            // Here, we'll reset them back, for the next view to be compiled.
+            LivewireManager::$currentCompilingViewPath = null;
+            LivewireManager::$currentCompilingChildCounter = null;
+        }
+
+        // Once we have the path to the compiled file, we will evaluate the paths with
+        // typical PHP just like any other templates. We also keep a stack of views
+        // which have been rendered for right exception messages to be generated.
+        $results = $this->evaluatePath($this->compiler->getCompiledPath($path), $data);
+
+        array_pop($this->lastCompiled);
+
+        return $results;
     }
 
     protected function evaluatePath($__path, $__data)

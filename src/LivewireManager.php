@@ -27,6 +27,9 @@ class LivewireManager
     ];
 
     public static $isLivewireRequestTestingOverride = false;
+    
+    public static $currentCompilingViewPath;
+    public static $currentCompilingChildCounter;
 
     public function component($alias, $viewClass = null)
     {
