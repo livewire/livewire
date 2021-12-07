@@ -52,7 +52,7 @@ EOT;
         // Livewire children are properly tracked across load balancers.
         if (LivewireManager::$currentCompilingViewPath !== null) {
             // $cachedKey = '[hash of Blade view path]-[current @livewire directive count]'
-            $cachedKey = "'" . crc32(LivewireManager::$currentCompilingViewPath) . "-" . LivewireManager::$currentCompilingChildCounter . "'";
+            $cachedKey = "'l" . crc32(LivewireManager::$currentCompilingViewPath) . "-" . LivewireManager::$currentCompilingChildCounter . "'";
 
             // We'll increment count, so each cache key inside a compiled view is unique.
             LivewireManager::$currentCompilingChildCounter++;
