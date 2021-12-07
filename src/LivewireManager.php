@@ -459,6 +459,9 @@ HTML;
 
     public function flushState()
     {
+        static::$currentCompilingChildCounter = null;
+        static::$currentCompilingViewPath = null;
+        
         $this->shouldDisableBackButtonCache = false;
 
         $this->dispatch('flush-state');
