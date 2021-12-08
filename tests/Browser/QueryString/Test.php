@@ -308,4 +308,16 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_query_string_aliases_set_intial_property_values()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithAliases::class, '?s=test')
+                /*
+                 * Check that the intial property value is set from the query string aliases.
+                 */
+                ->assertInputValue('@search', 'test')
+            ;
+        });
+    }
 }
