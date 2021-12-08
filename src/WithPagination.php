@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Illuminate\Pagination\Cursor;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\Paginator;
 
 trait WithPagination
@@ -30,6 +32,15 @@ trait WithPagination
         $this->page = $this->resolvePage();
 
         $this->paginators['page'] = $this->page;
+
+        if (class_exists(CursorPaginator::class)) {
+            CursorPaginator::currentCursorResolver(function ($pageName){
+                if (! isset($this->paginators[$pageName])) {
+                    $this->paginators[$pageName] = request()->query($pageName, '');
+                }
+                return Cursor::fromEncoded($this->paginators[$pageName]);
+            });
+        }
 
         Paginator::currentPageResolver(function ($pageName) {
             if (! isset($this->paginators[$pageName])) {
@@ -75,8 +86,10 @@ trait WithPagination
 
     public function setPage($page, $pageName = 'page')
     {
-        $page = intval($page);
-        $page = $page <= 0 ? 1 : $page ;
+        if (is_numeric($page)){
+            $page = (int)$page;
+            $page = $page <= 0 ? 1 : $page ;
+        }
         $beforePaginatorMethod = 'updatingPaginators';
         $afterPaginatorMethod = 'updatedPaginators';
 
