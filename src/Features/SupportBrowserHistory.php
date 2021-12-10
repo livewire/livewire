@@ -127,7 +127,7 @@ class SupportBrowserHistory
     {
         if (empty($referer = request()->header('Referer'))) return [];
 
-        parse_str(parse_url($referer, PHP_URL_QUERY), $refererQueryString);
+        parse_str((string) parse_url($referer, PHP_URL_QUERY), $refererQueryString);
 
         return $refererQueryString;
     }
