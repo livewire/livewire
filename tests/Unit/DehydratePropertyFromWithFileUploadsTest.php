@@ -54,6 +54,27 @@ class DehydratePropertyFromWithFileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function a_keyed_array_should_serialize_all_images_within_it_separately()
+    {
+        Storage::fake('tmp-for-tests');
+
+        $file1 = UploadedFile::fake()->image('avatar.jpg');
+        $file2 = UploadedFile::fake()->image('avatar.jpg');
+
+        $uploader = SupportFileUploads::init();
+        $tmpFileArray = [
+            'file1' => TemporaryUploadedFile::createFromLivewire($file1->path()),
+            'file2' => TemporaryUploadedFile::createFromLivewire($file2->path())
+        ];
+
+        $outputFileStr = $uploader->dehydratePropertyFromWithFileUploads($tmpFileArray);
+
+        $this->assertIsArray($outputFileStr);
+        $this->assertTrue(str_contains($outputFileStr['file1'], 'livewire-file:'));
+        $this->assertTrue(str_contains($outputFileStr['file2'], 'livewire-file:'));
+    }
+
+    /** @test */
     public function a_wireable_object_serialize_all_images_within_it()
     {
         Storage::fake('tmp-for-tests');
