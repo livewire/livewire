@@ -49,7 +49,7 @@ class SupportFileUploads
         if (is_array($value) && isset(array_values($value)[0])) {
             $isValid = true;
 
-            foreach (array_values($value) as $key => $arrayValue) {
+            foreach ($value as $key => $arrayValue) {
                 if (!($arrayValue instanceof TemporaryUploadedFile) || !is_numeric($key)) {
                     $isValid = false;
                     break;
