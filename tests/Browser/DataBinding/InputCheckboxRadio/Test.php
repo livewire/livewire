@@ -41,4 +41,35 @@ class Test extends TestCase
                 ;
         });
     }
+
+    /** @test */
+    public function checkboxes_fuzzy_match_integer_values()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, CheckboxesWithIntsComponent::class)
+                // ->tinker()
+                ->assertNotChecked('@int1')
+                ->assertChecked('@int2')
+                ->assertChecked('@int3')
+
+                ->waitForLivewire()->uncheck('@int2')
+
+                ->assertNotChecked('@int1')
+                ->assertNotChecked('@int2')
+                ->assertChecked('@int3')
+
+                ->waitForLivewire()->uncheck('@int3')
+
+                ->assertNotChecked('@int1')
+                ->assertNotChecked('@int2')
+                ->assertNotChecked('@int3')
+
+                ->waitForLivewire()->check('@int2')
+
+                ->assertNotChecked('@int1')
+                ->assertChecked('@int2')
+                ->assertNotChecked('@int3')
+                ;
+        });
+    }
 }
