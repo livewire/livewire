@@ -27,6 +27,9 @@ class LivewireManager
     ];
 
     public static $isLivewireRequestTestingOverride = false;
+    
+    public static $currentCompilingViewPath;
+    public static $currentCompilingChildCounter;
 
     public function component($alias, $viewClass = null)
     {
@@ -456,6 +459,9 @@ HTML;
 
     public function flushState()
     {
+        static::$currentCompilingChildCounter = null;
+        static::$currentCompilingViewPath = null;
+        
         $this->shouldDisableBackButtonCache = false;
 
         $this->dispatch('flush-state');
