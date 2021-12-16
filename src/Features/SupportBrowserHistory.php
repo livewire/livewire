@@ -26,6 +26,10 @@ class SupportBrowserHistory
             $queryParams = request()->query();
 
             foreach ($component->getQueryString() ?? [] as $property => $options) {
+                if (!is_array($options)) {
+                    $property = $options;
+                }
+
                 $fromQueryString = Arr::get($queryParams, $options['as'] ?? $property);
 
                 if ($fromQueryString === null) {
