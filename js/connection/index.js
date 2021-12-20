@@ -79,10 +79,6 @@ export default class Connection {
                         store.sessionHasExpired = true
 
                         this.showExpiredMessage(response, message)
-
-                        // @todo for deployment invalidation feature:
-                        // - should we do something different than a simple 419?
-                        //   - what would an SPA like Vue/React do here?
                     } else {
                         response.text().then(response => {
                             this.showHtmlModal(response)
