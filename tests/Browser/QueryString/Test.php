@@ -308,4 +308,21 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_query_string_aliases_set_intial_property_values()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithAliases::class, '?s=1')
+                /*
+                 * Check that the intial property value is set from the query string aliases.
+                 */
+                ->assertInputValue('@search', '1')
+
+                // Navigate to page 2.
+                ->waitForLivewire()->click('@nextPage.before')
+                ->assertQueryStringHas('p', 2)
+                ->assertQueryStringHas('s', '1')
+            ;
+        });
+    }
 }
