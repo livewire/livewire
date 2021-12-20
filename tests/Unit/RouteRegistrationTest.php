@@ -19,6 +19,20 @@ class RouteRegistrationTest extends TestCase
     }
 
     /** @test */
+    public function can_handle_requests_after_application_is_created()
+    {
+        Livewire::component(ComponentForRouteRegistration::class);
+
+        Route::get('/foo', ComponentForRouteRegistration::class);
+
+        // After application is created,
+        // request()->route() is null
+        $this->createApplication();
+
+        $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
+    }
+
+    /** @test */
     public function component_uses_alias_instead_of_full_name_if_registered()
     {
         Livewire::component('component-alias', ComponentForRouteRegistration::class);
