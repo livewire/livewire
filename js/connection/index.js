@@ -18,7 +18,6 @@ export default class Connection {
     }
 
     showExpiredMessage(response, message) {
-        console.log(store.sessionHasExpiredCallback, store.sessionHasExpired, 'yo');
         if (store.sessionHasExpiredCallback) {
             store.sessionHasExpiredCallback(response, message)
         } else {
