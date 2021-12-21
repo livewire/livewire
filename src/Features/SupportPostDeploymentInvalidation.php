@@ -9,21 +9,21 @@ use Livewire\Exceptions\LivewirePageExpiredBecauseNewDeploymentHasSignificantEno
 
 class SupportPostDeploymentInvalidation
 {
-    public const LIVEWIRE_DEPLOYMENT_INVALIDATION_HASH = 'acj';
+    public static $LIVEWIRE_DEPLOYMENT_INVALIDATION_HASH = 'acj';
 
     static function init() { return new static; }
 
     function __construct()
     {
         Livewire::listen('component.dehydrate.initial', function ($component, $response) {
-            $response->fingerprint['v'] = static::LIVEWIRE_DEPLOYMENT_INVALIDATION_HASH;
+            $response->fingerprint['v'] = static::$LIVEWIRE_DEPLOYMENT_INVALIDATION_HASH;
         });
 
         Livewire::listen('component.hydrate.subsequent', function ($component, $request) {
             if (! isset($request->fingerprint['v'])) return;
 
             if ($v = $request->fingerprint['v']) {
-                if ($v != static::LIVEWIRE_DEPLOYMENT_INVALIDATION_HASH) {
+                if ($v != static::$LIVEWIRE_DEPLOYMENT_INVALIDATION_HASH) {
                     throw new LivewirePageExpiredBecauseNewDeploymentHasSignificantEnoughChanges;
                 }
             }
