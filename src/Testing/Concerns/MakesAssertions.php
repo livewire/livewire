@@ -155,6 +155,26 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertEmittedTo($target, $value, ...$params)
+    {
+        $this->assertEmitted($value, ...$params);
+        $result = $this->testEmittedTo($target, $value);
+
+        PHPUnit::assertTrue($result, "Failed asserting that an event [{$value}] was fired to {$target}.");
+
+        return $this;
+    }
+
+    public function assertEmittedUp($value, ...$params)
+    {
+        $this->assertEmitted($value, ...$params);
+        $result = $this->testEmittedUp($value);
+
+        PHPUnit::assertTrue($result, "Failed asserting that an event [{$value}] was fired up.");
+
+        return $this;
+    }
+
     protected function testEmitted($value, $params)
     {
         $assertionSuffix = '.';
@@ -172,7 +192,7 @@ trait MakesAssertions
                 return $item['event'] === $value
                     && $item['params'] === $params;
             });
-            
+
             $encodedParams = json_encode($params);
             $assertionSuffix = " with parameters: {$encodedParams}";
         }
@@ -181,6 +201,23 @@ trait MakesAssertions
             'test'            => $test,
             'assertionSuffix' => $assertionSuffix,
         ];
+    }
+
+    protected function testEmittedTo($target, $value)
+    {
+        return (bool) collect(data_get($this->payload, 'effects.emits'))->first(function ($item) use ($target, $value) {
+            return $item['event'] === $value
+                && $item['to'] === $target;
+        });
+
+    }
+
+    protected function testEmittedUp($value)
+    {
+        return (bool) collect(data_get($this->payload, 'effects.emits'))->first(function ($item) use ($value) {
+            return $item['event'] === $value
+                && $item['ancestorsOnly'] === true;
+        });
     }
 
     public function assertDispatchedBrowserEvent($name, $data = null)
