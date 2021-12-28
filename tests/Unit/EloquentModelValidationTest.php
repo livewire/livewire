@@ -223,6 +223,18 @@ class EloquentModelValidationTest extends TestCase
 
         $this->assertEquals('sparkling', $cart->fresh()->items[0]->title);
     }
+
+    /** @test */
+    public function validate_message_doesnt_contain_base_property()
+    {
+        Livewire::test(ComponentWithoutModelBaseProperty::class, [
+            'state' => [],
+        ])
+            ->set('state.bar', '')
+            ->call('save')
+            ->assertHasErrors('bar', 'required')
+            ->assertSee('The bar field is required.');
+    }
 }
 
 class Foo extends Model
@@ -381,6 +393,25 @@ class ComponentForEloquentModelNestedHydrationMiddleware extends Component
         $this->validate();
 
         $this->cart->items->each->save();
+    }
+
+    public function render()
+    {
+        return view('dump-errors');
+    }
+}
+
+class ComponentWithoutModelBaseProperty extends Component
+{
+    public $state;
+
+    protected $rules = [
+        'bar' => 'required'
+    ];
+
+    public function save()
+    {
+        $this->validate(null, [], [], $this->state);
     }
 
     public function render()

@@ -163,12 +163,12 @@ trait ValidatesInput
         return $this;
     }
 
-    public function validate($rules = null, $messages = [], $attributes = [])
+    public function validate($rules = null, $messages = [], $attributes = [], $data = null)
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         $data = $this->prepareForValidation(
-            $this->getDataForValidation($rules)
+            $data ?? $this->getDataForValidation($rules)
         );
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
@@ -197,7 +197,7 @@ trait ValidatesInput
         return $validatedData;
     }
 
-    public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
+    public function validateOnly($field, $rules = null, $messages = [], $attributes = [], $data = null)
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
@@ -230,7 +230,7 @@ trait ValidatesInput
 
         $ruleKeysForField = array_keys($rulesForField);
 
-        $data = $this->getDataForValidation($rules);
+        $data = $data ?? $this->getDataForValidation($rules);
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
 
