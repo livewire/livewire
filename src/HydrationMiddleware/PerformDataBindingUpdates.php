@@ -14,6 +14,8 @@ class PerformDataBindingUpdates implements HydrationMiddleware
                 if ($update['type'] !== 'syncInput') continue;
 
                 $data = $update['payload'];
+                
+                if (! array_key_exists('value', $data)) continue;
 
                 $unHydratedInstance->syncInput($data['name'], $data['value']);
             }
