@@ -23,6 +23,7 @@ class TemporaryUploadedFile extends UploadedFile
         parent::__construct(stream_get_meta_data($tmpFile)['uri'], $this->path);
     }
 
+    #[\ReturnTypeWillChange]
     public function getPath()
     {
         return $this->storage->path(FileUploadConfiguration::directory());
@@ -33,6 +34,7 @@ class TemporaryUploadedFile extends UploadedFile
         return true;
     }
 
+    #[\ReturnTypeWillChange]
     public function getSize()
     {
         if (app()->runningUnitTests() && str($this->getfilename())->contains('-size=')) {
@@ -47,11 +49,13 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->storage->mimeType($this->path);
     }
 
+    #[\ReturnTypeWillChange]
     public function getFilename()
     {
         return $this->getName($this->path);
     }
 
+    #[\ReturnTypeWillChange]
     public function getRealPath()
     {
         return $this->storage->path($this->path);
