@@ -127,7 +127,7 @@ class HydratePublicProperties implements HydrationMiddleware
                 $response->memo['dataMeta']['stringables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->__toString());
-            } else if (is_subclass_of($value, \BackedEnum::class)) {
+            } else if (is_subclass_of($value, 'BackedEnum')) {
                 $response->memo['dataMeta']['enums'][$key] = get_class($value);
 
                 data_set($response, 'memo.data.'.$key, $value->value);
