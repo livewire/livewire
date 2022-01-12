@@ -7,7 +7,7 @@ use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    public TestEnum $enum;
+    public $enum;
 
     public function mount()
     {
