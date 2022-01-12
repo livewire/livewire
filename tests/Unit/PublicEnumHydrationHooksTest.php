@@ -10,7 +10,7 @@ class PublicEnumHydrationHooksTest extends TestCase
 {
     /**
      * @test
-     * @requires PHP 8.1
+     * @requires PHP >= 8.1
      */
     public function public_properties_can_be_cast()
     {
