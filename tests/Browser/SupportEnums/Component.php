@@ -4,14 +4,15 @@ namespace Tests\Browser\SupportEnums;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
+use Tests\TestEnum;
 
 class Component extends BaseComponent
 {
-    public $enum;
+    public TestEnum $enum;
 
     public function mount()
     {
-        $this->enum = \Tests\TestEnum::TEST;
+        $this->enum = TestEnum::TEST;
     }
 
     public function render()
