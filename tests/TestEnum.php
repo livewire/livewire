@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Browser\SupportEnums;
+namespace Tests;
 
 enum TestEnum: string
 {

@@ -11,7 +11,7 @@ class Component extends BaseComponent
 
     public function mount()
     {
-        $this->enum = TestEnum::TEST;
+        $this->enum = \Tests\TestEnum::TEST;
     }
 
     public function render()

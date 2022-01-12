@@ -16,8 +16,8 @@ class PublicEnumHydrationHooksTest extends TestCase
     {
         Livewire::test(ComponentWithPublicEnumCasters::class)
             ->call('storeTypeOf')
-            ->assertSet('typeOf', Browser\SupportEnums\TestEnum::class)
-            ->assertSet('enum', Browser\SupportEnums\TestEnum::from('Be excellent to each other'));
+            ->assertSet('typeOf', TestEnum::class)
+            ->assertSet('enum', TestEnum::from('Be excellent to each other'));
     }
 }
 
@@ -28,17 +28,17 @@ class ComponentWithPublicEnumCasters extends Component
 
     public function hydrate()
     {
-        $this->enum = Browser\SupportEnums\TestEnum::TEST;
+        $this->enum = TestEnum::TEST;
     }
 
     public function dehydrate()
     {
-        $this->enum = Browser\SupportEnums\TestEnum::from($this->enum->value);
+        $this->enum = TestEnum::from($this->enum->value);
     }
 
     public function mount()
     {
-        $this->enum = Browser\SupportEnums\TestEnum::TEST;
+        $this->enum = TestEnum::TEST;
     }
 
     public function storeTypeOf()
