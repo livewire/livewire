@@ -23,8 +23,8 @@ class PublicEnumHydrationHooksTest extends TestCase
 
 class ComponentWithPublicEnumCasters extends Component
 {
-    public string $typeOf;
-    public TestEnum $enum;
+    public $typeOf;
+    public $enum;
 
     public function hydrate()
     {
