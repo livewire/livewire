@@ -28,7 +28,7 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->storage->path(FileUploadConfiguration::directory());
     }
 
-    public function isValid()
+    public function isValid(): bool
     {
         return true;
     }
@@ -42,22 +42,22 @@ class TemporaryUploadedFile extends UploadedFile
         return (int) $this->storage->size($this->path);
     }
 
-    public function getMimeType()
+    public function getMimeType(): string
     {
         return $this->storage->mimeType($this->path);
     }
 
-    public function getFilename()
+    public function getFilename(): string
     {
         return $this->getName($this->path);
     }
 
-    public function getRealPath()
+    public function getRealPath(): string
     {
         return $this->storage->path($this->path);
     }
 
-    public function getClientOriginalName()
+    public function getClientOriginalName(): string
     {
         return $this->extractOriginalNameFromFilePath($this->path);
     }
