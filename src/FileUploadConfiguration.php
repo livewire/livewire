@@ -55,6 +55,7 @@ class FileUploadConfiguration
 
     public static function normalizeRelativePath($path)
     {
+        // Flysystem V2.0 and up removed the Util class, so this checks for the new class first
         if (class_exists("League\Flysystem\WhitespacePathNormalizer")) {
             return (new WhitespacePathNormalizer)->normalizePath($path);
         }
