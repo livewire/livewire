@@ -4,6 +4,7 @@ namespace Livewire;
 
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\Util;
+use League\Flysystem\WhitespacePathNormalizer;
 
 class FileUploadConfiguration
 {
@@ -52,15 +53,24 @@ class FileUploadConfiguration
         return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 'gcs';
     }
 
+    public static function normalizeRelativePath($path)
+    {
+        if (class_exists("League\Flysystem\WhitespacePathNormalizer")) {
+            return (new WhitespacePathNormalizer)->normalizePath($path);
+        }
+
+        return Util::normalizeRelativePath($path);
+    }
+
     public static function directory()
     {
-        return Util::normalizeRelativePath(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
+        return static::normalizeRelativePath(config('livewire.temporary_file_upload.directory') ?: 'livewire-tmp');
     }
 
     protected static function s3Root()
     {
         return static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig())
-            ? Util::normalizeRelativePath(static::diskConfig()['root'])
+            ? static::normalizeRelativePath(static::diskConfig()['root'])
             : '';
     }
 
@@ -68,7 +78,7 @@ class FileUploadConfiguration
     {
         $prefix = $withS3Root ? static::s3Root() : '';
         $directory = static::directory();
-        $path = Util::normalizeRelativePath($path);
+        $path = static::normalizeRelativePath($path);
 
         return $prefix.($prefix ? '/' : '').$directory.($path ? '/' : '').$path;
     }
