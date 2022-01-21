@@ -12,6 +12,7 @@ use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
 use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
+use Livewire\LivewirePropertyManager;
 use function Livewire\str;
 
 trait HandlesActions
@@ -19,6 +20,8 @@ trait HandlesActions
     public function syncInput($name, $value, $rehash = true)
     {
         $propertyName = $this->beforeFirstDot($name);
+
+        $value = Livewire::hydrate($this, $propertyName, $value);
 
         throw_if(
             ($this->{$propertyName} instanceof Model || $this->{$propertyName} instanceof EloquentCollection) && $this->missingRuleFor($name),

@@ -2,10 +2,15 @@
 
 namespace Livewire;
 
+use BuiltInType;
 use Exception;
+use Illuminate\Contracts\Queue\QueueableEntity;
+use Illuminate\Support\Arr;
+use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
+use ReflectionClass;
 
 class LivewireManager
 {
@@ -26,8 +31,13 @@ class LivewireManager
         \App\Http\Middleware\Authenticate::class,
     ];
 
+    protected $supportedPropertyTypes = [
+        Wireable::class => Types\WireableType::class,
+        QueueableEntity::class => Types\EloquentModelType::class,
+    ];
+
     public static $isLivewireRequestTestingOverride = false;
-    
+
     public static $currentCompilingViewPath;
     public static $currentCompilingChildCounter;
 
@@ -39,6 +49,103 @@ class LivewireManager
         }
 
         $this->componentAliases[$alias] = $viewClass;
+    }
+
+    public function registerPropertyType($class, $handler)
+    {
+        if (is_array($class)) {
+            foreach ($class as $key => $value) {
+                $this->registerPropertyType($key, $value);
+            }
+
+            return;
+        }
+
+        $this->supportedPropertyTypes[$class] = $handler;
+    }
+
+    public function hydrate($instance, $name, $value)
+    {
+        $handler = $this->getPropertyTypeHandler($instance, $name, $value);
+
+        if ($handler === true) {
+            return $value;
+        }
+
+        if ($handler === false) {
+            throw new PublicPropertyTypeNotAllowedException(
+                $instance::getName(), $name, $value
+            );
+        }
+
+        return $handler->hydrate($instance, $name, $value);
+    }
+
+    public function dehydrate($instance, $name, $value)
+    {
+        $handler = $this->getPropertyTypeHandler($instance, $name, $value);
+
+        if ($handler === true) {
+            return $value;
+        }
+
+        if ($handler === false) {
+            throw new PublicPropertyTypeNotAllowedException(
+                $instance::getName(), $name, $value
+            );
+        }
+
+        return $handler->dehydrate($instance, $name, $value);
+    }
+
+    protected function getPropertyTypeHandler($instance, $name, $value)
+    {
+        $instance = new ReflectionClass($instance);
+
+        if (! $instance->hasProperty($name)) {
+            return new BuiltInType;
+        }
+
+        $property = $instance->getProperty($name);
+
+        if (! $property->hasType()) {
+            return new BuiltInType;
+        }
+
+        $type = $property->getType();
+
+        // Support union types in PHP 8 (just uses first in the list)
+        if (method_exists($type, 'getTypes')) {
+            $type = $type->getTypes();
+        }
+
+        /** @var \ReflectionNamedType $type */
+        $type = Arr::wrap($type)[0];
+
+        if ($type->isBuiltin()) {
+            return new BuiltInType;
+        }
+
+        if (! $handler = $this->getCustomPropertyTypeHandler($propertyType = $type->getName())) {
+            if ($value instanceof $propertyType) {
+                return true;
+            }
+
+            return false;
+        }
+
+        return app($handler);
+    }
+
+    protected function getCustomPropertyTypeHandler($type)
+    {
+        foreach ($this->supportedPropertyTypes as $class => $handler) {
+            if (is_a($type, $class, true)) {
+                return $handler;
+            }
+        }
+
+        return null;
     }
 
     public function getAlias($class, $default = null)
@@ -461,7 +568,7 @@ HTML;
     {
         static::$currentCompilingChildCounter = null;
         static::$currentCompilingViewPath = null;
-        
+
         $this->shouldDisableBackButtonCache = false;
 
         $this->dispatch('flush-state');
