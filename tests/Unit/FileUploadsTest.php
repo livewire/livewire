@@ -12,6 +12,7 @@ use Illuminate\Http\UploadedFile;
 use Livewire\FileUploadConfiguration;
 use Illuminate\Support\Facades\Storage;
 use Facades\Livewire\GenerateSignedUploadUrl;
+use League\Flysystem\PathTraversalDetected;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 use function Livewire\str;
@@ -474,7 +475,12 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function file_paths_cant_include_slashes_which_would_allow_them_to_access_other_private_directories()
     {
-        $this->expectException(LogicException::class);
+        // Flysystem V2.0+ removed the Util class which throws the LogicException, so this checks for the new class and exception first
+        if (class_exists("League\Flysystem\WhitespacePathNormalizer")) {
+            $this->expectException(PathTraversalDetected::class);
+        } else {
+            $this->expectException(LogicException::class);
+        }
 
         $file = UploadedFile::fake()->image('avatar.jpg');
 
