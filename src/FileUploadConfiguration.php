@@ -55,7 +55,7 @@ class FileUploadConfiguration
 
     public static function normalizeRelativePath($path)
     {
-        // Flysystem V2.0 and up removed the Util class, so this checks for the new class first
+        // Flysystem V2.0+ removed the Util class, so this checks for the new class first
         if (class_exists("League\Flysystem\WhitespacePathNormalizer")) {
             return (new WhitespacePathNormalizer)->normalizePath($path);
         }
@@ -86,7 +86,13 @@ class FileUploadConfiguration
 
     public static function mimeType($filename)
     {
-        $mimeType = static::storage()->getMimeType(static::path($filename));
+        // Flysystem V2.0+ changed the mimeType method, so this checks for the new inteface first
+        if (interface_exists("League\Flysystem\FilesystemAdapter")) {
+            $mimeType = static::storage()->mimeType(static::path($filename));
+        } else {
+            $mimeType = static::storage()->getMimeType(static::path($filename));
+        }
+
         return $mimeType === 'image/svg' ? 'image/svg+xml' : $mimeType;
     }
 

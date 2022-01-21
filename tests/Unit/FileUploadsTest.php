@@ -475,7 +475,7 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function file_paths_cant_include_slashes_which_would_allow_them_to_access_other_private_directories()
     {
-        // Flysystem V2.0 and up removed the Util class with throws the LogicException, so this checks for the new class and exception first
+        // Flysystem V2.0+ removed the Util class which throws the LogicException, so this checks for the new class and exception first
         if (class_exists("League\Flysystem\WhitespacePathNormalizer")) {
             $this->expectException(PathTraversalDetected::class);
         } else {

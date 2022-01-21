@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
+use League\MimeTypeDetection\FinfoMimeTypeDetector;
 
 class TemporaryUploadedFile extends UploadedFile
 {
@@ -44,7 +45,17 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getMimeType(): string
     {
-        return $this->storage->mimeType($this->path);
+        $mimeType = $this->storage->mimeType($this->path);
+
+        // Flysystem V2.0+ removed guess mimeType from extension support, so it has been re-added back
+        // in here to ensure the correct mimeType is returned when using faked files in tests
+        if (in_array($mimeType, ['application/octet-stream', 'inode/x-empty', 'application/x-empty'])) {
+            $detector = new FinfoMimeTypeDetector();
+
+            $mimeType = $detector->detectMimeTypeFromPath($this->path) ?: 'text/plain';
+        }
+
+        return $mimeType;
     }
 
     public function getFilename(): string
