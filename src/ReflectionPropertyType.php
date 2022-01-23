@@ -3,15 +3,17 @@
 namespace Livewire;
 
 use Illuminate\Support\Arr;
-use Livewire\Exceptions\PropertyNotFoundException;
 use ReflectionClass;
-use ReflectionType;
 
 abstract class ReflectionPropertyType
 {
     /** @return \ReflectionNamedType|null */
     public static function get($class, $property)
     {
+        if (version_compare(PHP_VERSION, '7.4', '<')) {
+            return null;
+        }
+
         $instance = new ReflectionClass($class);
 
         if (! $instance->hasProperty($property)) {

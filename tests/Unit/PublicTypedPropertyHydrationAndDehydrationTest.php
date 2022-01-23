@@ -74,20 +74,14 @@ class PublicTypedPropertyHydrationAndDehydrationTest extends TestCase
             ->assertPayloadSet('model', null)
             ->set('attributedModel', 1)
             ->assertSet('attributedModel', $attributedModel)
-            ->assertPayloadSet('attributedModel', $attributes)
-            ->set('attributedModel', null)
-            ->assertSet('attributedModel', null)
-            ->assertPayloadSet('attributedModel', null)
-            ->set('complexAttributedModel', 1)
-            ->assertSet('complexAttributedModel', $attributedModel)
-            ->assertPayloadSet('complexAttributedModel', 'foo')
-            ->set('complexAttributedModel.title', 'bar')
-            ->assertSet('complexAttributedModel.title', 'bar')
-            ->assertPayloadSet('complexAttributedModel', 'bar');
+            ->assertPayloadSet('attributedModel', 1)
+            ->set('attributedModel.title', 'bar')
+            ->assertSet('attributedModel.title', 'bar')
+            ->assertPayloadSet('attributedModel', 1);
 
         $this->expectException(ModelNotFoundException::class);
 
         Livewire::test(ComponentWithComplexTypedProperties::class)
-            ->set('complexAttributedModel', 2);
+            ->set('strictAttributedModel', 2);
     }
 }

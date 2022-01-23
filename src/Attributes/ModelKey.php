@@ -8,13 +8,9 @@ use Attribute;
 class ModelKey
 {
     public $key;
-    public $label;
-    public $strict;
 
-    public function __construct($key, $label = null, $strict = false)
+    public function __construct($key)
     {
         $this->key = $key;
-        $this->label = $label;
-        $this->strict = $strict;
     }
 }

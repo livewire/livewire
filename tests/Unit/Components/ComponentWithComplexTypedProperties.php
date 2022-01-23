@@ -20,8 +20,8 @@ class ComponentWithComplexTypedProperties extends Component
     #[ModelKey('id')]
     public ?ModelForSerialization $attributedModel = null;
 
-    #[ModelKey('id', 'title', true)]
-    public ?ModelForSerialization $complexAttributedModel = null;
+    #[ModelKey('id')]
+    public ModelForSerialization $strictAttributedModel;
 
     protected $rules = [
         'model' => ['nullable'],
@@ -30,9 +30,6 @@ class ComponentWithComplexTypedProperties extends Component
         'attributedModel' => ['nullable'],
         'attributedModel.id' => ['required'],
         'attributedModel.title' => ['required'],
-        'complexAttributedModel' => ['nullable'],
-        'complexAttributedModel.id' => ['required'],
-        'complexAttributedModel.title' => ['required'],
     ];
 
     public function render()

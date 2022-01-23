@@ -22,13 +22,13 @@ class EloquentModelType implements LivewirePropertyType
         if (is_int($value) || is_string($value)) {
             if ($attribute = $this->getModelKeyAttribute($instance, $name)) {
                 if ($type = ReflectionPropertyType::get($instance, $name)) {
-                    if ($attribute->label && $modelData) {
+                    if ($modelData) {
                         $value = $modelData[$attribute->key] ?? $value;
                     }
 
                     $found = $type->getName()::firstWhere($attribute->key, $value);
 
-                    if (! $found && $attribute->strict) {
+                    if (! $found && ! $type->allowsNull()) {
                         throw new ModelNotFoundException("Model [{$type->getName()}] not found using column [{$attribute->key}] with value [{$value}]");
                     }
 
@@ -72,11 +72,9 @@ class EloquentModelType implements LivewirePropertyType
         $modelData = $this->filterData($instance, $name);
 
         if ($attribute = $this->getModelKeyAttribute($instance, $name)) {
-            if ($attribute->label) {
-                if ($response) data_set($response, "memo.dataMeta.modelData.$name", $modelData);
+            if ($response) data_set($response, "memo.dataMeta.modelData.$name", $modelData);
 
-                return data_get($instance->$name, $attribute->label);
-            }
+            return data_get($instance->$name, $attribute->key, $modelData);
         }
 
         return $modelData;
