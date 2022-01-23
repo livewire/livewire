@@ -3,22 +3,22 @@
 namespace Livewire\Types;
 
 use Livewire\LivewirePropertyType;
+use Livewire\ReflectionPropertyType;
 use ReflectionClass;
 
 class WireableType implements LivewirePropertyType
 {
-    public function hydrate($instance, $name, $value)
+    public function hydrate($instance, $request, $name, $value)
     {
-        $type = (new ReflectionClass($instance))
-            ->getProperty($name)
-            ->getType()
-            ->getName();
+        if (! $type = ReflectionPropertyType::get($instance, $name)) {
+            throw new \Exception('Absolutely fucked');
+        }
 
-        return $type::fromLivewire($value);
+        return ($type->getName())::fromLivewire($value);
     }
 
-    public function dehydrate($instance, $name, $value)
+    public function dehydrate($instance, $response, $name, $value)
     {
-        return $value->toLivewire();
+        return $value ? $value->toLivewire() : $value;
     }
 }

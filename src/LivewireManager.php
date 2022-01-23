@@ -2,15 +2,21 @@
 
 namespace Livewire;
 
-use BuiltInType;
-use Exception;
+use Livewire\Types\BuiltInType;
+use DateTimeInterface;
+use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Stringable;
+use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
+use Livewire\Types\DefaultType;
 use ReflectionClass;
+use ReflectionProperty;
 
 class LivewireManager
 {
@@ -34,6 +40,10 @@ class LivewireManager
     protected $supportedPropertyTypes = [
         Wireable::class => Types\WireableType::class,
         QueueableEntity::class => Types\EloquentModelType::class,
+        QueueableCollection::class => Types\EloquentModelCollectionType::class,
+        Collection::class => Types\CollectionType::class,
+        DateTimeInterface::class => Types\DateTimeType::class,
+        Stringable::class => Types\StringableType::class,
     ];
 
     public static $isLivewireRequestTestingOverride = false;
@@ -64,29 +74,32 @@ class LivewireManager
         $this->supportedPropertyTypes[$class] = $handler;
     }
 
-    public function hydrate($instance, $name, $value)
+    public function hydrate($instance, $request, $name, $value)
     {
-        $handler = $this->getPropertyTypeHandler($instance, $name, $value);
-
-        if ($handler === true) {
-            return $value;
+        if ($request) {
+            if (! $handler = $this->resolveTypeHandlerFromRequest($request, $name)) {
+                $handler = $this->hydrator($instance, $name, $value);
+            }
+        } else {
+            $handler = $this->hydrator($instance, $name, $value);
         }
 
-        if ($handler === false) {
-            throw new PublicPropertyTypeNotAllowedException(
-                $instance::getName(), $name, $value
-            );
-        }
-
-        return $handler->hydrate($instance, $name, $value);
+        return app($handler)->hydrate($instance, $request, $name, $value);
     }
 
-    public function dehydrate($instance, $name, $value)
+    public function dehydrate($instance, $response, $name, $value)
+    {
+        $handler = $this->hydrator($instance, $name, $value);
+
+        return app($handler)->dehydrate($instance, $response, $name, $value);
+    }
+
+    public function hydrator($instance, $name, $value)
     {
         $handler = $this->getPropertyTypeHandler($instance, $name, $value);
 
         if ($handler === true) {
-            return $value;
+            return DefaultType::class;
         }
 
         if ($handler === false) {
@@ -95,38 +108,35 @@ class LivewireManager
             );
         }
 
-        return $handler->dehydrate($instance, $name, $value);
+        return $handler;
+    }
+
+    public function attemptingToAssignNullToTypedPropertyThatDoesntAllowNullButIsUninitialized($instance, $name, $value)
+    {
+        if ($value) return false;
+
+        if (! $type = ReflectionPropertyType::get($instance, $name)) return false;
+
+        if ($type->allowsNull()) return false;
+
+        return ! (new ReflectionProperty($instance, $name))->isInitialized($instance);
     }
 
     protected function getPropertyTypeHandler($instance, $name, $value)
     {
-        $instance = new ReflectionClass($instance);
-
-        if (! $instance->hasProperty($name)) {
-            return new BuiltInType;
+        if (! $type = ReflectionPropertyType::get($instance, $name)) {
+            return $this->resolveTypeHandlerFromValue($value);
         }
-
-        $property = $instance->getProperty($name);
-
-        if (! $property->hasType()) {
-            return new BuiltInType;
-        }
-
-        $type = $property->getType();
-
-        // Support union types in PHP 8 (just uses first in the list)
-        if (method_exists($type, 'getTypes')) {
-            $type = $type->getTypes();
-        }
-
-        /** @var \ReflectionNamedType $type */
-        $type = Arr::wrap($type)[0];
 
         if ($type->isBuiltin()) {
-            return new BuiltInType;
+            return BuiltInType::class;
         }
 
         if (! $handler = $this->getCustomPropertyTypeHandler($propertyType = $type->getName())) {
+            if (is_null($value) && $type->allowsNull()) {
+                return true;
+            }
+
             if ($value instanceof $propertyType) {
                 return true;
             }
@@ -134,7 +144,7 @@ class LivewireManager
             return false;
         }
 
-        return app($handler);
+        return $handler;
     }
 
     protected function getCustomPropertyTypeHandler($type)
@@ -146,6 +156,40 @@ class LivewireManager
         }
 
         return null;
+    }
+
+    protected function resolveTypeHandlerFromValue($value)
+    {
+        if (is_object($value)) {
+            $type = get_class($value);
+
+            if (! $handler = $this->getCustomPropertyTypeHandler($type)) {
+                if ($value instanceof $type) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            return $handler;
+        }
+
+        if (
+            is_bool($value)
+                || is_null($value)
+                || is_array($value)
+                || is_numeric($value)
+                || is_string($value)
+        ) {
+            return BuiltInType::class;
+        }
+
+        return false;
+    }
+
+    protected function resolveTypeHandlerFromRequest($request, $name)
+    {
+        return data_get($request->memo, "dataMeta.hydrators.$name", false);
     }
 
     public function getAlias($class, $default = null)

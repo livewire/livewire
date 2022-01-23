@@ -14,10 +14,10 @@ class PerformDataBindingUpdates implements HydrationMiddleware
                 if ($update['type'] !== 'syncInput') continue;
 
                 $data = $update['payload'];
-                
+
                 if (! array_key_exists('value', $data)) continue;
 
-                $unHydratedInstance->syncInput($data['name'], $data['value']);
+                $unHydratedInstance->syncInput($data['name'], $data['value'], true, $request);
             }
         } catch (ValidationException $e) {
             Livewire::dispatch('failed-validation', $e->validator, $unHydratedInstance);

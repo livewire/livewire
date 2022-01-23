@@ -2,16 +2,15 @@
 
 namespace Tests\Unit;
 
-use Livewire\Livewire;
-use Livewire\Component;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Exceptions\CorruptComponentPayloadException;
-use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
+use Illuminate\Support\Facades\Schema;
 use Livewire\HydrationMiddleware\HydratePublicProperties;
+use Livewire\Types\Concerns\HydratesEloquentModels;
 
 class PublicPropertyHydrationAndDehydrationTest extends TestCase
 {
+    use HydratesEloquentModels;
+
     public function setUp(): void
     {
         parent::setUp();
@@ -78,7 +77,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ]
         ];
 
-        $results = HydratePublicProperties::setDirtyData($model, $dirtyData);
+        $results = $this->setDirtyData($model, $dirtyData);
 
         $this->assertEquals($model->title, 'oof');
         $this->assertEquals($model->name, 'rab');
@@ -99,7 +98,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             'name' => [],
         ];
 
-        HydratePublicProperties::setDirtyData($model, $dirtyData);
+        $this->setDirtyData($model, $dirtyData);
 
         $this->assertEquals([], $model->name);
     }
@@ -155,7 +154,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
+        $this->assertEquals($expected, $this->processRules($rules)->toArray());
     }
 
     /** @test */
@@ -178,7 +177,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
+        $this->assertEquals($expected, $this->processRules($rules)->toArray());
     }
 
     /** @test */
@@ -194,7 +193,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             'bar',
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
+        $this->assertEquals($expected, $this->processRules($rules)->toArray());
     }
 
     /** @test */
@@ -212,7 +211,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, HydratePublicProperties::processRules($rules)->toArray());
+        $this->assertEquals($expected, $this->processRules($rules)->toArray());
     }
 
     /** @test */
@@ -230,7 +229,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             'email' => 'baz',
         ];
 
-        $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);
+        $results = $this->extractData($model->toArray(), $this->processRules($rules)['author'], []);
 
         $this->assertEquals($expected, $results);
     }
@@ -285,7 +284,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['author']->toArray(), []);
+        $results = $this->extractData($models->toArray(), $this->processRules($rules)['author']->toArray(), []);
 
         $this->assertEquals($expected, $results);
     }
@@ -314,7 +313,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
+        $results = $this->extractData($models->toArray(), $this->processRules($rules)['authors']->toArray(), []);
 
         $this->assertEquals($expected, $results);
     }
@@ -357,7 +356,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
+        $results = $this->extractData($models->toArray(), $this->processRules($rules)['authors']->toArray(), []);
 
         $this->assertEquals($expected, $results);
     }
@@ -413,7 +412,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
+        $results = $this->extractData($models->toArray(), $this->processRules($rules)['authors']->toArray(), []);
 
         $this->assertEquals($expected, $results);
     }
@@ -475,7 +474,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
+        $results = $this->extractData($models->toArray(), $this->processRules($rules)['authors']->toArray(), []);
 
         $this->assertEquals($expected, $results);
     }
@@ -534,7 +533,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
+        $results = $this->extractData($models->toArray(), $this->processRules($rules)['authors']->toArray(), []);
 
         $this->assertEquals($expected, $results);
     }
@@ -584,7 +583,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             ],
         ];
 
-        $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['authors']->toArray(), []);
+        $results = $this->extractData($models->toArray(), $this->processRules($rules)['authors']->toArray(), []);
 
         $this->assertEquals($expected, $results);
     }
@@ -606,7 +605,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             'foo' => null,
         ];
 
-        $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);
+        $results = $this->extractData($model->toArray(), $this->processRules($rules)['author'], []);
 
         $this->assertEquals($expected, $results);
     }
@@ -624,7 +623,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             'name' => null,
         ];
 
-        $results = HydratePublicProperties::extractData($model->toArray(), HydratePublicProperties::processRules($rules)['author'], []);
+        $results = $this->extractData($model->toArray(), $this->processRules($rules)['author'], []);
 
         $this->assertEquals($expected, $results);
     }
