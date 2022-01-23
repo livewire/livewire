@@ -2,18 +2,28 @@
 
 namespace Livewire\Types\Concerns;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Stringable;
+use Livewire\Attributes\ModelKey;
+use Livewire\Livewire;
+use Livewire\ReflectionPropertyType;
+use ReflectionProperty;
 use stdClass;
 
 trait HydratesEloquentModels
 {
     use SerializesAndRestoresModelIdentifiers;
 
-    public function filterData($instance, $property) {
+    public function filterData($instance, $property)
+    {
+        if (Livewire::attemptingToAssignNullToTypedPropertyThatDoesntAllowNullButIsUninitialized($instance, $property, null)) return null;
+
+        if (! $instance->$property) return null;
+
         $data = $instance->$property->toArray();
 
         $rules = $instance->rulesForModel($property)->keys();
@@ -23,7 +33,8 @@ trait HydratesEloquentModels
         return $this->extractData($data, $rules, []);
     }
 
-    public function processRules($rules) {
+    public function processRules($rules)
+    {
         $rules = Collection::wrap($rules);
 
         $rules = $rules->mapInto(Stringable::class);
@@ -95,7 +106,8 @@ trait HydratesEloquentModels
         return $filteredData;
     }
 
-    public function setDirtyData($model, $data) {
+    public function setDirtyData($model, $data)
+    {
         foreach ($data as $key => $value) {
             if (is_array($value) && !empty($value)) {
                 $existingData = data_get($model, $key);
@@ -117,5 +129,23 @@ trait HydratesEloquentModels
         }
 
         return $model;
+    }
+
+    /** @return ModelKey|object|null */
+    public function getModelKeyAttribute($instance, $name)
+    {
+        if (version_compare(PHP_VERSION, '8.0', '<')) {
+            return null;
+        }
+
+        $property = new ReflectionProperty($instance, $name);
+
+        $attributes = $property->getAttributes(ModelKey::class);
+
+        if (! empty($attributes)) {
+            return $attributes[0]->newInstance();
+        }
+
+        return null;
     }
 }

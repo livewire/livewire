@@ -4,7 +4,9 @@ namespace Livewire\Types;
 
 use Illuminate\Contracts\Database\ModelIdentifier;
 use Illuminate\Contracts\Queue\QueueableEntity;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\LivewirePropertyType;
+use Livewire\ReflectionPropertyType;
 use Livewire\Types\Concerns\HydratesEloquentModels;
 
 class EloquentModelType implements LivewirePropertyType
@@ -13,8 +15,30 @@ class EloquentModelType implements LivewirePropertyType
 
     public function hydrate($instance, $request, $name, $value)
     {
+        if (! $value) return null;
+
+        $modelData = data_get($request->memo, "dataMeta.modelData.$name");
+
+        if (is_int($value) || is_string($value)) {
+            if ($attribute = $this->getModelKeyAttribute($instance, $name)) {
+                if ($type = ReflectionPropertyType::get($instance, $name)) {
+                    if ($attribute->label && $modelData) {
+                        $value = $modelData[$attribute->key] ?? $value;
+                    }
+
+                    $found = $type->getName()::firstWhere($attribute->key, $value);
+
+                    if (! $found && $attribute->strict) {
+                        throw new ModelNotFoundException("Model [{$type->getName()}] not found using column [{$attribute->key}] with value [{$value}]");
+                    }
+
+                    $value = $found;
+                }
+            }
+        }
+
         if (! $serialized = data_get($request->memo, "dataMeta.models.$name")) {
-            throw new \Exception('Absolutely fucked');
+            return $value;
         }
 
         if (isset($serialized['id'])) {
@@ -30,19 +54,31 @@ class EloquentModelType implements LivewirePropertyType
             $model = new $serialized['class'];
         }
 
-        if ($request) $this->setDirtyData($model, $request->memo['data'][$name]);
+        if ($request) $this->setDirtyData($model, $modelData ?? $request->memo['data'][$name]);
 
         return $model;
     }
 
     public function dehydrate($instance, $response, $name, $value)
     {
+        if (! $value) return null;
+
         $serializedModel = $value instanceof QueueableEntity && ! $value->exists
             ? ['class' => get_class($value)]
             : (array) $this->getSerializedPropertyValue($value);
 
         if ($response) data_set($response, "memo.dataMeta.models.$name", $serializedModel);
 
-        return $this->filterData($instance, $name);
+        $modelData = $this->filterData($instance, $name);
+
+        if ($attribute = $this->getModelKeyAttribute($instance, $name)) {
+            if ($attribute->label) {
+                if ($response) data_set($response, "memo.dataMeta.modelData.$name", $modelData);
+
+                return data_get($instance->$name, $attribute->label);
+            }
+        }
+
+        return $modelData;
     }
 }

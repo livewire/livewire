@@ -13,7 +13,7 @@ class EloquentModelCollectionType implements LivewirePropertyType
     public function hydrate($instance, $request, $name, $value)
     {
         if (! $serialized = data_get($request->memo, "dataMeta.modelCollections.$name")) {
-            throw new \Exception('Absolutely fucked');
+            return $value;
         }
 
         $idsWithNullsIntersparsed = $serialized['id'];

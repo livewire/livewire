@@ -119,6 +119,11 @@ class LivewireManager
 
         if ($type->allowsNull()) return false;
 
+        return $this->isPropertyUninitialized($instance, $name);
+    }
+
+    public function isPropertyUninitialized($instance, $name)
+    {
         return ! (new ReflectionProperty($instance, $name))->isInitialized($instance);
     }
 

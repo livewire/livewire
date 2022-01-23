@@ -11,7 +11,7 @@ class WireableType implements LivewirePropertyType
     public function hydrate($instance, $request, $name, $value)
     {
         if (! $type = ReflectionPropertyType::get($instance, $name)) {
-            throw new \Exception('Absolutely fucked');
+            return $value;
         }
 
         return ($type->getName())::fromLivewire($value);
