@@ -26,7 +26,7 @@ class EloquentModelType implements LivewirePropertyType
                         $value = $modelData[$attribute->key] ?? $value;
                     }
 
-                    $found = $type->getName()::firstWhere($attribute->key, $value);
+                    $found = $type->getName()::where($attribute->key, $value)->first();
 
                     if (! $found && ! $type->allowsNull()) {
                         throw new ModelNotFoundException("Model [{$type->getName()}] not found using column [{$attribute->key}] with value [{$value}]");

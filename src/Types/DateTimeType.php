@@ -15,9 +15,9 @@ use ReflectionProperty;
 
 class DateTimeType implements LivewirePropertyType
 {
-    public static string $default = DateTime::class;
+    public static $default = DateTime::class;
 
-    public static array $map = [
+    public static $map = [
         'native' => DateTime::class,
         'nativeImmutable' => DateTimeImmutable::class,
         'carbon' => Carbon::class,
