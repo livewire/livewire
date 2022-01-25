@@ -94,6 +94,10 @@ class SupportBrowserHistory
             $path = $this->buildPathFromReferer($referer, $queryParams);
         }
 
+        // Referer query string sent by the browser can have different encoding when parameters are bracket formatted
+        // the query string is rebuilt to avoid pushing undesired entries on the browser history
+        $referer = $this->buildPathFromReferer($referer, collect($this->getQueryParamsFromRefererHeader()));
+
         if ($referer !== $path) {
             $response->effects['path'] = $path;
         }
@@ -204,6 +208,10 @@ class SupportBrowserHistory
             return '';
         }
 
-        return '?'.http_build_query($queryParams->toArray(), '', '&', PHP_QUERY_RFC1738);
+        $httpQuery = http_build_query($queryParams->toArray(), '', '&', PHP_QUERY_RFC1738);
+        
+        // A nested array is not evaluated as empty, but if all values are nullable query string will be empty
+        // Prevent sending back path with an extra '?'
+        return $httpQuery ? '?'.$httpQuery : '';
     }
 }

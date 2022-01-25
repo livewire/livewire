@@ -325,4 +325,89 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_query_string_with_empty_array_do_not_write_wrong_history()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithArrayOnQueryString::class, '')
+                // the browser history exists and the last url is the test above
+                ->back()
+                ->assertPathIsNot('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->forward()
+                ->assertPathIs('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->assertInputValue('@search', '')
+                ->assertInputValue('@status', '')
+                ->assertDontSeeIn('@empty-array-output', 'history-not-created-when-array-is-empty')
+                ->assertDontSeeIn('@same-content-array-output', 'history-not-created-when-array-has-same-content')
+              
+                // the click on the button must not create a new entry in the browser history
+                ->waitForLivewire()->click('@empty-array-btn')
+                ->assertSeeIn('@empty-array-output', 'history-not-created-when-array-is-empty')
+                ->back()
+                ->assertPathIsNot('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->forward()
+                ->assertPathIs('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->assertQueryStringMissing('filters')
+                ->assertDontSeeIn('@empty-array-output', 'history-not-created-when-array-is-empty')
+
+                // change the input search must create a new entry in the browser history
+                ->type('@search', 'foo')
+                ->waitForLivewire()->click('@submit')
+                ->assertQueryStringHas('filters')
+                ->back()
+                ->assertPathIs('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->assertQueryStringMissing('filters')
+                ->back()
+                ->assertPathIsNot('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->forward()
+                ->forward()
+                ->assertPathIs('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->assertInputValue('@search', 'foo')
+                ->assertInputValue('@status', '')
+
+                // change the input status must create a new entry in the browser history
+                ->type('@status', 'baz')
+                ->waitForLivewire()->click('@submit')
+                ->assertQueryStringHas('filters')
+                ->back()
+                ->assertPathIs('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->assertQueryStringHas('filters')
+                ->assertInputValue('@search', 'foo')
+                ->assertInputValue('@status', '')
+                ->back()
+                ->assertPathIs('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->assertQueryStringMissing('filters')
+                ->back()
+                ->assertPathIsNot('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->forward()
+                ->forward()
+                ->forward()
+                ->assertPathIs('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->assertInputValue('@search', 'foo')
+                ->assertInputValue('@status', 'baz')
+                ->assertDontSeeIn('@same-content-array-output', 'history-not-created-when-array-has-same-content')
+
+                // the click on the button must not create a new entry in the browser history
+                ->waitForLivewire()->click('@same-content-array-btn')
+                ->assertSeeIn('@same-content-array-output', 'history-not-created-when-array-has-same-content')
+                ->back()
+                ->assertPathIs('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->assertQueryStringHas('filters')
+                ->assertInputValue('@search', 'foo')
+                ->assertInputValue('@status', '')
+                ->back()
+                ->assertPathIs('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->assertQueryStringMissing('filters')
+                ->back()
+                ->assertPathIsNot('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CComponentWithArrayOnQueryString')
+                ->forward()
+                ->forward()
+                ->forward()
+                ->assertQueryStringHas('filters')
+                ->assertInputValue('@search', 'foo')
+                ->assertInputValue('@status', 'baz')
+                ->assertDontSeeIn('@empty-array-output', 'history-not-created-when-array-is-empty')
+                ->assertDontSeeIn('@same-content-array-output', 'history-not-created-when-array-has-same-content');
+        });
+    }
 }
