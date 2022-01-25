@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class MoveCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:move {name} {new-name} {--force} {--inline} {--test}';
+    protected $signature = 'livewire:move {name} {new-name} {--f|--force} {--i|--inline} {--t|--test}';
 
     protected $description = 'Move a Livewire component';
 

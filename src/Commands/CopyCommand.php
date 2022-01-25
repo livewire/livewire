@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class CopyCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:copy {name} {new-name} {--inline} {--force} {--test}';
+    protected $signature = 'livewire:copy {name} {new-name} {--i|--inline} {--f|--force} {--t|--test}';
 
     protected $description = 'Copy a Livewire component';
 

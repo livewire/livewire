@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class DeleteCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:delete {name} {--inline} {--force} {--test}';
+    protected $signature = 'livewire:delete {name} {--i|--inline} {--f|--force} {--t|--test}';
 
     protected $description = 'Delete a Livewire component';
 
