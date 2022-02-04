@@ -133,7 +133,7 @@ ${el.outerHTML}
                 : arrayValue.concat(el.value)
         }
 
-        return arrayValue.filter(item => item !== el.value)
+        return arrayValue.filter(item => item != el.value)
     },
 
     setInputValueFromModel(el, component) {

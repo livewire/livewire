@@ -44,6 +44,20 @@ class ComputedPropertiesTest extends TestCase
             ->call('callForgetComputedWithTwoArgs', 'bar', 'foo')
             ->assertSee('int(11)');
     }
+
+    /** @test */
+    public function isset_is_true_on_existing_computed_property()
+    {
+        Livewire::test(IssetComputedPropertyStub::class)
+            ->assertSee('true');
+    }
+
+    /** @test */
+    public function isset_is_false_on_non_existing_computed_property()
+    {
+        Livewire::test(FalseIssetComputedPropertyStub::class)
+            ->assertSee('false');
+    }
 }
 
 class ComputedPropertyStub extends Component
@@ -111,5 +125,33 @@ class MemoizedComputedPropertyStub extends Component
         $this->foo;
 
         return view('var-dump-foo');
+    }
+}
+
+class IssetComputedPropertyStub extends Component{
+    public $upperCasedFoo = 'FOO_BAR';
+
+    public function getFooBarProperty()
+    {
+        return strtolower($this->upperCasedFoo);
+    }
+
+    public function render()
+    {
+        return view('isset-foo-bar');
+    }
+}
+
+class FalseIssetComputedPropertyStub extends Component{
+    public $upperCasedFoo = 'FOO_BAR';
+
+    public function getFooBarProperty()
+    {
+        return strtolower($this->upperCasedFoo);
+    }
+
+    public function render()
+    {
+        return view('isset-foo');
     }
 }

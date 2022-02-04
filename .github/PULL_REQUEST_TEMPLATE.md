@@ -1,9 +1,13 @@
-1️⃣ Is this something that is wanted/needed? Did you create an issue / discussion about it first?
+Review the contribution guide first at: https://laravel-livewire.com/docs/2.x/contribution-guide
 
-2️⃣ Does it contain multiple, unrelated changes? Please separate the PRs out.
+1️⃣ Is this something that is wanted/needed? Did you create a discussion about it first?
 
-3️⃣ Does it include tests, if possible? (Not a deal-breaker, just a nice-to-have)
+2️⃣ Did you create a branch for your fix/feature? (Master branch PR's will be closed)
 
-4️⃣ Please include a thorough description of the improvement and reasons why it's useful.
+3️⃣ Does it contain multiple, unrelated changes? Please separate the PRs out.
 
-5️⃣ Thanks for contributing! 🙌
+4️⃣ Does it include tests? (Required, where possible)
+
+5️⃣ Please include a thorough description (including small code snippets if possible) of the improvement and reasons why it's useful.
+
+Thanks for contributing! 🙌

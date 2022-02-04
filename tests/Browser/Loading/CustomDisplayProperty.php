@@ -25,6 +25,7 @@ class CustomDisplayProperty extends BaseComponent
                 <span wire:loading.flex dusk="flex">Flex</span>
                 <span wire:loading.table dusk="table">Table</span>
                 <span wire:loading.grid dusk="grid">Grid</span>
+                <span wire:loading.inline-flex dusk="inline-flex">Inline-flex</span>
             </div>
 HTML;
     }

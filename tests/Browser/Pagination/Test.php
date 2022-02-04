@@ -2,6 +2,7 @@
 
 namespace Tests\Browser\Pagination;
 
+use Illuminate\Pagination\CursorPaginator;
 use Livewire\Livewire;
 use Tests\Browser\TestCase;
 
@@ -9,6 +10,7 @@ class Test extends TestCase
 {
     public function test_tailwind()
     {
+
         $this->browse(function ($browser) {
             Livewire::visit($browser, Tailwind::class)
                 /**
@@ -104,6 +106,110 @@ class Test extends TestCase
         });
     }
 
+    public function test_cursor_tailwind()
+    {
+        if (! class_exists(CursorPaginator::class)) {
+            $this->markTestSkipped('Need Laravel >= 8');
+        }
+        $this->browse(function ($browser){
+            Livewire::visit($browser,ComponentWithCursorPaginationTailwind::class)
+                /**
+                 * Test it can go to second page and return to first one
+                 */
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+
+                ->waitForLivewire()->click('@previousPage')
+
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+
+                /**
+                 * Test that hitting the back button takes you back to the previous page after a refresh.
+                 */
+                ->refresh()
+                ->assertSee('Post #1')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertDontSee('Post #1')
+                ->assertSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertDontSee('Post #4')
+                ->assertSee('Post #7')
+
+                ->refresh()
+                ->back()
+                ->assertDontSee('Post #7')
+                ->assertSee('Post #4');
+        });
+    }
+    public function test_cursor_bootstrap()
+    {
+        if (! class_exists(CursorPaginator::class)) {
+            $this->markTestSkipped('Need Laravel >= 8');
+        }
+        $this->browse(function ($browser){
+            Livewire::visit($browser,ComponentWithCursorPaginationBootstrap::class)
+                /**
+                 * Test it can go to second page and return to first one
+                 */
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+
+                ->waitForLivewire()->click('@previousPage')
+
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+
+                /**
+                 * Test that hitting the back button takes you back to the previous page after a refresh.
+                 */
+                ->refresh()
+                ->assertSee('Post #1')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertDontSee('Post #1')
+                ->assertSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertDontSee('Post #4')
+                ->assertSee('Post #7')
+
+                ->refresh()
+                ->back()
+                ->assertDontSee('Post #7')
+                ->assertSee('Post #4');
+        });
+    }
     /** @test */
     public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page()
     {
