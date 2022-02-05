@@ -42,6 +42,12 @@ class Test extends TestCase
                 ->assertSeeIn('@output', 'foo')
 
                 /**
+                 * Action on multiple lines
+                 */
+                ->waitForLivewire()->click('@fizzfuzz')
+                ->assertSeeIn('@output', 'fizzfuzz')
+
+                /**
                  * wire:click.self
                  */
                 ->waitForLivewire()->click('@baz.inner')
