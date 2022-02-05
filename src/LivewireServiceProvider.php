@@ -59,6 +59,8 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        LivewireManager::$isLivewireRequestTestingOverride = false;
+
         $this->registerViews();
         $this->registerRoutes();
         $this->registerCommands();
