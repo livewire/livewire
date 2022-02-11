@@ -3,7 +3,9 @@
 namespace Livewire\Commands;
 
 use Illuminate\Console\Command;
+use League\Flysystem\Cached\CachedAdapter;
 use Livewire\FileUploadConfiguration;
+use function Livewire\invade;
 
 class S3CleanupCommand extends Command
 {
@@ -15,13 +17,39 @@ class S3CleanupCommand extends Command
     {
         if (! FileUploadConfiguration::isUsingS3()) {
             $this->error("Configuration ['livewire.temporary_file_upload.disk'] is not set to a disk with an S3 driver.");
+
             return;
         }
 
-        $adapter = FileUploadConfiguration::storage()->getDriver()->getAdapter();
+        $driver = FileUploadConfiguration::storage()->getDriver();
 
-        $adapter->getClient()->putBucketLifecycleConfiguration([
-            'Bucket' => $adapter->getBucket(),
+        // Flysystem V2+ doesn't allow direct access to adapter, so we need to invade instead.
+        if (method_exists($driver, 'getAdapter')) {
+            $adapter = $driver->getAdapter();
+        } else {
+            $adapter = invade($driver)->adapter;
+        }
+
+        if ($adapter instanceof CachedAdapter) {
+            $adapter = $adapter->getAdapter();
+        }
+
+        // Flysystem V2+ doesn't allow direct access to client, so we need to invade instead.
+        if (method_exists($adapter, 'getClient')) {
+            $client = $adapter->getClient();
+        } else {
+            $client = invade($adapter)->client;
+        }
+
+        // Flysystem V2+ doesn't allow direct access to bucket, so we need to invade instead.
+        if (method_exists($adapter, 'getBucket')) {
+            $bucket = $adapter->getBucket();
+        } else {
+            $bucket = invade($adapter)->bucket;
+        }
+
+        $client->putBucketLifecycleConfiguration([
+            'Bucket' => $bucket,
             'LifecycleConfiguration' => [
                 'Rules' => [
                     [
