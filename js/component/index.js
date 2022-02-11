@@ -82,7 +82,7 @@ export default class Component {
         }
 
         if (countElementsBeforeMarker(this.el.nextSibling) > 0) {
-            console.warn(`Livewire: Multiple root elements detected. This is not supported. See docs for more information https://laravel-livewire.com/docs/2.x/rendering-components#returning-blade`, this.el)
+            console.warn(`Livewire: Multiple root elements detected. This is not supported. See docs for more information https://laravel-livewire.com/docs/2.x/troubleshooting#root-element-issues`, this.el)
         }
     }
 
