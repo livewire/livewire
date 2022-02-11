@@ -436,7 +436,7 @@ export default class Component {
                         el.__livewire_ignore_self === true
                     ) {
                         // Don't update children of "wire:ingore.self" attribute.
-                        el.skipElUpdatingButStillUpdateChildren = true
+                        childrenOnly()
                     } else {
                         return skip()
                     }
