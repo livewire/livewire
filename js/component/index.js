@@ -13,6 +13,7 @@ import ModelAction from '@/action/model'
 import DeferredModelAction from '@/action/deferred-model'
 import MessageBus from '../MessageBus'
 import { alpinifyElementsForMorphdom, getEntangleFunction } from './SupportAlpine'
+import { morph } from '@alpinejs/morph'
 
 export default class Component {
     constructor(el, connection) {
@@ -383,7 +384,151 @@ export default class Component {
     handleMorph(dom) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
-        morphdom(this.el, dom, {
+
+        window.morph = true
+
+        if (window.morph) {
+            this.useMorph(this.el, dom)
+        } else {
+            this.useMorphdom(this.el, dom)
+        }
+
+        window.skipShow = false
+    }
+
+    useMorph(el, toEl) {
+        morph(el, toEl, {
+            updating: (el, toEl, childrenOnly, skip) => {
+                if (this.skipHook(el)) return
+
+                // Because morphdom also supports vDom nodes, it uses isSameNode to detect
+                // sameness. When dealing with DOM nodes, we want isEqualNode, otherwise
+                // isSameNode will ALWAYS return false.
+                if (el.isEqualNode(toEl)) {
+                    return false
+                }
+
+                store.callHook('element.updating', el, toEl, this)
+
+                // Reset the index of wire:modeled select elements in the
+                // "to" node before doing the diff, so that the options
+                // have the proper in-memory .selected value set.
+                if (
+                    el.hasAttribute('wire:model') &&
+                    el.tagName.toUpperCase() === 'SELECT'
+                ) {
+                    toEl.selectedIndex = -1
+                }
+
+                let fromDirectives = wireDirectives(el)
+
+                // Honor the "wire:ignore" attribute or the .__livewire_ignore element property.
+                if (
+                    fromDirectives.has('ignore') ||
+                    el.__livewire_ignore === true ||
+                    el.__livewire_ignore_self === true
+                ) {
+                    if (
+                        (fromDirectives.has('ignore') &&
+                            fromDirectives
+                                .get('ignore')
+                                .modifiers.includes('self')) ||
+                        el.__livewire_ignore_self === true
+                    ) {
+                        // Don't update children of "wire:ingore.self" attribute.
+                        el.skipElUpdatingButStillUpdateChildren = true
+                    } else {
+                        return skip()
+                    }
+                }
+
+                // Children will update themselves.
+                if (DOM.isComponentRootEl(el) && el.getAttribute('wire:id') !== this.id) return skip()
+
+                // Give the root Livewire "to" element, the same object reference as the "from"
+                // element. This ensures new Alpine magics like $wire and @entangle can
+                // initialize in the context of a real Livewire component object.
+                if (DOM.isComponentRootEl(el)) toEl.__livewire = this
+
+                alpinifyElementsForMorphdom(el, toEl)
+            },
+
+            updated: (el, toEl) => {
+                if (this.skipHook(el)) return
+
+                this.morphChanges.changed.push(el)
+
+                store.callHook('element.updated', el, this)
+            },
+
+            removing: (el, skip) => {
+                if (this.skipHook(el)) return
+                
+                // If the node is from x-if with a transition.
+                if (
+                    el.__x_inserted_me &&
+                    Array.from(el.attributes).some(attr =>
+                        /x-transition/.test(attr.name)
+                    )
+                ) {
+                    return skip()
+                }
+            },
+
+            removed: (el) => {
+                if (this.skipHook(el)) return
+
+                store.callHook('element.removed', el, this)
+
+                if (el.__livewire) {
+                    store.removeComponent(el.__livewire)
+                }
+
+                this.morphChanges.removed.push(el)
+            },
+
+            added: (el) => {
+                if (this.skipHook(el)) return
+
+                const closestComponentId = DOM.closestRoot(el).getAttribute('wire:id')
+
+                if (closestComponentId === this.id) {
+                    if (nodeInitializer.initialize(el, this) === false) {
+                        return skip()
+                    }
+                } else if (DOM.isComponentRootEl(el)) {
+                    store.addComponent(new Component(el, this.connection))
+
+                    // We don't need to initialize children, the
+                    // new Component constructor will do that for us.
+                    el.skipAddingChildren = true
+                }
+
+                this.morphChanges.added.push(el)
+
+            },
+
+            key: (el) => {
+                if (this.skipHook(el)) return
+
+                return el.hasAttribute(`wire:key`)
+                    ? el.getAttribute(`wire:key`)
+                    : // If no "key", then first check for "wire:id", then "id"
+                    el.hasAttribute(`wire:id`)
+                        ? el.getAttribute(`wire:id`)
+                        : el.id
+            },
+
+            lookahead: true,
+        })
+    }
+
+    skipHook(el) {
+        return typeof el.hasAttribute !== 'function'
+    }
+
+    useMorphdom(el, toEl) {
+        morphdom(el, toEl, {
             childrenOnly: false,
 
             getNodeKey: node => {
@@ -503,8 +648,6 @@ export default class Component {
                 this.morphChanges.added.push(node)
             },
         })
-
-        window.skipShow = false
     }
 
     walk(callback, callbackWhenNewComponentIsEncountered = el => { }) {

@@ -24,5 +24,8 @@
         "rollup-plugin-output-manifest": "^1.0.2",
         "rollup-plugin-terser": "^7.0.1",
         "whatwg-fetch": "^3.4.0"
+    },
+    "dependencies": {
+        "@alpinejs/morph": "^3.9.0"
     }
 }
