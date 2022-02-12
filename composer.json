@@ -24,7 +24,8 @@
         "laravel/framework": "^7.0|^8.0|^9.0",
         "orchestra/testbench": "^5.0|^6.0|^7.0",
         "orchestra/testbench-dusk": "^5.2|^6.0|^7.0",
-        "calebporzio/sushi": "^2.1"
+        "calebporzio/sushi": "^2.1",
+        "symfony/console": "6.0.2"
     },
     "autoload": {
         "files": [

@@ -35,6 +35,7 @@ export default function () {
     })
 
     store.registerHook('message.processed', (message, component) => {
+        // console.log(component)
         // Preventing a circular dependancy.
         if (message.replaying) return
 
@@ -45,6 +46,7 @@ export default function () {
         normalizeResponse(response, component)
 
         if ('path' in effects && effects.path !== window.location.href) {
+            // console.log('pushstate')
             let url = onlyChangeThePathAndQueryString(effects.path)
 
             LivewireStateManager.pushState(url, response, component)
@@ -62,6 +64,7 @@ export default function () {
     })
 
     window.addEventListener('popstate', event => {
+        console.log('popstate', event)
         if (LivewireStateManager.missingState(event)) return
 
         LivewireStateManager.replayResponses(event, async (response, component) => {
@@ -278,6 +281,7 @@ class LivewireState
     }
 
     async replayResponses(callback) {
+        console.log('replay', this.items)
         for (let {signature, response} of this.items) {
             let component = this.findComponentBySignature(signature)
 
