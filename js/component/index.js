@@ -384,13 +384,12 @@ export default class Component {
     handleMorph(dom) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
-
-        window.morph = true
-
-        if (window.morph) {
-            this.useMorph(this.el, dom)
-        } else {
+        if (window.morphdom === true) {
+            console.log('useMorphdom')
             this.useMorphdom(this.el, dom)
+        } else {
+            console.log('useMorph')
+            this.useMorph(this.el, dom)
         }
 
         window.skipShow = false
