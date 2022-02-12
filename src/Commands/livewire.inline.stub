@@ -8,10 +8,10 @@ class [class] extends Component
 {
     public function render()
     {
-        return <<<'blade'
+        return <<<'BLADE'
             <div>
                 {{-- [quote] --}}
             </div>
-        blade;
+        BLADE;
     }
 }
