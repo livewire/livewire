@@ -2,6 +2,7 @@
 
 namespace Livewire\Testing\Concerns;
 
+use Illuminate\Support\Arr;
 use function Livewire\str;
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
@@ -64,7 +65,7 @@ trait MakesCallsToComponent
     public function updateProperty($name, $value = null)
     {
         if (is_array($name)) {
-            foreach ($name as $key => $value) {
+            foreach (Arr::dot($name) as $key => $value) {
                 $this->syncInput($key, $value);
             }
 
