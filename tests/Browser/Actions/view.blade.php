@@ -8,7 +8,7 @@
         setOutputTo(
             'fizz',
             'fuzz'
-        )" dusk="fizzfuzz">Baw</button>
+        )" dusk="fizzfuzz">Fizz Fuzz</button>
     <button type="button" wire:click="setOutputTo('baz')" dusk="baz.outer"><button type="button" wire:click="$refresh" dusk="baz.inner">Inner</button> Outer</button>
     <input type="text" wire:blur="appendToOutput('bop')" dusk="bop.input"><button type="button" wire:mousedown="appendToOutput('bop')" dusk="bop.button">Blur &</button>
     <input type="text" wire:keydown="appendToOutput('bob')" wire:keydown.enter="appendToOutput('bob')" dusk="bob">

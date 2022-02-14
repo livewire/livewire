@@ -51,7 +51,7 @@ class Test extends TestCase
                  * wire:click.self
                  */
                 ->waitForLivewire()->click('@baz.inner')
-                ->assertSeeIn('@output', 'foo')
+                ->assertSeeIn('@output', 'fizzfuzz')
                 ->waitForLivewire()->click('@baz.outer')
                 ->assertSeeIn('@output', 'baz')
 
