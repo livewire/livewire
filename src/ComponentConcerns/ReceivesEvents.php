@@ -17,7 +17,11 @@ trait ReceivesEvents
 
     public function emit($event, ...$params)
     {
-        return $this->eventQueue[] = new Event($event, $params);
+        if(!$event instanceof Event){
+            $event = new Event($event, $params);
+        }
+
+        return $this->eventQueue[] = $event;
     }
 
     public function emitUp($event, ...$params)
