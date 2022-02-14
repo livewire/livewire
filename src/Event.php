@@ -57,4 +57,14 @@ class Event
 
         return $output;
     }
+
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    public function getParams()
+    {
+        return array_values($this->params);
+    }
 }

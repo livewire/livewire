@@ -74,6 +74,11 @@ trait ReceivesEvents
 
     public function fireEvent($event, $params, $id)
     {
+        if($event instanceof Event){
+            $params = $event->getParams();
+            $event = $event->getName();
+        }
+
         $method = $this->getEventsAndHandlers()[$event];
 
         $this->callMethod($method, $params, function ($returned) use ($event, $id) {
