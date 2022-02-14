@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
-use Livewire\Event;
+use Livewire\LivewireEvent;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
 
@@ -12,16 +12,16 @@ class ComponentEventInstanceTest extends TestCase
     /** @test */
     public function reieves_event_with_custom_class_name()
     {
-        $component = Livewire::test(ReceivesEvents::class);
+        $component = Livewire::test(ReceivesCustomClassEvents::class);
 
-        $component->emit(new CustomEvent('baz'));
+        $component->emit(new CustomLivewireEvent('baz'));
 
 
         $this->assertEquals($component->get('foo'), 'baz');
     }
 }
 
-class CustomEvent extends Event
+class CustomLivewireEvent extends LivewireEvent
 {
     public function __construct($param)
     {
@@ -29,11 +29,11 @@ class CustomEvent extends Event
     }
 }
 
-class ReceivesEvents extends Component
+class ReceivesCustomClassEvents extends Component
 {
     public $foo;
 
-    protected $listeners = [CustomEvent::class => 'onCustomEvent'];
+    protected $listeners = [CustomLivewireEvent::class => 'onCustomEvent'];
 
     public function onCustomEvent($value)
     {
