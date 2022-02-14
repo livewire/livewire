@@ -2,7 +2,7 @@
 
 namespace Livewire;
 
-class Event
+class LivewireEvent
 {
     protected $name;
     protected $params;
