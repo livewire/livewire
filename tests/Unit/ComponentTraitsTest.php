@@ -7,6 +7,12 @@ use Livewire\Livewire;
 
 class ComponentTraitsTest extends TestCase
 {
+    public function setUp(): void
+    {
+        Counter::reset();
+        parent::setUp();
+    }
+
     /** @test */
     public function traits_can_intercept_lifecycle_hooks()
     {
@@ -45,42 +51,75 @@ class ComponentTraitsTest extends TestCase
                 'dehydrate', 'secondDehydrate'
             ]);
     }
+
+    /** @test */
+    public function hooks_are_not_executed_more_than_they_should()
+    {
+        Livewire::test(ComponentWithTraitStub::class)
+            ->set('foo', 'bar');
+
+        $this->assertEquals(1, Counter::$counts['mount']);
+        $this->assertEquals(2, Counter::$counts['hydrate']);
+        $this->assertEquals(2, Counter::$counts['dehydrate']);
+        $this->assertEquals(1, Counter::$counts['updating']);
+        $this->assertEquals(1, Counter::$counts['updated']);
+        $this->assertEquals(2, Counter::$counts['rendering']);
+        $this->assertEquals(2, Counter::$counts['rendered']);
+    }
+}
+
+class Counter
+{
+    public static $counts = [];
+
+    public static function reset()
+    {
+        $hooks = ['mount', 'hydrate', 'dehydrate', 'updating', 'updated', 'rendering', 'rendered'];
+        static::$counts = collect($hooks)->mapWithKeys(fn ($hook) => [$hook => 0])->all();
+    }
 }
 
 trait TraitForComponent
 {
     public function mountTraitForComponent()
     {
+        Counter::$counts['mount']++;
         $this->hooksFromTrait[] = 'mount';
     }
 
     public function hydrateTraitForComponent()
     {
+        Counter::$counts['hydrate']++;
         $this->hooksFromTrait[] = 'hydrate';
     }
 
     public function dehydrateTraitForComponent()
     {
+        Counter::$counts['dehydrate']++;
         $this->hooksFromTrait[] = 'dehydrate';
     }
 
     public function updatingTraitForComponent($name, $value)
     {
+        Counter::$counts['updating']++;
         $this->hooksFromTrait[] = 'updating:'.$name.$value;
     }
 
     public function updatedTraitForComponent($name, $value)
     {
+        Counter::$counts['updated']++;
         $this->hooksFromTrait[] = 'updated:'.$name.$value;
     }
 
     public function renderingTraitForComponent()
     {
+        Counter::$counts['rendering']++;
         $this->hooksFromTrait[] = 'rendering';
     }
 
     public function renderedTraitForComponent($view)
     {
+        Counter::$counts['rendered']++;
         $this->hooksFromTrait[] = 'rendered:'.$view->getName();
     }
 

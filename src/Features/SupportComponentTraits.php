@@ -14,6 +14,7 @@ class SupportComponentTraits
     function __construct()
     {
         Livewire::listen('component.boot', function ($component) {
+            $this->componentIdMethodMap[$component->id] = [];
             foreach (class_uses_recursive($component) as $trait) {
                 $hooks = [
                     'boot',
