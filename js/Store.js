@@ -10,6 +10,7 @@ const store = {
     livewireIsInBackground: false,
     livewireIsOffline: false,
     sessionHasExpired: false,
+    sessionHasExpiredCallback: undefined,
     directives: DirectiveManager,
     hooks: HookManager,
     onErrorCallback: () => { },

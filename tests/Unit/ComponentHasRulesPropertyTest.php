@@ -5,8 +5,8 @@ namespace Tests\Unit;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Livewire;
 use Livewire\Component;
+use function Livewire\invade;
 use Livewire\Exceptions\MissingRulesException;
-use Livewire\ObjectPrybar;
 use Sushi\Sushi;
 
 class ComponentHasRulesPropertyTest extends TestCase
@@ -156,10 +156,10 @@ class ComponentWithRulesPropertyAndModelWithUniquenessValidation extends Compone
         // Sorry about this chunk of ridiculousness. It's Sushi's fault.
         $connection = $this->foo::resolveConnection();
         $db = app('db');
-        $prybar = new ObjectPrybar($db);
-        $connections = $prybar->getProperty('connections');
+        
+        $connections = invade($db)->connections;
         $connections['foo-connection'] = $connection;
-        $prybar->setProperty('connections', $connections);
+        invade($db)->connections = $connections;
 
         $this->validate();
     }
@@ -190,10 +190,9 @@ class ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions ext
         // Sorry about this chunk of ridiculousness. It's Sushi's fault.
         $connection = $this->foo::resolveConnection();
         $db = app('db');
-        $prybar = new ObjectPrybar($db);
-        $connections = $prybar->getProperty('connections');
+        $connections = invade($db)->connections;
         $connections['foo-connection'] = $connection;
-        $prybar->setProperty('connections', $connections);
+        invade($db)->connections = $connections;
 
         $this->validate();
     }

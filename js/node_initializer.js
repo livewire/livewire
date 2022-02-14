@@ -24,6 +24,10 @@ export default {
                         break
                     }
 
+                    el._x_modelable_hook = () => {
+                        return component.$wire.entangle(directive.value, directive.modifiers.includes('defer'))
+                    }
+
                     DOM.setInputValueFromModel(el, component)
 
                     this.attachModelListener(el, directive, component)

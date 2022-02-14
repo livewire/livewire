@@ -332,6 +332,7 @@ class LivewireServiceProvider extends ServiceProvider
         Features\SupportBrowserHistory::init();
         Features\SupportComponentTraits::init();
         Features\SupportRootElementTracking::init();
+        Features\SupportPostDeploymentInvalidation::init();
     }
 
     protected function registerHydrationMiddleware()
@@ -420,11 +421,10 @@ class LivewireServiceProvider extends ServiceProvider
 
         $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
 
-        $openKernel = new ObjectPrybar($kernel);
-
-        $middleware = $openKernel->getProperty('middleware');
-
-        $openKernel->setProperty('middleware', array_diff($middleware, $middlewareToExclude));
+        invade($kernel)->middleware = array_diff(
+            invade($kernel)->middleware,
+            $middlewareToExclude
+        );
     }
 
     protected function publishesToGroups(array $paths, $groups = null)
