@@ -61,6 +61,18 @@ class ComponentLayoutTest extends TestCase
     }
 
     /** @test */
+    public function can_show_params_set_in_the_constructor_of_a_custom_class_based_component_layout()
+    {
+        Livewire::component(ComponentWithClassBasedComponentLayoutAndParams::class);
+
+        Route::get('/foo', ComponentWithClassBasedComponentLayoutAndParams::class);
+
+        $this->withoutExceptionHandling()->get('/foo')
+            ->assertSee('bar')
+            ->assertSee('baz');
+    }
+
+    /** @test */
     public function can_show_attributes_with_a_custom_class_based_component_layout()
     {
         Livewire::component(ComponentWithClassBasedComponentLayoutAndAttributes::class);
@@ -163,6 +175,16 @@ class ComponentWithClassBasedComponentLayout extends Component
     public function render()
     {
         return view('null-view')->layout(\Tests\AppLayout::class, [
+            'bar' => 'baz'
+        ]);
+    }
+}
+
+class ComponentWithClassBasedComponentLayoutAndParams extends Component
+{
+    public function render()
+    {
+        return view('null-view')->layout(\Tests\AppLayoutWithConstructor::class, [
             'bar' => 'baz'
         ]);
     }
