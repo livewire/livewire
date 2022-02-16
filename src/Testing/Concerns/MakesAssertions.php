@@ -245,6 +245,20 @@ trait MakesAssertions
 
         return $this;
     }
+    
+    public function assertBrowserEventIsNotDispatched($name)
+    {
+        if (! array_key_exists('dispatches', $this->payload['effects'])){
+            $test = false;
+        } else {
+            $test = collect($this->payload['effects']['dispatches'])->contains('event', '=', $name);
+        }
+
+        PHPUnit::assertFalse($test, "Failed asserting that an event [{$name}] was not fired");
+
+        return $this;
+    }
+
 
     public function assertHasErrors($keys = [])
     {
