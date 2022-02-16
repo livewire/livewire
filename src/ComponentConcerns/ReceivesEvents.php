@@ -2,7 +2,7 @@
 
 namespace Livewire\ComponentConcerns;
 
-use Livewire\LivewireEvent;
+use Livewire\Event;
 use Livewire\Livewire;
 
 trait ReceivesEvents
@@ -17,8 +17,8 @@ trait ReceivesEvents
 
     public function emit($event, ...$params)
     {
-        if(!$event instanceof LivewireEvent){
-            $event = new LivewireEvent($event, $params);
+        if(!$event instanceof Event){
+            $event = new Event($event, $params);
         }
 
         return $this->eventQueue[] = $event;
@@ -74,7 +74,7 @@ trait ReceivesEvents
 
     public function fireEvent($event, $params, $id)
     {
-        if($event instanceof LivewireEvent){
+        if($event instanceof Event){
             $params = $event->getParams();
             $event = $event->getName();
         }
