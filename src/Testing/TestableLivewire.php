@@ -10,6 +10,7 @@ use Livewire\GenerateSignedUploadUrl;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Traits\Macroable;
 use Facades\Livewire\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\LivewireManager;
@@ -130,7 +131,8 @@ class TestableLivewire
 
     public function pretendWereMountingAComponentOnAPage($name, $params, $queryParams)
     {
-        $randomRoutePath = '/testing-livewire/'.str()->random(20);
+        $randomRoutePath = (Str::contains(request()->url(), 'localhost/') && !Str::contains(request()->url(), 'livewire'))
+            ? request()->getUri() : '/testing-livewire/'.str()->random(20);
 
         $this->registerRouteBeforeExistingRoutes($randomRoutePath, function () use ($name, $params) {
             return View::file(__DIR__.'/../views/mount-component.blade.php', [
