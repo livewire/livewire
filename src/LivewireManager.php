@@ -372,7 +372,7 @@ HTML;
                 return str(request('fingerprint')['url'])->after(request()->root());
             }
 
-            return request('fingerprint')['path'];
+            return request('fingerprint.path');
         }
 
         return request()->path();
@@ -389,7 +389,7 @@ HTML;
                 return 'GET';
             }
 
-            return request('fingerprint')['method'];
+            return request('fingerprint.method', 'POST');
         }
 
         return request()->method();
@@ -459,6 +459,7 @@ HTML;
 
     public function flushState()
     {
+        static::$isLivewireRequestTestingOverride = false;
         static::$currentCompilingChildCounter = null;
         static::$currentCompilingViewPath = null;
         

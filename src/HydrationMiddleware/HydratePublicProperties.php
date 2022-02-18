@@ -36,6 +36,7 @@ class HydratePublicProperties implements HydrationMiddleware
         $modelCollections = data_get($request, 'memo.dataMeta.modelCollections', []);
         $stringables = data_get($request, 'memo.dataMeta.stringables', []);
         $wireables = data_get($request, 'memo.dataMeta.wireables', []);
+        $enums = data_get($request, 'memo.dataMeta.enums', []);
 
         foreach ($publicProperties as $property => $value) {
             if ($type = data_get($dates, $property)) {
@@ -50,6 +51,8 @@ class HydratePublicProperties implements HydrationMiddleware
                 data_set($instance, $property, new $types[$type]($value));
             } else if (in_array($property, $collections)) {
                 data_set($instance, $property, collect($value));
+            } else if ($class = data_get($enums, $property)) {
+                data_set($instance, $property, $class::from($value));
             } else if ($serialized = data_get($models, $property)) {
                 static::hydrateModel($serialized, $property, $request, $instance);
             } else if ($serialized = data_get($modelCollections, $property)) {
@@ -124,6 +127,10 @@ class HydratePublicProperties implements HydrationMiddleware
                 $response->memo['dataMeta']['stringables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->__toString());
+            } else if (is_subclass_of($value, 'BackedEnum')) {
+                $response->memo['dataMeta']['enums'][$key] = get_class($value);
+
+                data_set($response, 'memo.data.'.$key, $value->value);
             } else {
                 throw new PublicPropertyTypeNotAllowedException($instance::getName(), $key, $value);
             }

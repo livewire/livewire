@@ -59,6 +59,10 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        if (! app()->environment('testing')) {
+            app('livewire')->flushState();
+        }
+
         $this->registerViews();
         $this->registerRoutes();
         $this->registerCommands();
