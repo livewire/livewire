@@ -246,7 +246,7 @@ trait MakesAssertions
         return $this;
     }
     
-    public function assertBrowserEventIsNotDispatched($name)
+    public function assertNotDispatchedBrowserEvent($name)
     {
         if (! array_key_exists('dispatches', $this->payload['effects'])){
             $test = false;
