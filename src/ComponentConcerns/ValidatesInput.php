@@ -170,11 +170,14 @@ trait ValidatesInput
             $this->getDataForValidation($rules)
         );
 
-        collect($rules)->keys()
-            ->each(fn ($ruleKey) => throw_unless(
-                array_key_exists($this->beforeFirstDot($ruleKey), $data),
-                new \Exception('No property found for validation: ['.$ruleKey.']')
-            ));
+        collect($rules)
+            ->keys()
+            ->each(function($ruleKey) use ($data) {
+                throw_unless(
+                    array_key_exists($this->beforeFirstDot($ruleKey), $data),
+                    new \Exception('No property found for validation: ['.$ruleKey.']')
+                );
+            });
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
 
