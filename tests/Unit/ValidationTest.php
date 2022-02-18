@@ -441,6 +441,18 @@ class ValidationTest extends TestCase
             ->call('runValidateOnly', 'image')
             ->assertHasNoErrors(['image', 'image_url', 'image_alt']);
     }
+
+    /** @test */
+    public function a_computed_property_is_able_to_validate()
+    {
+        Livewire::test(ValidatesComputedProperty::class, 'helper' => 10)
+            ->call('runValidation')
+            ->assertHasNoErrors(['computed']);
+
+        Livewire::test(ValidatesComputedProperty::class, 'helper' => -1)
+            ->call('runValidation')
+            ->assertHasErrors(['computed']);
+    }
 }
 
 class ForValidation extends Component
@@ -760,6 +772,39 @@ class ValidatesOnlyTestComponent extends Component
     public function runValidateOnly($propertyName)
     {
         $this->validateOnly($propertyName);
+    }
+
+    public function runResetValidation()
+    {
+        $this->resetValidation();
+    }
+
+    public function render()
+    {
+        return view('null-view');
+    }
+}
+
+class ValidatesComputedProperty extends Component
+{
+    private $helper = null;
+
+    public $rules = [
+        'computed' => 'required|gte:0'
+    ];
+
+    public function getComputedProperty() {
+        return $this->helper;
+    }
+
+    public function mount($helper = null)
+    {
+        $this->helper = $helper;
+    }
+
+    public function runValidation()
+    {
+        $this->validate();
     }
 
     public function runResetValidation()
