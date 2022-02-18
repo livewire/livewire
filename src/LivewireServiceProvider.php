@@ -59,7 +59,9 @@ class LivewireServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        LivewireManager::$isLivewireRequestTestingOverride = false;
+        if (! app()->environment('testing')) {
+            app('livewire')->flushState();
+        }
 
         $this->registerViews();
         $this->registerRoutes();

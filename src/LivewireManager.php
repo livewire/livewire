@@ -459,6 +459,7 @@ HTML;
 
     public function flushState()
     {
+        static::$isLivewireRequestTestingOverride = false;
         static::$currentCompilingChildCounter = null;
         static::$currentCompilingViewPath = null;
         
