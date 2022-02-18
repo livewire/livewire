@@ -445,11 +445,11 @@ class ValidationTest extends TestCase
     /** @test */
     public function a_computed_property_is_able_to_validate()
     {
-        Livewire::test(ValidatesComputedProperty::class, 'helper' => 10)
+        Livewire::test(ValidatesComputedProperty::class, ['helper' => 10])
             ->call('runValidation')
             ->assertHasNoErrors(['computed']);
 
-        Livewire::test(ValidatesComputedProperty::class, 'helper' => -1)
+        Livewire::test(ValidatesComputedProperty::class, ['helper' => -1])
             ->call('runValidation')
             ->assertHasErrors(['computed']);
     }
@@ -787,11 +787,16 @@ class ValidatesOnlyTestComponent extends Component
 
 class ValidatesComputedProperty extends Component
 {
-    private $helper = null;
+    public $helper;
 
     public $rules = [
         'computed' => 'required|gte:0'
     ];
+
+    public function prepareForValidation($attributes) {
+        $attributes['computed'] = $this->getComputedProperty();
+        return $attributes;
+    }
 
     public function getComputedProperty() {
         return $this->helper;
