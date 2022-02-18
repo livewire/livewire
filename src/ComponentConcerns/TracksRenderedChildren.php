@@ -41,4 +41,9 @@ trait TracksRenderedChildren
     {
         return $this->renderedChildren;
     }
+
+    public function keepRenderedChildren()
+    {
+        $this->renderedChildren = $this->previouslyRenderedChildren;
+    }
 }
