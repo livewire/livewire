@@ -163,11 +163,19 @@ class LifecycleManager
 
         Livewire::dispatch('mounted', $this->response);
 
-        return $this->response->toInitialResponse();
+        $response = $this->response->toInitialResponse();
+
+        app('livewire')->flushState();
+
+        return $response;
     }
 
     public function toSubsequentResponse()
     {
-        return $this->response->toSubsequentResponse();
+        $response = $this->response->toSubsequentResponse();
+
+        app('livewire')->flushState();
+
+        return $response;
     }
 }
