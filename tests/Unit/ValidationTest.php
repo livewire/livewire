@@ -9,6 +9,8 @@ use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
 use Livewire\Livewire;
 
+use function PHPUnit\Framework\assertTrue;
+
 class ValidationTest extends TestCase
 {
     /** @test */
@@ -447,11 +449,14 @@ class ValidationTest extends TestCase
     {
         Livewire::test(ValidatesComputedProperty::class, ['helper' => 10])
             ->call('runValidation')
-            ->assertHasNoErrors(['computed']);
-
-        Livewire::test(ValidatesComputedProperty::class, ['helper' => -1])
+            ->assertHasNoErrors(['computed'])
+            ->set('helper', -1)
             ->call('runValidation')
             ->assertHasErrors(['computed']);
+
+        $this->expectExceptionMessage('No property found for validation: [fail]');
+        Livewire::test(ValidatesComputedProperty::class)
+            ->call('runValidationRuleWithoutProperty');
     }
 }
 
@@ -802,9 +807,19 @@ class ValidatesComputedProperty extends Component
         return $this->helper;
     }
 
+    public function getFailProperty() {
+        return 'I will fail';
+    }
+
     public function mount($helper = null)
     {
         $this->helper = $helper;
+    }
+
+    public function runValidationRuleWithoutProperty()
+    {
+        $this->rules['fail'] = 'require|min:1';
+        $this->validate();
     }
 
     public function runValidation()
