@@ -454,6 +454,10 @@ class ValidationTest extends TestCase
             ->call('runValidation')
             ->assertHasErrors(['computed']);
 
+        $this->expectExceptionMessage('No property found for validation: [missing]');
+        Livewire::test(ForValidation::class)
+                ->call('runValidationOnlyWithMissingProperty', 'missing');
+
         $this->expectExceptionMessage('No property found for validation: [fail]');
         Livewire::test(ValidatesComputedProperty::class)
             ->call('runValidationRuleWithoutProperty');
@@ -499,6 +503,13 @@ class ForValidation extends Component
         $this->validateOnly($field, [
             'foo' => 'required',
             'bar' => 'required',
+        ]);
+    }
+
+    public function runValidationOnlyWithMissingProperty($field)
+    {
+        $this->validateOnly($field, [
+            'missing' => 'required',
         ]);
     }
 
