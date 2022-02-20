@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
-use Livewire\ComputedProperty;
+use Livewire\Property;
 use Livewire\Livewire;
 
 class ComputedPropertiesTest extends TestCase
@@ -175,9 +175,9 @@ class NewComputedPropertyStub extends Component
 {
     public $upperCasedFoo = 'FOO_BAR';
 
-    public function fooBar(): ComputedProperty
+    public function fooBar(): Property
     {
-        return new ComputedProperty(function() { return strtolower($this->upperCasedFoo); });
+        return new Property(function() { return strtolower($this->upperCasedFoo); });
     }
 
     public function render()

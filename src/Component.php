@@ -303,7 +303,7 @@ abstract class Component
         if (method_exists($this, $computedMethodName = Str::camel($studlyProperty))
             && ($returnType = (new ReflectionMethod($this, $computedMethodName))->getReturnType())
             && $returnType instanceof ReflectionNamedType
-            && $returnType->getName() === ComputedProperty::class) {
+            && $returnType->getName() === Property::class) {
             if (isset($this->computedPropertyCache[$property])) {
                 return $this->computedPropertyCache[$property];
             }

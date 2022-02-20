@@ -2,7 +2,7 @@
 
 namespace Livewire;
 
-class ComputedProperty
+class Property
 {
     public $get;
 
