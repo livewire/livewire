@@ -162,14 +162,8 @@ trait ValidatesInput
         return $this;
     }
 
-    public function validate($rules = null, $messages = [], $attributes = [])
+    protected function checkRuleMatchesProperty($rules, $data)
     {
-        [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
-
-        $data = $this->prepareForValidation(
-            $this->getDataForValidation($rules)
-        );
-
         collect($rules)
             ->keys()
             ->each(function($ruleKey) use ($data) {
@@ -178,6 +172,17 @@ trait ValidatesInput
                     new \Exception('No property found for validation: ['.$ruleKey.']')
                 );
             });
+    }
+
+    public function validate($rules = null, $messages = [], $attributes = [])
+    {
+        [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
+
+        $data = $this->prepareForValidation(
+            $this->getDataForValidation($rules)
+        );
+
+        $this->checkRuleMatchesProperty($rules, $data);
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
 
@@ -240,9 +245,11 @@ trait ValidatesInput
 
         $data = $this->getDataForValidation($rules);
 
-        $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
-
         $data = $this->prepareForValidation($data);
+
+        $this->checkRuleMatchesProperty($rules, $data);
+
+        $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
 
         $data = $this->unwrapDataForValidation($data);
 
