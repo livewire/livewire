@@ -64,7 +64,7 @@ class ComputedPropertiesTest extends TestCase
     public function new_computed_property_is_accessable_within_blade_view()
     {
         Livewire::test(NewComputedPropertyStub::class)
-                ->assertSee('foo');
+                ->assertSee('foo_bar');
     }
 
     /** @test */
