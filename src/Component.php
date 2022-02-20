@@ -14,6 +14,8 @@ use Livewire\Exceptions\PropertyNotFoundException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
+use ReflectionMethod;
+use ReflectionNamedType;
 
 abstract class Component
 {
@@ -274,7 +276,7 @@ abstract class Component
     {
         return $this->forStack;
     }
-    
+
     function __isset($property)
     {
         try {
@@ -296,6 +298,17 @@ abstract class Component
             }
 
             return $this->computedPropertyCache[$property] = app()->call([$this, $computedMethodName]);
+        }
+
+        if (method_exists($this, $computedMethodName = Str::camel($studlyProperty))
+            && ($returnType = (new ReflectionMethod($this, $computedMethodName))->getReturnType())
+            && $returnType instanceof ReflectionNamedType
+            && $returnType->getName() === ComputedProperty::class) {
+            if (isset($this->computedPropertyCache[$property])) {
+                return $this->computedPropertyCache[$property];
+            }
+
+            return $this->computedPropertyCache[$property] = (app()->call([$this, $computedMethodName])->get)();
         }
 
         throw new PropertyNotFoundException($property, static::getName());

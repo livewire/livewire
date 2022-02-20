@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Livewire\Component;
+use Livewire\ComputedProperty;
 use Livewire\Livewire;
 
 class ComputedPropertiesTest extends TestCase
@@ -57,6 +58,20 @@ class ComputedPropertiesTest extends TestCase
     {
         Livewire::test(FalseIssetComputedPropertyStub::class)
             ->assertSee('false');
+    }
+
+    /** @test */
+    public function new_computed_property_is_accessable_within_blade_view()
+    {
+        Livewire::test(NewComputedPropertyStub::class)
+                ->assertSee('foo');
+    }
+
+    /** @test */
+    public function new_computed_property_without_type_hint_is_not_found()
+    {
+        Livewire::test(NewComputedPropertyWithoutReturnTypeStub::class)
+                ->assertSee('false');
     }
 }
 
@@ -153,5 +168,35 @@ class FalseIssetComputedPropertyStub extends Component{
     public function render()
     {
         return view('isset-foo');
+    }
+}
+
+class NewComputedPropertyStub extends Component
+{
+    public $upperCasedFoo = 'FOO_BAR';
+
+    public function fooBar(): ComputedProperty
+    {
+        return new ComputedProperty(function() { return strtolower($this->upperCasedFoo); });
+    }
+
+    public function render()
+    {
+        return view('var-dump-foo-bar');
+    }
+}
+
+class NewComputedPropertyWithoutReturnTypeStub extends Component
+{
+    public $upperCasedFoo = 'FOO_BAR';
+
+    public function fooBar()
+    {
+        return 'something';
+    }
+
+    public function render()
+    {
+        return view('isset-foo-bar');
     }
 }
