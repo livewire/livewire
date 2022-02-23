@@ -69,7 +69,7 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
-    public function cant_remove_file_with_mismatched_filename_provided()
+    public function cant_remove_a_file_property_with_mismatched_filename_provided()
     {
 
         $file = UploadedFile::fake()->image('avatar.jpg');
