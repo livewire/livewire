@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\AssertionFailedError;
 use Illuminate\Support\Facades\Route;
 
 class LivewireTestingTest extends TestCase
@@ -234,7 +235,7 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
-    public function assert_dispatched()
+    public function assert_dispatched_browser_event()
     {
         Livewire::test(DispatchesBrowserEventsComponentStub::class)
             ->call('dispatchFoo')
@@ -245,6 +246,15 @@ class LivewireTestingTest extends TestCase
             ->assertDispatchedBrowserEvent('foo', function ($event, $data) {
                 return $event === 'foo' && $data === ['bar' => 'baz'];
             });
+    }
+
+    /** @test */
+    public function assert_dispatched_browser_event_fails()
+    {
+        $this->expectException(AssertionFailedError::class);
+
+        Livewire::test(DispatchesBrowserEventsComponentStub::class)
+            ->assertDispatchedBrowserEvent('foo');
     }
 
     /** @test */

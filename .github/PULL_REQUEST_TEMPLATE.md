@@ -6,7 +6,7 @@ Review the contribution guide first at: https://laravel-livewire.com/docs/2.x/co
 
 3️⃣ Does it contain multiple, unrelated changes? Please separate the PRs out.
 
-4️⃣ Does it include tests? (Required, where possible)
+4️⃣ Does it include tests? (Required)
 
 5️⃣ Please include a thorough description (including small code snippets if possible) of the improvement and reasons why it's useful.
 

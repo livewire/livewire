@@ -97,6 +97,19 @@ class NestingComponentsTest extends TestCase
         $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
         $this->assertStringNotContainsString('bar', $component->payload['effects']['html']);
     }
+
+    /** @test */
+    public function parent_keeps_rendered_children_even_when_skipped_rendering()
+    {
+        app('livewire')->component('parent', ParentComponentForSkipRenderStub::class);
+        app('livewire')->component('child', ChildComponentForNestingStub::class);
+        $component = app('livewire')->test('parent');
+
+        $children = $component->rawMountedResponse->memo['children'];
+        $component->runAction('skip');
+
+        $this->assertContains($children, $component->payload['serverMemo']);
+    }
 }
 
 class ParentComponentForNestingChildStub extends Component
@@ -180,5 +193,20 @@ class ChildComponentForNestingStub extends Component
     public function render()
     {
         return app('view')->make('show-name-with-this');
+    }
+}
+
+class ParentComponentForSkipRenderStub extends Component
+{
+    public function skip()
+    {
+        $this->skipRender();
+    }
+
+    public function render()
+    {
+        return app('view')->make('show-child', [
+            'child' => ['name' => 'foo'],
+        ]);
     }
 }

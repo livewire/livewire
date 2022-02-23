@@ -3,11 +3,12 @@
 namespace Livewire\Testing\Concerns;
 
 use function Livewire\str;
-use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
-use Livewire\FileUploadConfiguration;
-use Livewire\Controllers\FileUploadHandler;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Controllers\FileUploadHandler;
+use Livewire\FileUploadConfiguration;
+use Livewire\Livewire;
 
 trait MakesCallsToComponent
 {
@@ -144,6 +145,8 @@ trait MakesCallsToComponent
         if (! $this->lastResponse->exception) {
             $this->updateComponent($this->lastResponse->original);
         }
+
+        Livewire::flushState();
 
         return $this;
     }

@@ -33,7 +33,7 @@ abstract class Component
     protected $shouldSkipRender = null;
     protected $preRenderedView;
     protected $forStack = [];
-    
+
     public function __construct($id = null)
     {
         $this->id = $id ?? str()->random(20);
@@ -98,7 +98,7 @@ abstract class Component
     public function bootIfNotBooted()
     {
         if (method_exists($this, $method = 'boot')) {
-            ImplicitlyBoundMethod::call(app(), [$this, $method]); 
+            ImplicitlyBoundMethod::call(app(), [$this, $method]);
         }
     }
 
@@ -163,7 +163,9 @@ abstract class Component
 
     public function renderToView()
     {
-        if ($this->shouldSkipRender) return null;
+        if ($this->shouldSkipRender) {
+            return $this->keepRenderedChildren();
+        }
 
         Livewire::dispatch('component.rendering', $this);
 
