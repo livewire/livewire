@@ -5,11 +5,10 @@ namespace Livewire\ComponentConcerns;
 use function collect;
 use function count;
 use function explode;
-use function Livewire\str;
-use Livewire\ObjectPrybar;
 use Livewire\Wireable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
+use function Livewire\{str, invade};
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -268,13 +267,9 @@ trait ValidatesInput
             $result = $validator->validate();
         } catch (ValidationException $e) {
             $messages = $e->validator->getMessageBag();
-            $target = new ObjectPrybar($e->validator);
 
-            $target->setProperty(
-                'messages',
-                $messages->merge(
-                    $this->errorBagExcept($ruleKeysForField)
-                )
+            invade($e->validator)->messages = $messages->merge(
+                $this->errorBagExcept($ruleKeysForField)
             );
 
             throw $e;
