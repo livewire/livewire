@@ -225,15 +225,15 @@ trait MakesAssertions
         $assertionSuffix = '.';
 
         if (is_null($data)) {
-            $test = collect($this->payload['effects']['dispatches'])->contains('event', '=', $name);
+            $test = collect(data_get($this->payload, 'effects.dispatches'))->contains('event', '=', $name);
         } elseif (is_callable($data)) {
-            $event = collect($this->payload['effects']['dispatches'])->first(function ($item) use ($name) {
+            $event = collect(data_get($this->payload, 'effects.dispatches'))->first(function ($item) use ($name) {
                 return $item['event'] === $name;
             });
 
             $test = $event && $data($event['event'], $event['data']);
         } else {
-            $test = (bool) collect($this->payload['effects']['dispatches'])->first(function ($item) use ($name, $data) {
+            $test = (bool) collect(data_get($this->payload, 'effects.dispatches'))->first(function ($item) use ($name, $data) {
                 return $item['event'] === $name
                     && $item['data'] === $data;
             });
@@ -245,6 +245,20 @@ trait MakesAssertions
 
         return $this;
     }
+    
+    public function assertNotDispatchedBrowserEvent($name)
+    {
+        if (! array_key_exists('dispatches', $this->payload['effects'])){
+            $test = false;
+        } else {
+            $test = collect($this->payload['effects']['dispatches'])->contains('event', '=', $name);
+        }
+
+        PHPUnit::assertFalse($test, "Failed asserting that an event [{$name}] was not fired");
+
+        return $this;
+    }
+
 
     public function assertHasErrors($keys = [])
     {

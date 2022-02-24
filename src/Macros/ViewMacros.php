@@ -27,7 +27,7 @@ class ViewMacros
             unset($params['attributes']);
 
             if (is_subclass_of($view, \Illuminate\View\Component::class)) {
-                $layout = new $view();
+                $layout = app()->makeWith($view, $params);
                 $view = $layout->resolveView()->name();
             } else {
                 $layout = new AnonymousComponent($view, $params);

@@ -45,6 +45,31 @@ class ComponentTraitsTest extends TestCase
                 'dehydrate', 'secondDehydrate'
             ]);
     }
+
+    /** @test */
+    public function calling_test_methods_will_not_run_hooks_from_previous_methods()
+    {
+        ComponentForTestMethodsStub::$hooksFromTrait = [];
+        $test = Livewire::test(ComponentForTestMethodsStub::class);
+        $this->assertEquals(
+            ['initialized', 'hydrate', 'mount', 'rendering', 'rendered:show-name', 'dehydrate',], 
+            ComponentForTestMethodsStub::$hooksFromTrait
+        );
+
+        ComponentForTestMethodsStub::$hooksFromTrait = [];
+        $test->set('foo', 'bar');
+        $this->assertEquals(
+            ['initialized', 'hydrate', 'updating:foobar', 'updated:foobar', 'rendering', 'rendered:show-name', 'dehydrate'], 
+            ComponentForTestMethodsStub::$hooksFromTrait
+        );
+
+        ComponentForTestMethodsStub::$hooksFromTrait = [];
+        $test->call('save');
+        $this->assertEquals(
+            ['initialized', 'hydrate', 'rendering', 'rendered:show-name', 'dehydrate'], 
+            ComponentForTestMethodsStub::$hooksFromTrait
+        );
+    }
 }
 
 trait TraitForComponent
@@ -154,4 +179,70 @@ trait SecondTraitForComponent
 class ComponentWithTwoTraitsStub extends ComponentWithTraitStub
 {
     use TraitForComponent, SecondTraitForComponent;
+}
+
+trait TraitForComponentForTestMethods
+{
+    public function mountTraitForComponentForTestMethods()
+    {
+        static::$hooksFromTrait[] = 'mount';
+    }
+
+    public function hydrateTraitForComponentForTestMethods()
+    {
+        static::$hooksFromTrait[] = 'hydrate';
+    }
+
+    public function dehydrateTraitForComponentForTestMethods()
+    {
+        static::$hooksFromTrait[] = 'dehydrate';
+    }
+
+    public function updatingTraitForComponentForTestMethods($name, $value)
+    {
+        static::$hooksFromTrait[] = 'updating:'.$name.$value;
+    }
+
+    public function updatedTraitForComponentForTestMethods($name, $value)
+    {
+        static::$hooksFromTrait[] = 'updated:'.$name.$value;
+    }
+
+    public function renderingTraitForComponentForTestMethods()
+    {
+        static::$hooksFromTrait[] = 'rendering';
+    }
+
+    public function renderedTraitForComponentForTestMethods($view)
+    {
+        static::$hooksFromTrait[] = 'rendered:'.$view->getName();
+    }
+
+    public function initializeTraitForComponentForTestMethods()
+    {
+        static::$hooksFromTrait[] = 'initialized';
+    }
+}
+
+class ComponentForTestMethodsStub extends Component
+{
+    use TraitForComponentForTestMethods;
+
+    /*
+     * Livewire tests will boot a new instance with each test method (ie. set(), call())
+     * Hence using static variable to track hooks across all instances
+     */
+    public static $hooksFromTrait = [];
+
+    public $foo = 'bar';
+
+    public function save()
+    {
+        //
+    }
+
+    public function render()
+    {
+        return view('show-name', ['name' => $this->foo]);
+    }
 }
