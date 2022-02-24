@@ -64,14 +64,15 @@ export default function () {
     window.addEventListener('popstate', event => {
         if (LivewireStateManager.missingState(event)) return
 
-        LivewireStateManager.replayResponses(event, (response, component) => {
+        LivewireStateManager.replayResponses(event, async (response, component) => {
+            console.log('replayCallback')
             let message = new Message(component, [])
 
             message.storeResponse(response)
 
             message.replaying = true
 
-            component.handleResponse(message)
+            await component.handleResponse(message)
         })
     })
 
@@ -166,14 +167,14 @@ let LivewireStateManager = {
         }
     },
 
-    replayResponses(event, callback) {
+    async replayResponses(event, callback) {
         if (! event.state.livewire) return
 
         let state = typeof event.state.livewire === 'string'
             ? new LivewireState(this.getFromSession(event.state.livewire))
             : new LivewireState(event.state.livewire)
 
-        state.replayResponses(callback)
+        await state.replayResponses(callback)
     },
 
     currentState() {
@@ -277,14 +278,15 @@ class LivewireState
         this.pushItemInProperOrder(signature, response, component)
     }
 
-    replayResponses(callback) {
-        this.items.forEach(({ signature, response }) => {
+    async replayResponses(callback) {
+        for (let {signature, response} of this.items) {
+            console.log('replayResponse', response)
             let component = this.findComponentBySignature(signature)
 
             if (! component) return
 
-            callback(response, component)
-        })
+            await callback(response, component)
+        }
     }
 
     // We can't just store component reponses by their id because
