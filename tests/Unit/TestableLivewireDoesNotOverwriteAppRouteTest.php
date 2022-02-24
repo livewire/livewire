@@ -33,9 +33,9 @@ class TestableLivewireDoesNotOverwriteAppRouteTest extends TestCase
     private function create(string $class = Request::class)
     {
         $request = $class::create('/some/user/1');
-        $request->setRouteResolver(fn() => (new Route('GET', '/some/user/{user_id}', []))->bind($request));
+        $request->setRouteResolver(function() use ($request) { return (new Route('GET', '/some/user/{user_id}', []))->bind($request); });
         // Override the requst() helper (which calls app('request')) to return the newly created route
-        app()->bind('request', fn() => $request);
+        app()->bind('request', function() use ($request) { return $request; });
         return $request;
     }
 }
