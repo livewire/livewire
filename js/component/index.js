@@ -279,8 +279,7 @@ export default class Component {
         dispatch('livewire:update')
     }
 
-    async handleResponse(message) {
-        console.log('handleResponse')
+    handleResponse(message) {
         let response = message.response
         
         this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
@@ -291,11 +290,11 @@ export default class Component {
             // If we get HTML from the server, store it for the next time we might not.
             this.lastFreshHtml = response.effects.html
 
-            await this.handleMorph(response.effects.html.trim())
+            this.handleMorph(response.effects.html.trim())
         } else {
             // It's important to still "morphdom" even when the server HTML hasn't changed,
             // because Alpine needs to be given the chance to update.
-            await this.handleMorph(this.lastFreshHtml)
+            this.handleMorph(this.lastFreshHtml)
         }
 
         if (response.effects.dirty) {
@@ -383,7 +382,7 @@ export default class Component {
         this.connection.sendMessage(message)
     }
 
-    async handleMorph(dom) {
+    handleMorph(dom) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
         if (window.morphdom === true) {
@@ -391,15 +390,14 @@ export default class Component {
             this.useMorphdom(this.el, dom)
         } else {
             console.log('useMorph')
-            await this.useMorph(this.el, dom)
+            this.useMorph(this.el, dom)
         }
 
         window.skipShow = false
     }
 
-    async useMorph(el, toEl) {
-        console.log('useMorph', el, this.id)
-        await morph(el, toEl, {
+    useMorph(el, toEl) {
+        morph(el, toEl, {
             updating: (el, toEl, childrenOnly, skip) => {
                 if (this.skipHook(el)) return
 
@@ -445,7 +443,6 @@ export default class Component {
                 }
 
                 // Children will update themselves.
-                console.log('updatingId', this.id, el.getAttribute('wire:id'), DOM.isComponentRootEl(el) && el.getAttribute('wire:id'))
                 if (DOM.isComponentRootEl(el) && el.getAttribute('wire:id') !== this.id) return skip()
 
                 // Give the root Livewire "to" element, the same object reference as the "from"
