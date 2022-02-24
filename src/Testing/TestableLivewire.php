@@ -133,8 +133,7 @@ class TestableLivewire
 
     public function pretendWereMountingAComponentOnAPage($name, $params, $queryParams)
     {
-        $randomRoutePath = (Str::contains(request()->url(), 'localhost/') && !Str::contains(request()->url(), 'livewire'))
-            ? request()->getUri() : '/testing-livewire/'.str()->random(20);
+        $randomRoutePath = (Str::contains(request()->url(), 'localhost/') && !Str::contains(request()->url(), 'livewire')) ? request()->getUri() : '/testing-livewire/'.str()->random(20);
 
         $this->registerRouteBeforeExistingRoutes($randomRoutePath, function () use ($name, $params) {
             return View::file(__DIR__.'/../views/mount-component.blade.php', [
@@ -150,7 +149,7 @@ class TestableLivewire
         $laravelTestingWrapper->temporarilyDisableExceptionHandlingAndMiddleware(function ($wrapper) use ($randomRoutePath, &$response, $queryParams) {
             $response = $wrapper->call('GET', $randomRoutePath, $queryParams);
         });
-
+        
         return $response;
     }
 
