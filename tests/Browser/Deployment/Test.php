@@ -15,7 +15,7 @@ class Test extends TestCase
                 ->click('@refresh')
                 // Wait for Livewire to respond, but dusk helper won't
                 // work as dialog box is stopping further execution
-                ->pause(50)
+                ->waitForDialog()
                 ->assertDialogOpened("This page has expired.\nWould you like to refresh the page?")
                 // Dismiss dialog so next tests run
                 ->dismissDialog()
@@ -31,7 +31,7 @@ class Test extends TestCase
                 ->click('@invalidateComponent')
                 // Wait for Livewire to respond, but dusk helper won't
                 // work as dialog box is stopping further execution
-                ->pause(50)
+                ->waitForDialog()
                 ->assertDialogOpened("This page has expired.\nWould you like to refresh the page?")
                 // Dismiss dialog so next tests run
                 ->dismissDialog()
