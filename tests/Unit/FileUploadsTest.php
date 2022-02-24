@@ -437,7 +437,11 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function cant_preview_a_non_image_temporary_file_with_a_temporary_signed_url()
     {
-        $this->expectException(RuntimeException::class);
+        if (version_compare(app()->version(), '9.2.0', '<')) {
+            // Laravel 9.2 added support for faking temporary URLs PR#41113
+            // so will no longer throw an exception
+            $this->expectException(RuntimeException::class);
+        }
 
         Storage::fake('avatars');
 
