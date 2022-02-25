@@ -245,7 +245,7 @@ trait MakesAssertions
 
         return $this;
     }
-    
+
     public function assertNotDispatchedBrowserEvent($name)
     {
         if (! array_key_exists('dispatches', $this->payload['effects'])){
@@ -276,6 +276,10 @@ trait MakesAssertions
                 $rules = array_keys(Arr::get($failed, $key, []));
 
                 foreach ((array) $value as $rule) {
+                    if (Str::contains($rule, ':')){
+                        $rule = Str::before($rule, ':');
+                    }
+
                     PHPUnit::assertContains(Str::studly($rule), $rules, "Component has no [{$rule}] errors for [{$key}] attribute.");
                 }
             }
@@ -304,6 +308,10 @@ trait MakesAssertions
                 $rules = array_keys(Arr::get($failed, $key, []));
 
                 foreach ((array) $value as $rule) {
+                    if (Str::contains($rule, ':')){
+                        $rule = Str::before($rule, ':');
+                    }
+
                     PHPUnit::assertNotContains(Str::studly($rule), $rules, "Component has [{$rule}] errors for [{$key}] attribute.");
                 }
             }
