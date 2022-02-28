@@ -64,14 +64,14 @@ export default function () {
     window.addEventListener('popstate', event => {
         if (LivewireStateManager.missingState(event)) return
 
-        LivewireStateManager.replayResponses(event, (response, component) => {
+        LivewireStateManager.replayResponses(event, async (response, component) => {
             let message = new Message(component, [])
 
             message.storeResponse(response)
 
             message.replaying = true
 
-            component.handleResponse(message)
+            await component.handleResponse(message)
         })
     })
 

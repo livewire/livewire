@@ -279,7 +279,7 @@ export default class Component {
         dispatch('livewire:update')
     }
 
-    handleResponse(message) {
+    async handleResponse(message) {
         let response = message.response
         
         this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
@@ -290,11 +290,11 @@ export default class Component {
             // If we get HTML from the server, store it for the next time we might not.
             this.lastFreshHtml = response.effects.html
 
-            this.handleMorph(response.effects.html.trim())
+            await this.handleMorph(response.effects.html.trim())
         } else {
             // It's important to still "morphdom" even when the server HTML hasn't changed,
             // because Alpine needs to be given the chance to update.
-            this.handleMorph(this.lastFreshHtml)
+            await this.handleMorph(this.lastFreshHtml)
         }
 
         if (response.effects.dirty) {
@@ -382,7 +382,7 @@ export default class Component {
         this.connection.sendMessage(message)
     }
 
-    handleMorph(dom) {
+    async handleMorph(dom) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
         if (window.morphdom === true) {
@@ -390,14 +390,14 @@ export default class Component {
             this.useMorphdom(this.el, dom)
         } else {
             console.log('useMorph')
-            this.useMorph(this.el, dom)
+            await this.useMorph(this.el, dom)
         }
 
         window.skipShow = false
     }
 
-    useMorph(el, toEl) {
-        morph(el, toEl, {
+    async useMorph(el, toEl) {
+        await morph(el, toEl, {
             updating: (el, toEl, childrenOnly, skip) => {
                 if (this.skipHook(el)) return
 
