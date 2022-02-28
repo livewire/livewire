@@ -279,7 +279,7 @@ export default class Component {
         dispatch('livewire:update')
     }
 
-    async handleResponse(message) {
+    handleResponse(message) {
         let response = message.response
         
         this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
@@ -290,11 +290,11 @@ export default class Component {
             // If we get HTML from the server, store it for the next time we might not.
             this.lastFreshHtml = response.effects.html
 
-            await this.handleMorph(response.effects.html.trim())
+            this.handleMorph(response.effects.html.trim())
         } else {
             // It's important to still "morphdom" even when the server HTML hasn't changed,
             // because Alpine needs to be given the chance to update.
-            await this.handleMorph(this.lastFreshHtml)
+            this.handleMorph(this.lastFreshHtml)
         }
 
         if (response.effects.dirty) {
