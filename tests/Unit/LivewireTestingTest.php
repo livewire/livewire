@@ -297,6 +297,17 @@ class LivewireTestingTest extends TestCase
             ->set('bar', '')
             ->assertHasErrors(['foo', 'bar']);
     }
+
+    /** @test */
+    public function it_ignores_rules_with_params(){
+        Livewire::test(ValidatesDataWithRulesHasParams::class)
+            ->call('submit')
+            ->assertHasErrors(['foo' => 'min'])
+            ->assertHasErrors(['foo' => 'min:2'])
+            ->set('foo', 'FOO')
+            ->assertHasNoErrors(['foo' => 'min'])
+            ->assertHasNoErrors(['foo' => 'min:2']);
+    }
 }
 
 class HasMountArguments extends Component
@@ -427,6 +438,22 @@ class ValidatesDataWithRealTimeStub extends Component
         $this->validateOnly($field, [
             'foo' => 'required|min:6',
             'bar' => 'required',
+        ]);
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class ValidatesDataWithRulesHasParams extends Component{
+    public $foo, $bar;
+
+    public function submit()
+    {
+        $this->validate([
+            'foo' => 'string|min:2',
         ]);
     }
 
