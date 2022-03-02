@@ -143,7 +143,7 @@ class Test extends TestCase
         // TODO: Fix
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, Component::class)
-                ->tinker()
+                // ->tinker()
                 ->waitForLivewire()->click('@show-nested')
                 ->waitForLivewire()->type('@baz-input', 'foo')
                 ->assertSeeIn('@baz-output', 'foo')
