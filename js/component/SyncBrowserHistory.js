@@ -64,7 +64,7 @@ export default function () {
     })
 
     window.addEventListener('popstate', event => {
-        console.log('popstate', event)
+        // console.log('popstate', event)
         if (LivewireStateManager.missingState(event)) return
 
         LivewireStateManager.replayResponses(event, async (response, component, fingerprint) => {

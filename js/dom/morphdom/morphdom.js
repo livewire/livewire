@@ -38,7 +38,7 @@ function callHook(hook, ...params) {
 export default function morphdomFactory(morphAttrs) {
 
     return function morphdom(fromNode, toNode, options) {
-        console.log('morphdompatch', fromNode.outerHTML, toNode)
+        // console.log('morphdompatch', fromNode.outerHTML, toNode)
         if (!options) {
             options = {};
         }
