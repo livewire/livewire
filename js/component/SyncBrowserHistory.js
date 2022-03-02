@@ -282,7 +282,7 @@ class LivewireState
     }
 
     async replayResponses(callback) {
-        console.log('replay', this.items)
+        // console.log('replay', this.items)
         for (let {fingerprint, signature, response} of this.items) {
             let component = this.findComponentBySignature(signature)
 
