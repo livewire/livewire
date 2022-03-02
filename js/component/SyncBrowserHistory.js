@@ -67,10 +67,11 @@ export default function () {
         console.log('popstate', event)
         if (LivewireStateManager.missingState(event)) return
 
-        LivewireStateManager.replayResponses(event, async (response, component) => {
+        LivewireStateManager.replayResponses(event, async (response, component, fingerprint) => {
             let message = new Message(component, [])
 
             message.storeResponse(response)
+            message.storeFingerprint(fingerprint)
 
             message.replaying = true
 
@@ -249,7 +250,7 @@ class LivewireState
     toStateArray() { return this.items }
 
     pushItemInProperOrder(signature, response, component) {
-        let targetItem = { signature, response }
+        let targetItem = { signature, response, fingerprint: component.fingerprint }
 
         // First, we'll check if this signature already has an entry, if so, replace it.
         let existingIndex = this.items.findIndex(item => item.signature === signature)
@@ -282,12 +283,12 @@ class LivewireState
 
     async replayResponses(callback) {
         console.log('replay', this.items)
-        for (let {signature, response} of this.items) {
+        for (let {fingerprint, signature, response} of this.items) {
             let component = this.findComponentBySignature(signature)
 
             if (! component) return
 
-            await callback(response, component)
+            await callback(response, component, fingerprint)
         }
 
         // this.items.forEach(({ signature, response }) => {

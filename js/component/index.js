@@ -17,7 +17,7 @@ import { morph } from '@alpinejs/morph'
 import 'regenerator-runtime/runtime'
 
 export default class Component {
-    constructor(el, connection) {
+    constructor(el, connection, initialData = null) {
         window.morphdom = morphdom
         window.morph = morph
         el.__livewire = this
@@ -32,8 +32,10 @@ export default class Component {
 
         this.connection = connection
 
-        const initialData = JSON.parse(this.el.getAttribute('wire:initial-data'))
-        this.el.removeAttribute('wire:initial-data')
+        if(initialData === null) {
+            initialData = JSON.parse(this.el.getAttribute('wire:initial-data'))
+            this.el.removeAttribute('wire:initial-data')
+        }
 
         this.fingerprint = initialData.fingerprint
         this.serverMemo = initialData.serverMemo
@@ -297,11 +299,11 @@ export default class Component {
             // If we get HTML from the server, store it for the next time we might not.
             this.lastFreshHtml = response.effects.html
 
-            this.handleMorph(response.effects.html.trim())
+            this.handleMorph(response.effects.html.trim(), message)
         } else {
             // It's important to still "morphdom" even when the server HTML hasn't changed,
             // because Alpine needs to be given the chance to update.
-            this.handleMorph(this.lastFreshHtml)
+            this.handleMorph(this.lastFreshHtml, message)
         }
 
         if (response.effects.dirty) {
@@ -389,7 +391,7 @@ export default class Component {
         this.connection.sendMessage(message)
     }
 
-    async handleMorph(dom) {
+    async handleMorph(dom, message) {
         console.log('handleMorph', dom)
         this.morphChanges = { changed: [], added: [], removed: [] }
 
@@ -400,15 +402,15 @@ export default class Component {
             this.useMorphdom(this.el, dom)
         } else {
             console.log('useMorph')
-            await this.useMorph(this.el, dom)
+            await this.useMorph(this.el, dom, message)
         }
 
         window.skipShow = false
     }
 
-    async useMorph(el, toEl) {
+    async useMorph(el, toEl, message) {
         let localComponentId = this.id
-        window.morphOptions = {
+        let morphOptions = {
             updating: (el, toEl, childrenOnly, skip) => {
                 if (this.skipHook(el)) return
 
@@ -517,7 +519,19 @@ export default class Component {
                         return skip()
                     }
                 } else if (DOM.isComponentRootEl(el)) {
-                    store.addComponent(new Component(el, this.connection))
+                    console.log('Add new component', closestComponentId, localComponentId, message)
+
+                    let data
+                    
+                    if (closestComponentId == message.fingerprint.id) {
+                        data = {
+                            fingerprint: message.fingerprint,
+                            serverMemo: message.response.serverMemo,
+                            effects: message.response.effects
+                        }
+                    }
+                    
+                    store.addComponent(new Component(el, this.connection, data))
 
                     // We don't need to initialize children, the
                     // new Component constructor will do that for us.
@@ -543,6 +557,7 @@ export default class Component {
 
             lookahead: true,
         }
+        window.morphOptions = morphOptions
         await morph(el, toEl, window.morphOptions)
     }
 

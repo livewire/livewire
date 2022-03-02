@@ -37,6 +37,10 @@ export default class {
         return (this.response = payload)
     }
 
+    storeFingerprint(payload) {
+        return (this.fingerprint = payload)
+    }
+
     resolve() {
         let returns = this.response.effects.returns || []
 
