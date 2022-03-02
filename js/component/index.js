@@ -523,7 +523,7 @@ export default class Component {
 
                     let data
 
-                    if (closestComponentId == message.fingerprint.id) {
+                    if (message.fingerprint && closestComponentId == message.fingerprint.id) {
                         data = {
                             fingerprint: message.fingerprint,
                             serverMemo: message.response.serverMemo,
