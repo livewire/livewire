@@ -14,12 +14,9 @@ import DeferredModelAction from '@/action/deferred-model'
 import MessageBus from '../MessageBus'
 import { alpinifyElementsForMorphdom, getEntangleFunction } from './SupportAlpine'
 import { morph } from '@alpinejs/morph'
-import 'regenerator-runtime/runtime'
 
 export default class Component {
     constructor(el, connection, initialData = null) {
-        window.morphdom = morphdom
-        window.morph = morph
         el.__livewire = this
 
         this.el = el
@@ -32,13 +29,13 @@ export default class Component {
 
         this.connection = connection
 
-        if(initialData === null) {
+        if (initialData === null) {
             initialData = JSON.parse(this.el.getAttribute('wire:initial-data'))
             this.el.removeAttribute('wire:initial-data')
         }
 
         this.fingerprint = initialData.fingerprint
-        this.serverMemo = initialData.serverMemo
+        this.serverMemo = initialData.serverMemo``
         this.effects = initialData.effects
 
         this.listeners = this.effects.listeners

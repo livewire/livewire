@@ -9,7 +9,6 @@ class Test extends TestCase
 {
     public function test()
     {
-        // TODO: Fix
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
                 /**

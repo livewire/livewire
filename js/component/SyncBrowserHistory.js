@@ -286,15 +286,6 @@ class LivewireState
 
             await callback(response, component, fingerprint)
         }
-
-        // this.items.forEach(({ signature, response }) => {
-        //     console.log('replayResponse', response)
-        //     let component = this.findComponentBySignature(signature)
-
-        //     if (! component) return
-
-        //     callback(response, component)
-        // })
     }
 
     // We can't just store component reponses by their id because

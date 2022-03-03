@@ -95,7 +95,6 @@ class Test extends TestCase
 
     public function test_that_query_updates_from_child_components_can_coexist()
     {
-        // TODO: Fix
         $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history', ['step' => 1], false))
                 ->waitForText('Step 1 Active')

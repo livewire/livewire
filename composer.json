@@ -14,8 +14,7 @@
         "illuminate/support": "^7.0|^8.0|^9.0",
         "illuminate/database": "^7.0|^8.0|^9.0",
         "illuminate/validation": "^7.0|^8.0|^9.0",
-        "league/mime-type-detection": "^1.9",
-        "symfony/console": "6.0.2"
+        "league/mime-type-detection": "^1.9"
     },
     "require-dev": {
         "psy/psysh": "@stable",
