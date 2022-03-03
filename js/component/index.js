@@ -14,6 +14,7 @@ import DeferredModelAction from '@/action/deferred-model'
 import MessageBus from '../MessageBus'
 import { alpinifyElementsForMorphdom, getEntangleFunction } from './SupportAlpine'
 import { morph } from '@alpinejs/morph'
+import 'regenerator-runtime/runtime'
 
 export default class Component {
     constructor(el, connection, initialData = null) {
