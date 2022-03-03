@@ -401,8 +401,7 @@ export default class Component {
     }
 
     async useMorph(el, toEl, message) {
-        let localComponentId = this.id
-        let morphOptions = {
+        await morph(el, toEl, {
             updating: (el, toEl, childrenOnly, skip) => {
                 if (this.skipHook(el)) return
 
@@ -448,7 +447,7 @@ export default class Component {
                 }
 
                 // Children will update themselves.
-                if (DOM.isComponentRootEl(el) && el.getAttribute('wire:id') !== localComponentId) return skip()
+                if (DOM.isComponentRootEl(el) && el.getAttribute('wire:id') !== this.id) return skip()
 
                 // Give the root Livewire "to" element, the same object reference as the "from"
                 // element. This ensures new Alpine magics like $wire and @entangle can
@@ -497,7 +496,7 @@ export default class Component {
 
                 const closestComponentId = DOM.closestRoot(el).getAttribute('wire:id')
 
-                if (closestComponentId === localComponentId) {
+                if (closestComponentId === this.id) {
                     if (nodeInitializer.initialize(el, this) === false) {
                         return skip()
                     }
@@ -536,9 +535,7 @@ export default class Component {
             },
 
             lookahead: true,
-        }
-        window.morphOptions = morphOptions
-        await morph(el, toEl, window.morphOptions)
+        })
     }
 
     skipHook(el) {
@@ -546,7 +543,7 @@ export default class Component {
     }
 
     useMorphdom(el, toEl) {
-        window.morphdomOptions = {
+        morphdom(el, toEl, {
             childrenOnly: false,
 
             getNodeKey: node => {
@@ -665,8 +662,7 @@ export default class Component {
 
                 this.morphChanges.added.push(node)
             },
-        }
-        morphdom(el, toEl, window.morphdomOptions)
+        })
     }
 
     walk(callback, callbackWhenNewComponentIsEncountered = el => { }) {
