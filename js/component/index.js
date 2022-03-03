@@ -285,15 +285,10 @@ export default class Component {
 
     handleResponse(message) {
         let response = message.response
-
-        // console.log('handleResponse', this.id, message)
-
+        
         this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
 
         store.callHook('message.received', message, this)
-
-        // console.log('lastFreshHtml', this.lastFreshHtml)
-        // console.log('ResponseHTML', response.effects.html)
 
         if (response.effects.html) {
             // If we get HTML from the server, store it for the next time we might not.
@@ -392,13 +387,11 @@ export default class Component {
     }
 
     async handleMorph(dom, message) {
-        // console.log('handleMorph', dom)
         this.morphChanges = { changed: [], added: [], removed: [] }
 
         window.useMorphdom = false
 
         if (window.useMorphdom === true) {
-            // console.log('useMorphdom')
             this.useMorphdom(this.el, dom)
         } else {
             // console.log('useMorph')
@@ -413,8 +406,6 @@ export default class Component {
         let morphOptions = {
             updating: (el, toEl, childrenOnly, skip) => {
                 if (this.skipHook(el)) return
-
-                // console.log('updatingMorph', el)
 
                 // Because morphdom also supports vDom nodes, it uses isSameNode to detect
                 // sameness. When dealing with DOM nodes, we want isEqualNode, otherwise
@@ -458,8 +449,6 @@ export default class Component {
                 }
 
                 // Children will update themselves.
-                // console.log('isComponentRoot', DOM.isComponentRootEl(el))
-                // console.log("Detect if child", el.getAttribute('wire:id') !== localComponentId, el.getAttribute('wire:id'), localComponentId)
                 if (DOM.isComponentRootEl(el) && el.getAttribute('wire:id') !== localComponentId) return skip()
                 // console.log('Not child processing update')
 
@@ -481,9 +470,7 @@ export default class Component {
 
             removing: (el, skip) => {
                 if (this.skipHook(el)) return
-
-                // console.log('removing', el)
-
+                
                 // If the node is from x-if with a transition.
                 if (
                     el.__x_inserted_me &&
@@ -510,8 +497,6 @@ export default class Component {
             added: (el) => {
                 if (this.skipHook(el)) return
 
-                // console.log('added', el)
-
                 const closestComponentId = DOM.closestRoot(el).getAttribute('wire:id')
 
                 if (closestComponentId === localComponentId) {
@@ -519,7 +504,6 @@ export default class Component {
                         return skip()
                     }
                 } else if (DOM.isComponentRootEl(el)) {
-                    // console.log('Add new component', closestComponentId, localComponentId, message)
 
                     let data
 
@@ -545,8 +529,6 @@ export default class Component {
             key: (el) => {
                 if (this.skipHook(el)) return
 
-                // console.log('key', el)
-
                 return el.hasAttribute(`wire:key`)
                     ? el.getAttribute(`wire:key`)
                     : // If no "key", then first check for "wire:id", then "id"
@@ -570,13 +552,6 @@ export default class Component {
             childrenOnly: false,
 
             getNodeKey: node => {
-                // console.log('getKey', node)
-                // console.log('KEY', node.hasAttribute(`wire:key`)
-                // ? node.getAttribute(`wire:key`)
-                // : // If no "key", then first check for "wire:id", then "id"
-                // node.hasAttribute(`wire:id`)
-                //     ? node.getAttribute(`wire:id`)
-                //     : node.id, node.outerHTML)
                 // This allows the tracking of elements by the "key" attribute, like in VueJs.
                 return node.hasAttribute(`wire:key`)
                     ? node.getAttribute(`wire:key`)
@@ -587,12 +562,10 @@ export default class Component {
             },
 
             onBeforeNodeAdded: node => {
-                // console.log('adding')
                 //
             },
 
             onBeforeNodeDiscarded: node => {
-                // console.log('removing')
                 // If the node is from x-if with a transition.
                 if (
                     node.__x_inserted_me &&
@@ -605,7 +578,6 @@ export default class Component {
             },
 
             onNodeDiscarded: node => {
-                // console.log('removed')
                 store.callHook('element.removed', node, this)
 
                 if (node.__livewire) {
@@ -620,7 +592,6 @@ export default class Component {
             },
 
             onBeforeElUpdated: (from, to) => {
-                // console.log('updating', from)
                 // Because morphdom also supports vDom nodes, it uses isSameNode to detect
                 // sameness. When dealing with DOM nodes, we want isEqualNode, otherwise
                 // isSameNode will ALWAYS return false.
@@ -663,8 +634,6 @@ export default class Component {
                 }
 
                 // Children will update themselves.
-                // console.log('isComponentRoot', DOM.isComponentRootEl(from))
-                // console.log("Detect if child", from.getAttribute('wire:id') !== this.id, from.getAttribute('wire:id'), this.id)
                 if (DOM.isComponentRootEl(from) && from.getAttribute('wire:id') !== this.id) return false
                 // console.log('Not child processing update')
 
@@ -677,14 +646,12 @@ export default class Component {
             },
 
             onElUpdated: node => {
-                // console.log('updated', node)//, this.id, node.outerHTML)
                 this.morphChanges.changed.push(node)
 
                 store.callHook('element.updated', node, this)
             },
 
             onNodeAdded: node => {
-                // console.log('nodeAdded', node.outerHTML)
                 const closestComponentId = DOM.closestRoot(node).getAttribute('wire:id')
 
                 // console.log('addedIds', closestComponentId, this.id, closestComponentId === this.id)

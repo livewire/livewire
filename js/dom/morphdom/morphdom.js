@@ -38,7 +38,6 @@ function callHook(hook, ...params) {
 export default function morphdomFactory(morphAttrs) {
 
     return function morphdom(fromNode, toNode, options) {
-        // console.log('morphdompatch', fromNode.outerHTML, toNode)
         if (!options) {
             options = {};
         }
@@ -188,10 +187,7 @@ export default function morphdomFactory(morphAttrs) {
 
 
         function morphEl(fromEl, toEl, childrenOnly) {
-            // console.log('morphEl', fromEl.outerHTML, toEl.outerHTML)
             var toElKey = callHook(getNodeKey, toEl);
-
-            // console.log('TO EL KEY', toElKey)
 
             if (toElKey) {
                 // If an element with an ID is being morphed then it will be in the final
@@ -464,7 +460,6 @@ export default function morphdomFactory(morphAttrs) {
                 return;
             }
 
-            // console.warn('startMorphNore')
             morphEl(morphedNode, toNode, childrenOnly);
 
             // We now need to loop over any keyed nodes that might need to be
@@ -472,7 +467,6 @@ export default function morphdomFactory(morphAttrs) {
             // never found a match. When a keyed node is matched up we remove
             // it out of fromNodesLookup and we use fromNodesLookup to determine
             // if a keyed node has been matched up or not
-            // console.warn("KEYED REMOVAL LIST", keyedRemovalList)
             if (keyedRemovalList) {
                 for (var i=0, len=keyedRemovalList.length; i<len; i++) {
                     var elToRemove = fromNodesLookup[keyedRemovalList[i]];
