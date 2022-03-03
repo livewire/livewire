@@ -394,7 +394,6 @@ export default class Component {
         if (window.useMorphdom === true) {
             this.useMorphdom(this.el, dom)
         } else {
-            // console.log('useMorph')
             await this.useMorph(this.el, dom, message)
         }
 
@@ -450,7 +449,6 @@ export default class Component {
 
                 // Children will update themselves.
                 if (DOM.isComponentRootEl(el) && el.getAttribute('wire:id') !== localComponentId) return skip()
-                // console.log('Not child processing update')
 
                 // Give the root Livewire "to" element, the same object reference as the "from"
                 // element. This ensures new Alpine magics like $wire and @entangle can
@@ -635,7 +633,6 @@ export default class Component {
 
                 // Children will update themselves.
                 if (DOM.isComponentRootEl(from) && from.getAttribute('wire:id') !== this.id) return false
-                // console.log('Not child processing update')
 
                 // Give the root Livewire "to" element, the same object reference as the "from"
                 // element. This ensures new Alpine magics like $wire and @entangle can
@@ -654,7 +651,6 @@ export default class Component {
             onNodeAdded: node => {
                 const closestComponentId = DOM.closestRoot(node).getAttribute('wire:id')
 
-                // console.log('addedIds', closestComponentId, this.id, closestComponentId === this.id)
                 if (closestComponentId === this.id) {
                     if (nodeInitializer.initialize(node, this) === false) {
                         return false
