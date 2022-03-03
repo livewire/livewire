@@ -389,8 +389,6 @@ export default class Component {
     async handleMorph(dom, message) {
         this.morphChanges = { changed: [], added: [], removed: [] }
 
-        window.useMorphdom = false
-
         if (window.useMorphdom === true) {
             this.useMorphdom(this.el, dom)
         } else {
