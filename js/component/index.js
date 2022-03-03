@@ -36,7 +36,7 @@ export default class Component {
         }
 
         this.fingerprint = initialData.fingerprint
-        this.serverMemo = initialData.serverMemo``
+        this.serverMemo = initialData.serverMemo
         this.effects = initialData.effects
 
         this.listeners = this.effects.listeners
