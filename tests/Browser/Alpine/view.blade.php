@@ -70,6 +70,7 @@
 
     <div x-data wire:model="zorp">
         <button type="button" @click="$dispatch('input', 'after')" dusk="zorp.button">Before -> After</button>
+        <button @click="$dispatch('input', '')" dusk="zorp.button.empty" value="it should not fall back to this">Empty</button>
 
         <span dusk="zorp.output">{{ $zorp }}</span>
     </div>
