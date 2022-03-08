@@ -279,7 +279,7 @@ export default class Component {
 
     handleResponse(message) {
         let response = message.response
-        
+
         this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
 
         store.callHook('message.received', message, this)
@@ -294,6 +294,8 @@ export default class Component {
             // because Alpine needs to be given the chance to update.
             this.handleMorph(this.lastFreshHtml)
         }
+
+        this.listeners = response.effects.listeners;
 
         if (response.effects.dirty) {
             this.forceRefreshDataBoundElementsMarkedAsDirty(

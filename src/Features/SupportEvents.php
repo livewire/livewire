@@ -10,14 +10,6 @@ class SupportEvents
 
     function __construct()
     {
-        Livewire::listen('component.hydrate', function ($component, $request) {
-            //
-        });
-
-        Livewire::listen('component.dehydrate.initial', function ($component, $response) {
-            $response->effects['listeners'] = $component->getEventsBeingListenedFor();
-        });
-
         Livewire::listen('component.dehydrate', function ($component, $response) {
             $emits = $component->getEventQueue();
             $dispatches = $component->getDispatchQueue();
@@ -29,6 +21,8 @@ class SupportEvents
             if ($dispatches) {
                 $response->effects['dispatches'] = $dispatches;
             }
+
+            $response->effects['listeners'] = $component->getEventsBeingListenedFor();
         });
     }
 }
