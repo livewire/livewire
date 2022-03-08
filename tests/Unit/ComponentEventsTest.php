@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 
 class ComponentEventsTest extends TestCase
 {
@@ -36,6 +35,55 @@ class ComponentEventsTest extends TestCase
         $component->emit('bar', 'baz', 'blab');
 
         $this->assertEquals($component->get('foo'), 'bazblab');
+    }
+
+    /** @test */
+    public function emit_dynamically_deleted_event_generates_error()
+    {
+        $component = Livewire::test(ReceivesEventsWithModifiedDynamicListeners::class);
+
+        $this->expectException(\ErrorException::class);
+        $this->expectExceptionMessage('Undefined array key "bar"');
+
+        $component->call('delete', 2)
+                  ->emit('bar', 'bar');
+    }
+
+    /** @test */
+    public function emit_dynamically_added_event()
+    {
+        $component = Livewire::test(ReceivesEventsWithModifiedDynamicListeners::class);
+
+        $component->call('add', 4, 'goo')
+                  ->emit('goo', 'goo')
+                  ->assertSet('lastEvent', 'goo');
+    }
+
+    /** @test */
+    public function dynamically_added_listeners_are_provided_to_frontend()
+    {
+        $component = Livewire::test(ReceivesEventsWithModifiedDynamicListeners::class);
+
+        $this->assertTrue(in_array('bar', $component->payload['effects']['listeners']));
+
+        $component->call('add', 4, 'goo');
+        $this->assertTrue(isset($component->payload['effects']['listeners']));
+        $this->assertTrue(is_array($component->payload['effects']['listeners']));
+        $this->assertTrue(in_array('goo', $component->payload['effects']['listeners']));
+    }
+
+    /** @test */
+    public function dynamically_removed_listeners_are_removed_on_frontend()
+    {
+        $component = Livewire::test(ReceivesEventsWithModifiedDynamicListeners::class);
+
+        $this->assertTrue(in_array('bar', $component->payload['effects']['listeners']));
+
+        $component->call('delete', 2);
+
+        $this->assertTrue(isset($component->payload['effects']['listeners']));
+        $this->assertTrue(is_array($component->payload['effects']['listeners']));
+        $this->assertFalse(in_array('bar', $component->payload['effects']['listeners']));
     }
 
     /** @test */
@@ -190,6 +238,44 @@ class ReceivesEventsWithDynamicListeners extends Component
     public function handle($value)
     {
         $this->foo = $value;
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class ReceivesEventsWithModifiedDynamicListeners extends Component
+{
+    public $lastEvent = '';
+
+    public $eventsToListenFor = [
+        1 => 'foo',
+        2 => 'bar',
+        3 => 'baz',
+    ];
+
+    public function handle($event)
+    {
+        $this->lastEvent = $event;
+    }
+
+    public function delete($id)
+    {
+        unset($this->eventsToListenFor[$id]);
+    }
+
+    public function add($id, $event)
+    {
+        $this->eventsToListenFor[$id] = $event;
+    }
+
+    protected function getListeners()
+    {
+        return collect($this->eventsToListenFor)
+            ->flip()
+            ->map(function($item) { return 'handle'; });
     }
 
     public function render()

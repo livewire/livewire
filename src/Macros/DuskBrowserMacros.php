@@ -2,16 +2,20 @@
 
 namespace Livewire\Macros;
 
+use Facebook\WebDriver\Exception\NoSuchElementException;
+use Laravel\Dusk\Browser;
 use function Livewire\str;
 use Facebook\WebDriver\WebDriverBy;
 use PHPUnit\Framework\Assert as PHPUnit;
 
+/**
+ * @mixin Browser
+ */
 class DuskBrowserMacros
 {
     public function assertAttributeMissing()
     {
         return function ($selector, $attribute) {
-            /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
             $actual = $this->resolver->findOrFail($selector)->getAttribute($attribute);
@@ -28,7 +32,6 @@ class DuskBrowserMacros
     public function assertNotVisible()
     {
         return function ($selector) {
-            /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
             PHPUnit::assertFalse(
@@ -43,7 +46,6 @@ class DuskBrowserMacros
     public function assertNotPresent()
     {
         return function ($selector) {
-            /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
             PHPUnit::assertTrue(
@@ -58,7 +60,6 @@ class DuskBrowserMacros
     public function assertHasClass()
     {
         return function ($selector, $className) {
-            /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
             PHPUnit::assertContains(
@@ -74,7 +75,6 @@ class DuskBrowserMacros
     public function assertScript()
     {
         return function ($js, $expects = true) {
-            /** @var \Laravel\Dusk\Browser $this */
             PHPUnit::assertEquals($expects, head($this->script(
                 str($js)->start('return ')
             )));
@@ -86,17 +86,8 @@ class DuskBrowserMacros
     public function runScript()
     {
         return function ($js) {
-            /** @var \Laravel\Dusk\Browser $this */
             $this->script([$js]);
 
-            return $this;
-        };
-    }
-
-    public function scrollTo()
-    {
-        return function ($selector) {
-            $this->browser->scrollTo($selector);
             return $this;
         };
     }
@@ -104,7 +95,6 @@ class DuskBrowserMacros
     public function assertClassMissing()
     {
         return function ($selector, $className) {
-            /** @var \Laravel\Dusk\Browser $this */
             $fullSelector = $this->resolver->format($selector);
 
             PHPUnit::assertNotContains(
@@ -120,17 +110,42 @@ class DuskBrowserMacros
     public function waitForLivewireToLoad()
     {
         return function () {
-            /** @var \Laravel\Dusk\Browser $this */
             return $this->waitUsing(5, 75, function () {
                 return $this->driver->executeScript("return !! window.Livewire.components.initialRenderIsFinished");
             });
         };
     }
 
+    public function actionTriggersLivewireMessage() {
+        return function ($actionCallback) {
+            $id = rand(100, 1000);
+            $this->script([
+                "window.duskIsWaitingForLivewireRequest{$id} = false;",
+                "window.Livewire.hook('message.sent', () => { window.duskIsWaitingForLivewireRequest{$id} = true })",
+                "window.Livewire.hook('message.processed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+                "window.Livewire.hook('message.failed', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+            ]);
+
+            $actionCallback($this);
+
+            // Wait a quick sec for Livewire to hear a click and send a request.
+            $this->pause(25);
+
+            // If our flag is still false, no message was sent...
+            if ($this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === false")) {
+                PHPUnit::fail("Expected Livewire request was never sent");
+            }
+
+            // Else wait for the flag to disappear
+            return $this->waitUsing(5, 50, function () use ($id) {
+                return $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === undefined");
+            }, 'Livewire request never completed');
+        };
+    }
+
     public function waitForLivewire()
     {
         return function ($callback = null) {
-            /** @var \Laravel\Dusk\Browser $this */
             $id = rand(100, 1000);
 
             $this->script([
@@ -167,10 +182,33 @@ class DuskBrowserMacros
         };
     }
 
+    public function assertLivewireError()
+    {
+        return function() {
+            try {
+                $e = $this->driver->findElement(WebDriverBy::id("livewire-error"));
+            } catch (NoSuchElementException $e) {
+                $e = null;
+            }
+            PHPUnit::assertNotNull($e, "Livewire error dialog not detected.");
+        };
+    }
+
+    public function assertNoLivewireError()
+    {
+        return function() {
+            try {
+                $e = $this->driver->findElement(WebDriverBy::id("livewire-error"));
+            } catch (NoSuchElementException $e) {
+                $e = null;
+            }
+            PHPUnit::assertNull($e, "Livewire error dialog detected.");
+        };
+    }
+
     public function online()
     {
         return function () {
-            /** @var \Laravel\Dusk\Browser $this */
             return tap($this)->script("window.dispatchEvent(new Event('online'))");
         };
     }
@@ -178,7 +216,6 @@ class DuskBrowserMacros
     public function offline()
     {
         return function () {
-            /** @var \Laravel\Dusk\Browser $this */
             return tap($this)->script("window.dispatchEvent(new Event('offline'))");
         };
     }
