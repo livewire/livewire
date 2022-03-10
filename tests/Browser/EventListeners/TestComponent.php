@@ -2,10 +2,9 @@
 
 namespace Tests\Browser\EventListeners;
 
-use Illuminate\Support\Facades\View;
-use Livewire\Component as BaseComponent;
+use Livewire\Component;
 
-class Component extends BaseComponent
+class TestComponent extends Component
 {
     public $lastEvent = '';
     public $eventCount = 0;
