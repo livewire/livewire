@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\LivewireManager;
 
 class ComponentEventsTest extends TestCase
 {
