@@ -44,7 +44,6 @@ class ComponentEventsTest extends TestCase
         $component = Livewire::test(ReceivesEventsWithModifiedDynamicListeners::class);
 
         $this->expectException(\ErrorException::class);
-        $this->expectExceptionMessage('Undefined array key "bar"');
 
         $component->call('delete', 2)
                   ->emit('bar', 'bar');
