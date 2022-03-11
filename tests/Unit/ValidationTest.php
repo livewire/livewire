@@ -441,6 +441,28 @@ class ValidationTest extends TestCase
             ->call('runValidateOnly', 'image')
             ->assertHasNoErrors(['image', 'image_url', 'image_alt']);
     }
+
+    /** @test */
+    public function a_custom_error_bag_name_can_be_used_for_error_isolation_within_the_same_component()
+    {
+        Livewire::test(ForValidation::class)
+            ->assertHasNoErrors(['jellyfish'])
+            ->call('failJellyfishWithOceanBag')
+            ->assertHasErrors(['jellyfish'])
+            ->assertDontSee('The jellyfish field is required.');
+
+        Livewire::test(WithCustomErrorBag::class)
+            ->assertHasNoErrors(['jellyfish'])
+            ->call('failJellyfishWithOceanBag')
+            ->assertHasErrors(['jellyfish'])
+            ->assertSee('The jellyfish field is required.');
+
+        Livewire::test(WithCustomErrorBag::class)
+            ->assertHasNoErrors(['jellyfish'])
+            ->emit('failJellyfishWithOceanBag')
+            ->assertHasErrors(['jellyfish'])
+            ->assertSee('The jellyfish field is required.');
+    }
 }
 
 class ForValidation extends Component
@@ -628,6 +650,11 @@ class ForValidation extends Component
         return $this->validate(['bar' => 'required']);
     }
 
+    public function failJellyfishWithOceanBag()
+    {
+        Validator::make([], ['jellyfish' => 'required'])->validateWithBag('ocean');
+    }
+
     public function failFooOnCustomValidator()
     {
         Validator::make([], ['plop' => 'required'])->validate();
@@ -730,6 +757,21 @@ class WithValidationMethod extends Component
     public function render()
     {
         return app('view')->make('dump-errors');
+    }
+}
+
+class WithCustomErrorBag extends Component
+{
+    protected $listeners = ['failJellyfishWithOceanBag'];
+
+    public function failJellyfishWithOceanBag()
+    {
+        Validator::make([], ['jellyfish' => 'required'])->validateWithBag('ocean');
+    }
+
+    public function render()
+    {
+        return app('view')->make('dump-errors')->with('bag', 'ocean');
     }
 }
 

@@ -20,6 +20,8 @@ trait ValidatesInput
 {
     protected $errorBag;
 
+    protected $errorBagKey = 'default';
+
     protected $withValidatorCallback;
 
     public function getErrorBag()
@@ -37,6 +39,11 @@ trait ValidatesInput
         return $this->errorBag = $bag instanceof MessageBag
             ? $bag
             : new MessageBag($bag);
+    }
+
+    public function setErrorBagKey($key)
+    {
+        $this->errorBagKey = $key;
     }
 
     public function resetErrorBag($field = null)
@@ -238,7 +245,7 @@ trait ValidatesInput
         $data = $this->unwrapDataForValidation($data);
 
         // If a matching rule is found, then filter collections down to keys specified in the field,
-        // while leaving all other data intact. If a key isn't specified and instead there is a 
+        // while leaving all other data intact. If a key isn't specified and instead there is a
         // wildcard '*' then leave that whole collection intact. This ensures that any rules
         // that depend on other fields/ properties still work.
         if ($ruleForField) {

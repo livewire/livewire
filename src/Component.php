@@ -216,10 +216,10 @@ abstract class Component
         $previouslySharedErrors = app('view')->getShared()['errors'] ?? new ViewErrorBag;
         $previouslySharedInstance = app('view')->getShared()['_instance'] ?? null;
 
-        $errors = (new ViewErrorBag)->put('default', $errorBag);
+        $errors = (new ViewErrorBag)->put($this->errorBagKey, $errorBag);
 
-        $errors->getBag('default')->merge(
-            $previouslySharedErrors->getBag('default')
+        $errors->getBag($this->errorBagKey)->merge(
+            $previouslySharedErrors->getBag($this->errorBagKey)
         );
 
         $view->with([

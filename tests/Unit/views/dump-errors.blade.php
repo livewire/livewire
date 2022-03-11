@@ -1,7 +1,7 @@
 <div>
-    @json($errors->toArray())
+    @json($errors->getBag($bag ?? 'default')->toArray())
 
-    @error('test') @enderror
+    @error('test', $bag ?? 'default') @enderror
 
     @component('dump-errors-nested-component')@endcomponent
 </div>
