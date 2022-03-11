@@ -6,13 +6,11 @@ use Illuminate\View\View;
 use BadMethodCallException;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Route;
-use Livewire\ImplicitlyBoundMethod;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Container\Container;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CannotUseReservedLivewireComponentProperties;
 
 abstract class Component
@@ -274,7 +272,7 @@ abstract class Component
     {
         return $this->forStack;
     }
-    
+
     function __isset($property)
     {
         try {
