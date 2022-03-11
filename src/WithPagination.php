@@ -122,6 +122,6 @@ trait WithPagination
         // The "page" query string item should only be available
         // from within the original component mount run.
         // Avoid cast to integer to prevent hydrate error
-        return request()->query('page', $this->page);
+        return request()->query(data_get($this->queryString, 'page.as', 'page'), $this->page);
     }
 }
