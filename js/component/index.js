@@ -279,7 +279,7 @@ export default class Component {
 
     handleResponse(message) {
         let response = message.response
-        
+
         this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
 
         store.callHook('message.received', message, this)
@@ -692,7 +692,31 @@ export default class Component {
                     }
                 }
 
-                return getResult
+                const recursivelyProxy = (value, paths = []) => {
+                    if (! Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype) {
+                        return value
+                    }
+
+                    if (value.__paths === undefined) {
+                        Object.defineProperty(value, '__paths', {
+                            get: () => paths.length > 0 ? paths : [property],
+                            enumerable: false,
+                        })
+                    }
+
+                    return new Proxy(value, {
+                        get(target, prop) {
+                            let result = target[prop]
+                            return recursivelyProxy(result, [...target.__paths, prop])
+                        },
+                        set(target, prop, value) {
+                            component.set([...target.__paths, prop].join('.'), value)
+                            return true
+                        }
+                    })
+                }
+
+                return recursivelyProxy(getResult)
             },
 
             set: function (obj, prop, value) {
