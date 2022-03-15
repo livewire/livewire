@@ -23,6 +23,16 @@ class QueryParamsTest extends TestCase
         Livewire::test(QueryParamsComponent::class)
             ->assertSet('name', null);
     }
+
+    /** @test */
+    public function it_sets_only_some_filters_from_query_params()
+    {
+        $search = 'Livewire';
+
+        Livewire::withQueryParams(['filters' => [ 'search' => $search ]])
+            ->test(QueryParamsWithArrayFiltersPropertyComponent::class)
+            ->assertSet('filters', [ 'search' => $search, 'category' => '' ]);
+    }
 }
 
 class QueryParamsComponent extends Component
@@ -33,6 +43,21 @@ class QueryParamsComponent extends Component
     {
         $this->name = request('name');
     }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class QueryParamsWithArrayFiltersPropertyComponent extends Component
+{
+    public $filters = [
+        'search' => '',
+        'category' => ''
+    ];
+
+    protected $queryString = ['filters'];
 
     public function render()
     {

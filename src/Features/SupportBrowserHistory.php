@@ -40,7 +40,9 @@ class SupportBrowserHistory
                     ? json_decode(json_encode($fromQueryString), true)
                     : json_decode($fromQueryString, true);
 
-                $component->$property = $decoded === null ? $fromQueryString : $decoded;
+                $result = $decoded === null ? $fromQueryString : $decoded;
+
+                $component->$property = is_array($component->$property) ? array_merge($component->$property, $result) : $result;
             }
         });
 
