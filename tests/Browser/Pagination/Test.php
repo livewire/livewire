@@ -485,4 +485,29 @@ class Test extends TestCase
             ;
         });
     }
+
+    /** @test */
+    public function pagination_trait_resolves_query_string_alias_for_page_from_component()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, PaginationComponentWithQueryStringAliasForPage::class, '?p=2')
+                /**
+                 * Test a deeplink to page 2 with "p" from the query string shows the second page.
+                 */
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4')
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+                ->assertQueryStringHas('p', '2')
+
+                ->waitForLivewire()->click('@previousPage.before')
+
+                ->assertDontSee('Post #4')
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertQueryStringHas('p', '1')
+            ;
+        });
+    }
 }
