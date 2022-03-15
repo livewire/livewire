@@ -2,6 +2,7 @@
 
 namespace Livewire\Macros;
 
+use Facebook\WebDriver\Exception\TimeoutException;
 use function Livewire\str;
 use Facebook\WebDriver\WebDriverBy;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -128,8 +129,9 @@ class DuskBrowserMacros
         };
     }
 
-    public function actionTriggersLivewireMessage() {
+    public function assertLivewireSendsMessage() {
         return function ($actionCallback) {
+            /** @var \Laravel\Dusk\Browser $this */
             $id = rand(100, 1000);
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = false;",
@@ -141,17 +143,45 @@ class DuskBrowserMacros
             $actionCallback($this);
 
             // Wait a quick sec for Livewire to hear a click and send a request.
-            $this->pause(25);
+            $this->pause(50);
 
             // If our flag is still false, no message was sent...
-            if ($this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === false")) {
-                PHPUnit::fail("Expected Livewire request was never sent");
-            }
+            PHPUnit::assertFalse(
+                $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === false"),
+                "Expected Livewire request was never sent"
+            );
 
             // Else wait for the flag to disappear
             return $this->waitUsing(5, 50, function () use ($id) {
                 return $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === undefined");
             }, 'Livewire request never completed');
+        };
+    }
+
+    public function assertLivewireDoesNotSendMessage() {
+        return function ($actionCallback) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $id = rand(100, 1000);
+            $this->script([
+                "window.duskIsWaitingForLivewireRequest{$id} = false;",
+                "window.Livewire.hook('message.sent', () => { window.duskIsWaitingForLivewireRequest{$id} = true })",
+            ]);
+
+            $actionCallback($this);
+
+            $timeout = null;
+            try {
+                $this->waitUsing(1, 100, function () use ($id) {
+                    /** @var \Laravel\Dusk\Browser $this */
+                    $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === true");
+                });
+            } catch (TimeOutException $e) {
+                $timeout = $e;
+            }
+
+            // if we didn't time out, a message was sent
+            PHPUnit::assertNotNull($timeout, "Livewire request was sent when we were expecting none");
+            return $this;
         };
     }
 

@@ -49,8 +49,8 @@ class TestComponent extends Component
         <span dusk="eventCount">{{$eventCount}}</span><br />
         <span dusk="lastEvent">{{$lastEvent}}</span><br />
 
-        <button dusk="remove2" wire:click="delete(2)">Remove bar handler</button><br />
-        <button dusk="add4" wire:click="add(4, 'goo')">Add goo handler</button>
+        <button dusk="removeBar" wire:click="delete(2)">Remove bar handler</button><br />
+        <button dusk="addGoo" wire:click="add(4, 'goo')">Add goo handler</button>
     </div>
 BLADE;
 

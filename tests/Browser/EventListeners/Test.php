@@ -36,7 +36,7 @@ class Test extends TestCase
         $this->browse(function ($browser) {
             Livewire::visit($browser, TestComponent::class)
                 ->waitForLivewire(function ($browser) {
-                    $browser->click('@remove2');
+                    $browser->click('@removeBar');
                 })
                 ->click('@bar')
                 ->pause(50)
@@ -51,7 +51,7 @@ class Test extends TestCase
         $this->browse(function ($browser) {
             Livewire::visit($browser, TestComponent::class)
                 ->waitForLivewire(function ($browser) {
-                    $browser->click('@remove2');
+                    $browser->click('@removeBar');
                 })
                 ->click('@bar')
                 ->pause(50)
@@ -65,7 +65,7 @@ class Test extends TestCase
         $this->browse(function ($browser) {
             Livewire::visit($browser, TestComponent::class)
                 ->waitForLivewire(function ($browser) {
-                    $browser->click('@add4');
+                    $browser->click('@addGoo');
                 })
                 ->assertLivewireSendsMessage(function ($browser) {
                     $browser->click('@goo');
