@@ -15,16 +15,16 @@ class Test extends TestCase
             $browser
                 ->assertScript('document.querySelector(\'[dusk="foo-server"]\').innerText', 'baz')
                 ->assertScript('document.querySelector(\'[dusk="foo-input"]\').value', 'baz')
+                ->waitForLivewire()
                 ->type('@foo-input', 'car')
-                ->pause(100)
                 ->assertScript('document.querySelector(\'[dusk="foo-server"]\').innerText', 'car')
                 ->assertScript('document.querySelector(\'[dusk="foo-input"]\').value', 'car');
 
             $browser
                 ->assertScript('document.querySelector(\'[dusk="fizz-server"]\').innerText', 'buzz')
                 ->assertScript('document.querySelector(\'[dusk="fizz-input"]\').value', 'buzz')
+                ->waitForLivewire()
                 ->type('@fizz-input', 'fizzbuzz')
-                ->pause(100)
                 ->assertScript('document.querySelector(\'[dusk="fizz-server"]\').innerText', 'fizzbuzz')
                 ->assertScript('document.querySelector(\'[dusk="fizz-input"]\').value', 'fizzbuzz');
         });
