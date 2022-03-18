@@ -7,8 +7,10 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public function conditionally_loaded_component_can_push_and_preppend_to_stack()
+    public function test_conditionally_loaded_component_can_push_and_preppend_to_stack()
     {
+        $this->markTestSkipped('Stacks feature reverted since 2021-10-20');
+
         $this->browse(function ($browser) {
             Livewire::visit($browser, Component::class)
                 ->assertScript('JSON.stringify(window.stack_output)', json_encode([
