@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Testing\Constraints\SeeInOrder;
+use Livewire\Component;
 use Livewire\Features\SupportRootElementTracking;
 use PHPUnit\Framework\Assert as PHPUnit;
 
@@ -205,6 +206,10 @@ trait MakesAssertions
 
     protected function testEmittedTo($target, $value)
     {
+        $target = is_subclass_of($target, Component::class)
+            ? $target::getName()
+            : $target;
+
         return (bool) collect(data_get($this->payload, 'effects.emits'))->first(function ($item) use ($target, $value) {
             return $item['event'] === $value
                 && $item['to'] === $target;
