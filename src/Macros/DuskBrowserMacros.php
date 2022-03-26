@@ -147,7 +147,7 @@ class DuskBrowserMacros
                 // Wait a quick sec for Livewire to hear a click and send a request.
                 $this->pause(25);
 
-                return $this->waitUsing(5, 50, function () use ($id) {
+                return $this->waitUsing(5, 25, function () use ($id) {
                     return $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id} === undefined");
                 }, 'Livewire request was never triggered');
             }
