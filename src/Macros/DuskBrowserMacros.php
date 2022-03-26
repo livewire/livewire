@@ -2,6 +2,7 @@
 
 namespace Livewire\Macros;
 
+use Illuminate\Support\Str;
 use function Livewire\str;
 use Facebook\WebDriver\WebDriverBy;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -131,7 +132,7 @@ class DuskBrowserMacros
     {
         return function ($callback = null) {
             /** @var \Laravel\Dusk\Browser $this */
-            $id = rand(100, 1000);
+            $id = Str::random();
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
