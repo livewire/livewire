@@ -36,6 +36,10 @@ class SupportBrowserHistory
                     continue;
                 }
 
+                if(method_exists($component, 'formatQueryParameter')) {
+                    $fromQueryString = $component->formatQueryParameter($fromQueryString);
+                }
+
                 $decoded = is_array($fromQueryString)
                     ? json_decode(json_encode($fromQueryString), true)
                     : json_decode($fromQueryString, true);
@@ -52,7 +56,11 @@ class SupportBrowserHistory
 
                 $queryParams = $this->mergeComponentPropertiesWithExistingQueryParamsFromOtherComponentsAndTheRequest($component);
 
-                $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
+                if(method_exists($component, 'formatQueryString')) {
+                    $response->effects['path'] = url()->current().$component->formatQueryString($queryParams);
+                } else {
+                    $response->effects['path'] = url()->current().$this->stringifyQueryParams($queryParams);
+                }
             }
         });
 
@@ -91,7 +99,7 @@ class SupportBrowserHistory
         if ($route && ! $route->getActionName() instanceof \Closure && false !== strpos($route->getActionName(), get_class($component))) {
             $path = $response->effects['path'] = $this->buildPathFromRoute($component, $route, $queryParams);
         } else {
-            $path = $this->buildPathFromReferer($referer, $queryParams);
+            $path = $this->buildPathFromReferer($referer, $component, $queryParams);
         }
 
         if ($referer !== $path) {
@@ -136,9 +144,13 @@ class SupportBrowserHistory
         return $refererQueryString;
     }
 
-    protected function buildPathFromReferer($referer, $queryParams) : string
+    protected function buildPathFromReferer($referer, $component, $queryParams) : string
     {
-        return str($referer)->before('?').$this->stringifyQueryParams($queryParams);
+        if(method_exists($component, 'formatQueryString')) {
+            return str($referer)->before('?').$component->formatQueryString($queryParams);
+        } else {
+            return str($referer)->before('?').$this->stringifyQueryParams($queryParams);
+        }
     }
 
     protected function buildPathFromRoute($component, $route, $queryString)
