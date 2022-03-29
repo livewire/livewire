@@ -37,7 +37,7 @@ class SupportBrowserHistory
                 }
 
                 if(method_exists($component, 'formatQueryParameter')) {
-                    $fromQueryString = $component->formatQueryParameter($fromQueryString);
+                    $fromQueryString = $component->formatQueryParameter($property, $fromQueryString);
                 }
 
                 $decoded = is_array($fromQueryString)
