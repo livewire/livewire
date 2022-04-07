@@ -69,6 +69,21 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function cant_remove_a_file_property_with_mismatched_filename_provided()
+    {
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file);
+
+        $component->call('removeUpload', 'photo', 'mismatched-filename.png')
+            ->assertNotEmitted('upload:removed', 'photo', 'mismatched-filename.png')
+            ->assertNotSet('photo', null);
+
+    }
+
+    /** @test */
     public function can_remove_a_file_from_an_array_of_files_property()
     {
         $file1 = UploadedFile::fake()->image('avatar1.jpg');
