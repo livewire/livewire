@@ -127,6 +127,8 @@ class Test extends TestCase
                 ->assertSeeIn('@zorp.output', 'before')
                 ->waitForLivewire()->click('@zorp.button')
                 ->assertSeeIn('@zorp.output', 'after')
+                ->waitForLivewire()->click('@zorp.button.empty')
+                ->assertSeeNothingIn('@zorp.output')
             ;
         });
     }
