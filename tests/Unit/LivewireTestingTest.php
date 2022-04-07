@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 use PHPUnit\Framework\AssertionFailedError;
 use Illuminate\Support\Facades\Route;
+use Tests\Unit\Components\ComponentWhichReceivesEvent;
 
 class LivewireTestingTest extends TestCase
 {
@@ -189,6 +190,8 @@ class LivewireTestingTest extends TestCase
         Livewire::test(EmitsEventsComponentStub::class)
             ->call('emitFooToSomeComponent')
             ->assertEmittedTo('some-component', 'foo')
+            ->call('emitFooToAComponentAsAModel')
+            ->assertEmittedTo(ComponentWhichReceivesEvent::class, 'foo')
             ->call('emitFooToSomeComponentWithParam', 'bar')
             ->assertEmittedTo('some-component', 'foo', 'bar')
             ->call('emitFooToSomeComponentWithParam', 'bar')
@@ -368,6 +371,11 @@ class EmitsEventsComponentStub extends Component
     public function emitFooToSomeComponentWithParam($param)
     {
         $this->emitTo('some-component','foo', $param);
+    }
+
+    public function emitFooToAComponentAsAModel()
+    {
+        $this->emitTo(ComponentWhichReceivesEvent::class,'foo');
     }
 
     public function emitFooUp()
