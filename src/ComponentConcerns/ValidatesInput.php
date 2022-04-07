@@ -162,6 +162,18 @@ trait ValidatesInput
         return $this;
     }
 
+    protected function checkRuleMatchesProperty($rules, $data)
+    {
+        collect($rules)
+            ->keys()
+            ->each(function($ruleKey) use ($data) {
+                throw_unless(
+                    array_key_exists($this->beforeFirstDot($ruleKey), $data),
+                    new \Exception('No property found for validation: ['.$ruleKey.']')
+                );
+            });
+    }
+
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
@@ -169,6 +181,8 @@ trait ValidatesInput
         $data = $this->prepareForValidation(
             $this->getDataForValidation($rules)
         );
+
+        $this->checkRuleMatchesProperty($rules, $data);
 
         $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
 
@@ -231,14 +245,16 @@ trait ValidatesInput
 
         $data = $this->getDataForValidation($rules);
 
-        $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
-
         $data = $this->prepareForValidation($data);
+
+        $this->checkRuleMatchesProperty($rules, $data);
+
+        $ruleKeysToShorten = $this->getModelAttributeRuleKeysToShorten($data, $rules);
 
         $data = $this->unwrapDataForValidation($data);
 
         // If a matching rule is found, then filter collections down to keys specified in the field,
-        // while leaving all other data intact. If a key isn't specified and instead there is a 
+        // while leaving all other data intact. If a key isn't specified and instead there is a
         // wildcard '*' then leave that whole collection intact. This ensures that any rules
         // that depend on other fields/ properties still work.
         if ($ruleForField) {
@@ -349,16 +365,7 @@ trait ValidatesInput
 
     protected function getDataForValidation($rules)
     {
-        $properties = $this->getPublicPropertiesDefinedBySubClass();
-
-        collect($rules)->keys()
-            ->each(function ($ruleKey) use ($properties) {
-                $propertyName = $this->beforeFirstDot($ruleKey);
-
-                throw_unless(array_key_exists($propertyName, $properties), new \Exception('No property found for validation: ['.$ruleKey.']'));
-            });
-
-        return $properties;
+        return $this->getPublicPropertiesDefinedBySubClass();
     }
 
     protected function unwrapDataForValidation($data)

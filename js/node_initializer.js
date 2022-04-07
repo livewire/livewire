@@ -24,10 +24,6 @@ export default {
                         break
                     }
 
-                    el._x_modelable_hook = () => {
-                        return component.$wire.entangle(directive.value, directive.modifiers.includes('defer'))
-                    }
-
                     DOM.setInputValueFromModel(el, component)
 
                     this.attachModelListener(el, directive, component)
@@ -89,7 +85,7 @@ export default {
                 && typeof window.document.documentMode == 'undefined'
                     // With autofill in Safari, Safari triggers a custom event and assigns
                     // the value to e.target.value, so we need to check for that value as well.
-                    ? e.detail || e.target.value
+                    ? e.detail ?? e.target.value
                     : DOM.valueFromInput(el, component)
 
             if (directive.modifiers.includes('defer')) {
