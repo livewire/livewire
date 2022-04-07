@@ -48,7 +48,7 @@ class MoveCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('bob.blade.php')));
         $this->assertTrue(File::exists($this->livewireTestsPath('BobTest.php')));
 
-        Artisan::call('livewire:move', ['name' => 'bob', 'new-name' => 'lob','--test'=>true]);
+        Artisan::call('livewire:move', ['name' => 'bob', 'new-name' => 'lob']);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Lob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('lob.blade.php')));
@@ -85,7 +85,7 @@ class MoveCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('bob/lob.blade.php')));
         $this->assertTrue(File::exists($this->livewireTestsPath('Bob/LobTest.php')));
 
-        Artisan::call('livewire:move', ['name' => 'bob.lob', 'new-name' => 'bob.lob.law','--test'=>true]);
+        Artisan::call('livewire:move', ['name' => 'bob.lob', 'new-name' => 'bob.lob.law']);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Bob/Lob/Law.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('bob/lob/law.blade.php')));
@@ -106,7 +106,7 @@ class MoveCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('bob-lob.blade.php')));
         $this->assertTrue(File::exists($this->livewireTestsPath('BobLobTest.php')));
 
-        Artisan::call('livewire:move', ['name' => 'bob-lob', 'new-name' => 'lob-law','--test'=>true]);
+        Artisan::call('livewire:move', ['name' => 'bob-lob', 'new-name' => 'lob-law']);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('/LobLaw.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('lob-law.blade.php')));
@@ -127,7 +127,7 @@ class MoveCommandTest extends TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('bob-lob/bob-lob.blade.php')));
         $this->assertTrue(File::exists($this->livewireTestsPath('BobLob/BobLobTest.php')));
 
-        Artisan::call('livewire:move', ['name' => 'BobLob.BobLob', 'new-name' => 'LobLaw.LobLaw','--test'=>true]);
+        Artisan::call('livewire:move', ['name' => 'BobLob.BobLob', 'new-name' => 'LobLaw.LobLaw']);
 
         $this->assertFalse(File::exists($this->livewireClassesPath('BobLob/BobLob.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('bob-lob/bob-lob.blade.php')));
