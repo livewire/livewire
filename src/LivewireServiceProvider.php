@@ -281,7 +281,10 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
-        Blade::directive('js', [LivewireBladeDirectives::class, 'js']);
+        if ($this->shouldRegisterJsDirective()) {
+            Blade::directive('js', [LivewireBladeDirectives::class, 'js']);
+        }
+
         Blade::directive('this', [LivewireBladeDirectives::class, 'this']);
         Blade::directive('entangle', [LivewireBladeDirectives::class, 'entangle']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
@@ -438,5 +441,11 @@ class LivewireServiceProvider extends ServiceProvider
         foreach ((array) $groups as $group) {
             $this->publishes($paths, $group);
         }
+    }
+
+    protected function shouldRegisterJsDirective(): bool
+    {
+        return $this->app->environment('testing')
+            || version_compare($this->app->version(), '8.71.0') === -1;
     }
 }
