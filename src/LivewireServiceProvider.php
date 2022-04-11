@@ -446,6 +446,6 @@ class LivewireServiceProvider extends ServiceProvider
     protected function shouldRegisterJsDirective(): bool
     {
         return $this->app->environment('testing')
-            || version_compare($this->app->version(), '8.71.0') === -1;
+            || version_compare($this->app->version(), '8.71.0', '<');
     }
 }
