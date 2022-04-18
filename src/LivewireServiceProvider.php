@@ -456,7 +456,7 @@ class LivewireServiceProvider extends ServiceProvider
         }
     }
 
-    protected function bladeDirectiveAlreadyRegistered(string $name)
+    protected function bladeDirectiveAlreadyRegistered(string $name): bool
     {
         if ($this->app->environment('testing')) {
             return false;
