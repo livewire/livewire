@@ -4,6 +4,7 @@ namespace Livewire;
 
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\GenerateSignedUploadUrl;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
 
@@ -57,7 +58,7 @@ trait WithFileUploads
             $attribute = $translator->get("validation.attributes.{$name}");
             if ($attribute === "validation.attributes.{$name}") $attribute = $name;
 
-            $message = trans('validation.uploaded', ['attribute' => $attribute]);
+            $message =  Arr::get($this->getMessages(), "{$attribute}.uploaded") ?? trans('validation.uploaded', ['attribute' => $attribute]);
             if ($message === 'validation.uploaded') $message = "The {$name} failed to upload.";
 
             throw ValidationException::withMessages([$name => $message]);
