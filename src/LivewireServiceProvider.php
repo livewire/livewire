@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Str;
+use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\View\View;
 use Illuminate\Testing\TestView;
 use Illuminate\Testing\TestResponse;
@@ -281,8 +283,12 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
-        if ($this->shouldRegisterJsDirective()) {
-            Blade::directive('js', [LivewireBladeDirectives::class, 'js']);
+        $bladeDirectivesToRegisterIfMissing = [
+            'js' => [LivewireBladeDirectives::class, 'js'],
+        ];
+
+        foreach ($bladeDirectivesToRegisterIfMissing as $name => $callable) {
+            $this->registerBladeDirectiveIfNotRegistered($name, $callable);
         }
 
         Blade::directive('this', [LivewireBladeDirectives::class, 'this']);
@@ -443,9 +449,28 @@ class LivewireServiceProvider extends ServiceProvider
         }
     }
 
-    protected function shouldRegisterJsDirective(): bool
+    protected function registerBladeDirectiveIfNotRegistered(string $name, Callable $callable)
     {
-        return $this->app->environment('testing')
-            || version_compare($this->app->version(), '8.71.0', '<');
+        if (! $this->bladeDirectiveAlreadyRegistered($name)) {
+            Blade::directive($name, $callable);
+        }
+    }
+
+    protected function bladeDirectiveAlreadyRegistered(string $name)
+    {
+        if ($this->app->environment('testing')) {
+            return false;
+        }
+
+        if (method_exists(BladeCompiler::class, Str::start($name, 'compile')))
+        {
+            return true;
+        }
+
+        if (array_key_exists($name, Blade::getCustomDirectives())) {
+            return true;
+        }
+
+        return false;
     }
 }
