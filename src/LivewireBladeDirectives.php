@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
 
 class LivewireBladeDirectives
@@ -15,6 +16,20 @@ class LivewireBladeDirectives
     {
         return <<<EOT
 <?php if ((object) ({$expression}) instanceof \Livewire\WireDirective) : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression}->value() }}'){{ {$expression}->hasModifier('defer') ? '.defer' : '' }}<?php else : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression} }}')<?php endif; ?>
+EOT;
+    }
+
+    public static function entangleWhen($expression)
+    {
+        $expression  = Blade::stripParentheses($expression);
+
+        $payload     = Str::of($expression)->explode(',');
+        $conditional = $payload->first();
+        $expression  = $payload->get(1);
+        $default     = $payload->get(2);
+
+        return <<<EOT
+<?php if (!$conditional) { ?>$default<?php } if ((object) ({$expression}) instanceof \Livewire\WireDirective && $conditional) : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression}->value() }}'){{ {$expression}->hasModifier('defer') ? '.defer' : '' }}<?php elseif($conditional) : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression} }}')<?php endif; ?>
 EOT;
     }
 
@@ -56,7 +71,7 @@ EOT;
 
             // We'll increment count, so each cache key inside a compiled view is unique.
             LivewireManager::$currentCompilingChildCounter++;
-        } 
+        }
 
         $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
         $expression = preg_replace_callback($pattern, function ($match) use (&$cachedKey) {
