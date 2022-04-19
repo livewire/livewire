@@ -219,4 +219,30 @@ class Test extends TestCase
                 ->assertSeeIn('@output.alpine', 'false');
         });
     }
+
+    public function test_entangle_works_with_conditional_is_true()
+    {
+        $this->browse(function ($browser) {
+            Livewire::visit($browser, EntangleWhen::class)
+                ->assertSeeIn('@output.alpine.active', 'false')
+                ->assertSeeIn('@output.livewire.can', 'false')
+                ->assertSeeIn('@output.alpine.active', 'false')
+                ->assertSeeIn('@output.alpine.can', 'false')
+                ->waitForLivewire()->click('@toggleAll')
+                ->assertSeeIn('@output.alpine.active', 'true')
+                ->assertSeeIn('@output.livewire.can', 'true')
+                ->assertSeeIn('@output.alpine.active', 'true')
+                ->assertSeeIn('@output.alpine.can', 'true')
+                ->waitForLivewire()->click('@toggleAll')
+                ->assertSeeIn('@output.alpine.active', 'false')
+                ->assertSeeIn('@output.livewire.can', 'false')
+                ->assertSeeIn('@output.alpine.active', 'false')
+                ->assertSeeIn('@output.alpine.can', 'false')
+                ->click('@toggleCan')
+                ->assertSeeIn('@output.alpine.active', 'false')
+                ->assertSeeIn('@output.livewire.can', 'false')
+                ->assertSeeIn('@output.alpine.active', 'false')
+                ->assertSeeIn('@output.alpine.can', 'false');
+        });
+    }
 }
