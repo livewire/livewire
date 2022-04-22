@@ -57,7 +57,7 @@ class LivewireServiceProvider extends ServiceProvider
      *
      * @var string[][]
      */
-    static $bladeDirectivesToRegisterIfMissing = [
+    protected $bladeDirectivesToRegisterIfMissing = [
         'js' => [LivewireBladeDirectives::class, 'js'],
     ];
 
@@ -293,7 +293,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
-        foreach (static::$bladeDirectivesToRegisterIfMissing as $name => $callable) {
+        foreach ($this->bladeDirectivesToRegisterIfMissing as $name => $callable) {
             $this->registerBladeDirectiveIfNotRegistered($name, $callable);
         }
 

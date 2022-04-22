@@ -5,7 +5,7 @@ namespace Tests\Unit;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
 use Livewire\Component;
-use Livewire\LivewireServiceProvider;
+use Livewire\LivewireBladeDirectives;
 
 class LivewireJsDirectiveTest extends TestCase
 {
@@ -13,9 +13,8 @@ class LivewireJsDirectiveTest extends TestCase
     {
         parent::setUp();
 
-        foreach (LivewireServiceProvider::$bladeDirectivesToRegisterIfMissing as $name => $callable) {
-            Blade::directive($name, $callable);
-        }
+        // Register the @js directive to force replacement of the directive introduced in Laravel 8.71.0
+        Blade::directive('js', [LivewireBladeDirectives::class, 'js']);
     }
 
     /** @test */
