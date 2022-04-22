@@ -2,11 +2,22 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\LivewireServiceProvider;
 
 class LivewireJsDirectiveTest extends TestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        foreach (LivewireServiceProvider::$bladeDirectivesToRegisterIfMissing as $name => $callable) {
+            Blade::directive($name, $callable);
+        }
+    }
+
     /** @test */
     public function single_quotes()
     {

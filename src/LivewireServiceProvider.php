@@ -51,6 +51,16 @@ use Livewire\HydrationMiddleware\{
 
 class LivewireServiceProvider extends ServiceProvider
 {
+
+    /**
+     * Specify Blade directives that should never be overwritten.
+     *
+     * @var string[][]
+     */
+    static $bladeDirectivesToRegisterIfMissing = [
+        'js' => [LivewireBladeDirectives::class, 'js'],
+    ];
+
     public function register()
     {
         $this->registerConfig();
@@ -283,11 +293,7 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
-        $bladeDirectivesToRegisterIfMissing = [
-            'js' => [LivewireBladeDirectives::class, 'js'],
-        ];
-
-        foreach ($bladeDirectivesToRegisterIfMissing as $name => $callable) {
+        foreach (static::$bladeDirectivesToRegisterIfMissing as $name => $callable) {
             $this->registerBladeDirectiveIfNotRegistered($name, $callable);
         }
 
@@ -458,10 +464,6 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function bladeDirectiveAlreadyRegistered(string $name): bool
     {
-        if ($this->app->environment('testing')) {
-            return false;
-        }
-
         if (method_exists(BladeCompiler::class, Str::start($name, 'compile')))
         {
             return true;
