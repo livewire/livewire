@@ -325,4 +325,22 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_query_string_aliases_set_intial_property_values_1()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithDotNotation::class, '?title=Post')
+                ->assertInputValue('@title', 'Post')
+                ->assertQueryStringHas('title', 'Post')
+
+                /*
+                 * Ensures that if changing the value the queryString will work as expected
+                 */
+                ->waitForLivewire()->click('@changePostTitle')
+                ->assertInputValue('@title', 'Post #2')
+                ->assertQueryStringHas('title', 'Post #2')
+                ->assertSee('Post #2')
+            ;
+        });
+    }
 }
