@@ -40,7 +40,7 @@ class SupportBrowserHistory
                     ? json_decode(json_encode($fromQueryString), true)
                     : json_decode($fromQueryString, true);
 
-                $component->$property = $decoded === null ? $fromQueryString : $decoded;
+                data_set($component, $property, $decoded === null ? $fromQueryString : $decoded);
             }
         });
 
@@ -194,7 +194,7 @@ class SupportBrowserHistory
                 $key = is_string($key) ? $key : $value;
                 $alias = $value['as'] ?? $key;
 
-                return [$alias => $component->{$key}];
+                return [$alias => data_get($component, $key)];
             });
     }
 
