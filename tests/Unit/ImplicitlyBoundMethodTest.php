@@ -130,6 +130,72 @@ class ImplicitlyBoundMethodTest extends TestCase
     }
 
     /** @test */
+    public function call_with_implicit_enum_binding()
+    {
+        if (version_compare(PHP_VERSION, '8.1', '<')) {
+            $this->markTestSkipped('Enums are not supported prior to PHP 8.1');
+        }
+
+        $enum = <<<'PHP'
+namespace Tests\Unit;
+enum ContainerTestEnum: string
+{
+    case injected = 'injected';
+    case foo = 'foo';
+    case taylor = 'taylor';
+}
+PHP;
+        eval($enum);
+
+        $container = new Container;
+        $result = ImplicitlyBoundMethod::call($container, ContainerTestCallStub::class.'@implicitEnum', ['foo', 'injected', 'bar']);
+        $this->assertSame('foo', $result[0]);
+        $this->assertInstanceOf(ContainerTestEnum::class, $result[1]);
+        $this->assertSame('injected', $result[1]->value);
+        $this->assertSame('bar', $result[2]);
+        $this->assertSame(3, count($result));
+
+        $container = new Container;
+        $result = ImplicitlyBoundMethod::call($container, ContainerTestCallStub::class.'@implicitEnum', ['foo', ContainerTestEnum::from('injected'), 'bar']);
+        $this->assertSame('foo', $result[0]);
+        $this->assertInstanceOf(ContainerTestEnum::class, $result[1]);
+        $this->assertSame('injected', $result[1]->value);
+        $this->assertSame('bar', $result[2]);
+        $this->assertSame(3, count($result));
+
+        $container = new Container;
+        $result = ImplicitlyBoundMethod::call($container, ContainerTestCallStub::class.'@implicitEnum', ['foo', 'injected', 'bar', 'more', 'params']);
+        $this->assertSame('foo', $result[0]);
+        $this->assertInstanceOf(ContainerTestEnum::class, $result[1]);
+        $this->assertSame('injected', $result[1]->value);
+        $this->assertSame('bar', $result[2]);
+        $this->assertSame('more', $result[3]);
+        $this->assertSame('params', $result[4]);
+        $this->assertSame(5, count($result));
+
+        $result = ImplicitlyBoundMethod::call($container, function (ContainerTestEnum $foo, $bar = []) {
+            return func_get_args();
+        }, ['foo', 'bar' => 'taylor']);
+        $this->assertInstanceOf(ContainerTestEnum::class, $result[0]);
+        $this->assertSame('foo', $result[0]->value);
+        $this->assertSame('taylor', $result[1]);
+
+        $result = ImplicitlyBoundMethod::call($container, function (ContainerTestEnum $foo, $bar = []) {
+            return func_get_args();
+        }, ['foo' => ContainerTestEnum::from('foo'), 'bar' => 'taylor']);
+        $this->assertInstanceOf(ContainerTestEnum::class, $result[0]);
+        $this->assertSame('foo', $result[0]->value);
+        $this->assertSame('taylor', $result[1]);
+
+        $result = ImplicitlyBoundMethod::call($container, function (stdClass $foo, ContainerTestEnum $bar) {
+            return func_get_args();
+        }, [ContainerTestEnum::class => 'taylor']);
+        $this->assertInstanceOf(stdClass::class, $result[0]);
+        $this->assertInstanceOf(ContainerTestEnum::class, $result[1]);
+        $this->assertSame('taylor', $result[1]->value);
+    }
+
+    /** @test */
     public function bind_model_with_null_return()
     {
         $this->expectException(ModelNotFoundException::class);
@@ -410,6 +476,11 @@ class ContainerTestCallStub
     }
 
     public function injectAndImplicit(ContainerCallConcreteStub $stub, ContainerTestModel $model, $bar = 'taylor')
+    {
+        return func_get_args();
+    }
+
+    public function implicitEnum($foo, ContainerTestEnum $enum, $bar, ...$params)
     {
         return func_get_args();
     }
