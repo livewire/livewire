@@ -125,6 +125,14 @@ class ImplicitlyBoundMethod extends BoundMethod
     {
         $type = new ReflectionClass($parameter->getType()->getName());
 
-        return $type->implementsInterface(ImplicitlyBindable::class) || $type->implementsInterface(BackedEnum::class);
+        if ($type->implementsInterface(ImplicitlyBindable::class)) {
+            return true;
+        }
+
+        if (! interface_exists(BackedEnum::class)) {
+            return false;
+        }
+
+        return $type->implementsInterface(BackedEnum::class);
     }
 }
