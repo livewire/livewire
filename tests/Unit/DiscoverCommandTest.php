@@ -70,4 +70,14 @@ EOT
 
         $this->assertTrue(File::exists($manifestPath));
     }
+
+    /** @test */
+    public function no_exception_is_thrown_when_the_class_directory_does_not_exist()
+    {
+        File::deleteDirectory($this->livewireClassesPath());
+
+        Artisan::call('livewire:discover');
+
+        $this->assertTrue(File::exists(app()->bootstrapPath('cache/livewire-components.php')));
+    }
 }
