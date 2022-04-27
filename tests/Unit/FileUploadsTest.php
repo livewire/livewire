@@ -654,6 +654,22 @@ class FileUploadsTest extends TestCase
             $photo->getPath()
         );
     }
+
+    /** @test */
+    public function it_can_set_custom_message_on_uploaded_error()
+    {
+        $file = UploadedFile::fake()->image('avatar1.jpg');
+
+        $component = Livewire::test(FileUploadInArrayComponent::class)
+            ->set('photo', $file)
+            ->call('uploadError', 'photo')
+            ->assertHasErrors(['photo']);
+
+        $failed = optional($this->lastValidator)->failed() ?: [];
+        $rules = Arr::get($failed, 'photo', []);
+        $this->assertContains(FileUploadCustomErrorMesssageComponent::MESSAGE, $rules);
+
+    }
 }
 
 class DummyMiddleware
@@ -746,6 +762,15 @@ class FileUploadComponent extends Component
     }
 
     public function render() { return app('view')->make('null-view'); }
+}
+
+class FileUploadCustomErrorMesssageComponent extends FileUploadComponent
+{
+    public const MESSAGE = 'custom-uploaded-message';
+
+    protected array $messages = [
+        'photo.uploaded' => self::MESSAGE,
+    ];
 }
 
 class FileUploadInArrayComponent extends FileUploadComponent
