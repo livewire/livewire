@@ -64,6 +64,10 @@ class LivewireComponentsFinder
 
     public function getClassNames()
     {
+        if (! $this->files->exists($this->path)) {
+            return collect();
+        }
+
         return collect($this->files->allFiles($this->path))
             ->map(function (SplFileInfo $file) {
                 return app()->getNamespace().
