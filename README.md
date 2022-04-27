@@ -8,6 +8,8 @@ See the docs for everything: https://laravel-livewire.com/docs/quickstart
 
 Awesome Livewire stuff here: https://github.com/imliam/awesome-livewire
 
+Livewire Best Practices here: https://github.com/michael-rubel/livewire-best-practices
+
 All contributions are welcomed! (but please start a discussion to make sure the PR is warranted first)
 
 Ideas, questions and bugs belong in [Discussions](https://github.com/livewire/livewire/discussions) or [Discord server](https://discord.gg/livewire).
