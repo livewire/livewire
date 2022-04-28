@@ -77,36 +77,43 @@ trait ValidatesInput
         );
     }
 
+    protected function loadConfig(string $field)
+    {
+        $config = [];
+
+        foreach (class_uses_recursive($class = static::class) as $trait) {
+            if (method_exists($class, $method = $field . class_basename($trait))) {
+                $config = array_merge($config, $this->{$method}());
+            }
+            if (property_exists($class, $property = $field . class_basename($trait))) {
+                $config = array_merge($config, $this->{$property});
+            }
+        }
+
+        if (method_exists($this, $field)) $config = array_merge($config, $this->{$field}());
+        elseif (property_exists($this, $field)) $config = array_merge($config, $this->{$field});
+
+        return $config;
+    }
+
     protected function getRules()
     {
-        if (method_exists($this, 'rules')) return $this->rules();
-        if (property_exists($this, 'rules')) return $this->rules;
-
-        return [];
+        return $this->loadConfig('rules');
     }
 
     protected function getMessages()
     {
-        if (method_exists($this, 'messages')) return $this->messages();
-        if (property_exists($this, 'messages')) return $this->messages;
-
-        return [];
+        return $this->loadConfig('messages');
     }
 
     protected function getValidationAttributes()
     {
-        if (method_exists($this, 'validationAttributes')) return $this->validationAttributes();
-        if (property_exists($this, 'validationAttributes')) return $this->validationAttributes;
-
-        return [];
+        return $this->loadConfig('validationAttributes');
     }
 
     protected function getValidationCustomValues()
     {
-        if (method_exists($this, 'validationCustomValues')) return $this->validationCustomValues();
-        if (property_exists($this, 'validationCustomValues')) return $this->validationCustomValues;
-
-        return [];
+        return $this->loadConfig('validationCustomValues');
     }
 
     public function rulesForModel($name)

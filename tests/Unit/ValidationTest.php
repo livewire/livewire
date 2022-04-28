@@ -480,6 +480,331 @@ class ValidationTest extends TestCase
             ->assertHasNoErrors('customCollection.0.amount')
             ;
     }
+
+    /** @test */
+    public function loads_validation_rules_from_traits()
+    {
+        $component = Livewire::test(LoadsRulesFromTrait::class);
+
+        $this->assertEquals(
+            [
+                'foo' => 'in:foo',
+                'bar' => 'in:bar',
+                'baz' => 'in:baz',
+            ],
+            $component->instance()->exportRules()
+        );
+
+        $component
+            ->call('runValidation')
+            ->assertHasNoErrors()
+            ->set('baz','wrong')
+            ->call('runValidation')
+            ->assertHasErrors(['baz'])
+            ->assertHasNoErrors(['foo', 'bar']);
+    }
+
+    /** @test */
+    public function loads_validation_messages_from_traits()
+    {
+        $component = Livewire::test(LoadsMessagesFromTrait::class);
+
+        $this->assertEquals(
+            [
+                'foo.in' => 'Foo is not right.',
+                'bar.in' => 'Bar is not right.',
+                'baz.in' => 'Baz is plain wrong!',
+            ],
+            $component->instance()->exportMessages()
+        );
+
+        $component
+            ->set('foo', 'wrong')
+            ->set('bar', 'wrong')
+            ->set('baz', 'wrong')
+            ->call('runValidation')
+            ->assertSee('Foo is not right.')
+            ->assertSee('Bar is not right.')
+            ->assertSee('Baz is plain wrong!');
+    }
+
+    /** @test */
+    public function loads_validation_attributes_from_traits()
+    {
+        $component = Livewire::test(LoadsValidationAttributesFromTrait::class);
+
+        $this->assertEquals(
+            [
+                'foo' => 'FOO',
+                'bar' => 'BAR',
+                'baz' => 'B_a_Z',
+            ],
+            $component->instance()->exportValidationAttributes()
+        );
+
+        $component
+            ->set('foo', 'wrong')
+            ->set('bar', 'wrong')
+            ->set('baz', 'wrong')
+            ->call('runValidation')
+            ->assertSee('The selected FOO is invalid.')
+            ->assertSee('The selected BAR is invalid.')
+            ->assertSee('The selected B_a_Z is invalid.');
+    }
+
+    /** @test */
+    public function loads_validation_custom_values_from_traits()
+    {
+        $component = Livewire::test(LoadsValidationCustomValuesFromTrait::class);
+
+        $this->assertEquals(
+            [
+                'foo' => [
+                    'foo' => 'lowercase foo',
+                    'FOO' => 'uppercase foo'
+                ],
+                'bar' => [
+                    'bar' => 'lowercase bar',
+                    'BAR' => 'uppercase bar'
+                ],
+                'baz' => [
+                    'baz' => 'b_a_z',
+                    'BAZ' => 'B_A_Z'
+                ],
+            ],
+            $component->instance()->exportValidationCustomValues()
+        );
+
+        $component
+            ->set('foo', 'wrong')
+            ->set('bar', 'wrong')
+            ->set('baz', 'wrong')
+            ->call('runValidation')
+            ->assertSee('foo should be one of: lowercase foo, uppercase foo')
+            ->assertSee('bar should be one of: lowercase bar, uppercase bar')
+            ->assertSee('baz should be one of: b_a_z, B_A_Z');
+    }
+}
+
+trait HasAdditionalRules
+{
+    public function rulesHasAdditionalRules()
+    {
+        return [
+            'bar' => 'in:BAR',
+            'baz' => 'in:baz',
+        ];
+    }
+}
+
+class LoadsRulesFromTrait extends Component
+{
+    use HasAdditionalRules;
+
+    public $foo = 'foo';
+    public $bar = 'bar';
+    public $baz = 'baz';
+
+    public function runValidation()
+    {
+        $this->validate();
+    }
+
+    public function rules()
+    {
+        return [
+            'foo' => 'in:foo',
+            'bar' => 'in:bar',
+        ];
+    }
+
+    public function exportRules()
+    {
+        return $this->getRules();
+    }
+
+    public function render()
+    {
+        return app('view')->make('dump-errors');
+    }
+}
+
+trait HasAdditionalMessages
+{
+    public function messagesHasAdditionalMessages()
+    {
+        return [
+            'bar.in' => 'Bar is plain wrong!',
+            'baz.in' => 'Baz is plain wrong!',
+        ];
+    }
+}
+
+class LoadsMessagesFromTrait extends Component
+{
+    use HasAdditionalMessages;
+
+    public $foo = 'foo';
+    public $bar = 'bar';
+    public $baz = 'baz';
+
+    public function runValidation()
+    {
+        $this->validate();
+    }
+
+    public function rules()
+    {
+        return [
+            'foo' => 'in:foo',
+            'bar' => 'in:bar',
+            'baz' => 'in:baz',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'foo.in' => 'Foo is not right.',
+            'bar.in' => 'Bar is not right.',
+        ];
+    }
+
+    public function exportMessages()
+    {
+        return $this->getMessages();
+    }
+
+    public function render()
+    {
+        return app('view')->make('dump-errors');
+    }
+}
+
+trait HasAdditionalValidationAttributes
+{
+    public function validationAttributesHasAdditionalValidationAttributes()
+    {
+        return [
+            'bar' => 'B_a_R',
+            'baz' => 'B_a_Z',
+        ];
+    }
+}
+
+class LoadsValidationAttributesFromTrait extends Component
+{
+    use HasAdditionalValidationAttributes;
+
+    public $foo = 'foo';
+    public $bar = 'bar';
+    public $baz = 'baz';
+
+    public function runValidation()
+    {
+        $this->validate();
+    }
+
+    public function rules()
+    {
+        return [
+            'foo' => 'in:foo',
+            'bar' => 'in:bar',
+            'baz' => 'in:baz',
+        ];
+    }
+
+    public function validationAttributes()
+    {
+        return [
+            'foo' => 'FOO',
+            'bar' => 'BAR',
+        ];
+    }
+
+    public function exportValidationAttributes()
+    {
+        return $this->getValidationAttributes();
+    }
+
+    public function render()
+    {
+        return app('view')->make('dump-errors');
+    }
+}
+
+trait HasAdditionalValidationCustomValues
+{
+    public function validationCustomValuesHasAdditionalValidationCustomValues()
+    {
+        return [
+            'bar' => [
+                'bar' => 'b_a_r',
+                'BAR' => 'B_A_R',
+            ],
+            'baz' => [
+                'baz' => 'b_a_z',
+                'BAZ' => 'B_A_Z',
+            ]
+        ];
+    }
+}
+
+class LoadsValidationCustomValuesFromTrait extends Component
+{
+    use HasAdditionalValidationCustomValues;
+
+    public $foo = 'foo';
+    public $bar = 'bar';
+    public $baz = 'baz';
+
+    public function runValidation()
+    {
+        $this->validate();
+    }
+
+    public function rules()
+    {
+        return [
+            'foo' => 'in:foo,FOO',
+            'bar' => 'in:bar,BAR',
+            'baz' => 'in:baz,BAZ',
+        ];
+    }
+
+    public function messages()
+    {
+        $message = ':attribute should be one of: :values';
+        return [
+            'foo.in' => $message,
+            'bar.in' => $message,
+            'baz.in' => $message,
+        ];
+    }
+
+    public function validationCustomValues()
+    {
+        return [
+            'foo' => [
+                'foo' => 'lowercase foo',
+                'FOO' => 'uppercase foo',
+            ],
+            'bar' => [
+                'bar' => 'lowercase bar',
+                'BAR' => 'uppercase bar',
+            ],
+        ];
+    }
+
+    public function exportValidationCustomValues()
+    {
+        return $this->getValidationCustomValues();
+    }
+
+    public function render()
+    {
+        return app('view')->make('dump-errors');
+    }
 }
 
 class ForValidation extends Component
