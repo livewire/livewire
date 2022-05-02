@@ -1,5 +1,6 @@
 ![Laravel Livewire](https://avatars.githubusercontent.com/u/51960834?s=100)
 # Laravel Livewire
+Livewire is a full-stack framework for Laravel that makes building dynamic interfaces simple, without leaving the comfort of Laravel.
 
 ---
 See the docs for everything: https://laravel-livewire.com/docs/quickstart
