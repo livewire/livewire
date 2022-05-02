@@ -468,6 +468,10 @@ class ValidationTest extends TestCase
     /** @test */
     public function when_unwrapping_data_for_validation_an_object_is_checked_if_it_is_wireable_first()
     {
+        if (version_compare(PHP_VERSION, '7.4', '<')) {
+            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
+        }
+
         Livewire::test(ValidatesWireableProperty::class)
             ->call('runValidation')
             ->assertHasErrors('customCollection.0.amount')
