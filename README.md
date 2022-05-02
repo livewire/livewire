@@ -1,5 +1,10 @@
 ![Laravel Livewire](https://avatars.githubusercontent.com/u/51960834?s=100)
 # Laravel Livewire
+[![Packagist Version](https://img.shields.io/packagist/v/livewire/livewire)](https://packagist.org/packages/livewire/livewire)
+[![Total Downloads](https://img.shields.io/packagist/dt/livewire/livewire)](https://packagist.org/packages/livewire/livewire)
+[![License](https://img.shields.io/packagist/l/livewire/livewire)](https://packagist.org/packages/livewire/livewire)
+[![Tests](https://github.com/livewire/livewire/actions/workflows/test.yml/badge.svg)](https://github.com/livewire/livewire/actions/workflows/test.yml)
+
 Livewire is a full-stack framework for Laravel that makes building dynamic interfaces simple, without leaving the comfort of Laravel.
 
 ---
