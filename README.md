@@ -1,3 +1,4 @@
+![Laravel Livewire](https://avatars.githubusercontent.com/u/51960834?s=100)
 # Laravel Livewire
 
 See the docs for everything: https://laravel-livewire.com/docs/quickstart
