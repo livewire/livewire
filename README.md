@@ -30,6 +30,9 @@ Contribute to the docs here: https://github.com/livewire/docs
 * A CSP-safe mode for Livewire (https://github.com/livewire/livewire/pull/2485#issuecomment-784355989)
 * Add `$wire.errors()` type deal
 
+## Contributors
+[![GitHub Contributors Image](https://contrib.rocks/image?repo=livewire/livewire)](https://github.com/livewire/livewire/graphs/contributors)
+
 ## License
 
 Copyright © Caleb Porzio
