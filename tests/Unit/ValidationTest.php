@@ -466,7 +466,7 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
-    public function an_object_with_wireable_on_it_gets_validated()
+    public function when_unwrapping_data_for_validation_an_object_is_checked_if_it_is_wireable_first()
     {
         Livewire::test(ValidatesWireableProperty::class)
             ->call('runValidation')
