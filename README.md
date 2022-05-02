@@ -6,10 +6,17 @@
 
 See the docs for everything: https://laravel-livewire.com/docs/quickstart
 
+## From the community
+
 Awesome Livewire stuff here: https://github.com/imliam/awesome-livewire
 
 Livewire Best Practices here: https://github.com/michael-rubel/livewire-best-practices
 
+All contributions are welcomed! (but please start a discussion to make sure the PR is warranted first)
+
+Ideas, questions and bugs belong in [Discussions](https://github.com/livewire/livewire/discussions) or [Discord server](https://discord.gg/livewire).
+
+Contribute to the docs here: https://github.com/livewire/docs
 All contributions are welcomed! (but please start a discussion to make sure the PR is warranted first)
 
 Ideas, questions and bugs belong in [Discussions](https://github.com/livewire/livewire/discussions) or [Discord server](https://discord.gg/livewire).
