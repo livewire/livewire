@@ -18,7 +18,7 @@ class DisableBrowserCache
     {
         $response = $next($request);
 
-        if (!$request->routeIs('livewire.')) {
+        if (!$request->isMethodCacheable() || !$request->routeIs('livewire.')) {
             return $response;
         }
 
