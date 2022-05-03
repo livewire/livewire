@@ -3,6 +3,7 @@
 namespace Livewire\ComponentConcerns;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use function Livewire\str;
 
 trait InteractsWithProperties
@@ -182,20 +183,20 @@ trait InteractsWithProperties
         $this->reset($keysToReset);
     }
 
-    public function only($properties)
+    public function only(...$properties)
     {
         $results = [];
 
-        foreach ($properties as $property) {
+        foreach (Arr::flatten($properties) as $property) {
             $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
         }
 
         return $results;
     }
     
-    public function except($properties)
+    public function except(...$properties)
     {
-        return array_diff_key($this->all(), array_flip($properties));
+        return array_diff_key($this->all(), array_flip(Arr::flatten($properties)));
     }
 
     public function all()
