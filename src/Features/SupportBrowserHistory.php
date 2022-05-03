@@ -166,7 +166,11 @@ class SupportBrowserHistory
             ->merge($this->mergedQueryParamsFromDehydratedComponents)
             ->merge($this->getQueryParamsFromComponentProperties($component))
             ->reject(function ($value, $key) use ($excepts) {
-                return isset($excepts[$key]) && $excepts[$key] === $value;
+                return isset($excepts[$key])
+                    && (
+                        (is_array($excepts[$key]) && in_array($value, $excepts[$key]))
+                        || $excepts[$key] === $value
+                    );
             })
             ->map(function ($property) {
                 return is_bool($property) ? json_encode($property) : $property;
