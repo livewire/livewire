@@ -371,8 +371,8 @@ trait ValidatesInput
     protected function unwrapDataForValidation($data)
     {
         return collect($data)->map(function ($value) {
-            if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
-            else if ($value instanceof Wireable) return $value->toLivewire();
+            if ($value instanceof Wireable) return $value->toLivewire();
+            else if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
 
             return $value;
         })->all();
