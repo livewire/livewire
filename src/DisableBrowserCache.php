@@ -18,6 +18,10 @@ class DisableBrowserCache
     {
         $response = $next($request);
 
+        if (!$request->routeIs('livewire.')) {
+            return $response;
+        }
+
         if ($response instanceof Response && Livewire::shouldDisableBackButtonCache()){
             $response->headers->add([
                 "Pragma" => "no-cache",
