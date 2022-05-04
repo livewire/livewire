@@ -660,14 +660,11 @@ class FileUploadsTest extends TestCase
     {
         $file = UploadedFile::fake()->image('avatar1.jpg');
 
-        $component = Livewire::test(FileUploadInArrayComponent::class)
+        Livewire::test(FileUploadInArrayComponent::class)
             ->set('photo', $file)
             ->call('uploadError', 'photo')
-            ->assertHasErrors(['photo']);
-
-        $failed = optional($this->lastValidator)->failed() ?: [];
-        $rules = Arr::get($failed, 'photo', []);
-        $this->assertContains(FileUploadCustomErrorMesssageComponent::MESSAGE, $rules);
+            ->assertHasErrors(['photo'])
+            ->assertSeeText(FileUploadCustomErrorMesssageComponent::MESSAGE);
 
     }
 }
@@ -768,9 +765,11 @@ class FileUploadCustomErrorMesssageComponent extends FileUploadComponent
 {
     public const MESSAGE = 'custom-uploaded-message';
 
-    protected array $messages = [
+    protected $messages = [
         'photo.uploaded' => self::MESSAGE,
     ];
+
+    public function render() { return app('view')->make('show-upload-file-error'); }
 }
 
 class FileUploadInArrayComponent extends FileUploadComponent
