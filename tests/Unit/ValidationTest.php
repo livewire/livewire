@@ -167,6 +167,17 @@ class ValidationTest extends TestCase
     }
 
     /** @test */
+    public function validating_only_a_specific_field_wont_throw_an_error_if_the_array_key_doesnt_exist()
+    {
+        $component = Livewire::test(ForValidation::class);
+
+        $component
+            ->set('items', [])
+            ->call('runDeeplyNestedValidationOnly', 'items.0.baz')
+            ->assertSee('items.0.baz field is required');
+    }
+
+    /** @test */
     public function can_validate_only_a_specific_field_with_custom_message_property()
     {
         $component = Livewire::test(ForValidation::class);
