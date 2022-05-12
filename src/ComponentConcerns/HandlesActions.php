@@ -21,7 +21,7 @@ trait HandlesActions
         $propertyName = $this->beforeFirstDot($name);
 
         throw_if(
-            ($this->{$propertyName} instanceof Model || $this->{$propertyName} instanceof EloquentCollection) && $this->missingRuleFor($name),
+            isset($this->{$propertyName}) && ($this->{$propertyName} instanceof Model || $this->{$propertyName} instanceof EloquentCollection) && $this->missingRuleFor($name),
             new CannotBindToModelDataWithoutValidationRuleException($name, $this::getName())
         );
 

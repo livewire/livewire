@@ -91,6 +91,15 @@ class Test extends TestCase
                 ->assertSeeIn('@output', 'spa')
 
                 /**
+                 * Uninitialized null properties
+                 */
+                ->click('@foo.input')
+                ->keys('@foo.input', 'hello world')
+                ->waitForLivewire()
+                ->pause(50)
+                ->assertMissing('#livewire-error')
+
+                /**
                  * Elements are marked as read-only during form submission
                  */
                 ->tap(function ($b) {
