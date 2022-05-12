@@ -182,7 +182,6 @@ class LivewireManager
         // HTML Label.
         $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
 
-
         // JavaScript assets.
         $html[] = $debug ? $scripts : $this->minify($scripts);
 
