@@ -8,7 +8,6 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $output = '';
-    public string $uninitializedProperty;
 
     public function setOutputToFoo()
     {

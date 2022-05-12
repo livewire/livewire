@@ -28,6 +28,4 @@
     </form>
     <input wire:keydown.debounce.75ms="setOutputTo('bap')" dusk="bap"></button>
     <span dusk="output">{{ $output }}</span>
-
-    <input dusk="foo.input" wire:model="uninitializedProperty" />
 </div>
