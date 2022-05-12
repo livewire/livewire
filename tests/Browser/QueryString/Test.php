@@ -176,6 +176,31 @@ class Test extends TestCase
         });
     }
 
+    public function test_array_excepts_results()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithArrayExcepts::class)
+                ->assertSeeIn('@request', 'Request:#')
+                ->assertSeeIn('@search', 'Search:#')
+                ->waitForLivewire()->type('@input', 'red')
+                ->assertSeeIn('@search', 'Search:red')
+                ->refresh()
+                ->assertSeeIn('@request', 'Request:red')
+                ->waitForLivewire()->type('@input', 'black')
+                ->assertSeeIn('@search', 'Search:black')
+                ->refresh()
+                ->assertSeeIn('@request', 'Request:#')
+                ->waitForLivewire()->type('@input', 'yellow')
+                ->assertSeeIn('@search', 'Search:yellow')
+                ->refresh()
+                ->assertSeeIn('@request', 'Request:yellow')
+                ->waitForLivewire()->type('@input', 'white')
+                ->assertSeeIn('@search', 'Search:white')
+                ->refresh()
+                ->assertSeeIn('@request', 'Request:#');
+        });
+    }
+
     public function test_that_input_values_are_set_after_back_button()
     {
         $this->browse(function (Browser $browser) {
