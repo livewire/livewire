@@ -193,7 +193,8 @@ class LivewireManager
         return implode("\n", $html);
     }
 
-    protected function getHmrScript(): string {
+    protected function getHmrScript(): string
+    {
         if (File::exists(public_path('hot'))) {
             $websocketUrl = str_replace(['http://', 'https://'], 'ws://', trim(File::get(public_path('hot'))) . '/ws');
 
