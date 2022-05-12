@@ -3,6 +3,7 @@
 namespace Livewire;
 
 use Exception;
+use Illuminate\Support\Facades\File;
 use Livewire\Testing\TestableLivewire;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Livewire\Exceptions\ComponentNotFoundException;
@@ -27,7 +28,7 @@ class LivewireManager
     ];
 
     public static $isLivewireRequestTestingOverride = false;
-    
+
     public static $currentCompilingViewPath;
     public static $currentCompilingChildCounter;
 
@@ -181,10 +182,39 @@ class LivewireManager
         // HTML Label.
         $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
 
+
         // JavaScript assets.
         $html[] = $debug ? $scripts : $this->minify($scripts);
 
+        // Hmr.
+        if ($debug) {
+            $html[] = $this->getHmrScript();
+        }
+
         return implode("\n", $html);
+    }
+
+    protected function getHmrScript(): string {
+        if (File::exists(public_path('hot'))) {
+            $websocketUrl = str_replace(['http://', 'https://'], 'ws://', trim(File::get(public_path('hot'))) . '/ws');
+
+            return <<<HTML
+<script>
+document.addEventListener('livewire:load', function () {
+    console.log('[HMR]: Livewire ready');
+    const socket = new WebSocket('$websocketUrl');
+    socket.addEventListener('message', function (event) {
+        if (JSON.parse(event.data).type === 'ok') {
+            console.log('[HMR]: Refreshing components')
+            Livewire.emit('hmr');
+        }
+    });
+});
+</script>
+HTML;
+        }
+
+        return '';
     }
 
     protected function cssAssets($options = [])
@@ -462,7 +492,7 @@ HTML;
         static::$isLivewireRequestTestingOverride = false;
         static::$currentCompilingChildCounter = null;
         static::$currentCompilingViewPath = null;
-        
+
         $this->shouldDisableBackButtonCache = false;
 
         $this->dispatch('flush-state');
