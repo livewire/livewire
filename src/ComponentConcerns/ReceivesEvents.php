@@ -2,6 +2,7 @@
 
 namespace Livewire\ComponentConcerns;
 
+use Illuminate\Support\Facades\File;
 use Livewire\Event;
 use Livewire\Livewire;
 
@@ -12,7 +13,13 @@ trait ReceivesEvents
     protected $listeners = [];
 
     protected function getListeners() {
-        return $this->listeners;
+        $listeners = $this->listeners;
+
+        if (config('app.debug') && File::exists(public_path('hot'))) {
+            $listeners['hmr'] = '$refresh';
+        }
+
+        return $listeners;
     }
 
     public function emit($event, ...$params)
