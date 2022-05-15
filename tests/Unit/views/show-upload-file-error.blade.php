@@ -1,3 +1,3 @@
 <div>
-	@error('photo') {{ $messsage }} @enderror
+	@json($errors->toArray())
 </div>

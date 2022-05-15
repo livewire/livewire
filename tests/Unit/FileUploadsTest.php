@@ -660,7 +660,7 @@ class FileUploadsTest extends TestCase
     {
         $file = UploadedFile::fake()->image('avatar1.jpg');
 
-        Livewire::test(FileUploadInArrayComponent::class)
+        Livewire::test(FileUploadCustomErrorMesssageComponent::class)
             ->set('photo', $file)
             ->call('uploadError', 'photo')
             ->assertHasErrors(['photo'])
