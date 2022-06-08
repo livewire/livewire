@@ -18,9 +18,9 @@ Contribute to the docs here: https://github.com/livewire/docs
 
 ## From the community
 
-Awesome Livewire stuff here: https://github.com/imliam/awesome-livewire
+- [Awesome Livewire](https://github.com/imliam/awesome-livewire)
 
-Livewire Best Practices here: https://github.com/michael-rubel/livewire-best-practices
+- [Livewire Best Practices](https://github.com/michael-rubel/livewire-best-practices)
 
 ## Roadmap
 * Add `wire:append` for appending DOM changes rather than replacing them
