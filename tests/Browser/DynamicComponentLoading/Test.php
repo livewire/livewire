@@ -21,4 +21,17 @@ class Test extends TestCase
                 ->assertSee('Test succeeded');
         });
     }
+
+    public function test_that_components_in_shadow_dom_can_have_wire_directives()
+    {
+        File::makeDirectory($this->livewireClassesPath('App'), 0755, true);
+
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('shadow-dom-component', [], false))
+                ->waitForText('Step 1 Active')
+                ->click('#click_me')
+                ->waitForText('Test succeeded')
+                ->assertSee('Test succeeded');
+        });
+    }
 }

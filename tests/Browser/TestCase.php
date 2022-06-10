@@ -104,6 +104,11 @@ class TestCase extends BaseTestCase
                 return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
             })->middleware('web')->name('dynamic-component');
 
+            Route::get(
+                '/livewire-dusk/tests/browser/shadow-dom-component',
+                \Tests\Browser\DynamicComponentLoading\ShadowDomComponent::class
+            )->middleware('web')->name('shadow-dom-component');
+
             Route::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
 
