@@ -38,4 +38,7 @@
             <div wire:key="qux" data-qux="{{ $qux ? 'true' : 'false' }}">third</div>
         </div>
     </button>
+
+    <template>test @if($ann)change @endif</template>
+    <button wire:click="$set('ann', true)" dusk="ann"></button>
 </div>

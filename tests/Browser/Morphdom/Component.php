@@ -14,6 +14,7 @@ class Component extends BaseComponent
     public $lob = false;
     public $law = false;
     public $qux = false;
+    public $ann = false;
 
     public function render()
     {

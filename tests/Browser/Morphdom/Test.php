@@ -54,6 +54,12 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@qux')
                 ->assertScript('window.lastAddedElement.innerText', 'second')
                 ->assertScript('window.lastUpdatedElement.innerText', 'third')
+
+                /**
+                 * changes in template elements are updated correctly
+                 */
+                ->waitForLivewire()->click('@ann')
+                ->assertScript('document.querySelector(\'template\').content.textContent', 'test change ')
             ;
         });
     }
