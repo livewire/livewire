@@ -4,10 +4,16 @@
 export function walk(root, callback) {
     if (callback(root) === false) return
 
-    let node = root.firstElementChild
+    const roots = [root, root.shadowRoot]
 
-    while (node) {
-        walk(node, callback)
-        node = node.nextElementSibling
-    }
+    roots.forEach(root => {
+        if (!root) return
+
+        let node = root.firstElementChild
+
+        while (node) {
+            walk(node, callback)
+            node = node.nextElementSibling
+        }
+    })
 }

@@ -29,9 +29,9 @@ class Test extends TestCase
         $this->browse(function (Browser $browser) {
             $browser->visit(route('shadow-dom-component', [], false))
                 ->waitForText('Step 1 Active')
-                ->click('#click_me')
-                ->waitForText('Test succeeded')
-                ->assertSee('Test succeeded');
+                ->script('window.shadowButton.click()');
+            $browser->waitForText('Test succeeded')
+                    ->assertSee('Test succeeded');
         });
     }
 }
