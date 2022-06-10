@@ -208,6 +208,28 @@ export default function morphdomFactory(morphAttrs) {
                     morphAttrs(fromEl, toEl);
                 }
 
+                if (fromEl.tagName === 'TEMPLATE') {
+                    // Compare from and to document fragments and update them
+                    let fromChildren = fromEl.content.childNodes;
+                    let toChildren = toEl.content.childNodes;
+
+                    console.log(fromChildren)
+                    console.log(toChildren)
+
+                    for (let i = 0, len = toChildren.length; i < len; i++) {
+                        console.log(typeof fromChildren[i]);
+                        if (typeof fromChildren[i] === 'undefined') {
+                            fromEl.innerHTML += toChildren[i].outerHTML || toChildren[i].textContent;
+                        } else if (!fromChildren[i].isEqualNode(toChildren[i])) {
+                            if (fromChildren[i].nodeType === TEXT_NODE) {
+                                fromChildren[i].nodeValue = toChildren[i].nodeValue;
+                            } else {
+                                fromChildren[i].innerHTML = toChildren[i].innerHTML || toChildren[i].textContent;
+                            }
+                        }
+                    }
+                }
+
                 callHook(onElUpdated, fromEl);
 
                 if (callHook(onBeforeElChildrenUpdated, fromEl, toEl) === false) {

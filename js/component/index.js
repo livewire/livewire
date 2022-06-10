@@ -279,7 +279,7 @@ export default class Component {
 
     handleResponse(message) {
         let response = message.response
-        
+
         this.updateServerMemoFromResponseAndMergeBackIntoResponse(message)
 
         store.callHook('message.received', message, this)
@@ -431,7 +431,13 @@ export default class Component {
                 // sameness. When dealing with DOM nodes, we want isEqualNode, otherwise
                 // isSameNode will ALWAYS return false.
                 if (from.isEqualNode(to)) {
-                    return false
+                    // The content of template elements is not checked by isEqualNode
+                    // Therefor we check if template elements OR elements containing any
+                    // templates have changed.
+                    if ((from.tagName !== 'TEMPLATE' && from.querySelector('template') === null)
+                        || from.innerHTML === to.innerHTML) {
+                        return false
+                    }
                 }
 
                 store.callHook('element.updating', from, to, this)
