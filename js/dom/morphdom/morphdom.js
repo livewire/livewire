@@ -213,11 +213,7 @@ export default function morphdomFactory(morphAttrs) {
                     let fromChildren = fromEl.content.childNodes;
                     let toChildren = toEl.content.childNodes;
 
-                    console.log(fromChildren)
-                    console.log(toChildren)
-
                     for (let i = 0, len = toChildren.length; i < len; i++) {
-                        console.log(typeof fromChildren[i]);
                         if (typeof fromChildren[i] === 'undefined') {
                             fromEl.innerHTML += toChildren[i].outerHTML || toChildren[i].textContent;
                         } else if (!fromChildren[i].isEqualNode(toChildren[i])) {
