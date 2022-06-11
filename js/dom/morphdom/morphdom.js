@@ -209,21 +209,7 @@ export default function morphdomFactory(morphAttrs) {
                 }
 
                 if (fromEl.tagName === 'TEMPLATE') {
-                    // Compare from and to document fragments and update them
-                    let fromChildren = fromEl.content.childNodes;
-                    let toChildren = toEl.content.childNodes;
-
-                    for (let i = 0, len = toChildren.length; i < len; i++) {
-                        if (typeof fromChildren[i] === 'undefined') {
-                            fromEl.innerHTML += toChildren[i].outerHTML || toChildren[i].textContent;
-                        } else if (!fromChildren[i].isEqualNode(toChildren[i])) {
-                            if (fromChildren[i].nodeType === TEXT_NODE) {
-                                fromChildren[i].nodeValue = toChildren[i].nodeValue;
-                            } else {
-                                fromChildren[i].innerHTML = toChildren[i].innerHTML || toChildren[i].textContent;
-                            }
-                        }
-                    }
+                    morphEl(fromEl.content, toEl.content, true);
                 }
 
                 callHook(onElUpdated, fromEl);
