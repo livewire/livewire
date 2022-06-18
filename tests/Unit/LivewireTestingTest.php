@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Components\ComponentWhichDoesntEmittedTo;
 use Livewire\Component;
 use Livewire\Livewire;
 use PHPUnit\Framework\AssertionFailedError;
@@ -234,6 +235,22 @@ class LivewireTestingTest extends TestCase
             ->call('emitFooWithParam', 'baz')
             ->assertNotEmitted('foo', function ($event, $params) {
                 return $event !== 'foo' && $params !== ['bar'];
+            });
+    }
+
+    /** @test */
+    public function assert_not_emitted_to()
+    {
+        Livewire::test(EmitsEventsComponentStub::class)
+            ->call('emitFooToSomeComponent')
+            ->assertNotEmittedTo('other-component', 'foo')
+            ->call('emitFooToAComponentAsAModel')
+            ->assertNotEmittedTo(ComponentWhichDoesntEmittedTo::class, 'foo')
+            ->call('emitFooToSomeComponentWithParam', 'bar')
+            ->assertNotEmittedTo('other-component', 'foo', 'bar')
+            ->call('emitFooToSomeComponentWithParam', 'bar')
+            ->assertNotEmittedTo('other-component','foo', function ($event, $params) {
+                return $event === 'foo' && $params === ['bar'];
             });
     }
 
