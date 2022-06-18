@@ -165,6 +165,15 @@ trait MakesAssertions
 
         return $this;
     }
+    public function assertNotEmittedTo($target, $value, ...$params)
+    {
+        $this->assertEmitted($value, ...$params);
+        $result = $this->testNotEmittedTo($target, $value);
+
+        PHPUnit::assertTrue($result, "Failed asserting that an event [{$value}] was not fired to {$target}.");
+
+        return $this;
+    }
 
     public function assertEmittedUp($value, ...$params)
     {
@@ -210,6 +219,19 @@ trait MakesAssertions
             ? $target::getName()
             : $target;
 
+        return (bool) collect(data_get($this->payload, 'effects.emits'))->first(function ($item) use ($target, $value) {
+            return $item['event'] === $value
+                && $item['to'] === $target;
+        });
+
+    }
+
+    protected function testNotEmittedTo($target, $value)
+    {
+        $target = is_subclass_of($target, Component::class)
+            ? $target::getName()
+            : $target;
+        dd($target);
         return (bool) collect(data_get($this->payload, 'effects.emits'))->first(function ($item) use ($target, $value) {
             return $item['event'] === $value
                 && $item['to'] === $target;
