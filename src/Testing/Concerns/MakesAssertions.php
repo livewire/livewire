@@ -234,7 +234,7 @@ trait MakesAssertions
 
         return (bool) collect(data_get($this->payload, 'effects.emits'))->first(function ($item) use ($target, $value) {
             return $item['event'] === $value
-                && $item['to'] != $target;
+                && $item['to'] !== $target;
         });
 
     }
