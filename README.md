@@ -19,7 +19,6 @@ Contribute to the docs here: https://github.com/livewire/docs
 * Refine the "asset_url" config. Potentially change to "app_url" (https://github.com/livewire/livewire/pull/1693)
 * Support multiple pagination (https://github.com/livewire/livewire/pull/1997)
 * A CSP-safe mode for Livewire (https://github.com/livewire/livewire/pull/2485#issuecomment-784355989)
-* Add `$wire.errors()` type deal
 
 ## License
 
