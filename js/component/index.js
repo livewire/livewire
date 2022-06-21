@@ -636,6 +636,10 @@ export default class Component {
         )
     }
 
+    errors() {
+        return this.serverMemo.errors
+    }
+
     get $wire() {
         if (this.dollarWireProxy) return this.dollarWireProxy
 
@@ -671,6 +675,7 @@ export default class Component {
                         'upload',
                         'uploadMultiple',
                         'removeUpload',
+                        'errors'
                     ].includes(property)
                 ) {
                     // Forward public API methods right away.
