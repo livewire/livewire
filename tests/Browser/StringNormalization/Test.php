@@ -8,8 +8,6 @@ use Tests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public static $useSafari = true;
-
     public function test()
     {
         $this->browse(function (Browser $browser) {
