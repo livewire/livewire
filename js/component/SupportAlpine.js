@@ -177,14 +177,14 @@ export function getEntangleFunction(component) {
                     return
                 }
 
-                // Let's set the initial value of the Alpine prop to the Livewire prop's value.
-
-                let value = (typeof livewirePropertyFallback !== 'undefined') ? livewirePropertyFallback: livewirePropertyValue;
-
-                setter(
+                let value =
                     // We need to stringify and parse it though to get a deep clone.
-                    JSON.parse(JSON.stringify((value)))
-                );
+                    JSON.parse(JSON.stringify(
+                        // Let's set the initial value of the Alpine prop to the Livewire prop's value.
+                        (typeof livewirePropertyFallback !== 'undefined') ? livewirePropertyFallback: livewirePropertyValue
+                    ));
+
+                setter(value)
 
                 // Now, we'll watch for changes to the Alpine prop, and fire the update to Livewire.
                 window.Alpine.effect(() => {
