@@ -173,7 +173,7 @@ export function getEntangleFunction(component) {
                 // Check to see if the Livewire property exists and if not log a console error
                 // and return so everything else keeps running.
                 if (typeof livewirePropertyValue === 'undefined' && typeof livewirePropertyFallback === 'undefined') {
-                    console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found or does not have a default value`)
+                    console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`)
                     return
                 }
 
