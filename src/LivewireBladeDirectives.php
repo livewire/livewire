@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
 
 class LivewireBladeDirectives
@@ -13,6 +14,19 @@ class LivewireBladeDirectives
 
     public static function entangle($expression)
     {
+        $expression  = Blade::stripParentheses($expression);
+
+        $payload     = Str::of($expression)->explode(',');
+        $expression  = strval($payload->get(0));
+        $fallback    = strval($payload->get(1));
+
+        if($fallback) {
+
+            return <<<EOT
+<?php if ((object) ({$expression}) instanceof \Livewire\WireDirective) : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression}->value() }}', {$fallback}){{ {$expression}->hasModifier('defer') ? '.defer' : '' }}<?php else : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression} }}', {$fallback})<?php endif; ?>
+EOT;
+        }
+
         return <<<EOT
 <?php if ((object) ({$expression}) instanceof \Livewire\WireDirective) : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression}->value() }}'){{ {$expression}->hasModifier('defer') ? '.defer' : '' }}<?php else : ?>window.Livewire.find('{{ \$_instance->id }}').entangle('{{ {$expression} }}')<?php endif; ?>
 EOT;
@@ -56,7 +70,7 @@ EOT;
 
             // We'll increment count, so each cache key inside a compiled view is unique.
             LivewireManager::$currentCompilingChildCounter++;
-        } 
+        }
 
         $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
         $expression = preg_replace_callback($pattern, function ($match) use (&$cachedKey) {

@@ -162,24 +162,34 @@ function supportEntangle() {
 
 export function getEntangleFunction(component) {
     if (isV3()) {
-        return (name, defer = false) => {
+        return (name, fallback, defer = false) => {
             let isDeferred = defer
             let livewireProperty = name
             let livewireComponent = component
             let livewirePropertyValue = component.get(livewireProperty)
+            let livewirePropertyFallback = fallback
 
             let interceptor = Alpine.interceptor((initialValue, getter, setter, path, key) => {
                 // Check to see if the Livewire property exists and if not log a console error
                 // and return so everything else keeps running.
-                if (typeof livewirePropertyValue === 'undefined') {
-                    console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`)
+                if (typeof livewirePropertyValue === 'undefined' && typeof livewirePropertyFallback === 'undefined') {
+                    console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found or does not have a default value`)
                     return
                 }
 
                 // Let's set the initial value of the Alpine prop to the Livewire prop's value.
                 let value
-                    // We need to stringify and parse it though to get a deep clone.
-                    = JSON.parse(JSON.stringify(livewirePropertyValue))
+
+                if (typeof livewirePropertyFallback !== 'undefined') {
+                    value
+                        // We need to stringify and parse it though to get a deep clone.
+                        = JSON.parse(JSON.stringify(livewirePropertyFallback))
+
+                } else {
+                    value
+                        // We need to stringify and parse it though to get a deep clone.
+                        = JSON.parse(JSON.stringify(livewirePropertyValue))
+                }
 
                 setter(value)
 
