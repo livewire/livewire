@@ -362,7 +362,7 @@ export default class Component {
 
             const modelValue = directives.get('model').value
 
-            if (DOM.hasFocus(el) && ! dirtyInputs.includes(modelValue)) return
+            if (el.nodeName != 'SELECT' && DOM.hasFocus(el) && ! dirtyInputs.includes(modelValue)) return
 
             DOM.setInputValueFromModel(el, this)
         })
