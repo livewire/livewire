@@ -59,4 +59,18 @@ class Test extends TestCase
                 ->assertSeeIn('@multiple.output', 'baz');
         });
     }
+
+    /** @test */
+    public function it_can_handle_having_selected_on_an_option()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, SelectWithSelectedOnOption::class)
+                ->assertSeeIn('@output', '3')
+                ->assertSelected('@select-input', '3')
+                ->waitForLivewire()->select('@select-input', '4')
+                ->assertSeeIn('@output', '4')
+                ->assertSelected('@select-input', '4')
+                ;
+        });
+    }
 }
