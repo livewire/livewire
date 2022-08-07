@@ -9,6 +9,7 @@ class MoveCommand extends FileManipulationCommand
     protected $signature = 'livewire:move {name} {new-name} {--force} {--inline}';
 
     protected $description = 'Move a Livewire component';
+    private $newParser;
 
     public function handle()
     {
@@ -80,7 +81,7 @@ class MoveCommand extends FileManipulationCommand
         if (!File::exists($oldTestPath) || File::exists($newTestPath)) {
             return false;
         }
-        
+
         $this->ensureDirectoryExists($newTestPath);
         File::move($oldTestPath, $newTestPath);
         return $newTestPath;

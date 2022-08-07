@@ -429,6 +429,8 @@ class ImplicitlyBoundMethodTester extends ImplicitlyBoundMethod
 
 class ContainerTestModel extends \Illuminate\Database\Eloquent\Model
 {
+    public $value;
+
     public function __construct()
     {
         $this->value = func_get_args();
@@ -443,6 +445,8 @@ class ContainerTestModel extends \Illuminate\Database\Eloquent\Model
 
 class NullContainerTestModel extends \Illuminate\Database\Eloquent\Model
 {
+    public $value;
+
     public function __construct()
     {
         $this->value = func_get_args();

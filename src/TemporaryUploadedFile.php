@@ -12,6 +12,7 @@ class TemporaryUploadedFile extends UploadedFile
 {
     protected $storage;
     protected $path;
+    public $disk;
 
     public function __construct($path, $disk)
     {

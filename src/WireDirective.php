@@ -8,6 +8,10 @@ use Illuminate\View\ComponentAttributeBag;
 
 class WireDirective implements Htmlable, Stringable
 {
+    public $name;
+    public $directive;
+    public $value;
+
     public function __construct($name, $directive, $value)
     {
         $this->name = $name;

@@ -7,6 +7,7 @@ use ReflectionClass;
 class ObjectPrybar
 {
     protected $obj;
+    public $reflected;
 
     public function __construct($obj)
     {

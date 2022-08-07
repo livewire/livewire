@@ -14,6 +14,12 @@ class ComponentParser
     protected $component;
     protected $componentClass;
     protected $directories;
+    protected $baseClassNamespace;
+    protected $baseTestNamespace;
+    protected $baseClassPath;
+    protected $baseViewPath;
+    protected $baseTestPath;
+    protected $stubDirectory;
 
     public function __construct($classNamespace, $viewPath, $rawCommand, $stubSubDirectory = '')
     {

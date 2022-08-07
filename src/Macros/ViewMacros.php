@@ -6,6 +6,8 @@ use Illuminate\View\AnonymousComponent;
 
 class ViewMacros
 {
+    public $livewireLayout;
+
     public function extends()
     {
         return function ($view, $params = []) {

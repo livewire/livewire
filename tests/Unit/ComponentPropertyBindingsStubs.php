@@ -62,6 +62,8 @@ class ComponentWithPropBindingsAndMountMethod extends Component
 
     public $parent;
 
+    public $name;
+
     public function mount(PropBoundModel $parent)
     {
         $this->parent = $parent;
