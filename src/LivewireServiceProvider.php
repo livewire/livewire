@@ -2,6 +2,8 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Str;
+use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\View\View;
 use Illuminate\Testing\TestView;
 use Illuminate\Testing\TestResponse;
@@ -49,6 +51,16 @@ use Livewire\HydrationMiddleware\{
 
 class LivewireServiceProvider extends ServiceProvider
 {
+
+    /**
+     * Specify Blade directives that should never be overwritten.
+     *
+     * @var string[][]
+     */
+    protected $bladeDirectivesToRegisterIfMissing = [
+        'js' => [LivewireBladeDirectives::class, 'js'],
+    ];
+
     public function register()
     {
         $this->registerConfig();
@@ -281,7 +293,10 @@ class LivewireServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
-        Blade::directive('js', [LivewireBladeDirectives::class, 'js']);
+        foreach ($this->bladeDirectivesToRegisterIfMissing as $name => $callable) {
+            $this->registerBladeDirectiveIfNotRegistered($name, $callable);
+        }
+
         Blade::directive('this', [LivewireBladeDirectives::class, 'this']);
         Blade::directive('entangle', [LivewireBladeDirectives::class, 'entangle']);
         Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
@@ -438,5 +453,26 @@ class LivewireServiceProvider extends ServiceProvider
         foreach ((array) $groups as $group) {
             $this->publishes($paths, $group);
         }
+    }
+
+    protected function registerBladeDirectiveIfNotRegistered(string $name, Callable $callable)
+    {
+        if (! $this->bladeDirectiveAlreadyRegistered($name)) {
+            Blade::directive($name, $callable);
+        }
+    }
+
+    protected function bladeDirectiveAlreadyRegistered(string $name): bool
+    {
+        if (method_exists(BladeCompiler::class, Str::start($name, 'compile')))
+        {
+            return true;
+        }
+
+        if (array_key_exists($name, Blade::getCustomDirectives())) {
+            return true;
+        }
+
+        return false;
     }
 }
