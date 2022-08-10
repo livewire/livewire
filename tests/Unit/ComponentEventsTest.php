@@ -78,6 +78,16 @@ class ComponentEventsTest extends TestCase
     }
 
     /** @test */
+    public function server_emitted_ignore_self_events_are_provided_to_frontend()
+    {
+        $component = Livewire::test(ReceivesEvents::class);
+
+        $component->call('emitOthersGoo');
+
+        $this->assertTrue(in_array(['ignoreSelf' => true, 'event' => 'goo', 'params' => ['car']], $component->payload['effects']['emits']));
+    }
+
+    /** @test */
     public function server_emitted_to_events_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -138,6 +148,11 @@ class ReceivesEvents extends Component
     public function emitSelfGoo()
     {
         $this->emitSelf('goo', 'car');
+    }
+
+    public function emitOthersGoo()
+    {
+        $this->emitOthers('goo', 'car');
     }
 
     public function emitToGooGone()

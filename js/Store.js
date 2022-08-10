@@ -74,6 +74,14 @@ const store = {
         }
     },
 
+    emitOthers(exceptComponentId, event, ...params) {
+        this.listeners.call(event, ...params)
+
+        this.componentsListeningForEvent(event)
+            .filter(component => component.id !== exceptComponentId)
+            .forEach(component => component.addAction(new EventAction(event, params)))
+    },
+
     emitTo(componentName, event, ...params) {
         let components = this.getComponentsByName(componentName)
 

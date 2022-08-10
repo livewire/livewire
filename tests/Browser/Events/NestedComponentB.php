@@ -7,13 +7,20 @@ use Livewire\Component as BaseComponent;
 
 class NestedComponentB extends BaseComponent
 {
-    protected $listeners = ['foo'];
+    protected $listeners = ['foo', 'bar'];
 
     public $lastEvent = '';
+
+    public $lastBarEvent = '';
 
     public function foo($value)
     {
         $this->lastEvent = $value;
+    }
+
+    public function bar($value)
+    {
+        $this->lastBarEvent = $value;
     }
 
     public function render()

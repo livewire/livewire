@@ -76,6 +76,15 @@ class Test extends TestCase
                                    ->assertSeeIn('@lastEventForChildB', 'blog')
                                    ->assertScript('window.lastFooEventValue', 'bob');
                 })
+
+                /**
+                 * emit event and ignore self, others components should receive the event
+                 */
+                ->waitForLivewire()->click('@emit.fireBarToOthers')
+                ->waitUsing(5, 75, function () use ($browser) {
+                    return $browser->assertSeeIn('@lastBarEventB', 'others: received')
+                                   ->assertSeeNothingIn('@lastBarEventA');
+                })
             ;
         });
     }

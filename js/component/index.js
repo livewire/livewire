@@ -312,6 +312,8 @@ export default class Component {
 
                     if (event.selfOnly) {
                         store.emitSelf(this.id, event.event, ...event.params)
+                    } else if (event.ignoreSelf) {
+                        store.emitOthers(this.id, event.event, ...event.params)
                     } else if (event.to) {
                         store.emitTo(event.to, event.event, ...event.params)
                     } else if (event.ancestorsOnly) {

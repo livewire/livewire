@@ -35,6 +35,11 @@ trait ReceivesEvents
         $this->emit($event, ...$params)->component($name);
     }
 
+    public function emitOthers($event, ...$params)
+    {
+        $this->emit($event, ...$params)->ignoreSelf();
+    }
+
     public function dispatchBrowserEvent($event, $data = null)
     {
         $this->dispatchQueue[] = [

@@ -234,6 +234,11 @@ export default {
                     return
                 }
 
+                if (method === '$emitOthers') {
+                    store.emitOthers(component.id, ...params)
+                    return
+                }
+
                 if (method === '$emitTo') {
                     store.emitTo(...params)
                     return

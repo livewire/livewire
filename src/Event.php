@@ -8,6 +8,7 @@ class Event
     protected $params;
     protected $up;
     protected $self;
+    protected $ignoreSelf;
     protected $component;
 
     public function __construct($name, $params)
@@ -26,6 +27,13 @@ class Event
     public function self()
     {
         $this->self = true;
+
+        return $this;
+    }
+
+    public function ignoreSelf()
+    {
+        $this->ignoreSelf = true;
 
         return $this;
     }
@@ -51,6 +59,7 @@ class Event
 
         if ($this->up) $output['ancestorsOnly'] = true;
         if ($this->self) $output['selfOnly'] = true;
+        if ($this->ignoreSelf) $output['ignoreSelf'] = true;
         if ($this->component) $output['to'] = is_subclass_of($this->component, Component::class)
             ? $this->component::getName()
             : $this->component;
