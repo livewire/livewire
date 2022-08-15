@@ -1,0 +1,14 @@
+{
+    "main": "dist/livewire.js",
+    "name": "laravel-livewire",
+    "scripts": {
+        "build": "node ./scripts/build.js",
+        "watch": "node ./scripts/build.js --watch"
+    },
+    "author": "Caleb Porzio",
+    "license": "MIT",
+    "devDependencies": {
+        "brotli-size": "^4.0.0",
+        "esbuild": "^0.14.49"
+    }
+}
