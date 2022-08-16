@@ -1,6 +1,5 @@
 import { on } from "./events";
 import { dataGet, dataSet, decorate } from "./utils";
-import { addActionToComponent, triggerRequest } from "./payload";
 
 let defer = false
 let preventRecurse = false

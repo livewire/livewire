@@ -4,6 +4,16 @@ namespace Livewire;
 
 class Assets
 {
+    public function source()
+    {
+        return Utils::pretendResponseIsFile(__DIR__.'/../dist/livewire.js');
+    }
+
+    public function maps()
+    {
+        return Utils::pretendResponseIsFile(__DIR__.'/../dist/livewire.js.map');
+    }
+
     public static function styles($options = [])
     {
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';

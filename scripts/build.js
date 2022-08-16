@@ -1,5 +1,6 @@
 let fs = require('fs')
 let brotliSize = require('brotli-size')
+let crypto = require('crypto')
 
 build({
     entryPoints: [`js/index.js`],
@@ -8,6 +9,12 @@ build({
     platform: 'browser',
     define: { CDN: true },
 })
+
+let hash = crypto.randomBytes(4).toString('hex');
+
+fs.writeFileSync(__dirname+'/../dist/manifest.json', `
+{"/livewire.js":"/livewire.js?id=${hash}"}
+`)
 
 // Build a minified version.
 build({

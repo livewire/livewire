@@ -2,16 +2,17 @@
 
 namespace Livewire\Mechanisms;
 
-use Illuminate\Support\Facades\Blade;
 use Livewire\Manager;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Blade;
 
 class BladeDirectives
 {
     public function __invoke()
     {
-        Blade::directive('livewireScripts', [LivewireBladeDirectives::class, 'livewireScripts']);
-        Blade::directive('livewireStyles', [LivewireBladeDirectives::class, 'livewireStyles']);
-        Blade::directive('livewire', [LivewireBladeDirectives::class, 'livewire']);
+        Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
+        Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
+        Blade::directive('livewire', [static::class, 'livewire']);
     }
 
     public static function livewireStyles($expression)
@@ -26,7 +27,7 @@ class BladeDirectives
 
     public static function livewire($expression)
     {
-        $key = "'" . str()->random(7) . "'";
+        $key = "'" . Str::random(7) . "'";
 
         // If we are inside a Livewire component, we know we're rendering a child.
         // Therefore, we must create a more deterministic view cache key so that

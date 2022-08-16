@@ -2,9 +2,9 @@
 
 namespace Livewire;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
-class LivewireServiceProvider extends ServiceProvider
+class ServiceProvider extends BaseServiceProvider
 {
     public function register()
     {
@@ -34,6 +34,7 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerMechanisms()
     {
         foreach ([
+            \Livewire\Mechanisms\CompileLivewireTags::class,
             \Livewire\Mechanisms\BladeDirectives::class,
             \Livewire\Mechanisms\Routes::class,
         ] as $mechanism) {
@@ -44,7 +45,8 @@ class LivewireServiceProvider extends ServiceProvider
     protected function registerFeatures()
     {
         foreach ([
-            \Livewire\Features\SupportReactiveProps::class,
+            // \Livewire\Features\SupportReactiveProps::class,
+            \Livewire\Features\SupportWireModelingNestedComponents::class,
         ] as $feature) {
             (new $feature)();
         }

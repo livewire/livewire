@@ -18,7 +18,11 @@ export default function () {
         let html = effects.html
         if (! html) return
 
-        doMorph(component, component.el, html)
+        // Doing this so all the state of components in a nested tree has a chance
+        // to update on synthetic's end. (mergeSnapshots kinda deal).
+        queueMicrotask(() => {
+            doMorph(component, component.el, html)
+        })
     })
 }
 
@@ -29,7 +33,18 @@ function createElement(html) {
 }
 
 function doMorph(component, el, html) {
-    let to = createElement(html)
+    let wrapper = document.createElement('div')
+
+    wrapper.innerHTML = html
+    let parentComponent
+
+    try {
+        parentComponent = closestComponent(el.parentElement)
+    } catch (e) {}
+
+    parentComponent && (wrapper.__livewire = parentComponent)
+
+    let to = wrapper.firstElementChild
 
     to.__livewire = component
 

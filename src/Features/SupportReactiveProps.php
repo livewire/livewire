@@ -2,9 +2,9 @@
 
 namespace Livewire\Features;
 
+use Synthetic\Utils as SyntheticUtils;
+use Livewire\Utils;
 use Livewire\Synthesizers\LivewireSynth;
-use Synthetic\Synthesizers\ObjectSynth;
-use Synthetic\Utils;
 
 class SupportReactiveProps
 {
@@ -12,12 +12,24 @@ class SupportReactiveProps
 
     public function __invoke()
     {
+        app('synthetic')->on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
+            $this->storeChildParams($id, $params);
+        });
+
+        app('synthetic')->on('mount', function ($target, $id, $params, $parent, $key) {
+            return function ($html) use ($parent, $key, $id) {
+
+
+                return $html;
+            };
+        });
+
         app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
             $props = [];
 
-            foreach (Utils::getAnnotations($target) as $key => $value) {
+            foreach (SyntheticUtils::getAnnotations($target) as $key => $value) {
                 if (isset($value['prop'])) $props[] = $key;
             }
 

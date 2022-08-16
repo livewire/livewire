@@ -2,13 +2,13 @@
 
 namespace Livewire;
 
+use Livewire\Testing\TestableLivewire;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Livewire\Testing\TestableLivewire;
+use Closure;
 
 class Manager
 {
-    protected $listeners = [];
     protected $componentAliases = [];
     protected $queryParamsForTesting = [];
 

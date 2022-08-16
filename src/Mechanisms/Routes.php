@@ -2,13 +2,13 @@
 
 namespace Livewire\Mechanisms;
 
-use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Route;
+use Livewire\Assets;
 
 class Routes
 {
     public function __invoke()
     {
-        Route::get('/livewire/livewire.js.map', [LivewireJavaScriptAssets::class, 'maps']);
-        Route::get('/livewire/livewire.js', [LivewireJavaScriptAssets::class, 'source']);
+        Route::get('/livewire/livewire.js', [Assets::class, 'source']);
     }
 }
