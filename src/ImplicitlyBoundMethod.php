@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use BackedEnum;
 use Illuminate\Container\BoundMethod;
 use Illuminate\Contracts\Routing\UrlRoutable as ImplicitlyBindable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -92,6 +93,10 @@ class ImplicitlyBoundMethod extends BoundMethod
 
     protected static function getImplicitBinding($container, $className, $value)
     {
+        if (in_array(BackedEnum::class, class_implements($className))) {
+            return $className::tryFrom($value);
+        }
+
         $model = $container->make($className)->resolveRouteBinding($value);
 
         if (! $model) {
@@ -118,6 +123,16 @@ class ImplicitlyBoundMethod extends BoundMethod
 
     public static function implementsInterface($parameter)
     {
-        return (new ReflectionClass($parameter->getType()->getName()))->implementsInterface(ImplicitlyBindable::class);
+        $type = new ReflectionClass($parameter->getType()->getName());
+
+        if ($type->implementsInterface(ImplicitlyBindable::class)) {
+            return true;
+        }
+
+        if (! interface_exists(BackedEnum::class)) {
+            return false;
+        }
+
+        return $type->implementsInterface(BackedEnum::class);
     }
 }
