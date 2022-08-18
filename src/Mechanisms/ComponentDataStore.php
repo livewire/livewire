@@ -22,6 +22,18 @@ class ComponentDataStore
         static::$dataLookup[$component][$key] = $value;
     }
 
+    static function has($component, $key) {
+        if (! isset(static::$dataLookup[$component])) {
+            return false;
+        }
+
+        if (! isset(static::$dataLookup[$component][$key])) {
+            return false;
+        }
+
+        return true;
+    }
+
     static function get($component, $key, $default = null)
     {
         if (! isset(static::$dataLookup[$component])) {

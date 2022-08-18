@@ -15,8 +15,6 @@ class RenderComponent
     public function __invoke()
     {
         Blade::directive('livewire', [static::class, 'livewire']);
-        Blade::directive('startLivewire', [static::class, 'startLivewire']);
-        Blade::directive('endLivewire', [static::class, 'endLivewire']);
     }
 
     public static function livewire($expression)
@@ -47,39 +45,24 @@ class RenderComponent
 };
 [\$__name, \$__params] = \$__split($expression);
 
-echo \Livewire\Mechanisms\RenderComponent::mount(\$__name, \$__params, $key);
+echo \Livewire\Mechanisms\RenderComponent::mount(\$__name, \$__params, $key, \$__slot ?? null);
 
 unset(\$__name);
 unset(\$__params);
 unset(\$__split);
+if (isset(\$__slot)) unset(\$__slot);
 ?>
 EOT;
     }
 
-    static function startLivewire($expression) {
-        return <<<'PHP'
-            <?php
-
-            $__startLivewire = true;
-
-            ?>
-        PHP;
-    }
-
-    static function endLivewire($expression) {
-        return <<<'PHP'
-
-        PHP.static::livewire($expression);
-    }
-
-    static function mount($name, $params = [], $key = null)
+    static function mount($name, $params = [], $key = null, $slot = null)
     {
         $parent = last(static::$renderStack);
 
         $hijackedHtml = null;
         $hijack = function ($html) use (&$hijackedHtml) { $hijackedHtml = $html; };
 
-        $finishMount = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $hijack);
+        $finishMount = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slot, $hijack);
 
         // Allow a "mount" event listener to short-circuit the mount...
         if ($hijackedHtml !== null) return $hijackedHtml;
@@ -144,6 +127,7 @@ EOT;
         array_push(static::$renderStack, $target);
 
         $rawHTML = Blade::render($blade, [
+            '__livewire' => $target,
             ...$viewData
         ]);
 

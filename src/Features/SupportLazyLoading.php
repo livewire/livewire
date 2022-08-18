@@ -26,7 +26,7 @@ class SupportLazyLoading
             PHP;
         });
 
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slot, $hijack) {
             if (! static::$shouldRenderLazilly) return;
 
             $hijack(<<<'HTML'
