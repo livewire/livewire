@@ -3,34 +3,41 @@
 namespace Livewire\Features;
 
 use Synthetic\Utils as SyntheticUtils;
-use Livewire\Utils;
 use Livewire\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\ComponentDataStore;
 
 class SupportReactiveProps
 {
-    public static $pendingChildParams = [];
+    public static $pendingChildParams;
 
     public function __invoke()
     {
-        app('synthetic')->on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
-            $this->storeChildParams($id, $params);
+        app('synthetic')->on('render', function ($target, $id, $params, $parent, $key) {
+            $props = [];
+
+            foreach (SyntheticUtils::getAnnotations($target) as $key => $value) {
+                if (isset($value['prop']) && isset($params[$key])) {
+                    $props[] = $key;
+                }
+            }
+
+            ComponentDataStore::set($target, 'props', $props);
         });
 
-        app('synthetic')->on('mount', function ($target, $id, $params, $parent, $key) {
-            return function ($html) use ($parent, $key, $id) {
-
-
-                return $html;
-            };
+        app('synthetic')->on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
+            $this->storeChildParams($id, $params);
         });
 
         app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
-            $props = [];
+            $props = ComponentDataStore::get($target, 'props', []);
+            $propHashes = ComponentDataStore::get($target, 'propHashes', []);
 
-            foreach (SyntheticUtils::getAnnotations($target) as $key => $value) {
-                if (isset($value['prop'])) $props[] = $key;
+            foreach ($propHashes as $key => $hash) {
+                if (crc32(json_encode($target->{$key})) !== $hash) {
+                    throw new \Exception('Cant mutate a prop: ['.$key.']');
+                }
             }
 
             $props && $context->addMeta('props', $props);
@@ -44,10 +51,19 @@ class SupportReactiveProps
 
             $props = static::getProps($meta['id'], $propKeys);
 
-            return function ($target) use ($props) {
+            return function ($target) use ($props, $propKeys) {
+                $propHashes = [];
+
                 foreach ($props as $key => $value) {
                     $target->{$key} = $value;
                 }
+
+                foreach ($propKeys as $key) {
+                    $propHashes[$key] = crc32(json_encode($target->{$key}));
+                }
+
+                ComponentDataStore::set($target, 'props', $propKeys);
+                ComponentDataStore::set($target, 'propHashes', $propHashes);
 
                 return $target;
             };
@@ -72,5 +88,16 @@ class SupportReactiveProps
         }
 
         return $props;
+    }
+
+    public static function hasProp($id, $propKey)
+    {
+        $params = static::$pendingChildParams[$id] ?? [];
+
+        foreach ($params as $key => $value) {
+            if ($propKey === $key) return true;
+        }
+
+        return false;
     }
 }

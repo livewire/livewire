@@ -57,6 +57,17 @@ class LivewireSynth extends ObjectSynth
         return parent::set($target, $key, $value);
     }
 
+    function unset(&$target, $key, $value) {
+        return parent::set($target, $key, $value);
+    }
+
+    function methods($target)
+    {
+        $methods = parent::methods($target);
+
+        return array_diff($methods, ['render']);
+    }
+
     function call($target, $method, $params, $addEffect) {
         return parent::call($target, $method, $params, $addEffect);
     }

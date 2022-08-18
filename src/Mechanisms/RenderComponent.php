@@ -3,16 +3,86 @@
 namespace Livewire\Mechanisms;
 
 use Livewire\Utils;
+use Livewire\Manager;
 use Livewire\ImplicitlyBoundMethod;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Blade;
 
 class RenderComponent
 {
     public static $renderStack = [];
 
+    public function __invoke()
+    {
+        Blade::directive('livewire', [static::class, 'livewire']);
+        Blade::directive('startLivewire', [static::class, 'startLivewire']);
+        Blade::directive('endLivewire', [static::class, 'endLivewire']);
+    }
+
+    public static function livewire($expression)
+    {
+        $key = "'" . Str::random(7) . "'";
+
+        // If we are inside a Livewire component, we know we're rendering a child.
+        // Therefore, we must create a more deterministic view cache key so that
+        // Livewire children are properly tracked across load balancers.
+        if (Manager::$currentCompilingViewPath !== null) {
+            // $key = '[hash of Blade view path]-[current @livewire directive count]'
+            $key = "'l" . crc32(Manager::$currentCompilingViewPath) . "-" . Manager::$currentCompilingChildCounter . "'";
+
+            // We'll increment count, so each cache key inside a compiled view is unique.
+            Manager::$currentCompilingChildCounter++;
+        }
+
+        $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
+        $expression = preg_replace_callback($pattern, function ($match) use (&$key) {
+            $key = trim($match[1]) ?: $key;
+            return "";
+        }, $expression);
+
+        return <<<EOT
+<?php
+\$__split = function (\$name, \$params = []) {
+    return [\$name, \$params];
+};
+[\$__name, \$__params] = \$__split($expression);
+
+echo \Livewire\Mechanisms\RenderComponent::mount(\$__name, \$__params, $key);
+
+unset(\$__name);
+unset(\$__params);
+unset(\$__split);
+?>
+EOT;
+    }
+
+    static function startLivewire($expression) {
+        return <<<'PHP'
+            <?php
+
+            $__startLivewire = true;
+
+            ?>
+        PHP;
+    }
+
+    static function endLivewire($expression) {
+        return <<<'PHP'
+
+        PHP.static::livewire($expression);
+    }
+
     static function mount($name, $params = [], $key = null)
     {
         $parent = last(static::$renderStack);
+
+        $hijackedHtml = null;
+        $hijack = function ($html) use (&$hijackedHtml) { $hijackedHtml = $html; };
+
+        $finishMount = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $hijack);
+
+        // Allow a "mount" event listener to short-circuit the mount...
+        if ($hijackedHtml !== null) return $hijackedHtml;
 
         // If this has already been rendered spoof it...
         if ($parent && $parent->hasChild($key)) {
@@ -27,14 +97,14 @@ class RenderComponent
 
         // New up the component instance...
 
-        // This is if a user doesn't pass params, BUT passes key() as the second argument.
+        // This is if a user doesn't pass params, BUT passes key() as the second argument...
         if (is_string($params)) $params = [];
         $id = str()->random(20);
         if (! class_exists($name)) throw new \Exception('Not a class');
         $target = new $name;
         $target->setId($id);
 
-        $finish = app('synthetic')->trigger('mount', $target, $id, $params, $parent, $key);
+        $finishMount($target);
 
         if ($params) {
             foreach ($params as $name => $value) {
@@ -45,6 +115,8 @@ class RenderComponent
         if (method_exists($target, 'mount')) {
             ImplicitlyBoundMethod::call(app(), [$target, 'mount'], $params);
         }
+
+        $finish = app('synthetic')->trigger('render', $target, $id, $params, $parent, $key);
 
         // Render it...
         $payload = app('synthetic')->synthesize($target);

@@ -74,4 +74,19 @@ class Utils
     {
         return sprintf('%s GMT', gmdate('D, d M Y H:i:s', $timestamp));
     }
+
+    static function containsDots($subject)
+    {
+        return strpos($subject, '.') !== false;
+    }
+
+    static function beforeFirstDot($subject)
+    {
+        return head(explode('.', $subject));
+    }
+
+    static function afterFirstDot($subject) : string
+    {
+        return str($subject)->after('.');
+    }
 }

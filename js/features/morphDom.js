@@ -7,9 +7,9 @@ export default function () {
     on('request.before', (target) => {
         let childIds = Object.values(target.snapshot.data[1].children).map(i => i[1])
 
-        childIds.forEach((id) => {
-            state.components[id].synthetic.ephemeral.$commit()
-        })
+        // childIds.forEach((id) => {
+        //     state.components[id].synthetic.ephemeral.$commit()
+        // })
     })
 
     on('effects', (target, effects, path) => {

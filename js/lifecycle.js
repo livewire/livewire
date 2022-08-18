@@ -21,6 +21,12 @@ function initElement(el) {
 
         el.__livewire = component
 
+        // This makes anything that would normally be available on $wire
+        // available directly without needing to prefix "$wire.".
+        Alpine.bind(el, {
+            'x-data'() { return component.synthetic.reactive }
+        })
+
         state.components[component.id] = component
 
         trigger('component.initialized', component)

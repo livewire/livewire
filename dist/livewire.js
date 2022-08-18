@@ -1,23 +1,23 @@
 (() => {
   // js/utils.js
-  function dataGet(object, key) {
+  function dataGet(object2, key) {
     return key.split(".").reduce((carry, i) => {
       if (carry === void 0)
         return void 0;
       return carry[i];
-    }, object);
+    }, object2);
   }
-  function dataSet(object, key, value2) {
+  function dataSet(object2, key, value2) {
     let segments = key.split(".");
     if (segments.length === 1) {
-      return object[key] = value2;
+      return object2[key] = value2;
     }
     let firstSegment = segments.shift();
     let restOfSegments = segments.join(".");
-    if (object[firstSegment] === void 0) {
-      object[firstSegment] = {};
+    if (object2[firstSegment] === void 0) {
+      object2[firstSegment] = {};
     }
-    dataSet(object[firstSegment], restOfSegments, value2);
+    dataSet(object2[firstSegment], restOfSegments, value2);
   }
   var Bag = class {
     constructor() {
@@ -835,14 +835,14 @@
   function each(subject, callback) {
     Object.entries(subject).forEach(([key, value2]) => callback(key, value2));
   }
-  function dataGet2(object, key) {
+  function dataGet2(object2, key) {
     if (key === "")
-      return object;
+      return object2;
     return key.split(".").reduce((carry, i) => {
       if (carry === void 0)
         return void 0;
       return carry[i];
-    }, object);
+    }, object2);
   }
   function diff(left, right, diffs = {}, path = "") {
     if (left === right)
@@ -932,16 +932,32 @@
     };
   }
 
-  // ../synthetic/js/features/jsMethods.js
-  function jsMethods_default() {
-    on2("effects", (target, effects, path) => {
-      let decorator = dataGet2(target.ephemeral, path).__decorator;
+  // ../synthetic/js/features/methods.js
+  function methods_default() {
+    on2("decorate", (target, path, addProp, decorator, symbol) => {
+      let effects = target.effects[path];
+      if (!effects)
+        return;
+      let methods = effects["methods"] || [];
+      methods.forEach((method) => {
+        addProp(method, async (...params) => {
+          if (params.length === 1 && params[0] instanceof Event) {
+            params = [];
+          }
+          return await callMethod(symbol, path, method, params);
+        });
+      });
+    });
+    on2("decorate", (target, path, addProp) => {
+      let effects = target.effects[path];
+      if (!effects)
+        return;
       let methods = effects["js"] || [];
       each(methods, (name, expression) => {
         let func = new Function([], "return " + expression);
         let boundFunc = func.bind(dataGet2(target.reactive, path));
         let run = boundFunc();
-        Object.defineProperty(decorator, name, { value: run, enumerable: false });
+        addProp(name, run);
       });
     });
   }
@@ -969,13 +985,10 @@
       target.__loading.state = true;
       return () => target.__loading.state = false;
     });
-    on2("decorate", (target, path) => {
-      return (decorator) => {
-        Object.defineProperty(decorator, "$loading", { get() {
-          return target.__loading.state;
-        } });
-        return decorator;
-      };
+    on2("decorate", (target, path, addProp, decorator, symbol) => {
+      addProp("$loading", { get() {
+        return target.__loading.state;
+      } });
     });
   }
 
@@ -1049,7 +1062,7 @@
   }
 
   // ../synthetic/js/features/index.js
-  jsMethods_default();
+  methods_default();
   prefetch_default();
   redirect_default();
   loading_default();
@@ -1074,6 +1087,7 @@
     if (typeof provided === "string")
       return newUp(provided);
     let target = {
+      methods: provided.effects["methods"] || [],
       effects: raw(provided.effects),
       snapshot: raw(provided.snapshot)
     };
@@ -1092,64 +1106,62 @@
     return synthetic(await requestNew(name));
   }
   function extractDataAndDecorate(payload, symbol) {
-    return extractData(payload, symbol, (value2, meta, symbol2, path) => {
+    return extractData(payload, symbol, (object2, meta, symbol2, path) => {
       let target = store.get(symbol2);
-      let finish = trigger3("decorate", target, path);
-      return decorate(value2, finish({
-        $watch(path2, callback) {
-          let firstTime = true;
-          let old = void 0;
-          effect2(() => {
-            let value3 = dataGet2(target.reactive, path2);
-            if (firstTime) {
-              firstTime = false;
-              return;
-            }
-            pauseTracking();
-            callback(value3, old);
-            old = value3;
-            enableTracking();
+      let decorator = {};
+      let addProp = (key, value2, options = {}) => {
+        let base = { enumerable: false, configurable: true, ...options };
+        if (isObject2(value2) && deeplyEqual(Object.keys(value2), ["get"]) || deeplyEqual(Object.keys(value2), ["get", "set"])) {
+          Object.defineProperty(object2, key, {
+            get: value2.get,
+            set: value2.set,
+            ...base
           });
-        },
-        $watchEffect(callback) {
-          effect2(callback);
-        },
-        async $commit() {
-          return await requestCommit(symbol2);
-        },
-        __get(property2) {
-          if (property2 === "__target")
-            return target;
-          if (typeof property2 === "symbol")
-            return;
-          if ([
-            "__v_isRef",
-            "__v_isReadonly",
-            "__v_raw",
-            "__v_skip",
-            "toJSON",
-            "then",
-            "_x_interceptor",
-            "init"
-          ].includes(property2))
-            return;
-          let method = property2;
-          return async (...params) => {
-            return await callMethod(symbol2, path, method, params);
-          };
+        } else {
+          Object.defineProperty(object2, key, {
+            value: value2,
+            ...base
+          });
         }
-      }));
+      };
+      let finish = trigger3("decorate", target, path, addProp, decorator, symbol2);
+      addProp("__target", { get() {
+        return target;
+      } });
+      addProp("$watch", (path2, callback) => {
+        let firstTime = true;
+        let old = void 0;
+        effect2(() => {
+          let value2 = dataGet2(target.reactive, path2);
+          if (firstTime) {
+            firstTime = false;
+            return;
+          }
+          pauseTracking();
+          callback(value2, old);
+          old = value2;
+          enableTracking();
+        });
+      });
+      addProp("$watchEffect", (callback) => effect2(callback));
+      addProp("$commit", async (callback) => {
+        return await requestCommit(symbol2);
+      });
+      each(Object.getOwnPropertyDescriptors(decorator), (key, value2) => {
+        Object.defineProperty(object2, key, value2);
+      });
+      return object2;
     });
   }
-  function extractData(payload, symbol, decorate3 = (i) => i, path = "") {
+  function extractData(payload, symbol, decorate2 = (i) => i, path = "") {
     let value2 = isSynthetic(payload) ? payload[0] : payload;
     let meta = isSynthetic(payload) ? payload[1] : void 0;
     if (isObjecty(value2)) {
       Object.entries(value2).forEach(([key, iValue]) => {
-        value2[key] = extractData(iValue, symbol, decorate3, path === "" ? key : `${path}.${key}`);
+        value2[key] = extractData(iValue, symbol, decorate2, path === "" ? key : `${path}.${key}`);
       });
     }
-    return meta !== void 0 && isObjecty(value2) ? decorate3(value2, meta, symbol, path) : value2;
+    return meta !== void 0 && isObjecty(value2) ? decorate2(value2, meta, symbol, path) : value2;
   }
   function isSynthetic(subject) {
     return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
@@ -1288,33 +1300,6 @@
       }
     });
   }
-  function decorate(object, decorator) {
-    return new Proxy(object, {
-      get(target, property2, receiver) {
-        if (property2 === "__decorator")
-          return decorator;
-        let got = Reflect.get(decorator, property2, receiver);
-        if (got !== void 0)
-          return got;
-        got = Reflect.get(target, property2, receiver);
-        if (got !== void 0)
-          return got;
-        if ("__get" in decorator) {
-          return decorator.__get(property2);
-        }
-      },
-      set(target, property2, value2) {
-        if (property2 in decorator) {
-          decorator[property2] = value2;
-        } else if (property2 in target || property2 === "__v_isRef") {
-          target[property2] = value2;
-        } else if ("__set" in decorator && !["then"].includes(property2)) {
-          decorator.__set(property2, value2);
-        }
-        return true;
-      }
-    });
-  }
   function processEffects(target) {
     let effects = target.effects;
     each(effects, (key, value2) => trigger3("effects", target, value2, key));
@@ -1324,9 +1309,6 @@
   function morphDom_default() {
     on2("request.before", (target) => {
       let childIds = Object.values(target.snapshot.data[1].children).map((i) => i[1]);
-      childIds.forEach((id) => {
-        state.components[id].synthetic.ephemeral.$commit();
-      });
     });
     on2("effects", (target, effects, path) => {
       let component = state.components[target.__livewireId];
@@ -1547,9 +1529,25 @@
     Alpine.magic("wire", (el) => closestComponent(el).$wire);
   }
 
+  // js/features/props.js
+  function props_default() {
+    on2("request.before", (target) => {
+      let meta = target.snapshot.data[1];
+      let childIds = Object.values(meta.children).map((i) => i[1]);
+      childIds.forEach((id) => {
+        let childSynthetic = state.components[id].synthetic;
+        let childMeta = childSynthetic.snapshot.data[1];
+        let props = childMeta.props;
+        if (props)
+          childSynthetic.ephemeral.$commit();
+      });
+    });
+  }
+
   // js/features/index.js
   function features_default() {
     wire_default();
+    props_default();
     morphDom_default();
     wireModel_default();
     wireLoading_default();
@@ -1580,6 +1578,11 @@
       let raw2 = JSON.parse(el.getAttribute("wire:initial-data"));
       let component2 = new Component(synthetic(raw2).__target, el, id);
       el.__livewire = component2;
+      Alpine.bind(el, {
+        "x-data"() {
+          return component2.synthetic.reactive;
+        }
+      });
       state.components[component2.id] = component2;
       trigger("component.initialized", component2);
     }

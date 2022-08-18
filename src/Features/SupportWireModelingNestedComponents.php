@@ -5,6 +5,7 @@ namespace Livewire\Features;
 use Synthetic\Utils as SyntheticUtils;
 use Livewire\Utils;
 use Livewire\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\ComponentDataStore;
 
 class SupportWireModelingNestedComponents
 {
@@ -12,8 +13,8 @@ class SupportWireModelingNestedComponents
 
     public function __invoke()
     {
-        // When a Livewire component is mounted, we'll check to see if "wire:model" is set.
-        app('synthetic')->on('mount', function ($target, $id, $params, $parent, $key) {
+        // When a Livewire component is rendered, we'll check to see if "wire:model" is set.
+        app('synthetic')->on('render', function ($target, $id, $params, $parent, $key) {
             if ($parent && isset($params['wire:model'])) {
 
                 $outer = $params['wire:model'];
@@ -27,12 +28,13 @@ class SupportWireModelingNestedComponents
                 // We couldn't find a "modelable" property in the child.
                 if (! isset($inner)) return;
 
-                $target->__wireModels[$outer] = $inner;
+                $wireModels = ComponentDataStore::get($target, 'wireModels', []);
+                $wireModels[$outer] = $inner;
+                ComponentDataStore::set($target, 'wireModels', $wireModels);
 
                 $target->$inner = $parent->$outer;
 
                 return function ($html) {
-
                     return $html;
                 };
             }
@@ -50,9 +52,10 @@ class SupportWireModelingNestedComponents
         // those extra Alpine attributes.
         app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
-            if (! isset($target->__wireModels)) return;
+            $wireModels = ComponentDataStore::get($target, 'wireModels', false);
+            if (! $wireModels) return;
 
-            $context->addMeta('wireModels', $target->__wireModels);
+            $context->addMeta('wireModels', $wireModels);
 
             return function ($thing) use ($target, $context) {
                 foreach ($target->__wireModels as $outer => $inner) {
@@ -72,7 +75,9 @@ class SupportWireModelingNestedComponents
             if (! isset($meta['wireModels'])) return;
 
             return function ($target) use ($meta) {
-                $target->__wireModels = $wireModels = $meta['wireModels'];
+                $wireModels = $meta['wireModels'];
+
+                ComponentDataStore::set($target, 'wireModels', $wireModels);
 
                 if (! isset($this->outersByComponentId[$meta['id']])) return $target;
 

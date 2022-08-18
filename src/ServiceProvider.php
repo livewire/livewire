@@ -35,7 +35,9 @@ class ServiceProvider extends BaseServiceProvider
     {
         foreach ([
             \Livewire\Mechanisms\CompileLivewireTags::class,
+            \Livewire\Mechanisms\ComponentDataStore::class,
             \Livewire\Mechanisms\BladeDirectives::class,
+            \Livewire\Mechanisms\RenderComponent::class,
             \Livewire\Mechanisms\Routes::class,
         ] as $mechanism) {
             (new $mechanism)();
@@ -45,8 +47,11 @@ class ServiceProvider extends BaseServiceProvider
     protected function registerFeatures()
     {
         foreach ([
-            // \Livewire\Features\SupportReactiveProps::class,
+            \Livewire\Features\SupportReactiveProps::class,
             \Livewire\Features\SupportWireModelingNestedComponents::class,
+            \Livewire\Features\SupportLockedProperties::class,
+            \Livewire\Features\SupportLazyLoading::class,
+            \Livewire\Features\SupportSlots::class,
         ] as $feature) {
             (new $feature)();
         }

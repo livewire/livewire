@@ -16,9 +16,6 @@ abstract class Component extends \Synthetic\Component
         return $this->__id;
     }
 
-    // [outerKey => innerKey, ...]
-    public $__wireModels = [];
-
     // [key => ['id' => id, 'tag' => tag]
     public $__children = [];
 
