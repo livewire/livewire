@@ -47,11 +47,11 @@ class ServiceProvider extends BaseServiceProvider
     protected function registerFeatures()
     {
         foreach ([
+            \Livewire\Features\SupportSlots::class,
             \Livewire\Features\SupportReactiveProps::class,
             \Livewire\Features\SupportWireModelingNestedComponents::class,
             \Livewire\Features\SupportLockedProperties::class,
-            \Livewire\Features\SupportLazyLoading::class,
-            \Livewire\Features\SupportSlots::class,
+            \Livewire\Features\SupportLazyLoading::class, // This has to be after "SupportSlots"
         ] as $feature) {
             (new $feature)();
         }

@@ -2,11 +2,13 @@
 
 namespace Livewire\Features;
 
-use Livewire\Synthesizers\LivewireSynth;
-use Livewire\Mechanisms\ComponentDataStore;
-use Illuminate\Support\Facades\Blade;
-
 use function Livewire\invade;
+use Livewire\Synthesizers\LivewireSynth;
+use Livewire\Regexes;
+use Livewire\Mechanisms\ComponentDataStore;
+
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Blade;
 
 // This is the current behavior. The problem is that it only
 // currently supports child scope. It COULD support parent
@@ -28,31 +30,63 @@ class SupportSlots
     public function __invoke()
     {
         $compiler = function ($string) {
-            $pattern = '/\<livewire:[^\>]*\>(?<slot>.*)\<\/livewire\>/sm';
+            $pattern = '/'.Regexes::$livewireOpeningTag.'(?<body>.*)'.Regexes::$livewireClosingTag.'/xsm';
 
-            return preg_replace_callback($pattern, function (array $matches) use ($string) {
-                $whole = $matches[0];
-                $slot = $matches['slot'];
-                $hash = sha1($slot);
+            return preg_replace_callback($pattern, function ($matches) use ($string) {
+                $body = $matches['body'];
 
-                $path = storage_path('framework/cache/livewire-'.$hash.'.blade.php');
-                file_put_contents($path, $slot);
+                [$opening, $closing] = str($matches[0])->explode($body);
 
-                [$opening, $closing] = str($whole)->explode($slot);
+                // Look for any named slots and extract them:
+                $slotPattern = '/'.Regexes::specificBladeDirective('slot').'(?<body>.+?)@endslot/xsm';
 
-                $scope = '';
-                $strippedScope = '';
+                $slots = [];
 
-                // Look in the opening for a slot scope declaration...
-                if (str($opening)->contains(':slot')) {
-                    $scope = (string) str($opening)->match('/:slot="\[(.*)\]"/');
+                $body = preg_replace_callback($slotPattern, function ($matches) use (&$slots) {
+                    $arguments = $matches[3];
 
-                    $strippedScope = str($scope)->explode(',')->map(fn ($i) => trim($i, ' '))->map(fn ($i) => trim($i, '$'))->join(',');
+                    $noop = fn($i) => $i;
 
-                    $opening = (string) str($opening)->replace(':slot="['.$scope.']"', '');
+                    $scope = (string) str($arguments)->match('/\'scope\' => \\\Illuminate\\\View\\\Compilers\\\BladeCompiler::sanitizeComponentAttribute\((.*?)\)/');
+                    $name = (string) str($arguments)->between("('", "', ");
+
+                    $strippedScope = str($scope)->between('[', ']')->explode(',')->map(fn ($i) => trim($i, ' '))->map(fn ($i) => trim($i, '$'))->filter(fn ($i) => $i !== '')->toArray();
+
+                    $hash = Str::random(20);
+                    $slotBody = $matches['body'];
+                    $path = storage_path('framework/cache/livewire-'.$hash.'.blade.php');
+                    file_put_contents($path, $slotBody);
+
+                    $slots[$name === '' ? 'default' : $name] = ['hash' => $hash, 'scope' => $strippedScope];
+
+                    return '';
+                }, $body);
+
+                if ((string) str($body)->replaceMatches('/\s/', '') !== '') {
+                    // There still more inside the slot, so we'll take care of it...
+                    $scope = '';
+                    $strippedScope = [];
+
+                    // Look in the opening for a slot scope declaration, extract, and remove it...
+                    if (str($opening)->contains(':scope')) {
+                        $scope = (string) str($opening)->match('/:scope="\[([^\]]*)\]"/');
+
+                        $strippedScope = str($scope)->explode(',')->map(fn ($i) => trim($i, ' '))->map(fn ($i) => trim($i, '$'))->filter(fn ($i) => $i !== '')->toArray();
+
+                        $opening = (string) str($opening)->replace(':scope="['.$scope.']"', '');
+                    }
+
+                    if (! isset($slots['default'])) {
+                        $hash = Str::random(20);
+                        $slotBody = $body;
+                        $path = storage_path('framework/cache/livewire-'.$hash.'.blade.php');
+                        file_put_contents($path, $slotBody);
+                        $slots['default'] = ['hash' => $hash, 'scope' => $strippedScope];
+                    }
                 }
 
-                return "<?php \$__slot = '$hash----$strippedScope'; ?>\n".$opening;
+                $encodedSlots = json_encode($slots);
+                return "<?php \$__slots = json_decode('$encodedSlots', true); ?>\n".$opening;
             }, $string);
         };
 
@@ -61,42 +95,71 @@ class SupportSlots
 
         Blade::directive('renderSlot', function ($expression) {
             return <<<HTML
-                <?php \Livewire\Mechanisms\ComponentDataStore::set(\$__livewire, 'slotProps', $expression); ?>
-                |---SLOT---|
+                <?php
+                    [\$__name, \$__scope] = (function(\$name = 'default', \$scope = []) {
+                        if (is_array(\$name)) {
+                            return ['default', \$name];
+                        }
+
+                        return [\$name, \$scope];
+                    })($expression);
+
+
+                    \$__slotProps = \Livewire\Mechanisms\ComponentDataStore::get(\$__livewire, 'slotProps', []);
+
+                    \$__slotProps[\$__name] = \$__scope;
+
+                    \Livewire\Mechanisms\ComponentDataStore::set(\$__livewire, 'slotProps', \$__slotProps);
+
+                    echo '|---SLOT:'.\$__name.'---|';
+
+                    unset(\$__name);
+                    unset(\$__scope);
+                    unset(\$__slotProps);
+                ?>
                 HTML;
         });
 
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slot) {
-            if (! $slot) return;
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots) {
+            if (! $slots) return;
 
-            return function ($target) use ($slot) {
-                ComponentDataStore::set($target, 'slot', $slot);
+            return function ($target) use ($slots) {
+                ComponentDataStore::set($target, 'slots', $slots);
             };
         });
 
         app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
-            if (! ComponentDataStore::has($target, 'slot')) return;
+            if (! ComponentDataStore::has($target, 'slots')) return;
 
-            $slot = ComponentDataStore::get($target, 'slot');
+            $slots = ComponentDataStore::get($target, 'slots');
 
-            $context->addMeta('slot', $slot);
+            $context->addMeta('slots', $slots);
 
-            return function ($value) use ($target, $context, $slot) {
+            return function ($value) use ($target, $context, $slots) {
                 $html = $context->effects['html'];
 
                 if (! $html) return $value;
 
-                [$hash, $scope] = explode('----', $slot);
-                $scopeVarNames = $scope ? explode(',', $scope) : [];
+                $slotProps = ComponentDataStore::get($target, 'slotProps', false);
 
-                $path = storage_path('framework/cache/livewire-'.$hash.'.blade.php');
+                if ($slotProps === false) return $value;
 
-                $slotProps = ComponentDataStore::get($target, 'slotProps', []);
+                foreach ($slotProps as $name => $scope) {
+                    ['hash' => $hash, 'scope' => $scopeNames] = $slots[$name];
 
-                $slotContents = Blade::render(file_get_contents($path), array_intersect_key($slotProps, array_flip($scopeVarNames)));
+                    $path = storage_path('framework/cache/livewire-'.$hash.'.blade.php');
 
-                $context->effects['html'] = str($html)->replace('|---SLOT---|', $slotContents);
+                    $passThroughScope = count($scopeNames) === 1 && $scopeNames[0] === '__all__';
+
+                    if ($passThroughScope) {
+                        $scopeNames = array_keys($scope);
+                    }
+
+                    $slotContents = Blade::render(file_get_contents($path), array_intersect_key($scope, array_flip($scopeNames)));
+
+                    $context->effects['html'] = str($html)->replace('|---SLOT:'.$name.'---|', $slotContents);
+                }
 
                 return $value;
             };
@@ -104,12 +167,12 @@ class SupportSlots
 
         app('synthetic')->on('hydrate', function ($synth, $rawValue, $meta) {
             if (! $synth instanceof LivewireSynth) return;
-            if (! isset($meta['slot'])) return;
+            if (! isset($meta['slots'])) return;
 
-            $slot = $meta['slot'];
+            $slot = $meta['slots'];
 
             return function ($target) use ($slot) {
-                ComponentDataStore::set($target, 'slot', $slot);
+                ComponentDataStore::set($target, 'slots', $slot);
 
                 return $target;
             };

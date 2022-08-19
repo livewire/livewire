@@ -45,24 +45,24 @@ class RenderComponent
 };
 [\$__name, \$__params] = \$__split($expression);
 
-echo \Livewire\Mechanisms\RenderComponent::mount(\$__name, \$__params, $key, \$__slot ?? null);
+echo \Livewire\Mechanisms\RenderComponent::mount(\$__name, \$__params, $key, \$__slots ?? []);
 
 unset(\$__name);
 unset(\$__params);
 unset(\$__split);
-if (isset(\$__slot)) unset(\$__slot);
+if (isset(\$__slots)) unset(\$__slots);
 ?>
 EOT;
     }
 
-    static function mount($name, $params = [], $key = null, $slot = null)
+    static function mount($name, $params = [], $key = null, $slots = [])
     {
         $parent = last(static::$renderStack);
 
         $hijackedHtml = null;
         $hijack = function ($html) use (&$hijackedHtml) { $hijackedHtml = $html; };
 
-        $finishMount = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slot, $hijack);
+        $finishMount = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slots, $hijack);
 
         // Allow a "mount" event listener to short-circuit the mount...
         if ($hijackedHtml !== null) return $hijackedHtml;
