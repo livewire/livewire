@@ -400,4 +400,28 @@ trait MakesAssertions
 
         return $this;
     }
+    
+    public function assertFileDownloadedContains($content)
+    {
+        $downloadedContent = data_get($this->lastResponse, 'original.effects.download.content');
+
+        PHPUnit::assertStringContainsString(
+            $content,
+            base64_decode($downloadedContent)
+        );
+
+        return $this;
+    }
+    
+    public function assertFileDownloadedNotContains($content)
+    {
+        $downloadedContent = data_get($this->lastResponse, 'original.effects.download.content');
+
+        PHPUnit::assertStringNotContainsString(
+            $content,
+            base64_decode($downloadedContent)
+        );
+
+        return $this;
+    }
 }
