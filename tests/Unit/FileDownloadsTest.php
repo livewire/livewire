@@ -73,6 +73,22 @@ class FileDownloadsTest extends TestCase
             ->assertFileDownloaded()
             ->assertSeeText('Thanks!');
     }
+    
+    /** @test */
+    public function can_check_a_downloaded_file_contains()
+    {
+        Livewire::test(FileDownloadComponent::class)
+                ->call('streamDownload', 'download.txt')
+                ->assertFileDownloadedContains('alpine');
+    }
+    
+    /** @test */
+    public function can_check_a_downloaded_file_does_not_contain()
+    {
+        Livewire::test(FileDownloadComponent::class)
+                ->call('streamDownload', 'download.txt')
+                ->assertFileDownloadedNotContains('vuejs');
+    }
 }
 
 class FileDownloadComponent extends Component
