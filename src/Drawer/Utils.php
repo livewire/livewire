@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Drawer;
 
 use Livewire\Exceptions\RootTagMissingFromViewException;
 

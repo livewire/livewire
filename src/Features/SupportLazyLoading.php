@@ -3,16 +3,11 @@
 namespace Livewire\Features;
 
 use function Livewire\invade;
-use function PHPUnit\Framework\matches;
-
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Blade;
 
 class SupportLazyLoading
 {
-    static $shouldRenderLazilly = false;
-
-    public function __invoke()
+    public function boot()
     {
         $compiler = function ($string) {
             $pattern = '/@lazy\((?<params>[^\)]*)\)(?<body>.*)@endlazy/sm';
@@ -47,28 +42,5 @@ class SupportLazyLoading
 
         // This ensures we'll be at the top of the precompilers...
         invade(app('blade.compiler'))->precompilers = [$compiler, ...invade(app('blade.compiler'))->precompilers];
-
-        return;
-        Blade::directive('lazy', function ($expression) {
-            return <<<'PHP'
-                <?php
-                    \Livewire\Features\SupportLazyLoading::$shouldRenderLazilly = true;
-                ?>
-            PHP;
-        });
-
-        Blade::directive('endlazy', function ($expression) {
-            return <<<'PHP'
-                //
-            PHP;
-        });
-
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slot, $hijack) {
-            if (! static::$shouldRenderLazilly) return;
-
-            $hijack(<<<'HTML'
-                <div x-init="">Loading...</div>
-            HTML);
-        });
     }
 }

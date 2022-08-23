@@ -4,9 +4,9 @@ namespace Livewire\Features;
 
 use function Livewire\invade;
 use Livewire\Synthesizers\LivewireSynth;
-use Livewire\Regexes;
 use Livewire\Mechanisms\ComponentDataStore;
 
+use Livewire\Drawer\Regexes;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Blade;
 
@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Blade;
 
 class SupportSlots
 {
-    public function __invoke()
+    public function boot()
     {
         $compiler = function ($string) {
             $pattern = '/'.Regexes::$livewireOpeningTag.'(?<body>.*)'.Regexes::$livewireClosingTag.'/xsm';

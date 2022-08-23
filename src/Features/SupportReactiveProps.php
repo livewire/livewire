@@ -8,20 +8,27 @@ use Livewire\Mechanisms\ComponentDataStore;
 
 class SupportReactiveProps
 {
-    public static $pendingChildParams;
+    public static $pendingChildParams = [];
 
-    public function __invoke()
+    public function boot()
     {
-        app('synthetic')->on('render', function ($target, $id, $params, $parent, $key) {
-            $props = [];
+        app('synthetic')->on('flush-state', fn() => static::$pendingChildParams = []);
 
-            foreach (SyntheticUtils::getAnnotations($target) as $key => $value) {
-                if (isset($value['prop']) && isset($params[$key])) {
-                    $props[] = $key;
+
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+            return function ($target) use ($params) {
+                $props = [];
+
+                foreach (SyntheticUtils::getAnnotations($target) as $key => $value) {
+                    if (isset($value['prop']) && isset($params[$key])) {
+                        $props[] = $key;
+                    }
                 }
-            }
 
-            ComponentDataStore::set($target, 'props', $props);
+                ComponentDataStore::set($target, 'props', $props);
+
+                return $target;
+            };
         });
 
         app('synthetic')->on('dummy-mount', function ($tag, $id, $params, $parent, $key) {

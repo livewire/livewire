@@ -1,17 +1,40 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Mechanisms;
 
-class Assets
+use Livewire\Drawer\Utils;
+use Livewire\Drawer\IsSingleton;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Blade;
+
+class JavaScriptAndCssAssets
 {
+    public function boot()
+    {
+        Route::get('/livewire/livewire.js', [static::class, 'source']);
+
+        Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
+        Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
+    }
+
+    public static function livewireScripts($expression)
+    {
+        return '{!! \Livewire\Mechanisms\JavaScriptAndCssAssets::scripts('.$expression.') !!}';
+    }
+
+    public static function livewireStyles($expression)
+    {
+        return '{!! \Livewire\Mechanisms\JavaScriptAndCssAssets::styles('.$expression.') !!}';
+    }
+
     public function source()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../dist/livewire.js');
+        return Utils::pretendResponseIsFile(__DIR__.'/../../dist/livewire.js');
     }
 
     public function maps()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../dist/livewire.js.map');
+        return Utils::pretendResponseIsFile(__DIR__.'/../../dist/livewire.js.map');
     }
 
     public static function styles($options = [])
@@ -46,7 +69,7 @@ class Assets
     {
         $debug = config('app.debug');
 
-        $scripts = static::javaScriptAssets($options);
+        $scripts = static::js($options);
 
         // HTML Label.
         $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
@@ -57,7 +80,7 @@ class Assets
         return implode("\n", $html);
     }
 
-    public static function javaScriptAssets($options)
+    public static function js($options)
     {
         $jsonEncodedOptions = $options ? json_encode($options) : '';
 
@@ -69,7 +92,7 @@ class Assets
 
         $jsLivewireToken = app()->has('session.store') ? "'" . csrf_token() . "'" : 'null';
 
-        $manifest = json_decode(file_get_contents(__DIR__.'/../dist/manifest.json'), true);
+        $manifest = json_decode(file_get_contents(__DIR__.'/../../dist/manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
 
         // Default to dynamic `livewire.js` (served by a Laravel route).

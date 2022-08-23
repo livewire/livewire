@@ -2,17 +2,20 @@
 
 namespace Livewire\Mechanisms;
 
-use Livewire\Utils;
 use Livewire\Manager;
-use Livewire\ImplicitlyBoundMethod;
+use Livewire\Drawer\Utils;
+use Livewire\Drawer\IsSingleton;
+use Livewire\Drawer\ImplicitlyBoundMethod;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Blade;
 
 class RenderComponent
 {
+    use IsSingleton;
+
     public static $renderStack = [];
 
-    public function __invoke()
+    function boot()
     {
         Blade::directive('livewire', [static::class, 'livewire']);
     }
@@ -83,8 +86,8 @@ EOT;
         // This is if a user doesn't pass params, BUT passes key() as the second argument...
         if (is_string($params)) $params = [];
         $id = str()->random(20);
-        if (! class_exists($name)) throw new \Exception('Not a class');
-        $target = new $name;
+
+        $target = app('livewire')->new($name);
         $target->setId($id);
 
         $finishMount($target);
@@ -98,8 +101,6 @@ EOT;
         if (method_exists($target, 'mount')) {
             ImplicitlyBoundMethod::call(app(), [$target, 'mount'], $params);
         }
-
-        $finish = app('synthetic')->trigger('render', $target, $id, $params, $parent, $key);
 
         // Render it...
         $payload = app('synthetic')->synthesize($target);
@@ -119,22 +120,49 @@ EOT;
             'wire:initial-data' => $payload,
         ]);
 
-        return $finish($html);
+        return $html;
     }
 
-    static function renderComponentBladeView($target, $blade, $viewData)
+    static function renderComponentBladeView($target, $blade, $data)
     {
         array_push(static::$renderStack, $target);
 
-        $rawHTML = Blade::render($blade, [
-            '__livewire' => $target,
-            ...$viewData
-        ]);
+        $view = static::getBladeView($blade, $data);
+
+        $finish = app('synthetic')->trigger('render', $target, $view, $data);
+
+        $view->with('__livewire', $target);
+
+        $rawHtml = $view->render();
+
+        $rawHtml = $finish($rawHtml);
 
         array_pop(static::$renderStack);
 
-        $html = Utils::insertAttributesIntoHtmlRoot($rawHTML, [ 'wire:id' => $target->getId() ]);
+        $html = Utils::insertAttributesIntoHtmlRoot($rawHtml, [ 'wire:id' => $target->getId() ]);
 
         return $html;
+    }
+
+    static function getBladeView($subject, $data = [])
+    {
+        $component = new class($subject) extends \Illuminate\View\Component
+        {
+            protected $template;
+
+            public function __construct($template)
+            {
+                $this->template = $template;
+            }
+
+            public function render()
+            {
+                return $this->template;
+            }
+        };
+
+        $view = app('view')->make($component->resolveView(), $data);
+
+        return $view;
     }
 }

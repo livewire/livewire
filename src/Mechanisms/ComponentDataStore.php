@@ -8,7 +8,7 @@ class ComponentDataStore
 {
     protected static $dataLookup;
 
-    public function __invoke()
+    public function boot()
     {
         static::$dataLookup = new WeakMap;
     }
@@ -57,10 +57,10 @@ class ComponentDataStore
             static::$dataLookup[$component][$key] = [];
         }
 
-        // if ($iKey) {
+        if ($iKey) {
+            static::$dataLookup[$component][$key][$iKey] = $value;
+        }
 
-        // }
-
-        // static::$dataLookup[$component][$key]] = $value;
+        static::$dataLookup[$component][$key][] = $value;
     }
 }

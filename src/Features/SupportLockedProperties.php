@@ -2,12 +2,12 @@
 
 namespace Livewire\Features;
 
-use Livewire\Utils;
+use Livewire\Drawer\Utils;
 use Synthetic\Utils as SyntheticUtils;
 
 class SupportLockedProperties
 {
-    public function __invoke()
+    public function boot()
     {
         app('synthetic')->on('applyDiff', function ($root, $path, $value) {
             $prop = Utils::beforeFirstDot($path);

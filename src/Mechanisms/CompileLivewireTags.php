@@ -4,10 +4,12 @@ namespace Livewire\Mechanisms;
 
 use Livewire\Exceptions\ComponentAttributeMissingOnDynamicComponentException;
 use Illuminate\View\Compilers\ComponentTagCompiler;
+use Livewire\Drawer\IsSingleton;
+use Livewire\Drawer\Regexes;
 
 class CompileLivewireTags extends ComponentTagCompiler
 {
-    public function __invoke()
+    public function boot()
     {
         app('blade.compiler')->precompiler(function ($string) {
             return $this->compileLivewireSelfClosingTags($string);
@@ -16,30 +18,7 @@ class CompileLivewireTags extends ComponentTagCompiler
 
     protected function compileLivewireSelfClosingTags($value)
     {
-        $pattern = "/
-            <
-                \s*
-                livewire\:([\w\-\:\.]*)
-                \s*
-                (?<attributes>
-                    (?:
-                        \s+
-                        [\w\-:.@]+
-                        (
-                            =
-                            (?:
-                                \\\"[^\\\"]*\\\"
-                                |
-                                \'[^\']*\'
-                                |
-                                [^\'\\\"=<>]+
-                            )
-                        )?
-                    )*
-                    \s*
-                )
-            \/?>
-        /x";
+        $pattern = '/'.Regexes::$livewireOpeningTagOrSelfClosingTag.'/x';
 
         return preg_replace_callback($pattern, function (array $matches) {
             $attributes = $this->getAttributesFromAttributeString($matches['attributes']);
@@ -101,7 +80,6 @@ class CompileLivewireTags extends ComponentTagCompiler
 
             return "@livewire({$component}, [".$this->attributesToString($attributes, $escapeBound = false)."], key({$key}))";
         }
-
 
         return "@livewire({$component}, [".$this->attributesToString($attributes, $escapeBound = false).'])';
     }

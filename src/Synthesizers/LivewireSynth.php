@@ -19,7 +19,7 @@ class LivewireSynth extends ObjectSynth
     function dehydrate($target, $context) {
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($target);
 
-        $html = RenderComponent::renderComponentBladeView($target, $target->render(), $properties);
+        $html = app('livewire')->renderBladeView($target, $target->render(), $properties);
 
         $context->addMeta('children', $target->getChildren());
         $context->addMeta('id', $target->getId());

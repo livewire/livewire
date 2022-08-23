@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Drawer;
 
 class Regexes
 {
@@ -39,6 +39,42 @@ class Regexes
             )
             (?<![\/=\-])
         >
+    ";
+
+    static $livewireOpeningTagOrSelfClosingTag = "
+        <
+            \s*
+            livewire[-\:]([\w\-\:\.]*)
+            (?<attributes>
+                (?:
+                    \s+
+                    (?:
+                        (?:
+                            @(?:class)(\( (?: (?>[^()]+) | (?-1) )* \))
+                        )
+                        |
+                        (?:
+                            \{\{\s*\\\$attributes(?:[^}]+?)?\s*\}\}
+                        )
+                        |
+                        (?:
+                            [\w\-:.@]+
+                            (
+                                =
+                                (?:
+                                    \\\"[^\\\"]*\\\"
+                                    |
+                                    \'[^\']*\'
+                                    |
+                                    [^\'\\\"=<>]+
+                                )
+                            )?
+                        )
+                    )
+                )*
+                \s*
+            )
+        \/?>
     ";
 
     static $livewireSelfClosingTag = "

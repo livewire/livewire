@@ -2,14 +2,18 @@
 
 namespace Livewire;
 
-use Livewire\Testing\TestableLivewire;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Livewire\Mechanisms\ComponentRegistry;
+use Livewire\Mechanisms\RenderComponent;
+use Livewire\Testing\TestableLivewire;
+use Livewire\Mechanisms\HijackBlade;
+use Throwable;
 use Closure;
 
 class Manager
 {
-    protected $componentAliases = [];
     protected $queryParamsForTesting = [];
 
     protected $shouldDisableBackButtonCache = false;
@@ -30,63 +34,27 @@ class Manager
     public static $currentCompilingViewPath;
     public static $currentCompilingChildCounter;
 
-    public function component($alias, $viewClass = null)
+    public function component($name, $class = null)
     {
-        if (is_null($viewClass)) {
-            $viewClass = $alias;
-            $alias = $viewClass::getName();
-        }
-
-        $this->componentAliases[$alias] = $viewClass;
+        ComponentRegistry::getInstance()->register($name, $class);
     }
 
-    public function getAlias($class, $default = null)
+    public function new($name)
     {
-        $alias = array_search($class, $this->componentAliases);
-
-        return $alias === false ? $default : $alias;
+        return ComponentRegistry::getInstance()->get($name);
     }
 
-    public function getComponentAliases()
+    public function directive($name, $callback)
     {
-        return $this->componentAliases;
+        HijackBlade::getInstance()->livewireOnlyDirective($name, $callback);
     }
 
-    public function getClass($alias)
+    /**
+     * Render a Livewire component's Blade view to raw HTML (without all the dehydration metadata...)
+     */
+    public function renderBladeView($target, $blade, $data)
     {
-        $finder = app(LivewireComponentsFinder::class);
-
-        $class = false;
-
-        $class = $class ?: (
-            // Let's first check if the user registered the component using:
-            // Livewire::component('name', [Livewire component class]);
-            // If not, we'll look in the auto-discovery manifest.
-            $this->componentAliases[$alias] ?? $finder->find($alias)
-        );
-
-        $class = $class ?: (
-            // If none of the above worked, our last-ditch effort will be
-            // to re-generate the auto-discovery manifest and look again.
-            $finder->build()->find($alias)
-        );
-
-        throw_unless($class, new ComponentNotFoundException(
-            "Unable to find component: [{$alias}]"
-        ));
-
-        return $class;
-    }
-
-    public function getInstance($component, $id)
-    {
-        $componentClass = $this->getClass($component);
-
-        throw_unless(class_exists($componentClass), new ComponentNotFoundException(
-            "Component [{$component}] class not found: [{$componentClass}]"
-        ));
-
-        return new $componentClass($id);
+        return RenderComponent::getInstance()->renderComponentBladeView($target, $blade, $data);
     }
 
     public function test($name, $params = [])
@@ -118,6 +86,7 @@ class Manager
         return $this;
     }
 
+
     public function flushState()
     {
         static::$isLivewireRequestTestingOverride = false;
@@ -126,6 +95,6 @@ class Manager
 
         $this->shouldDisableBackButtonCache = false;
 
-        $this->dispatch('flush-state');
+        app('synthetic')->trigger('flush-state');
     }
 }

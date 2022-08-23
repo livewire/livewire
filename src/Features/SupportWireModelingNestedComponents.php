@@ -3,41 +3,44 @@
 namespace Livewire\Features;
 
 use Synthetic\Utils as SyntheticUtils;
-use Livewire\Utils;
 use Livewire\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Drawer\Utils;
+use Livewire\Drawer\IsSingleton;
 
 class SupportWireModelingNestedComponents
 {
     protected $outersByComponentId = [];
 
-    public function __invoke()
+    public function boot()
     {
+        app('synthetic')->on('flush-state', fn() => static::$outersByComponentId = []);
+
         // When a Livewire component is rendered, we'll check to see if "wire:model" is set.
-        app('synthetic')->on('render', function ($target, $id, $params, $parent, $key) {
-            if ($parent && isset($params['wire:model'])) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+            return function ($target) use ($parent, $params) {
+                if ($parent && isset($params['wire:model'])) {
 
-                $outer = $params['wire:model'];
+                    $outer = $params['wire:model'];
 
-                foreach (SyntheticUtils::getAnnotations($target) as $propertyName => $annotations) {
-                    if (array_key_exists('modelable', $annotations)) {
-                        $inner = $propertyName;
+                    foreach (SyntheticUtils::getAnnotations($target) as $propertyName => $annotations) {
+                        if (array_key_exists('modelable', $annotations)) {
+                            $inner = $propertyName;
+                        }
                     }
+
+                    // We couldn't find a "modelable" property in the child.
+                    if (! isset($inner)) return $target;
+
+                    $wireModels = ComponentDataStore::get($target, 'wireModels', []);
+                    $wireModels[$outer] = $inner;
+                    ComponentDataStore::set($target, 'wireModels', $wireModels);
+
+                    $target->$inner = $parent->$outer;
                 }
 
-                // We couldn't find a "modelable" property in the child.
-                if (! isset($inner)) return;
-
-                $wireModels = ComponentDataStore::get($target, 'wireModels', []);
-                $wireModels[$outer] = $inner;
-                ComponentDataStore::set($target, 'wireModels', $wireModels);
-
-                $target->$inner = $parent->$outer;
-
-                return function ($html) {
-                    return $html;
-                };
-            }
+                return $target;
+            };
         });
 
         app('synthetic')->on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
