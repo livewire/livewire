@@ -156,6 +156,11 @@ abstract class Component
             ->toArray();
     }
 
+    public function getPreRenderedView()
+    {
+        return $this->preRenderedView;
+    }
+
     public function skipRender()
     {
         $this->shouldSkipRender = true;
@@ -274,7 +279,7 @@ abstract class Component
     {
         return $this->forStack;
     }
-    
+
     function __isset($property)
     {
         try {
