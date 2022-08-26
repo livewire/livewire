@@ -11,13 +11,16 @@ use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Livewire\ServiceProvider;
 use Livewire\Livewire;
+use Livewire\Drawer\Utils;
 use Livewire\Drawer\DuskBrowserMacros;
 use Livewire\Component;
 use Laravel\Dusk\Browser;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Auth\User as AuthUser;
@@ -31,6 +34,75 @@ use Closure;
 class DuskTestCase extends BaseTestCase
 {
     public static $useAlpineV3 = false;
+    public $applicationTweaks = [];
+
+    public function visit($component, $callback)
+    {
+        $name = '';
+
+        // If this is an anomymous class...
+        File::deleteDirectory($tempDir = sys_get_temp_dir().'/livewire-dusk');
+
+        if (is_object($component) && str(get_class($component))->contains('@anonymous')) {
+            $name = 'LivewireAnonymous'.Str::random(5);
+
+            $tempDir = sys_get_temp_dir().'/livewire-dusk';
+            mkdir($tempDir);
+            $path = $tempDir.'/'.$name.'.php';
+
+            file_put_contents($path, Utils::anonymousClassToStringClass($component, $name));
+        } else if (is_object($component)) {
+            $name = get_class($component);
+        } else {
+            $name = $component;
+        }
+
+        $url = '/livewire-dusk?component='.$name;
+
+        $this->browse(function ($browser) use ($url, $callback) {
+            $callback($browser->visit($url));
+        });
+    }
+
+    public static function runOnApplicationBoot()
+    {
+        Route::get('/livewire-dusk', function () {
+            $name = request('component');
+
+            return Blade::render(<<<HTML
+            <html x-data>
+                <head>
+                    <script defer src="http://alpine.test/packages/morph/dist/cdn.js"></script>
+                    <script defer src="http://alpine.test/packages/alpinejs/dist/cdn.js"></script>
+                </head>
+                <body>
+                    @livewire('$name')
+
+                    @livewireScripts
+                </body>
+            </html>
+            HTML);
+        })->middleware('web');
+
+        spl_autoload_register(function ($class) {
+            if (str_starts_with($class, 'LivewireAnonymous')) {
+
+                include_once sys_get_temp_dir().'/livewire-dusk/'.$class.'.php';
+
+                return true;
+            }
+
+            return false;
+        });
+
+        if (File::exists($tempDir = sys_get_temp_dir().'/livewire-dusk')) {
+            foreach (File::allFiles($tempDir) as $file) {
+                $name = (string) str($file->getFilename())->before('.php');
+
+                Livewire::component($name, new $name);
+            }
+        }
+    }
 
     public function setUp(): void
     {
@@ -50,24 +122,23 @@ class DuskTestCase extends BaseTestCase
 
         parent::setUp();
 
-        // $thing = get_class($this);
-
         $isUsingAlpineV3 = static::$useAlpineV3;
 
         $this->tweakApplication(function () use ($isUsingAlpineV3) {
             // Autoload all Livewire components in this test suite.
-            collect(File::allFiles(__DIR__))
-                ->map(function ($file) {
-                    return 'Tests\\Browser\\'.str($file->getRelativePathname())->before('.php')->replace('/', '\\');
-                })
-                ->filter(function ($computedClassName) {
-                    return class_exists($computedClassName);
-                })
-                ->filter(function ($class) {
-                    return is_subclass_of($class, Component::class);
-                })->each(function ($componentClass) {
-                    app('livewire')->component($componentClass);
-                });
+
+            // collect(File::allFiles(__DIR__))
+            //     ->map(function ($file) {
+            //         return 'Tests\\Browser\\'.str($file->getRelativePathname())->before('.php')->replace('/', '\\');
+            //     })
+            //     ->filter(function ($computedClassName) {
+            //         return class_exists($computedClassName);
+            //     })
+            //     ->filter(function ($class) {
+            //         return is_subclass_of($class, Component::class);
+            //     })->each(function ($componentClass) {
+            //         app('livewire')->component($componentClass);
+            //     });
 
             // @todo...
             // Route::get(
@@ -94,19 +165,13 @@ class DuskTestCase extends BaseTestCase
 
             // The following two routes belong together. The first one serves a view which in return
             // loads and renders a component dynamically. There may not be a POST route for the first one.
-            Route::get('/livewire-dusk/tests/browser/load-dynamic-component', function () {
-                return View::file(__DIR__ . '/DynamicComponentLoading/view-load-dynamic-component.blade.php');
-            })->middleware('web')->name('load-dynamic-component');
+            // Route::get('/livewire-dusk/tests/browser/load-dynamic-component', function () {
+            //     return View::file(__DIR__ . '/DynamicComponentLoading/view-load-dynamic-component.blade.php');
+            // })->middleware('web')->name('load-dynamic-component');
 
-            Route::post('/livewire-dusk/tests/browser/dynamic-component', function () {
-                return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
-            })->middleware('web')->name('dynamic-component');
-
-            // Route::get('/livewire-dusk/{component}', function ($component) {
-            //     $class = urldecode($component);
-
-            //     return app()->call(new $class);
-            // })->middleware('web', AllowListedMiddleware::class, BlockListedMiddleware::class);
+            // Route::post('/livewire-dusk/tests/browser/dynamic-component', function () {
+            //     return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
+            // })->middleware('web')->name('dynamic-component');
 
             Route::get('/force-login/{userId}', function ($userId) {
                 Auth::login(User::find($userId));
@@ -158,6 +223,8 @@ class DuskTestCase extends BaseTestCase
 
     protected function tearDown(): void
     {
+        File::deleteDirectory($tempDir = sys_get_temp_dir().'/livewire-dusk');
+
         $this->removeApplicationTweaks();
 
         parent::tearDown();

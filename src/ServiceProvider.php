@@ -71,6 +71,10 @@ class ServiceProvider extends BaseServiceProvider
         $this->registerSynthesizers();
         $this->registerMechanisms();
         $this->registerFeatures();
+
+        if (app()->environment('testing')) {
+            DuskTestCase::runOnApplicationBoot();
+        };
     }
 
     protected function registerLivewireSingleton()

@@ -37,7 +37,6 @@ export default function () {
         })
 
         Alpine.effect(() => {
-            console.log(dirty.state)
             setDirtyState(el, inverted(dirty.state))
         })
     })

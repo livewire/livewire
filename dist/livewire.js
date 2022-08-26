@@ -1083,6 +1083,7 @@
   });
   var store = /* @__PURE__ */ new Map();
   window.synthetic = synthetic;
+  window.syntheticOn = on2;
   function synthetic(provided) {
     if (typeof provided === "string")
       return newUp(provided);
@@ -1260,9 +1261,11 @@
         let { snapshot, effects } = response[i];
         receivers[i](snapshot, effects);
       }
+      trigger3("response.success");
     } else {
       let html = await request.text();
       showHtmlModal(html);
+      trigger3("response.failure");
     }
     finish();
   }
@@ -1610,4 +1613,18 @@
   };
   if (!window.Livewire)
     window.Livewire = Livewire;
+  function monkeyPatchDomSetAttributeToAllowAtSymbols() {
+    let original = Element.prototype.setAttribute;
+    let hostDiv = document.createElement("div");
+    Element.prototype.setAttribute = function newSetAttribute(name, value2) {
+      if (!name.includes("@")) {
+        return original.call(this, name, value2);
+      }
+      hostDiv.innerHTML = `<span ${name}="${value2}"></span>`;
+      let attr = hostDiv.firstElementChild.getAttributeNode(name);
+      hostDiv.firstElementChild.removeAttributeNode(attr);
+      this.setAttributeNode(attr);
+    };
+  }
+  monkeyPatchDomSetAttributeToAllowAtSymbols();
 })();

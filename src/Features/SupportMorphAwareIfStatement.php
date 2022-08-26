@@ -19,30 +19,20 @@ class SupportMorphAwareIfStatement
         });
 
         app('livewire')->directive('endif', function ($expression) {
-            $key = Str::random(6);
-
             return <<<PHP
             <?php
-                echo \Livewire\Features\SupportMorphAwareIfStatement::injectKey(ob_get_clean(), '$key');
-
                 endif;
+                echo \Livewire\Features\SupportMorphAwareIfStatement::injectMarkers(ob_get_clean());
             ?>
             PHP;
         });
     }
 
-    static function injectKey($content, $key)
+    static function injectMarkers($content)
     {
-        $pattern = '/<[^\/].+?>/xsm';
-
-        $content = preg_replace_callback($pattern, function ($matches) use ($key) {
-            $tag = $matches[0];
-
-            $opening = str($tag)->beforeLast('>');
-            $closing = '>';
-
-            return $opening.' wire:key="'.$key.'"'.$closing;
-        }, $content, limit: 1);
+        if (str_starts_with(trim($content, " \n"), '<')) {
+            return '<!-- __IF__ -->'.$content.'<!-- __ENDIF__ -->';
+        }
 
         return $content;
     }
