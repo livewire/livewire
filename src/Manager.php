@@ -49,6 +49,11 @@ class Manager
         HijackBlade::getInstance()->livewireOnlyDirective($name, $callback);
     }
 
+    public function precompiler($pattern, $callback)
+    {
+        HijackBlade::getInstance()->livewireOnlyPrecompiler($pattern, $callback);
+    }
+
     /**
      * Render a Livewire component's Blade view to raw HTML (without all the dehydration metadata...)
      */

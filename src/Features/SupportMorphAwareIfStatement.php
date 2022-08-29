@@ -2,38 +2,26 @@
 
 namespace Livewire\Features;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Blade;
-
 class SupportMorphAwareIfStatement
 {
     function boot()
     {
-        app('livewire')->directive('if', function ($expression) {
-            return <<<PHP
-            <?php
-                ob_start();
-                if ($expression) :
-            ?>
-            PHP;
+        $if = '\B@(@?if(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?';
+        $endif = '@endif';
+
+        $hasClosingTagBefore = '>[^<]*';
+        $hasOpeningTagAfter = '[^>]*<';
+
+        app('livewire')->precompiler('/'.$hasClosingTagBefore.$if.'/x', function ($matches) {
+            [$beforeIf, $afterIf] = explode('@if', $matches[0]);
+
+            return $beforeIf.'<!-- __IF__ -->@if'.$afterIf;
         });
 
-        app('livewire')->directive('endif', function ($expression) {
-            return <<<PHP
-            <?php
-                endif;
-                echo \Livewire\Features\SupportMorphAwareIfStatement::injectMarkers(ob_get_clean());
-            ?>
-            PHP;
+        app('livewire')->precompiler('/'.$endif.$hasOpeningTagAfter.'/sm', function ($matches) {
+            [$before, $after] = explode('@endif', $matches[0]);
+
+            return $before.'@endif <!-- __ENDIF__ -->'.$after;
         });
-    }
-
-    static function injectMarkers($content)
-    {
-        if (str_starts_with(trim($content, " \n"), '<')) {
-            return '<!-- __IF__ -->'.$content.'<!-- __ENDIF__ -->';
-        }
-
-        return $content;
     }
 }

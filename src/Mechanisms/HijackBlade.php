@@ -10,6 +10,7 @@ class HijackBlade
     use IsSingleton;
 
     protected $directives = [];
+    protected $precompilers = [];
     protected $renderCounter = 0;
 
     function boot()
@@ -19,6 +20,7 @@ class HijackBlade
 
             if ($this->renderCounter === 0) {
                 $customDirectives = app('blade.compiler')->getCustomDirectives();
+                $precompilers = invade(app('blade.compiler'))->precompilers;
 
                 foreach ($this->directives as $name => $handler) {
                     if (! isset($customDirectives[$name])) {
@@ -32,6 +34,26 @@ class HijackBlade
                             unset($customDirectives[$name]);
 
                             invade(app('blade.compiler'))->customDirectives = $customDirectives;
+                        };
+                    }
+                }
+
+                foreach ($this->precompilers as $handler) {
+                    if (array_search($handler, $precompilers) === false) {
+                        $precompilers[] = $handler;
+
+                        invade(app('blade.compiler'))->precompilers = $precompilers;
+
+                        $removals[] = function () use ($handler) {
+                            $precompilers = invade(app('blade.compiler'))->precompilers;
+
+                            $index = array_search($handler, $precompilers);
+
+                            if ($index === false) return;
+
+                            unset($precompilers[$index]);
+
+                            invade(app('blade.compiler'))->precompilers = $precompilers;
                         };
                     }
                 }
@@ -61,6 +83,15 @@ class HijackBlade
     function livewireOnlyDirective($name, $handler)
     {
         $this->directives[$name] = $handler;
+    }
+
+    function livewireOnlyPrecompiler($pattern, $handler)
+    {
+        $this->precompilers[] = function ($string) use ($pattern, $handler) {
+            return preg_replace_callback($pattern, function ($matches) use ($handler, $string) {
+                return $handler($matches, $string);
+            }, $string);
+        };
     }
 
     function getEngine()

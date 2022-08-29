@@ -24,7 +24,25 @@ class HijackBladeTest extends TestCase
             <div>@foo</div>
         ');
 
-        $this->assertCount(3, explode('<div>@foo</div>', $output));
+        $this->assertCount(3, explode('@foo', $output));
+    }
+
+    /** @test */
+    public function livewire_only_precompilers_apply_to_livewire_components_and_not_normal_blade()
+    {
+        Livewire::precompiler('/@foo/sm', function ($matches) {
+            return 'bar';
+        });
+
+        $output = Blade::render('
+            <div>@foo</div>
+
+            @livewire(\Livewire\Mechanisms\HijackBladeTestComponent::class)
+
+            <div>@foo</div>
+        ');
+
+        $this->assertCount(3, explode('@foo', $output));
     }
 }
 

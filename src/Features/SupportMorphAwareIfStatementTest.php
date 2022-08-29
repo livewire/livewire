@@ -28,6 +28,7 @@ class SupportMorphAwareIfStatementTest extends DuskTestCase
         $this->assertCount(2, explode('__ENDIF__', $output));
     }
 
+    /** @test */
     public function blade_conditionals_are_handled_properly_by_morphdom()
     {
         $this->visit(new class extends Component {
