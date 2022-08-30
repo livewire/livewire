@@ -116,6 +116,7 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportLockedProperties::class,
             \Livewire\Features\SupportReactiveProps::class,
+            \Livewire\Features\SupportHotReloading::class,
             \Livewire\Features\SupportSlots::class,
             \Livewire\Features\SupportLazyLoading::class, // This has to be after "SupportSlots"...
         ] as $feature) {
