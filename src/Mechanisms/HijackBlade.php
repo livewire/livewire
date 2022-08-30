@@ -13,9 +13,33 @@ class HijackBlade
     protected $precompilers = [];
     protected $renderCounter = 0;
 
+    protected static $livewireComponents = [];
+
+    function startLivewireRendering($component)
+    {
+        static::$livewireComponents[] = $component;
+    }
+
+    function endLivewireRendering()
+    {
+        array_pop(static::$livewireComponents);
+    }
+
+    static function currentRendering()
+    {
+        return end(static::$livewireComponents);
+    }
+
+    static function isRenderingLivewireComponent()
+    {
+        return ! empty(static::$livewireComponents);
+    }
+
     function boot()
     {
         app('synthetic')->on('render', function ($target, $view) {
+            $this->startLivewireRendering($target);
+
             $removals = [];
 
             if ($this->renderCounter === 0) {
@@ -61,7 +85,9 @@ class HijackBlade
 
             $this->renderCounter++;
 
-            return function ($html) use ($view, $removals) {
+            return function ($html) use ($view, $removals, $target) {
+                $this->endLivewireRendering();
+
                 $this->renderCounter--;
 
                 if ($this->renderCounter === 0) {
@@ -97,7 +123,16 @@ class HijackBlade
     function getEngine()
     {
         return new class(app('blade.compiler')) extends \Illuminate\View\Engines\CompilerEngine {
-            //
+            public function get($path, array $data = [])
+            {
+                if (! HijackBlade::isRenderingLivewireComponent()) return parent::get($path, $data);
+
+                $currentComponent = HijackBlade::currentRendering();
+
+                app('synthetic')->trigger('view:compile', $currentComponent, $path);
+
+                return parent::get($path, $data);
+            }
         };
     }
 

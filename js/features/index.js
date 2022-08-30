@@ -1,6 +1,7 @@
 import morphDom from "./morphDom";
 import wireModel from "./wireModel";
 import wireWildcard from "./wireWildcard";
+import hotReloading from "./hotReloading";
 import wireLoading from "./wireLoading";
 import wireTarget from "./wireTarget";
 import $wire from "./$wire";
@@ -18,6 +19,7 @@ export default function () {
     wireModel()
     wireLoading()
     wireWildcard()
+    hotReloading()
     // wireDirty()
     // wireIgnore()
     // disableFormsDuringRequest()

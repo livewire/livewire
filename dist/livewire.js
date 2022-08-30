@@ -41,9 +41,6 @@
   function on(name, callback) {
     listeners.add(name, callback);
   }
-  function trigger(name, ...params) {
-    listeners.each(name, (i) => i(...params));
-  }
 
   // js/state.js
   var state = {
@@ -275,7 +272,7 @@
       }
     }
   }
-  function trigger2(target, type, key, newValue, oldValue, oldTarget) {
+  function trigger(target, type, key, newValue, oldValue, oldTarget) {
     const depsMap = targetMap.get(target);
     if (!depsMap) {
       return;
@@ -453,9 +450,9 @@
       const result = Reflect.set(target, key, value2, receiver);
       if (target === toRaw(receiver)) {
         if (!hadKey) {
-          trigger2(target, "add", key, value2);
+          trigger(target, "add", key, value2);
         } else if (hasChanged(value2, oldValue)) {
-          trigger2(target, "set", key, value2, oldValue);
+          trigger(target, "set", key, value2, oldValue);
         }
       }
       return result;
@@ -466,7 +463,7 @@
     const oldValue = target[key];
     const result = Reflect.deleteProperty(target, key);
     if (result && hadKey) {
-      trigger2(target, "delete", key, void 0, oldValue);
+      trigger(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
@@ -549,7 +546,7 @@
     const hadKey = proto.has.call(target, value2);
     if (!hadKey) {
       target.add(value2);
-      trigger2(target, "add", value2, value2);
+      trigger(target, "add", value2, value2);
     }
     return this;
   }
@@ -567,9 +564,9 @@
     const oldValue = get2.call(target, key);
     target.set(key, value2);
     if (!hadKey) {
-      trigger2(target, "add", key, value2);
+      trigger(target, "add", key, value2);
     } else if (hasChanged(value2, oldValue)) {
-      trigger2(target, "set", key, value2, oldValue);
+      trigger(target, "set", key, value2, oldValue);
     }
     return this;
   }
@@ -586,7 +583,7 @@
     const oldValue = get2 ? get2.call(target, key) : void 0;
     const result = target.delete(key);
     if (hadKey) {
-      trigger2(target, "delete", key, void 0, oldValue);
+      trigger(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
@@ -596,7 +593,7 @@
     const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
-      trigger2(target, "clear", void 0, void 0, oldTarget);
+      trigger(target, "clear", void 0, void 0, oldTarget);
     }
     return result;
   }
@@ -915,7 +912,7 @@
       listeners2[name] = [];
     listeners2[name].push(callback);
   }
-  function trigger3(name, ...params) {
+  function trigger2(name, ...params) {
     let callbacks = listeners2[name] || [];
     let finishers = [];
     for (let i = 0; i < callbacks.length; i++) {
@@ -1099,7 +1096,7 @@
     target.canonical = canonical;
     target.ephemeral = ephemeral;
     target.reactive = reactive2(ephemeral);
-    trigger3("new", target);
+    trigger2("new", target);
     processEffects(target);
     return target.reactive;
   }
@@ -1125,7 +1122,7 @@
           });
         }
       };
-      let finish = trigger3("decorate", target, path, addProp, decorator, symbol2);
+      let finish = trigger2("decorate", target, path, addProp, decorator, symbol2);
       addProp("__target", { get() {
         return target;
       } });
@@ -1145,6 +1142,7 @@
         });
       });
       addProp("$watchEffect", (callback) => effect2(callback));
+      addProp("$refresh", async () => await requestCommit(symbol2));
       addProp("$commit", async (callback) => {
         return await requestCommit(symbol2);
       });
@@ -1208,7 +1206,7 @@
   async function sendMethodCall() {
     requestTargetQueue.forEach((request2, symbol) => {
       let target = store.get(symbol);
-      trigger3("request.before", target);
+      trigger2("request.before", target);
     });
     let payload = [];
     let receivers = [];
@@ -1225,7 +1223,7 @@
         }))
       };
       payload.push(targetPaylaod);
-      let finish2 = trigger3("target.request", target, targetPaylaod);
+      let finish2 = trigger2("target.request", target, targetPaylaod);
       receivers.push((snapshot, effects) => {
         mergeNewSnapshot(symbol, snapshot, effects);
         processEffects(target);
@@ -1246,7 +1244,7 @@
       });
     });
     requestTargetQueue.clear();
-    let finish = trigger3("request", payload);
+    let finish = trigger2("request", payload);
     let request = await fetch("/synthetic/update", {
       method: "POST",
       body: JSON.stringify({
@@ -1261,11 +1259,11 @@
         let { snapshot, effects } = response[i];
         receivers[i](snapshot, effects);
       }
-      trigger3("response.success");
+      trigger2("response.success");
     } else {
       let html = await request.text();
       showHtmlModal(html);
-      trigger3("response.failure");
+      trigger2("response.failure");
     }
     finish();
   }
@@ -1305,7 +1303,7 @@
   }
   function processEffects(target) {
     let effects = target.effects;
-    each(effects, (key, value2) => trigger3("effects", target, value2, key));
+    each(effects, (key, value2) => trigger2("effects", target, value2, key));
   }
 
   // js/features/morphDom.js
@@ -1499,7 +1497,7 @@
 
   // js/features/wireWildcard.js
   function wireWildcard_default() {
-    on("element.init", (el, component) => {
+    on2("element.init", (el, component) => {
       directives(el).all().forEach((directive) => {
         if (["model", "init", "loading", "poll", "ignore", "id", "initial-data", "key", "target", "dirty"].includes(directive.type))
           return;
@@ -1511,6 +1509,45 @@
         });
       });
     });
+  }
+
+  // js/features/hotReloading.js
+  function hotReloading_default() {
+    on2("effects", (target, effects, path) => {
+      queueMicrotask(() => {
+        let files = effects.hotReload;
+        if (!files)
+          return;
+        let component = state.components[target.__livewireId];
+        if (files) {
+          files.forEach((file) => {
+            whenFileIsModified(file, () => {
+              component.$wire.$refresh();
+            });
+          });
+        }
+      });
+    });
+    let es = new EventSource("/livewire/hot-reload");
+    es.addEventListener("message", function(event) {
+      let data = JSON.parse(event.data);
+      data.file && console.log(data.file, listeners3);
+      if (data.file && listeners3[data.file]) {
+        listeners3[data.file].forEach((cb) => cb());
+      }
+    });
+    es.onerror = function(err) {
+      console.log("EventSource failed:", err);
+    };
+    es.onopen = function(err) {
+      console.log("opened", err);
+    };
+  }
+  var listeners3 = [];
+  function whenFileIsModified(file, callback) {
+    if (!listeners3[file])
+      listeners3[file] = [];
+    listeners3[file].push(callback);
   }
 
   // js/features/wireLoading.js
@@ -1555,6 +1592,7 @@
     wireModel_default();
     wireLoading_default();
     wireWildcard_default();
+    hotReloading_default();
   }
 
   // js/component.js
@@ -1587,14 +1625,14 @@
         }
       });
       state.components[component2.id] = component2;
-      trigger("component.initialized", component2);
+      trigger2("component.initialized", component2);
     }
     let component;
     try {
       component = closestComponent(el);
     } catch (e) {
     }
-    component && trigger("element.init", el, component);
+    component && trigger2("element.init", el, component);
   }
   function closestComponent(el) {
     let closestRoot = Alpine.findClosest(el, (i) => i.__livewire);

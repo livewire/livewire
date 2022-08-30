@@ -1,5 +1,5 @@
 import { directives } from '../directives'
-import { on } from '../events'
+import { on } from './../../../synthetic/js/index'
 
 export default function () {
     on('element.init', (el, component) => {

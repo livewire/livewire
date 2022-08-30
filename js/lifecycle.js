@@ -1,6 +1,7 @@
 import bootFeatures from './features'
 import { state } from './state'
-import { trigger } from './events'
+// import { trigger } from './events'
+import { trigger } from './../../synthetic/js/index'
 import { synthetic } from './../../synthetic/js/index'
 import { Component } from './component'
 
