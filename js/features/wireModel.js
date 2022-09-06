@@ -1,6 +1,6 @@
 import { directives } from '../directives'
-import { dataGet, dataSet, debounce as generateDebounce } from '../utils'
-import { on } from '../events'
+import { dataGet, dataSet, debounce, debounce as generateDebounce, throttle } from '../utils'
+import { on } from './../../../synthetic/js/index'
 import { closestComponent } from '../lifecycle'
 import { deferMutation } from './../data'
 
@@ -32,6 +32,15 @@ export default function () {
 
         let modifierTail = getModifierTail(directive.modifiers)
 
+        let live = directive.modifiers.includes('live')
+
+        // @todo: change this to throttle?
+        let update = debounce((component) => {
+            if (! live) return
+
+            component.$wire.$commit()
+        }, 250)
+
         Alpine.bind(el, {
             // "unintrusive" in this case means to not update the value of the input
             // if it is a currently focused text input.
@@ -46,7 +55,11 @@ export default function () {
                         return dataGet(closestComponent(el).$wire, directive.value)
                     },
                     set(value) {
-                        dataSet(closestComponent(el).$wire, directive.value, value)
+                        let component = closestComponent(el)
+
+                        dataSet(component.$wire, directive.value, value)
+
+                        update(component)
                     },
                 }
             }

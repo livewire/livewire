@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features;
+namespace Livewire\Features\SupportHotReloading;
 
 use Livewire\Synthesizers\LivewireSynth;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +13,8 @@ class SupportHotReloading
     public function boot()
     {
         if (! app()->environment('local') || ! config('app.debug')) return;
+
+        app('livewire')->enableJsFeature('hot-reloading');
 
         app('synthetic')->on('view:compile', function ($component, $path) {
             if (! isset($this->pathsByComponentId[$component->getId()])) {

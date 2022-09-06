@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms;
 
 use Livewire\Drawer\Utils;
 use Livewire\Drawer\IsSingleton;
+use Illuminate\Support\Js;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 
@@ -94,6 +95,7 @@ class JavaScriptAndCssAssets
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../../dist/manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
+        $jsFeatures = Js::from(app('livewire')->getJsFeatures());
 
         // Default to dynamic `livewire.js` (served by a Laravel route).
         $fullAssetPath = "{$assetsUrl}/livewire{$versionedFileName}";
@@ -129,7 +131,7 @@ class JavaScriptAndCssAssets
 
             window.addEventListener('alpine:init', function () {
                 if (! started) {
-                    window.Livewire.start();
+                    window.Livewire.start({ features: {$jsFeatures} });
 
                     started = true;
                 }
@@ -139,10 +141,14 @@ class JavaScriptAndCssAssets
                 // window.livewire.restart();
             });
         </script>
+        <script src="http://alpine.test/packages/morph/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
+        <script src="http://alpine.test/packages/navigate/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
+        <script src="http://alpine.test/packages/intersect/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
+        <script src="http://alpine.test/packages/alpinejs/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
         HTML;
     }
 
-    protected function minify($subject)
+    protected static function minify($subject)
     {
         return preg_replace('~(\v|\t|\s{2,})~m', '', $subject);
     }

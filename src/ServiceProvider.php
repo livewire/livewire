@@ -64,10 +64,12 @@ class ServiceProvider extends BaseServiceProvider
     public function register()
     {
         $this->registerLivewireSingleton();
+        $this->registerConfig();
     }
 
     public function boot()
     {
+        $this->registerConsoleCommands();
         $this->registerSynthesizers();
         $this->registerMechanisms();
         $this->registerFeatures();
@@ -81,6 +83,27 @@ class ServiceProvider extends BaseServiceProvider
     {
         $this->app->alias(Manager::class, 'livewire');
         $this->app->singleton(Manager::class);
+    }
+
+    protected function registerConsoleCommands()
+    {
+        if (! $this->app->runningInConsole()) return;
+
+        $this->commands([
+            \Livewire\Commands\MakeLivewireCommand::class, // make:livewire
+            \Livewire\Commands\MakeCommand::class,         // livewire:make
+            \Livewire\Commands\TouchCommand::class,        // livewire:touch
+            \Livewire\Commands\CopyCommand::class,         // livewire:copy
+            \Livewire\Commands\CpCommand::class,           // livewire:cp
+            \Livewire\Commands\DeleteCommand::class,       // livewire:delete
+            \Livewire\Commands\RmCommand::class,           // livewire:rm
+            \Livewire\Commands\MoveCommand::class,         // livewire:move
+            \Livewire\Commands\MvCommand::class,           // livewire:mv
+            \Livewire\Commands\StubsCommand::class,        // livewire:stubs
+            \Livewire\Commands\DiscoverCommand::class,     // livewire:discover
+            \Livewire\Commands\S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
+            \Livewire\Commands\PublishCommand::class,      // livewire:publish
+        ]);
     }
 
     protected function registerSynthesizers()
@@ -111,14 +134,18 @@ class ServiceProvider extends BaseServiceProvider
     protected function registerFeatures()
     {
         foreach ([
+            \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
+            \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
+            \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
+            \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
+            \Livewire\Features\SupportEagerLoading\SupportEagerLoading::class,
             \Livewire\Features\SupportWireModelingNestedComponents::class,
             \Livewire\Features\SupportChecksumErrorDebugging::class,
-            \Livewire\Features\SupportMorphAwareIfStatement::class,
-            \Livewire\Features\SupportLockedProperties::class,
+            \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
+            \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
             \Livewire\Features\SupportReactiveProps::class,
-            \Livewire\Features\SupportHotReloading::class,
-            \Livewire\Features\SupportSlots::class,
-            \Livewire\Features\SupportLazyLoading::class, // This has to be after "SupportSlots"...
+            \Livewire\Features\SupportSlots\SupportSlots::class,
+            \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class, // This has to be after "SupportSlots"...
         ] as $feature) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($feature))) {
                 $feature::getInstance()->boot();
@@ -126,5 +153,10 @@ class ServiceProvider extends BaseServiceProvider
                 (new $feature)->boot();
             }
         }
+    }
+
+    protected function registerConfig()
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/livewire.php', 'livewire');
     }
 }

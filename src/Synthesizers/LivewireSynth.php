@@ -37,7 +37,7 @@ class LivewireSynth extends ObjectSynth
         ] = $meta;
 
         $target = new $class;
-        $target->setChildren($children);
+        $target->setPreviouslyRenderedChildren($children);
         $target->setId($id);
 
         $properties = $value;

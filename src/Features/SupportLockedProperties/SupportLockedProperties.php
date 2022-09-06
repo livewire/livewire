@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features;
+namespace Livewire\Features\SupportLockedProperties;
 
 use Livewire\Drawer\Utils;
 use Synthetic\Utils as SyntheticUtils;

@@ -2,14 +2,15 @@
 
 namespace Livewire;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Livewire\Exceptions\ComponentNotFoundException;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Livewire\Mechanisms\ComponentRegistry;
-use Livewire\Mechanisms\RenderComponent;
-use Livewire\Testing\TestableLivewire;
-use Livewire\Mechanisms\HijackBlade;
 use Throwable;
+use Livewire\Testing\TestableLivewire;
+use Livewire\Mechanisms\RenderComponent;
+use Livewire\Mechanisms\HijackBlade;
+use Livewire\Mechanisms\ComponentRegistry;
+use Livewire\Features\SupportPageComponents\SupportPageComponents;
+use Livewire\Exceptions\ComponentNotFoundException;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Closure;
 
 class Manager
@@ -39,6 +40,18 @@ class Manager
         ComponentRegistry::getInstance()->register($name, $class);
     }
 
+    public static $jsFeatures = [];
+
+    public function enableJsFeature($name)
+    {
+        static::$jsFeatures[] = $name;
+    }
+
+    public function getJsFeatures()
+    {
+        return static::$jsFeatures;
+    }
+
     public function new($name)
     {
         return ComponentRegistry::getInstance()->get($name);
@@ -52,6 +65,16 @@ class Manager
     public function precompiler($pattern, $callback)
     {
         HijackBlade::getInstance()->livewireOnlyPrecompiler($pattern, $callback);
+    }
+
+    public function mount($name, $params = [], $key = null, $slots = [], $viewScope = [])
+    {
+        return RenderComponent::mount($name, $params, $key, $slots, $viewScope);
+    }
+
+    public function isRenderingPageComponent()
+    {
+        return SupportPageComponents::isRenderingPageComponent();
     }
 
     /**
@@ -91,6 +114,13 @@ class Manager
         return $this;
     }
 
+    public function isRunningServerless()
+    {
+        return in_array($_ENV['SERVER_SOFTWARE'] ?? null, [
+            'vapor',
+            'bref',
+        ]);
+    }
 
     public function flushState()
     {

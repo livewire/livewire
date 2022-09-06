@@ -6,7 +6,6 @@ use Synthetic\Utils as SyntheticUtils;
 use Livewire\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\ComponentDataStore;
 use Livewire\Drawer\Utils;
-use Livewire\Drawer\IsSingleton;
 
 class SupportWireModelingNestedComponents
 {

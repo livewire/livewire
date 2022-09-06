@@ -1,15 +1,16 @@
-import { closestComponent } from "../lifecycle";
-import { state } from "../state";
-import { on } from './../../../synthetic/js/index'
+import { findComponent, state } from "../../../js/state";
+import { on } from './../../../../synthetic/js/index'
 
-export default function () {
+export default function (enabled) {
+    if (! enabled.includes('hot-reloading')) return
+
     on('effects', (target, effects, path) => {
         queueMicrotask(() => {
             let files = effects.hotReload
 
             if (! files) return
 
-            let component = state.components[target.__livewireId]
+            let component = findComponent(target.__livewireId)
 
             if (files) {
                 files.forEach(file => {

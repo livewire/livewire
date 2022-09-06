@@ -64,7 +64,7 @@ class HijackBlade
 
                 foreach ($this->precompilers as $handler) {
                     if (array_search($handler, $precompilers) === false) {
-                        $precompilers[] = $handler;
+                        array_unshift($precompilers, $handler);
 
                         invade(app('blade.compiler'))->precompilers = $precompilers;
 

@@ -1,5 +1,21 @@
 (() => {
   // js/utils.js
+  function debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+      var context = this, args = arguments;
+      var later = function() {
+        timeout = null;
+        if (!immediate)
+          func.apply(context, args);
+      };
+      var callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow)
+        func.apply(context, args);
+    };
+  }
   function dataGet(object2, key) {
     return key.split(".").reduce((carry, i) => {
       if (carry === void 0)
@@ -46,8 +62,92 @@
   var state = {
     components: {}
   };
+  function hasComponent(id) {
+    return !!state.components[id];
+  }
+  function findComponent(id) {
+    let component = state.components[id];
+    if (!component)
+      throw "Component not found: ".id;
+    return component;
+  }
+  function storeComponent(id, component) {
+    state.components[id] = component;
+  }
+  function releaseComponent(id) {
+    delete state.components[id];
+  }
   function first() {
     return Object.values(state.components)[0].$wire;
+  }
+
+  // js/morph.js
+  function morph(component, el, html) {
+    let wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    let parentComponent;
+    try {
+      parentComponent = closestComponent(el.parentElement);
+    } catch (e) {
+    }
+    parentComponent && (wrapper.__livewire = parentComponent);
+    let to = wrapper.firstElementChild;
+    to.__livewire = component;
+    Alpine.morph(el, to, {
+      updating: (el2, toEl, childrenOnly, skip) => {
+        if (isntElement(el2))
+          return;
+        if (el2.__livewire_ignore === true)
+          return skip();
+        if (el2.__livewire_ignore_self === true)
+          childrenOnly();
+        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
+          return skip();
+        if (isComponentRootEl(el2))
+          toEl.__livewire = component;
+      },
+      updated: (el2, toEl) => {
+        if (isntElement(el2))
+          return;
+      },
+      removing: (el2, skip) => {
+        if (isntElement(el2))
+          return;
+      },
+      removed: (el2) => {
+        if (isntElement(el2))
+          return;
+      },
+      added: (el2) => {
+        if (isntElement(el2))
+          return;
+        const closestComponentId = closestComponent(el2).id;
+        if (closestComponentId === component.id) {
+        } else if (isComponentRootEl(el2)) {
+          let data;
+          if (message.fingerprint && closestComponentId == message.fingerprint.id) {
+            data = {
+              fingerprint: message.fingerprint,
+              serverMemo: message.response.serverMemo,
+              effects: message.response.effects
+            };
+          }
+          el2.skipAddingChildren = true;
+        }
+      },
+      key: (el2) => {
+        if (isntElement(el2))
+          return;
+        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
+      },
+      lookahead: true
+    });
+  }
+  function isntElement(el) {
+    return typeof el.hasAttribute !== "function";
+  }
+  function isComponentRootEl(el) {
+    return el.hasAttribute("wire:id");
   }
 
   // ../synthetic/node_modules/@vue/shared/dist/shared.esm-bundler.js
@@ -1308,85 +1408,15 @@
 
   // js/features/morphDom.js
   function morphDom_default() {
-    on2("request.before", (target) => {
-      let childIds = Object.values(target.snapshot.data[1].children).map((i) => i[1]);
-    });
     on2("effects", (target, effects, path) => {
-      let component = state.components[target.__livewireId];
       let html = effects.html;
       if (!html)
         return;
+      let component = findComponent(target.__livewireId);
       queueMicrotask(() => {
-        doMorph(component, component.el, html);
+        morph(component, component.el, html);
       });
     });
-  }
-  function doMorph(component, el, html) {
-    let wrapper = document.createElement("div");
-    wrapper.innerHTML = html;
-    let parentComponent;
-    try {
-      parentComponent = closestComponent(el.parentElement);
-    } catch (e) {
-    }
-    parentComponent && (wrapper.__livewire = parentComponent);
-    let to = wrapper.firstElementChild;
-    to.__livewire = component;
-    Alpine.morph(el, to, {
-      updating: (el2, toEl, childrenOnly, skip) => {
-        if (isntElement(el2))
-          return;
-        if (el2.__livewire_ignore === true)
-          return skip();
-        if (el2.__livewire_ignore_self === true)
-          childrenOnly();
-        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
-          return skip();
-        if (isComponentRootEl(el2))
-          toEl.__livewire = component;
-      },
-      updated: (el2, toEl) => {
-        if (isntElement(el2))
-          return;
-      },
-      removing: (el2, skip) => {
-        if (isntElement(el2))
-          return;
-      },
-      removed: (el2) => {
-        if (isntElement(el2))
-          return;
-      },
-      added: (el2) => {
-        if (isntElement(el2))
-          return;
-        const closestComponentId = closestComponent(el2).id;
-        if (closestComponentId === component.id) {
-        } else if (isComponentRootEl(el2)) {
-          let data;
-          if (message.fingerprint && closestComponentId == message.fingerprint.id) {
-            data = {
-              fingerprint: message.fingerprint,
-              serverMemo: message.response.serverMemo,
-              effects: message.response.effects
-            };
-          }
-          el2.skipAddingChildren = true;
-        }
-      },
-      key: (el2) => {
-        if (isntElement(el2))
-          return;
-        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
-      },
-      lookahead: true
-    });
-  }
-  function isntElement(el) {
-    return typeof el.hasAttribute !== "function";
-  }
-  function isComponentRootEl(el) {
-    return el.hasAttribute("wire:id");
   }
 
   // js/directives.js
@@ -1456,7 +1486,7 @@
 
   // js/features/wireModel.js
   function wireModel_default() {
-    on("element.init", (el, component) => {
+    on2("element.init", (el, component) => {
       let allDirectives = directives(el);
       if (allDirectives.missing("model"))
         return;
@@ -1467,6 +1497,12 @@
       }
       let lazy = directive.modifiers.includes("lazy");
       let modifierTail = getModifierTail(directive.modifiers);
+      let live = directive.modifiers.includes("live");
+      let update = debounce((component2) => {
+        if (!live)
+          return;
+        component2.$wire.$commit();
+      }, 250);
       Alpine.bind(el, {
         ["@change"]() {
           if (lazy) {
@@ -1478,7 +1514,9 @@
               return dataGet(closestComponent(el).$wire, directive.value);
             },
             set(value2) {
-              dataSet(closestComponent(el).$wire, directive.value, value2);
+              let component2 = closestComponent(el);
+              dataSet(component2.$wire, directive.value, value2);
+              update(component2);
             }
           };
         }
@@ -1511,14 +1549,16 @@
     });
   }
 
-  // js/features/hotReloading.js
-  function hotReloading_default() {
+  // src/Features/SupportHotReloading/SupportHotReloading.js
+  function SupportHotReloading_default(enabled) {
+    if (!enabled.includes("hot-reloading"))
+      return;
     on2("effects", (target, effects, path) => {
       queueMicrotask(() => {
         let files = effects.hotReload;
         if (!files)
           return;
-        let component = state.components[target.__livewireId];
+        let component = findComponent(target.__livewireId);
         if (files) {
           files.forEach((file) => {
             whenFileIsModified(file, () => {
@@ -1550,6 +1590,43 @@
     listeners3[file].push(callback);
   }
 
+  // src/Features/SupportEagerLoading/SupportEagerLoading.js
+  function SupportEagerLoading_default(enabled) {
+    if (!enabled.includes("eager-loading"))
+      return;
+    on2("element.init", (el, component) => {
+      let allDirectives = directives(el);
+      if (allDirectives.missing("eager"))
+        return;
+      let directive = allDirectives.get("eager");
+    });
+    on2("effects", (target, effects, path) => {
+      queueMicrotask(() => {
+        let eager = effects.eager;
+        if (!eager)
+          return;
+        let component = findComponent(target.__livewireId);
+        component.__eager = eager;
+      });
+    });
+    on2("target.request", (target, payload) => {
+      let component = findComponent(target.__livewireId);
+      if (!component.__eager)
+        return;
+      let eager = component.__eager;
+      payload.calls.forEach((call) => {
+        eager.forEach(({ key, method, partial }) => {
+          if (call.method === method) {
+            let el = component.el.querySelector('[wire\\:eager="' + key + '"]');
+            if (!el)
+              throw "Cant find eager element with key: " + key;
+            morph(component, el, partial);
+          }
+        });
+      });
+    });
+  }
+
   // js/features/wireLoading.js
   function wireLoading_default() {
     on("element.init", (el, component) => {
@@ -1575,7 +1652,8 @@
       let meta = target.snapshot.data[1];
       let childIds = Object.values(meta.children).map((i) => i[1]);
       childIds.forEach((id) => {
-        let childSynthetic = state.components[id].synthetic;
+        let child = findComponent(id);
+        let childSynthetic = child.synthetic;
         let childMeta = childSynthetic.snapshot.data[1];
         let props = childMeta.props;
         if (props)
@@ -1585,14 +1663,15 @@
   }
 
   // js/features/index.js
-  function features_default() {
-    wire_default();
-    props_default();
-    morphDom_default();
-    wireModel_default();
-    wireLoading_default();
-    wireWildcard_default();
-    hotReloading_default();
+  function features_default(enabledFeatures) {
+    wire_default(enabledFeatures);
+    props_default(enabledFeatures);
+    morphDom_default(enabledFeatures);
+    wireModel_default(enabledFeatures);
+    wireLoading_default(enabledFeatures);
+    wireWildcard_default(enabledFeatures);
+    SupportHotReloading_default(enabledFeatures);
+    SupportEagerLoading_default(enabledFeatures);
   }
 
   // js/component.js
@@ -1607,8 +1686,9 @@
   };
 
   // js/lifecycle.js
-  function start() {
-    features_default();
+  function start(options) {
+    let enabledFeatures = options.features || [];
+    features_default(enabledFeatures);
     Alpine.interceptInit(Alpine.skipDuringClone((el) => {
       initElement(el);
     }));
@@ -1617,14 +1697,20 @@
     if (el.hasAttribute("wire:id")) {
       let id = el.getAttribute("wire:id");
       let raw2 = JSON.parse(el.getAttribute("wire:initial-data"));
+      if (hasComponent(id)) {
+        throw "This component has already been initialized - identify your problem";
+      }
       let component2 = new Component(synthetic(raw2).__target, el, id);
       el.__livewire = component2;
       Alpine.bind(el, {
         "x-data"() {
           return component2.synthetic.reactive;
+        },
+        "x-destroy"() {
+          releaseComponent(component2.id);
         }
       });
-      state.components[component2.id] = component2;
+      storeComponent(component2.id, component2);
       trigger2("component.initialized", component2);
     }
     let component;

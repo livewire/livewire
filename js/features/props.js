@@ -1,4 +1,4 @@
-import { state } from "../state";
+import { findComponent } from "../state";
 import { on } from './../../../synthetic/js/index'
 
 export default function () {
@@ -7,7 +7,8 @@ export default function () {
         let childIds = Object.values(meta.children).map(i => i[1])
 
         childIds.forEach((id) => {
-            let childSynthetic = state.components[id].synthetic
+            let child = findComponent(id)
+            let childSynthetic = child.synthetic
             let childMeta = childSynthetic.snapshot.data[1]
             let props = childMeta.props
 

@@ -2,7 +2,7 @@ import { on } from './events'
 import { first } from './state'
 import { start } from './lifecycle'
 
-let Livewire = {
+export let Livewire = {
     start,
     // @todo: legacy name, offer "on" as the new name?
     hook: on,

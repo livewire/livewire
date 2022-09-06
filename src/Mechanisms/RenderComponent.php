@@ -48,7 +48,7 @@ class RenderComponent
 };
 [\$__name, \$__params] = \$__split($expression);
 
-echo \Livewire\Mechanisms\RenderComponent::mount(\$__name, \$__params, $key, \$__slots ?? []);
+echo app('livewire')->mount(\$__name, \$__params, $key, \$__slots ?? [], get_defined_vars());
 
 unset(\$__name);
 unset(\$__params);
@@ -58,25 +58,27 @@ if (isset(\$__slots)) unset(\$__slots);
 EOT;
     }
 
-    static function mount($name, $params = [], $key = null, $slots = [])
+    static function mount($name, $params = [], $key = null, $slots = [], $viewScope = [])
     {
         $parent = last(static::$renderStack);
 
         $hijackedHtml = null;
         $hijack = function ($html) use (&$hijackedHtml) { $hijackedHtml = $html; };
 
-        $finishMount = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slots, $hijack);
+        $finishMount = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slots, $hijack, $viewScope);
 
         // Allow a "mount" event listener to short-circuit the mount...
         if ($hijackedHtml !== null) return $hijackedHtml;
 
         // If this has already been rendered spoof it...
-        if ($parent && $parent->hasChild($key)) {
-            [$tag, $childId] = $parent->getChild($key);
+        if ($parent && $parent->hasPreviouslyRenderedChild($key)) {
+            [$tag, $childId] = $parent->getPreviouslyRenderedChild($key);
 
             $finish = app('synthetic')->trigger('dummy-mount', $tag, $childId, $params, $parent, $key);
 
             $html  = "<{$tag} wire:id=\"{$childId}\"></{$tag}>";
+
+            $parent->setChild($key, $tag, $childId);
 
             return $finish($html);
         }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features;
+namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Livewire\Livewire;
 use Livewire\Component;
@@ -8,7 +8,7 @@ use Laravel\Dusk\Browser;
 use Livewire\DuskTestCase;
 use Illuminate\Support\Facades\Blade;
 
-class SupportMorphAwareIfStatementTest extends DuskTestCase
+class Test extends DuskTestCase
 {
     /** @test */
     public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
@@ -67,6 +67,5 @@ class SupportMorphAwareIfStatementTest extends DuskTestCase
                 ->assertVisible('@foo');
         });
     }
-
 }
 
