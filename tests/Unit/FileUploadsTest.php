@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Carbon\Carbon;
 use LogicException;
 use RuntimeException;
 use Livewire\Livewire;
@@ -432,6 +433,33 @@ class FileUploadsTest extends TestCase
         $this->assertEquals($file->get(), $rawFileContents);
 
         $this->assertTrue($photo->isPreviewable());
+    }
+
+    /** @test */
+    public function preview_url_is_stable_over_some_time()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        // Due to Livewire object still being in memory, we need to
+        // reset the "shouldDisableBackButtonCache" property back to it's default
+        // which is false to ensure it's not applied to the below route
+        Livewire::enableBackButtonCache();
+
+        Carbon::setTestNow(Carbon::today()->setTime(10, 01, 00));
+
+        $first_url = $photo->temporaryUrl();
+
+        Carbon::setTestNow(Carbon::today()->setTime(10, 05, 00));
+
+        $second_url = $photo->temporaryUrl();
+
+        $this->assertEquals($first_url, $second_url);
     }
 
     /** @test */
