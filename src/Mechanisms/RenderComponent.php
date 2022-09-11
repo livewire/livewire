@@ -65,6 +65,11 @@ EOT;
         $hijackedHtml = null;
         $hijack = function ($html) use (&$hijackedHtml) { $hijackedHtml = $html; };
 
+        if (isset($params['apply'])) {
+            $params = [...$params, ...$params['apply']];
+            unset($params['apply']);
+        }
+
         $finishMount = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slots, $hijack, $viewScope);
 
         // Allow a "mount" event listener to short-circuit the mount...
@@ -148,6 +153,10 @@ EOT;
 
     static function getBladeView($subject, $data = [])
     {
+        if (! is_string($subject)) {
+            return $subject;
+        }
+
         $component = new class($subject) extends \Illuminate\View\Component
         {
             protected $template;

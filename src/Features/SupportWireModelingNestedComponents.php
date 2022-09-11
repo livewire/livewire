@@ -19,7 +19,6 @@ class SupportWireModelingNestedComponents
         app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             return function ($target) use ($parent, $params) {
                 if ($parent && isset($params['wire:model'])) {
-
                     $outer = $params['wire:model'];
 
                     foreach (SyntheticUtils::getAnnotations($target) as $propertyName => $annotations) {
@@ -59,10 +58,10 @@ class SupportWireModelingNestedComponents
 
             $context->addMeta('wireModels', $wireModels);
 
-            return function ($thing) use ($target, $context) {
-                foreach ($target->__wireModels as $outer => $inner) {
+            return function ($thing) use ($target, $context, $wireModels) {
+                foreach ($wireModels as $outer => $inner) {
                     $context->effects['html'] = Utils::insertAttributesIntoHtmlRoot($context->effects['html'], [
-                        'x-model.parent' => '$wire.'.$outer,
+                        'x-model' => '$wire.$parent.'.$outer,
                         'x-modelable' => '$wire.'.$inner,
                     ]);
                 }

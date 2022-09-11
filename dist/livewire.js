@@ -81,75 +81,6 @@
     return Object.values(state.components)[0].$wire;
   }
 
-  // js/morph.js
-  function morph(component, el, html) {
-    let wrapper = document.createElement("div");
-    wrapper.innerHTML = html;
-    let parentComponent;
-    try {
-      parentComponent = closestComponent(el.parentElement);
-    } catch (e) {
-    }
-    parentComponent && (wrapper.__livewire = parentComponent);
-    let to = wrapper.firstElementChild;
-    to.__livewire = component;
-    Alpine.morph(el, to, {
-      updating: (el2, toEl, childrenOnly, skip) => {
-        if (isntElement(el2))
-          return;
-        if (el2.__livewire_ignore === true)
-          return skip();
-        if (el2.__livewire_ignore_self === true)
-          childrenOnly();
-        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
-          return skip();
-        if (isComponentRootEl(el2))
-          toEl.__livewire = component;
-      },
-      updated: (el2, toEl) => {
-        if (isntElement(el2))
-          return;
-      },
-      removing: (el2, skip) => {
-        if (isntElement(el2))
-          return;
-      },
-      removed: (el2) => {
-        if (isntElement(el2))
-          return;
-      },
-      added: (el2) => {
-        if (isntElement(el2))
-          return;
-        const closestComponentId = closestComponent(el2).id;
-        if (closestComponentId === component.id) {
-        } else if (isComponentRootEl(el2)) {
-          let data;
-          if (message.fingerprint && closestComponentId == message.fingerprint.id) {
-            data = {
-              fingerprint: message.fingerprint,
-              serverMemo: message.response.serverMemo,
-              effects: message.response.effects
-            };
-          }
-          el2.skipAddingChildren = true;
-        }
-      },
-      key: (el2) => {
-        if (isntElement(el2))
-          return;
-        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
-      },
-      lookahead: true
-    });
-  }
-  function isntElement(el) {
-    return typeof el.hasAttribute !== "function";
-  }
-  function isComponentRootEl(el) {
-    return el.hasAttribute("wire:id");
-  }
-
   // ../synthetic/node_modules/@vue/shared/dist/shared.esm-bundler.js
   function makeMap(str, expectsLowerCase) {
     const map = /* @__PURE__ */ Object.create(null);
@@ -1051,10 +982,10 @@
         return;
       let methods = effects["js"] || [];
       each(methods, (name, expression) => {
-        let func = new Function([], "return " + expression);
-        let boundFunc = func.bind(dataGet2(target.reactive, path));
-        let run = boundFunc();
-        addProp(name, run);
+        let func = new Function([], expression);
+        addProp(name, () => {
+          func.bind(dataGet2(target.reactive, path))();
+        });
       });
     });
   }
@@ -1091,15 +1022,13 @@
 
   // ../synthetic/js/features/polling.js
   function polling_default() {
-    on2("decorate", (target, path) => {
-      return (decorator) => {
-        Object.defineProperty(decorator, "$poll", { value: () => {
-          syncronizedInterval(2500, () => {
-            target.ephemeral.$commit();
-          });
-        } });
-        return decorator;
-      };
+    on2("decorate", (target, path, addProp, decorator, symbol) => {
+      addProp("$poll", (callback) => {
+        syncronizedInterval(2500, () => {
+          callback();
+          target.ephemeral.$commit();
+        });
+      });
     });
   }
   var clocks = [];
@@ -1406,6 +1335,79 @@
     each(effects, (key, value2) => trigger2("effects", target, value2, key));
   }
 
+  // js/morph.js
+  function morph(component, el, html) {
+    let wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    let parentComponent;
+    try {
+      parentComponent = closestComponent(el.parentElement);
+    } catch (e) {
+    }
+    parentComponent && (wrapper.__livewire = parentComponent);
+    let to = wrapper.firstElementChild;
+    to.__livewire = component;
+    Alpine.morph(el, to, {
+      updating: (el2, toEl, childrenOnly, skip) => {
+        if (isntElement(el2))
+          return;
+        if (el2.__livewire_ignore === true)
+          return skip();
+        if (el2.__livewire_ignore_self === true)
+          childrenOnly();
+        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
+          return skip();
+        if (isComponentRootEl(el2))
+          toEl.__livewire = component;
+      },
+      updated: (el2, toEl) => {
+        if (isntElement(el2))
+          return;
+      },
+      removing: (el2, skip) => {
+        if (isntElement(el2))
+          return;
+      },
+      removed: (el2) => {
+        if (isntElement(el2))
+          return;
+      },
+      adding: (el2) => {
+        trigger2("morph.adding", el2);
+      },
+      added: (el2) => {
+        if (isntElement(el2))
+          return;
+        trigger2("morph.added", el2);
+        const closestComponentId = closestComponent(el2).id;
+        if (closestComponentId === component.id) {
+        } else if (isComponentRootEl(el2)) {
+          let data;
+          if (message.fingerprint && closestComponentId == message.fingerprint.id) {
+            data = {
+              fingerprint: message.fingerprint,
+              serverMemo: message.response.serverMemo,
+              effects: message.response.effects
+            };
+          }
+          el2.skipAddingChildren = true;
+        }
+      },
+      key: (el2) => {
+        if (isntElement(el2))
+          return;
+        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
+      },
+      lookahead: true
+    });
+  }
+  function isntElement(el) {
+    return typeof el.hasAttribute !== "function";
+  }
+  function isComponentRootEl(el) {
+    return el.hasAttribute("wire:id");
+  }
+
   // js/features/morphDom.js
   function morphDom_default() {
     on2("effects", (target, effects, path) => {
@@ -1571,16 +1573,13 @@
     let es = new EventSource("/livewire/hot-reload");
     es.addEventListener("message", function(event) {
       let data = JSON.parse(event.data);
-      data.file && console.log(data.file, listeners3);
       if (data.file && listeners3[data.file]) {
         listeners3[data.file].forEach((cb) => cb());
       }
     });
     es.onerror = function(err) {
-      console.log("EventSource failed:", err);
     };
     es.onopen = function(err) {
-      console.log("opened", err);
     };
   }
   var listeners3 = [];
@@ -1641,6 +1640,59 @@
     });
   }
 
+  // js/features/wirePoll.js
+  function wirePoll_default() {
+    on2("element.init", (el, component) => {
+      let elDirectives = directives(el);
+      if (elDirectives.missing("poll"))
+        return;
+      let directive = elDirectives.get("poll");
+      Alpine.bind(el, {
+        "x-init"() {
+          component.$wire.$poll(() => {
+            directive.value ? Alpine.evaluate(el, "$wire." + directive.value) : Alpine.evaluate(el, "$wire.$commit()");
+          });
+        }
+      });
+    });
+  }
+
+  // js/features/wireParent.js
+  function wireParent_default() {
+    on2("decorate", (target, path, addProp, decorator, symbol) => {
+      addProp("$parent", { get() {
+        let component = findComponent(target.__livewireId);
+        let parent = closestComponent(component.el.parentElement);
+        return parent.$wire;
+      } });
+    });
+  }
+
+  // js/features/wireTransition.js
+  function wireTransition_default() {
+    on2("morph.added", (el) => {
+      el.__addedByMorph = true;
+    });
+    on2("element.init", (el, component) => {
+      if (!el.__addedByMorph)
+        return;
+      let elDirectives = directives(el);
+      if (elDirectives.missing("transition"))
+        return;
+      let directive = elDirectives.get("transition");
+      let visibility = Alpine.reactive({ state: false });
+      Alpine.bind(el, {
+        [directive.rawName.replace("wire:", "x-")]: "",
+        "x-show"() {
+          return visibility.state;
+        },
+        "x-init"() {
+          setTimeout(() => visibility.state = true);
+        }
+      });
+    });
+  }
+
   // js/features/$wire.js
   function wire_default() {
     Alpine.magic("wire", (el) => closestComponent(el).$wire);
@@ -1668,7 +1720,10 @@
     props_default(enabledFeatures);
     morphDom_default(enabledFeatures);
     wireModel_default(enabledFeatures);
+    wireParent_default(enabledFeatures);
+    wirePoll_default(enabledFeatures);
     wireLoading_default(enabledFeatures);
+    wireTransition_default(enabledFeatures);
     wireWildcard_default(enabledFeatures);
     SupportHotReloading_default(enabledFeatures);
     SupportEagerLoading_default(enabledFeatures);

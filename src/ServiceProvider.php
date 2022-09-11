@@ -138,6 +138,7 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
             \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
             \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
+            \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportEagerLoading\SupportEagerLoading::class,
             \Livewire\Features\SupportWireModelingNestedComponents::class,
             \Livewire\Features\SupportChecksumErrorDebugging::class,

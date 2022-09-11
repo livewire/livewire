@@ -19,6 +19,7 @@ class Manager
 
     protected $shouldDisableBackButtonCache = false;
 
+
     protected $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
@@ -75,6 +76,27 @@ class Manager
     public function isRenderingPageComponent()
     {
         return SupportPageComponents::isRenderingPageComponent();
+    }
+
+    public function isLivewireRequest()
+    {
+        return $this->isProbablyLivewireRequest();
+    }
+
+    public function isDefinitelyLivewireRequest()
+    {
+        $route = request()->route();
+
+        if (! $route) return false;
+
+        return $route->named('synthetic.update');
+    }
+
+    public function isProbablyLivewireRequest()
+    {
+        if (static::$isLivewireRequestTestingOverride) return true;
+
+        return request()->hasHeader('X-Livewire');
     }
 
     /**

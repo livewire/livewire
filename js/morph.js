@@ -1,3 +1,4 @@
+import { trigger } from './../../synthetic/js/index'
 import { closestComponent } from "./lifecycle"
 
 export function morph(component, el, html) {
@@ -54,9 +55,14 @@ export function morph(component, el, html) {
             // }
         },
 
+        adding: (el) => {
+            trigger('morph.adding', el)
+        },
 
         added: (el) => {
             if (isntElement(el)) return
+
+            trigger('morph.added', el)
 
             const closestComponentId = closestComponent(el).id
 

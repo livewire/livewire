@@ -62,7 +62,7 @@ class SupportHotReloading
                         $filesByTime[(string) $file] = $time;
                     }
 
-                    sleep(1);
+                    sleep(.25);
                     echo 'data: ' . json_encode(['ping']) . "\n\n";
                     ob_flush();
                     flush();

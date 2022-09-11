@@ -92,6 +92,50 @@ class ComponentRegistry
         ));
     }
 
+    public function getClass($name)
+    {
+        $subject = $name;
+
+        if (isset($this->aliases[$name])) {
+            $subject = $this->aliases[$name];
+        }
+
+        // If an anonymous object was stored in the registry,
+        // clone its instance and return that...
+        if (is_object($subject)) return clone $subject;
+
+        // If the name or its alias are a class,
+        // then new it up and return it...
+        if (class_exists((string) str($subject)->studly())) {
+            return new (str($subject)->studly()->toString());
+        }
+
+        // Otherwise, we'll look in the "autodiscovery" manifest
+        // for the component...
+
+        $getFromManifest = function ($name) {
+            $manifest = $this->getManifest();
+
+            return $manifest[$name] ?? $manifest["{$name}.index"] ?? null;
+        };
+
+        $fromManifest = $getFromManifest($subject);
+
+        if ($fromManifest) return new $fromManifest;
+
+        // If we couldn't find it, we'll re-generate the manifest and look again...
+        $this->buildManifest();
+
+        $fromManifest = $getFromManifest($subject);
+
+        if ($fromManifest) return new $fromManifest;
+
+        // By now, we give up and throw an error...
+        throw_unless($fromManifest, new ComponentNotFoundException(
+            "Unable to find component: [{$subject}]"
+        ));
+    }
+
     public function getManifest()
     {
         if (! is_null($this->manifest)) {

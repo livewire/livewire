@@ -110,7 +110,7 @@ class JavaScriptAndCssAssets
 
 	        $windowLivewireCheck = <<<'HTML'
             if (window.Livewire) {
-                console.warn('Livewire: It looks like Livewire\'s @livewireScripts JavaScript assets have already been loaded. Make sure you aren\'t loading them twice.')
+                // console.warn('Livewire: It looks like Livewire\'s @livewireScripts JavaScript assets have already been loaded. Make sure you aren\'t loading them twice.');
             }
             HTML;
         }
@@ -130,6 +130,8 @@ class JavaScriptAndCssAssets
             let started = false;
 
             window.addEventListener('alpine:init', function () {
+                window.Alpine.addInitSelector(() => '[wire\\\:id]');
+
                 if (! started) {
                     window.Livewire.start({ features: {$jsFeatures} });
 
@@ -144,6 +146,8 @@ class JavaScriptAndCssAssets
         <script src="http://alpine.test/packages/morph/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
         <script src="http://alpine.test/packages/navigate/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
         <script src="http://alpine.test/packages/intersect/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
+        <script src="http://alpine.test/packages/ui/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
+        <!-- <script src="https://unpkg.com/@alpinejs/ui@3.10.3-beta.2/dist/cdn.min.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script> -->
         <script src="http://alpine.test/packages/alpinejs/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
         HTML;
     }

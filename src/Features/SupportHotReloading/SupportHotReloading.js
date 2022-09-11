@@ -27,19 +27,17 @@ export default function (enabled) {
     es.addEventListener("message", function(event) {
         let data = JSON.parse(event.data)
 
-        data.file && console.log(data.file, listeners)
-
         if (data.file && listeners[data.file]) {
             listeners[data.file].forEach(cb => cb())
         }
     })
 
     es.onerror = function(err) {
-        console.log("EventSource failed:", err)
+        // console.log("EventSource failed:", err)
     }
 
     es.onopen = function(err) {
-        console.log("opened", err)
+        // console.log("opened", err)
     }
 }
 
