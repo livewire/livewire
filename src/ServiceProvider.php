@@ -135,18 +135,17 @@ class ServiceProvider extends BaseServiceProvider
     {
         foreach ([
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
+            \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
             \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
+            \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
+            \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
             \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
+            \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
-            \Livewire\Features\SupportEagerLoading\SupportEagerLoading::class,
             \Livewire\Features\SupportWireModelingNestedComponents::class,
             \Livewire\Features\SupportChecksumErrorDebugging::class,
-            \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
-            \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
             \Livewire\Features\SupportReactiveProps::class,
-            \Livewire\Features\SupportSlots\SupportSlots::class,
-            \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class, // This has to be after "SupportSlots"...
         ] as $feature) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($feature))) {
                 $feature::getInstance()->boot();

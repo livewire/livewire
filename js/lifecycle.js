@@ -1,5 +1,5 @@
 import bootFeatures from './features'
-import { findComponent, hasComponent, releaseComponent, state, storeComponent } from './state'
+import { findComponent, hasComponent, releaseComponent, resurrect, state, storeComponent } from './state'
 // import { trigger } from './events'
 import { trigger } from './../../synthetic/js/index'
 import { synthetic } from './../../synthetic/js/index'
@@ -18,13 +18,13 @@ export function start(options) {
 function initElement(el) {
     if (el.hasAttribute('wire:id')) {
         let id = el.getAttribute('wire:id')
-        let raw = JSON.parse(el.getAttribute('wire:initial-data'))
+        let initialData = JSON.parse(el.getAttribute('wire:initial-data'))
 
-        if (hasComponent(id)) {
-            throw 'This component has already been initialized - identify your problem'
+        if (! initialData) {
+            initialData = resurrect(id)
         }
 
-        let component = new Component(synthetic(raw).__target, el, id)
+        let component = new Component(synthetic(initialData).__target, el, id)
 
         el.__livewire = component
 
@@ -32,7 +32,10 @@ function initElement(el) {
         // available directly without needing to prefix "$wire.".
         Alpine.bind(el, {
             'x-data'() { return component.synthetic.reactive },
-            'x-destroy'() { releaseComponent(component.id) }
+            // Disabling this for laracon...
+            'x-destroy'() {
+                releaseComponent(component.id)
+            }
         })
 
         storeComponent(component.id, component)

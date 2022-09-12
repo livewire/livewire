@@ -7,6 +7,7 @@ import wireLoading from "./wireLoading";
 import wirePoll from "./wirePoll";
 import wireParent from "./wireParent";
 import wireTransition from "./wireTransition";
+import wireNavigate from "./wireNavigate";
 import wireTarget from "./wireTarget";
 import $wire from "./$wire";
 import props from "./props";
@@ -25,6 +26,7 @@ export default function (enabledFeatures) {
     wirePoll(enabledFeatures)
     wireLoading(enabledFeatures)
     wireTransition(enabledFeatures)
+    wireNavigate(enabledFeatures)
     wireWildcard(enabledFeatures)
     hotReloading(enabledFeatures)
     eagerLoading(enabledFeatures)

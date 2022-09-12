@@ -21,6 +21,7 @@ class CompileLivewireTags extends ComponentTagCompiler
         $pattern = '/'.Regexes::$livewireOpeningTagOrSelfClosingTag.'/x';
 
         return preg_replace_callback($pattern, function (array $matches) {
+            dd($matches);
             $attributes = $this->getAttributesFromAttributeString($matches['attributes']);
 
             // Convert all kebab-cased to camelCase.

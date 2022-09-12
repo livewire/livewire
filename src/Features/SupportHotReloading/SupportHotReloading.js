@@ -2,6 +2,9 @@ import { findComponent, state } from "../../../js/state";
 import { on } from './../../../../synthetic/js/index'
 
 export default function (enabled) {
+    // Only allow this in "Simple Preview"...
+    if (! navigator.userAgent.includes('Electron')) return
+
     if (! enabled.includes('hot-reloading')) return
 
     on('effects', (target, effects, path) => {

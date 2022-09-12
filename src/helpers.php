@@ -54,7 +54,7 @@ if (! function_exists('Livewire\invade')) {
                 $method = $this->reflected->getMethod($name);
 
                 $method->setAccessible(true);
-               
+
                 return $method->invoke($this->obj, ...$params);
             }
         };

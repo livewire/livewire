@@ -49,7 +49,8 @@ export default function () {
 
                 }
             },
-            ['x-model.unintrusive' + modifierTail]() {
+            // ['x-model.unintrusive' + modifierTail]() {
+            ['x-model' + modifierTail]() {
                 return {
                     get() {
                         return dataGet(closestComponent(el).$wire, directive.value)
