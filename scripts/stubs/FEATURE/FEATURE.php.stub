@@ -1,0 +1,11 @@
+<?php
+
+namespace Livewire\Features\[FEATURE];
+
+class [FEATURE]
+{
+    function boot()
+    {
+        //
+    }
+}

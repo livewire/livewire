@@ -21,8 +21,20 @@ class CompileLivewireTags extends ComponentTagCompiler
         $pattern = '/'.Regexes::$livewireOpeningTagOrSelfClosingTag.'/x';
 
         return preg_replace_callback($pattern, function (array $matches) {
-            dd($matches);
             $attributes = $this->getAttributesFromAttributeString($matches['attributes']);
+
+            // This is only for Laracon and makes :todos="$todos" work...
+            $keys = array_keys($attributes);
+            $values = array_values($attributes);
+
+            for ($i=0; $i < count($keys); $i++) {
+                if ($keys[$i] === ':' && $values[$i] === 'true') {
+                    if (isset($values[$i + 1]) && $values[$i + 1] === 'true') {
+                        $attributes[$keys[$i + 1]] = '$'.$keys[$i + 1];
+                        unset($attributes[':']);
+                    }
+                }
+            }
 
             // Convert all kebab-cased to camelCase.
             $attributes = collect($attributes)->mapWithKeys(function ($value, $key) {

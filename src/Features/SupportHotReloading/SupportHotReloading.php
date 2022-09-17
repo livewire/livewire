@@ -12,10 +12,6 @@ class SupportHotReloading
 
     public function boot()
     {
-        if (include(base_path('/disableHotReloading.php'))) {
-            return;
-        }
-
         if (! app()->environment('local') || ! config('app.debug')) return;
 
         app('livewire')->enableJsFeature('hot-reloading');

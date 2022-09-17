@@ -1002,8 +1002,10 @@
       if (!effects)
         return;
       let methods = effects["js"] || [];
+      let AsyncFunction = Object.getPrototypeOf(async function() {
+      }).constructor;
       each(methods, (name, expression) => {
-        let func = new Function([], expression);
+        let func = new AsyncFunction([], expression);
         addProp(name, () => {
           func.bind(dataGet2(target.reactive, path))();
         });
@@ -1744,6 +1746,7 @@
     on2("request.before", (target) => {
       let meta = target.snapshot.data[1];
       let childIds = Object.values(meta.children).map((i) => i[1]);
+      console.log(childIds);
       childIds.forEach((id) => {
         let child = findComponent(id);
         let childSynthetic = child.synthetic;

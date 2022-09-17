@@ -1,0 +1,12 @@
+<?php
+
+namespace Livewire\Features\[FEATURE];
+
+class Test extends \Livewire\DuskTestCase
+{
+    /** @test */
+    public function can_()
+    {
+        //
+    }
+}

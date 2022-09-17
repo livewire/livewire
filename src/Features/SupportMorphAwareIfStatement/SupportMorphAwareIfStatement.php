@@ -6,10 +6,6 @@ class SupportMorphAwareIfStatement
 {
     function boot()
     {
-        if (include(base_path('/disableBladeMarkers.php'))) {
-            return;
-        }
-
         $if = '\B@(@?if(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?';
         $endif = '@endif';
         $foreach = '\B@(@?foreach(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?';
