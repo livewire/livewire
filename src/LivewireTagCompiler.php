@@ -118,7 +118,7 @@ class LivewireTagCompiler extends ComponentTagCompiler
                             return $value;
                         }
 
-                        return str($value)->after('=> ')->prepend('...')->toString();
+                        return (string) str($value)->after('=> ')->prepend('...');
                     });
                 })
                 ->implode(',');
