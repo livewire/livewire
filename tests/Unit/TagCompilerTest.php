@@ -111,6 +111,42 @@ class TagCompilerTest extends TestCase
     }
 
     /** @test */
+    public function it_compiles_livewire_dynamic_component_and_spread_attributes()
+    {
+        if(PHP_VERSION_ID < 80100) {
+            $this->markTestSkipped();
+        }
+
+        $alertComponent = '<livewire:is component="alert" :wire:spread="$alertAttributes" />';
+        $result = $this->compiler->compile($alertComponent);
+
+        $this->assertEquals('@livewire(\'alert\', [...$alertAttributes])', $result);
+
+        $alertComponent = '<livewire:is component="alert" :wire:spread="[\'type\' => \'warning\']" />';
+        $result = $this->compiler->compile($alertComponent);
+
+        $this->assertEquals("@livewire('alert', [...['type' => 'warning']])", $result);
+    }
+
+    /** @test */
+    public function it_compiles_livewire_dynamic_component_and_not_spread_attributes()
+    {
+        if(PHP_VERSION_ID >= 80100) {
+            $this->markTestSkipped();
+        }
+
+        $alertComponent = '<livewire:is component="alert" :wire:spread="$alertAttributes" />';
+        $result = $this->compiler->compile($alertComponent);
+
+        $this->assertEquals('@livewire(\'alert\', [\'wire:spread\' => $alertAttributes])', $result);
+
+        $alertComponent = '<livewire:is component="alert" :wire:spread="[\'type\' => \'warning\']" />';
+        $result = $this->compiler->compile($alertComponent);
+
+        $this->assertEquals("@livewire('alert', ['wire:spread' => ['type' => 'warning']])", $result);
+    }
+
+    /** @test */
     public function it_uses_existing_dynamic_component_if_one_exists()
     {
         Livewire::component('dynamic-component', DynamicComponent::class);

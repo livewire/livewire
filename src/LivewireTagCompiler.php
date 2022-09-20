@@ -112,6 +112,15 @@ class LivewireTagCompiler extends ComponentTagCompiler
                                 ? "'{$attribute}' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute({$value})"
                                 : "'{$attribute}' => {$value}";
                 })
+                ->when(PHP_VERSION_ID >= 80100, function($collection) {
+                    return $collection->map(function (string $value, string $attribute) {
+                        if(! str($attribute)->startsWith('wire:spread')) {
+                            return $value;
+                        }
+
+                        return str($value)->after('=> ')->prepend('...')->toString();
+                    });
+                })
                 ->implode(',');
     }
 }
