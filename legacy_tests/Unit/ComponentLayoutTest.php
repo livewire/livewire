@@ -11,6 +11,8 @@ class ComponentLayoutTest extends TestCase
     /** @test */
     public function can_extend_a_blade_layout()
     {
+        $this->withoutExceptionHandling();
+
         Livewire::component(ComponentWithExtendsLayout::class);
 
         Route::get('/foo', ComponentWithExtendsLayout::class);
@@ -174,7 +176,7 @@ class ComponentWithClassBasedComponentLayout extends Component
 {
     public function render()
     {
-        return view('null-view')->layout(\Tests\AppLayout::class, [
+        return view('null-view')->layout(\LegacyTests\AppLayout::class, [
             'bar' => 'baz'
         ]);
     }
@@ -184,7 +186,7 @@ class ComponentWithClassBasedComponentLayoutAndParams extends Component
 {
     public function render()
     {
-        return view('null-view')->layout(\Tests\AppLayoutWithConstructor::class, [
+        return view('null-view')->layout(\LegacyTests\AppLayoutWithConstructor::class, [
             'bar' => 'baz'
         ]);
     }
@@ -194,7 +196,7 @@ class ComponentWithClassBasedComponentLayoutAndAttributes extends Component
 {
     public function render()
     {
-        return view('null-view')->layout(\Tests\AppLayout::class, [
+        return view('null-view')->layout(\LegacyTests\AppLayout::class, [
             'attributes' => [
                 'class' => 'foo',
             ],
@@ -229,7 +231,7 @@ class ComponentWithCustomParams extends Component
     public function render()
     {
         return view('null-view')->layoutData([
-            'slot' => 'foo'
+            'customParam' => 'foo'
         ]);
     }
 }

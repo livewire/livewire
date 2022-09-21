@@ -35,11 +35,12 @@ class ConfigurableLayoutTest extends TestCase
     /** @test */
     public function can_configure_the_default_layout_to_a_class_based_component_layout()
     {
-        config()->set('livewire.layout', AppLayout::class);
+        config()->set('livewire.layout', \LegacyTests\AppLayout::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
 
         $this
+            ->withoutExceptionHandling()
             ->get('/configurable-layout')
             ->assertSee('foo')
             ->assertSee('bar')

@@ -1,3 +1,3 @@
 @yield('content')
 
-{{ $slot }}
+{{ $slot }}{{ $customParam ?? '' }}

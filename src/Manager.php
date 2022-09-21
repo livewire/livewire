@@ -38,6 +38,10 @@ class Manager
 
     public function component($name, $class = null)
     {
+        if (is_null($class)) {
+            [$class, $name] = [$name, $name::getName()];
+        }
+
         ComponentRegistry::getInstance()->register($name, $class);
     }
 
