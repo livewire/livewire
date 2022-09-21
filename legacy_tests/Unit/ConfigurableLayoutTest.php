@@ -50,7 +50,7 @@ class ConfigurableLayoutTest extends TestCase
     /** @test */
     public function can_show_params_with_a_configured_class_based_component_layout()
     {
-        config()->set('livewire.layout', AppLayout::class);
+        config()->set('livewire.layout', \LegacyTests\AppLayout::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomParams::class);
 
@@ -64,7 +64,7 @@ class ConfigurableLayoutTest extends TestCase
     /** @test */
     public function can_set_custom_slot_for_a_configured_class_based_component_layout()
     {
-        config()->set('livewire.layout', AppLayout::class);
+        config()->set('livewire.layout', \LegacyTests\AppLayout::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomSlot::class);
 
@@ -146,7 +146,7 @@ class ConfigurableLayoutTest extends TestCase
     /** @test */
     public function can_pass_attributes_to_a_configured_class_based_component_layout()
     {
-        config()->set('livewire.layout', AppLayout::class);
+        config()->set('livewire.layout', \LegacyTests\AppLayout::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTestWithCustomAttributes::class);
 

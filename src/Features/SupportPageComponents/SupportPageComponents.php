@@ -6,6 +6,7 @@ use Livewire\Mechanisms\ComponentDataStore;
 use Livewire\Drawer\ImplicitRouteBinding;
 use Illuminate\View\View;
 use Illuminate\View\AnonymousComponent;
+use Illuminate\Support\Facades\View as ViewFacade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class SupportPageComponents
@@ -70,27 +71,15 @@ class SupportPageComponents
         ];
 
         if ($layout['type'] === 'component') {
-            return \Illuminate\Support\Facades\Blade::render(<<<HTML
-                @component(\$layout['view'], \$layout['params'])
-                    @slot(\$layout['slotOrSection'])
-                        {!! \$content !!}
-                    @endslot
-                @endcomponent
-            HTML, [
+            return ViewFacade::file(__DIR__.'/layout_component.blade.php', [
                 'content' => $content,
                 'layout' => $layout,
-            ]);
+            ])->render();
         } else {
-            return \Illuminate\Support\Facades\Blade::render(<<<HTML
-                @extends(\$layout['view'], \$layout['params'])
-
-                @section(\$layout['slotOrSection'])
-                    {!! \$content !!}
-                @endsection
-            HTML, [
+            return ViewFacade::file(__DIR__.'/layout_extends.blade.php', [
                 'content' => $content,
                 'layout' => $layout,
-            ]);
+            ])->render();
         }
     }
 
