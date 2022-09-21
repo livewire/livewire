@@ -2,10 +2,10 @@
 
 namespace Livewire\Features\SupportComputedProperties;
 
+use Tests\TestCase;
 use Livewire\Component;
-use Livewire\DuskTestCase;
 
-class Test extends DuskTestCase
+class Test extends TestCase
 {
     /** @test */
     function parses_computed_properties()

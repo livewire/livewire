@@ -5,10 +5,9 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 use Livewire\Livewire;
 use Livewire\Component;
 use Laravel\Dusk\Browser;
-use Livewire\DuskTestCase;
 use Illuminate\Support\Facades\Blade;
 
-class Test extends DuskTestCase
+class Test extends \Tests\TestCase
 {
     /** @test */
     public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
@@ -24,8 +23,8 @@ class Test extends DuskTestCase
             <livewire:foo />
         ');
 
-        $this->assertCount(2, explode('__IF__', $output));
-        $this->assertCount(2, explode('__ENDIF__', $output));
+        $this->assertCount(2, explode('__BLOCK__', $output));
+        $this->assertCount(2, explode('__ENDBLOCK__', $output));
     }
 
     /** @test */

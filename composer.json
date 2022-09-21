@@ -39,7 +39,8 @@
     "autoload-dev": {
         "psr-4": {
             "App\\": "vendor/orchestra/testbench-core/laravel/app",
-            "Tests\\": "tests/"
+            "Tests\\": "tests/",
+            "LegacyTests\\": "legacy_tests/"
         }
     },
     "extra": {
@@ -57,7 +58,7 @@
     "repositories": {
         "local": {
             "type": "path",
-            "url": "../synthetic"
+            "url": "./synthetic"
         }
     }
 }

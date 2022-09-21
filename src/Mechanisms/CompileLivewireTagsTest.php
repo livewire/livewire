@@ -2,11 +2,10 @@
 
 namespace Livewire\Mechanisms;
 
-use Livewire\TestCase;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
 
-class CompileLivewireTagsTest extends TestCase
+class CompileLivewireTagsTest extends \Tests\TestCase
 {
     /** @test */
     public function can_compile_livewire_self_closing_tags()

@@ -2,7 +2,6 @@ import morphDom from "./morphDom";
 import wireModel from "./wireModel";
 import wireWildcard from "./wireWildcard";
 import hotReloading from "./../../src/Features/SupportHotReloading/SupportHotReloading";
-import eagerLoading from "./../../src/Features/SupportEagerLoading/SupportEagerLoading";
 import wireLoading from "./wireLoading";
 import wirePoll from "./wirePoll";
 import wireParent from "./wireParent";
@@ -29,7 +28,6 @@ export default function (enabledFeatures) {
     wireNavigate(enabledFeatures)
     wireWildcard(enabledFeatures)
     hotReloading(enabledFeatures)
-    eagerLoading(enabledFeatures)
     // wireDirty()
     // wireIgnore()
     // disableFormsDuringRequest()

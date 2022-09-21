@@ -1,4 +1,4 @@
-import { trigger } from './../../synthetic/js/index'
+import { trigger } from '@synthetic/index'
 import { closestComponent } from "./lifecycle"
 
 export function morph(component, el, html) {

@@ -1,4 +1,4 @@
-import { deepClone } from "../../synthetic/js/utils"
+import { deepClone } from "@synthetic/utils"
 
 export let state = {
     components: {},

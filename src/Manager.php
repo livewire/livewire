@@ -154,4 +154,9 @@ class Manager
 
         app('synthetic')->trigger('flush-state');
     }
+
+    function addPersistentMiddleware()
+    {
+        // @todo
+    }
 }

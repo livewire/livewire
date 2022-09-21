@@ -1,6 +1,16 @@
-import { on } from './events'
 import { first } from './state'
 import { start } from './lifecycle'
+import { synthetic, on } from '@synthetic/index'
+
+/**
+ * This is the single entrypoint into "synthetic". Users can pass
+ * either a full snapshot, rendered on the backend, or they can
+ * pass a string identifier and request a snapshot via fetch.
+ */
+ window.synthetic = synthetic
+
+ // @todo - do better. Currently this is here for Laravel dusk tests (waitForLivewire macro).
+ window.syntheticOn = on
 
 export let Livewire = {
     start,

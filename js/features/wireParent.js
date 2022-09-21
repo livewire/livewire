@@ -1,4 +1,4 @@
-import { on } from './../../../synthetic/js/index'
+import { on } from '@synthetic/index'
 import { findComponent } from '../state'
 import { closestComponent } from '../lifecycle'
 

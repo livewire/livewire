@@ -154,7 +154,7 @@ EOT;
     static function getBladeView($subject, $data = [])
     {
         if (! is_string($subject)) {
-            return $subject;
+            return tap($subject)->with($data);
         }
 
         $component = new class($subject) extends \Illuminate\View\Component

@@ -2,12 +2,11 @@
 
 namespace Livewire\Mechanisms;
 
-use Livewire\TestCase;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class HijackBladeTest extends TestCase
+class HijackBladeTest extends \Tests\TestCase
 {
     /** @test */
     public function livewire_only_directives_apply_to_livewire_components_and_not_normal_blade()

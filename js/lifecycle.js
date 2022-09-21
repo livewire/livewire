@@ -1,8 +1,6 @@
 import bootFeatures from './features'
 import { findComponent, hasComponent, releaseComponent, resurrect, state, storeComponent } from './state'
-// import { trigger } from './events'
-import { trigger } from './../../synthetic/js/index'
-import { synthetic } from './../../synthetic/js/index'
+import { synthetic, trigger } from '@synthetic/index'
 import { Component } from './component'
 
 export function start(options) {

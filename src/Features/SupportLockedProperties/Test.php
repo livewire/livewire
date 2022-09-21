@@ -3,9 +3,8 @@
 namespace Livewire\Features\SupportLockedProperties;
 
 use Livewire\Component;
-use Livewire\DuskTestCase;
 
-class Test extends DuskTestCase
+class Test extends \Tests\TestCase
 {
     /** @test */
     function can_lock_property()

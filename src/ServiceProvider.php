@@ -75,7 +75,7 @@ class ServiceProvider extends BaseServiceProvider
         $this->registerFeatures();
 
         if (app()->environment('testing')) {
-            DuskTestCase::runOnApplicationBoot();
+            \Tests\TestCase::runOnApplicationBoot();
         };
     }
 
@@ -109,8 +109,8 @@ class ServiceProvider extends BaseServiceProvider
     protected function registerSynthesizers()
     {
         app('synthetic')->registerSynth([
-            \Livewire\Synthesizers\LivewireSynth::class,
             \Livewire\Synthesizers\EloquentModelSynth::class,
+            \Livewire\Synthesizers\LivewireSynth::class,
         ]);
     }
 
@@ -134,18 +134,18 @@ class ServiceProvider extends BaseServiceProvider
     protected function registerFeatures()
     {
         foreach ([
+            \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
+            \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
             \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
             \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
+            \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
-            \Livewire\Features\SupportWireModelingNestedComponents::class,
-            \Livewire\Features\SupportChecksumErrorDebugging::class,
-            \Livewire\Features\SupportReactiveProps::class,
         ] as $feature) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($feature))) {
                 $feature::getInstance()->boot();
