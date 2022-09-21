@@ -1,0 +1,16 @@
+{
+    "main": "js/index.js",
+    "name": "syntheticjs",
+    "version": "0.0.0-alpha.0",
+    "scripts": {
+        "build": "esbuild js/index.js --bundle --outfile=dist/synthetic.js"
+    },
+    "author": "Caleb Porzio",
+    "license": "MIT",
+    "devDependencies": {
+        "esbuild": "^0.14.51"
+    },
+    "dependencies": {
+        "@vue/reactivity": "^3.2.37"
+    }
+}
