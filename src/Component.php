@@ -74,6 +74,19 @@ abstract class Component extends \Synthetic\Component
         return $this->__previous_children[$key];
     }
 
+    function __isset($property)
+    {
+        try {
+            $this->__get($property);
+
+            return true;
+        } catch(PropertyNotFoundException $e) {
+            return false;
+        }
+
+        return false;
+    }
+
     public function __get($property)
     {
         $value = 'noneset';
@@ -87,7 +100,7 @@ abstract class Component extends \Synthetic\Component
         $value = $finish($value);
 
         if ($value === 'noneset') {
-            throw new PropertyNotFoundException($property, $this);
+            throw new PropertyNotFoundException($property, $this->getName());
         }
 
         return $value;

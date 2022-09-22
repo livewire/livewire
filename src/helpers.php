@@ -4,6 +4,7 @@ namespace Livewire;
 
 use ReflectionClass;
 use Illuminate\Support\Str;
+use Livewire\Drawer\ImplicitlyBoundMethod;
 
 if (! function_exists('Livewire\str')) {
     function str($string = null)
@@ -56,6 +57,20 @@ if (! function_exists('Livewire\invade')) {
                 $method->setAccessible(true);
 
                 return $method->invoke($this->obj, ...$params);
+            }
+        };
+    }
+}
+
+if (! function_exists('Livewire\bound')) {
+    function bound($obj)
+    {
+        return new class($obj) {
+            public function __construct(public $obj) {}
+
+            public function __call($name, $params)
+            {
+                return ImplicitlyBoundMethod::call(app(), [$this->obj, $name], $params);
             }
         };
     }

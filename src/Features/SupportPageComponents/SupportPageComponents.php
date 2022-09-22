@@ -2,10 +2,10 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
-use Livewire\Mechanisms\ComponentDataStore;
-use Livewire\Drawer\ImplicitRouteBinding;
 use Illuminate\View\View;
 use Illuminate\View\AnonymousComponent;
+use Livewire\Drawer\ImplicitRouteBinding;
+use Livewire\Mechanisms\ComponentDataStore;
 use Illuminate\Support\Facades\View as ViewFacade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -49,17 +49,7 @@ class SupportPageComponents
             throw $exception;
         }
 
-        $instance = null;
-
-        app('synthetic')->on('mount', $cb = function ($name, $params, $parent, $key, $slots, $hijack) use (&$instance) {
-            return function ($target) use (&$instance) {
-                return $instance = $target;
-            };
-        });
-
-        $content = app('livewire')->mount($component, $params);
-
-        app('synthetic')->off('mount', $cb);
+        [$content, $instance] = app('livewire')->mount($component, $params);
 
         $layout = ComponentDataStore::get($instance, 'layout', []);
 

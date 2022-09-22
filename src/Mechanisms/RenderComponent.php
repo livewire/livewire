@@ -48,8 +48,11 @@ class RenderComponent
 };
 [\$__name, \$__params] = \$__split($expression);
 
-echo app('livewire')->mount(\$__name, \$__params, $key, \$__slots ?? [], get_defined_vars());
+[\$__html] = app('livewire')->mount(\$__name, \$__params, $key, \$__slots ?? [], get_defined_vars());
 
+echo \$__html;
+
+unset(\$__html);
 unset(\$__name);
 unset(\$__params);
 unset(\$__split);
@@ -127,7 +130,7 @@ EOT;
             'wire:initial-data' => $payload,
         ]);
 
-        return $html;
+        return [$html, $target];
     }
 
     static function renderComponentBladeView($target, $blade, $data)

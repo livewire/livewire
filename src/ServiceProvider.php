@@ -117,11 +117,11 @@ class ServiceProvider extends BaseServiceProvider
     protected function registerMechanisms()
     {
         foreach ([
+            \Livewire\Mechanisms\HijackBlade\HijackBlade::class,
             \Livewire\Mechanisms\JavaScriptAndCssAssets::class,
             \Livewire\Mechanisms\CompileLivewireTags::class,
             \Livewire\Mechanisms\ComponentDataStore::class,
             \Livewire\Mechanisms\RenderComponent::class,
-            \Livewire\Mechanisms\HijackBlade::class,
         ] as $mechanism) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($mechanism))) {
                 $mechanism::getInstance()->boot();
@@ -146,6 +146,7 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
+            \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
         ] as $feature) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($feature))) {
                 $feature::getInstance()->boot();

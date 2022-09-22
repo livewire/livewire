@@ -12,7 +12,7 @@ class SupportLazyLoading
             if (! array_key_exists('lazy', $params)) return;
             unset($params['lazy']);
 
-            $html = app('livewire')->mount('lazy', ['componentName' => $name, 'forwards' => $params], $key, $slots);
+            [$html] = app('livewire')->mount('lazy', ['componentName' => $name, 'forwards' => $params], $key, $slots);
 
             $hijack($html);
         });

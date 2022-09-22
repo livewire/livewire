@@ -1,12 +1,12 @@
 <?php
 
-namespace Livewire\Mechanisms;
+namespace Livewire\Mechanisms\HijackBlade;
 
 use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class HijackBladeTest extends \Tests\TestCase
+class Test extends \Tests\TestCase
 {
     /** @test */
     public function livewire_only_directives_apply_to_livewire_components_and_not_normal_blade()
@@ -18,7 +18,7 @@ class HijackBladeTest extends \Tests\TestCase
         $output = Blade::render('
             <div>@foo</div>
 
-            @livewire(\Livewire\Mechanisms\HijackBladeTestComponent::class)
+            @livewire(\Livewire\Mechanisms\HijackBlade\HijackBladeTestComponent::class)
 
             <div>@foo</div>
         ');
@@ -36,7 +36,7 @@ class HijackBladeTest extends \Tests\TestCase
         $output = Blade::render('
             <div>@foo</div>
 
-            @livewire(\Livewire\Mechanisms\HijackBladeTestComponent::class)
+            @livewire(\Livewire\Mechanisms\HijackBlade\HijackBladeTestComponent::class)
 
             <div>@foo</div>
         ');

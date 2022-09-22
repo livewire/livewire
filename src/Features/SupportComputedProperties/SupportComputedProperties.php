@@ -2,8 +2,11 @@
 
 namespace Livewire\Features\SupportComputedProperties;
 
+use Livewire\Drawer\ImplicitlyBoundMethod;
 use Livewire\Mechanisms\ComponentDataStore;
 use Synthetic\Utils as SyntheticUtils;
+
+use function Livewire\bound;
 
 class SupportComputedProperties
 {
@@ -50,12 +53,12 @@ class SupportComputedProperties
 
     public static function hasComputedProperty($target, $property)
     {
-        return array_search($property, static::getComputedPropertyNames($target)) !== false;
+        return array_search((string) str($property)->camel(), static::getComputedPropertyNames($target)) !== false;
     }
 
     public static function hasGetterProperty($target, $property)
     {
-        return array_search($property, static::getGetterPropertyNames($target)) !== false;
+        return array_search((string) str($property)->camel(), static::getGetterPropertyNames($target)) !== false;
     }
 
     public static function getComputedProperty($target, $property)
@@ -69,7 +72,7 @@ class SupportComputedProperties
         ComponentDataStore::push(
             $target,
             'computedProperties',
-            $value = ComponentDataStore::find($target, 'computedProperties', $property, fn () => $target->$method()),
+            $value = ComponentDataStore::find($target, 'computedProperties', $property, fn() => bound($target)->$method()),
             $property,
         );
 
@@ -87,7 +90,7 @@ class SupportComputedProperties
         ComponentDataStore::push(
             $target,
             'getterProperties',
-            $value = ComponentDataStore::find($target, 'getterProperties', $property, fn () => $target->$method()),
+            $value = ComponentDataStore::find($target, 'computedProperties', $property, fn() => bound($target)->$method()),
             $property,
         );
 
