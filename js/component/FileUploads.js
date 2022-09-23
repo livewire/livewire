@@ -12,7 +12,7 @@ export default function () {
 
             el.dispatchEvent(
                 new CustomEvent('livewire-upload-progress', {
-                    bubbles: true, detail: { progress: percentCompleted }
+                    bubbles: true, detail: { progress: percentCompleted, loaded: progressEvent.loaded, total: progressEvent.total }
                 })
             )
         }
