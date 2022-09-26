@@ -2,13 +2,8 @@
 
 namespace Synthetic;
 
-use PHPUnit\Framework\Assert;
-use Illuminate\Support\Traits\Macroable;
-
-class TestableSynthetic
+class FakeBrowser
 {
-    use Macroable { __call as macroCall; }
-
     protected $target;
     protected $snapshot;
     protected $data;
@@ -37,7 +32,13 @@ class TestableSynthetic
 
     function call($method, $params)
     {
-        $return = app('synthetic')->update($this->snapshot, [$key => $value], $calls = []);
+        $return = app('synthetic')->update($this->snapshot, $diff = [], $calls = [
+            [
+                'method' => $method,
+                'params' => $params,
+                'path' => '',
+            ]
+        ]);
 
         $this->target = $return['target'];
         $this->snapshot = $return['snapshot'];
@@ -63,35 +64,5 @@ class TestableSynthetic
         return is_array($payload)
             && count($payload) === 2
             && isset($payload[1]['s']);
-    }
-
-    function assert($value)
-    {
-        Assert::assertTrue(value($value, $this->data, $this->target));
-
-        return $this;
-    }
-
-    function assertEquals($expected, $value)
-    {
-        Assert::assertEquals($expected, value($value, $this->data, $this->target));
-
-        return $this;
-    }
-
-    public function __get($property)
-    {
-        //
-    }
-
-    public function __call($method, $params)
-    {
-        if (static::hasMacro($method)) {
-            return $this->macroCall($method, $params);
-        }
-
-        //
-
-        return $this;
     }
 }

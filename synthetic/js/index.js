@@ -32,15 +32,15 @@ import './features'
  */
 let store = new Map
 
-export function synthetic(provided) {
-    if (typeof provided === 'string') return newUp(provided)
+export function synthetic(dehydrated) {
+    if (typeof dehydrated === 'string') return newUp(dehydrated)
 
     // This "target" will be the object representing all the state for this synthetic.
     // Anytime you need to interect with this synthetic, you will need this object.
     let target = {
-        methods: provided.effects['methods'] || [],
-        effects: raw(provided.effects),
-        snapshot: raw(provided.snapshot),
+        methods: dehydrated.effects['methods'] || [],
+        effects: raw(dehydrated.effects),
+        snapshot: raw(dehydrated.snapshot),
     }
 
     // These will be used as an identifier in a lookup for this synthetic.

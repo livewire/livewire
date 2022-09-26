@@ -8,11 +8,31 @@ use Synthetic\Synthesizers\AnonymousSynth;
 use Synthetic\Synthesizers\ObjectSynth;
 use Synthetic\Synthesizers\CarbonSynth;
 use Synthetic\Synthesizers\ArraySynth;
-use Synthetic\LifecycleHooks;
 use Closure;
+use Livewire\Drawer\Utils;
 
 class SyntheticManager
 {
+    /**
+     * Livewire & Synthetic rely heavily on events.
+     * Here's a breakdown of what events get triggered when.
+     *
+     * When Synthesizing:
+     * - "synthesize"
+     * - "dehydrate.root"
+     * - "dehydrate"
+     *
+     * When Updating:
+     * - "hydrate.root"
+     * - "hydrate"
+     * - "update.root"
+     * - "update"
+     * - "call.root"
+     * - "call"
+     * - "dehydrate.root"
+     * - "dehydrate"
+     */
+
     use SyntheticValidation, SyntheticTesting;
 
     protected $synthesizers = [
@@ -38,11 +58,17 @@ class SyntheticManager
         return $this->synthesize(new $name);
     }
 
-    function synthesize($target, $props = [])
+    function synthesize($target)
     {
         $effects = [];
 
-        return $this->toSnapshot($target, $effects, $initial = true);
+        $finish = $this->trigger('synthesize', $target);
+
+        $result = $this->toSnapshot($target, $effects, $initial = true);
+
+        $result = $finish($result);
+
+        return $result;
     }
 
     function update($snapshot, $diff, $calls)
@@ -51,7 +77,11 @@ class SyntheticManager
 
         $root = $this->fromSnapshot($snapshot, $diff);
 
+        $finish = $this->trigger('call.root', $root, $calls);
+
         $this->makeCalls($root, $calls, $effects);
+
+        $finish();
 
         $payload = $this->toSnapshot($root, $effects);
 
@@ -63,7 +93,11 @@ class SyntheticManager
     }
 
     function toSnapshot($root, &$effects = [], $initial = false) {
+        $finish = $this->trigger('dehydrate.root', $root);
+
         $data = $this->dehydrate($root, $effects, $initial);
+
+        $finish($data, $effects);
 
         $this->metasByPath = [];
 
@@ -77,9 +111,17 @@ class SyntheticManager
     function fromSnapshot($snapshot, $diff) {
         Checksum::verify($snapshot);
 
+        $finish = app('synthetic')->trigger('hydrate.root', $snapshot);
+
         $root = $this->hydrate($snapshot['data']);
 
+        $finish($root);
+
+        $finish = app('synthetic')->trigger('update.root', $root);
+
         $this->applyDiff($root, $diff);
+
+        $finish();
 
         return $root;
     }
@@ -93,6 +135,7 @@ class SyntheticManager
             $finish = app('synthetic')->trigger('dehydrate', $synth, $target, $context);
 
             $methods = $synth->methods($target);
+
             if ($methods) $context->addEffect('methods', $methods);
 
             $value = $synth->dehydrate($target, $context);
@@ -105,6 +148,7 @@ class SyntheticManager
 
             foreach ($iEffects as $key => $effect) {
                 if (! isset($effects[$path])) $effects[$path] = [];
+
                 $effects[$path][$key] = $effect;
             }
 
@@ -129,7 +173,7 @@ class SyntheticManager
     }
 
     function hydrate($data, $path = null) {
-        if (is_array($data)) {
+        if (Utils::isSyntheticTuple($data)) {
             [$rawValue, $meta] = $data;
             $synthKey = $meta['s'];
             $synth = $this->synth($synthKey);
@@ -153,21 +197,39 @@ class SyntheticManager
 
     function applyDiff($root, $diff) {
         foreach ($diff as $path => $newValue) {
-            $this->trigger('applyDiff', $root, $path, $newValue);
+            [$parentKey, $key] = $this->getParentAndChildKey($path);
 
-            $rawValue = $newValue;
+            foo:
+
+            $target =& $this->dataGet($root, $parentKey);
+
+            // If the parent is null, there is nothing to set this
+            // value on, and we need to crawl up the data until
+            // we find something we can attach an array onto.
+            if ($target === null) {
+                $path = $parentKey;
+                [$newParentKey, $newKey] = $this->getParentAndChildKey($parentKey);
+                $parentKey = $newParentKey;
+                $newValue = [Utils::beforeFirstDot($key) => $newValue];
+                $key = $newKey;
+                goto foo;
+            }
 
             if (isset($this->metasByPath[$path])) {
                 $newValue = [$newValue, $this->metasByPath[$path]];
             }
 
-            [$parentKey, $key] = $this->getParentAndChildKey($path);
+            // [$parentKey, $key] = $this->getParentAndChildKey($path);
 
-            $target =& $this->dataGet($root, $parentKey);
+            // $target =& $this->dataGet($root, $parentKey);
 
-            LifecycleHooks::updating($root, $path, $rawValue);
+            // if ($target === null) {
+            //     [$parentKey] = $this->getParentAndChildKey($parentKey);
+            // }
 
             $value = $this->hydrate($newValue, $path);
+
+            $finish = $this->trigger('update', $root, $path, $value);
 
             if ($value === '__rm__') {
                 $this->synth($target)->unset($target, $key);
@@ -175,7 +237,7 @@ class SyntheticManager
                 $this->synth($target)->set($target, $key, $value);
             }
 
-            LifecycleHooks::updated($root, $path, $value);
+            $finish($value);
         }
     }
 
@@ -264,11 +326,19 @@ class SyntheticManager
     }
 
     protected $listeners = [];
+    protected $listenersAfter = [];
+    protected $listenersBefore = [];
 
     function trigger($name, &...$params) {
         $finishers = [];
 
-        foreach ($this->listeners[$name] ?? [] as $callback) {
+        $listeners = array_merge(
+            ($this->listenersBefore[$name] ?? []),
+            ($this->listeners[$name] ?? []),
+            ($this->listenersAfter[$name] ?? []),
+        );
+
+        foreach ($listeners as $callback) {
             $result = $callback(...$params);
 
             if ($result instanceof Closure) {
@@ -291,11 +361,25 @@ class SyntheticManager
         $this->listeners[$name][] = $callback;
     }
 
+    function after($name, $callback) {
+        if (! isset($this->listenersAfter[$name])) $this->listenersAfter[$name] = [];
+
+        $this->listenersAfter[$name][] = $callback;
+    }
+
+    function before($name, $callback) {
+        if (! isset($this->listenersBefore[$name])) $this->listenersBefore[$name] = [];
+
+        $this->listenersBefore[$name][] = $callback;
+    }
+
     function off($name, $callback) {
         $index = array_search($callback, $this->listeners[$name]);
+        $indexAfter = array_search($callback, $this->listenersAfter[$name]);
+        $indexBefore = array_search($callback, $this->listenersBefore[$name]);
 
-        if ($index === false) return;
-
-        unset($this->listeners[$name][$index]);
+        if ($index !== false) unset($this->listeners[$name][$index]);
+        elseif ($indexAfter !== false) unset($this->listenersAfter[$name][$indexAfter]);
+        elseif ($indexBefore !== false) unset($this->listenersBefore[$name][$indexBefore]);
     }
 }

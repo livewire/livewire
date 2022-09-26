@@ -6,28 +6,20 @@ use PHPUnit\Framework\Assert as PHPUnit;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Arr;
 use Livewire\Mechanisms\ComponentDataStore;
+use Synthetic\TestableSynthetic;
+use Synthetic\Testing\Testable as BaseTestable;
 
-class TestableLivewire
+class Testable extends BaseTestable
 {
-    use Macroable { __call as macroCall; }
-
-    function __construct(
-        public $instance
-    ) {}
-
     function html()
     {
-        return ComponentDataStore::get($this->instance, 'testing.html');
+        return ComponentDataStore::get($this->target, 'testing.html');
     }
 
     public function id()
     {
         //
     }
-
-    /**
-     * @todo: add in assertions...
-     */
 
     public function assertSee($values, $escape = true)
     {
@@ -41,14 +33,6 @@ class TestableLivewire
         return $this;
     }
 
-    function stripOutInitialData($html)
-    {
-        $html = preg_replace('/((?:[\n\s+]+)?wire:initial-data=\".+}"\n?|(?:[\n\s+]+)?wire:id=\"[^"]*"\n?)/m', '', $html);
-
-        return $html;
-    }
-
-
     public function instance()
     {
         //
@@ -59,9 +43,13 @@ class TestableLivewire
         //
     }
 
-    public function get($property)
+    function call($method, ...$params)
     {
-        //
+        if ($method === '$refresh') {
+            return parent::commit();
+        }
+
+        return parent::call($method, ...$params);
     }
 
     public function emit($event, ...$parameters)
@@ -74,22 +62,12 @@ class TestableLivewire
         //
     }
 
-    public function call($method, ...$parameters)
-    {
-        //
-    }
-
     public function runAction($method, ...$parameters)
     {
         //
     }
 
     public function fill($values)
-    {
-        //
-    }
-
-    public function set($name, $value = null)
     {
         //
     }
@@ -129,19 +107,4 @@ class TestableLivewire
         //
     }
 
-    public function __get($property)
-    {
-        //
-    }
-
-    public function __call($method, $params)
-    {
-        if (static::hasMacro($method)) {
-            return $this->macroCall($method, $params);
-        }
-
-        //
-
-        return $this;
-    }
 }

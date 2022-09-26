@@ -2,9 +2,9 @@
 
 namespace LegacyTests\Unit;
 
-use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
+use Illuminate\Support\Stringable;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 class LifecycleHooksTest extends TestCase
@@ -117,11 +117,12 @@ class LifecycleHooksTest extends TestCase
             ],
         ]);
 
-        $component->updateProperty('bar.foo', 'baz');
+        $component->set('bar.foo', 'baz');
 
-        $component->updateProperty('bar.cocktail.soft', 'Shirley Ginger');
+        // @resume - this is failing, why?
+        $component->set('bar.cocktail.soft', 'Shirley Ginger');
 
-        $component->updateProperty('bar.cocktail.soft', 'Shirley Cumin');
+        $component->set('bar.cocktail.soft', 'Shirley Cumin');
 
         $this->assertEquals([
             'mount' => true,

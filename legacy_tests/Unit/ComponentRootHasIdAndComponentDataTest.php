@@ -17,7 +17,7 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
         $this->assertTrue(
-            str($component->payload['effects']['html'])->contains([$component->id(), 'foo'])
+            str($component->html())->containsAll([$component->id(), 'foo'])
         );
     }
 

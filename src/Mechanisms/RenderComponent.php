@@ -63,6 +63,9 @@ EOT;
 
     static function mount($name, $params = [], $key = null, $slots = [], $viewScope = [])
     {
+        // This is if a user doesn't pass params, BUT passes key() as the second argument...
+        if (is_string($params)) $params = [];
+
         $parent = last(static::$renderStack);
 
         $hijackedHtml = null;
@@ -91,10 +94,7 @@ EOT;
             return $finish($html);
         }
 
-        // New up the component instance...
-
-        // This is if a user doesn't pass params, BUT passes key() as the second argument...
-        if (is_string($params)) $params = [];
+        // New it up...
         $id = str()->random(20);
 
         $target = app('livewire')->new($name);
@@ -102,14 +102,8 @@ EOT;
 
         $finishMount($target);
 
-        if ($params) {
-            foreach ($params as $name => $value) {
-                $target->$name = $value;
-            }
-        }
-
-        if (method_exists($target, 'mount')) {
-            ImplicitlyBoundMethod::call(app(), [$target, 'mount'], $params);
+        foreach ($params as $name => $value) {
+            $target->$name = $value;
         }
 
         // Render it...
@@ -130,7 +124,7 @@ EOT;
             'wire:initial-data' => $payload,
         ]);
 
-        return [$html, $target];
+        return [$html, $target, $payload];
     }
 
     static function renderComponentBladeView($target, $blade, $data)

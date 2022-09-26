@@ -2,12 +2,20 @@
 
 namespace Livewire;
 
+use Synthetic\Utils as SyntheticUtils;
 use Livewire\Exceptions\PropertyNotFoundException;
+use Livewire\Drawer\Utils;
+use Livewire\Concerns\InteractsWithProperties;
+use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Str;
 
 abstract class Component extends \Synthetic\Component
 {
-    public function __invoke()
+    use Macroable { __call as macroCall; }
+
+    use InteractsWithProperties;
+
+    function __invoke()
     {
         $finish = app('synthetic')->trigger('__invoke', $this);
 
@@ -16,17 +24,17 @@ abstract class Component extends \Synthetic\Component
 
     protected $__id;
 
-    public function setId($id)
+    function setId($id)
     {
         $this->__id = $id;
     }
 
-    public function getId()
+    function getId()
     {
         return $this->__id;
     }
 
-    public static function getName()
+    static function getName()
     {
         $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace'))))
             ->map(fn ($i) => Str::kebab($i))
@@ -43,33 +51,36 @@ abstract class Component extends \Synthetic\Component
         return $fullName;
     }
 
+    /**
+     * @todo: move all this children stuff to "single file"
+     */
     // [key => ['id' => id, 'tag' => tag]
     public $__children = [];
     public $__previous_children = [];
 
-    public function getChildren() { return $this->__children; }
+    function getChildren() { return $this->__children; }
 
-    public function setChildren($children) { $this->__children = $children; }
+    function setChildren($children) { $this->__children = $children; }
 
-    public function setPreviouslyRenderedChildren($children) { $this->__previous_children = $children; }
+    function setPreviouslyRenderedChildren($children) { $this->__previous_children = $children; }
 
-    public function setChild($key, $tag, $id) { $this->__children[$key] = [$tag, $id]; }
+    function setChild($key, $tag, $id) { $this->__children[$key] = [$tag, $id]; }
 
-    public function hasPreviouslyRenderedChild($key) {
+    function hasPreviouslyRenderedChild($key) {
         return in_array($key, array_keys($this->__previous_children));
     }
 
-    public function hasChild($key)
+    function hasChild($key)
     {
         return in_array($key, array_keys($this->__children));
     }
 
-    public function getChild($key)
+    function getChild($key)
     {
         return $this->__children[$key];
     }
 
-    public function getPreviouslyRenderedChild($key)
+    function getPreviouslyRenderedChild($key)
     {
         return $this->__previous_children[$key];
     }
@@ -87,7 +98,7 @@ abstract class Component extends \Synthetic\Component
         return false;
     }
 
-    public function __get($property)
+    function __get($property)
     {
         $value = 'noneset';
 
@@ -104,5 +115,12 @@ abstract class Component extends \Synthetic\Component
         }
 
         return $value;
+    }
+
+    function __call($method, $params)
+    {
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $params);
+        }
     }
 }

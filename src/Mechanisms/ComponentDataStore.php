@@ -87,4 +87,15 @@ class ComponentDataStore
             static::$dataLookup[$component][$key][] = $value;
         }
     }
+
+    static function dd()
+    {
+        $forDd = [];
+
+        foreach (static::$dataLookup as $component => $data) {
+            $forDd[$component->getId()] = $data;
+        }
+
+        dd($forDd);
+    }
 }

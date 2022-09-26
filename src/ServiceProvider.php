@@ -142,6 +142,8 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
             \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
+            \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
+            \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,
             \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,

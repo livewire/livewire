@@ -4,6 +4,12 @@ namespace Synthetic;
 
 class Utils
 {
+    static function isSyntheticTuple($payload) {
+        return is_array($payload)
+            && count($payload) === 2
+            && isset($payload[1]['s']);
+    }
+
     static function getPublicPropertiesDefinedOnSubclass($target) {
         return static::getPublicProperties($target, function ($property) use ($target) {
             // dump($property->getDeclaringClass()->getName(), $target::class, $property);

@@ -122,6 +122,8 @@ class SupportSlots
 
             return function ($target) use ($slots) {
                 ComponentDataStore::set($target, 'slots', $slots);
+
+                return $target;
             };
         });
 

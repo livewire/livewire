@@ -14,8 +14,10 @@ class SupportUnitTesting
         app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
-            return function () use ($context, $target) {
+            return function ($value) use ($context, $target) {
                 ComponentDataStore::set($target, 'testing.html', $context->effects['html']);
+
+                return $value;
             };
         });
     }

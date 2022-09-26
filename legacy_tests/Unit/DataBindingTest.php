@@ -12,7 +12,7 @@ class DataBindingTest extends TestCase
     {
         $component = Livewire::test(DataBindingStub::class);
 
-        $component->updateProperty('foo', 'bar');
+        $component->set('foo', 'bar');
 
         $this->assertEquals('bar', $component->foo);
     }
@@ -22,9 +22,9 @@ class DataBindingTest extends TestCase
     {
         $component = Livewire::test(DataBindingStub::class);
 
-        $component->updateProperty('foo', []);
-        $component->updateProperty('foo.0', 'bar');
-        $component->updateProperty('foo.bar', 'baz');
+        $component->set('foo', []);
+        $component->set('foo.0', 'bar');
+        $component->set('foo.bar', 'baz');
 
         $this->assertEquals(['bar', 'bar' => 'baz'], $component->foo);
     }
@@ -34,15 +34,15 @@ class DataBindingTest extends TestCase
     {
         $component = Livewire::test(DataBindingStub::class);
 
-        $component->updateProperty('foo', 'bar');
+        $component->set('foo', 'bar');
 
         $this->assertEquals('bar', $component->foo);
-        $this->assertEmpty($component->payload['effects']['dirty'] ?? []);
+        $this->assertEmpty($component->effects['dirty'] ?? []);
 
-        $component->runAction('changeFoo', 'baz');
+        $component->call('changeFoo', 'baz');
 
         $this->assertEquals('baz', $component->foo);
-        $this->assertContains('foo', $component->payload['effects']['dirty']);
+        $this->assertContains('foo', $component->effects['dirty']);
     }
 
     /** @test */
@@ -50,15 +50,15 @@ class DataBindingTest extends TestCase
     {
         $component = Livewire::test(DataBindingStub::class);
 
-        $component->updateProperty('arrayProperty.1', 'baz');
+        $component->set('arrayProperty.1', 'baz');
 
         $this->assertEquals(['foo', 'baz'], $component->arrayProperty);
-        $this->assertEmpty($component->payload['effects']['dirty'] ?? []);
+        $this->assertEmpty($component->effects['dirty'] ?? []);
 
-        $component->runAction('changeArrayPropertyOne', 'bar');
+        $component->call('changeArrayPropertyOne', 'bar');
 
         $this->assertEquals(['foo', 'bar'], $component->arrayProperty);
-        $this->assertContains('arrayProperty.1', $component->payload['effects']['dirty']);
+        $this->assertContains('arrayProperty.1', $component->effects['dirty']);
     }
 
     /** @test */
@@ -66,10 +66,10 @@ class DataBindingTest extends TestCase
     {
         $component = Livewire::test(DataBindingStub::class);
 
-        $component->runAction('removeArrayPropertyOne');
+        $component->call('removeArrayPropertyOne');
 
         $this->assertEquals(['foo'], $component->arrayProperty);
-        $this->assertContains('arrayProperty.1', $component->payload['effects']['dirty']);
+        $this->assertContains('arrayProperty.1', $component->effects['dirty']);
     }
 
     /** @test */
@@ -80,7 +80,7 @@ class DataBindingTest extends TestCase
         $component->set('propertyWithHook', 'something');
 
         $this->assertEquals('something else', $component->propertyWithHook);
-        $this->assertContains('propertyWithHook', $component->payload['effects']['dirty']);
+        $this->assertContains('propertyWithHook', $component->effects['dirty']);
     }
 }
 

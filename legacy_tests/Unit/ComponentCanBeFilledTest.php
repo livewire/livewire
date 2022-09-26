@@ -5,6 +5,7 @@ namespace LegacyTests\Unit;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Database\Eloquent\Model;
+use Synthetic\Testing\FauxJsTarget;
 
 class ComponentCanBeFilledTest extends TestCase
 {

@@ -6,7 +6,7 @@ use Throwable;
 use Livewire\Mechanisms\RenderComponent;
 use Livewire\Mechanisms\HijackBlade\HijackBlade;
 use Livewire\Mechanisms\ComponentRegistry;
-use Livewire\Features\SupportUnitTesting\TestableLivewire;
+use Livewire\Features\SupportUnitTesting\Testable;
 use Livewire\Features\SupportPageComponents\SupportPageComponents;
 use Livewire\Exceptions\ComponentNotFoundException;
 use Illuminate\Contracts\Container\BindingResolutionException;
@@ -113,9 +113,9 @@ class Manager
 
     public function test($name, $params = [])
     {
-        [$noop, $instance] = $this->mount($name, $params);
+        [$noop, $instance, $dehydrated] = $this->mount($name, $params);
 
-        return new TestableLivewire($instance);
+        return new Testable($dehydrated, $instance);
     }
 
     public function visit($browser, $class, $queryString = '')

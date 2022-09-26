@@ -9,7 +9,7 @@ class SupportLockedProperties
 {
     public function boot()
     {
-        app('synthetic')->on('applyDiff', function ($root, $path, $value) {
+        app('synthetic')->on('diff', function ($root, $path, $value) {
             $prop = Utils::beforeFirstDot($path);
 
             if (SyntheticUtils::propertyHasAnnotation($root, $prop, 'locked')) {
