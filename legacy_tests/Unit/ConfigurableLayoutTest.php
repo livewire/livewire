@@ -14,6 +14,7 @@ class ConfigurableLayoutTest extends TestCase
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
 
         $this
+            ->withoutExceptionHandling()
             ->get('/configurable-layout')
             ->assertSee('foo')
             ->assertDontSee('baz');

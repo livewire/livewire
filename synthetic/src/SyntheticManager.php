@@ -374,9 +374,9 @@ class SyntheticManager
     }
 
     function off($name, $callback) {
-        $index = array_search($callback, $this->listeners[$name]);
-        $indexAfter = array_search($callback, $this->listenersAfter[$name]);
-        $indexBefore = array_search($callback, $this->listenersBefore[$name]);
+        $index = array_search($callback, $this->listeners[$name] ?? []);
+        $indexAfter = array_search($callback, $this->listenersAfter[$name] ?? []);
+        $indexBefore = array_search($callback, $this->listenersBefore[$name] ?? []);
 
         if ($index !== false) unset($this->listeners[$name][$index]);
         elseif ($indexAfter !== false) unset($this->listenersAfter[$name][$indexAfter]);

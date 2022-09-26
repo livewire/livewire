@@ -37,7 +37,7 @@ class ComponentLayoutTest extends TestCase
 
         Route::get('/foo', ComponentWithCustomLayout::class);
 
-        $this->get('/foo')->assertSee('baz');
+        $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
     /** @test */
