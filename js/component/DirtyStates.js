@@ -26,11 +26,17 @@ export default function () {
                             directives.get('model').value ===
                                 property) ||
                         (directives.has('target') &&
-                            directives
+                            (directives
                                 .get('target')
                                 .value.split(',')
                                 .map(s => s.trim())
-                                .includes(property))
+                                .includes(property)) ||
+                            (directives
+                                .get('target')
+                                .value.split(',')
+                                .map(s => s.trim())
+                                .includes(property.split('.')[0]))
+                        )
                     ) {
                         let isDirty = DOM.valueFromInput(el, component) != component.get(property)
 
