@@ -71,7 +71,6 @@ class LifecycleHooksTest extends TestCase
             ]
         ])->set('foo', 'bar');
 
-
         $this->assertEquals([
             'mount' => true,
             'hydrate' => 1,
@@ -119,7 +118,6 @@ class LifecycleHooksTest extends TestCase
 
         $component->set('bar.foo', 'baz');
 
-        // @resume - this is failing, why?
         $component->set('bar.cocktail.soft', 'Shirley Ginger');
 
         $component->set('bar.cocktail.soft', 'Shirley Cumin');

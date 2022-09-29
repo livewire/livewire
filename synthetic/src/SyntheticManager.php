@@ -196,40 +196,39 @@ class SyntheticManager
     }
 
     function applyDiff($root, $diff) {
-        foreach ($diff as $path => $newValue) {
-            [$parentKey, $key] = $this->getParentAndChildKey($path);
-
-            foo:
+        foreach ($diff as $path => $value) {
+            // "$path" is a dot-notated key. This means we may need to drill
+            // down and set a value on a deeply nested object. That object
+            // may not exist, so let's find the first one that does...
+            [$parentKey, $key] = $this->closestExistingParent($root, $path);
 
             $target =& $this->dataGet($root, $parentKey);
 
-            // If the parent is null, there is nothing to set this
-            // value on, and we need to crawl up the data until
-            // we find something we can attach an array onto.
-            if ($target === null) {
-                $path = $parentKey;
-                [$newParentKey, $newKey] = $this->getParentAndChildKey($parentKey);
-                $parentKey = $newParentKey;
-                $newValue = [Utils::beforeFirstDot($key) => $newValue];
-                $key = $newKey;
-                goto foo;
-            }
-
             if (isset($this->metasByPath[$path])) {
-                $newValue = [$newValue, $this->metasByPath[$path]];
+                $value = [$value, $this->metasByPath[$path]];
             }
 
-            // [$parentKey, $key] = $this->getParentAndChildKey($path);
+            $value = $this->hydrate($value, $path);
 
-            // $target =& $this->dataGet($root, $parentKey);
+            // "$leafValue" here is the most deeply nested value we're trying to set
+            // on this "$root". We make this distinction, because "$value" may be
+            // an array containing nesting levels that didn't previously exist.
+            $leafValue = $value;
 
-            // if ($target === null) {
-            //     [$parentKey] = $this->getParentAndChildKey($parentKey);
-            // }
+            if (Utils::containsDots($key)) {
+                // Here's we've determined we're trying to set a deeply nested
+                // value on an object/array that doesn't exist, so we need
+                // to build up that non-existant nesting structure first.
+                $nestedKey = Utils::afterFirstDot($key);
 
-            $value = $this->hydrate($newValue, $path);
+                $key = Utils::beforeFirstDot($key);
 
-            $finish = $this->trigger('update', $root, $path, $value);
+                $value = [];
+
+                $value = data_set($value, $nestedKey, $leafValue);
+            }
+
+            $finish = $this->trigger('update', $root, $path, $leafValue);
 
             if ($value === '__rm__') {
                 $this->synth($target)->unset($target, $key);
@@ -237,8 +236,27 @@ class SyntheticManager
                 $this->synth($target)->set($target, $key, $value);
             }
 
-            $finish($value);
+            $finish($leafValue);
         }
+    }
+
+    protected function closestExistingParent(&$root, $path, $nestedKey = '')
+    {
+        if (! Utils::containsDots($path)) {
+            return ['', $path];
+        }
+
+        [$parentKey, $key] = $this->getParentAndChildKey($path);
+
+        $key = $nestedKey === '' ? $key : $key.'.'.$nestedKey;
+
+        $parentTarget = $this->dataGet($root, $parentKey);
+
+        if ($parentTarget !== null) {
+            return [$parentKey, $key];
+        };
+
+        return $this->closestExistingParent($root, $parentKey, $key);
     }
 
     protected function makeCalls($root, $calls, &$effects) {

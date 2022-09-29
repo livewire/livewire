@@ -49,6 +49,10 @@ class Testable extends BaseTestable
             return parent::commit();
         }
 
+        if ($method === '$set') {
+            return parent::set(...$params);
+        }
+
         return parent::call($method, ...$params);
     }
 
