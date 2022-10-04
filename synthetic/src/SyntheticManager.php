@@ -115,6 +115,8 @@ class SyntheticManager
 
         $root = $this->hydrate($snapshot['data']);
 
+        app('synthetic')->trigger('boot', $root);
+
         $finish($root);
 
         $finish = app('synthetic')->trigger('update.root', $root);
@@ -343,61 +345,23 @@ class SyntheticManager
         return [$parentKey, $childKey];
     }
 
-    protected $listeners = [];
-    protected $listenersAfter = [];
-    protected $listenersBefore = [];
-
     function trigger($name, &...$params) {
-        $finishers = [];
-
-        $listeners = array_merge(
-            ($this->listenersBefore[$name] ?? []),
-            ($this->listeners[$name] ?? []),
-            ($this->listenersAfter[$name] ?? []),
-        );
-
-        foreach ($listeners as $callback) {
-            $result = $callback(...$params);
-
-            if ($result instanceof Closure) {
-                $finishers[] = $result;
-            }
-        }
-
-        return function (&$forward = null) use (&$finishers) {
-            $latest = $forward;
-            foreach ($finishers as $finisher) {
-                $latest = $finisher($latest);
-            }
-            return $latest;
-        };
+        return app(EventBus::class)->trigger($name, ...$params);
     }
 
     function on($name, $callback) {
-        if (! isset($this->listeners[$name])) $this->listeners[$name] = [];
-
-        $this->listeners[$name][] = $callback;
+        app(EventBus::class)->on($name, $callback);
     }
 
     function after($name, $callback) {
-        if (! isset($this->listenersAfter[$name])) $this->listenersAfter[$name] = [];
-
-        $this->listenersAfter[$name][] = $callback;
+        app(EventBus::class)->after($name, $callback);
     }
 
     function before($name, $callback) {
-        if (! isset($this->listenersBefore[$name])) $this->listenersBefore[$name] = [];
-
-        $this->listenersBefore[$name][] = $callback;
+        app(EventBus::class)->before($name, $callback);
     }
 
     function off($name, $callback) {
-        $index = array_search($callback, $this->listeners[$name] ?? []);
-        $indexAfter = array_search($callback, $this->listenersAfter[$name] ?? []);
-        $indexBefore = array_search($callback, $this->listenersBefore[$name] ?? []);
-
-        if ($index !== false) unset($this->listeners[$name][$index]);
-        elseif ($indexAfter !== false) unset($this->listenersAfter[$name][$indexAfter]);
-        elseif ($indexBefore !== false) unset($this->listenersBefore[$name][$indexBefore]);
+        app(EventBus::class)->off($name, $callback);
     }
 }

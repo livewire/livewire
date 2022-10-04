@@ -17,7 +17,7 @@ class Testable
     function __construct($dehydrated, $target) {
         $this->target = $target;
         $this->methods = $dehydrated['effects']['methods'] ?? [];
-        $this->effects = $dehydrated['effects'];
+        $this->effects = $dehydrated['effects'][''];
         $this->snapshot = $dehydrated['snapshot'];
         $this->canonical = $this->extractData($this->snapshot['data']);
     }
@@ -82,11 +82,6 @@ class Testable
     function __get($property)
     {
         return $this->target->$property;
-    }
-
-    function __call($method, $params)
-    {
-        return $this->call($method, $params);
     }
 
     function __set($property, $value)

@@ -5,4 +5,3 @@ if (! function_exists('synthetic')) {
         return app('synthetic')->synthesize($subject);
     }
 }
-

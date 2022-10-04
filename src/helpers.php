@@ -75,3 +75,10 @@ if (! function_exists('Livewire\bound')) {
         };
     }
 }
+
+if (! function_exists('Livewire\of')) {
+    function of(...$params)
+    {
+        return $params;
+    }
+}

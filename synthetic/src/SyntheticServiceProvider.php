@@ -10,6 +10,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 use Synthetic\SyntheticManager;
+use Synthetic\EventBus;
 
 class SyntheticServiceProvider extends ServiceProvider
 {
@@ -17,9 +18,8 @@ class SyntheticServiceProvider extends ServiceProvider
     {
         $this->app->alias(SyntheticManager::class, 'synthetic');
         $this->app->singleton(SyntheticManager::class);
+        $this->app->singleton(EventBus::class);
         // AnonymousSynth::registerAnonymousCacheClassAutoloader();
-
-
     }
 
     public function boot()

@@ -43,8 +43,7 @@ class ComponentEventsTest extends TestCase
     {
         $component = Livewire::test(ReceivesEvents::class);
 
-        $this->assertTrue(in_array('bar', $component->payload['effects']['listeners']));
-        $this->assertStringContainsString('bar', $component->payload['effects']['html']);
+        $this->assertTrue(in_array('bar', $component->effects['listeners']));
     }
 
     /** @test */
@@ -54,7 +53,7 @@ class ComponentEventsTest extends TestCase
 
         $component->call('emitGoo');
 
-        $this->assertTrue(in_array(['event' => 'goo', 'params' => ['car']], $component->payload['effects']['emits']));
+        $this->assertTrue(in_array(['event' => 'goo', 'params' => ['car']], $component->effects['emits']));
     }
 
     /** @test */
@@ -64,7 +63,7 @@ class ComponentEventsTest extends TestCase
 
         $component->call('emitUpGoo');
 
-        $this->assertTrue(in_array(['ancestorsOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->payload['effects']['emits']));
+        $this->assertTrue(in_array(['ancestorsOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->effects['emits']));
     }
 
     /** @test */
@@ -74,7 +73,7 @@ class ComponentEventsTest extends TestCase
 
         $component->call('emitSelfGoo');
 
-        $this->assertTrue(in_array(['selfOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->payload['effects']['emits']));
+        $this->assertTrue(in_array(['selfOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->effects['emits']));
     }
 
     /** @test */
@@ -84,7 +83,7 @@ class ComponentEventsTest extends TestCase
 
         $component->call('emitToGooGone');
 
-        $this->assertTrue(in_array(['to' => 'goo', 'event' => 'gone', 'params' => ['car']], $component->payload['effects']['emits']));
+        $this->assertTrue(in_array(['to' => 'goo', 'event' => 'gone', 'params' => ['car']], $component->effects['emits']));
     }
 
     /** @test */
@@ -110,7 +109,7 @@ class ComponentEventsTest extends TestCase
 
         $component->call('emitToComponentUsingClassname');
 
-        $this->assertTrue(in_array(['to' => 'tests.unit.it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->payload['effects']['emits']));
+        $this->assertTrue(in_array(['to' => 'legacy-tests.unit.it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->effects['emits']));
     }
 }
 

@@ -36,8 +36,6 @@ class SupportWireModelingNestedComponents
 
                     $target->$inner = $parent->$outer;
                 }
-
-                return $target;
             };
         });
 

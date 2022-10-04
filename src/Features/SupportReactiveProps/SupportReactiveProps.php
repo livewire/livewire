@@ -14,7 +14,6 @@ class SupportReactiveProps
     {
         app('synthetic')->on('flush-state', fn() => static::$pendingChildParams = []);
 
-
         app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             return function ($target) use ($params) {
                 $props = [];
@@ -26,8 +25,6 @@ class SupportReactiveProps
                 }
 
                 ComponentDataStore::set($target, 'props', $props);
-
-                return $target;
             };
         });
 

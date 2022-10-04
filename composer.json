@@ -46,7 +46,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Livewire\\ServiceProvider"
+                "Livewire\\ServiceProvider",
+                "Synthetic\\SyntheticServiceProvider"
             ],
             "aliases": {
                 "Livewire": "Livewire\\Livewire"

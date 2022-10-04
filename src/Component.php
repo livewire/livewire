@@ -3,17 +3,24 @@
 namespace Livewire;
 
 use Synthetic\Utils as SyntheticUtils;
+use Livewire\Mechanisms\Events\HandlesEvents;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Drawer\Utils;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Str;
+use BadMethodCallException;
+
+/**
+ * @todo - add Facade-esque method signatures to this file (from triggered __get and __call)
+ */
 
 abstract class Component extends \Synthetic\Component
 {
     use Macroable { __call as macroCall; }
 
     use InteractsWithProperties;
+    use HandlesEvents;
 
     function __invoke()
     {
@@ -119,8 +126,26 @@ abstract class Component extends \Synthetic\Component
 
     function __call($method, $params)
     {
+        $value = 'noneset';
+
+        $returnValue = function ($newValue) use (&$value) {
+            $value = $newValue;
+        };
+
+        $finish = app('synthetic')->trigger('__call', $this, $method, $params, $returnValue);
+
+        $value = $finish($value);
+
+        if ($value !== 'noneset') {
+            return $value;
+        }
+
         if (static::hasMacro($method)) {
             return $this->macroCall($method, $params);
         }
+
+        throw new BadMethodCallException(sprintf(
+            'Method %s::%s does not exist.', static::class, $method
+        ));
     }
 }

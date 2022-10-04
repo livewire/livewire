@@ -11,6 +11,8 @@ use Synthetic\Testing\Testable as BaseTestable;
 
 class Testable extends BaseTestable
 {
+    use MakesAssertions;
+
     function html()
     {
         return ComponentDataStore::get($this->target, 'testing.html');
@@ -58,17 +60,17 @@ class Testable extends BaseTestable
 
     public function emit($event, ...$parameters)
     {
-        //
+        return parent::call('__emit', $event, ...$parameters);
     }
 
     public function fireEvent($event, ...$parameters)
     {
-        //
+        return $this->emit($event, ...$parameters);
     }
 
-    public function runAction($method, ...$parameters)
+    public function runAction($method, ...$params)
     {
-        //
+        return parent::call($method, ...$params);
     }
 
     public function fill($values)

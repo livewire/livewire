@@ -117,13 +117,11 @@ class SupportSlots
                 HTML;
         });
 
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             if (! $slots) return;
 
             return function ($target) use ($slots) {
                 ComponentDataStore::set($target, 'slots', $slots);
-
-                return $target;
             };
         });
 

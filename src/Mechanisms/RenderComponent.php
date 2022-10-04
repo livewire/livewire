@@ -61,7 +61,7 @@ if (isset(\$__slots)) unset(\$__slots);
 EOT;
     }
 
-    static function mount($name, $params = [], $key = null, $slots = [], $viewScope = [])
+    static function mount($name, $params = [], $key = null, $slots = [])
     {
         // This is if a user doesn't pass params, BUT passes key() as the second argument...
         if (is_string($params)) $params = [];
@@ -76,7 +76,17 @@ EOT;
             unset($params['apply']);
         }
 
-        $finishMount = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slots, $hijack, $viewScope);
+        $instanceInterceptors = [];
+
+        $interceptInstance = function ($callback) use (&$instanceInterceptors) {
+            array_push($instanceInterceptors, $callback);
+        };
+
+        $runInstanceInterceptors = function ($instance) use (&$instanceInterceptors) {
+            foreach ($instanceInterceptors as $interceptor) $interceptor($instance);
+        };
+
+        [$receiveInstance, $finishMount] = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slots, $hijack, $interceptInstance);
 
         // Allow a "mount" event listener to short-circuit the mount...
         if ($hijackedHtml !== null) return $hijackedHtml;
@@ -94,13 +104,14 @@ EOT;
             return $finish($html);
         }
 
-        // New it up...
         $id = str()->random(20);
 
         $target = app('livewire')->new($name);
         $target->setId($id);
 
-        $finishMount($target);
+        $receiveInstance($target);
+
+        $runInstanceInterceptors($target);
 
         foreach ($params as $name => $value) {
             $target->$name = $value;
@@ -123,6 +134,8 @@ EOT;
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:initial-data' => $payload,
         ]);
+
+        $finishMount($html);
 
         return [$html, $target, $payload];
     }

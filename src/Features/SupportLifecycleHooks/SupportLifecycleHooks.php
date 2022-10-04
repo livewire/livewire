@@ -6,6 +6,7 @@ use Livewire\Synthesizers\LivewireSynth;
 use Livewire\Drawer\ImplicitlyBoundMethod;
 
 use function Livewire\bound;
+use function Livewire\of;
 
 class SupportLifecycleHooks
 {
@@ -21,19 +22,15 @@ class SupportLifecycleHooks
     function handleBootHooks()
     {
         // Cover the initial request, mounting, scenario...
-        app('synthetic')->on('mount', function ($name, $params) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'boot')) $target->boot();
-
-                return $target;
             };
         });
 
         app('synthetic')->after('mount', function ($name, $params) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'booted')) $target->booted();
-
-                return $target;
             };
         });
 
@@ -43,8 +40,6 @@ class SupportLifecycleHooks
 
             return function ($target) {
                 if (method_exists($target, 'boot')) $target->boot();
-
-                return $target;
             };
         });
 
@@ -53,8 +48,6 @@ class SupportLifecycleHooks
                 if (! $target instanceof \Livewire\Component) return;
 
                 if (method_exists($target, 'booted')) $target->booted();
-
-                return $target;
             };
         });
     }
@@ -62,13 +55,11 @@ class SupportLifecycleHooks
     function handleMountHooks()
     {
         // Note: "mount" is the only one of these events fired by Livewire...
-        app('synthetic')->on('mount', function ($name, $params) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'mount')) {
                     bound($target)->mount(...$params);
                 }
-
-                return $target;
             };
         });
     }
@@ -88,8 +79,6 @@ class SupportLifecycleHooks
 
                     if (method_exists($target, $method)) $target->$method($value);
                 }
-
-                return $target;
             };
         });
     }

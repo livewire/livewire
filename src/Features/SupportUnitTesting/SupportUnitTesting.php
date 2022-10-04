@@ -20,5 +20,13 @@ class SupportUnitTesting
                 return $value;
             };
         });
+
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+            return function ($target) {
+                return function ($html) use ($target) {
+                    ComponentDataStore::set($target, 'testing.html', $html);
+                };
+            };
+        });
     }
 }
