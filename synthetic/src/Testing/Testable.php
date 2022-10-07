@@ -51,6 +51,11 @@ class Testable
         return $this;
     }
 
+    function runAction($method, ...$params)
+    {
+        return $this->call($method, ...$params);
+    }
+
     function call($method, ...$params)
     {
         $dehydrated = app('synthetic')->update($this->snapshot, $diff = [], $calls = [[

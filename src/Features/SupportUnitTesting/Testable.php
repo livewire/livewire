@@ -2,16 +2,18 @@
 
 namespace Livewire\Features\SupportUnitTesting;
 
-use PHPUnit\Framework\Assert as PHPUnit;
-use Illuminate\Support\Traits\Macroable;
-use Illuminate\Support\Arr;
-use Livewire\Mechanisms\ComponentDataStore;
-use Synthetic\TestableSynthetic;
 use Synthetic\Testing\Testable as BaseTestable;
+use Synthetic\TestableSynthetic;
+use PHPUnit\Framework\Assert as PHPUnit;
+use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Features\SupportValidation\TestsValidation;
+use Illuminate\Support\Traits\Macroable;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\Arr;
 
 class Testable extends BaseTestable
 {
-    use MakesAssertions;
+    use MakesAssertions, TestsValidation;
 
     function html()
     {
@@ -21,18 +23,6 @@ class Testable extends BaseTestable
     public function id()
     {
         //
-    }
-
-    public function assertSee($values, $escape = true)
-    {
-        foreach (Arr::wrap($values) as $value) {
-            PHPUnit::assertStringContainsString(
-                $escape ? e($value): $value,
-                $this->html()
-            );
-        }
-
-        return $this;
     }
 
     public function instance()
@@ -66,11 +56,6 @@ class Testable extends BaseTestable
     public function fireEvent($event, ...$parameters)
     {
         return $this->emit($event, ...$parameters);
-    }
-
-    public function runAction($method, ...$params)
-    {
-        return parent::call($method, ...$params);
     }
 
     public function fill($values)

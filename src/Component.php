@@ -4,6 +4,7 @@ namespace Livewire;
 
 use Synthetic\Utils as SyntheticUtils;
 use Livewire\Mechanisms\Events\HandlesEvents;
+use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Drawer\Utils;
 use Livewire\Concerns\InteractsWithProperties;
@@ -21,6 +22,7 @@ abstract class Component extends \Synthetic\Component
 
     use InteractsWithProperties;
     use HandlesEvents;
+    use HandlesValidation;
 
     function __invoke()
     {

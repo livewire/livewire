@@ -21,7 +21,8 @@
     },
     "autoload": {
         "files": [
-            "src/helpers.php"
+            "src/helpers.php",
+            "src/global_helpers.php"
         ],
         "psr-4": {
             "Synthetic\\": "src/"

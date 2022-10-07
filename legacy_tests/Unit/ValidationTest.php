@@ -20,8 +20,8 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidation');
 
-        $this->assertStringNotContainsString('The foo field is required', $component->payload['effects']['html']);
-        $this->assertStringContainsString('The bar field is required', $component->payload['effects']['html']);
+        $this->assertStringNotContainsString('The foo field is required', $component->html());
+        $this->assertStringContainsString('The bar field is required', $component->html());
     }
 
     /** @test */
@@ -31,7 +31,7 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidationWithCustomMessage');
 
-        $this->assertStringContainsString('Custom Message', $component->payload['effects']['html']);
+        $this->assertStringContainsString('Custom Message', $component->html());
     }
 
     /** @test */
@@ -41,7 +41,7 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidationWithMessageProperty');
 
-        $this->assertStringContainsString('Custom Message', $component->payload['effects']['html']);
+        $this->assertStringContainsString('Custom Message', $component->html());
     }
 
     /** @test */
@@ -51,8 +51,8 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidationWithAttributesProperty');
 
-        $this->assertStringContainsString('The foobar field is required.', $component->payload['effects']['html']);
-        $this->assertStringContainsString('The Items Baz field is required.', $component->payload['effects']['html']);
+        $this->assertStringContainsString('The foobar field is required.', $component->html());
+        $this->assertStringContainsString('The Items Baz field is required.', $component->html());
     }
 
     /** @test */
@@ -62,7 +62,7 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidationWithCustomAttribute');
 
-        $this->assertStringContainsString('The foobar field is required.', $component->payload['effects']['html']);
+        $this->assertStringContainsString('The foobar field is required.', $component->html());
     }
 
     /** @test */
@@ -72,7 +72,7 @@ class ValidationTest extends TestCase
 
         $component->runAction('runValidationWithCustomValuesProperty');
 
-        $this->assertStringContainsString('The bar field is required when foo is my custom value.', $component->payload['effects']['html']);
+        $this->assertStringContainsString('The bar field is required when foo is my custom value.', $component->html());
     }
 
     /** @test */
@@ -82,7 +82,7 @@ class ValidationTest extends TestCase
 
         $component->runAction('runNestedValidation');
 
-        $this->assertStringContainsString('emails.1 must be a valid email address.', $component->payload['effects']['html']);
+        $this->assertStringContainsString('emails.1 must be a valid email address.', $component->html());
     }
 
     /** @test */
@@ -92,8 +92,8 @@ class ValidationTest extends TestCase
 
         $component->runAction('runDeeplyNestedValidation');
 
-        $this->assertStringContainsString('items.1.baz field is required', $component->payload['effects']['html']);
-        $this->assertStringNotContainsString('items.0.baz field is required', $component->payload['effects']['html']);
+        $this->assertStringContainsString('items.1.baz field is required', $component->html());
+        $this->assertStringNotContainsString('items.0.baz field is required', $component->html());
     }
 
     /** @test */

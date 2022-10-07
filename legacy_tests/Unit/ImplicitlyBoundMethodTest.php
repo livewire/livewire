@@ -2,12 +2,12 @@
 
 namespace LegacyTests\Unit;
 
-use Closure;
-use Illuminate\Container\Container;
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Livewire\Drawer\ImplicitlyBoundMethod;
 use stdClass;
+use Synthetic\ImplicitlyBoundMethod;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Container\Container;
+use Closure;
 
 class ImplicitlyBoundMethodTest extends TestCase
 {

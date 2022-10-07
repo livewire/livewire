@@ -6,79 +6,70 @@ use ReflectionClass;
 use Illuminate\Support\Str;
 use Livewire\Drawer\ImplicitlyBoundMethod;
 
-if (! function_exists('Livewire\str')) {
-    function str($string = null)
-    {
-        if (is_null($string)) return new class {
-            public function __call($method, $params) {
-                return Str::$method(...$params);
-            }
-        };
+function str($string = null)
+{
+    if (is_null($string)) return new class {
+        public function __call($method, $params) {
+            return Str::$method(...$params);
+        }
+    };
 
-        return Str::of($string);
-    }
+    return Str::of($string);
 }
 
-if (! function_exists('Livewire\invade')) {
-    function invade($obj)
-    {
-        return new class($obj) {
-            public $obj;
-            public $reflected;
+function invade($obj)
+{
+    return new class($obj) {
+        public $obj;
+        public $reflected;
 
-            public function __construct($obj)
-            {
-                $this->obj = $obj;
-                $this->reflected = new ReflectionClass($obj);
-            }
+        public function __construct($obj)
+        {
+            $this->obj = $obj;
+            $this->reflected = new ReflectionClass($obj);
+        }
 
-            public function __get($name)
-            {
-                $property = $this->reflected->getProperty($name);
+        public function &__get($name)
+        {
+            $property = $this->reflected->getProperty($name);
 
-                $property->setAccessible(true);
+            $property->setAccessible(true);
 
-                return $property->getValue($this->obj);
-            }
+            $value = $property->getValue($this->obj);
 
-            public function __set($name, $value)
-            {
-                $property = $this->reflected->getProperty($name);
+            return $value;
+        }
 
-                $property->setAccessible(true);
+        public function __set($name, $value)
+        {
+            $property = $this->reflected->getProperty($name);
 
-                $property->setValue($this->obj, $value);
-            }
+            $property->setAccessible(true);
 
-            public function __call($name, $params)
-            {
-                $method = $this->reflected->getMethod($name);
+            $property->setValue($this->obj, $value);
+        }
 
-                $method->setAccessible(true);
+        public function __call($name, $params)
+        {
+            $method = $this->reflected->getMethod($name);
 
-                return $method->invoke($this->obj, ...$params);
-            }
-        };
-    }
+            $method->setAccessible(true);
+
+            return $method->invoke($this->obj, ...$params);
+        }
+    };
 }
 
-if (! function_exists('Livewire\bound')) {
-    function bound($obj)
-    {
-        return new class($obj) {
-            public function __construct(public $obj) {}
-
-            public function __call($name, $params)
-            {
-                return ImplicitlyBoundMethod::call(app(), [$this->obj, $name], $params);
-            }
-        };
-    }
+function of(...$params)
+{
+    return $params;
 }
 
-if (! function_exists('Livewire\of')) {
-    function of(...$params)
-    {
-        return $params;
-    }
+function revert(&$variable)
+{
+    $cache = $variable;
+
+    return function () use (&$variable, $cache) {
+        $variable = $cache;
+    };
 }

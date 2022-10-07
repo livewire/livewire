@@ -5,7 +5,7 @@ namespace Livewire\Mechanisms\Events;
 use Livewire\Mechanisms\ComponentDataStore;
 use Livewire\Synthesizers\LivewireSynth;
 
-use function Livewire\bound;
+use function Synthetic\wrap;
 
 class Events
 {
@@ -38,7 +38,7 @@ class Events
 
         $method = static::getListenerMethodName($component, $name);
 
-        bound($component)->$method(...$params);
+        wrap($component)->$method(...$params);
     }
 
     static function getListenerEventNames($component)

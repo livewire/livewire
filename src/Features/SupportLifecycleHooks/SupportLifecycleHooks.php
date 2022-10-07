@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportLifecycleHooks;
 use Livewire\Synthesizers\LivewireSynth;
 use Livewire\Drawer\ImplicitlyBoundMethod;
 
-use function Livewire\bound;
+use function Synthetic\wrap;
 use function Livewire\of;
 
 class SupportLifecycleHooks
@@ -58,7 +58,7 @@ class SupportLifecycleHooks
         app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'mount')) {
-                    bound($target)->mount(...$params);
+                    wrap($target)->mount(...$params);
                 }
             };
         });
@@ -71,13 +71,13 @@ class SupportLifecycleHooks
                 if (! $target instanceof \Livewire\Component) return;
 
                 // Call general "hydrate" hook...
-                if (method_exists($target, 'hydrate')) $target->hydrate();
+                if (method_exists($target, 'hydrate')) wrap($target)->hydrate();
 
                 // Call "hydrateXx" hooks for each property...
                 foreach ($target->all() as $property => $value) {
                     $method = 'hydrate'.str($property)->studly();
 
-                    if (method_exists($target, $method)) $target->$method($value);
+                    if (method_exists($target, $method)) wrap($target)->$method($value);
                 }
             };
         });
@@ -89,13 +89,13 @@ class SupportLifecycleHooks
             if (! $target instanceof \Livewire\Component) return;
 
             // Call general "dehydrate" hook...
-            if (method_exists($target, 'dehydrate')) $target->dehydrate();
+            if (method_exists($target, 'dehydrate')) wrap($target)->dehydrate();
 
             // Call "dehydrateXx" hooks for each property...
             foreach ($target->all() as $property => $value) {
                 $method = 'dehydrate'.str($property)->studly();
 
-                if (method_exists($target, $method)) $target->$method($value);
+                if (method_exists($target, $method)) wrap($target)->$method($value);
             }
         });
     }
@@ -124,25 +124,25 @@ class SupportLifecycleHooks
 
             $name = $name->__toString();
 
-            if (method_exists($target, 'updating')) $target->updating($path, $value);
+            if (method_exists($target, 'updating')) wrap($target)->updating($path, $value);
 
             if (method_exists($target, $beforeMethod)) {
-                $target->{$beforeMethod}($value, $keyAfterFirstDot);
+                wrap($target)->{$beforeMethod}($value, $keyAfterFirstDot);
             }
 
             if ($beforeNestedMethod && method_exists($target, $beforeNestedMethod)) {
-                $target->{$beforeNestedMethod}($value, $keyAfterLastDot);
+                wrap($target)->{$beforeNestedMethod}($value, $keyAfterLastDot);
             }
 
             return function ($newValue) use ($target, $path, $afterMethod, $afterNestedMethod, $keyAfterFirstDot, $keyAfterLastDot) {
-                if (method_exists($target, 'updated')) $target->updated($path, $newValue);
+                if (method_exists($target, 'updated')) wrap($target)->updated($path, $newValue);
 
                 if (method_exists($target, $afterMethod)) {
-                    $target->{$afterMethod}($newValue, $keyAfterFirstDot);
+                    wrap($target)->{$afterMethod}($newValue, $keyAfterFirstDot);
                 }
 
                 if ($afterNestedMethod && method_exists($target, $afterNestedMethod)) {
-                    $target->{$afterNestedMethod}($newValue, $keyAfterLastDot);
+                    wrap($target)->{$afterNestedMethod}($newValue, $keyAfterLastDot);
                 }
 
                 return $newValue;

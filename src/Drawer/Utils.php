@@ -91,6 +91,11 @@ class Utils extends SyntheticUtils
         return str($subject)->after('.');
     }
 
+    static public function hasProperty($target, $property)
+    {
+        return property_exists($target, static::beforeFirstDot($property));
+    }
+
     static function anonymousClassToStringClass($target, $class, $namespace = null)
     {
         $raw = file((new \ReflectionObject($target))->getFilename());

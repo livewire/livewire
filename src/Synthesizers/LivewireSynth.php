@@ -6,7 +6,7 @@ use Synthetic\Utils;
 use Synthetic\Synthesizers\ObjectSynth;
 use Livewire\Mechanisms\RenderComponent;
 
-use function Livewire\bound;
+use function Synthetic\wrap;
 
 class LivewireSynth extends ObjectSynth
 {
@@ -21,7 +21,7 @@ class LivewireSynth extends ObjectSynth
     function dehydrate($target, $context) {
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($target);
 
-        $rendered = bound($target)->render();
+        $rendered = wrap($target)->render();
 
         $html = app('livewire')->renderBladeView($target, $rendered, $properties);
 
@@ -79,6 +79,6 @@ class LivewireSynth extends ObjectSynth
     }
 
     function call($target, $method, $params, $addEffect) {
-        return bound($target)->{$method}(...$params);
+        return wrap($target)->{$method}(...$params);
     }
 }

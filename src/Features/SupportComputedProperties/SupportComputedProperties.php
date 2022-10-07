@@ -6,7 +6,7 @@ use Livewire\Drawer\ImplicitlyBoundMethod;
 use Livewire\Mechanisms\ComponentDataStore;
 use Synthetic\Utils as SyntheticUtils;
 
-use function Livewire\bound;
+use function Synthetic\wrap;
 
 class SupportComputedProperties
 {
@@ -72,7 +72,7 @@ class SupportComputedProperties
         ComponentDataStore::push(
             $target,
             'computedProperties',
-            $value = ComponentDataStore::find($target, 'computedProperties', $property, fn() => bound($target)->$method()),
+            $value = ComponentDataStore::find($target, 'computedProperties', $property, fn() => wrap($target)->$method()),
             $property,
         );
 
@@ -90,7 +90,7 @@ class SupportComputedProperties
         ComponentDataStore::push(
             $target,
             'getterProperties',
-            $value = ComponentDataStore::find($target, 'computedProperties', $property, fn() => bound($target)->$method()),
+            $value = ComponentDataStore::find($target, 'computedProperties', $property, fn() => wrap($target)->$method()),
             $property,
         );
 

@@ -150,6 +150,7 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
+            \Livewire\Features\SupportValidation\SupportValidation::class,
         ] as $feature) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($feature))) {
                 $feature::getInstance()->boot();
