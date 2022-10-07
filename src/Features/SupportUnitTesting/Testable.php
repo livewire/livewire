@@ -10,10 +10,11 @@ use Livewire\Features\SupportValidation\TestsValidation;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Arr;
+use Livewire\Features\SupportEvents\TestsEvents;
 
 class Testable extends BaseTestable
 {
-    use MakesAssertions, TestsValidation;
+    use MakesAssertions, TestsValidation, TestsEvents;
 
     function html()
     {
@@ -46,16 +47,6 @@ class Testable extends BaseTestable
         }
 
         return parent::call($method, ...$params);
-    }
-
-    public function emit($event, ...$parameters)
-    {
-        return parent::call('__emit', $event, ...$parameters);
-    }
-
-    public function fireEvent($event, ...$parameters)
-    {
-        return $this->emit($event, ...$parameters);
     }
 
     public function fill($values)

@@ -3,8 +3,8 @@
 namespace Livewire;
 
 use Synthetic\Utils as SyntheticUtils;
-use Livewire\Mechanisms\Events\HandlesEvents;
 use Livewire\Features\SupportValidation\HandlesValidation;
+use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Drawer\Utils;
 use Livewire\Concerns\InteractsWithProperties;

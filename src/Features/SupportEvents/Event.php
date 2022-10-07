@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms\Events;
+namespace Livewire\Features\SupportEvents;
 
 use Livewire\Component;
 

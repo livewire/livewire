@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms\Events;
+namespace Livewire\Features\SupportEvents;
 
 trait HandlesEvents
 {
@@ -17,12 +17,12 @@ trait HandlesEvents
     }
 
     public function __emit($name, ...$params) {
-        Events::receive($this, $name, $params);
+        SupportEvents::receive($this, $name, $params);
     }
 
     public function emit($event, ...$params)
     {
-        return Events::emit($this, $event, ...$params);
+        return SupportEvents::emit($this, $event, ...$params);
     }
 
     public function emitUp($event, ...$params)
@@ -42,7 +42,7 @@ trait HandlesEvents
 
     public function dispatchBrowserEvent($event, $data = null)
     {
-        Events::dispatch($this, $event, $data);
+        SupportEvents::dispatch($this, $event, $data);
     }
 
     public function getEventQueue()

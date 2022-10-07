@@ -122,7 +122,6 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Mechanisms\CompileLivewireTags::class,
             \Livewire\Mechanisms\ComponentDataStore::class,
             \Livewire\Mechanisms\RenderComponent::class,
-            \Livewire\Mechanisms\Events\Events::class,
         ] as $mechanism) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($mechanism))) {
                 $mechanism::getInstance()->boot();
@@ -151,6 +150,7 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
+            \Livewire\Features\SupportEvents\SupportEvents::class,
         ] as $feature) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($feature))) {
                 $feature::getInstance()->boot();

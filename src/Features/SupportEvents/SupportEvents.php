@@ -1,13 +1,12 @@
 <?php
 
-namespace Livewire\Mechanisms\Events;
+namespace Livewire\Features\SupportEvents;
 
 use Livewire\Mechanisms\ComponentDataStore;
 use Livewire\Synthesizers\LivewireSynth;
-
 use function Synthetic\wrap;
 
-class Events
+class SupportEvents
 {
     function boot()
     {
