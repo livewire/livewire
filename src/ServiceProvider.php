@@ -141,6 +141,7 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
             \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
             \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
+            \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
             \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
             \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,
@@ -150,6 +151,9 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
+            \Livewire\Features\SupportWireables\SupportWireables::class,
+            \Livewire\Features\SupportEntangle\SupportEntangle::class,
+            \Livewire\Features\SupportTraits\SupportTraits::class,
             \Livewire\Features\SupportEvents\SupportEvents::class,
         ] as $feature) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($feature))) {

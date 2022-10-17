@@ -3,6 +3,7 @@
 namespace Synthetic\Testing;
 
 use Synthetic\Utils;
+use Illuminate\Support\Traits\Macroable;
 
 class Testable
 {
@@ -13,6 +14,8 @@ class Testable
     public $canonical;
 
     use MakesAssertions;
+
+    use Macroable { __call as macroCall; }
 
     function __construct($dehydrated, $target) {
         $this->target = $target;

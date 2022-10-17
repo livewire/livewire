@@ -7,6 +7,7 @@ use Livewire\Drawer\ImplicitlyBoundMethod;
 
 use function Synthetic\wrap;
 use function Livewire\of;
+use function Synthetic\trigger;
 
 class SupportLifecycleHooks
 {
@@ -25,12 +26,16 @@ class SupportLifecycleHooks
         app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'boot')) $target->boot();
+
+                trigger('component.boot', $target);
             };
         });
 
         app('synthetic')->after('mount', function ($name, $params) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'booted')) $target->booted();
+
+                trigger('component.booted', $target);
             };
         });
 
@@ -40,6 +45,8 @@ class SupportLifecycleHooks
 
             return function ($target) {
                 if (method_exists($target, 'boot')) $target->boot();
+
+                trigger('component.boot', $target);
             };
         });
 
@@ -48,6 +55,8 @@ class SupportLifecycleHooks
                 if (! $target instanceof \Livewire\Component) return;
 
                 if (method_exists($target, 'booted')) $target->booted();
+
+                trigger('component.booted', $target);
             };
         });
     }
@@ -60,6 +69,8 @@ class SupportLifecycleHooks
                 if (method_exists($target, 'mount')) {
                     wrap($target)->mount(...$params);
                 }
+
+                trigger('component.mount', $target, $params);
             };
         });
     }
@@ -79,6 +90,8 @@ class SupportLifecycleHooks
 
                     if (method_exists($target, $method)) wrap($target)->$method($value);
                 }
+
+                trigger('component.hydrate', $target);
             };
         });
     }
@@ -97,6 +110,10 @@ class SupportLifecycleHooks
 
                 if (method_exists($target, $method)) wrap($target)->$method($value);
             }
+
+            return function () use ($target) {
+                trigger('component.dehydrate', $target);
+            };
         });
     }
 
@@ -134,6 +151,8 @@ class SupportLifecycleHooks
                 wrap($target)->{$beforeNestedMethod}($value, $keyAfterLastDot);
             }
 
+            trigger('component.updating', $target, $path, $value);
+
             return function ($newValue) use ($target, $path, $afterMethod, $afterNestedMethod, $keyAfterFirstDot, $keyAfterLastDot) {
                 if (method_exists($target, 'updated')) wrap($target)->updated($path, $newValue);
 
@@ -145,7 +164,7 @@ class SupportLifecycleHooks
                     wrap($target)->{$afterNestedMethod}($newValue, $keyAfterLastDot);
                 }
 
-                return $newValue;
+                trigger('component.updated', $target, $path, $newValue);
             };
         });
     }

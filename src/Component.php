@@ -33,6 +33,11 @@ abstract class Component extends \Synthetic\Component
 
     protected $__id;
 
+    function id()
+    {
+        return $this->getId();
+    }
+
     function setId($id)
     {
         $this->__id = $id;

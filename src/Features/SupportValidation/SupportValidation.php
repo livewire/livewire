@@ -28,17 +28,7 @@ class SupportValidation
         on('render', function ($target, $view, $data) {
             $errors = (new ViewErrorBag)->put('default', $target->getErrorBag());
 
-            $cache = app('view')->shared('errors');
-
-            $revert = function () use ($cache) {
-                if ($cache === 'notfound') {
-                    unset(invade(app('view'))->shared['errors']);
-                } else {
-                    app('view')->share('errors', $cache);
-                }
-            };
-
-            app('view')->share('errors', $errors);
+            $revert = Utils::shareWithViews('errors', $errors);
 
             return function () use ($revert) {
                 // After the component has rendered, let's revert our global

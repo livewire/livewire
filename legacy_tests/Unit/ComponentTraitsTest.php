@@ -13,7 +13,7 @@ class ComponentTraitsTest extends TestCase
         Livewire::test(ComponentWithTraitStub::class)
             ->assertSet(
                 'hooksFromTrait',
-                ['initialized', 'hydrate', 'mount', 'rendering', 'rendered:show-name', 'dehydrate']
+                ['initialized', 'mount', 'rendering', 'rendered:show-name', 'dehydrate']
             )
             ->set('foo', 'bar')
             ->assertSet(
@@ -28,7 +28,6 @@ class ComponentTraitsTest extends TestCase
         Livewire::test(ComponentWithTwoTraitsStub::class)
             ->assertSet('hooksFromTrait', [
                 'initialized', 'secondInitialized',
-                'hydrate', 'secondHydrate',
                 'mount', 'secondMount',
                 'rendering', 'secondRendering',
                 'rendered:show-name', 'secondRendered:show-name',
@@ -52,7 +51,7 @@ class ComponentTraitsTest extends TestCase
         ComponentForTestMethodsStub::$hooksFromTrait = [];
         $test = Livewire::test(ComponentForTestMethodsStub::class);
         $this->assertEquals(
-            ['initialized', 'hydrate', 'mount', 'rendering', 'rendered:show-name', 'dehydrate',],
+            ['initialized', 'mount', 'rendering', 'rendered:show-name', 'dehydrate',],
             ComponentForTestMethodsStub::$hooksFromTrait
         );
 

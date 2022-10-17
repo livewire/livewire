@@ -148,9 +148,13 @@ EOT;
 
         $finish = app('synthetic')->trigger('render', $target, $view, $data);
 
-        $view->with('__livewire', $target);
+        $revertA = Utils::shareWithViews('__livewire', $target);
+        $revertB = Utils::shareWithViews('_instance', $target); // @legacy
 
         $rawHtml = $view->render();
+
+        $revertA();
+        $revertB();
 
         $rawHtml = $finish($rawHtml);
 

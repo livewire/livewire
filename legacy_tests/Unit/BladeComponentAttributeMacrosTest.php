@@ -32,7 +32,7 @@ class BladeComponentAttributeMacrosTest extends TestCase
     public function entangle_directive_adds_dot_defer_if_defer_modifier_is_present()
     {
         $dom = Livewire::test(ComponentWithEntangleDirectiveUsedWithinBladeComponent::class)
-            ->lastRenderedDom;
+            ->html();
 
         $this->assertStringContainsString("{ foo: window.Livewire.find('", $dom);
         $this->assertStringContainsString("').entangle('foo').defer }", $dom);

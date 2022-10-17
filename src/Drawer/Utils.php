@@ -5,6 +5,8 @@ namespace Livewire\Drawer;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 use Synthetic\Utils as SyntheticUtils;
 
+use function Livewire\invade;
+
 class Utils extends SyntheticUtils
 {
     static function insertAttributesIntoHtmlRoot($html, $attributes) {
@@ -94,6 +96,21 @@ class Utils extends SyntheticUtils
     static public function hasProperty($target, $property)
     {
         return property_exists($target, static::beforeFirstDot($property));
+    }
+
+    static public function shareWithViews($name, $value)
+    {
+        $old = app('view')->shared($name, 'notfound');
+
+        app('view')->share($name, $value);
+
+        return $revert = function () use ($name, $old) {
+            if ($old === 'notfound') {
+                unset(invade(app('view'))->shared[$name]);
+            } else {
+                app('view')->share($name, $old);
+            }
+        };
     }
 
     static function anonymousClassToStringClass($target, $class, $namespace = null)
