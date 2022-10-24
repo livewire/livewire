@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Livewire\Synthesizers\LivewireSynth;
+use Livewire\LivewireSynth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 

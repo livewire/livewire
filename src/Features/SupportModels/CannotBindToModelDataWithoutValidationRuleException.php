@@ -1,6 +1,8 @@
 <?php
 
-namespace Livewire\Exceptions;
+namespace Livewire\Features\SupportModels;
+
+use Livewire\Exceptions\BypassViewHandler;
 
 class CannotBindToModelDataWithoutValidationRuleException extends \Exception
 {

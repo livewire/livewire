@@ -14,6 +14,7 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
     public function exception_is_thrown_and_not_caught_by_view_error_handler()
     {
         $this->expectException(PublicPropertyTypeNotAllowedException::class);
+
         Livewire::component('foo', ComponentWithPropertiesStub::class);
 
         View::make('render-component', ['component' => 'foo', 'params' => ['foo' => new \StdClass]])->render();

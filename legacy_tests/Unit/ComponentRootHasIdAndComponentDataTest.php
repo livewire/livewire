@@ -36,9 +36,9 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
 
         $this->assertStringContainsString(
             <<<EOT
-{&quot;string&quot;:&quot;foo&quot;,&quot;array&quot;:[&quot;foo&quot;],&quot;object&quot;:{&quot;foo&quot;:&quot;bar&quot;},&quot;number&quot;:1,&quot;quote&quot;:&quot;\&quot;&quot;,&quot;singleQuote&quot;:&quot;&#039;&quot;}
+{&quot;string&quot;:&quot;foo&quot;,&quot;array&quot;:[[&quot;foo&quot;],{&quot;s&quot;:&quot;arr&quot;}],&quot;object&quot;:[{&quot;foo&quot;:&quot;bar&quot;},{&quot;s&quot;:&quot;arr&quot;}],&quot;number&quot;:1,&quot;quote&quot;:&quot;\&quot;&quot;,&quot;singleQuote&quot;:&quot;&#039;&quot;}
 EOT
-            , $component->payload['effects']['html']
+            , $component->html()
         );
     }
 
@@ -50,9 +50,9 @@ EOT
         $this->assertStringContainsString(
             <<<EOT
 <!-- Test comment <div>Commented out code</div> -->
-<span wire:id="{$component->id}" wire:initial-data
+<span wire:initial-data
 EOT
-            , $component->payload['effects']['html']
+            , $component->html()
         );
     }
 
@@ -64,9 +64,9 @@ EOT
         $this->assertStringContainsString(
             <<<EOT
 <!-- Test comment <div>Commented out code</div> -->
-<span wire:id="{$component->id}" wire:initial-data
+<span wire:initial-data
 EOT
-            , $component->payload['effects']['html']
+            , $component->html()
         );
     }
 
@@ -77,9 +77,9 @@ EOT
 
         $component->call('$refresh');
 
-        $this->assertStringContainsString($component->id(), $component->lastRenderedDom);
+        $this->assertStringContainsString($component->id(), $component->html());
 
-        $this->assertStringNotContainsString('foo', $component->lastRenderedDom);
+        $this->assertStringNotContainsString('foo', $component->html());
     }
 }
 

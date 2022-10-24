@@ -2,17 +2,20 @@
 
 namespace Livewire\Features\SupportLifecycleHooks;
 
-use Livewire\Synthesizers\LivewireSynth;
-use Livewire\Drawer\ImplicitlyBoundMethod;
-
 use function Synthetic\wrap;
-use function Livewire\of;
+
 use function Synthetic\trigger;
+use function Livewire\of;
+use function Synthetic\on;
+
+use Livewire\LivewireSynth;
+use Livewire\Drawer\ImplicitlyBoundMethod;
 
 class SupportLifecycleHooks
 {
     function boot()
     {
+        $this->preventLifecycleHooksFromBeingCalledDirectly();
         $this->handleBootHooks();
         $this->handleMountHooks();
         $this->handleHydrateHooks();
@@ -20,12 +23,32 @@ class SupportLifecycleHooks
         $this->handleUpdateHooks();
     }
 
+    function preventLifecycleHooksFromBeingCalledDirectly()
+    {
+        $protectedMethods = [
+            'mount',
+            'hydrate*',
+            'dehydrate*',
+            'updating*',
+            'updated*',
+        ];
+
+        on('call', function ($synth, $target, $method, $params, $addEffect) use ($protectedMethods) {
+            if (! $synth instanceof LivewireSynth) return;
+
+            throw_if(
+                str($method)->is($protectedMethods),
+                new DirectlyCallingLifecycleHooksNotAllowedException($method, $target->getName())
+            );
+        });
+    }
+
     function handleBootHooks()
     {
         // Cover the initial request, mounting, scenario...
         app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             return function ($target) use ($params) {
-                if (method_exists($target, 'boot')) $target->boot();
+                if (method_exists($target, 'boot')) wrap($target)->boot();
 
                 trigger('component.boot', $target);
             };
@@ -33,7 +56,7 @@ class SupportLifecycleHooks
 
         app('synthetic')->after('mount', function ($name, $params) {
             return function ($target) use ($params) {
-                if (method_exists($target, 'booted')) $target->booted();
+                if (method_exists($target, 'booted')) wrap($target)->booted();
 
                 trigger('component.booted', $target);
             };
@@ -44,7 +67,7 @@ class SupportLifecycleHooks
             if (! $synth instanceof LivewireSynth) return;
 
             return function ($target) {
-                if (method_exists($target, 'boot')) $target->boot();
+                if (method_exists($target, 'boot')) wrap($target)->boot();
 
                 trigger('component.boot', $target);
             };
@@ -54,7 +77,7 @@ class SupportLifecycleHooks
             return function ($target) {
                 if (! $target instanceof \Livewire\Component) return;
 
-                if (method_exists($target, 'booted')) $target->booted();
+                if (method_exists($target, 'booted')) wrap($target)->booted();
 
                 trigger('component.booted', $target);
             };
@@ -67,7 +90,7 @@ class SupportLifecycleHooks
         app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'mount')) {
-                    wrap($target)->mount(...$params);
+                    wrap($target)->__call('mount', $params);
                 }
 
                 trigger('component.mount', $target, $params);

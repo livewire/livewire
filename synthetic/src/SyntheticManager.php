@@ -233,9 +233,9 @@ class SyntheticManager
             $finish = $this->trigger('update', $root, $path, $leafValue);
 
             if ($value === '__rm__') {
-                $this->synth($target)->unset($target, $key);
+                $this->synth($target)->unset($target, $key, $root, $path);
             } else {
-                $this->synth($target)->set($target, $key, $value);
+                $this->synth($target)->set($target, $key, $value, $root, $path);
             }
 
             $finish($leafValue);

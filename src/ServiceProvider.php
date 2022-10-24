@@ -109,8 +109,7 @@ class ServiceProvider extends BaseServiceProvider
     protected function registerSynthesizers()
     {
         app('synthetic')->registerSynth([
-            \Livewire\Synthesizers\EloquentModelSynth::class,
-            \Livewire\Synthesizers\LivewireSynth::class,
+            \Livewire\LivewireSynth::class,
         ]);
     }
 
@@ -135,6 +134,7 @@ class ServiceProvider extends BaseServiceProvider
     {
         foreach ([
             \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
+            \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
             \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
@@ -152,7 +152,10 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
             \Livewire\Features\SupportWireables\SupportWireables::class,
+            \Livewire\Features\SupportRedirects\SupportRedirects::class,
             \Livewire\Features\SupportEntangle\SupportEntangle::class,
+            \Livewire\Features\SupportLocales\SupportLocales::class,
+            \Livewire\Features\SupportModels\SupportModels::class,
             \Livewire\Features\SupportTraits\SupportTraits::class,
             \Livewire\Features\SupportEvents\SupportEvents::class,
         ] as $feature) {

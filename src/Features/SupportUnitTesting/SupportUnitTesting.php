@@ -3,8 +3,8 @@
 namespace Livewire\Features\SupportUnitTesting;
 
 use function Synthetic\on;
-use Livewire\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\LivewireSynth;
 use Livewire\Component;
 use Illuminate\Validation\ValidationException;
 
@@ -18,10 +18,16 @@ class SupportUnitTesting
             if (! $synth instanceof LivewireSynth) return;
 
             return function ($value) use ($context, $target) {
-                ComponentDataStore::set($target, 'testing.html', $context->effects['html'] ?? '');
-                // ComponentDataStore::set($target, 'testing.errors', $target->getErrorBag());
+                ComponentDataStore::set($target, 'testing.html', $context->effects['html'] ?? null);
+                ComponentDataStore::set($target, 'testing.view', null);
 
                 return $value;
+            };
+        });
+
+        on('render', function ($target, $view, $data) {
+            return function () use ($target, $view) {
+                ComponentDataStore::set($target, 'testing.view', $view);
             };
         });
 

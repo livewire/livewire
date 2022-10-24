@@ -3,6 +3,7 @@
 namespace Synthetic;
 
 use Exception;
+use Livewire\Exceptions\CorruptComponentPayloadException;
 
 class Checksum {
     static function verify($snapshot) {
@@ -16,7 +17,7 @@ class Checksum {
         if ($checksum !== $comparitor = self::generate($snapshot)) {
             app('synthetic')->trigger('checksum.fail', $checksum, $comparitor, $snapshot);
 
-            throw new Exception;
+            throw new CorruptComponentPayloadException;
         }
     }
 

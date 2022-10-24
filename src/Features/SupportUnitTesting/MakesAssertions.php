@@ -30,4 +30,21 @@ trait MakesAssertions
 
         return $this;
     }
+
+    public function assertSeeText($value, $escape = true)
+    {
+        $value = Arr::wrap($value);
+
+        $values = $escape ? array_map('e', ($value)) : $value;
+
+        $content = $this->html();
+
+        tap(strip_tags($content), function ($content) use ($values) {
+            foreach ($values as $value) {
+                PHPUnit::assertStringContainsString((string) $value, $content);
+            }
+        });
+
+        return $this;
+    }
 }

@@ -15,7 +15,7 @@ class ComponentSkipRenderTest extends TestCase
         $component = Livewire::test(ComponentSkipRenderStub::class);
 
         $this->assertTrue(
-            str($component->payload['effects']['html'])->contains([$component->id(), 'foo'])
+            str($component->html())->contains([$component->id(), 'foo'])
         );
     }
 
@@ -26,7 +26,7 @@ class ComponentSkipRenderTest extends TestCase
 
         $component->call('noop');
 
-        $this->assertNull($component->payload['effects']['html']);
+        $this->assertNull($component->html());
     }
 
     /** @test */
@@ -34,16 +34,16 @@ class ComponentSkipRenderTest extends TestCase
     {
         $component = Livewire::test(ComponentSkipRenderOnRedirectInMountStub::class);
 
-        $this->assertEquals('/foo', $component->payload['effects']['redirect']);
-        $this->assertNull($component->lastRenderedView);
+        $this->assertEquals('/foo', $component->effects['redirect']);
+        $this->assertNull($component->view());
 
         Route::get('/403', ComponentSkipRenderOnRedirectInMountStub::class);
         $this->get('/403')->assertRedirect('/foo');
 
         $component = Livewire::test(ComponentSkipRenderOnRedirectHelperInMountStub::class);
 
-        $this->assertStringEndsWith('/bar', $component->payload['effects']['redirect']);
-        $this->assertNull($component->lastRenderedView);
+        $this->assertStringEndsWith('/bar', $component->effects['redirect']);
+        $this->assertNull($component->view());
 
         Route::get('/403', ComponentSkipRenderOnRedirectHelperInMountStub::class);
         $this->get('/403')->assertRedirect('/bar');

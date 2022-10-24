@@ -3,8 +3,8 @@
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Synthetic\Utils as SyntheticUtils;
-use Livewire\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\LivewireSynth;
 use Livewire\Drawer\Utils;
 
 class SupportWireModelingNestedComponents

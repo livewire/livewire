@@ -11,6 +11,9 @@ use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Str;
 use BadMethodCallException;
+use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
+use Livewire\Features\SupportRedirects\HandlesRedirects;
+use Livewire\Mechanisms\ComponentDataStore;
 
 /**
  * @todo - add Facade-esque method signatures to this file (from triggered __get and __call)
@@ -22,7 +25,9 @@ abstract class Component extends \Synthetic\Component
 
     use InteractsWithProperties;
     use HandlesEvents;
+    use HandlesRedirects;
     use HandlesValidation;
+    use HandlesDisablingBackButtonCache;
 
     function __invoke()
     {
@@ -63,6 +68,11 @@ abstract class Component extends \Synthetic\Component
         }
 
         return $fullName;
+    }
+
+    function skipRender()
+    {
+        ComponentDataStore::set($this, 'skipRender', true);
     }
 
     /**

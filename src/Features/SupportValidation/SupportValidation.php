@@ -2,10 +2,10 @@
 
 namespace Livewire\Features\SupportValidation;
 
-use function Livewire\invade;
 use function Synthetic\on;
-use Livewire\Synthesizers\LivewireSynth;
+use function Livewire\invade;
 use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\LivewireSynth;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 use Illuminate\Validation\ValidationException;

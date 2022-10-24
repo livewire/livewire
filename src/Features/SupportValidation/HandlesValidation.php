@@ -2,16 +2,17 @@
 
 namespace Livewire\Features\SupportValidation;
 
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Livewire\Exceptions\MissingRulesException;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\Collection;
-use Livewire\Drawer\Utils;
-
 use function Livewire\invade;
+use Livewire\Wireable;
+use Livewire\Exceptions\MissingRulesException;
+use Livewire\Drawer\Utils;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Collection;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 trait HandlesValidation
 {
@@ -343,7 +344,7 @@ trait HandlesValidation
     {
         foreach ($ruleKeys as $key) {
             if (str($key)->snake()->replace('_', ' ')->is($validator->getDisplayableAttribute($key))) {
-                $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute($this->afterFirstDot($key))]);
+                $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute(Utils::afterFirstDot($key))]);
             }
         }
     }
@@ -368,10 +369,9 @@ trait HandlesValidation
     protected function unwrapDataForValidation($data)
     {
         return collect($data)->map(function ($value) {
-            // @todo...
-            // if ($value instanceof Wireable) return $value->toLivewire();
-            // else if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
-            if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
+            // @todo: this logic should be contained within "SupportWireables"...
+            if ($value instanceof Wireable) return $value->toLivewire();
+            else if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
 
             return $value;
         })->all();

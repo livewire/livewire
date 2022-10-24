@@ -1,12 +1,13 @@
 <?php
 
-namespace Livewire\Synthesizers;
-
-use Synthetic\Utils;
-use Synthetic\Synthesizers\ObjectSynth;
-use Livewire\Mechanisms\RenderComponent;
+namespace Livewire;
 
 use function Synthetic\wrap;
+use Synthetic\Utils;
+use Synthetic\Synthesizers\ObjectSynth;
+
+use Livewire\Mechanisms\RenderComponent;
+use Livewire\Mechanisms\ComponentDataStore;
 
 class LivewireSynth extends ObjectSynth
 {
@@ -21,14 +22,19 @@ class LivewireSynth extends ObjectSynth
     function dehydrate($target, $context) {
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($target);
 
-        $rendered = wrap($target)->render();
+        if (! ComponentDataStore::get($target, 'skipRender', false)) {
+            $rendered = method_exists($target, 'render')
+                ? wrap($target)->render()
+                : view("livewire.{$target::getName()}");
 
-        $html = app('livewire')->renderBladeView($target, $rendered, $properties);
+            $html = app('livewire')->renderBladeView($target, $rendered, $properties);
+
+            $context->addEffect('html', $html);
+        }
 
         $context->addMeta('children', $target->getChildren());
         $context->addMeta('id', $target->getId());
 
-        $context->addEffect('html', $html);
 
         return parent::dehydrate($target, $context);
     }
@@ -47,7 +53,12 @@ class LivewireSynth extends ObjectSynth
         $properties = $value;
 
         foreach ($properties as $key => $value) {
-            $target->$key = $value;
+            // Typed properties shouldn't be set back to "null". It will throw an error...
+            if (property_exists($target, $key) && (new \ReflectionProperty($target, $key))->getType()){
+                is_null($value) || $target->$key = $value;
+            } else {
+                $target->$key = $value;
+            }
         }
 
         return $target;

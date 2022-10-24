@@ -18,17 +18,22 @@ class Testable extends BaseTestable
 
     function html()
     {
-        return ComponentDataStore::get($this->target, 'testing.html');
+        return componentdatastore::get($this->target, 'testing.html');
+    }
+
+    function view()
+    {
+        return componentdatastore::get($this->target, 'testing.view');
     }
 
     public function id()
     {
-        //
+        return $this->target->id();
     }
 
     public function instance()
     {
-        //
+        return $this->target;
     }
 
     public function viewData($key)

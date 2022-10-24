@@ -4,13 +4,13 @@ namespace Livewire\Features\SupportSlots;
 
 use function Livewire\invade;
 
-use Illuminate\Contracts\Support\Htmlable;
-use Livewire\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\ComponentDataStore;
 
+use Livewire\LivewireSynth;
 use Livewire\Drawer\Regexes;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Contracts\Support\Htmlable;
 
 // This is the current behavior. The problem is that it only
 // currently supports child scope. It COULD support parent

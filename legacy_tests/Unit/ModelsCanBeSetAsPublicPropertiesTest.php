@@ -7,7 +7,7 @@ use Livewire\Component;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Exceptions\CorruptComponentPayloadException;
-use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
+use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleException;
 
 class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
 {
@@ -67,7 +67,7 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
 
         $component = Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model]);
 
-        $component->payload['serverMemo']['data']['model']['id'] = 2;
+        $component->snapshot['data']['model']['id'] = 2;
 
         $component->call('refresh');
     }
@@ -110,11 +110,11 @@ class ModelsCanBeSetAsPublicPropertiesTest extends TestCase
 
         $component = Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models]);
 
-        $this->assertEquals([2, 1], $component->payload['serverMemo']['dataMeta']['modelCollections']['models']['id']);
+        $component->assertSee("bar\n            foo\n");
 
         $component ->call('refresh');
 
-        $this->assertEquals([2, 1], $component->payload['serverMemo']['dataMeta']['modelCollections']['models']['id']);
+        $component->assertSee("bar\n            foo\n");
     }
 }
 

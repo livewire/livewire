@@ -7,7 +7,7 @@ use Livewire\Component;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Exceptions\CorruptComponentPayloadException;
-use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
+use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleException;
 
 class ModelAttributesCanBeBoundDirectlyTest extends TestCase
 {

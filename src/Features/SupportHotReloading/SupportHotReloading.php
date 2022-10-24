@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportHotReloading;
 
-use Livewire\Synthesizers\LivewireSynth;
+use Livewire\LivewireSynth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
 

@@ -23,6 +23,7 @@ trait TestsValidation
 
         return $validator ? $validator->failed() : [];
     }
+
     public function assertHasErrors($keys = [])
     {
         $errors = $this->errors();

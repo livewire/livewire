@@ -120,7 +120,7 @@ EOT;
         // Render it...
         $payload = app('synthetic')->synthesize($target);
 
-        $html = $payload['effects']['']['html'];
+        $html = $payload['effects']['']['html'] ?? '<div></div>';
 
         if ($parent) {
             preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
@@ -129,7 +129,7 @@ EOT;
         }
 
         // Remove it from effects...
-        unset($payload['effects']['']['html']);
+        if (isset($payload['effects']['']['html'])) unset($payload['effects']['']['html']);
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:initial-data' => $payload,

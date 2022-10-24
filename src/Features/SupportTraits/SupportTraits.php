@@ -5,6 +5,9 @@ namespace Livewire\Features\SupportTraits;
 use function Synthetic\on;
 use function Synthetic\wrap;
 
+/**
+ * Depends on: SupportLifecycleHooks to trigger "component." events
+ */
 class SupportTraits
 {
     function boot()
@@ -12,6 +15,10 @@ class SupportTraits
         on('component.boot', function ($component) {
             $this->callTraitSuffixedMethod($component, 'boot');
             $this->callTraitSuffixedMethod($component, 'initialize');
+        });
+
+        on('component.booted', function ($component) {
+            $this->callTraitSuffixedMethod($component, 'booted');
         });
 
         on('component.hydrate', function ($component) {

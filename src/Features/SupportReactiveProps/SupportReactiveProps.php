@@ -3,8 +3,8 @@
 namespace Livewire\Features\SupportReactiveProps;
 
 use Synthetic\Utils as SyntheticUtils;
-use Livewire\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\LivewireSynth;
 
 class SupportReactiveProps
 {

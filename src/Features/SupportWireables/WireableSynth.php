@@ -7,6 +7,8 @@ use Synthetic\Synthesizers\Synth;
 
 class WireableSynth extends Synth
 {
+    public static $key = 'wrbl';
+
     static function match($target)
     {
         return is_object($target) && $target instanceof Wireable;
@@ -14,11 +16,13 @@ class WireableSynth extends Synth
 
     function dehydrate($target, $context)
     {
+        $context->addMeta('class', get_class($target));
+
         return $target->toLivewire();
     }
 
-    function hydrate($value, $meta, $getProperty)
+    function hydrate($value, $meta)
     {
-        return
+        return $meta['class']::fromLivewire($value);
     }
 }

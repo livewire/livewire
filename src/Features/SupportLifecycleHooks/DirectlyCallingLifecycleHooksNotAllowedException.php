@@ -1,6 +1,8 @@
 <?php
 
-namespace Livewire\Exceptions;
+namespace Livewire\Features\SupportLifecycleHooks;
+
+use Livewire\Exceptions\BypassViewHandler;
 
 class DirectlyCallingLifecycleHooksNotAllowedException extends \Exception
 {

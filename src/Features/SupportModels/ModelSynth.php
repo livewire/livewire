@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Synthesizers;
+namespace Livewire\Features\SupportModels;
 
 use Synthetic\SyntheticValidation;
 use Synthetic\Synthesizers\Synth;
@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Database\ModelIdentifier;
 use Exception;
 
-class EloquentModelSynth extends Synth {
+class ModelSynth extends Synth {
     use SerializesAndRestoresModelIdentifiers, SyntheticValidation;
 
     public static $key = 'mdl';
@@ -47,14 +47,25 @@ class EloquentModelSynth extends Synth {
             $meta['connection'],
         );
 
-        return $this->getRestoredPropertyValue($identifier);
+        $model = $this->getRestoredPropertyValue($identifier);
+
+        foreach ($value as $key => $val) {
+            $model->setAttribute($key, $val);
+        }
+
+        return $model;
     }
 
     function &get($target, $key) {
         $target->getAttribute($key);
     }
 
-    function set(&$target, $key, $value) {
+    function set(&$target, $key, $value, $root, $path) {
+        throw_if(
+            $root->missingRuleFor($path),
+            new CannotBindToModelDataWithoutValidationRuleException($key, $root::getName())
+        );
+
         $target->setAttribute($key, $value);
     }
 

@@ -17,7 +17,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirect');
 
-        $this->assertEquals('/local', $component->payload['effects']['redirect']);
+        $this->assertEquals('/local', $component->effects['redirect']);
     }
 
     /** @test */
@@ -25,7 +25,7 @@ class RedirectTest extends TestCase
     {
         $component = Livewire::test(TriggersRedirectOnMountStub::class);
 
-        $this->assertEquals('/local', $component->payload['effects']['redirect']);
+        $this->assertEquals('/local', $component->effects['redirect']);
     }
 
     /** @test */
@@ -37,7 +37,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectRoute');
 
-        $this->assertEquals('http://localhost/foo', $component->payload['effects']['redirect']);
+        $this->assertEquals('http://localhost/foo', $component->effects['redirect']);
     }
 
     /** @test */
@@ -49,7 +49,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectAction');
 
-        $this->assertEquals('http://localhost/foo', $component->payload['effects']['redirect']);
+        $this->assertEquals('http://localhost/foo', $component->effects['redirect']);
     }
 
     /** @test */
@@ -59,7 +59,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectHelper');
 
-        $this->assertEquals(url('foo'), $component->payload['effects']['redirect']);
+        $this->assertEquals(url('foo'), $component->effects['redirect']);
     }
 
     /** @test */
@@ -69,7 +69,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectHelperUsingKeyValueWith');
 
-        $this->assertEquals(url('foo'), $component->payload['effects']['redirect']);
+        $this->assertEquals(url('foo'), $component->effects['redirect']);
 
         $this->assertEquals('livewire-is-awesome',Session::get('success'));
     }
@@ -81,7 +81,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectHelperUsingArrayWith');
 
-        $this->assertEquals(url('foo'), $component->payload['effects']['redirect']);
+        $this->assertEquals(url('foo'), $component->effects['redirect']);
 
         $this->assertEquals('livewire-is-awesome',Session::get('success'));
     }
@@ -93,7 +93,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectFacadeUsingTo');
 
-        $this->assertEquals(url('foo'), $component->payload['effects']['redirect']);
+        $this->assertEquals(url('foo'), $component->effects['redirect']);
     }
 
     /** @test */
@@ -105,7 +105,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectFacadeUsingRoute');
 
-        $this->assertEquals(route('foo'), $component->payload['effects']['redirect']);
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
     }
 
     /** @test */
@@ -117,7 +117,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectHelperUsingRoute');
 
-        $this->assertEquals(route('foo'), $component->payload['effects']['redirect']);
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
     }
 
     /** @test */
@@ -129,7 +129,7 @@ class RedirectTest extends TestCase
 
         $component->runAction('triggerRedirectHelperUsingAway');
 
-        $this->assertEquals(route('foo'), $component->payload['effects']['redirect']);
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
     }
 
     /** @test */
@@ -137,8 +137,8 @@ class RedirectTest extends TestCase
     {
         $component = Livewire::test(SkipsRenderOnRedirect::class);
 
-        $this->assertEquals('/local', $component->payload['effects']['redirect']);
-        $this->assertNull($component->payload['effects']['html']);
+        $this->assertEquals('/local', $component->effects['redirect']);
+        $this->assertNull($component->effects['html'] ?? null);
     }
 
     /** @test */
@@ -148,8 +148,8 @@ class RedirectTest extends TestCase
 
         $component = Livewire::test(SkipsRenderOnRedirect::class);
 
-        $this->assertEquals('/local', $component->payload['effects']['redirect']);
-        $this->assertStringContainsString('Render has run', $component->payload['effects']['html']);
+        $this->assertEquals('/local', $component->effects['redirect']);
+        $this->assertStringContainsString('Render has run', $component->html());
     }
 
     /** @test */
@@ -159,8 +159,8 @@ class RedirectTest extends TestCase
 
         $component = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
 
-        $this->assertEquals('/local', $component->payload['effects']['redirect']);
-        $this->assertNull($component->payload['effects']['html']);
+        $this->assertEquals('/local', $component->effects['redirect']);
+        $this->assertNull($component->effects['html'] ?? null);
     }
 
     protected function registerNamedRoute()

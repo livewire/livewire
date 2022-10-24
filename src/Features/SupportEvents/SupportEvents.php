@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportEvents;
 
-use Livewire\Mechanisms\ComponentDataStore;
-use Livewire\Synthesizers\LivewireSynth;
 use function Synthetic\wrap;
+use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\LivewireSynth;
 
 class SupportEvents
 {

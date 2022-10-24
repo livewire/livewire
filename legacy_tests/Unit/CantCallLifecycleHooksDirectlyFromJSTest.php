@@ -3,8 +3,8 @@
 namespace LegacyTests\Unit;
 
 use Livewire\Livewire;
+use Livewire\Features\SupportLifecycleHooks\DirectlyCallingLifecycleHooksNotAllowedException;
 use Livewire\Component;
-use Livewire\Exceptions\DirectlyCallingLifecycleHooksNotAllowedException;
 
 class CantCallLifecycleHooksDirectlyFromJSTest extends TestCase
 {

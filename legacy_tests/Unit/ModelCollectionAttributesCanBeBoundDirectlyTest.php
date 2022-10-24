@@ -8,7 +8,7 @@ use Livewire\Component;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Exceptions\CorruptComponentPayloadException;
-use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
+use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleException;
 
 class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
 {

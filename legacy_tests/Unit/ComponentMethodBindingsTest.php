@@ -58,7 +58,7 @@ class ComponentMethodBindingsTest extends TestCase
 
         Route::get('/foo/{model}', ComponentWithMountInjections::class);
 
-        $this->get('/foo/route-model')->assertSeeText('http://localhost/some-url:route-model:param-default');
+        $this->withoutExceptionHandling()->get('/foo/route-model')->assertSeeText('http://localhost/some-url:route-model:param-default');
     }
 
     /** @test */
