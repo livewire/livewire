@@ -83,6 +83,11 @@ class Utils extends SyntheticUtils
         return strpos($subject, '.') !== false;
     }
 
+    static function dotSegments($subject)
+    {
+        return explode('.', $subject);
+    }
+
     static function beforeFirstDot($subject)
     {
         return head(explode('.', $subject));

@@ -3,17 +3,19 @@
 namespace Livewire;
 
 use Synthetic\Utils as SyntheticUtils;
+use Livewire\Mechanisms\DataStore;
 use Livewire\Features\SupportValidation\HandlesValidation;
+use Livewire\Features\SupportRedirects\HandlesRedirects;
+use Livewire\Features\SupportPageComponents\HandlesPageComponents;
+use Livewire\Features\SupportNestingComponents\HandlesNestingComponents;
 use Livewire\Features\SupportEvents\HandlesEvents;
+use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Drawer\Utils;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Str;
 use BadMethodCallException;
-use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
-use Livewire\Features\SupportRedirects\HandlesRedirects;
-use Livewire\Mechanisms\ComponentDataStore;
 
 /**
  * @todo - add Facade-esque method signatures to this file (from triggered __get and __call)
@@ -27,16 +29,12 @@ abstract class Component extends \Synthetic\Component
     use HandlesEvents;
     use HandlesRedirects;
     use HandlesValidation;
+    use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
-
-    function __invoke()
-    {
-        $finish = app('synthetic')->trigger('__invoke', $this);
-
-        return $finish();
-    }
+    use HandlesNestingComponents;
 
     protected $__id;
+    protected $__name;
 
     function id()
     {
@@ -53,8 +51,24 @@ abstract class Component extends \Synthetic\Component
         return $this->__id;
     }
 
-    static function getName()
+    function setName($name)
     {
+        $this->__name = $name;
+    }
+
+    function getName()
+    {
+        if ($this->__name) return $this->__name;
+
+        return static::generateName();
+    }
+
+    static function generateName()
+    {
+        $alias = \Livewire\Mechanisms\ComponentRegistry::getInstance()->getAlias(static::class);
+
+        if ($alias) return $alias;
+
         $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace'))))
             ->map(fn ($i) => Str::kebab($i))
             ->implode('.');
@@ -72,41 +86,7 @@ abstract class Component extends \Synthetic\Component
 
     function skipRender()
     {
-        ComponentDataStore::set($this, 'skipRender', true);
-    }
-
-    /**
-     * @todo: move all this children stuff to "single file"
-     */
-    // [key => ['id' => id, 'tag' => tag]
-    public $__children = [];
-    public $__previous_children = [];
-
-    function getChildren() { return $this->__children; }
-
-    function setChildren($children) { $this->__children = $children; }
-
-    function setPreviouslyRenderedChildren($children) { $this->__previous_children = $children; }
-
-    function setChild($key, $tag, $id) { $this->__children[$key] = [$tag, $id]; }
-
-    function hasPreviouslyRenderedChild($key) {
-        return in_array($key, array_keys($this->__previous_children));
-    }
-
-    function hasChild($key)
-    {
-        return in_array($key, array_keys($this->__children));
-    }
-
-    function getChild($key)
-    {
-        return $this->__children[$key];
-    }
-
-    function getPreviouslyRenderedChild($key)
-    {
-        return $this->__previous_children[$key];
+        store($this)->set('skipRender', true);
     }
 
     function __isset($property)

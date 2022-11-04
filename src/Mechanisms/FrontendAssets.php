@@ -8,7 +8,7 @@ use Illuminate\Support\Js;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 
-class JavaScriptAndCssAssets
+class FrontendAssets
 {
     public function boot()
     {

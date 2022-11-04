@@ -3,9 +3,11 @@
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Synthetic\Utils as SyntheticUtils;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 use Livewire\LivewireSynth;
 use Livewire\Drawer\Utils;
+
+use function Livewire\store;
 
 class SupportWireModelingNestedComponents
 {
@@ -30,9 +32,9 @@ class SupportWireModelingNestedComponents
                     // We couldn't find a "modelable" property in the child.
                     if (! isset($inner)) return $target;
 
-                    $wireModels = ComponentDataStore::get($target, 'wireModels', []);
+                    $wireModels = store($target)->get('wireModels', []);
                     $wireModels[$outer] = $inner;
-                    ComponentDataStore::set($target, 'wireModels', $wireModels);
+                    store($target)->set('wireModels', $wireModels);
 
                     $target->$inner = $parent->$outer;
                 }
@@ -51,7 +53,7 @@ class SupportWireModelingNestedComponents
         // those extra Alpine attributes.
         app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
-            $wireModels = ComponentDataStore::get($target, 'wireModels', false);
+            $wireModels = store($target)->get('wireModels', false);
             if (! $wireModels) return;
 
             $context->addMeta('wireModels', $wireModels);
@@ -76,7 +78,7 @@ class SupportWireModelingNestedComponents
             return function ($target) use ($meta) {
                 $wireModels = $meta['wireModels'];
 
-                ComponentDataStore::set($target, 'wireModels', $wireModels);
+                store($target)->set('wireModels', $wireModels);
 
                 if (! isset($this->outersByComponentId[$meta['id']])) return $target;
 

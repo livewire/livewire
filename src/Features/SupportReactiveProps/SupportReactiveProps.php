@@ -3,8 +3,10 @@
 namespace Livewire\Features\SupportReactiveProps;
 
 use Synthetic\Utils as SyntheticUtils;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 use Livewire\LivewireSynth;
+
+use function Livewire\store;
 
 class SupportReactiveProps
 {
@@ -24,7 +26,7 @@ class SupportReactiveProps
                     }
                 }
 
-                ComponentDataStore::set($target, 'props', $props);
+                store($target)->set('props', $props);
             };
         });
 
@@ -35,8 +37,8 @@ class SupportReactiveProps
         app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
-            $props = ComponentDataStore::get($target, 'props', []);
-            $propHashes = ComponentDataStore::get($target, 'propHashes', []);
+            $props = store($target)->get('props', []);
+            $propHashes = store($target)->get('propHashes', []);
 
             foreach ($propHashes as $key => $hash) {
                 if (crc32(json_encode($target->{$key})) !== $hash) {
@@ -66,8 +68,8 @@ class SupportReactiveProps
                     $propHashes[$key] = crc32(json_encode($target->{$key}));
                 }
 
-                ComponentDataStore::set($target, 'props', $propKeys);
-                ComponentDataStore::set($target, 'propHashes', $propHashes);
+                store($target)->set('props', $propKeys);
+                store($target)->set('propHashes', $propHashes);
 
                 return $target;
             };

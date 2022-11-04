@@ -50,28 +50,6 @@ EOT
     }
 
     /** @test */
-    public function the_manifest_file_is_automatically_created_if_none_exists()
-    {
-        $manifestPath = app()->bootstrapPath('cache/livewire-components.php');
-
-        // I'm calling "make:livewire" as a shortcut to generate a manifest file
-        Artisan::call('make:livewire', ['name' => 'foo']);
-
-        File::delete($manifestPath);
-
-        // We need to refresh the appliction because otherwise, the manifest
-        // will still be stored in the object memory.
-        $this->refreshApplication();
-
-        // Attempting to render a component should re-generate the manifest file.
-        view('render-component', [
-            'component' => 'foo',
-        ])->render();
-
-        $this->assertTrue(File::exists($manifestPath));
-    }
-
-    /** @test */
     public function no_exception_is_thrown_when_the_class_directory_does_not_exist()
     {
         File::deleteDirectory($this->livewireClassesPath());

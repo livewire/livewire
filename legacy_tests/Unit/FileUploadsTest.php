@@ -6,15 +6,16 @@ use LogicException;
 use RuntimeException;
 use Livewire\Livewire;
 use Livewire\Component;
-use Livewire\WithFileUploads;
+use Livewire\Features\SupportFileUploads\WithFileUploads;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
-use Livewire\FileUploadConfiguration;
+use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use Illuminate\Support\Facades\Storage;
-use Facades\Livewire\GenerateSignedUploadUrl;
+use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
 use League\Flysystem\PathTraversalDetected;
-use Livewire\Exceptions\MissingFileUploadsTraitException;
-use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
+use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
+use Livewire\Features\SupportFileUploads\MissingFileUploadsTraitException;
+use Livewire\Features\SupportFileUploads\S3DoesntSupportMultipleFileUploads;
 use function Livewire\str;
 
 class FileUploadsTest extends TestCase
@@ -304,7 +305,7 @@ class FileUploadsTest extends TestCase
             ->call('uploadError', 'file')
             ->assertHasErrors(['file']);
 
-        $this->assertEquals('The upload failed to upload.', $test->lastErrorBag->get('file')[0]);
+        $this->assertEquals('The upload failed to upload.', $test->errors()->get('file')[0]);
     }
 
     /** @test */
@@ -398,7 +399,7 @@ class FileUploadsTest extends TestCase
     /** @test */
     public function the_global_upload_route_middleware_is_configurable()
     {
-        config()->set('livewire.temporary_file_upload.middleware', 'Tests\Unit\DummyMiddleware');
+        config()->set('livewire.temporary_file_upload.middleware', 'LegacyTests\Unit\DummyMiddleware');
 
         $url = GenerateSignedUploadUrl::forLocal();
 
@@ -423,7 +424,7 @@ class FileUploadsTest extends TestCase
         // Due to Livewire object still being in memory, we need to
         // reset the "shouldDisableBackButtonCache" property back to it's default
         // which is false to ensure it's not applied to the below route
-        Livewire::enableBackButtonCache();
+        \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::$disableBackButtonCache = false;
 
         ob_start();
         $this->get($photo->temporaryUrl())->sendContent();
@@ -472,7 +473,7 @@ class FileUploadsTest extends TestCase
         // Due to Livewire object still being in memory, we need to
         // reset the "shouldDisableBackButtonCache" property back to it's default
         // which is false to ensure it's not applied to the below route
-        Livewire::enableBackButtonCache();
+        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
 
         ob_start();
         $this->get($photo->temporaryUrl())->sendContent();
@@ -527,7 +528,7 @@ class FileUploadsTest extends TestCase
         // Due to Livewire object still being in memory, we need to
         // reset the "shouldDisableBackButtonCache" property back to it's default
         // which is false to ensure it's not applied to the below route
-        Livewire::enableBackButtonCache();
+        SupportDisablingBackButtonCache::$disableBackButtonCache = false;
 
         // When testing, rather than trying to hit an s3 server, we just serve
         // the local driver preview URL.
@@ -549,13 +550,13 @@ class FileUploadsTest extends TestCase
         $component = Livewire::test(FileUploadComponent::class)
                              ->set('photos', [$file1, $file2, $file3, $file4]);
 
-        $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
+        $this->assertCount(4, $component->snapshot['data'][0]['photos'][0]);
 
         $component->call('removePhoto', 3);
-        $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
+        $this->assertCount(3, $component->snapshot['data'][0]['photos'][0]);
 
         $component->call('removePhoto', 0);
-        $this->assertStringStartsWith('livewire-files:', $component->get('photos'));
+        $this->assertCount(2, $component->snapshot['data'][0]['photos'][0]);
     }
 
     /** @test */
@@ -575,13 +576,13 @@ class FileUploadsTest extends TestCase
 
         $this->assertSame($component->get('obj.last_name'), 'doe');
 
-        $this->assertStringStartsWith('livewire-files:', $component->get('obj.file_uploads'));
+        $this->assertCount(4, $component->snapshot['data'][0]['obj'][0]['file_uploads'][0]);
 
         $component->call('removePhoto', 3);
-        $this->assertStringStartsWith('livewire-files:', $component->get('obj.file_uploads'));
+        $this->assertCount(3, $component->snapshot['data'][0]['obj'][0]['file_uploads'][0]);
 
         $component->call('removePhoto', 0);
-        $this->assertStringStartsWith('livewire-files:', $component->get('obj.file_uploads'));
+        $this->assertCount(2, $component->snapshot['data'][0]['obj'][0]['file_uploads'][0]);
     }
 
     /** @test */
@@ -609,7 +610,10 @@ class FileUploadsTest extends TestCase
 
         $this->assertSame($component->get('obj.second_number'), 99);
 
-        $this->assertStringStartsWith('livewire-files:', $component->get('obj.file_uploads'));
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0][0][0]);
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0][1][0]);
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0][2][0]);
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0][3][0]);
 
         $this->assertCount(4, $tmpFiles);
     }
@@ -634,7 +638,7 @@ class FileUploadsTest extends TestCase
 
         $this->assertSame($component->get('obj.second_number'), 99);
 
-        $this->assertStringStartsWith('livewire-file:', $component->get('obj.file_uploads'));
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0]);
     }
 
     /** @test */
@@ -750,6 +754,8 @@ class FileUploadComponent extends Component
 
 class FileUploadInArrayComponent extends FileUploadComponent
 {
+    use WithFileUploads;
+
     public $obj = [
         'first_name' => null,
         'last_name' => null,

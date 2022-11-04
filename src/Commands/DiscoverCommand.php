@@ -4,6 +4,7 @@ namespace Livewire\Commands;
 
 use Illuminate\Console\Command;
 use Livewire\LivewireComponentsFinder;
+use Livewire\Mechanisms\ComponentRegistry;
 
 class DiscoverCommand extends Command
 {
@@ -13,7 +14,7 @@ class DiscoverCommand extends Command
 
     public function handle()
     {
-        app(LivewireComponentsFinder::class)->build();
+        app(ComponentRegistry::class)->buildManifest();
 
         $this->info('Livewire auto-discovery manifest rebuilt!');
     }

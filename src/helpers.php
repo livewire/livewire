@@ -73,3 +73,35 @@ function revert(&$variable)
         $variable = $cache;
     };
 }
+
+function store($instance = null)
+{
+    if (! $instance) $instance = \Livewire\DataStore::getInstance();
+
+    return new class ($instance) {
+        function __construct(protected $instance) {}
+
+        function get($key, $default = null) {
+            return \Livewire\DataStore::getInstance()->get($this->instance, $key, $default);
+        }
+
+        function set($key, $value) {
+            return \Livewire\DataStore::getInstance()->set($this->instance, $key, $value);
+        }
+
+        function push($key, $value, $iKey = null)
+        {
+            return \Livewire\DataStore::getInstance()->push($this->instance, $key, $value, $iKey);
+        }
+
+        function find($key, $iKey = null, $default = null)
+        {
+            return \Livewire\DataStore::getInstance()->find($this->instance, $key, $iKey, $default);
+        }
+
+        function has($key, $iKey = null)
+        {
+            return \Livewire\DataStore::getInstance()->has($this->instance, $key, $iKey);
+        }
+    };
+}

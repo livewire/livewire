@@ -53,7 +53,7 @@ trait InteractsWithProperties
         }
 
         foreach ($properties as $property) {
-            $freshInstance = new static($this->id);
+            $freshInstance = new static;
 
             $this->{$property} = $freshInstance->{$property};
         }

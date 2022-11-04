@@ -5,6 +5,8 @@ namespace LegacyTests\Unit;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
+
+use function Livewire\store;
 use function Livewire\str;
 
 class ComponentSkipRenderTest extends TestCase
@@ -32,10 +34,10 @@ class ComponentSkipRenderTest extends TestCase
     /** @test */
     public function on_redirect_in_mount_render_is_not_called()
     {
-        $component = Livewire::test(ComponentSkipRenderOnRedirectInMountStub::class);
+        // $component = Livewire::test(ComponentSkipRenderOnRedirectInMountStub::class);
 
-        $this->assertEquals('/foo', $component->effects['redirect']);
-        $this->assertNull($component->view());
+        // $this->assertEquals('/foo', $component->effects['redirect']);
+        // $this->assertNull($component->view());
 
         Route::get('/403', ComponentSkipRenderOnRedirectInMountStub::class);
         $this->get('/403')->assertRedirect('/foo');
@@ -75,6 +77,8 @@ class ComponentSkipRenderOnRedirectInMountStub extends Component
 {
     public function mount()
     {
+        store($this)->set('redirect', '/yoyoyo');
+
         $this->skipRender();
 
         $this->redirect('/foo');

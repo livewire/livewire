@@ -39,10 +39,6 @@ class ObjectSynth extends Synth {
         return $target;
     }
 
-    function &get($target, $key) {
-        return $target->{$key};
-    }
-
     function set(&$target, $key, $value) {
         $target->$key = $value;
     }

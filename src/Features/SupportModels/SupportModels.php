@@ -13,6 +13,7 @@ class SupportModels
     {
         app('synthetic')->registerSynth([
             ModelSynth::class,
+            CastableSynth::class,
         ]);
 
         on('update', function ($target, $path, $value) {

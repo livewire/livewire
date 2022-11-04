@@ -2,13 +2,15 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
+
+use function Livewire\store;
 
 trait HandlesRedirects
 {
     public function redirect($url)
     {
-        ComponentDataStore::set($this, 'redirect', $url);
+        store($this)->set('redirect', $url);
 
         $shouldSkipRender = ! config('livewire.render_on_redirect', false);
 
@@ -19,7 +21,7 @@ trait HandlesRedirects
     {
         $to = route($name, $parameters, $absolute);
 
-        ComponentDataStore::set($this, 'redirect', $to);
+        store($this)->set('redirect', $to);
 
         $shouldSkipRender = ! config('livewire.render_on_redirect', false);
 
@@ -30,7 +32,7 @@ trait HandlesRedirects
     {
         $to = action($name, $parameters, $absolute);
 
-        ComponentDataStore::set($this, 'redirect', $to);
+        store($this)->set('redirect', $to);
 
         $shouldSkipRender = ! config('livewire.render_on_redirect', false);
 

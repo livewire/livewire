@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-[$name, $command, $run] = require __DIR__.'/console.php';
+[$name, $command, $run] = require __DIR__.'/laravel.php';
 
 $name('Livewire Admin Console', '1.0.0');
 

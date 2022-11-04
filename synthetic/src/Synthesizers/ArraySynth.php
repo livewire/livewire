@@ -17,10 +17,6 @@ class ArraySynth extends Synth {
         return $value;
     }
 
-    function &get(&$target, $key) {
-        return $target[$key];
-    }
-
     function set(&$target, $key, $value) {
         $target[$key] = $value;
     }

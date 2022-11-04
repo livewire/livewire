@@ -13,7 +13,7 @@ class ComponentUsesCustomNameTest extends TestCase
         $component = Livewire::test(UsesDefaultComponentName::class);
 
         $this->assertEquals('Hello World', $component->get('name'));
-        $this->assertEquals('tests.unit.uses-default-component-name', $component->instance()->getName());
+        $this->assertNotEquals('Hello World', $component->instance()->getName());
     }
 
     /** @test */
@@ -45,7 +45,7 @@ class PreservesNameProperty extends Component
         return app('view')->make('null-view');
     }
 
-    public static function getName()
+    public function getName()
     {
         return 'uses-custom-name';
     }

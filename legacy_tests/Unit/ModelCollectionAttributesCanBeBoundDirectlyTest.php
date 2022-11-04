@@ -21,7 +21,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
 
         Livewire::test(ComponentWithModelCollectionProperty::class)
             ->assertSet('models.0.title', 'foo')
-            ->assertPayloadSet('models.0.title', 'foo')
+            ->assertSnapshotSet('models.0.title', 'foo')
             ->set('models.0.title', 'bo')
             ->assertSet('models.0.title', 'bo')
             ->call('refreshModels')
@@ -45,17 +45,17 @@ class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
         Livewire::test(ComponentWithModelCollectionProperty::class)
             ->assertSet('models.2.title', 'baz')
             ->assertSet('models.3', null)
-            ->assertPayloadSet('models.3', null)
+            ->assertSnapshotSet('models.3', null)
             ->call('addModel')
             ->assertNotSet('models.3', null)
-            ->assertPayloadNotSet('models.3', null)
+            ->assertSnapshotNotSet('models.3', null)
             ->set('models.3.title', 'bob')
             ->assertSet('models.3.title', 'bob')
-            ->assertPayloadSet('models.3.title', 'bob')
+            ->assertSnapshotSet('models.3.title', 'bob')
             ->set('models.3.title', 'bo')
             ->call('refreshModels')
             ->assertSet('models.3', null)
-            ->assertPayloadSet('models.3', null)
+            ->assertSnapshotSet('models.3', null)
             ->call('addModel')
             ->set('models.3.title', 'bo')
             ->call('save')
@@ -77,7 +77,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
         Livewire::test(ComponentWithModelCollectionProperty::class)
             ->call('setModelsToCustomCollection')
             ->assertSet('models.0.title', 'foo')
-            ->assertPayloadSet('models.0.title', 'foo')
+            ->assertSnapshotSet('models.0.title', 'foo')
             ->set('models.0.title', 'bo')
             ->assertSet('models.0.title', 'bo')
             ->call('refreshModels')
@@ -118,7 +118,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
 
         $component = Livewire::test(ComponentWithModelCollectionProperty::class);
 
-        $component->payload['serverMemo']['dataMeta']['modelCollections']['models']['id'] = [1];
+        $component->snapshot['data'][0]['models'][0]['id'] = 2;
 
         $component->call('$refresh');
     }

@@ -4,9 +4,10 @@ namespace LegacyTests\Unit;
 
 use Livewire\Livewire;
 use Livewire\Component;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class RedirectTest extends TestCase
 {
@@ -23,7 +24,11 @@ class RedirectTest extends TestCase
     /** @test */
     public function standard_redirect_on_mount()
     {
-        $component = Livewire::test(TriggersRedirectOnMountStub::class);
+        try {
+            $component = Livewire::test(TriggersRedirectOnMountStub::class);
+        } catch (HttpResponseException $e) {
+            dd($e->getResponse()->getStatusCode());
+        }
 
         $this->assertEquals('/local', $component->effects['redirect']);
     }

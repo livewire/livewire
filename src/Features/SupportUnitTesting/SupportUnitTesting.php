@@ -2,8 +2,9 @@
 
 namespace Livewire\Features\SupportUnitTesting;
 
+use function Livewire\store;
 use function Synthetic\on;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 use Livewire\LivewireSynth;
 use Livewire\Component;
 use Illuminate\Validation\ValidationException;
@@ -14,12 +15,22 @@ class SupportUnitTesting
     {
         if (! app()->environment('testing')) return;
 
+        $this->registerTestingMacros();
+
         on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
             return function ($value) use ($context, $target) {
-                ComponentDataStore::set($target, 'testing.html', $context->effects['html'] ?? null);
-                ComponentDataStore::set($target, 'testing.view', null);
+                store($target)->set('testing.html', $context->effects['html'] ?? null);
+
+                $errors = $target->getErrorBag();
+
+                if (! $errors->isEmpty()) {
+                    store($target)->set('testing.errors', $errors);
+                }
+
+                // ??
+                // Componentstore($target)->set('testing.view', null);
 
                 return $value;
             };
@@ -27,14 +38,14 @@ class SupportUnitTesting
 
         on('render', function ($target, $view, $data) {
             return function () use ($target, $view) {
-                ComponentDataStore::set($target, 'testing.view', $view);
+                store($target)->set('testing.view', $view);
             };
         });
 
         on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
             return function ($target) {
                 return function ($html) use ($target) {
-                    ComponentDataStore::set($target, 'testing.html', $html);
+                    store($target)->set('testing.html', $html);
                 };
             };
         });
@@ -43,7 +54,7 @@ class SupportUnitTesting
             if (! $synth instanceof LivewireSynth) return;
 
             return function ($target) {
-                ComponentDataStore::set($target, 'testing.validator', null);
+                store($target)->set('testing.validator', null);
             };
         });
 
@@ -51,7 +62,78 @@ class SupportUnitTesting
             if (! $target instanceof Component) return;
             if (! $e instanceof ValidationException) return;
 
-            ComponentDataStore::set($target, 'testing.validator', $e->validator);
+            store($target)->set('testing.validator', $e->validator);
         });
+    }
+
+    protected function registerTestingMacros()
+    {
+        // Usage: $this->assertSeeLivewire('counter');
+        \Illuminate\Testing\TestResponse::macro('assertSeeLivewire', function ($component) {
+            if (is_subclass_of($component, Component::class)) {
+                $component = $component->getName();
+            }
+
+            $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+            \PHPUnit\Framework\Assert::assertStringContainsString(
+                $escapedComponentName,
+                $this->getContent(),
+                'Cannot find Livewire component ['.$component.'] rendered on page.'
+            );
+
+            return $this;
+        });
+
+        // Usage: $this->assertDontSeeLivewire('counter');
+        \Illuminate\Testing\TestResponse::macro('assertDontSeeLivewire', function ($component) {
+            if (is_subclass_of($component, Component::class)) {
+                $component = $component->getName();
+            }
+
+            $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+            \PHPUnit\Framework\Assert::assertStringNotContainsString(
+                $escapedComponentName,
+                $this->getContent(),
+                'Found Livewire component ['.$component.'] rendered on page.'
+            );
+
+            return $this;
+        });
+
+        if (class_exists(\Illuminate\Testing\TestView::class)) {
+            \Illuminate\Testing\TestView::macro('assertSeeLivewire', function ($component) {
+                if (is_subclass_of($component, Component::class)) {
+                    $component = $component->getName();
+                }
+
+                $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+                \PHPUnit\Framework\Assert::assertStringContainsString(
+                    $escapedComponentName,
+                    $this->rendered,
+                    'Cannot find Livewire component ['.$component.'] rendered on page.'
+                );
+
+                return $this;
+            });
+
+            \Illuminate\Testing\TestView::macro('assertDontSeeLivewire', function ($component) {
+                if (is_subclass_of($component, Component::class)) {
+                    $component = $component->getName();
+                }
+
+                $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
+
+                \PHPUnit\Framework\Assert::assertStringNotContainsString(
+                    $escapedComponentName,
+                    $this->rendered,
+                    'Found Livewire component ['.$component.'] rendered on page.'
+                );
+
+                return $this;
+            });
+        }
     }
 }

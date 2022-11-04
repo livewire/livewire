@@ -3,8 +3,9 @@
 namespace Livewire\Features\SupportSlots;
 
 use function Livewire\invade;
+use function Livewire\store;
 
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 
 use Livewire\LivewireSynth;
 use Livewire\Drawer\Regexes;
@@ -102,11 +103,11 @@ class SupportSlots
                         return [\$name, \$scope];
                     })($expression);
 
-                    \$__slotProps = \Livewire\Mechanisms\ComponentDataStore::get(\$__livewire, 'slotProps', []);
+                    \$__slotProps = \Livewire\Mechanisms\Componentstore(\$__livewire)->get('slotProps', []);
 
                     \$__slotProps[\$__name] = \$__scope;
 
-                    \Livewire\Mechanisms\ComponentDataStore::set(\$__livewire, 'slotProps', \$__slotProps);
+                    \Livewire\Mechanisms\Componentstore(\$__livewire)->set('slotProps', \$__slotProps);
 
                     echo '|---SLOT:'.\$__name.'---|';
 
@@ -121,14 +122,14 @@ class SupportSlots
             if (! $slots) return;
 
             return function ($target) use ($slots) {
-                ComponentDataStore::set($target, 'slots', $slots);
+                store($target)->set('slots', $slots);
             };
         });
 
         app('synthetic')->on('render', function ($target, $view, $data) {
-            if (! ComponentDataStore::has($target, 'slots')) return;
+            if (! store($target)->has('slots')) return;
 
-            foreach (ComponentDataStore::get($target, 'slots') as $name => ['scope' => $scope]) {
+            foreach (store($target)->get('slots') as $name => ['scope' => $scope]) {
                 $viewName = $name === 'default' ? 'slot' : $name;
 
                 $view->with($viewName, new class($name, $scope, $target) implements Htmlable {
@@ -136,7 +137,7 @@ class SupportSlots
 
                     public function __invoke($scope = [])
                     {
-                        \Livewire\Mechanisms\ComponentDataStore::push($this->component, 'slotProps', $scope, $this->name);
+                        store($this->component)->push('slotProps', $scope, $this->name);
 
                         return $this;
                     }
@@ -151,9 +152,9 @@ class SupportSlots
 
         app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
-            if (! ComponentDataStore::has($target, 'slots')) return;
+            if (! store($target)->has('slots')) return;
 
-            $slots = ComponentDataStore::get($target, 'slots');
+            $slots = store($target)->get('slots');
 
             $context->addMeta('slots', $slots);
 
@@ -162,7 +163,7 @@ class SupportSlots
 
                 if (! $html) return $value;
 
-                $slotProps = ComponentDataStore::get($target, 'slotProps', false);
+                $slotProps = store($target)->get('slotProps', false);
 
                 if ($slotProps === false) return $value;
 
@@ -193,7 +194,7 @@ class SupportSlots
             $slot = $meta['slots'];
 
             return function ($target) use ($slot) {
-                ComponentDataStore::set($target, 'slots', $slot);
+                store($target)->set('slots', $slot);
 
                 return $target;
             };

@@ -12,18 +12,24 @@ class EventBus
         if (! isset($this->listeners[$name])) $this->listeners[$name] = [];
 
         $this->listeners[$name][] = $callback;
+
+        return fn() => $this->off($name, $callback);
     }
 
     function before($name, $callback) {
         if (! isset($this->listenersBefore[$name])) $this->listenersBefore[$name] = [];
 
         $this->listenersBefore[$name][] = $callback;
+
+        return fn() => $this->off($name, $callback);
     }
 
     function after($name, $callback) {
         if (! isset($this->listenersAfter[$name])) $this->listenersAfter[$name] = [];
 
         $this->listenersAfter[$name][] = $callback;
+
+        return fn() => $this->off($name, $callback);
     }
 
     function off($name, $callback) {

@@ -11,16 +11,6 @@ use Livewire\Exceptions\PublicPropertyTypeNotAllowedException;
 class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
 {
     /** @test */
-    public function exception_is_thrown_and_not_caught_by_view_error_handler()
-    {
-        $this->expectException(PublicPropertyTypeNotAllowedException::class);
-
-        Livewire::component('foo', ComponentWithPropertiesStub::class);
-
-        View::make('render-component', ['component' => 'foo', 'params' => ['foo' => new \StdClass]])->render();
-    }
-
-    /** @test */
     public function unordered_numeric_keyed_arrays_are_reordered_so_javascript_doesnt_do_it_for_us()
     {
         $orderedNumericArray = [
@@ -28,12 +18,11 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
             0 => 'bar',
         ];
 
-        $foo = Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])->foo;
-
-        $this->assertSame([
-            0 => 'bar',
-            1 => 'foo',
-        ], $foo);
+        Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])
+            ->assertSnapshotSet('foo', [
+                0 => 'bar',
+                1 => 'foo',
+            ], true);
     }
 
     /** @test */
@@ -45,13 +34,12 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
             '0' => 'foo',
         ];
 
-        $foo = Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])->foo;
-
-        $this->assertSame([
-            '0' => 'foo',
-            '19' => 'bar',
-            '20' => 'baz',
-        ], $foo);
+        Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])
+            ->assertSnapshotSet('foo', [
+                '0' => 'foo',
+                '19' => 'bar',
+                '20' => 'baz',
+            ], true);
     }
 
     /** @test */
@@ -64,15 +52,13 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
             'abob' => 'lob',
         ];
 
-        $foo = Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])
-            ->foo;
-
-        $this->assertSame([
-            0 => 'bar',
-            1 => 'foo',
-            'bob' => 'lob',
-            'abob' => 'lob',
-        ], $foo);
+        Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])
+            ->assertSnapshotSet('foo', [
+                0 => 'bar',
+                1 => 'foo',
+                'bob' => 'lob',
+                'abob' => 'lob',
+            ], true);
     }
 
     /** @test */

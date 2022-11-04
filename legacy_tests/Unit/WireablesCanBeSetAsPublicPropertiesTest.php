@@ -202,3 +202,4 @@ class WireablesCanBeSetAsPublicPropertiesTest extends TestCase
             ->call('removeWireable');
     }
 }
+

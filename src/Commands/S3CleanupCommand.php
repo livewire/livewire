@@ -2,10 +2,10 @@
 
 namespace Livewire\Commands;
 
-use Illuminate\Console\Command;
-use League\Flysystem\Cached\CachedAdapter;
-use Livewire\FileUploadConfiguration;
 use function Livewire\invade;
+use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
+use League\Flysystem\Cached\CachedAdapter;
+use Illuminate\Console\Command;
 
 class S3CleanupCommand extends Command
 {

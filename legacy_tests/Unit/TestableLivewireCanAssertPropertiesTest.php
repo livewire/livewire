@@ -44,9 +44,11 @@ class TestableLivewireCanAssertPropertiesTest extends TestCase
     /** @test */
     public function throws_non_property_not_found_exceptions()
     {
+        $this->markTestSkipped('In V2 computed properties are "LAZY", what should we do in V3?');
+
         $this->expectException(\Exception::class);
 
-        Livewire::test(PropertyTestingComponent::class)
+        Livewire::test(ComputedPropertyWithExceptionTestingComponent::class)
             ->assertSet('throwsException', null);
     }
 }
@@ -75,6 +77,14 @@ class PropertyTestingComponent extends Component
         return 'lob';
     }
 
+    public function render()
+    {
+        return view('null-view');
+    }
+}
+
+class ComputedPropertyWithExceptionTestingComponent extends Component
+{
     public function getThrowsExceptionProperty()
     {
         throw new \Exception('Test exception');

@@ -1,10 +1,10 @@
 <?php
 
-namespace Livewire\Exceptions;
+namespace Livewire\Features\SupportFileUploads;
 
 class S3DoesntSupportMultipleFileUploads extends \Exception
 {
-    use BypassViewHandler;
+    use \Livewire\Exceptions\BypassViewHandler;
 
     public function __construct()
     {

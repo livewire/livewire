@@ -2,8 +2,9 @@
 
 namespace Livewire\Features\SupportEvents;
 
+use function Livewire\store;
 use function Synthetic\wrap;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 use Livewire\LivewireSynth;
 
 class SupportEvents
@@ -67,14 +68,14 @@ class SupportEvents
     {
         $event = new Event($event, $params);
 
-        ComponentDataStore::push($component, 'emitted', $event);
+        store($component)->push('emitted', $event);
 
         return $event;
     }
 
     static function dispatch($component, $event, $data)
     {
-        ComponentDataStore::push($component, 'dispatched', [
+        store($component)->push('dispatched', [
             'event' => $event,
             'data' => $data,
         ]);
@@ -82,19 +83,19 @@ class SupportEvents
 
     function getServerEmittedEvents($component)
     {
-        return collect(ComponentDataStore::get($component, 'emitted', []))
+        return collect(store($component)->get('emitted', []))
             ->map(fn ($event) => $event->serialize())
             ->toArray();
     }
 
     function getServerDispatchedEvents($component)
     {
-        return ComponentDataStore::get($component, 'dispatched', []);
+        return store($component)->get('dispatched', []);
     }
 
     static function dispatchBrowserEvent($component, $event, $data = null)
     {
-        ComponentDataStore::push($component, 'dispatched', [
+        store($component)->push('dispatched', [
             'event' => $event,
             'data' => $data,
         ]);

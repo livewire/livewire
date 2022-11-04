@@ -3,13 +3,18 @@
 namespace Synthetic;
 
 use Synthetic\Synthesizers\StringableSynth;
-use Synthetic\Synthesizers\CollectionSynth;
-use Synthetic\Synthesizers\AnonymousSynth;
+use Synthetic\Synthesizers\StdClassSynth;
 use Synthetic\Synthesizers\ObjectSynth;
+use Synthetic\Synthesizers\EnumSynth;
+use Synthetic\Synthesizers\CollectionSynth;
 use Synthetic\Synthesizers\CarbonSynth;
 use Synthetic\Synthesizers\ArraySynth;
-use Closure;
+use Synthetic\Synthesizers\AnonymousSynth;
+use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Exception;
+use Closure;
 
 class SyntheticManager
 {
@@ -39,7 +44,9 @@ class SyntheticManager
         CarbonSynth::class,
         CollectionSynth::class,
         StringableSynth::class,
+        EnumSynth::class,
         AnonymousSynth::class,
+        StdClassSynth::class,
         ObjectSynth::class,
         ArraySynth::class,
     ];
@@ -62,13 +69,7 @@ class SyntheticManager
     {
         $effects = [];
 
-        $finish = $this->trigger('synthesize', $target);
-
-        $result = $this->toSnapshot($target, $effects, $initial = true);
-
-        $result = $finish($result);
-
-        return $result;
+        return $this->toSnapshot($target, $effects, $initial = true);
     }
 
     function update($snapshot, $diff, $calls)
@@ -95,7 +96,7 @@ class SyntheticManager
     function toSnapshot($root, &$effects = [], $initial = false) {
         $finish = $this->trigger('dehydrate.root', $root);
 
-        $data = $this->dehydrate($root, $effects, $initial);
+        $data = $this->dehydrate($root, $root, $effects, $initial);
 
         $finish($data, $effects);
 
@@ -128,11 +129,11 @@ class SyntheticManager
         return $root;
     }
 
-    function dehydrate($target, &$effects, $initial, $annotationsFromParent = [], $path = '') {
+    function dehydrate($root, $target, &$effects, $initial, $annotationsFromParent = [], $path = '') {
         $synth = $this->synth($target);
 
         if ($synth) {
-            $context = new DehydrationContext($target, $initial, $annotationsFromParent);
+            $context = new DehydrationContext($root, $target, $initial, $annotationsFromParent, $path);
 
             $finish = app('synthetic')->trigger('dehydrate', $synth, $target, $context);
 
@@ -158,7 +159,7 @@ class SyntheticManager
                 foreach ($value as $key => $child) {
                     $annotationsFromParent = $context->annotations[$key] ?? [];
 
-                    $value[$key] = $this->dehydrate($child, $effects, $initial, $annotationsFromParent, $path === '' ? $key : $path.'.'.$key);
+                    $value[$key] = $this->dehydrate($root, $child, $effects, $initial, $annotationsFromParent, $path === '' ? $key : $path.'.'.$key);
                 }
             }
 
@@ -199,66 +200,62 @@ class SyntheticManager
 
     function applyDiff($root, $diff) {
         foreach ($diff as $path => $value) {
-            // "$path" is a dot-notated key. This means we may need to drill
-            // down and set a value on a deeply nested object. That object
-            // may not exist, so let's find the first one that does...
-            [$parentKey, $key] = $this->closestExistingParent($root, $path);
+            $this->updateValue($root, $path, $value);
+        }
+    }
 
-            $target =& $this->dataGet($root, $parentKey);
-
+    function updateValue(&$root, $path, $value, $skipHydrate = false)
+    {
+        if (! $skipHydrate) {
             if (isset($this->metasByPath[$path])) {
                 $value = [$value, $this->metasByPath[$path]];
             }
 
             $value = $this->hydrate($value, $path);
-
-            // "$leafValue" here is the most deeply nested value we're trying to set
-            // on this "$root". We make this distinction, because "$value" may be
-            // an array containing nesting levels that didn't previously exist.
-            $leafValue = $value;
-
-            if (Utils::containsDots($key)) {
-                // Here's we've determined we're trying to set a deeply nested
-                // value on an object/array that doesn't exist, so we need
-                // to build up that non-existant nesting structure first.
-                $nestedKey = Utils::afterFirstDot($key);
-
-                $key = Utils::beforeFirstDot($key);
-
-                $value = [];
-
-                $value = data_set($value, $nestedKey, $leafValue);
-            }
-
-            $finish = $this->trigger('update', $root, $path, $leafValue);
-
-            if ($value === '__rm__') {
-                $this->synth($target)->unset($target, $key, $root, $path);
-            } else {
-                $this->synth($target)->set($target, $key, $value, $root, $path);
-            }
-
-            $finish($leafValue);
         }
+
+        $finish = $this->trigger('update', $root, $path, $value);
+
+        $segments = Utils::dotSegments($path);
+
+        $this->recursivelySetValue($root, $root, $value, $segments);
+
+        $finish($value);
     }
 
-    protected function closestExistingParent(&$root, $path, $nestedKey = '')
+    function recursivelySetValue($root, $target, $leafValue, $segments, $index = 0)
     {
-        if (! Utils::containsDots($path)) {
-            return ['', $path];
+        $isLastSegment = count($segments) === $index + 1;
+
+        $property = $segments[$index];
+
+        assert($synth = $this->synth($target));
+
+        if ($isLastSegment) {
+            $toSet = $leafValue;
+        } else {
+            $propertyTarget = $synth->get($target, $property);
+
+            // "$path" is a dot-notated key. This means we may need to drill
+            // down and set a value on a deeply nested object. That object
+            // may not exist, so let's find the first one that does...
+
+            // Here's we've determined we're trying to set a deeply nested
+            // value on an object/array that doesn't exist, so we need
+            // to build up that non-existant nesting structure first.
+            if ($propertyTarget === null) $propertyTarget = [];
+
+            $toSet = $this->recursivelySetValue($root, $propertyTarget, $leafValue, $segments, $index + 1);
         }
 
-        [$parentKey, $key] = $this->getParentAndChildKey($path);
+        $method = $leafValue === '__rm__' ? 'unset' : 'set';
 
-        $key = $nestedKey === '' ? $key : $key.'.'.$nestedKey;
+        $pathThusFar = collect($segments)->slice(0, $index + 1)->join('.');
+        $fullPath = collect($segments)->join('.');
 
-        $parentTarget = $this->dataGet($root, $parentKey);
+        $synth->$method($target, $property, $toSet, $pathThusFar, $fullPath);
 
-        if ($parentTarget !== null) {
-            return [$parentKey, $key];
-        };
-
-        return $this->closestExistingParent($root, $parentKey, $key);
+        return $target;
     }
 
     protected function makeCalls($root, $calls, &$effects) {
@@ -280,7 +277,7 @@ class SyntheticManager
             $synth = $this->synth($target);
 
             if (! in_array($method, $synth->methods($target))) {
-                throw new \Exception('Method call not allowed: ['.$method.']');
+                throw new MethodNotFoundException($method);
             }
 
             $finish = app('synthetic')->trigger('call', $synth, $target, $method, $params, $addEffect);
@@ -350,18 +347,18 @@ class SyntheticManager
     }
 
     function on($name, $callback) {
-        app(EventBus::class)->on($name, $callback);
+        return app(EventBus::class)->on($name, $callback);
     }
 
     function after($name, $callback) {
-        app(EventBus::class)->after($name, $callback);
+        return app(EventBus::class)->after($name, $callback);
     }
 
     function before($name, $callback) {
-        app(EventBus::class)->before($name, $callback);
+        return app(EventBus::class)->before($name, $callback);
     }
 
     function off($name, $callback) {
-        app(EventBus::class)->off($name, $callback);
+        return app(EventBus::class)->off($name, $callback);
     }
 }

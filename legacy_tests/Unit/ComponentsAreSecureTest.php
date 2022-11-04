@@ -22,20 +22,9 @@ class ComponentsAreSecureTest extends TestCase
     }
 
     /** @test */
-    public function can_only_call_public_methods()
-    {
-        $this->expectException(NonPublicComponentMethodCall::class);
-
-        app('livewire')->component('security-target', SecurityTargetStub::class);
-        $component = app('livewire')->test('security-target');
-
-        $component->runAction('protectedMethod');
-    }
-
-    /** @test */
     public function can_only_call_methods_defined_by_user()
     {
-        $this->expectException(NonPublicComponentMethodCall::class);
+        $this->expectException(MethodNotFoundException::class);
 
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
@@ -47,7 +36,7 @@ class ComponentsAreSecureTest extends TestCase
     /** @test */
     public function can_only_set_public_properties()
     {
-        $this->expectException(PublicPropertyNotFoundException::class);
+        $this->expectException(\Error::class);
 
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
@@ -63,7 +52,7 @@ class ComponentsAreSecureTest extends TestCase
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
 
-        $component->payload['serverMemo']['data']['publicProperty'] = 'different-property';
+        $component->snapshot['data']['0']['publicProperty'] = 'different-property';
 
         $component->call('$refresh');
     }
@@ -76,7 +65,7 @@ class ComponentsAreSecureTest extends TestCase
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
 
-        $component->payload['fingerprint']['id'] = 'different-id';
+        $component->snapshot['data'][1]['id'] = 'different-id';
 
         $component->call('$refresh');
     }
@@ -91,7 +80,7 @@ class ComponentsAreSecureTest extends TestCase
         $component = app('livewire')->test('safe');
 
         // Hijack the "safe" component, with "unsafe"
-        $component->payload['fingerprint']['name'] = 'unsafe';
+        $component->snapshot['data'][1]['name'] = 'unsafe';
 
         // If the hijack was stopped, the expected exception will be thrown.
         // If it worked, then an exception will be thrown that will fail the test.

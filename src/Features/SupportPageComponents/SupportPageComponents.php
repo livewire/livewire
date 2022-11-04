@@ -6,31 +6,20 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\AnonymousComponent;
 use Livewire\Drawer\ImplicitRouteBinding;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 use Illuminate\Support\Facades\View as ViewFacade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Livewire\Drawer\IsSingleton;
 
 class SupportPageComponents
 {
-    protected static $isPageComponentRequest = false;
+    use IsSingleton;
+
+    public static $isPageComponentRequest = false;
 
     public function boot()
     {
         $this->registerLayoutViewMacros();
-
-        $this->whenALivewireComponentIsUsedAsARoute(function ($component) {
-            $content = $instance = null;
-
-            $layoutConfig = $this->interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration(function () use (&$content, &$instance, $component) {
-                $params = $this->gatherMountMethodParamsFromRouteParameters($component);
-
-                [$content, $instance] = $this->mountAndRenderTheComponent($component, $params);
-            });
-
-            $layoutConfig = $this->mergeLayoutDefaults($layoutConfig);
-
-            return $this->renderContentsIntoLayout($content, $layoutConfig);
-        });
     }
 
     public static function isRenderingPageComponent()
@@ -81,20 +70,6 @@ class SupportPageComponents
         });
     }
 
-    function whenALivewireComponentIsUsedAsARoute($callback)
-    {
-        // Here's we're hooking into the "__invoke" method being called on a component.
-        // This way, users can pass Livewire components into Routes as if they were
-        // simple invokable controllers. Ex: Route::get('...', SomeLivewireComponent::class);
-        app('synthetic')->on('__invoke', function ($target) use ($callback) {
-            return function () use ($target, $callback) {
-                static::$isPageComponentRequest = true;
-
-                return $callback($target);
-            };
-        });
-    }
-
     function interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration($callback)
     {
         $layoutConfig = null;
@@ -115,23 +90,22 @@ class SupportPageComponents
         return $layoutConfig;
     }
 
-    function mountAndRenderTheComponent($component, $params)
-    {
-        return app('livewire')->mount($component::class, $params);
-    }
-
     function gatherMountMethodParamsFromRouteParameters($component)
     {
         // This allows for route parameters like "slug" in /post/{slug},
         // to be passed into a Livewire component's mount method...
         $route = request()->route();
 
+        if (! $route) return [];
+
         try {
             $params = (new ImplicitRouteBinding(app()))
                 ->resolveAllParameters($route, new $component);
         } catch (ModelNotFoundException $exception) {
             if (method_exists($route,'getMissing') && $route->getMissing()) {
-                return $route->getMissing()(request());
+                abort(
+                    $route->getMissing()(request())
+                );
             }
 
             throw $exception;

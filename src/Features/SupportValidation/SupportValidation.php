@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportValidation;
 
 use function Synthetic\on;
 use function Livewire\invade;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 use Livewire\LivewireSynth;
 use Livewire\Drawer\Utils;
 use Livewire\Component;

@@ -13,12 +13,13 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Closure;
 
+use function Synthetic\after;
+use function Synthetic\before;
+use function Synthetic\on;
+
 class Manager
 {
     protected $queryParamsForTesting = [];
-
-    protected $shouldDisableBackButtonCache = false;
-
 
     protected $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
@@ -33,13 +34,14 @@ class Manager
 
     public static $isLivewireRequestTestingOverride = false;
 
+    public $currentComponent;
     public static $currentCompilingViewPath;
     public static $currentCompilingChildCounter;
 
     public function component($name, $class = null)
     {
         if (is_null($class)) {
-            [$class, $name] = [$name, $name::getName()];
+            [$class, $name] = [$name, $name::generateName()];
         }
 
         ComponentRegistry::getInstance()->register($name, $class);
@@ -59,7 +61,30 @@ class Manager
 
     public function new($name)
     {
-        return ComponentRegistry::getInstance()->get($name);
+        if (is_object($name) && $name instanceof Component) return $name;
+
+        $component = ComponentRegistry::getInstance()->get($name);
+
+        $name = $component::generateName();
+
+        $component->setId(str()->random(20));
+        $component->setName($name);
+
+        return $component;
+    }
+
+    public function current()
+    {
+        throw_unless($this->currentComponent, new \Exception(
+            'No Livewire component is currently being processed.'
+        ));
+
+        return $this->currentComponent;
+    }
+
+    public function setCurrent($component)
+    {
+        $this->currentComponent = $component;
     }
 
     public function directive($name, $callback)
@@ -111,11 +136,55 @@ class Manager
         return RenderComponent::getInstance()->renderComponentBladeView($target, $blade, $data);
     }
 
+    function withQueryParams($params)
+    {
+        $this->queryParamsForTesting = $params;
+
+        return $this;
+    }
+
     public function test($name, $params = [])
     {
-        [$noop, $instance, $dehydrated] = $this->mount($name, $params);
+        $uri = 'livewire-test';
 
-        return new Testable($dehydrated, $instance);
+        $symfonyRequest = \Symfony\Component\HttpFoundation\Request::create(
+            $uri, 'GET', $parameters = $this->queryParamsForTesting,
+            $cookies = [], $files = [], $server = [], $content = null
+        );
+
+        $request = \Illuminate\Http\Request::createFromBase($symfonyRequest);
+
+        app()->instance('request', $request);
+
+        app('request')->headers->set('X-Livewire', true);
+
+        // \Illuminate\Support\Facades\Facade::clearResolvedInstance('request');
+
+        // This allows the user to test a component by it's class name,
+        // and not have to register an alias.
+        if (class_exists($name)) {
+            if (! is_subclass_of($name, Component::class)) {
+                throw new \Exception('Class ['.$name.'] is not a subclass of Livewire\Component.');
+            }
+
+            $componentClass = $name;
+
+            $this->component($name = str()->random(20), $componentClass);
+        }
+
+        $component = null;
+
+        $forget = on('mount', function () use (&$component, &$forget) {
+            $forget();
+
+            return function ($instance) use (&$component) {
+                $component = $instance;
+            };
+        });
+
+        [$html, $dehydrated] = $this->mount($name, $params);
+
+        return new Testable($dehydrated, $component);
     }
 
     public function visit($browser, $class, $queryString = '')
@@ -155,8 +224,6 @@ class Manager
         static::$isLivewireRequestTestingOverride = false;
         static::$currentCompilingChildCounter = null;
         static::$currentCompilingViewPath = null;
-
-        $this->shouldDisableBackButtonCache = false;
 
         app('synthetic')->trigger('flush-state');
     }

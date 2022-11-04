@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\View;
 
 class LivewireAssetsDirectiveTest extends TestCase
 {
+    function setUp(): void
+    {
+        $this->markTestSkipped('not sure exactly how we want to handle all this asset stuff for v3 so holding off on this...');
+    }
+
     /** @test */
     public function livewire_js_is_unminified_when_app_is_in_debug_mode()
     {

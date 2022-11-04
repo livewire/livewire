@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportDisablingBackButtonCache;
 
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Support\Facades\Event;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 
 class SupportDisablingBackButtonCache
 {

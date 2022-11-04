@@ -42,11 +42,17 @@ class ComponentRegistry
     {
         if (is_null($class)) {
             $class = $name;
-            $name = $class::getName();
+            $name = $class::generateName();
         }
 
         $this->aliases[$name] = $class;
     }
+
+    function getAlias($class, $default = null)
+    {
+        return array_search($class, array_reverse($this->aliases)) ?? $default;
+    }
+
 
     public function get($name)
     {
@@ -58,12 +64,14 @@ class ComponentRegistry
 
         // If an anonymous object was stored in the registry,
         // clone its instance and return that...
-        if (is_object($subject)) return clone $subject;
+        if (is_object($subject)) return tap(clone $subject)->setName($name);
 
         // If the name or its alias are a class,
         // then new it up and return it...
         if (class_exists((string) str($subject)->studly())) {
-            return new (str($subject)->studly()->toString());
+            return tap(
+                new (str($subject)->studly()->toString())
+            )->setName($name);
         }
 
         // Otherwise, we'll look in the "autodiscovery" manifest
@@ -153,7 +161,7 @@ class ComponentRegistry
     {
         $this->manifest = $this->getClassNames()
             ->mapWithKeys(function ($class) {
-                return [$class::getName() => $class];
+                return [$class::generateName() => $class];
             })->toArray();
 
         $this->write($this->manifest);

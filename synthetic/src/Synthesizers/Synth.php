@@ -19,6 +19,14 @@ abstract class Synth {
         return [];
     }
 
+    function get(&$target, $key) {
+        if (is_array($target)) {
+            return $target[$key] ?? null;
+        }
+
+        return $target->$key;
+    }
+
     function __call($method, $params) {
         if ($method === 'dehydrate') {
             throw new \Exception('You must define a "dehydrate" method');

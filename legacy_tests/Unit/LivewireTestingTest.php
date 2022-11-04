@@ -26,6 +26,8 @@ class LivewireTestingTest extends TestCase
         });
 
         Livewire::test(HasMountArguments::class, ['name' => 'foo']);
+
+        $this->assertTrue(true);
     }
 
     /** @test */
@@ -33,7 +35,7 @@ class LivewireTestingTest extends TestCase
     {
         $component = Livewire::test(HasMountArguments::class, ['name' => 'foo']);
 
-        $this->assertStringContainsString('foo', $component->payload['effects']['html']);
+        $this->assertStringContainsString('foo', $component->html());
     }
 
     /** @test */
@@ -108,7 +110,7 @@ class LivewireTestingTest extends TestCase
     public function assert_see_unescaped()
     {
         Livewire::test(HasHtml::class)
-                ->assertSee('<div><p style', false);
+                ->assertSee('<p style', false);
     }
 
     /** @test */

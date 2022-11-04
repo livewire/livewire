@@ -5,25 +5,49 @@ namespace Livewire\Features\SupportUnitTesting;
 use Synthetic\Testing\Testable as BaseTestable;
 use Synthetic\TestableSynthetic;
 use PHPUnit\Framework\Assert as PHPUnit;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 use Livewire\Features\SupportValidation\TestsValidation;
+use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
+use Livewire\Features\SupportEvents\TestsEvents;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Arr;
-use Livewire\Features\SupportEvents\TestsEvents;
+use Livewire\Features\SupportRedirects\TestsRedirects;
+
+use function Livewire\store;
 
 class Testable extends BaseTestable
 {
-    use MakesAssertions, TestsValidation, TestsEvents;
+    use
+        MakesAssertions,
+        TestsEvents,
+        TestsRedirects,
+        TestsValidation,
+        TestsFileDownloads;
 
-    function html()
+    function html($stripInitialData = false)
     {
-        return componentdatastore::get($this->target, 'testing.html');
+        $html = store($this->target)->get('testing.html');
+
+        if ($stripInitialData) {
+            $removeMe = (string) str($html)->betweenFirst(
+                'wire:initial-data="', '"'
+            );
+
+            $html = str_replace($removeMe, '', $html);
+        }
+
+        return $html;
     }
 
     function view()
     {
-        return componentdatastore::get($this->target, 'testing.view');
+        return store($this->target)->get('testing.view');
+    }
+
+    public function viewData($key)
+    {
+        return $this->view()->getData()[$key];
     }
 
     public function id()
@@ -34,11 +58,6 @@ class Testable extends BaseTestable
     public function instance()
     {
         return $this->target;
-    }
-
-    public function viewData($key)
-    {
-        //
     }
 
     function call($method, ...$params)
@@ -66,7 +85,7 @@ class Testable extends BaseTestable
 
     public function updateProperty($name, $value = null)
     {
-        //
+        return parent::set($name, $value);
     }
 
     public function syncInput($name, $value)

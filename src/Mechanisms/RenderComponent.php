@@ -76,56 +76,31 @@ EOT;
             unset($params['apply']);
         }
 
-        $instanceInterceptors = [];
-
-        $interceptInstance = function ($callback) use (&$instanceInterceptors) {
-            array_push($instanceInterceptors, $callback);
-        };
-
-        $runInstanceInterceptors = function ($instance) use (&$instanceInterceptors) {
-            foreach ($instanceInterceptors as $interceptor) $interceptor($instance);
-        };
-
-        [$receiveInstance, $finishMount] = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slots, $hijack, $interceptInstance);
+        [$receiveInstance, $finishMount] = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slots, $hijack);
 
         // Allow a "mount" event listener to short-circuit the mount...
-        if ($hijackedHtml !== null) return $hijackedHtml;
+        if ($hijackedHtml !== null) return [$hijackedHtml];
 
-        // If this has already been rendered spoof it...
-        if ($parent && $parent->hasPreviouslyRenderedChild($key)) {
-            [$tag, $childId] = $parent->getPreviouslyRenderedChild($key);
 
-            $finish = app('synthetic')->trigger('dummy-mount', $tag, $childId, $params, $parent, $key);
-
-            $html  = "<{$tag} wire:id=\"{$childId}\"></{$tag}>";
-
-            $parent->setChild($key, $tag, $childId);
-
-            return $finish($html);
-        }
-
-        $id = str()->random(20);
-
-        $target = app('livewire')->new($name);
-        $target->setId($id);
-
-        $receiveInstance($target);
-
-        $runInstanceInterceptors($target);
+        $component = app('livewire')->new($name);
 
         foreach ($params as $name => $value) {
-            $target->$name = $value;
+            if (property_exists($component, $name)) {
+                $component->$name = $value;
+            }
         }
 
+        $receiveInstance($component);
+
         // Render it...
-        $payload = app('synthetic')->synthesize($target);
+        $payload = app('synthetic')->synthesize($component);
 
         $html = $payload['effects']['']['html'] ?? '<div></div>';
 
         if ($parent) {
             preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
             $tag = $matches[1][0];
-            $parent->setChild($key, $tag, $id);
+            $parent->setChild($key, $tag, $component->getId());
         }
 
         // Remove it from effects...
@@ -137,7 +112,7 @@ EOT;
 
         $finishMount($html);
 
-        return [$html, $target, $payload];
+        return [$html, $payload];
     }
 
     static function renderComponentBladeView($target, $blade, $data)

@@ -3,9 +3,10 @@
 namespace Livewire\Features\SupportComputedProperties;
 
 use Livewire\Drawer\ImplicitlyBoundMethod;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 use Synthetic\Utils as SyntheticUtils;
 
+use function Livewire\store;
 use function Synthetic\wrap;
 
 class SupportComputedProperties
@@ -69,10 +70,9 @@ class SupportComputedProperties
 
         $method = 'get'.str($property)->studly().'Property';
 
-        ComponentDataStore::push(
-            $target,
+        store($target)->push(
             'computedProperties',
-            $value = ComponentDataStore::find($target, 'computedProperties', $property, fn() => wrap($target)->$method()),
+            $value = store($target)->find('computedProperties', $property, fn() => wrap($target)->$method()),
             $property,
         );
 
@@ -87,10 +87,9 @@ class SupportComputedProperties
 
         $method = $property;
 
-        ComponentDataStore::push(
-            $target,
+        store($target)->push(
             'getterProperties',
-            $value = ComponentDataStore::find($target, 'computedProperties', $property, fn() => wrap($target)->$method()),
+            $value = store($target)->find('computedProperties', $property, fn() => wrap($target)->$method()),
             $property,
         );
 

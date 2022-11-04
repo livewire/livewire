@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportEvents;
 
 use PHPUnit\Framework\Assert as PHPUnit;
+use Livewire\Component;
 
 trait TestsEvents
 {
@@ -85,7 +86,7 @@ trait TestsEvents
     protected function testEmittedTo($target, $value)
     {
         $target = is_subclass_of($target, Component::class)
-            ? $target::getName()
+            ? $target::generateName()
             : $target;
 
         return (bool) collect(data_get($this->effects, 'emits'))->first(function ($item) use ($target, $value) {

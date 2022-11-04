@@ -2,11 +2,14 @@
 
 namespace Livewire\Features\SupportRedirects;
 
+use function Livewire\short;
+use function Livewire\store;
 use function Synthetic\after;
 use function Synthetic\before;
 use function Synthetic\on;
 use Livewire\LivewireSynth;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
+use Synthetic\ShortcircuitResponse;
 
 class SupportRedirects
 {
@@ -14,16 +17,6 @@ class SupportRedirects
 
     function boot()
     {
-        after('__invoke', function ($component) {
-            return function () use ($component) {
-                $to = ComponentDataStore::get($component, 'redirect');
-
-                if ($to) {
-                    return response()->redirect($to);
-                }
-            };
-        });
-
         on('component.boot', function ($component) {
             // Put Laravel's redirector aside and replace it with our own custom one.
             static::$redirectorCacheStack[] = app('redirect');
@@ -45,7 +38,11 @@ class SupportRedirects
             // Put the old redirector back into the container.
             app()->instance('redirect', array_pop(static::$redirectorCacheStack));
 
-            $to = ComponentDataStore::get($target, 'redirect');
+            $to = store($target)->get('redirect');
+
+            if ($to && ! app('livewire')->isLivewireRequest()) {
+                abort(redirect($to));
+            }
 
             if (! $to) {
                 // If there was no redirect. Clear flash session data.

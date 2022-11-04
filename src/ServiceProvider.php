@@ -2,9 +2,11 @@
 
 namespace Livewire;
 
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+use stdClass;
 
-class ServiceProvider extends BaseServiceProvider
+class AssociatedData {}
+
+class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     /**
      * Hey! Let me tell you a bit about how this codebase
@@ -50,7 +52,7 @@ class ServiceProvider extends BaseServiceProvider
      *    Sometimes "Mechanisms" or "Features" need to associate data with
      *    specific Livewire components. Rather than storing arbitrary
      *    data on the component objects themselves, you should
-     *    instead use the "ComponentDataStore" class.
+     *    instead use the "DataStore" class.
      *
      * Hoefully the above helped give you some context for the structure
      * of this codebase. We haven't even touched on the entire component
@@ -69,13 +71,13 @@ class ServiceProvider extends BaseServiceProvider
 
     public function boot()
     {
-        $this->registerConsoleCommands();
-        $this->registerSynthesizers();
-        $this->registerMechanisms();
-        $this->registerFeatures();
+        $this->bootConsoleCommands();
+        $this->bootSynthesizers();
+        $this->bootMechanisms();
+        $this->bootFeatures();
 
         if (app()->environment('testing')) {
-            \Tests\TestCase::runOnApplicationBoot();
+            \Tests\TestCase::onApplicationBoot();
         };
     }
 
@@ -85,7 +87,12 @@ class ServiceProvider extends BaseServiceProvider
         $this->app->singleton(Manager::class);
     }
 
-    protected function registerConsoleCommands()
+    protected function registerConfig()
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/livewire.php', 'livewire');
+    }
+
+    protected function bootConsoleCommands()
     {
         if (! $this->app->runningInConsole()) return;
 
@@ -106,21 +113,21 @@ class ServiceProvider extends BaseServiceProvider
         ]);
     }
 
-    protected function registerSynthesizers()
+    protected function bootSynthesizers()
     {
         app('synthetic')->registerSynth([
             \Livewire\LivewireSynth::class,
         ]);
     }
 
-    protected function registerMechanisms()
+    protected function bootMechanisms()
     {
         foreach ([
             \Livewire\Mechanisms\HijackBlade\HijackBlade::class,
-            \Livewire\Mechanisms\JavaScriptAndCssAssets::class,
+            \Livewire\Mechanisms\TrackCurrentComponent::class,
             \Livewire\Mechanisms\CompileLivewireTags::class,
-            \Livewire\Mechanisms\ComponentDataStore::class,
             \Livewire\Mechanisms\RenderComponent::class,
+            \Livewire\Mechanisms\FrontendAssets::class,
         ] as $mechanism) {
             if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($mechanism))) {
                 $mechanism::getInstance()->boot();
@@ -130,15 +137,17 @@ class ServiceProvider extends BaseServiceProvider
         }
     }
 
-    protected function registerFeatures()
+    protected function bootFeatures()
     {
         foreach ([
             \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
             \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
+            \Livewire\Features\SupportJavaScriptOrderedArrays\SupportJavaScriptOrderedArrays::class,
             \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
+            \Livewire\Features\SupportNestingComponents\SupportNestingComponents::class,
             \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
             \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
             \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class,
@@ -146,10 +155,12 @@ class ServiceProvider extends BaseServiceProvider
             \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
             \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,
             \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
+            \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
             \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
+            \Livewire\Features\SupportFileUploads\SupportFileUploads::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
             \Livewire\Features\SupportWireables\SupportWireables::class,
             \Livewire\Features\SupportRedirects\SupportRedirects::class,
@@ -165,10 +176,5 @@ class ServiceProvider extends BaseServiceProvider
                 (new $feature)->boot();
             }
         }
-    }
-
-    protected function registerConfig()
-    {
-        $this->mergeConfigFrom(__DIR__.'/../config/livewire.php', 'livewire');
     }
 }

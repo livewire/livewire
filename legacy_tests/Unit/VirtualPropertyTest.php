@@ -12,6 +12,7 @@ class VirtualPropertyTest extends TestCase
     /** @test */
     public function virtual_property_is_accessible()
     {
+        $this->markTestSkipped('Not sure we should support this.');
         $component = Livewire::test(ComponentWithPublicVirtualproperty::class)
             ->assertSee('Caleb')
             ->set(PROPERTY_NAME, 'Porzio')

@@ -7,7 +7,7 @@ use Synthetic\Utils;
 use Synthetic\Synthesizers\ObjectSynth;
 
 use Livewire\Mechanisms\RenderComponent;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 
 class LivewireSynth extends ObjectSynth
 {
@@ -22,32 +22,31 @@ class LivewireSynth extends ObjectSynth
     function dehydrate($target, $context) {
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($target);
 
-        if (! ComponentDataStore::get($target, 'skipRender', false)) {
+        if (! store($target)->get('skipRender', false)) {
             $rendered = method_exists($target, 'render')
                 ? wrap($target)->render()
-                : view("livewire.{$target::getName()}");
+                : view("livewire.{$target::generateName()}");
 
             $html = app('livewire')->renderBladeView($target, $rendered, $properties);
 
             $context->addEffect('html', $html);
         }
 
-        $context->addMeta('children', $target->getChildren());
         $context->addMeta('id', $target->getId());
+        $context->addMeta('name', $target->getName());
 
+        $properties = Utils::getPublicPropertiesDefinedOnSubclass($target);
 
-        return parent::dehydrate($target, $context);
+        return $properties;
     }
 
     function hydrate($value, $meta) {
         [
-            'children' => $children,
-            'class' => $class,
+            'name' => $name,
             'id' => $id,
         ] = $meta;
 
-        $target = new $class;
-        $target->setPreviouslyRenderedChildren($children);
+        $target = app('livewire')->new($name);
         $target->setId($id);
 
         $properties = $value;
@@ -64,16 +63,12 @@ class LivewireSynth extends ObjectSynth
         return $target;
     }
 
-    function &get($target, $key) {
-        return parent::get($target, $key);
-    }
-
     function set(&$target, $key, $value) {
-        return parent::set($target, $key, $value);
+        parent::set($target, $key, $value);
     }
 
     function unset(&$target, $key, $value) {
-        return parent::set($target, $key, $value);
+        parent::set($target, $key, $value);
     }
 
     function methods($target)

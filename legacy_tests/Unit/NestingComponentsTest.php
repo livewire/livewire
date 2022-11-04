@@ -13,7 +13,7 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->payload['effects']['html']);
+        $this->assertStringContainsString('foo', $component->html());
     }
 
     /** @test */
@@ -23,11 +23,11 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->payload['effects']['html']);
+        $this->assertStringContainsString('foo', $component->html());
 
         $component->runAction('$refresh');
 
-        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
+        $this->assertStringNotContainsString('foo', $component->html());
     }
 
     /** @test */
@@ -37,11 +37,11 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('span', $component->payload['effects']['html']);
+        $this->assertStringContainsString('span', $component->html());
 
         $component->runAction('$refresh');
 
-        $this->assertStringContainsString('span', $component->payload['effects']['html']);
+        $this->assertStringContainsString('span', $component->html());
     }
 
     /** @test */
@@ -51,15 +51,15 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->payload['effects']['html'] );
+        $this->assertStringContainsString('foo', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
-        $this->assertStringContainsString('bar', $component->payload['effects']['html'] );
+        $this->assertStringNotContainsString('foo', $component->html());
+        $this->assertStringContainsString('bar', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
-        $this->assertStringNotContainsString('bar', $component->payload['effects']['html']);
+        $this->assertStringNotContainsString('foo', $component->html());
+        $this->assertStringNotContainsString('bar', $component->html());
     }
 
     /** @test */
@@ -69,15 +69,15 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->payload['effects']['html'] );
+        $this->assertStringContainsString('foo', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
-        $this->assertStringContainsString('bar', $component->payload['effects']['html'] );
+        $this->assertStringNotContainsString('foo', $component->html());
+        $this->assertStringContainsString('bar', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
-        $this->assertStringNotContainsString('bar', $component->payload['effects']['html']);
+        $this->assertStringNotContainsString('foo', $component->html());
+        $this->assertStringNotContainsString('bar', $component->html());
     }
 
     /** @test */
@@ -87,15 +87,15 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->payload['effects']['html'] );
+        $this->assertStringContainsString('foo', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
-        $this->assertStringContainsString('bar', $component->payload['effects']['html'] );
+        $this->assertStringNotContainsString('foo', $component->html());
+        $this->assertStringContainsString('bar', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->payload['effects']['html']);
-        $this->assertStringNotContainsString('bar', $component->payload['effects']['html']);
+        $this->assertStringNotContainsString('foo', $component->html());
+        $this->assertStringNotContainsString('bar', $component->html());
     }
 
     /** @test */
@@ -105,10 +105,11 @@ class NestingComponentsTest extends TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $children = $component->rawMountedResponse->memo['children'];
+        $children = $component->snapshot['data'][1]['children'];
+
         $component->runAction('skip');
 
-        $this->assertContains($children, $component->payload['serverMemo']);
+        $this->assertContains($children, $component->snapshot['data'][1]);
     }
 }
 

@@ -61,7 +61,7 @@ class TestCase extends BaseTestCase
         });
     }
 
-    public static function runOnApplicationBoot()
+    public static function onApplicationBoot()
     {
         Route::get('/livewire-dusk', function () {
             $name = request('component');

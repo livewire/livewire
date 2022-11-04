@@ -3,23 +3,31 @@
 namespace Livewire\Features\SupportValidation;
 
 use PHPUnit\Framework\Assert as PHPUnit;
-use Livewire\Mechanisms\ComponentDataStore;
+use Livewire\Mechanisms\DataStore;
 use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Arr;
+
+use function Livewire\store;
 
 trait TestsValidation
 {
     function errors()
     {
-        $validator = ComponentDataStore::get($this->target, 'testing.validator');
+        $validator = store($this->target)->get('testing.validator');
 
-        return $validator ? $validator->errors() : new MessageBag;
+        if ($validator) return $validator->errors();
+
+        $errors = store($this->target)->get('testing.errors');
+
+        if ($errors) return $errors;
+
+        return new MessageBag;
     }
 
     function failedRules()
     {
-        $validator = ComponentDataStore::get($this->target, 'testing.validator');
+        $validator = store($this->target)->get('testing.validator');
 
         return $validator ? $validator->failed() : [];
     }

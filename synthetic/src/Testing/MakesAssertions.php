@@ -27,4 +27,37 @@ trait MakesAssertions
 
         return $this;
     }
+
+    public function assertCount($name, $value)
+    {
+        PHPUnit::assertCount($value, $this->get($name));
+
+        return $this;
+    }
+
+    public function assertSnapshotSet($name, $value, $strict = false)
+    {
+        $data = $this->extractData($this->snapshot)['data'];
+
+        if (is_callable($value)) {
+            PHPUnit::assertTrue($value(data_get($data, $name)));
+        } else {
+            $strict ? PHPUnit::assertSame($value, data_get($data, $name)) : PHPUnit::assertEquals($value, data_get($data, $name));
+        }
+
+        return $this;
+    }
+
+    public function assertSnapshotNotSet($name, $value, $strict = false)
+    {
+        $data = $this->extractData($this->snapshot)['data'];
+
+        if (is_callable($value)) {
+            PHPUnit::assertFalse($value(data_get($data, $name)));
+        } else {
+            $strict ? PHPUnit::assertNotSame($value, data_get($data, $name)) : PHPUnit::assertNotEquals($value, data_get($data, $name));
+        }
+
+        return $this;
+    }
 }
