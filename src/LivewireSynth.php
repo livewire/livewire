@@ -27,7 +27,7 @@ class LivewireSynth extends ObjectSynth
                 ? wrap($target)->render()
                 : view("livewire.{$target::generateName()}");
 
-            $html = app('livewire')->renderBladeView($target, $rendered, $properties);
+            $html = app(RenderComponent::class)->renderComponentBladeView($target, $rendered, $properties);
 
             $context->addEffect('html', $html);
         }

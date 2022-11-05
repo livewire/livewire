@@ -3,14 +3,16 @@
 namespace Livewire\Mechanisms;
 
 use Livewire\Exceptions\ComponentNotFoundException;
-use Livewire\Drawer\IsSingleton;
 use Livewire\Component;
 use Livewire\Commands\ComponentParser;
 use Illuminate\Filesystem\Filesystem;
 
 class ComponentRegistry
 {
-    use IsSingleton;
+    function boot()
+    {
+        app()->singleton($this::class);
+    }
 
     protected $aliases = [];
     protected $path;
@@ -38,11 +40,24 @@ class ComponentRegistry
         );
     }
 
+    function new($name)
+    {
+        if (is_object($name) && $name instanceof Component) return $name;
+
+        $component = $this->get($name);
+
+        $name = $component::generateName();
+
+        $component->setId(str()->random(20));
+        $component->setName($name);
+
+        return $component;
+    }
+
     function register($name, $class = null)
     {
         if (is_null($class)) {
-            $class = $name;
-            $name = $class::generateName();
+            [$class, $name] = [$name, $name::generateName()];
         }
 
         $this->aliases[$name] = $class;

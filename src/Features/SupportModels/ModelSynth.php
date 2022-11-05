@@ -117,8 +117,8 @@ class ModelSynth extends Synth {
         return $target->$key;
     }
 
-    function set(&$target, $key, $value, $pathThusFar, $fullPath) {
-        $component = app('livewire')->current();
+    function set(&$target, $key, $value, $pathThusFar, $fullPath, $root) {
+        $component = $root;
 
         // make sure "path" is the right path here.
         throw_if(

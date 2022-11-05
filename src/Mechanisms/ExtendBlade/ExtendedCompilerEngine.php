@@ -1,13 +1,13 @@
 <?php
 
-namespace Livewire\Mechanisms\HijackBlade;
+namespace Livewire\Mechanisms\ExtendBlade;
 
-class HijackedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
+class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
     public function get($path, array $data = [])
     {
-        if (! HijackBlade::isRenderingLivewireComponent()) return parent::get($path, $data);
+        if (! ExtendBlade::isRenderingLivewireComponent()) return parent::get($path, $data);
 
-        $currentComponent = HijackBlade::currentRendering();
+        $currentComponent = ExtendBlade::currentRendering();
 
         app('synthetic')->trigger('view:compile', $currentComponent, $path);
 
@@ -16,7 +16,7 @@ class HijackedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
 
     protected function evaluatePath($path, $data)
     {
-        if (! HijackBlade::isRenderingLivewireComponent()) {
+        if (! ExtendBlade::isRenderingLivewireComponent()) {
             return parent::evaluatePath($path, $data);
         }
 
@@ -28,7 +28,7 @@ class HijackedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
         // flush out any stray output that might get out before an error occurs or
         // an exception is thrown. This prevents any partial views from leaking.
         try {
-            $component = HijackBlade::currentRendering();
+            $component = ExtendBlade::currentRendering();
 
             \Closure::bind(function () use ($path, $data) {
                 extract($data, EXTR_SKIP);

@@ -46,7 +46,7 @@ class SupportLifecycleHooks
     function handleBootHooks()
     {
         // Cover the initial request, mounting, scenario...
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'boot')) wrap($target)->boot();
 
@@ -87,7 +87,7 @@ class SupportLifecycleHooks
     function handleMountHooks()
     {
         // Note: "mount" is the only one of these events fired by Livewire...
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'mount')) {
                     wrap($target)->__call('mount', $params);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms\HijackBlade;
+namespace Livewire\Mechanisms\ExtendBlade;
 
 use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
@@ -18,7 +18,7 @@ class Test extends \Tests\TestCase
         $output = Blade::render('
             <div>@foo</div>
 
-            @livewire(\Livewire\Mechanisms\HijackBlade\HijackBladeTestComponent::class)
+            @livewire(\Livewire\Mechanisms\ExtendBlade\ExtendBladeTestComponent::class)
 
             <div>@foo</div>
         ');
@@ -36,7 +36,7 @@ class Test extends \Tests\TestCase
         $output = Blade::render('
             <div>@foo</div>
 
-            @livewire(\Livewire\Mechanisms\HijackBlade\HijackBladeTestComponent::class)
+            @livewire(\Livewire\Mechanisms\ExtendBlade\ExtendBladeTestComponent::class)
 
             <div>@foo</div>
         ');
@@ -45,7 +45,7 @@ class Test extends \Tests\TestCase
     }
 }
 
-class HijackBladeTestComponent extends Component
+class ExtendBladeTestComponent extends Component
 {
     public function render()
     {

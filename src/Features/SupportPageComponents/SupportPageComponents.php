@@ -13,18 +13,11 @@ use Livewire\Drawer\IsSingleton;
 
 class SupportPageComponents
 {
-    use IsSingleton;
-
-    public static $isPageComponentRequest = false;
-
-    public function boot()
+    function boot()
     {
+        app()->singleton($this::class);
+
         $this->registerLayoutViewMacros();
-    }
-
-    public static function isRenderingPageComponent()
-    {
-        return static::$isPageComponentRequest;
     }
 
     public function registerLayoutViewMacros()

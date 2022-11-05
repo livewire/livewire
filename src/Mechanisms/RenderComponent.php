@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Blade;
 
 class RenderComponent
 {
-    use IsSingleton;
-
     public static $renderStack = [];
 
     function boot()
     {
+        app()->singleton($this::class);
+
         Blade::directive('livewire', [static::class, 'livewire']);
     }
 
@@ -61,7 +61,7 @@ if (isset(\$__slots)) unset(\$__slots);
 EOT;
     }
 
-    static function mount($name, $params = [], $key = null, $slots = [])
+    static function mount($name, $params = [], $key = null)
     {
         // This is if a user doesn't pass params, BUT passes key() as the second argument...
         if (is_string($params)) $params = [];
@@ -76,7 +76,7 @@ EOT;
             unset($params['apply']);
         }
 
-        [$receiveInstance, $finishMount] = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $slots, $hijack);
+        [$receiveInstance, $finishMount] = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $hijack);
 
         // Allow a "mount" event listener to short-circuit the mount...
         if ($hijackedHtml !== null) return [$hijackedHtml];

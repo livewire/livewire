@@ -1,13 +1,15 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Mechanisms;
 
-use Livewire\Drawer\IsSingleton;
 use WeakMap;
 
 class DataStore
 {
-    use IsSingleton;
+    function boot()
+    {
+        app()->singleton($this::class);
+    }
 
     protected $lookup;
 

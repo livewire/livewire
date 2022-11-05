@@ -253,7 +253,7 @@ class SyntheticManager
         $pathThusFar = collect($segments)->slice(0, $index + 1)->join('.');
         $fullPath = collect($segments)->join('.');
 
-        $synth->$method($target, $property, $toSet, $pathThusFar, $fullPath);
+        $synth->$method($target, $property, $toSet, $pathThusFar, $fullPath, $root);
 
         return $target;
     }

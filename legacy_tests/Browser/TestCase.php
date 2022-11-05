@@ -37,6 +37,13 @@ class TestCase extends BaseTestCase
     public static $useSafari = false;
     public static $useAlpineV3 = false;
 
+    function livewireVisit($browser, $class, $queryString = '')
+    {
+        $url = '/livewire-dusk/'.urlencode($class).$queryString;
+
+        return $browser->visit($url)->waitForLivewireToLoad();
+    }
+
     public function setUp(): void
     {
         if (isset($_SERVER['CI'])) {

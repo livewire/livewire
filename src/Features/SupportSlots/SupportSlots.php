@@ -118,7 +118,7 @@ class SupportSlots
                 HTML;
         });
 
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
             if (! $slots) return;
 
             return function ($target) use ($slots) {

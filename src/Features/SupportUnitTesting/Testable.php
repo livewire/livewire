@@ -15,6 +15,7 @@ use Illuminate\Support\Arr;
 use Livewire\Features\SupportRedirects\TestsRedirects;
 
 use function Livewire\store;
+use function Synthetic\on;
 
 class Testable extends BaseTestable
 {
@@ -24,6 +25,61 @@ class Testable extends BaseTestable
         TestsRedirects,
         TestsValidation,
         TestsFileDownloads;
+
+    static function create($name, $params = [], $queryParams = [])
+    {
+        $uri = 'livewire-test';
+
+        $symfonyRequest = \Symfony\Component\HttpFoundation\Request::create(
+            $uri, 'GET', $parameters = $queryParams,
+            $cookies = [], $files = [], $server = [], $content = null
+        );
+
+        $request = \Illuminate\Http\Request::createFromBase($symfonyRequest);
+
+        app()->instance('request', $request);
+
+        app('request')->headers->set('X-Livewire', true);
+
+        // \Illuminate\Support\Facades\Facade::clearResolvedInstance('request');
+
+        // This allows the user to test a component by it's class name,
+        // and not have to register an alias.
+        if (class_exists($name)) {
+            if (! is_subclass_of($name, Component::class)) {
+                throw new \Exception('Class ['.$name.'] is not a subclass of Livewire\Component.');
+            }
+
+            $componentClass = $name;
+
+            app('livewire')->component($name = str()->random(20), $componentClass);
+        }
+
+        $component = null;
+
+        $forget = on('mount', function () use (&$component, &$forget) {
+            $forget();
+
+            return function ($instance) use (&$component) {
+                $component = $instance;
+            };
+        });
+
+        [$html, $dehydrated] = app('livewire')->mount($name, $params);
+
+        return new static($dehydrated, $component);
+    }
+
+    static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
+    {
+        if (isset($user->wasRecentlyCreated) && $user->wasRecentlyCreated) {
+            $user->wasRecentlyCreated = false;
+        }
+
+        auth()->guard($driver)->setUser($user);
+
+        auth()->shouldUse($driver);
+    }
 
     function html($stripInitialData = false)
     {

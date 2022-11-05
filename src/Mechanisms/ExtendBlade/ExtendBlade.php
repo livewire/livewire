@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\Mechanisms\HijackBlade;
+namespace Livewire\Mechanisms\ExtendBlade;
 
 use function Livewire\invade;
 use Livewire\Drawer\IsSingleton;
 
-class HijackBlade
+class ExtendBlade
 {
     use IsSingleton;
 
@@ -102,7 +102,7 @@ class HijackBlade
         // Livewire views. Things like letting certain exceptions bubble
         // to the handler, and registering custom directives like: "@this".
         app()->make('view.engine.resolver')->register('blade', function () {
-            return new HijackedCompilerEngine(app('blade.compiler'));
+            return new ExtendedCompilerEngine(app('blade.compiler'));
         });
     }
 

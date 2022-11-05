@@ -31,7 +31,7 @@ class SupportNestingComponents
             };
         });
 
-        on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+        on('mount', function ($name, $params, $parent, $key, $hijack) {
             // If this has already been rendered spoof it...
             if ($parent && $parent->hasPreviouslyRenderedChild($key)) {
                 [$tag, $childId] = $parent->getPreviouslyRenderedChild($key);

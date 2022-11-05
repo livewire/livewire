@@ -16,7 +16,7 @@ class SupportReactiveProps
     {
         app('synthetic')->on('flush-state', fn() => static::$pendingChildParams = []);
 
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($target) use ($params) {
                 $props = [];
 

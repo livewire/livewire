@@ -18,7 +18,7 @@ class SupportWireModelingNestedComponents
         app('synthetic')->on('flush-state', fn() => static::$outersByComponentId = []);
 
         // When a Livewire component is rendered, we'll check to see if "wire:model" is set.
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($target) use ($parent, $params) {
                 if ($parent && isset($params['wire:model'])) {
                     $outer = $params['wire:model'];

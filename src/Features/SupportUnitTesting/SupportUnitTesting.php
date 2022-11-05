@@ -42,7 +42,7 @@ class SupportUnitTesting
             };
         });
 
-        on('mount', function ($name, $params, $parent, $key, $slots, $hijack) {
+        on('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($target) {
                 return function ($html) use ($target) {
                     store($target)->set('testing.html', $html);
