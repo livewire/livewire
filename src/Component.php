@@ -65,7 +65,7 @@ abstract class Component extends \Synthetic\Component
 
     static function generateName()
     {
-        $alias = \Livewire\Mechanisms\ComponentRegistry::getInstance()->getAlias(static::class);
+        $alias = app(\Livewire\Mechanisms\ComponentRegistry::class)->getAlias(static::class);
 
         if ($alias) return $alias;
 

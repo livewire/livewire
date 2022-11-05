@@ -76,32 +76,32 @@ function revert(&$variable)
 
 function store($instance = null)
 {
-    if (! $instance) $instance = \Livewire\DataStore::getInstance();
+    if (! $instance) $instance = app(\Livewire\Mechanisms\DataStore::class);
 
     return new class ($instance) {
         function __construct(protected $instance) {}
 
         function get($key, $default = null) {
-            return \Livewire\DataStore::getInstance()->get($this->instance, $key, $default);
+            return app(\Livewire\Mechanisms\DataStore::class)->get($this->instance, $key, $default);
         }
 
         function set($key, $value) {
-            return \Livewire\DataStore::getInstance()->set($this->instance, $key, $value);
+            return app(\Livewire\Mechanisms\DataStore::class)->set($this->instance, $key, $value);
         }
 
         function push($key, $value, $iKey = null)
         {
-            return \Livewire\DataStore::getInstance()->push($this->instance, $key, $value, $iKey);
+            return app(\Livewire\Mechanisms\DataStore::class)->push($this->instance, $key, $value, $iKey);
         }
 
         function find($key, $iKey = null, $default = null)
         {
-            return \Livewire\DataStore::getInstance()->find($this->instance, $key, $iKey, $default);
+            return app(\Livewire\Mechanisms\DataStore::class)->find($this->instance, $key, $iKey, $default);
         }
 
         function has($key, $iKey = null)
         {
-            return \Livewire\DataStore::getInstance()->has($this->instance, $key, $iKey);
+            return app(\Livewire\Mechanisms\DataStore::class)->has($this->instance, $key, $iKey);
         }
     };
 }

@@ -9,7 +9,6 @@ use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\Mechanisms\DataStore;
 use Illuminate\Support\Facades\View as ViewFacade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Livewire\Drawer\IsSingleton;
 
 class SupportPageComponents
 {

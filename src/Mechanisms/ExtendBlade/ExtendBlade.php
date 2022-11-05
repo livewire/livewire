@@ -3,12 +3,9 @@
 namespace Livewire\Mechanisms\ExtendBlade;
 
 use function Livewire\invade;
-use Livewire\Drawer\IsSingleton;
 
 class ExtendBlade
 {
-    use IsSingleton;
-
     protected $directives = [];
     protected $precompilers = [];
     protected $renderCounter = 0;
@@ -37,6 +34,8 @@ class ExtendBlade
 
     function boot()
     {
+        app()->singleton($this::class);
+
         app('synthetic')->on('render', function ($target, $view) {
             $this->startLivewireRendering($target);
 

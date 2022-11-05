@@ -66,8 +66,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         foreach ([
             \Livewire\Mechanisms\ExtendBlade\ExtendBlade::class,
             \Livewire\Mechanisms\CompileLivewireTags::class,
+            \Livewire\Mechanisms\ComponentRegistry::class,
             \Livewire\Mechanisms\RenderComponent::class,
             \Livewire\Mechanisms\FrontendAssets::class,
+            \Livewire\Mechanisms\DataStore::class,
         ] as $mechanism) {
             (new $mechanism)->boot();
         }
@@ -106,11 +108,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportTraits\SupportTraits::class,
             \Livewire\Features\SupportEvents\SupportEvents::class,
         ] as $feature) {
-            if (in_array(\Livewire\Drawer\IsSingleton::class, class_uses($feature))) {
-                $feature::getInstance()->boot();
-            } else {
-                (new $feature)->boot();
-            }
+            (new $feature)->boot();
         }
     }
 }

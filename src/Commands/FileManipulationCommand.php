@@ -21,7 +21,7 @@ class FileManipulationCommand extends Command
 
     public function refreshComponentAutodiscovery()
     {
-        ComponentRegistry::getInstance()->buildManifest();
+        app(ComponentRegistry::class)->buildManifest();
     }
 
     public function isFirstTimeMakingAComponent()

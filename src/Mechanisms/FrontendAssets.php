@@ -3,7 +3,6 @@
 namespace Livewire\Mechanisms;
 
 use Livewire\Drawer\Utils;
-use Livewire\Drawer\IsSingleton;
 use Illuminate\Support\Js;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;

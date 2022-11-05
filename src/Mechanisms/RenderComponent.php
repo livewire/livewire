@@ -4,7 +4,6 @@ namespace Livewire\Mechanisms;
 
 use Livewire\Manager;
 use Livewire\Drawer\Utils;
-use Livewire\Drawer\IsSingleton;
 use Livewire\Drawer\ImplicitlyBoundMethod;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Blade;
@@ -27,13 +26,13 @@ class RenderComponent
         // If we are inside a Livewire component, we know we're rendering a child.
         // Therefore, we must create a more deterministic view cache key so that
         // Livewire children are properly tracked across load balancers.
-        if (Manager::$currentCompilingViewPath !== null) {
-            // $key = '[hash of Blade view path]-[current @livewire directive count]'
-            $key = "'l" . crc32(Manager::$currentCompilingViewPath) . "-" . Manager::$currentCompilingChildCounter . "'";
+        // if (Manager::$currentCompilingViewPath !== null) {
+        //     // $key = '[hash of Blade view path]-[current @livewire directive count]'
+        //     $key = "'l" . crc32(Manager::$currentCompilingViewPath) . "-" . Manager::$currentCompilingChildCounter . "'";
 
-            // We'll increment count, so each cache key inside a compiled view is unique.
-            Manager::$currentCompilingChildCounter++;
-        }
+        //     // We'll increment count, so each cache key inside a compiled view is unique.
+        //     Manager::$currentCompilingChildCounter++;
+        // }
 
         $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
         $expression = preg_replace_callback($pattern, function ($match) use (&$key) {
@@ -81,8 +80,7 @@ EOT;
         // Allow a "mount" event listener to short-circuit the mount...
         if ($hijackedHtml !== null) return [$hijackedHtml];
 
-
-        $component = app('livewire')->new($name);
+        $component = app(ComponentRegistry::class)->new($name);
 
         foreach ($params as $name => $value) {
             if (property_exists($component, $name)) {

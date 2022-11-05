@@ -46,7 +46,7 @@ class Testable extends BaseTestable
         // This allows the user to test a component by it's class name,
         // and not have to register an alias.
         if (class_exists($name)) {
-            if (! is_subclass_of($name, Component::class)) {
+            if (! is_subclass_of($name, \Livewire\Component::class)) {
                 throw new \Exception('Class ['.$name.'] is not a subclass of Livewire\Component.');
             }
 

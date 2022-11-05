@@ -4,7 +4,6 @@ namespace Livewire\Mechanisms;
 
 use Livewire\Exceptions\ComponentAttributeMissingOnDynamicComponentException;
 use Illuminate\View\Compilers\ComponentTagCompiler;
-use Livewire\Drawer\IsSingleton;
 use Livewire\Drawer\Regexes;
 
 class CompileLivewireTags extends ComponentTagCompiler

@@ -3,6 +3,8 @@
 namespace Livewire;
 
 use function Synthetic\wrap;
+
+use Livewire\Mechanisms\ComponentRegistry;
 use Synthetic\Utils;
 use Synthetic\Synthesizers\ObjectSynth;
 
@@ -46,7 +48,7 @@ class LivewireSynth extends ObjectSynth
             'id' => $id,
         ] = $meta;
 
-        $target = app('livewire')->new($name);
+        $target = app(ComponentRegistry::class)->new($name);
         $target->setId($id);
 
         $properties = $value;

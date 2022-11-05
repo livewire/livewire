@@ -42,7 +42,7 @@ class ComponentRegistry
 
     function new($name)
     {
-        if (is_object($name) && $name instanceof Component) return $name;
+        if (is_object($name) && $name instanceof \Livewire\Component) return $name;
 
         $component = $this->get($name);
 
@@ -68,8 +68,7 @@ class ComponentRegistry
         return array_search($class, array_reverse($this->aliases)) ?? $default;
     }
 
-
-    public function get($name)
+    function get($name)
     {
         $subject = $name;
 

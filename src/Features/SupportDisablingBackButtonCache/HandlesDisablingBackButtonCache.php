@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportDisablingBackButtonCache;
 
-use Livewire\Mechanisms\DataStore;
-
 trait HandlesDisablingBackButtonCache
 {
     function disableBackButtonCache()
