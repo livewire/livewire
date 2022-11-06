@@ -19,11 +19,6 @@ class FileManipulationCommand extends Command
         }
     }
 
-    public function refreshComponentAutodiscovery()
-    {
-        app(ComponentRegistry::class)->buildManifest();
-    }
-
     public function isFirstTimeMakingAComponent()
     {
         $namespace = str(config('livewire.class_namespace'))->replaceFirst(app()->getNamespace(), '');

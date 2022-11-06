@@ -48,7 +48,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Commands\MoveCommand::class,         // livewire:move
             \Livewire\Commands\MvCommand::class,           // livewire:mv
             \Livewire\Commands\StubsCommand::class,        // livewire:stubs
-            \Livewire\Commands\DiscoverCommand::class,     // livewire:discover
             \Livewire\Commands\S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
             \Livewire\Commands\PublishCommand::class,      // livewire:publish
         ]);

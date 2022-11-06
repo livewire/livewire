@@ -58,30 +58,7 @@ abstract class Component extends \Synthetic\Component
 
     function getName()
     {
-        if ($this->__name) return $this->__name;
-
-        return static::generateName();
-    }
-
-    static function generateName()
-    {
-        $alias = app(\Livewire\Mechanisms\ComponentRegistry::class)->getAlias(static::class);
-
-        if ($alias) return $alias;
-
-        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace'))))
-            ->map(fn ($i) => Str::kebab($i))
-            ->implode('.');
-
-        $fullName = collect(explode('.', str_replace(['/', '\\'], '.', static::class)))
-            ->map(fn ($i) => Str::kebab($i))
-            ->implode('.');
-
-        if (str($fullName)->startsWith($namespace)) {
-            return (string) str($fullName)->substr(strlen($namespace) + 1);
-        }
-
-        return $fullName;
+        return $this->__name;
     }
 
     function skipRender()

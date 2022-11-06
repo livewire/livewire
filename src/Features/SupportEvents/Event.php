@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportEvents;
 
 use Livewire\Component;
+use Livewire\Mechanisms\ComponentRegistry;
 
 class Event
 {
@@ -53,9 +54,7 @@ class Event
 
         if ($this->up) $output['ancestorsOnly'] = true;
         if ($this->self) $output['selfOnly'] = true;
-        if ($this->component) $output['to'] = is_subclass_of($this->component, Component::class)
-            ? $this->component::generateName()
-            : $this->component;
+        if ($this->component) $output['to'] = app(ComponentRegistry::class)->getName($this->component);
 
         return $output;
     }

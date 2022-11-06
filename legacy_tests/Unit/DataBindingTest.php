@@ -2,6 +2,7 @@
 
 namespace LegacyTests\Unit;
 
+use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\Livewire;
 

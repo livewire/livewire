@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportEvents;
 
 use PHPUnit\Framework\Assert as PHPUnit;
 use Livewire\Component;
+use Livewire\Mechanisms\ComponentRegistry;
 
 trait TestsEvents
 {
@@ -85,13 +86,11 @@ trait TestsEvents
 
     protected function testEmittedTo($target, $value)
     {
-        $target = is_subclass_of($target, Component::class)
-            ? $target::generateName()
-            : $target;
+        $name = app(ComponentRegistry::class)->getName($target);
 
-        return (bool) collect(data_get($this->effects, 'emits'))->first(function ($item) use ($target, $value) {
+        return (bool) collect(data_get($this->effects, 'emits'))->first(function ($item) use ($name, $value) {
             return $item['event'] === $value
-                && $item['to'] === $target;
+                && $item['to'] === $name;
         });
 
     }

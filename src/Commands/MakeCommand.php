@@ -46,8 +46,6 @@ class MakeCommand extends FileManipulationCommand
             $test = $this->createTest($force);
         }
 
-        $this->refreshComponentAutodiscovery();
-
         if($class || $view) {
             $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
             $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");

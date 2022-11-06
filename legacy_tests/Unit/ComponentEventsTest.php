@@ -79,6 +79,8 @@ class ComponentEventsTest extends TestCase
     /** @test */
     public function server_emitted_to_events_are_provided_to_frontend()
     {
+        Livewire::component('goo', DispatchesBrowserEvents::class);
+
         $component = Livewire::test(ReceivesEvents::class);
 
         $component->call('emitToGooGone');

@@ -4,210 +4,203 @@ namespace Livewire\Mechanisms;
 
 use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Component;
-use Livewire\Commands\ComponentParser;
-use Illuminate\Filesystem\Filesystem;
 
 class ComponentRegistry
 {
+    protected $nonAliasedClasses = [];
+    protected $aliases = [];
+
     function boot()
     {
         app()->singleton($this::class);
     }
 
-    protected $aliases = [];
-    protected $path;
-    protected $files;
-    protected $manifest;
-    protected $manifestPath;
-
-    function __construct()
+    function register($name, $class = null)
     {
-        $this->files = new Filesystem;
-
-        // Rather than forcing users to register each individual component,
-        // we will auto-detect the component's class based on its kebab-cased
-        // alias. For instance: 'examples.foo' => App\Http\Livewire\Examples\Foo
-
-        // We will generate a manifest file so we don't have to do the lookup every time.
-        $defaultManifestPath = app('livewire')->isRunningServerless()
-            ? '/tmp/storage/bootstrap/cache/livewire-components.php'
-            : app()->bootstrapPath('cache/livewire-components.php');
-
-        $this->manifestPath = config('livewire.manifest_path') ?: $defaultManifestPath;
-
-        $this->path = ComponentParser::generatePathFromNamespace(
-            config('livewire.class_namespace')
-        );
+        if (is_null($class)) {
+            $this->nonAliasedClasses[] = $name;
+        } else {
+            $this->aliases[$name] = $class;
+        }
     }
 
-    function new($name)
+    function new($nameOrClass, $id = null)
     {
-        if (is_object($name) && $name instanceof \Livewire\Component) return $name;
+        [$class, $name] = $this->getNameAndClass($nameOrClass);
 
-        $component = $this->get($name);
+        $component = new $class;
 
-        $name = $component::generateName();
+        $component->setId($id ?: str()->random(20));
 
-        $component->setId(str()->random(20));
         $component->setName($name);
 
         return $component;
     }
 
-    function register($name, $class = null)
+    function getName($nameOrClassOrComponent)
     {
-        if (is_null($class)) {
-            [$class, $name] = [$name, $name::generateName()];
-        }
+        [$class, $name] = $this->getNameAndClass($nameOrClassOrComponent);
 
-        $this->aliases[$name] = $class;
+        return $name;
     }
 
-    function getAlias($class, $default = null)
+    protected function getNameAndClass($nameComponentOrClass)
     {
-        return array_search($class, array_reverse($this->aliases)) ?? $default;
+        // If a component itself was passed in, just take the class name...
+        $nameOrClass = is_object($nameComponentOrClass) ? $nameComponentOrClass::class : $nameComponentOrClass;
+
+        // If a component class was passed in, use that...
+        if (class_exists($nameOrClass)) {
+            $class = $nameOrClass;
+        // Otherwise, assume it was a simple name...
+        } else {
+            $class = $this->nameToClass($nameOrClass);
+        }
+
+        // Now that we have a class, we can check that it's actually a Livewire component...
+        if (! is_subclass_of($class, Component::class)) {
+            throw new ComponentNotFoundException(
+                "Unable to find component: [{$nameOrClass}]"
+            );
+        }
+
+        // Convert it to a name even if a name was passed in to make sure we're using deterministic names...
+        $name = $this->classToName($class);
+
+        return [$class, $name];
     }
 
-    function get($name)
+    protected function nameToClass($name)
     {
-        $subject = $name;
+        // Check the aliases...
+        if (isset($this->aliases[$name])) return $this->aliases[$name];
 
-        if (isset($this->aliases[$name])) {
-            $subject = $this->aliases[$name];
+        // Hash check the non-aliased classes...
+        foreach ($this->nonAliasedClasses as $class) {
+            if (md5($class) === $name) {
+                return $class;
+            }
         }
 
-        // If an anonymous object was stored in the registry,
-        // clone its instance and return that...
-        if (is_object($subject)) return tap(clone $subject)->setName($name);
-
-        // If the name or its alias are a class,
-        // then new it up and return it...
-        if (class_exists((string) str($subject)->studly())) {
-            return tap(
-                new (str($subject)->studly()->toString())
-            )->setName($name);
-        }
-
-        // Otherwise, we'll look in the "autodiscovery" manifest
-        // for the component...
-
-        $getFromManifest = function ($name) {
-            $manifest = $this->getManifest();
-
-            return $manifest[$name] ?? $manifest["{$name}.index"] ?? null;
-        };
-
-        $fromManifest = $getFromManifest($subject);
-
-        if ($fromManifest) return new $fromManifest;
-
-        // If we couldn't find it, we'll re-generate the manifest and look again...
-        $this->buildManifest();
-
-        $fromManifest = $getFromManifest($subject);
-
-        if ($fromManifest) return new $fromManifest;
-
-        // By now, we give up and throw an error...
-        throw_unless($fromManifest, new ComponentNotFoundException(
-            "Unable to find component: [{$subject}]"
-        ));
+        // Reverse generate a class from a name...
+        return $this->generateClassFromName($name);
     }
 
-    public function getClass($name)
+    protected function classToName($class)
     {
-        $subject = $name;
+        // Check the aliases...
+        if ($name = array_search($class, $this->aliases)) return $name;
 
-        if (isset($this->aliases[$name])) {
-            $subject = $this->aliases[$name];
+        // Check existance in non-aliased classes and hash...
+        foreach ($this->nonAliasedClasses as $oneOff) {
+            if (md5($oneOff) === $hash = md5($class)) {
+                return $hash;
+            }
         }
 
-        // If an anonymous object was stored in the registry,
-        // clone its instance and return that...
-        if (is_object($subject)) return clone $subject;
-
-        // If the name or its alias are a class,
-        // then new it up and return it...
-        if (class_exists((string) str($subject)->studly())) {
-            return new (str($subject)->studly()->toString());
-        }
-
-        // Otherwise, we'll look in the "autodiscovery" manifest
-        // for the component...
-
-        $getFromManifest = function ($name) {
-            $manifest = $this->getManifest();
-
-            return $manifest[$name] ?? $manifest["{$name}.index"] ?? null;
-        };
-
-        $fromManifest = $getFromManifest($subject);
-
-        if ($fromManifest) return new $fromManifest;
-
-        // If we couldn't find it, we'll re-generate the manifest and look again...
-        $this->buildManifest();
-
-        $fromManifest = $getFromManifest($subject);
-
-        if ($fromManifest) return new $fromManifest;
-
-        // By now, we give up and throw an error...
-        throw_unless($fromManifest, new ComponentNotFoundException(
-            "Unable to find component: [{$subject}]"
-        ));
+        // Generate name from class...
+        return $this->generateNameFromClass($class);
     }
 
-    public function getManifest()
+    protected function generateClassFromName($name)
     {
-        if (! is_null($this->manifest)) {
-            return $this->manifest;
-        }
+        $rootNamespace = config('livewire.class_namespace');
 
-        if (! file_exists($this->manifestPath)) {
-            $this->buildManifest();
-        }
+        $class = collect(str($name)->explode('.'))
+            ->map(fn ($segment) => (string) str($segment)->studly())
+            ->join('\\');
 
-        return $this->manifest = $this->files->getRequire($this->manifestPath);
+        return '\\' . $rootNamespace . '\\' . $class;
     }
 
-    public function buildManifest()
+    protected function generateNameFromClass($class)
     {
-        $this->manifest = $this->getClassNames()
-            ->mapWithKeys(function ($class) {
-                return [$class::generateName() => $class];
-            })->toArray();
+        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace'))))
+            ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
+            ->implode('.');
 
-        $this->write($this->manifest);
+        $fullName = collect(explode('.', str_replace(['/', '\\'], '.', $class)))
+            ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
+            ->implode('.');
 
-        return $this;
-    }
-
-    protected function write(array $manifest)
-    {
-        if (! is_writable(dirname($this->manifestPath))) {
-            throw new \Exception('The '.dirname($this->manifestPath).' directory must be present and writable.');
+        if (str($fullName)->startsWith($namespace)) {
+            return (string) str($fullName)->substr(strlen($namespace) + 1);
         }
 
-        $this->files->put($this->manifestPath, '<?php return '.var_export($manifest, true).';', true);
+        return $fullName;
     }
 
-    public function getClassNames()
-    {
-        if (! $this->files->exists($this->path)) {
-            return collect();
-        }
 
-        return collect($this->files->allFiles($this->path))
-            ->map(function (\SplFileInfo $file) {
-                return app()->getNamespace().
-                    str($file->getPathname())
-                        ->after(app_path().'/')
-                        ->replace(['/', '.php'], ['\\', ''])->__toString();
-            })
-            ->filter(function (string $class) {
-                return is_subclass_of($class, Component::class) &&
-                    ! (new \ReflectionClass($class))->isAbstract();
-            });
-    }
+
+    // public function getClass($name)
+    // {
+    //     $subject = $name;
+
+    //     if (isset($this->aliases[$name])) {
+    //         $subject = $this->aliases[$name];
+    //     }
+
+    //     // If an anonymous object was stored in the registry,
+    //     // clone its instance and return that...
+    //     if (is_object($subject)) return clone $subject;
+
+    //     // If the name or its alias are a class,
+    //     // then new it up and return it...
+    //     if (class_exists((string) str($subject)->studly())) {
+    //         return new (str($subject)->studly()->toString());
+    //     }
+
+    //     // Otherwise, we'll look in the "autodiscovery" manifest
+    //     // for the component...
+
+    //     $getFromManifest = function ($name) {
+    //         $manifest = $this->getManifest();
+
+    //         return $manifest[$name] ?? $manifest["{$name}.index"] ?? null;
+    //     };
+
+    //     $fromManifest = $getFromManifest($subject);
+
+    //     if ($fromManifest) return new $fromManifest;
+
+    //     // If we couldn't find it, we'll re-generate the manifest and look again...
+    //     $this->buildManifest();
+
+    //     $fromManifest = $getFromManifest($subject);
+
+    //     if ($fromManifest) return new $fromManifest;
+
+    //     // By now, we give up and throw an error...
+    //     throw_unless($fromManifest, new ComponentNotFoundException(
+    //         "Unable to find component: [{$subject}]"
+    //     ));
+    // }
+
+    // protected function write(array $manifest)
+    // {
+    //     if (! is_writable(dirname($this->manifestPath))) {
+    //         throw new \Exception('The '.dirname($this->manifestPath).' directory must be present and writable.');
+    //     }
+
+    //     $this->files->put($this->manifestPath, '<?php return '.var_export($manifest, true).';', true);
+    // }
+
+    // public function getClassNames()
+    // {
+    //     if (! $this->files->exists($this->path)) {
+    //         return collect();
+    //     }
+
+    //     return collect($this->files->allFiles($this->path))
+    //         ->map(function (\SplFileInfo $file) {
+    //             return app()->getNamespace().
+    //                 str($file->getPathname())
+    //                     ->after(app_path().'/')
+    //                     ->replace(['/', '.php'], ['\\', ''])->__toString();
+    //         })
+    //         ->filter(function (string $class) {
+    //             return is_subclass_of($class, Component::class) &&
+    //                 ! (new \ReflectionClass($class))->isAbstract();
+    //         });
+    // }
 }

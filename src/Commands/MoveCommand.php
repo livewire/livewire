@@ -31,7 +31,6 @@ class MoveCommand extends FileManipulationCommand
         if (! $inline) $view = $this->renameView();
 
         $test = $this->renameTest();
-        $this->refreshComponentAutodiscovery();
 
         $this->line("<options=bold,reverse;fg=green> COMPONENT MOVED </> 🤙\n");
         $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()} <options=bold;fg=green>=></> {$this->newParser->relativeClassPath()}");
@@ -80,7 +79,7 @@ class MoveCommand extends FileManipulationCommand
         if (!File::exists($oldTestPath) || File::exists($newTestPath)) {
             return false;
         }
-        
+
         $this->ensureDirectoryExists($newTestPath);
         File::move($oldTestPath, $newTestPath);
         return $newTestPath;

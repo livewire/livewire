@@ -27,7 +27,7 @@ class LivewireSynth extends ObjectSynth
         if (! store($target)->get('skipRender', false)) {
             $rendered = method_exists($target, 'render')
                 ? wrap($target)->render()
-                : view("livewire.{$target::generateName()}");
+                : view("livewire.{$target->getName()}");
 
             $html = app(RenderComponent::class)->renderComponentBladeView($target, $rendered, $properties);
 
@@ -48,8 +48,7 @@ class LivewireSynth extends ObjectSynth
             'id' => $id,
         ] = $meta;
 
-        $target = app(ComponentRegistry::class)->new($name);
-        $target->setId($id);
+        $target = app(ComponentRegistry::class)->new($name, $id);
 
         $properties = $value;
 

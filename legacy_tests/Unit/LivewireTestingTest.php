@@ -189,6 +189,8 @@ class LivewireTestingTest extends TestCase
     /** @test */
     public function assert_emitted_to()
     {
+        Livewire::component('some-component', SomeComponentStub::class);
+
         Livewire::test(EmitsEventsComponentStub::class)
             ->call('emitFooToSomeComponent')
             ->assertEmittedTo('some-component', 'foo')
@@ -335,6 +337,14 @@ class HasHtml extends Component
     public function render()
     {
         return app('view')->make('show-html');
+    }
+}
+
+class SomeComponentStub extends Component
+{
+    public function render()
+    {
+        return app('view')->make('null-view');
     }
 }
 

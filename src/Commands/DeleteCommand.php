@@ -35,8 +35,6 @@ class DeleteCommand extends FileManipulationCommand
         if (! $inline) $view = $this->removeView($force);
         if ($test) $test = $this->removeTest($force);
 
-        $this->refreshComponentAutodiscovery();
-
         $this->line("<options=bold,reverse;fg=yellow> COMPONENT DESTROYED </> 🦖💫\n");
         $class && $this->line("<options=bold;fg=yellow>CLASS:</> {$this->parser->relativeClassPath()}");
         if (! $inline) $view && $this->line("<options=bold;fg=yellow>VIEW:</>  {$this->parser->relativeViewPath()}");

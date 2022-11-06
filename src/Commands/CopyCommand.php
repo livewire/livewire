@@ -34,8 +34,6 @@ class CopyCommand extends FileManipulationCommand
         if ($test){
             $test = $this->copyTest($force);
         }
-        $this->refreshComponentAutodiscovery();
-
         $this->line("<options=bold,reverse;fg=green> COMPONENT COPIED </> 🤙\n");
         $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()} <options=bold;fg=green>=></> {$this->newParser->relativeClassPath()}");
         if (! $inline) $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
