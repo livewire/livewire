@@ -2,11 +2,17 @@
 
 namespace Livewire\Mechanisms;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Livewire\Manager;
 use Livewire\Drawer\Utils;
 use Livewire\Drawer\ImplicitlyBoundMethod;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Blade;
+use Throwable;
+
+use function Livewire\store;
+use function Synthetic\trigger;
+use function Synthetic\wrap;
 
 class RenderComponent
 {
@@ -17,6 +23,22 @@ class RenderComponent
         app()->singleton($this::class);
 
         Blade::directive('livewire', [static::class, 'livewire']);
+
+        app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
+            if ($context->initial) return;
+            if (! $synth instanceof \Livewire\LivewireSynth) return;
+
+            if (! store($target)->get('skipRender', false)) {
+                $rendered = method_exists($target, 'render')
+                    ? wrap($target)->render()
+                    : view("livewire.{$target->getName()}");
+
+                $properties = Utils::getPublicPropertiesDefinedOnSubclass($target);
+                $html = static::renderComponentBladeView($target, $rendered, $properties);
+
+                $context->addEffect('html', $html);
+            }
+        });
     }
 
     public static function livewire($expression)
@@ -33,12 +55,6 @@ class RenderComponent
         //     // We'll increment count, so each cache key inside a compiled view is unique.
         //     Manager::$currentCompilingChildCounter++;
         // }
-
-        $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
-        $expression = preg_replace_callback($pattern, function ($match) use (&$key) {
-            $key = trim($match[1]) ?: $key;
-            return "";
-        }, $expression);
 
         return <<<EOT
 <?php
@@ -62,38 +78,43 @@ EOT;
 
     static function mount($name, $params = [], $key = null)
     {
-        // This is if a user doesn't pass params, BUT passes key() as the second argument...
-        if (is_string($params)) $params = [];
-
-        $parent = last(static::$renderStack);
-
-        $hijackedHtml = null;
-        $hijack = function ($html) use (&$hijackedHtml) { $hijackedHtml = $html; };
-
+        // Support for "spreading" or "applying" an array of parameters by a single "apply" key.
+        // Used so far exclusively for forwarding properties by the "SupportsLazy" feature...
         if (isset($params['apply'])) {
             $params = [...$params, ...$params['apply']];
+
             unset($params['apply']);
         }
 
+        // Grab the parent component that this component is mounted within (if one exists)...
+        $parent = last(static::$renderStack);
+
+        // Provide a way to interupt a mounting component and render entirely different html...
+        $hijackedHtml = null;
+        $hijack = function ($html) use (&$hijackedHtml) { $hijackedHtml = $html; };
+
         [$receiveInstance, $finishMount] = app('synthetic')->trigger('mount', $name, $params, $parent, $key, $hijack);
 
-        // Allow a "mount" event listener to short-circuit the mount...
         if ($hijackedHtml !== null) return [$hijackedHtml];
 
-        $component = app(ComponentRegistry::class)->new($name);
-
-        foreach ($params as $name => $value) {
-            if (property_exists($component, $name)) {
-                $component->$name = $value;
-            }
-        }
+        // Now we're ready to actually create a Livewire component instance...
+        $component = app(ComponentRegistry::class)->new($name, $params);
 
         $receiveInstance($component);
 
-        // Render it...
-        $payload = app('synthetic')->synthesize($component);
+        $html = '<div></div>';
 
-        $html = $payload['effects']['']['html'] ?? '<div></div>';
+        if (! store($component)->get('skipRender', false)) {
+            $rendered = method_exists($component, 'render')
+                ? wrap($component)->render()
+                : view("livewire.{$component->getName()}");
+
+            $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
+            $html = static::renderComponentBladeView($component, $rendered, $properties);
+        }
+
+        // Trigger the dehydrate...
+        $payload = app('synthetic')->synthesize($component);
 
         if ($parent) {
             preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);

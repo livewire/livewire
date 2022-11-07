@@ -24,7 +24,7 @@ class ComponentRegistry
         }
     }
 
-    function new($nameOrClass, $id = null)
+    function new($nameOrClass, $params = [], $id = null)
     {
         [$class, $name] = $this->getNameAndClass($nameOrClass);
 
@@ -33,6 +33,16 @@ class ComponentRegistry
         $component->setId($id ?: str()->random(20));
 
         $component->setName($name);
+
+        // Parameters passed in automatically set public properties by the same name...
+        foreach ($params as $key => $value) {
+            // Typed properties shouldn't be set back to "null". It will throw an error...
+            if (property_exists($component, $key) && (new \ReflectionProperty($component, $key))->getType()){
+                is_null($value) || $component->$key = $value;
+            } else {
+                $component->$key = $value;
+            }
+        }
 
         return $component;
     }
@@ -77,7 +87,7 @@ class ComponentRegistry
 
         // Hash check the non-aliased classes...
         foreach ($this->nonAliasedClasses as $class) {
-            if (md5($class) === $name) {
+            if (crc32($class) === $name) {
                 return $class;
             }
         }
@@ -93,7 +103,7 @@ class ComponentRegistry
 
         // Check existance in non-aliased classes and hash...
         foreach ($this->nonAliasedClasses as $oneOff) {
-            if (md5($oneOff) === $hash = md5($class)) {
+            if (crc32($oneOff) === $hash = crc32($class)) {
                 return $hash;
             }
         }
@@ -129,78 +139,4 @@ class ComponentRegistry
 
         return $fullName;
     }
-
-
-
-    // public function getClass($name)
-    // {
-    //     $subject = $name;
-
-    //     if (isset($this->aliases[$name])) {
-    //         $subject = $this->aliases[$name];
-    //     }
-
-    //     // If an anonymous object was stored in the registry,
-    //     // clone its instance and return that...
-    //     if (is_object($subject)) return clone $subject;
-
-    //     // If the name or its alias are a class,
-    //     // then new it up and return it...
-    //     if (class_exists((string) str($subject)->studly())) {
-    //         return new (str($subject)->studly()->toString());
-    //     }
-
-    //     // Otherwise, we'll look in the "autodiscovery" manifest
-    //     // for the component...
-
-    //     $getFromManifest = function ($name) {
-    //         $manifest = $this->getManifest();
-
-    //         return $manifest[$name] ?? $manifest["{$name}.index"] ?? null;
-    //     };
-
-    //     $fromManifest = $getFromManifest($subject);
-
-    //     if ($fromManifest) return new $fromManifest;
-
-    //     // If we couldn't find it, we'll re-generate the manifest and look again...
-    //     $this->buildManifest();
-
-    //     $fromManifest = $getFromManifest($subject);
-
-    //     if ($fromManifest) return new $fromManifest;
-
-    //     // By now, we give up and throw an error...
-    //     throw_unless($fromManifest, new ComponentNotFoundException(
-    //         "Unable to find component: [{$subject}]"
-    //     ));
-    // }
-
-    // protected function write(array $manifest)
-    // {
-    //     if (! is_writable(dirname($this->manifestPath))) {
-    //         throw new \Exception('The '.dirname($this->manifestPath).' directory must be present and writable.');
-    //     }
-
-    //     $this->files->put($this->manifestPath, '<?php return '.var_export($manifest, true).';', true);
-    // }
-
-    // public function getClassNames()
-    // {
-    //     if (! $this->files->exists($this->path)) {
-    //         return collect();
-    //     }
-
-    //     return collect($this->files->allFiles($this->path))
-    //         ->map(function (\SplFileInfo $file) {
-    //             return app()->getNamespace().
-    //                 str($file->getPathname())
-    //                     ->after(app_path().'/')
-    //                     ->replace(['/', '.php'], ['\\', ''])->__toString();
-    //         })
-    //         ->filter(function (string $class) {
-    //             return is_subclass_of($class, Component::class) &&
-    //                 ! (new \ReflectionClass($class))->isAbstract();
-    //         });
-    // }
 }

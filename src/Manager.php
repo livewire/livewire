@@ -26,6 +26,11 @@ class Manager
         app(ExtendBlade::class)->livewireOnlyPrecompiler($pattern, $callback);
     }
 
+    function new($name, $params = [], $id = null)
+    {
+        return app(ComponentRegistry::class)->new($name, $params, $id);
+    }
+
     function mount($name, $params = [], $key = null)
     {
         return app(RenderComponent::class)->mount($name, $params, $key);

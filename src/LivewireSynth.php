@@ -22,46 +22,16 @@ class LivewireSynth extends ObjectSynth
     }
 
     function dehydrate($target, $context) {
-        $properties = Utils::getPublicPropertiesDefinedOnSubclass($target);
-
-        if (! store($target)->get('skipRender', false)) {
-            $rendered = method_exists($target, 'render')
-                ? wrap($target)->render()
-                : view("livewire.{$target->getName()}");
-
-            $html = app(RenderComponent::class)->renderComponentBladeView($target, $rendered, $properties);
-
-            $context->addEffect('html', $html);
-        }
-
         $context->addMeta('id', $target->getId());
         $context->addMeta('name', $target->getName());
 
-        $properties = Utils::getPublicPropertiesDefinedOnSubclass($target);
-
-        return $properties;
+        return Utils::getPublicPropertiesDefinedOnSubclass($target);
     }
 
     function hydrate($value, $meta) {
-        [
-            'name' => $name,
-            'id' => $id,
-        ] = $meta;
+        ['name' => $name, 'id' => $id] = $meta;
 
-        $target = app(ComponentRegistry::class)->new($name, $id);
-
-        $properties = $value;
-
-        foreach ($properties as $key => $value) {
-            // Typed properties shouldn't be set back to "null". It will throw an error...
-            if (property_exists($target, $key) && (new \ReflectionProperty($target, $key))->getType()){
-                is_null($value) || $target->$key = $value;
-            } else {
-                $target->$key = $value;
-            }
-        }
-
-        return $target;
+        return app(ComponentRegistry::class)->new($name, $value, $id);
     }
 
     function set(&$target, $key, $value) {
