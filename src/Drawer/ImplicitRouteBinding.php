@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Routing\Route;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Contracts\Routing\UrlRoutable;
-use Synthetic\Utils;
+use Livewire\Drawer\Utils;
 
 /**
  * This class mirrors the functionality of Laravel's Illuminate\Routing\ImplicitRouteBinding class.

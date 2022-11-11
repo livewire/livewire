@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportReactiveProps;
 
-use Synthetic\Utils as SyntheticUtils;
+use Livewire\Drawer\Utils as SyntheticUtils;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 

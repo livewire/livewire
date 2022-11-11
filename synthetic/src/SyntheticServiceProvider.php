@@ -14,22 +14,10 @@ class SyntheticServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        $this->skipRequestPayloadTamperingMiddleware();
         $this->injectJavaScript();
         $this->directives();
         $this->features();
         $this->routes();
-    }
-
-    function skipRequestPayloadTamperingMiddleware()
-    {
-        ConvertEmptyStringsToNull::skipWhen(function () {
-            return request()->is('synthetic/update');
-        });
-
-        TrimStrings::skipWhen(function () {
-            return request()->is('synthetic/update');
-        });
     }
 
     function injectJavaScript()
@@ -78,10 +66,10 @@ class SyntheticServiceProvider extends ServiceProvider
         Route::get('/synthetic/synthetic.js', [JavaScriptAssets::class, 'source']);
         // Route::get('/synthetic/synthetic.js.map', [JavaScriptAssets::class, 'maps']);
 
-        Route::post('/synthetic/new', function () {
-            $name = request('name');
+        // Route::post('/synthetic/new', function () {
+        //     $name = request('name');
 
-            return app('livewire')->new($name);
-        });
+        //     return app('livewire')->new($name);
+        // });
     }
 }

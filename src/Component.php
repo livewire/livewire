@@ -2,7 +2,7 @@
 
 namespace Livewire;
 
-use Synthetic\Utils as SyntheticUtils;
+use Livewire\Drawer\Utils as SyntheticUtils;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportRedirects\HandlesRedirects;

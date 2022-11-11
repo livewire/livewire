@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportLockedProperties;
 
 use Livewire\Drawer\Utils;
-use Synthetic\Utils as SyntheticUtils;
+use Livewire\Drawer\Utils as SyntheticUtils;
 
 use function Livewire\on;
 

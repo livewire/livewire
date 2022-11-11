@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportUnitTesting;
 
-use Synthetic\Testing\Testable as BaseTestable;
 use Synthetic\TestableSynthetic;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Livewire\Mechanisms\DataStore;

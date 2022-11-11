@@ -1,8 +1,8 @@
 <?php
 
-namespace Synthetic;
+namespace Livewire\Drawer;
 
-class Utils
+class BaseUtils
 {
     static function isSyntheticTuple($payload) {
         return is_array($payload)

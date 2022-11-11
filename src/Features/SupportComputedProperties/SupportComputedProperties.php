@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportComputedProperties;
 
 use Livewire\Drawer\ImplicitlyBoundMethod;
 use Livewire\Mechanisms\DataStore;
-use Synthetic\Utils as SyntheticUtils;
+use Livewire\Drawer\Utils as SyntheticUtils;
 
 use function Livewire\on;
 use function Livewire\store;

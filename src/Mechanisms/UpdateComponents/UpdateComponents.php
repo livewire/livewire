@@ -9,6 +9,8 @@ use Livewire\Mechanisms\UpdateComponents\Checksum;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Exception;
 use Closure;
@@ -49,6 +51,19 @@ class UpdateComponents
 
             return $responses;
         })->middleware('web')->name('synthetic.update');
+
+        $this->skipRequestPayloadTamperingMiddleware();
+    }
+
+    function skipRequestPayloadTamperingMiddleware()
+    {
+        ConvertEmptyStringsToNull::skipWhen(function () {
+            return request()->is('synthetic/update');
+        });
+
+        TrimStrings::skipWhen(function () {
+            return request()->is('synthetic/update');
+        });
     }
 
     public function registerSynth($synthClass)

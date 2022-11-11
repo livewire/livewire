@@ -32,8 +32,7 @@
             "src/helpers.php"
         ],
         "psr-4": {
-            "Livewire\\": "src/",
-            "Synthetic\\": "synthetic/src"
+            "Livewire\\": "src/"
         }
     },
     "autoload-dev": {
@@ -46,8 +45,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Livewire\\ServiceProvider",
-                "Synthetic\\SyntheticServiceProvider"
+                "Livewire\\ServiceProvider"
             ],
             "aliases": {
                 "Livewire": "Livewire\\Livewire"

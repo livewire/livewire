@@ -3,11 +3,10 @@
 namespace Livewire\Drawer;
 
 use Livewire\Exceptions\RootTagMissingFromViewException;
-use Synthetic\Utils as SyntheticUtils;
 
 use function Livewire\invade;
 
-class Utils extends SyntheticUtils
+class Utils extends BaseUtils
 {
     static function insertAttributesIntoHtmlRoot($html, $attributes) {
         $attributesFormattedForHtmlElement = collect($attributes)

@@ -1,14 +1,14 @@
 <?php
 
-namespace Synthetic\Testing;
+namespace Livewire\Features\SupportUnitTesting;
 
-use Synthetic\Utils;
+use Livewire\Drawer\Utils;
 use Illuminate\Support\Traits\Macroable;
 use Livewire\Features\SupportFileUploads\FileUploadController;
 
 use function Livewire\trigger;
 
-class Testable
+class BaseTestable
 {
     public $target;
     public $methods;
@@ -16,7 +16,7 @@ class Testable
     public $snapshot;
     public $canonical;
 
-    use MakesAssertions;
+    use BaseMakesAssertions;
 
     use Macroable { __call as macroCall; }
 

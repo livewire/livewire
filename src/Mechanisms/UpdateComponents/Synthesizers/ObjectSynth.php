@@ -3,7 +3,7 @@
 namespace Livewire\Mechanisms\UpdateComponents\Synthesizers;
 
 use Synthetic\Component;
-use Synthetic\Utils;
+use Livewire\Drawer\Utils;
 
 class ObjectSynth extends Synth {
     public static $key = 'obj';

@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
-use Synthetic\Utils as SyntheticUtils;
+use Livewire\Drawer\Utils as SyntheticUtils;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Drawer\Utils;

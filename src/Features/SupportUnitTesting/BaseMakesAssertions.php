@@ -1,10 +1,10 @@
 <?php
 
-namespace Synthetic\Testing;
+namespace Livewire\Features\SupportUnitTesting;
 
 use PHPUnit\Framework\Assert as PHPUnit;
 
-trait MakesAssertions
+trait BaseMakesAssertions
 {
     public function assertSet($name, $value, $strict = false)
     {
