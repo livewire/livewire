@@ -1,12 +1,12 @@
 <?php
 
-namespace Livewire\Commands;
+namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\Command;
 
 class PublishCommand extends Command
 {
-    protected $signature = 'livewire:publish 
+    protected $signature = 'livewire:publish
         { --assets : Indicates if Livewire\'s front-end assets should be published }
         { --config : Indicates if Livewire\'s config file should be published }
         { --pagination : Indicates if Livewire\'s pagination views should be published }';

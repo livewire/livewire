@@ -2,7 +2,7 @@
 
 namespace LegacyTests\Unit;
 
-use Livewire\Commands\ComponentParser;
+use Livewire\Features\SupportConsoleCommands\Commands\ComponentParser;
 
 class FileManipulationCommandParserTest extends TestCase
 {

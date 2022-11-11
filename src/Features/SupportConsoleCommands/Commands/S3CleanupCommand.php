@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Commands;
+namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use function Livewire\invade;
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;

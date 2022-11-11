@@ -12,14 +12,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
     public function boot()
     {
-        $this->bootConsoleCommands();
         $this->bootEventBus();
         $this->bootMechanisms();
         $this->bootFeatures();
-
-        if (app()->environment('testing')) {
-            \Tests\TestCase::onApplicationBoot();
-        };
     }
 
     protected function registerLivewireSingleton()
@@ -31,26 +26,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function registerConfig()
     {
         $this->mergeConfigFrom(__DIR__.'/../config/livewire.php', 'livewire');
-    }
-
-    protected function bootConsoleCommands()
-    {
-        if (! $this->app->runningInConsole()) return;
-
-        $this->commands([
-            \Livewire\Commands\MakeLivewireCommand::class, // make:livewire
-            \Livewire\Commands\MakeCommand::class,         // livewire:make
-            \Livewire\Commands\TouchCommand::class,        // livewire:touch
-            \Livewire\Commands\CopyCommand::class,         // livewire:copy
-            \Livewire\Commands\CpCommand::class,           // livewire:cp
-            \Livewire\Commands\DeleteCommand::class,       // livewire:delete
-            \Livewire\Commands\RmCommand::class,           // livewire:rm
-            \Livewire\Commands\MoveCommand::class,         // livewire:move
-            \Livewire\Commands\MvCommand::class,           // livewire:mv
-            \Livewire\Commands\StubsCommand::class,        // livewire:stubs
-            \Livewire\Commands\S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
-            \Livewire\Commands\PublishCommand::class,      // livewire:publish
-        ]);
     }
 
     protected function bootEventBus()
@@ -87,6 +62,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
             \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
             \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class,
+            \Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
             \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
             \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,

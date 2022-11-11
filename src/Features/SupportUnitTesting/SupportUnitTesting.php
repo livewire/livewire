@@ -15,6 +15,8 @@ class SupportUnitTesting
     {
         if (! app()->environment('testing')) return;
 
+        \Tests\TestCase::onApplicationBoot();
+
         $this->registerTestingMacros();
 
         on('dehydrate', function ($synth, $target, $context) {

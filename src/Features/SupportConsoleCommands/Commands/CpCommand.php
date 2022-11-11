@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Commands;
+namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 class CpCommand extends CopyCommand
 {
