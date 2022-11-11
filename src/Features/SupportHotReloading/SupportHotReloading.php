@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportHotReloading;
 
-use Livewire\LivewireSynth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
 
@@ -16,7 +16,7 @@ class SupportHotReloading
 
         app('livewire')->enableJsFeature('hot-reloading');
 
-        app('synthetic')->on('view:compile', function ($component, $path) {
+        on('view:compile', function ($component, $path) {
             if (! isset($this->pathsByComponentId[$component->getId()])) {
                 $this->pathsByComponentId[$component->getId()] = [];
             }
@@ -26,7 +26,7 @@ class SupportHotReloading
             }
         });
 
-        app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
+        on('dehydrate', function ($synth, $target, $context) {
             if (! $context->initial) return;
             if (! $synth instanceof LivewireSynth) return;
 

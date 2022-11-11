@@ -1,6 +1,6 @@
 <?php
 
-namespace Synthetic\Synthesizers;
+namespace Livewire\Mechanisms\UpdateComponents\Synthesizers;
 
 use Synthetic\Component;
 use Synthetic\Utils;
@@ -41,36 +41,6 @@ class ObjectSynth extends Synth {
 
     function set(&$target, $key, $value) {
         $target->$key = $value;
-    }
-
-    function methods($target)
-    {
-        $methods = Utils::getPublicMethodsDefinedBySubClass($target);
-
-        // @todo: move this elsewhere...
-        // Remove JS methods from method list:
-        $jsMethods = $this->getJsMethods($target);
-
-        // Also remove "render" from the list...
-        return array_values(array_diff($methods, $jsMethods, ['render']));
-    }
-
-    function getJsMethods($target)
-    {
-        $methods = (new \ReflectionClass($target))->getMethods(\ReflectionMethod::IS_PUBLIC);
-
-        return collect($methods)
-            ->filter(function ($subject) {
-                return $subject->getDocComment() && str($subject->getDocComment())->contains('@js');
-            })
-            ->map(function ($subject) use ($target) {
-                return $subject->getName();
-            })
-            ->toArray();
-    }
-
-    function call($target, $method, $params, $addEffect) {
-        return $target->{$method}(...$params);
     }
 
     function ensureSynthetic($target) {

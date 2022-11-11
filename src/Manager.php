@@ -2,18 +2,25 @@
 
 namespace Livewire;
 
-use Livewire\Features\SupportUnitTesting\Testable;
-use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use Livewire\Mechanisms\ComponentRegistry;
+use function Livewire\trigger;
+use Orchestra\DuskUpdater\UpdateCommand;
+use Livewire\Mechanisms\UpdateComponents\UpdateComponents;
 use Livewire\Mechanisms\RenderComponent;
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 
-use function Synthetic\trigger;
+use Livewire\Mechanisms\ComponentRegistry;
+use Livewire\Features\SupportUnitTesting\Testable;
 
 class Manager
 {
     function component($name, $class = null)
     {
         app(ComponentRegistry::class)->register($name, $class);
+    }
+
+    function synth($synthClass)
+    {
+        app(UpdateComponents::class)->registerSynth($synthClass);
     }
 
     function directive($name, $callback)
@@ -34,6 +41,23 @@ class Manager
     function mount($name, $params = [], $key = null)
     {
         return app(RenderComponent::class)->mount($name, $params, $key);
+    }
+
+    function snapshot($component, $initial = false)
+    {
+        $effects = [];
+
+        return app(UpdateComponents::class)->toSnapshot($component, $effects, $initial);
+    }
+
+    function update($snapshot, $diff, $calls)
+    {
+        return app(UpdateComponents::class)->update($snapshot, $diff, $calls);
+    }
+
+    function updateProperty($component, $path, $value, $skipHydrate = false)
+    {
+        return app(UpdateComponents::class)->updateProperty($component, $path, $value, $skipHydrate);
     }
 
     protected $queryParamsForTesting = [];

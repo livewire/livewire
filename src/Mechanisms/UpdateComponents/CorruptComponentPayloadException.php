@@ -1,6 +1,8 @@
 <?php
 
-namespace Livewire\Exceptions;
+namespace Livewire\Mechanisms\UpdateComponents;
+
+use Livewire\Exceptions\BypassViewHandler;
 
 class CorruptComponentPayloadException extends \Exception
 {

@@ -3,9 +3,10 @@
 namespace Livewire\Features\SupportNestingComponents;
 
 use function Livewire\store;
-use function Synthetic\on;
-use Livewire\Mechanisms\DataStore;
-use Livewire\LivewireSynth;
+use function Livewire\on;
+use function Livewire\trigger;
+
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 
 class SupportNestingComponents
 {
@@ -36,7 +37,7 @@ class SupportNestingComponents
             if ($parent && $parent->hasPreviouslyRenderedChild($key)) {
                 [$tag, $childId] = $parent->getPreviouslyRenderedChild($key);
 
-                $finish = app('synthetic')->trigger('dummy-mount', $tag, $childId, $params, $parent, $key);
+                $finish = trigger('dummy-mount', $tag, $childId, $params, $parent, $key);
 
                 $html  = "<{$tag} wire:id=\"{$childId}\"></{$tag}>";
 
@@ -44,12 +45,22 @@ class SupportNestingComponents
 
                 return $hijack($html);
             }
+
+            return function ($component) use ($parent, $key) {
+                return function ($html) use ($component, $parent, $key) {
+                    if ($parent) {
+                        preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
+                        $tag = $matches[1][0];
+                        $parent->setChild($key, $tag, $component->getId());
+                    }
+                };
+            };
         });
     }
 
     function preserveChildTrackingWhenSkippingRenderOnParent()
     {
-        app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
+        on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
             $skipRender = store($target)->get('skipRender');

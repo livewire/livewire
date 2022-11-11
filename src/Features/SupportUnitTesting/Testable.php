@@ -15,7 +15,7 @@ use Illuminate\Support\Arr;
 use Livewire\Features\SupportRedirects\TestsRedirects;
 
 use function Livewire\store;
-use function Synthetic\on;
+use function Livewire\on;
 
 class Testable extends BaseTestable
 {

@@ -5,11 +5,13 @@ namespace Livewire\Features\SupportLockedProperties;
 use Livewire\Drawer\Utils;
 use Synthetic\Utils as SyntheticUtils;
 
+use function Livewire\on;
+
 class SupportLockedProperties
 {
     public function boot()
     {
-        app('synthetic')->on('diff', function ($root, $path, $value) {
+        on('diff', function ($root, $path, $value) {
             $prop = Utils::beforeFirstDot($path);
 
             if (SyntheticUtils::propertyHasAnnotation($root, $prop, 'locked')) {

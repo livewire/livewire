@@ -2,11 +2,11 @@
 
 namespace LegacyTests\Unit;
 
-use Livewire\Component;
-use Livewire\Exceptions\NonPublicComponentMethodCall;
-use Livewire\Exceptions\CorruptComponentPayloadException;
+use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
+use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Component;
 
 class ComponentsAreSecureTest extends TestCase
 {

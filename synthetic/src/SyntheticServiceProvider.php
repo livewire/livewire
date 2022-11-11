@@ -9,19 +9,9 @@ use Synthetic\Synthesizers\AnonymousSynth;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
-use Synthetic\SyntheticManager;
-use Synthetic\EventBus;
 
 class SyntheticServiceProvider extends ServiceProvider
 {
-    public function register()
-    {
-        $this->app->alias(SyntheticManager::class, 'synthetic');
-        $this->app->singleton(SyntheticManager::class);
-        $this->app->singleton(EventBus::class);
-        // AnonymousSynth::registerAnonymousCacheClassAutoloader();
-    }
-
     public function boot()
     {
         $this->skipRequestPayloadTamperingMiddleware();
@@ -67,7 +57,7 @@ class SyntheticServiceProvider extends ServiceProvider
     {
         Blade::directive('synthetic', function ($expression) {
             return sprintf(
-                "synthetic(<?php echo \%s::from(app('synthetic')->synthesize(%s))->toHtml() ?>)",
+                "synthetic(<?php echo \%s::from(app('livewire')->snapshot(%s))->toHtml() ?>)",
                 \Illuminate\Support\Js::class, $expression
             );
         });
@@ -77,7 +67,6 @@ class SyntheticServiceProvider extends ServiceProvider
     {
         foreach ([
             \Synthetic\Features\SupportComputedProperties::class,
-            \Synthetic\Features\SupportRedirects::class,
             \Synthetic\Features\SupportJsMethods::class,
         ] as $feature) {
             (new $feature)();
@@ -92,27 +81,7 @@ class SyntheticServiceProvider extends ServiceProvider
         Route::post('/synthetic/new', function () {
             $name = request('name');
 
-            return app('synthetic')->new($name);
+            return app('livewire')->new($name);
         });
-
-        Route::post('/synthetic/update', function () {
-            $targets = request('targets');
-
-            $responses = [];
-
-            foreach ($targets as $target) {
-                $snapshot = $target['snapshot'];
-                $diff = $target['diff'];
-                $calls = $target['calls'];
-
-                $response = app('synthetic')->update($snapshot, $diff, $calls);
-
-                unset($response['target']);
-
-                $responses[] = $response;
-            }
-
-            return $responses;
-        })->middleware('web')->name('synthetic.update');
     }
 }

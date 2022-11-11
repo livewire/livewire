@@ -10,6 +10,9 @@ use Livewire\Mechanisms\DataStore;
 use Illuminate\Support\Facades\View as ViewFacade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
+use function Livewire\off;
+use function Livewire\on;
+
 class SupportPageComponents
 {
     function boot()
@@ -73,11 +76,11 @@ class SupportPageComponents
              $layoutConfig = $view->layoutConfig;
         };
 
-        app('synthetic')->on('render', $handler);
+        on('render', $handler);
 
         $callback();
 
-        app('synthetic')->off('render', $handler);
+        off('render', $handler);
 
         return $layoutConfig;
     }

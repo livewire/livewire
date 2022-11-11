@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportTraits;
 
-use function Synthetic\on;
-use function Synthetic\wrap;
+use function Livewire\on;
+use function Livewire\wrap;
 
 /**
  * Depends on: SupportLifecycleHooks to trigger "component." events

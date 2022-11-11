@@ -1,12 +1,17 @@
 <?php
 
-namespace Synthetic;
+namespace Livewire;
 
 class EventBus
 {
     protected $listeners = [];
     protected $listenersAfter = [];
     protected $listenersBefore = [];
+
+    function boot()
+    {
+        app()->singleton($this::class);
+    }
 
     function on($name, $callback) {
         if (! isset($this->listeners[$name])) $this->listeners[$name] = [];

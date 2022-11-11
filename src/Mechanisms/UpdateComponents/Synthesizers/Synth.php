@@ -1,6 +1,6 @@
 <?php
 
-namespace Synthetic\Synthesizers;
+namespace Livewire\Mechanisms\UpdateComponents\Synthesizers;
 
 abstract class Synth {
     public static function getKey() {

@@ -6,7 +6,7 @@ use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Exceptions\CorruptComponentPayloadException;
+use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
 use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleException;
 
 class ModelsCanBeSetAsPublicPropertiesTest extends TestCase

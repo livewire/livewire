@@ -3,10 +3,10 @@
 namespace Livewire\Features\SupportFileDownloads;
 
 use function Livewire\store;
-use function Synthetic\on;
+use function Livewire\on;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Livewire\LivewireSynth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Illuminate\Contracts\Support\Responsable;
 use Livewire\Mechanisms\DataStore;
 
@@ -49,7 +49,7 @@ class SupportFileDownloads
         });
 
         on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof \Livewire\LivewireSynth) return;
+            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
 
             if (! $download = store($target)->get('download')) return;
 

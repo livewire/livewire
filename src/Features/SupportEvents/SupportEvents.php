@@ -2,16 +2,17 @@
 
 namespace Livewire\Features\SupportEvents;
 
+use function Livewire\on;
 use function Livewire\store;
-use function Synthetic\wrap;
+use function Livewire\wrap;
 use Livewire\Mechanisms\DataStore;
-use Livewire\LivewireSynth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 
 class SupportEvents
 {
     function boot()
     {
-        app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
+        on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
             $listeners = static::getListenerEventNames($target);
@@ -23,7 +24,7 @@ class SupportEvents
             $dispatches && $context->addEffect('dispatches', $dispatches);
         });
 
-        app('synthetic')->on('methods', function ($target, $addMethod) {
+        on('methods', function ($target, $addMethod) {
             $addMethod('__emit');
         });
     }

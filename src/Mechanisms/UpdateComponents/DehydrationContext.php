@@ -1,6 +1,8 @@
 <?php
 
-namespace Synthetic;
+namespace Livewire\Mechanisms\UpdateComponents;
+
+use Livewire\Drawer\Utils;
 
 class DehydrationContext
 {

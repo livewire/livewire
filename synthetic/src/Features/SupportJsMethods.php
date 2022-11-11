@@ -7,11 +7,13 @@ use Illuminate\Http\RedirectResponse;
 use ReflectionMethod;
 use ReflectionClass;
 
+use function Livewire\on;
+
 class SupportJsMethods
 {
     public function __invoke()
     {
-        app('synthetic')->on('call', function ($synth, $target, $method, $params, $addEffect) {
+        on('call', function ($synth, $target, $method, $params, $addEffect) {
             if (! $synth instanceof ObjectSynth) return;
 
             return function ($result) use ($method, $params, $addEffect) {
@@ -23,7 +25,7 @@ class SupportJsMethods
             };
         });
 
-        app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
+        on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof ObjectSynth) return;
 
             $methods = $this->getJsMethods($target);

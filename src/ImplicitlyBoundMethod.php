@@ -1,6 +1,6 @@
 <?php
 
-namespace Synthetic;
+namespace Livewire;
 
 use Illuminate\Container\BoundMethod;
 use Illuminate\Contracts\Routing\UrlRoutable as ImplicitlyBindable;

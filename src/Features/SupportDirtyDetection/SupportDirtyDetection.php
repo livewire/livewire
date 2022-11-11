@@ -2,8 +2,9 @@
 
 namespace Livewire\Features\SupportDirtyDetection;
 
+use function Livewire\before;
 use function Livewire\store;
-use function Synthetic\on;
+use function Livewire\on;
 use Livewire\Mechanisms\DataStore;
 
 use Livewire\Drawer\Utils;
@@ -38,8 +39,8 @@ class SupportDirtyDetection
 
     function whenAComponentIsHydrated($callback)
     {
-        app('synthetic')->on('hydrate', function ($synth, $rawValue, $meta) use ($callback) {
-            if (! $synth instanceof \Livewire\LivewireSynth) return;
+        on('hydrate', function ($synth, $rawValue, $meta) use ($callback) {
+            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
 
             return function ($target) use ($callback) {
                 $callback($target);
@@ -49,7 +50,7 @@ class SupportDirtyDetection
 
     function whenComponentDataIsUpdated($callback)
     {
-        app('synthetic')->before('update', function ($target, $path, $value) use ($callback) {
+        before('update', function ($target, $path, $value) use ($callback) {
             if (! $target instanceof \Livewire\Component) return;
 
             return function ($newValue) use ($target, $path, $callback) {
@@ -99,8 +100,8 @@ class SupportDirtyDetection
 
     function whenAComponentIsDehydrated($callback)
     {
-        app('synthetic')->on('dehydrate', function ($synth, $target, $context) use ($callback) {
-            if (! $synth instanceof \Livewire\LivewireSynth) return;
+        on('dehydrate', function ($synth, $target, $context) use ($callback) {
+            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
 
             $callback($target, function ($dirtyProperties) use ($context) {
                 $context->addEffect('dirty', $dirtyProperties);

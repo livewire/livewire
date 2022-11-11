@@ -1,6 +1,6 @@
 <?php
 
-namespace Synthetic\Synthesizers;
+namespace Livewire\Mechanisms\UpdateComponents\Synthesizers;
 
 use stdClass;
 use Synthetic\Component;

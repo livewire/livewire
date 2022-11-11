@@ -2,13 +2,14 @@
 
 namespace Livewire\Features\SupportLifecycleHooks;
 
-use function Synthetic\wrap;
+use function Livewire\after;
+use function Livewire\wrap;
 
-use function Synthetic\trigger;
+use function Livewire\trigger;
 use function Livewire\of;
-use function Synthetic\on;
+use function Livewire\on;
 
-use Livewire\LivewireSynth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Drawer\ImplicitlyBoundMethod;
 
 class SupportLifecycleHooks
@@ -46,7 +47,7 @@ class SupportLifecycleHooks
     function handleBootHooks()
     {
         // Cover the initial request, mounting, scenario...
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
+        on('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'boot')) wrap($target)->boot();
 
@@ -54,7 +55,7 @@ class SupportLifecycleHooks
             };
         });
 
-        app('synthetic')->after('mount', function ($name, $params) {
+        after('mount', function ($name, $params) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'booted')) wrap($target)->booted();
 
@@ -63,7 +64,7 @@ class SupportLifecycleHooks
         });
 
         // Cover the subsequent request, hydration, scenario...
-        app('synthetic')->on('hydrate', function ($synth, $rawValue, $meta) {
+        on('hydrate', function ($synth, $rawValue, $meta) {
             if (! $synth instanceof LivewireSynth) return;
 
             return function ($target) {
@@ -73,7 +74,7 @@ class SupportLifecycleHooks
             };
         });
 
-        app('synthetic')->after('hydrate.root', function () {
+        after('hydrate.root', function () {
             return function ($target) {
                 if (! $target instanceof \Livewire\Component) return;
 
@@ -87,7 +88,7 @@ class SupportLifecycleHooks
     function handleMountHooks()
     {
         // Note: "mount" is the only one of these events fired by Livewire...
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
+        on('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($target) use ($params) {
                 if (method_exists($target, 'mount')) {
                     wrap($target)->__call('mount', $params);
@@ -100,7 +101,7 @@ class SupportLifecycleHooks
 
     function handleHydrateHooks()
     {
-        app('synthetic')->on('hydrate.root', function () {
+        on('hydrate.root', function () {
             return function ($target) {
                 if (! $target instanceof \Livewire\Component) return;
 
@@ -121,7 +122,7 @@ class SupportLifecycleHooks
 
     function handleDehydrateHooks()
     {
-        app('synthetic')->on('dehydrate.root', function ($target) {
+        on('dehydrate.root', function ($target) {
             if (! $target instanceof \Livewire\Component) return;
 
             // Call general "dehydrate" hook...
@@ -142,7 +143,7 @@ class SupportLifecycleHooks
 
     function handleUpdateHooks()
     {
-        app('synthetic')->on('update', function ($target, $path, $value) {
+        on('update', function ($target, $path, $value) {
             if (! $target instanceof \Livewire\Component) return;
 
             $name = str($path);

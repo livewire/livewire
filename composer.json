@@ -29,9 +29,7 @@
     },
     "autoload": {
         "files": [
-            "src/helpers.php",
-            "synthetic/src/helpers.php",
-            "synthetic/src/global_helpers.php"
+            "src/helpers.php"
         ],
         "psr-4": {
             "Livewire\\": "src/",

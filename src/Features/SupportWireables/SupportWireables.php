@@ -6,6 +6,6 @@ class SupportWireables
 {
     function boot()
     {
-        app('synthetic')->registerSynth(WireableSynth::class);
+        app('livewire')->synth(WireableSynth::class);
     }
 }

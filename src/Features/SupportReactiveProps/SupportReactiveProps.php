@@ -4,8 +4,9 @@ namespace Livewire\Features\SupportReactiveProps;
 
 use Synthetic\Utils as SyntheticUtils;
 use Livewire\Mechanisms\DataStore;
-use Livewire\LivewireSynth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 
+use function Livewire\on;
 use function Livewire\store;
 
 class SupportReactiveProps
@@ -14,9 +15,9 @@ class SupportReactiveProps
 
     public function boot()
     {
-        app('synthetic')->on('flush-state', fn() => static::$pendingChildParams = []);
+        on('flush-state', fn() => static::$pendingChildParams = []);
 
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
+        on('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($target) use ($params) {
                 $props = [];
 
@@ -30,11 +31,11 @@ class SupportReactiveProps
             };
         });
 
-        app('synthetic')->on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
+        on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
             $this->storeChildParams($id, $params);
         });
 
-        app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
+        on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
             $props = store($target)->get('props', []);
@@ -49,7 +50,7 @@ class SupportReactiveProps
             $props && $context->addMeta('props', $props);
         });
 
-        app('synthetic')->on('hydrate', function ($synth, $rawValue, $meta) {
+        on('hydrate', function ($synth, $rawValue, $meta) {
             if (! $synth instanceof LivewireSynth) return;
             if (! isset($meta['props'])) return;
 

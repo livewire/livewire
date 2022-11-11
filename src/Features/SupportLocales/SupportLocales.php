@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportLocales;
 
-use function Synthetic\on;
-use Livewire\LivewireSynth;
+use function Livewire\on;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 
 class SupportLocales
 {

@@ -1,6 +1,8 @@
 <?php
 
-namespace Synthetic;
+namespace Livewire;
+
+use Livewire\ImplicitlyBoundMethod;
 
 class Wrapped
 {

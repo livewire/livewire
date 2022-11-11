@@ -6,7 +6,7 @@ use Synthetic\Utils;
 use Illuminate\Support\Traits\Macroable;
 use Livewire\Features\SupportFileUploads\FileUploadController;
 
-use function Synthetic\trigger;
+use function Livewire\trigger;
 
 class Testable
 {
@@ -23,7 +23,7 @@ class Testable
     function __construct($dehydrated, $target) {
         $this->target = $target;
         $this->methods = $dehydrated['effects']['methods'] ?? [];
-        $this->effects = $dehydrated['effects'][''];
+        $this->effects = $dehydrated['effects'][''] ?? [];
         $this->snapshot = $dehydrated['snapshot'];
         $this->canonical = $this->extractData($this->snapshot['data']);
     }
@@ -54,7 +54,7 @@ class Testable
             return $this->upload($key, $value, $isMultiple = true);
         }
 
-        $dehydrated = app('synthetic')->update($this->snapshot, [$key => $value], $calls = []);
+        $dehydrated = app('livewire')->update($this->snapshot, [$key => $value], $calls = []);
 
         // FakeRequest::get('/synthetic/update', [
         //     'targets' => [
@@ -123,7 +123,7 @@ class Testable
 
     function commit()
     {
-        $dehydrated = app('synthetic')->update($this->snapshot, $diff = [], $calls = []);
+        $dehydrated = app('livewire')->update($this->snapshot, $diff = [], $calls = []);
 
         $this->target = $dehydrated['target'];
         $this->effects = $dehydrated['effects'][''];
@@ -140,7 +140,7 @@ class Testable
 
     function call($method, ...$params)
     {
-        $dehydrated = app('synthetic')->update($this->snapshot, $diff = [], $calls = [[
+        $dehydrated = app('livewire')->update($this->snapshot, $diff = [], $calls = [[
             'method' => $method,
             'params' => $params,
             'path' => '',

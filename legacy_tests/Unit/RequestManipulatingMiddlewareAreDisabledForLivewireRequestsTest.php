@@ -4,7 +4,7 @@ namespace LegacyTests\Unit;
 
 use Livewire\Component;
 use Livewire\LivewireManager;
-use Livewire\Exceptions\CorruptComponentPayloadException;
+use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
 
 class RequestManipulatingMiddlewareAreDisabledForLivewireRequestsTest extends TestCase
 {

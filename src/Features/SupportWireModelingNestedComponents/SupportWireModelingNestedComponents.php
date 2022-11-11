@@ -4,9 +4,10 @@ namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Synthetic\Utils as SyntheticUtils;
 use Livewire\Mechanisms\DataStore;
-use Livewire\LivewireSynth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Drawer\Utils;
 
+use function Livewire\on;
 use function Livewire\store;
 
 class SupportWireModelingNestedComponents
@@ -15,10 +16,10 @@ class SupportWireModelingNestedComponents
 
     public function boot()
     {
-        app('synthetic')->on('flush-state', fn() => static::$outersByComponentId = []);
+        on('flush-state', fn() => static::$outersByComponentId = []);
 
         // When a Livewire component is rendered, we'll check to see if "wire:model" is set.
-        app('synthetic')->on('mount', function ($name, $params, $parent, $key, $hijack) {
+        on('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($target) use ($parent, $params) {
                 if ($parent && isset($params['wire:model'])) {
                     $outer = $params['wire:model'];
@@ -41,7 +42,7 @@ class SupportWireModelingNestedComponents
             };
         });
 
-        app('synthetic')->on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
+        on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
             if (! isset($params['wire:model'])) return;
 
             $outer = $params['wire:model'];
@@ -51,7 +52,7 @@ class SupportWireModelingNestedComponents
 
         // We need to add a note that everytime we render this thing, we'll need to add
         // those extra Alpine attributes.
-        app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
+        on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
             $wireModels = store($target)->get('wireModels', false);
             if (! $wireModels) return;
@@ -71,7 +72,7 @@ class SupportWireModelingNestedComponents
         });
 
         // Now on subsequent renders, we can make a note
-        app('synthetic')->on('hydrate', function ($synth, $value, $meta) {
+        on('hydrate', function ($synth, $value, $meta) {
             if (! $synth instanceof LivewireSynth) return;
             if (! isset($meta['wireModels'])) return;
 

@@ -4,10 +4,10 @@ namespace Livewire\Features\SupportRedirects;
 
 use function Livewire\short;
 use function Livewire\store;
-use function Synthetic\after;
-use function Synthetic\before;
-use function Synthetic\on;
-use Livewire\LivewireSynth;
+use function Livewire\after;
+use function Livewire\before;
+use function Livewire\on;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\DataStore;
 use Synthetic\ShortcircuitResponse;
 

@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportModels;
 
-use Synthetic\Synthesizers\Synth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
 
 class CastableSynth extends Synth {
     public static $key = 'csts';

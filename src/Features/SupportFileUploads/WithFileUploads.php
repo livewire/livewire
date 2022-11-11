@@ -43,7 +43,7 @@ trait WithFileUploads
             }
         }
 
-        app('synthetic')->updateValue($this, $name, $file, skipHydrate: true);
+        app('livewire')->updateProperty($this, $name, $file, skipHydrate: true);
     }
 
     public function uploadErrored($name, $errorsInJson, $isMultiple) {
@@ -78,7 +78,7 @@ trait WithFileUploads
         if (is_array($uploads) && isset($uploads[0]) && $uploads[0] instanceof TemporaryUploadedFile) {
             $this->emit('upload:removed', $name, $tmpFilename)->self();
 
-            app('synthetic')->updateValue($this, $name, array_values(array_filter($uploads, function ($upload) use ($tmpFilename) {
+            app('livewire')->updateProperty($this, $name, array_values(array_filter($uploads, function ($upload) use ($tmpFilename) {
                 if ($upload->getFilename() === $tmpFilename) {
                     $upload->delete();
                     return false;
@@ -91,7 +91,7 @@ trait WithFileUploads
 
             $this->emit('upload:removed', $name, $tmpFilename)->self();
 
-            app('synthetic')->updateValue($this, $name, null, skipHydrate: true);
+            app('livewire')->updateProperty($this, $name, null, skipHydrate: true);
         }
     }
 

@@ -6,14 +6,15 @@ use Livewire\Drawer\ImplicitlyBoundMethod;
 use Livewire\Mechanisms\DataStore;
 use Synthetic\Utils as SyntheticUtils;
 
+use function Livewire\on;
 use function Livewire\store;
-use function Synthetic\wrap;
+use function Livewire\wrap;
 
 class SupportComputedProperties
 {
     public function boot()
     {
-        app('synthetic')->on('render', function ($target, $view, $data) {
+        on('render', function ($target, $view, $data) {
             foreach (static::getComputedProperties($target) as $property => $value) {
                 isset($view[$property]) || $view->with($property, $value);
             };
@@ -23,7 +24,7 @@ class SupportComputedProperties
             };
         });
 
-        app('synthetic')->on('__get', function ($target, $property, $returnValue) {
+        on('__get', function ($target, $property, $returnValue) {
             if (static::hasComputedProperty($target, $property)) {
                 $returnValue(static::getComputedProperty($target, $property));
             }

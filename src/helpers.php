@@ -74,6 +74,30 @@ function revert(&$variable)
     };
 }
 
+function wrap($subject) {
+    return new Wrapped($subject);
+}
+
+function trigger($name, &...$params) {
+    return app(\Livewire\EventBus::class)->trigger($name, ...$params);
+}
+
+function on($name, $callback) {
+    return app(\Livewire\EventBus::class)->on($name, $callback);
+}
+
+function after($name, $callback) {
+    return app(\Livewire\EventBus::class)->after($name, $callback);
+}
+
+function before($name, $callback) {
+    return app(\Livewire\EventBus::class)->before($name, $callback);
+}
+
+function off($name, $callback) {
+    return app(\Livewire\EventBus::class)->off($name, $callback);
+}
+
 function store($instance = null)
 {
     if (! $instance) $instance = app(\Livewire\Mechanisms\DataStore::class);

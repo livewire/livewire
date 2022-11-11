@@ -13,7 +13,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     public function boot()
     {
         $this->bootConsoleCommands();
-        $this->bootSynthesizers();
+        $this->bootEventBus();
         $this->bootMechanisms();
         $this->bootFeatures();
 
@@ -53,19 +53,15 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         ]);
     }
 
-    protected function bootSynthesizers()
+    protected function bootEventBus()
     {
-        app('synthetic')->registerSynth([
-            \Livewire\LivewireSynth::class,
-        ]);
+        (new \Livewire\EventBus)->boot();
     }
 
     protected function bootMechanisms()
     {
-        // Mount (to HTML)
-        // Mount (to renderless JS object)
-
         foreach ([
+            \Livewire\Mechanisms\UpdateComponents\UpdateComponents::class,
             \Livewire\Mechanisms\ExtendBlade\ExtendBlade::class,
             \Livewire\Mechanisms\CompileLivewireTags::class,
             \Livewire\Mechanisms\ComponentRegistry::class,

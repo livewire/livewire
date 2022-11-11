@@ -2,6 +2,8 @@
 
 namespace Livewire\Mechanisms\ExtendBlade;
 
+use function Livewire\trigger;
+
 class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
     public function get($path, array $data = [])
     {
@@ -9,7 +11,7 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
 
         $currentComponent = ExtendBlade::currentRendering();
 
-        app('synthetic')->trigger('view:compile', $currentComponent, $path);
+        trigger('view:compile', $currentComponent, $path);
 
         return parent::get($path, $data);
     }

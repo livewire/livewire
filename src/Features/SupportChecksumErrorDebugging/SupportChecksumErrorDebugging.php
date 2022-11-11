@@ -35,7 +35,7 @@ class SupportChecksumErrorDebugging
 
         })->purpose('Debug checksum errors in Livewire');
 
-        app('synthetic')->on('checksum.fail', function ($checksum, $comparitor, $tamperedSnapshot) use ($file) {
+        on('checksum.fail', function ($checksum, $comparitor, $tamperedSnapshot) use ($file) {
             $cache = json_decode(File::get($file), true);
 
             if (! isset($cache['checksums'][$checksum])) return;
@@ -50,7 +50,7 @@ class SupportChecksumErrorDebugging
             File::put($file, json_encode($cache));
         });
 
-        app('synthetic')->on('checksum.generate', function ($checksum, $snapshot) use ($file) {
+        on('checksum.generate', function ($checksum, $snapshot) use ($file) {
             $cache = json_decode(File::get($file), true);
 
             $cache['checksums'][$checksum] = $snapshot;

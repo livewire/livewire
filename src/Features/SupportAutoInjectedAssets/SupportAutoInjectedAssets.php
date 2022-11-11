@@ -2,9 +2,11 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Livewire\LivewireSynth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Foundation\Http\Events\RequestHandled;
+
+use function Livewire\on;
 
 class SupportAutoInjectedAssets
 {
@@ -12,7 +14,7 @@ class SupportAutoInjectedAssets
 
     public function boot()
     {
-        app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
+        on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
             static::$hasRenderedAComponentThisRequest = true;

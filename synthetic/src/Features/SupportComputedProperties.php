@@ -7,11 +7,13 @@ use ReflectionMethod;
 use ReflectionProperty;
 use Synthetic\Synthesizers\ObjectSynth;
 
+use function Livewire\on;
+
 class SupportComputedProperties
 {
     public function __invoke()
     {
-        app('synthetic')->on('dehydrate', function ($synth, $target, $context) {
+        on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof ObjectSynth) return;
 
             [$computedProperties, $deps] = $this->getComputedProperties($target);
@@ -27,7 +29,7 @@ class SupportComputedProperties
             };
         });
 
-        app('synthetic')->on('hydrate', function ($synth, $rawValue, $meta) {
+        on('hydrate', function ($synth, $rawValue, $meta) {
             if (! $synth instanceof ObjectSynth) return;
 
             $deps = $meta['deps'];

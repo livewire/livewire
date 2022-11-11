@@ -1,55 +1,55 @@
 <?php
 
-namespace Synthetic;
+namespace Livewire\Mechanisms\UpdateComponents;
 
-use Synthetic\Synthesizers\StringableSynth;
-use Synthetic\Synthesizers\StdClassSynth;
-use Synthetic\Synthesizers\ObjectSynth;
-use Synthetic\Synthesizers\EnumSynth;
-use Synthetic\Synthesizers\CollectionSynth;
-use Synthetic\Synthesizers\CarbonSynth;
-use Synthetic\Synthesizers\ArraySynth;
-use Synthetic\Synthesizers\AnonymousSynth;
+use function Livewire\trigger;
+
+use Livewire\Mechanisms\UpdateComponents\DehydrationContext;
+use Livewire\Mechanisms\UpdateComponents\Checksum;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Exception;
 use Closure;
 
-class SyntheticManager
+class UpdateComponents
 {
-    /**
-     * Livewire & Synthetic rely heavily on events.
-     * Here's a breakdown of what events get triggered when.
-     *
-     * When Synthesizing:
-     * - "synthesize"
-     * - "dehydrate.root"
-     * - "dehydrate"
-     *
-     * When Updating:
-     * - "hydrate.root"
-     * - "hydrate"
-     * - "update.root"
-     * - "update"
-     * - "call.root"
-     * - "call"
-     * - "dehydrate.root"
-     * - "dehydrate"
-     */
-
-    use SyntheticValidation, SyntheticTesting;
-
     protected $synthesizers = [
-        CarbonSynth::class,
-        CollectionSynth::class,
-        StringableSynth::class,
-        EnumSynth::class,
-        AnonymousSynth::class,
-        StdClassSynth::class,
-        ObjectSynth::class,
-        ArraySynth::class,
+        Synthesizers\LivewireSynth::class,
+        Synthesizers\CarbonSynth::class,
+        Synthesizers\CollectionSynth::class,
+        Synthesizers\StringableSynth::class,
+        Synthesizers\EnumSynth::class,
+        Synthesizers\AnonymousSynth::class,
+        Synthesizers\StdClassSynth::class,
+        Synthesizers\ArraySynth::class,
     ];
+
+    function boot()
+    {
+        app()->singleton($this::class);
+
+        Route::post('/synthetic/update', function () {
+            $targets = request('targets');
+
+            $responses = [];
+
+            foreach ($targets as $target) {
+                $snapshot = $target['snapshot'];
+                $diff = $target['diff'];
+                $calls = $target['calls'];
+
+                $response = $this->update($snapshot, $diff, $calls);
+
+                unset($response['target']);
+
+                $responses[] = $response;
+            }
+
+            return $responses;
+        })->middleware('web')->name('synthetic.update');
+    }
 
     public function registerSynth($synthClass)
     {
@@ -60,25 +60,13 @@ class SyntheticManager
 
     protected $metasByPath = [];
 
-    function new($name)
-    {
-        return $this->synthesize(new $name);
-    }
-
-    function synthesize($target)
-    {
-        $effects = [];
-
-        return $this->toSnapshot($target, $effects, $initial = true);
-    }
-
     function update($snapshot, $diff, $calls)
     {
         $effects = [];
 
         $root = $this->fromSnapshot($snapshot, $diff);
 
-        $finish = $this->trigger('call.root', $root, $calls);
+        $finish = trigger('call.root', $root, $calls);
 
         $this->makeCalls($root, $calls, $effects);
 
@@ -94,7 +82,7 @@ class SyntheticManager
     }
 
     function toSnapshot($root, &$effects = [], $initial = false) {
-        $finish = $this->trigger('dehydrate.root', $root);
+        $finish = trigger('dehydrate.root', $root);
 
         $data = $this->dehydrate($root, $root, $effects, $initial);
 
@@ -112,17 +100,17 @@ class SyntheticManager
     function fromSnapshot($snapshot, $diff) {
         Checksum::verify($snapshot);
 
-        $finish = app('synthetic')->trigger('hydrate.root', $snapshot);
+        $finish = trigger('hydrate.root', $snapshot);
 
         $root = $this->hydrate($snapshot['data']);
 
-        app('synthetic')->trigger('boot', $root);
+        trigger('boot', $root);
 
         $finish($root);
 
-        $finish = app('synthetic')->trigger('update.root', $root);
+        $finish = trigger('update.root', $root);
 
-        $this->applyDiff($root, $diff);
+        $this->updateProperties($root, $diff);
 
         $finish();
 
@@ -135,7 +123,7 @@ class SyntheticManager
         if ($synth) {
             $context = new DehydrationContext($root, $target, $initial, $annotationsFromParent, $path);
 
-            $finish = app('synthetic')->trigger('dehydrate', $synth, $target, $context);
+            $finish = trigger('dehydrate', $synth, $target, $context);
 
             $methods = $synth->methods($target);
 
@@ -188,7 +176,7 @@ class SyntheticManager
                 }
             }
 
-            $finish = app('synthetic')->trigger('hydrate', $synth, $rawValue, $meta);
+            $finish = trigger('hydrate', $synth, $rawValue, $meta);
 
             $return = $synth->hydrate($rawValue, $meta);
 
@@ -198,13 +186,13 @@ class SyntheticManager
         return $data;
     }
 
-    function applyDiff($root, $diff) {
+    function updateProperties($root, $diff) {
         foreach ($diff as $path => $value) {
-            $this->updateValue($root, $path, $value);
+            $this->updateProperty($root, $path, $value);
         }
     }
 
-    function updateValue(&$root, $path, $value, $skipHydrate = false)
+    function updateProperty(&$root, $path, $value, $skipHydrate = false)
     {
         if (! $skipHydrate) {
             if (isset($this->metasByPath[$path])) {
@@ -214,7 +202,7 @@ class SyntheticManager
             $value = $this->hydrate($value, $path);
         }
 
-        $finish = $this->trigger('update', $root, $path, $value);
+        $finish = trigger('update', $root, $path, $value);
 
         $segments = Utils::dotSegments($path);
 
@@ -280,7 +268,7 @@ class SyntheticManager
                 throw new MethodNotFoundException($method);
             }
 
-            $finish = app('synthetic')->trigger('call', $synth, $target, $method, $params, $addEffect);
+            $finish = trigger('call', $synth, $target, $method, $params, $addEffect);
 
             $return = $this->synth($target)->call($target, $method, $params, $addEffect);
 
@@ -340,25 +328,5 @@ class SyntheticManager
         $childKey = str($path)->afterLast('.')->__toString();
 
         return [$parentKey, $childKey];
-    }
-
-    function trigger($name, &...$params) {
-        return app(EventBus::class)->trigger($name, ...$params);
-    }
-
-    function on($name, $callback) {
-        return app(EventBus::class)->on($name, $callback);
-    }
-
-    function after($name, $callback) {
-        return app(EventBus::class)->after($name, $callback);
-    }
-
-    function before($name, $callback) {
-        return app(EventBus::class)->before($name, $callback);
-    }
-
-    function off($name, $callback) {
-        return app(EventBus::class)->off($name, $callback);
     }
 }

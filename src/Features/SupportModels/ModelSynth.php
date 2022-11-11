@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportModels;
 
 use stdClass;
 use Synthetic\SyntheticValidation;
-use Synthetic\Synthesizers\Synth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Stringable;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
@@ -14,7 +14,7 @@ use Illuminate\Contracts\Database\ModelIdentifier;
 use Exception;
 
 class ModelSynth extends Synth {
-    use SerializesAndRestoresModelIdentifiers, SyntheticValidation;
+    use SerializesAndRestoresModelIdentifiers;
 
     public static $key = 'mdl';
 

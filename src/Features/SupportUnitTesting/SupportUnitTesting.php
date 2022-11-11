@@ -3,9 +3,9 @@
 namespace Livewire\Features\SupportUnitTesting;
 
 use function Livewire\store;
-use function Synthetic\on;
+use function Livewire\on;
 use Livewire\Mechanisms\DataStore;
-use Livewire\LivewireSynth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Component;
 use Illuminate\Validation\ValidationException;
 
@@ -50,7 +50,7 @@ class SupportUnitTesting
             };
         });
 
-        app('synthetic')->on('hydrate', function ($synth, $rawValue, $meta) {
+        on('hydrate', function ($synth, $rawValue, $meta) {
             if (! $synth instanceof LivewireSynth) return;
 
             return function ($target) {

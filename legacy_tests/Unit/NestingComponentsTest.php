@@ -55,7 +55,7 @@ class NestingComponentsTest extends TestCase
 
         $component->runAction('setChildren', ['foo', 'bar']);
         $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringContainsString('bar', $component->html() );
+        $this->assertStringContainsString('bar', $component->html());
 
         $component->runAction('setChildren', ['foo', 'bar']);
         $this->assertStringNotContainsString('foo', $component->html());

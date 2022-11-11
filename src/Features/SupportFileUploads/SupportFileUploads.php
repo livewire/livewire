@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use function Synthetic\on;
+use function Livewire\on;
 
-use Livewire\LivewireSynth;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Component;
 use Illuminate\Support\Facades\Route;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
@@ -21,7 +21,7 @@ class SupportFileUploads
             GenerateSignedUploadUrlFacade::swap($mock);
         }
 
-        app('synthetic')->registerSynth([
+        app('livewire')->synth([
             FileUploadSynth::class,
         ]);
 

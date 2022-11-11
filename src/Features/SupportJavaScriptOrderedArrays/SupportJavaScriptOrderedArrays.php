@@ -2,14 +2,14 @@
 
 namespace Livewire\Features\SupportJavaScriptOrderedArrays;
 
-use function Synthetic\on;
+use function Livewire\on;
 
 class SupportJavaScriptOrderedArrays
 {
     function boot()
     {
         on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof \Livewire\LivewireSynth) return;
+            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
 
             return function ($value) {
                 return $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);

@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\ExtendBlade;
 
 use function Livewire\invade;
+use function Livewire\on;
 
 class ExtendBlade
 {
@@ -36,7 +37,7 @@ class ExtendBlade
     {
         app()->singleton($this::class);
 
-        app('synthetic')->on('render', function ($target, $view) {
+        on('render', function ($target, $view) {
             $this->startLivewireRendering($target);
 
             $removals = [];

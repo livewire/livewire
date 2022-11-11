@@ -1,21 +1,17 @@
-<?php
+<?php namespace Livewire\Mechanisms\UpdateComponents;
 
-namespace Synthetic;
-
-use Exception;
-use Livewire\Exceptions\CorruptComponentPayloadException;
+use function Livewire\trigger;
 
 class Checksum {
     static function verify($snapshot) {
-
         $checksum = $snapshot['checksum'];
 
         unset($snapshot['checksum']);
 
-        app('synthetic')->trigger('checksum.verify', $checksum, $snapshot);
+        trigger('checksum.verify', $checksum, $snapshot);
 
         if ($checksum !== $comparitor = self::generate($snapshot)) {
-            app('synthetic')->trigger('checksum.fail', $checksum, $comparitor, $snapshot);
+            trigger('checksum.fail', $checksum, $comparitor, $snapshot);
 
             throw new CorruptComponentPayloadException;
         }
@@ -26,7 +22,7 @@ class Checksum {
 
         $checksum = hash_hmac('sha256', json_encode($snapshot), $hashKey);
 
-        app('synthetic')->trigger('checksum.generate', $checksum, $snapshot);
+        trigger('checksum.generate', $checksum, $snapshot);
 
         return $checksum;
     }

@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportModels;
 
-use function Synthetic\on;
+use function Livewire\on;
 
 /**
  * Depends on: SupportValidation for ->missingRuleFor() method on component. (inside ModelSynth)
@@ -11,7 +11,7 @@ class SupportModels
 {
     function boot()
     {
-        app('synthetic')->registerSynth([
+        app('livewire')->synth([
             ModelSynth::class,
             CastableSynth::class,
         ]);

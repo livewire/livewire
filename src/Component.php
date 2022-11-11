@@ -21,7 +21,7 @@ use BadMethodCallException;
  * @todo - add Facade-esque method signatures to this file (from triggered __get and __call)
  */
 
-abstract class Component extends \Synthetic\Component
+abstract class Component
 {
     use Macroable { __call as macroCall; }
 
@@ -87,7 +87,7 @@ abstract class Component extends \Synthetic\Component
             $value = $newValue;
         };
 
-        $finish = app('synthetic')->trigger('__get', $this, $property, $returnValue);
+        $finish = trigger('__get', $this, $property, $returnValue);
 
         $value = $finish($value);
 
@@ -106,7 +106,7 @@ abstract class Component extends \Synthetic\Component
             $value = $newValue;
         };
 
-        $finish = app('synthetic')->trigger('__call', $this, $method, $params, $returnValue);
+        $finish = trigger('__call', $this, $method, $params, $returnValue);
 
         $value = $finish($value);
 
