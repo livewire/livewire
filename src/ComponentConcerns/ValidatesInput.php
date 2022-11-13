@@ -310,7 +310,7 @@ trait ValidatesInput
                 }
             } else {
                 // Otherwise filter collection down to a specific key
-                $keyData = $data[$fieldKey];
+                $keyData = $data[$fieldKey] ?? null;
 
                 if ($ruleKey == '*') {
                     $data = [];
