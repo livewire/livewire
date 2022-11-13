@@ -22,7 +22,7 @@ Contribute to the docs here: https://github.com/livewire/docs
 
 - [Livewire Best Practices](https://github.com/michael-rubel/livewire-best-practices)
 
-* 
+
 ## License
 
 Copyright © Caleb Porzio
