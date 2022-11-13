@@ -94,10 +94,13 @@ class HydratePublicProperties implements HydrationMiddleware
         array_walk($publicData, function ($value, $key) use ($instance, $response) {
             if (
                 // The value is a supported type, set it in the data, if not, throw an exception for the user.
-                is_bool($value) || is_null($value) || is_array($value) || is_numeric($value) || is_string($value)
+                is_bool($value) || is_null($value) || is_array($value) || is_numeric($value)
             ) {
                 data_set($response, 'memo.data.'.$key, $value);
-            } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
+            } else if(is_string($value)) {
+                data_set($response, 'memo.data.'.$key, \Normalizer::normalize($value));
+            }
+              else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
                 $response->memo['dataMeta']['wireables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->toLivewire());
@@ -244,7 +247,7 @@ class HydratePublicProperties implements HydrationMiddleware
 
     public static function processRules($rules) {
         $rules = Collection::wrap($rules);
-        
+
         $rules = $rules
             ->mapInto(Stringable::class);
 
