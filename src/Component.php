@@ -274,15 +274,17 @@ abstract class Component
     {
         return $this->forStack;
     }
-    
+
     function __isset($property)
     {
         try {
-            $this->__get($property);
-            return true;
-        } catch(PropertyNotFoundException $ex) {
-            return false;
-        }
+            $value = $this->__get($property);
+
+            if (isset($value)) {
+                return true;
+            }
+        } catch(PropertyNotFoundException $ex) {}
+
         return false;
     }
 
