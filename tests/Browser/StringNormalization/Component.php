@@ -9,6 +9,7 @@ class Component extends BaseComponent
 {
     public $string = 'â';
     public $number = 0;
+    public $array = ['â'];
 
     public function render()
     {
