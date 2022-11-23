@@ -32,7 +32,7 @@ class TestCase extends BaseTestCase
 {
     use SupportsSafari;
 
-    public static $useSafari = true;
+    public static $useSafari = false;
     public static $useAlpineV3 = false;
 
     public function setUp(): void
