@@ -58,6 +58,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
+            \Livewire\Features\SupportLivewireDirective\SupportLivewireDirective::class,
             \Livewire\Features\SupportNestingComponents\SupportNestingComponents::class,
             \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
             \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
