@@ -8,6 +8,7 @@ use Livewire\Mechanisms\DataStore;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Component;
 use Illuminate\Validation\ValidationException;
+use Livewire\Mechanisms\ComponentRegistry;
 
 class SupportUnitTesting
 {
@@ -73,7 +74,7 @@ class SupportUnitTesting
         // Usage: $this->assertSeeLivewire('counter');
         \Illuminate\Testing\TestResponse::macro('assertSeeLivewire', function ($component) {
             if (is_subclass_of($component, Component::class)) {
-                $component = $component->getName();
+                $component = app(ComponentRegistry::class)->getName($component);
             }
 
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
@@ -90,7 +91,7 @@ class SupportUnitTesting
         // Usage: $this->assertDontSeeLivewire('counter');
         \Illuminate\Testing\TestResponse::macro('assertDontSeeLivewire', function ($component) {
             if (is_subclass_of($component, Component::class)) {
-                $component = $component->getName();
+                $component = app(ComponentRegistry::class)->getName($component);
             }
 
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
@@ -107,7 +108,7 @@ class SupportUnitTesting
         if (class_exists(\Illuminate\Testing\TestView::class)) {
             \Illuminate\Testing\TestView::macro('assertSeeLivewire', function ($component) {
                 if (is_subclass_of($component, Component::class)) {
-                    $component = $component->getName();
+                    $component = app(ComponentRegistry::class)->getName($component);
                 }
 
                 $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
@@ -123,7 +124,7 @@ class SupportUnitTesting
 
             \Illuminate\Testing\TestView::macro('assertDontSeeLivewire', function ($component) {
                 if (is_subclass_of($component, Component::class)) {
-                    $component = $component->getName();
+                    $component = app(ComponentRegistry::class)->getName($component);
                 }
 
                 $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
