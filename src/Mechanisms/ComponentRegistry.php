@@ -133,6 +133,10 @@ class ComponentRegistry
             ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
             ->implode('.');
 
+        if(str($fullName)->startsWith('.')) {
+            $fullName = (string) str($fullName)->substr(1);
+        }
+
         if (str($fullName)->startsWith($namespace)) {
             return (string) str($fullName)->substr(strlen($namespace) + 1);
         }
