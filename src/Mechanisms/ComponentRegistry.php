@@ -65,6 +65,11 @@ class ComponentRegistry
         // Otherwise, assume it was a simple name...
         } else {
             $class = $this->nameToClass($nameOrClass);
+
+            // If class can't be found, see if there is an index component in a subfolder...
+            if(! class_exists($class)) {
+                $class = $class . '\\Index';
+            }
         }
 
         // Now that we have a class, we can check that it's actually a Livewire component...
@@ -135,6 +140,11 @@ class ComponentRegistry
 
         if ($fullName->startsWith('.')) {
             $fullName = $fullName->substr(1);
+        }
+
+        // If using an index component in a sub folder, remove the '.index' so the name is the subfolder name...
+        if ($fullName->endsWith('.index')) {
+            $fullName = $fullName->replaceLast('.index', '');
         }
 
         if ($fullName->startsWith($namespace)) {
