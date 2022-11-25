@@ -129,18 +129,18 @@ class ComponentRegistry
             ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
             ->implode('.');
 
-        $fullName = collect(explode('.', str_replace(['/', '\\'], '.', $class)))
+        $fullName = str(collect(explode('.', str_replace(['/', '\\'], '.', $class)))
             ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
-            ->implode('.');
+            ->implode('.'));
 
-        if(str($fullName)->startsWith('.')) {
-            $fullName = (string) str($fullName)->substr(1);
+        if ($fullName->startsWith('.')) {
+            $fullName = $fullName->substr(1);
         }
 
-        if (str($fullName)->startsWith($namespace)) {
-            return (string) str($fullName)->substr(strlen($namespace) + 1);
+        if ($fullName->startsWith($namespace)) {
+            return (string) $fullName->substr(strlen($namespace) + 1);
         }
 
-        return $fullName;
+        return (string) $fullName;
     }
 }
