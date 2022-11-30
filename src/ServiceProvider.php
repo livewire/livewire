@@ -68,7 +68,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,
             \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
-            \Livewire\Features\SupportThisDirective\SupportThisDirective::class,
             \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
