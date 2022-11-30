@@ -1,5 +1,6 @@
-import { trigger } from '@synthetic/index'
+import { trigger } from './synthetic/index'
 import { closestComponent } from "./lifecycle"
+import Alpine from 'alpinejs'
 
 export function morph(component, el, html) {
     let wrapper = document.createElement('div')

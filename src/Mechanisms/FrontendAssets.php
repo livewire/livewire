@@ -19,12 +19,12 @@ class FrontendAssets
 
     public static function livewireScripts($expression)
     {
-        return '{!! \Livewire\Mechanisms\JavaScriptAndCssAssets::scripts('.$expression.') !!}';
+        return '{!! \Livewire\Mechanisms\FrontendAssets::scripts('.$expression.') !!}';
     }
 
     public static function livewireStyles($expression)
     {
-        return '{!! \Livewire\Mechanisms\JavaScriptAndCssAssets::styles('.$expression.') !!}';
+        return '{!! \Livewire\Mechanisms\FrontendAssets::styles('.$expression.') !!}';
     }
 
     public function source()
@@ -90,7 +90,7 @@ class FrontendAssets
             ?: rtrim($options['app_url'] ?? '', '/')
             ?: $assetsUrl;
 
-        $jsLivewireToken = app()->has('session.store') ? "'" . csrf_token() . "'" : 'null';
+        $jsLivewireToken = app()->has('session.store') ? csrf_token() : '';
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../../dist/manifest.json'), true);
         $versionedFileName = $manifest['/livewire.js'];
@@ -117,8 +117,8 @@ class FrontendAssets
         // Because it will be minified, using semicolons is important.
         return <<<HTML
         {$assetWarning}
-        <script src="{$fullAssetPath}" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
-        <script data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}>
+        <script src="{$fullAssetPath}" {$nonce} data-livewire-scripts data-csrf="{$jsLivewireToken}"></script>
+        <!-- <script data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}>
             {$windowLivewireCheck}
 
             window.livewire_app_url = '{$appUrl}';
@@ -146,8 +146,8 @@ class FrontendAssets
         <script src="http://alpine.test/packages/navigate/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
         <script src="http://alpine.test/packages/intersect/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
         <script src="http://alpine.test/packages/ui/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
-        <!-- <script src="https://unpkg.com/@alpinejs/ui@3.10.3-beta.2/dist/cdn.min.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script> -->
-        <script src="http://alpine.test/packages/alpinejs/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
+        <script src="https://unpkg.com/@alpinejs/ui@3.10.3-beta.2/dist/cdn.min.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script>
+        <script src="http://alpine.test/packages/alpinejs/dist/cdn.js" data-turbo-eval="false" data-turbolinks-eval="false" x-navigate:ignore {$nonce}></script> -->
         HTML;
     }
 

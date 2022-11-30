@@ -1,4 +1,4 @@
-import { on } from '@synthetic/index'
+import { on } from './../synthetic/index'
 import { directives } from "../directives"
 
 export default function () {

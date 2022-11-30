@@ -1,6 +1,6 @@
 import { dataGet, each } from "../utils"
 import { on } from "../events"
-import { callMethod } from "./../index"
+import { callMethod } from "../index"
 
 export default function () {
     // Normal, request-triggering, methods...

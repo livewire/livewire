@@ -1,5 +1,6 @@
-import { on } from '@synthetic/index'
+import { on } from './../synthetic/index'
 import { directives } from "../directives"
+import Alpine from 'alpinejs'
 
 export default function () {
     on('morph.added', (el) => {

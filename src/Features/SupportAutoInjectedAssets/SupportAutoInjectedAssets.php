@@ -28,8 +28,6 @@ class SupportAutoInjectedAssets
 
             if (str($html)->contains('</html>')) {
                 $handled->response->setContent($this->injectAssets($html));
-            } else {
-                //
             }
         });
     }

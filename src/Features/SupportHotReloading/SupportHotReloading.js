@@ -1,5 +1,5 @@
 import { findComponent, state } from "../../../js/state";
-import { on } from './../../../../synthetic/js/index'
+import { on } from './../../../js/synthetic/index'
 
 export default function (enabled) {
     // Only allow this in "Simple Preview"...

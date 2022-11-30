@@ -1,9 +1,11 @@
 import bootFeatures from './features'
 import { findComponent, hasComponent, releaseComponent, resurrect, state, storeComponent } from './state'
-import { synthetic, trigger } from '@synthetic/index'
+import { synthetic, trigger } from './synthetic/index'
 import { Component } from './component'
+import Alpine from 'alpinejs'
+import morph from '@alpinejs/morph'
 
-export function start(options) {
+export function start(options = {}) {
     let enabledFeatures = options.features || []
 
     bootFeatures(enabledFeatures)
@@ -11,6 +13,10 @@ export function start(options) {
     Alpine.interceptInit(Alpine.skipDuringClone(el => {
         initElement(el)
     }))
+
+    Alpine.plugin(morph)
+
+    Alpine.start()
 }
 
 function initElement(el) {

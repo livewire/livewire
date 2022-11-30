@@ -1,5 +1,5 @@
 import { findComponent } from "../state";
-import { on } from '@synthetic/index'
+import { on } from './../synthetic/index'
 
 export default function () {
     on('request.before', (target) => {
