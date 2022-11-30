@@ -397,7 +397,7 @@ class Test extends \Tests\TestCase
     /** @test */
     public function the_global_upload_route_middleware_is_configurable()
     {
-        config()->set('livewire.temporary_file_upload.middleware', 'LegacyTests\Unit\DummyMiddleware');
+        config()->set('livewire.temporary_file_upload.middleware', DummyMiddleware::class);
 
         $url = GenerateSignedUploadUrl::forLocal();
 
