@@ -130,11 +130,23 @@ class ComponentRegistry
 
     protected function generateNameFromClass($class)
     {
-        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace'))))
+        $namespace = str_replace(
+            ['/', '\\'],
+            '.',
+            trim(trim(config('livewire.class_namespace')), '\\')
+        );
+
+        $class = str_replace(
+            ['/', '\\'],
+            '.',
+            trim(trim($class, '/'), '\\')
+        );
+
+        $namespace = collect(explode('.', $namespace))
             ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
             ->implode('.');
 
-        $fullName = str(collect(explode('.', str_replace(['/', '\\'], '.', $class)))
+        $fullName = str(collect(explode('.', $class))
             ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
             ->implode('.'));
 

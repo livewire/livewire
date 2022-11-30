@@ -1,5 +1,6 @@
 import { directives } from '../directives'
-import { on } from '@synthetic/index'
+import { on } from './../synthetic/index'
+import Alpine from 'alpinejs'
 
 export default function () {
     on('element.init', (el, component) => {

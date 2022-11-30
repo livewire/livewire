@@ -1,6 +1,6 @@
 import { directives } from '../directives'
 import { dataGet, dataSet, debounce, debounce as generateDebounce, throttle } from '../utils'
-import { on } from '@synthetic/index'
+import { on } from './../synthetic/index'
 import { closestComponent } from '../lifecycle'
 import { deferMutation } from './../data'
 

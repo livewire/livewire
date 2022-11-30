@@ -1,6 +1,6 @@
 import { morph } from "../morph";
 import { findComponent } from "../state";
-import { on } from '@synthetic/index'
+import { on } from './../synthetic/index'
 
 export default function () {
     on('effects', (target, effects, path) => {

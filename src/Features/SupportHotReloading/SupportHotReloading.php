@@ -6,6 +6,8 @@ use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
 
+use function Livewire\on;
+
 class SupportHotReloading
 {
     protected $pathsByComponentId = [];

@@ -1,6 +1,6 @@
 import { first } from './state'
 import { start } from './lifecycle'
-import { synthetic, on } from '@synthetic/index'
+import { synthetic, on } from './synthetic/index'
 
 /**
  * This is the single entrypoint into "synthetic". Users can pass
@@ -46,3 +46,5 @@ function monkeyPatchDomSetAttributeToAllowAtSymbols() {
 }
 
 monkeyPatchDomSetAttributeToAllowAtSymbols()
+
+Livewire.start()
