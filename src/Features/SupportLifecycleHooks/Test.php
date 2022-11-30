@@ -13,6 +13,37 @@ class Test extends \Tests\TestCase
     {
         $this->assertTrue(true);
     }
+
+    /** @test */
+    public function cant_call_protected_lifecycle_hooks()
+    {
+        $this->assertTrue(
+            collect([
+                'mount',
+                'hydrate',
+                'hydrateFoo',
+                'dehydrate',
+                'dehydrateFoo',
+                'updating',
+                'updatingFoo',
+                'updated',
+                'updatedFoo',
+            ])->every(function ($method) {
+                return $this->cannotCallMethod($method);
+            })
+        );
+    }
+
+    protected function cannotCallMethod($method)
+    {
+        try {
+            Livewire::test(ForProtectedLifecycleHooks::class)->call($method);
+        } catch (DirectlyCallingLifecycleHooksNotAllowedException $e) {
+            return true;
+        }
+
+        return false;
+    }
     
     /** @test */
     public function boot_method_is_called_on_mount_and_on_subsequent_updates()
@@ -41,6 +72,60 @@ class Test extends \Tests\TestCase
             ->assertSet('memo', 'boottraitbootbootedtraitbooted');
     }
 }
+
+class ForProtectedLifecycleHooks extends Component
+{
+    public function mount()
+    {
+        //
+    }
+
+    public function hydrate()
+    {
+        //
+    }
+
+    public function hydrateFoo()
+    {
+        //
+    }
+
+    public function dehydrate()
+    {
+        //
+    }
+
+    public function dehydrateFoo()
+    {
+        //
+    }
+
+    public function updating($name, $value)
+    {
+        //
+    }
+
+    public function updated($name, $value)
+    {
+        //
+    }
+
+    public function updatingFoo($value)
+    {
+        //
+    }
+
+    public function updatedFoo($value)
+    {
+        //
+    }
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
 class ComponentWithBootMethod extends Component
 {
     // Use protected property to record all memo's
@@ -72,6 +157,7 @@ class ComponentWithBootMethod extends Component
     {
         $this->memo = $this->_memo;
 
+        // TODO: Fix broken view
         return view('null-view');
     }
 }
