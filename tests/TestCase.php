@@ -263,6 +263,12 @@ class TestCase extends BaseTestCase
             'driver' => 'local',
             'root' => __DIR__.'/downloads',
         ]);
+
+        // TODO: Review this and see if this file can be moved to File Downloads feature folder
+        $app['config']->set('filesystems.disks.unit-downloads', [
+            'driver' => 'local',
+            'root' => __DIR__.'/fixtures',
+        ]);
     }
 
     protected function resolveApplicationHttpKernel($app)
