@@ -237,7 +237,7 @@ class TestCase extends BaseTestCase
     {
         return [
             ServiceProvider::class,
-            SyntheticServiceProvider::class,
+            // SyntheticServiceProvider::class,
         ];
     }
 
