@@ -196,13 +196,13 @@ class LivewireDirectivesTest extends TestCase
             self::markTestSkipped('Need Laravel >= 8');
         }
 
-        Artisan::call('make:livewire', ['name' => 'foo.index']);
+        Artisan::call('make:livewire', ['name' => 'bar.index']);
 
         $testView = new TestView(view('render-component', [
-            'component' => 'foo',
+            'component' => 'bar',
         ]));
 
-        $testView->assertSeeLivewire('foo');
+        $testView->assertSeeLivewire('bar');
     }
 
     /** @test */
