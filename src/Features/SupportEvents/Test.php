@@ -116,7 +116,7 @@ class Test extends \Tests\TestCase
 
         $component->call('emitToComponentUsingClassname');
 
-        $this->assertTrue(in_array(['to' => 'legacy-tests.unit.it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->effects['emits']));
+        $this->assertTrue(in_array(['to' => 'livewire.features.support-events.it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->effects['emits']));
     }
 }
 
