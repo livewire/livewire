@@ -2,6 +2,8 @@
 
 namespace Livewire\Mechanisms\ExtendBlade;
 
+use Illuminate\Support\Facades\Blade;
+
 use function Livewire\invade;
 use function Livewire\on;
 
@@ -36,6 +38,8 @@ class ExtendBlade
     function boot()
     {
         app()->singleton($this::class);
+
+        Blade::directive('this', fn() => "window.livewire.find('{{ \$_instance->getId() }}')");
 
         on('render', function ($target, $view) {
             $this->startLivewireRendering($target);
