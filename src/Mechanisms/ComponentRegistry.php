@@ -88,7 +88,11 @@ class ComponentRegistry
     protected function nameToClass($name)
     {
         // Check the aliases...
-        if (isset($this->aliases[$name])) return $this->aliases[$name];
+        if (isset($this->aliases[$name])) {
+            if (is_object($this->aliases[$name])) return $this->aliases[$name]::class;
+            
+            return $this->aliases[$name];
+        }
 
         // Hash check the non-aliased classes...
         foreach ($this->nonAliasedClasses as $class) {
