@@ -151,7 +151,6 @@ class ComponentWithModelPublicProperty extends Component
 
     public function render()
     {
-        // TODO: Fix broken view
         return view('model-arrow-title-view');
     }
 }
@@ -169,7 +168,6 @@ class ComponentWithModelsPublicProperty extends Component
 
     public function render()
     {
-        // TODO: Fix broken view
         return view('foreach-models-arrow-title-view');
     }
 }

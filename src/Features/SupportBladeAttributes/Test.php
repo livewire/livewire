@@ -51,7 +51,6 @@ class ComponentWithEntangleDirectiveUsedWithinBladeComponent extends Component
 {
     public function render()
     {
-        // TODO: Fix broken view
         return view('entangle');
     }
 }

@@ -158,7 +158,6 @@ class ReceivesEvents extends Component
 
     public function render()
     {
-        // TODO: Fix broken view
         return app('view')->make('null-view');
     }
 }
@@ -176,7 +175,6 @@ class ReceivesEventsWithSingleValueListener extends Component
 
     public function render()
     {
-        // TODO: Fix broken view
         return app('view')->make('null-view');
     }
 }
@@ -203,7 +201,6 @@ class ReceivesEventsWithDynamicListeners extends Component
 
     public function render()
     {
-        // TODO: Fix broken view
         return app('view')->make('null-view');
     }
 }
@@ -217,7 +214,6 @@ class DispatchesBrowserEvents extends Component
 
     public function render()
     {
-        // TODO: Fix broken view
         return app('view')->make('null-view');
     }
 }
@@ -237,7 +233,6 @@ class ItCanReceiveEventUsingClassname extends Component
 
     public function render()
     {
-        // TODO: Fix broken view
         return app('view')->make('null-view');
     }
 }

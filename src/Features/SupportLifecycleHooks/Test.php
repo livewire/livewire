@@ -157,7 +157,6 @@ class ComponentWithBootMethod extends Component
     {
         $this->memo = $this->_memo;
 
-        // TODO: Fix broken view
         return view('null-view');
     }
 }
@@ -253,7 +252,6 @@ class ComponentWithBootMethodDI extends Component
     {
         $this->memo = $this->_memo;
 
-        // TODO: Fix broken view
         return view('null-view');
     }
 }

@@ -241,7 +241,6 @@ class TriggersRedirectStub extends Component
 
     public function render()
     {
-        // TODO: Fix broken view
         return app('view')->make('null-view');
     }
 }
@@ -255,7 +254,6 @@ class TriggersRedirectOnMountStub extends Component
 
     public function render()
     {
-        // TODO: Fix broken view
         return app('view')->make('null-view');
     }
 }
