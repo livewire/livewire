@@ -14,9 +14,7 @@
         "illuminate/support": "^8.0|^9.0",
         "illuminate/database": "^8.0|^9.0",
         "illuminate/validation": "^8.0|^9.0",
-        "league/mime-type-detection": "^1.9",
-        "react/event-loop": "^1.3",
-        "spatie/file-system-watcher": "^1.1"
+        "league/mime-type-detection": "^1.9"
     },
     "require-dev": {
         "psy/psysh": "@stable",

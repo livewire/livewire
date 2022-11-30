@@ -1,8 +1,0 @@
-/vendor/
-/node_modules/
-SCRATCH.md
-COMMIT_MSG.aim.txt
-composer.lock
-.phpunit.result.cache
-.idea
-phpunit.xml

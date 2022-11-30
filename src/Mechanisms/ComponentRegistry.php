@@ -65,6 +65,11 @@ class ComponentRegistry
         // Otherwise, assume it was a simple name...
         } else {
             $class = $this->nameToClass($nameOrClass);
+
+            // If class can't be found, see if there is an index component in a subfolder...
+            if(! class_exists($class)) {
+                $class = $class . '\\Index';
+            }
         }
 
         // Now that we have a class, we can check that it's actually a Livewire component...
@@ -83,7 +88,11 @@ class ComponentRegistry
     protected function nameToClass($name)
     {
         // Check the aliases...
-        if (isset($this->aliases[$name])) return $this->aliases[$name];
+        if (isset($this->aliases[$name])) {
+            if (is_object($this->aliases[$name])) return $this->aliases[$name]::class;
+            
+            return $this->aliases[$name];
+        }
 
         // Hash check the non-aliased classes...
         foreach ($this->nonAliasedClasses as $class) {
@@ -125,18 +134,39 @@ class ComponentRegistry
 
     protected function generateNameFromClass($class)
     {
-        $namespace = collect(explode('.', str_replace(['/', '\\'], '.', config('livewire.class_namespace'))))
+        $namespace = str_replace(
+            ['/', '\\'],
+            '.',
+            trim(trim(config('livewire.class_namespace')), '\\')
+        );
+
+        $class = str_replace(
+            ['/', '\\'],
+            '.',
+            trim(trim($class, '/'), '\\')
+        );
+
+        $namespace = collect(explode('.', $namespace))
             ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
             ->implode('.');
 
-        $fullName = collect(explode('.', str_replace(['/', '\\'], '.', $class)))
+        $fullName = str(collect(explode('.', $class))
             ->map(fn ($i) => \Illuminate\Support\Str::kebab($i))
-            ->implode('.');
+            ->implode('.'));
 
-        if (str($fullName)->startsWith($namespace)) {
-            return (string) str($fullName)->substr(strlen($namespace) + 1);
+        if ($fullName->startsWith('.')) {
+            $fullName = $fullName->substr(1);
         }
 
-        return $fullName;
+        // If using an index component in a sub folder, remove the '.index' so the name is the subfolder name...
+        if ($fullName->endsWith('.index')) {
+            $fullName = $fullName->replaceLast('.index', '');
+        }
+
+        if ($fullName->startsWith($namespace)) {
+            return (string) $fullName->substr(strlen($namespace) + 1);
+        }
+
+        return (string) $fullName;
     }
 }

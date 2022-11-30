@@ -11,11 +11,6 @@ use PHPUnit\Framework\ExpectationFailedException;
 
 class LivewireDirectivesTest extends TestCase
 {
-    function setUp(): void
-    {
-        $this->markTestSkipped('This is a low hanging fruit one for someone else to make pass');
-    }
-
     /** @test */
     public function component_is_loaded_with_blade_directive()
     {
@@ -201,13 +196,13 @@ class LivewireDirectivesTest extends TestCase
             self::markTestSkipped('Need Laravel >= 8');
         }
 
-        Artisan::call('make:livewire', ['name' => 'foo.index']);
+        Artisan::call('make:livewire', ['name' => 'bar.index']);
 
         $testView = new TestView(view('render-component', [
-            'component' => 'foo',
+            'component' => 'bar',
         ]));
 
-        $testView->assertSeeLivewire('foo');
+        $testView->assertSeeLivewire('bar');
     }
 
     /** @test */

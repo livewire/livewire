@@ -2,6 +2,7 @@ import { reactive as r, effect as e, toRaw as tr, stop as s, pauseTracking, enab
 import { each, deeplyEqual, isObjecty, deepClone, diff, dataGet, isObject } from './utils'
 import { showHtmlModal } from './modal'
 import { on, trigger } from './events'
+import Alpine from 'alpinejs'
 
 export { on, trigger }
 
@@ -352,6 +353,10 @@ async function requestNew(name) {
 function getCsrfToken() {
     if (document.querySelector('meta[name="csrf"]')) {
         return document.querySelector('meta[name="csrf"]').content
+    }
+
+    if (document.querySelector('[data-livewire-scripts]')) {
+        return document.querySelector('[data-livewire-scripts]').getAttribute('data-csrf')
     }
 
     return window.__csrf
