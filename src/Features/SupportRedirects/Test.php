@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportRedirects;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\Livewire;
 
