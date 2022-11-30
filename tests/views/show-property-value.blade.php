@@ -1,0 +1,1 @@
+<span>{{ $message }}</span>
