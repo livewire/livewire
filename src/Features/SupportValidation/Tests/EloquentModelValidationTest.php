@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportValidation\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
@@ -9,7 +9,8 @@ use Sushi\Sushi;
 use function collect;
 use function view;
 
-class EloquentModelValidationTest extends TestCase
+// TODO: Should this be moved to the SupportModels folder
+class EloquentModelValidationTest extends \Tests\TestCase
 {
     /** @test */
     public function standard_model_property()
