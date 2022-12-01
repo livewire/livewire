@@ -230,36 +230,4 @@ class LivewireDirectivesTest extends TestCase
 
         $this->assertStringContainsString('div', $output);
     }
-
-    /** @test */
-    public function this_directive_returns_javascript_component_object_string()
-    {
-        Livewire::test(ComponentForTestingDirectives::class)
-            ->assertDontSee('@this')
-            ->assertSee('window.livewire.find(');
-    }
-
-    /** @test */
-    public function this_directive_can_be_used_in_nested_blade_component()
-    {
-        Livewire::test(ComponentForTestingNestedThisDirective::class)
-            ->assertDontSee('@this')
-            ->assertSee('window.livewire.find(');
-    }
-}
-
-class ComponentForTestingDirectives extends Component
-{
-    public function render()
-    {
-        return view('this-directive');
-    }
-}
-
-class ComponentForTestingNestedThisDirective extends Component
-{
-    public function render()
-    {
-        return view('nested-this-directive');
-    }
 }
