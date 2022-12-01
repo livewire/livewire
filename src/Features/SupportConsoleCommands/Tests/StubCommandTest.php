@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
-class StubCommandTest extends TestCase
+class StubCommandTest extends \Tests\TestCase
 {
     /** @test */
     public function default_view_stub_is_created()

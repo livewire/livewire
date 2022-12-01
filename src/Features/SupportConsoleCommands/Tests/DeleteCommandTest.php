@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
-class DeleteCommandTest extends TestCase
+class DeleteCommandTest extends \Tests\TestCase
 {
     /** @test */
     public function component_is_removed_by_delete_command()

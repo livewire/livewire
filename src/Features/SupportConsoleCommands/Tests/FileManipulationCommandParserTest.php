@@ -1,10 +1,10 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Livewire\Features\SupportConsoleCommands\Commands\ComponentParser;
 
-class FileManipulationCommandParserTest extends TestCase
+class FileManipulationCommandParserTest extends \Tests\TestCase
 {
     /**
      * @test

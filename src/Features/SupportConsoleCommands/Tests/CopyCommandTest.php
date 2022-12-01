@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
-class CopyCommandTest extends TestCase
+class CopyCommandTest extends \Tests\TestCase
 {
     /** @test */
     public function component_is_copied_by_copy_command()

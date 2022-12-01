@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
-class MoveCommandTest extends TestCase
+class MoveCommandTest extends \Tests\TestCase
 {
     /** @test */
     public function component_is_renamed_by_move_command()
