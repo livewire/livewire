@@ -43,6 +43,13 @@ class Test extends \Tests\TestCase
 
         $this->assertCount(3, explode('@foo', $output));
     }
+
+    /** @test */
+    public function this_keyword_will_reference_the_livewire_component_class()
+    {
+        Livewire::test(ComponentForTestingThisKeyword::class)
+            ->assertSee(ComponentForTestingThisKeyword::class);
+    }
 }
 
 class ExtendBladeTestComponent extends Component
@@ -50,5 +57,13 @@ class ExtendBladeTestComponent extends Component
     public function render()
     {
         return '<div>@foo</div>';
+    }
+}
+
+class ComponentForTestingThisKeyword extends Component
+{
+    public function render()
+    {
+        return view('this-keyword');
     }
 }
