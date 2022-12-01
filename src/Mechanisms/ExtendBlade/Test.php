@@ -64,6 +64,6 @@ class ComponentForTestingThisKeyword extends Component
 {
     public function render()
     {
-        return view('this-keyword');
+        return '<div>{{ get_class($this) }}</div>';
     }
 }
