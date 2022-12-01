@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportModels;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
@@ -8,7 +8,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
 
-class ModelAttributesCanBeCastTest extends TestCase
+class ModelAttributesCanBeCastTest extends \Tests\TestCase
 {
     /** @test */
     public function can_cast_normal_date_attributes_from_model_casts_definition()

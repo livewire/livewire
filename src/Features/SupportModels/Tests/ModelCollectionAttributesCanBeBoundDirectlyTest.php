@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportModels;
 
 use Sushi\Sushi;
 use Livewire\Livewire;
@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
 use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleException;
 
-class ModelCollectionAttributesCanBeBoundDirectlyTest extends TestCase
+class ModelCollectionAttributesCanBeBoundDirectlyTest extends \Tests\TestCase
 {
     /** @test */
     public function can_set_a_model_attribute_inside_a_models_collection_and_save()

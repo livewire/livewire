@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportModels;
 
 use Livewire\Livewire;
 use Livewire\Component;
@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
 use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleException;
 
-class ModelAttributesCanBeBoundDirectlyTest extends TestCase
+class ModelAttributesCanBeBoundDirectlyTest extends \Tests\TestCase
 {
     public function setUp(): void
     {
