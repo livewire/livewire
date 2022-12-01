@@ -88,7 +88,7 @@ class ComponentForTestingDirectives extends Component
 {
     public function render()
     {
-        return view('this-directive');
+        return '<div>@this</div>';
     }
 }
 
@@ -96,6 +96,6 @@ class ComponentForTestingNestedThisDirective extends Component
 {
     public function render()
     {
-        return view('nested-this-directive');
+        return "<div>@component('this-directive')@endcomponent</div>";
     }
 }
