@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Mechanisms\Tests;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
@@ -9,7 +9,7 @@ use Livewire\Livewire;
 use function Livewire\store;
 use function Livewire\str;
 
-class ComponentSkipRenderTest extends TestCase
+class ComponentSkipRenderTest extends \Tests\TestCase
 {
     /** @test */
     public function component_renders_like_normal()
