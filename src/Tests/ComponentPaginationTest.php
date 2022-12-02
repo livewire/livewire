@@ -1,12 +1,12 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\WithPagination;
 
-class ComponentPaginationTest extends TestCase
+class ComponentPaginationTest extends \Tests\TestCase
 {
     /** @test */
     public function can_navigate_to_previous_page()
