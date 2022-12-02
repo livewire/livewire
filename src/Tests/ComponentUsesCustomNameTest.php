@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ComponentUsesCustomNameTest extends TestCase
+class ComponentUsesCustomNameTest extends \Tests\TestCase
 {
     /** @test */
     public function uses_default_component_name()
