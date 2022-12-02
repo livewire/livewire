@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ComponentIsMacroableTest extends TestCase
+class ComponentIsMacroableTest extends \Tests\TestCase
 {
     /** @test */
     public function it_resolves_the_mount_parameters()
