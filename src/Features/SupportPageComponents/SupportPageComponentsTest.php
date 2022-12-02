@@ -1,12 +1,12 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportPageComponents;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ComponentLayoutTest extends TestCase
+class SupportPageComponentsTest extends \Tests\TestCase
 {
     /** @test */
     public function can_extend_a_blade_layout()
