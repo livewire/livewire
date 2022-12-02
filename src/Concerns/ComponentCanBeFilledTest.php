@@ -1,13 +1,13 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Concerns;
 
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Database\Eloquent\Model;
 use Synthetic\Testing\FauxJsTarget;
 
-class ComponentCanBeFilledTest extends TestCase
+class ComponentCanBeFilledTest extends \Tests\TestCase
 {
     /** @test */
     public function can_fill_from_an_array()
