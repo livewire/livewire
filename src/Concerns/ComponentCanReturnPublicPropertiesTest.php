@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Concerns;
 
 use Livewire\Livewire;
 use Livewire\Component;
 
-class ComponentCanReturnPublicPropertiesTest extends TestCase
+class ComponentCanReturnPublicPropertiesTest extends \Tests\TestCase
 {
     /** @test */
     public function a_livewire_component_can_return_an_associative_array_of_public_properties()
