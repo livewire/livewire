@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Mechanisms\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
-class InlineBladeTemplatesTest extends TestCase
+class InlineBladeTemplatesTest extends \Tests\TestCase
 {
     /** @test */
     public function renders_inline_blade_template()
