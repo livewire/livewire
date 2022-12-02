@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use function Livewire\invade;
 use Livewire\Component;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Request;
 use Livewire\Response;
 
-class InvadeHelperTest extends TestCase
+class InvadeHelperTest extends \Tests\TestCase
 {
     /** @test */
     public function get_property()
