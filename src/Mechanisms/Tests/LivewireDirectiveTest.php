@@ -20,4 +20,16 @@ class LivewireDirectiveTest extends \LegacyTests\Unit\TestCase
 
         $this->assertStringContainsString('div', $output);
     }
+
+    /** @test */
+    public function component_is_loaded_with_blade_directive_by_classname()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo']);
+
+        $output = view('render-component', [
+            'component' => \App\Http\Livewire\Foo::class,
+        ])->render();
+
+        $this->assertStringContainsString('div', $output);
+    }
 }
