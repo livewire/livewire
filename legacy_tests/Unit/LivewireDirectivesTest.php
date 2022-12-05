@@ -9,6 +9,7 @@ use Illuminate\Testing\TestResponse;
 use Illuminate\Support\Facades\Artisan;
 use PHPUnit\Framework\ExpectationFailedException;
 
+// TODO - Delete this once bug in Dusk TestCase is fixed, see Livewire\Mechanisms\Tests\LivewireDirectiveTest
 class LivewireDirectivesTest extends TestCase
 {
     /** @test */
