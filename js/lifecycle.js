@@ -16,7 +16,13 @@ export function start(options = {}) {
 
     Alpine.plugin(morph)
 
+    Alpine.addRootSelector(() => '[wire\\:id]')
+
     Alpine.start()
+
+    setTimeout(() => {
+        window.Livewire.initialRenderIsFinished = true
+    })
 }
 
 function initElement(el) {

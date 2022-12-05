@@ -63,36 +63,36 @@ class TestCase extends BaseTestCase
 
     public static function onApplicationBoot()
     {
-        Route::get('/livewire-dusk', function () {
-            $name = request('component');
+        // Route::get('/livewire-dusk', function () {
+        //     $name = request('component');
 
-            return Blade::render(<<<HTML
-            <html>
-                <body>
-                    @livewire('$name')
-                </body>
-            </html>
-            HTML);
-        })->middleware('web');
+        //     return Blade::render(<<<HTML
+        //     <html>
+        //         <body>
+        //             @livewire('$name')
+        //         </body>
+        //     </html>
+        //     HTML);
+        // })->middleware('web');
 
-        spl_autoload_register(function ($class) {
-            if (str_starts_with($class, 'LivewireAnonymous')) {
+        // spl_autoload_register(function ($class) {
+        //     if (str_starts_with($class, 'LivewireAnonymous')) {
 
-                include_once sys_get_temp_dir().'/livewire-dusk/'.$class.'.php';
+        //         include_once sys_get_temp_dir().'/livewire-dusk/'.$class.'.php';
 
-                return true;
-            }
+        //         return true;
+        //     }
 
-            return false;
-        });
+        //     return false;
+        // });
 
-        if (File::exists($tempDir = sys_get_temp_dir().'/livewire-dusk')) {
-            foreach (File::allFiles($tempDir) as $file) {
-                $name = (string) str($file->getFilename())->before('.php');
+        // if (File::exists($tempDir = sys_get_temp_dir().'/livewire-dusk')) {
+        //     foreach (File::allFiles($tempDir) as $file) {
+        //         $name = (string) str($file->getFilename())->before('.php');
 
-                Livewire::component($name, new $name);
-            }
-        }
+        //         Livewire::component($name, new $name);
+        //     }
+        // }
     }
 
     public function setUp(): void

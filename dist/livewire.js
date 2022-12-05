@@ -920,17 +920,36 @@
   }
 
   // ../alpine/packages/alpinejs/dist/module.esm.js
+  var flushPending = false;
+  var flushing = false;
   var queue = [];
   function scheduler(callback) {
     queueJob(callback);
   }
   function queueJob(job) {
-    job();
+    if (!queue.includes(job))
+      queue.push(job);
+    queueFlush();
   }
   function dequeueJob(job) {
     let index = queue.indexOf(job);
     if (index !== -1)
       queue.splice(index, 1);
+  }
+  function queueFlush() {
+    if (!flushing && !flushPending) {
+      flushPending = true;
+      queueMicrotask(flushJobs);
+    }
+  }
+  function flushJobs() {
+    flushPending = false;
+    flushing = true;
+    for (let i = 0; i < queue.length; i++) {
+      queue[i]();
+    }
+    queue.length = 0;
+    flushing = false;
   }
   var reactive2;
   var effect2;
@@ -1295,7 +1314,11 @@
     return obj;
   }
   function tryCatch(el, expression, callback, ...args) {
-    return callback(...args);
+    try {
+      return callback(...args);
+    } catch (e) {
+      handleError(e, el, expression);
+    }
   }
   function handleError(error2, el, expression = void 0) {
     Object.assign(error2, { el, expression });
@@ -1349,7 +1372,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     let AsyncFunction = Object.getPrototypeOf(async function() {
     }).constructor;
-    let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression) || /^(let|const)\s/.test(expression) ? `(() => { ${expression} })()` : expression;
+    let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression) || /^(let|const)\s/.test(expression) ? `(async()=>{ ${expression} })()` : expression;
     const safeAsyncFunction = () => {
       try {
         return new AsyncFunction(["__self", "scope"], `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`);
@@ -1406,6 +1429,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var directiveHandlers = {};
   function directive(name, callback) {
     directiveHandlers[name] = callback;
+    return {
+      before(directive2) {
+        if (!directiveHandlers[directive2]) {
+          console.warn("Cannot find directive `${directive}`. `${name}` will use the default order of execution");
+          return;
+        }
+        const pos = directiveOrder.indexOf(directive2) ?? directiveOrder.indexOf("DEFAULT");
+        if (pos >= 0) {
+          directiveOrder.splice(pos, 0, name);
+        }
+      }
+    };
   }
   function directives(el, attributes, originalAttributeOverride) {
     attributes = Array.from(attributes);
@@ -1529,6 +1564,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "ref",
     "data",
     "id",
+    "radio",
+    "tabs",
+    "switch",
+    "disclosure",
+    "menu",
+    "listbox",
+    "combobox",
     "bind",
     "init",
     "for",
@@ -1553,30 +1595,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       composed: true,
       cancelable: true
     }));
-  }
-  var tickStack = [];
-  var isHolding = false;
-  function nextTick(callback = () => {
-  }) {
-    queueMicrotask(() => {
-      isHolding || setTimeout(() => {
-        releaseNextTicks();
-      });
-    });
-    return new Promise((res) => {
-      tickStack.push(() => {
-        callback();
-        res();
-      });
-    });
-  }
-  function releaseNextTicks() {
-    isHolding = false;
-    while (tickStack.length)
-      tickStack.shift()();
-  }
-  function holdNextTicks() {
-    isHolding = true;
   }
   function walk(el, callback) {
     if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
@@ -1665,6 +1683,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function destroyTree(root) {
     walk(root, (el) => cleanupAttributes(el));
+  }
+  var tickStack = [];
+  var isHolding = false;
+  function nextTick(callback = () => {
+  }) {
+    queueMicrotask(() => {
+      isHolding || setTimeout(() => {
+        releaseNextTicks();
+      });
+    });
+    return new Promise((res) => {
+      tickStack.push(() => {
+        callback();
+        res();
+      });
+    });
+  }
+  function releaseNextTicks() {
+    isHolding = false;
+    while (tickStack.length)
+      tickStack.shift()();
+  }
+  function holdNextTicks() {
+    isHolding = true;
   }
   function setClasses(el, value2) {
     if (Array.isArray(value2)) {
@@ -2195,11 +2237,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let attr = el.getAttribute(name);
     if (attr === null)
       return typeof fallback === "function" ? fallback() : fallback;
+    if (attr === "")
+      return true;
     if (isBooleanAttr2(name)) {
       return !![name, "true"].includes(attr);
     }
-    if (attr === "")
-      return true;
     return attr;
   }
   function debounce(func, wait) {
@@ -2223,6 +2265,37 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         inThrottle = true;
         setTimeout(() => inThrottle = false, limit);
       }
+    };
+  }
+  function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
+    let firstRun = true;
+    let outerHash, innerHash;
+    let reference = effect2(() => {
+      let outer, inner;
+      if (firstRun) {
+        outer = outerGet();
+        innerSet(outer);
+        inner = innerGet();
+        firstRun = false;
+      } else {
+        outer = outerGet();
+        inner = innerGet();
+        outerHashLatest = JSON.stringify(outer);
+        innerHashLatest = JSON.stringify(inner);
+        if (outerHashLatest !== outerHash) {
+          inner = innerGet();
+          innerSet(outer);
+          inner = outer;
+        } else {
+          outerSet(inner);
+          outer = inner;
+        }
+      }
+      outerHash = JSON.stringify(outer);
+      innerHash = JSON.stringify(inner);
+    });
+    return () => {
+      release(reference);
     };
   }
   function plugin(callback) {
@@ -2318,7 +2391,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.10.3",
+    version: "3.10.5",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -2345,6 +2418,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setStyles,
     mutateDom,
     directive,
+    entangle,
     throttle,
     debounce,
     evaluate,
@@ -2374,8 +2448,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs2 = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr22 = /* @__PURE__ */ makeMap2(specialBooleanAttrs2 + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ2 = false ? Object.freeze({}) : {};
-  var EMPTY_ARR2 = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ2 = true ? Object.freeze({}) : {};
+  var EMPTY_ARR2 = true ? Object.freeze([]) : [];
   var extend2 = Object.assign;
   var hasOwnProperty2 = Object.prototype.hasOwnProperty;
   var hasOwn2 = (val, key) => hasOwnProperty2.call(val, key);
@@ -2409,8 +2483,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap2 = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect2;
-  var ITERATE_KEY2 = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY2 = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY2 = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY2 = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2500,7 +2574,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect2)) {
       dep.add(activeEffect2);
       activeEffect2.deps.push(dep);
-      if (false) {
+      if (activeEffect2.options.onTrack) {
         activeEffect2.options.onTrack({
           effect: activeEffect2,
           target,
@@ -2564,7 +2638,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect32) => {
-      if (false) {
+      if (effect32.options.onTrigger) {
         effect32.options.onTrigger({
           effect: effect32,
           target,
@@ -2702,13 +2776,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers2 = {
     get: readonlyGet2,
     set(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2777,7 +2851,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3.call(target, key);
@@ -2796,7 +2870,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2809,7 +2883,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear2() {
     const target = toRaw2(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger3(target, "clear", void 0, void 0, oldTarget);
@@ -2854,7 +2928,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod2(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize2(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
       }
@@ -2953,6 +3027,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var shallowReadonlyCollectionHandlers = {
     get: createInstrumentationGetter2(true, true)
   };
+  function checkIdentityKeys(target, has22, key) {
+    const rawKey = toRaw2(key);
+    if (rawKey !== key && has22.call(target, rawKey)) {
+      const type = toRawType2(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap2 = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap2 = /* @__PURE__ */ new WeakMap();
   var readonlyMap2 = /* @__PURE__ */ new WeakMap();
@@ -2985,7 +3066,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject2(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject3(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3079,8 +3160,44 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function warnMissingPluginMagic(name, magicName, slug) {
     magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
+  directive("modelable", (el, { expression }, { effect: effect32, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
+    let func = evaluateLater2(expression);
+    let innerGet = () => {
+      let result;
+      func((i) => result = i);
+      return result;
+    };
+    let evaluateInnerSet = evaluateLater2(`${expression} = __placeholder`);
+    let innerSet = (val) => evaluateInnerSet(() => {
+    }, { scope: { __placeholder: val } });
+    let initialValue = innerGet();
+    innerSet(initialValue);
+    queueMicrotask(() => {
+      if (!el._x_model)
+        return;
+      el._x_removeModelListeners["default"]();
+      let outerGet = el._x_model.get;
+      let outerSet = el._x_model.set;
+      let releaseEntanglement = entangle({
+        get() {
+          return outerGet();
+        },
+        set(value2) {
+          outerSet(value2);
+        }
+      }, {
+        get() {
+          return innerGet();
+        },
+        set(value2) {
+          innerSet(value2);
+        }
+      });
+      cleanup2(releaseEntanglement);
+    });
+  });
   var teleportContainerDuringClone = document.createElement("div");
-  directive("teleport", (el, { expression }, { cleanup: cleanup2 }) => {
+  directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup2 }) => {
     if (el.tagName.toLowerCase() !== "template")
       warn("x-teleport can only be used on a <template> tag", el);
     let target = skipDuringClone(() => {
@@ -3103,15 +3220,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     addScopeToNode(clone2, {}, el);
     mutateDom(() => {
-      target.appendChild(clone2);
+      if (modifiers.includes("prepend")) {
+        target.parentNode.insertBefore(clone2, target);
+      } else if (modifiers.includes("append")) {
+        target.parentNode.insertBefore(clone2, target.nextSibling);
+      } else {
+        target.appendChild(clone2);
+      }
       initTree(clone2);
       clone2._x_ignore = true;
     });
     cleanup2(() => clone2.remove());
   });
-  directive("destroy", skipDuringClone((el, { expression }, { evaluate: evaluate2, cleanup: cleanup2 }) => {
-    cleanup2(() => evaluate2(expression, {}, false));
-  }));
   var handler = () => {
   };
   handler.inline = (el, { modifiers }, { cleanup: cleanup2 }) => {
@@ -3206,6 +3326,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return !Array.isArray(subject) && !isNaN(subject);
   }
   function kebabCase2(subject) {
+    if ([" ", "_"].includes(subject))
+      return subject;
     return subject.replace(/([a-z])([A-Z])/g, "$1-$2").replace(/[_\s]/, "-").toLowerCase();
   }
   function isKeyEvent(event) {
@@ -3217,6 +3339,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     if (keyModifiers.includes("debounce")) {
       let debounceIndex = keyModifiers.indexOf("debounce");
+      keyModifiers.splice(debounceIndex, isNumeric((keyModifiers[debounceIndex + 1] || "invalid-wait").split("ms")[0]) ? 2 : 1);
+    }
+    if (keyModifiers.includes("throttle")) {
+      let debounceIndex = keyModifiers.indexOf("throttle");
       keyModifiers.splice(debounceIndex, isNumeric((keyModifiers[debounceIndex + 1] || "invalid-wait").split("ms")[0]) ? 2 : 1);
     }
     if (keyModifiers.length === 0)
@@ -3246,8 +3372,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let modifierToKeyMap = {
       ctrl: "control",
       slash: "/",
-      space: "-",
-      spacebar: "-",
+      space: " ",
+      spacebar: " ",
       cmd: "meta",
       esc: "escape",
       up: "arrow-up",
@@ -3255,7 +3381,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       left: "arrow-left",
       right: "arrow-right",
       period: ".",
-      equal: "="
+      equal: "=",
+      minus: "-",
+      underscore: "_"
     };
     modifierToKeyMap[key] = key;
     return Object.keys(modifierToKeyMap).map((modifier) => {
@@ -3309,6 +3437,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_removeModelListeners = {};
     el._x_removeModelListeners["default"] = removeListener;
     cleanup2(() => el._x_removeModelListeners["default"]());
+    if (el.form) {
+      let removeResetListener = on2(el.form, "reset", [], (e) => {
+        nextTick(() => el._x_model && el._x_model.set(el.value));
+      });
+      cleanup2(() => removeResetListener());
+    }
     el._x_model = {
       get() {
         return getValue();
@@ -3367,7 +3501,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return !Array.isArray(subject) && !isNaN(subject);
   }
   function isGetterSetter(value2) {
-    return typeof value2 === "object" && typeof value2.get === "function" && typeof value2.set === "function";
+    return value2 !== null && typeof value2 === "object" && typeof value2.get === "function" && typeof value2.set === "function";
   }
   directive("cloak", (el) => queueMicrotask(() => mutateDom(() => el.removeAttribute(prefix("cloak")))));
   addInitSelector(() => `[${prefix("init")}]`);
@@ -3415,8 +3549,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return storeKeyForXFor(el, expression);
     let evaluate2 = evaluateLater(el, expression);
     effect32(() => evaluate2((result) => {
-      if (result === void 0 && expression.match(/\./))
+      if (result === void 0 && typeof expression === "string" && expression.match(/\./)) {
         result = "";
+      }
       mutateDom(() => bind(el, value2, result, modifiers));
     }));
   });
@@ -3714,34 +3849,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     cleanup2(() => removeListener());
   }));
-  directive("modelable", (el, { expression }, { effect: effect32, evaluateLater: evaluateLater2 }) => {
-    let func = evaluateLater2(expression);
-    let innerGet = () => {
-      let result;
-      func((i) => result = i);
-      return result;
-    };
-    let evaluateInnerSet = evaluateLater2(`${expression} = __placeholder`);
-    let innerSet = (val) => evaluateInnerSet(() => {
-    }, { scope: { __placeholder: val } });
-    let initialValue = innerGet();
-    innerSet(initialValue);
-    queueMicrotask(() => {
-      if (!el._x_model)
-        return;
-      el._x_removeModelListeners["default"]();
-      let outerGet = el._x_model.get;
-      let outerSet = el._x_model.set;
-      effect32(() => {
-        let value2 = outerGet();
-        queueMicrotask(() => innerSet(value2));
-      });
-      effect32(() => {
-        let value2 = innerGet();
-        queueMicrotask(() => outerSet(value2));
-      });
-    });
-  });
   warnMissingPluginDirective("Collapse", "collapse", "collapse");
   warnMissingPluginDirective("Intersect", "intersect", "intersect");
   warnMissingPluginDirective("Focus", "trap", "focus");
@@ -4787,6 +4894,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           patchChildren(newFromChildren, newToChildren, (node) => appendPoint.before(node));
           continue;
         }
+        if (currentFrom.nodeType === 1 && lookahead) {
+          let nextToElementSibling = dom.next(toChildren, currentTo);
+          let found = false;
+          while (!found && nextToElementSibling) {
+            if (currentFrom.isEqualNode(nextToElementSibling)) {
+              found = true;
+              [fromChildren, currentFrom] = addNodeBefore(fromChildren, currentTo, currentFrom);
+              fromKey = getKey(currentFrom);
+            }
+            nextToElementSibling = dom.next(toChildren, nextToElementSibling);
+          }
+        }
         if (toKey !== fromKey) {
           if (!toKey && fromKey) {
             fromKeyHoldovers[fromKey] = currentFrom;
@@ -4898,7 +5017,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       initElement(el);
     }));
     module_default.plugin(module_default2);
+    module_default.addRootSelector(() => "[wire\\:id]");
     module_default.start();
+    setTimeout(() => {
+      window.Livewire.initialRenderIsFinished = true;
+    });
   }
   function initElement(el) {
     if (el.hasAttribute("wire:id")) {

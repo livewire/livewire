@@ -116,6 +116,7 @@ EOT;
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:initial-data' => $payload,
+            'wire:id' => $component->getId(),
         ]);
 
         $finishMount($html);
