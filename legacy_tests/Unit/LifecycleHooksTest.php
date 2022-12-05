@@ -13,7 +13,7 @@ class LifecycleHooksTest extends TestCase
     /** @test */
     public function refresh_magic_method()
     {
-        $component = Livewire::test(ForLifecycleHooks::class);
+        $component = Livewire::test(ForMagicMethods::class);
 
         $component->call('$refresh');
 
@@ -37,7 +37,7 @@ class LifecycleHooksTest extends TestCase
     /** @test */
     public function set_magic_method()
     {
-        $component = Livewire::test(ForLifecycleHooks::class, [
+        $component = Livewire::test(ForMagicMethods::class, [
             'expected' => [
                 'updating' => [[
                     'foo' => 'bar',
@@ -70,7 +70,7 @@ class LifecycleHooksTest extends TestCase
     }
 }
 
-class ForLifecycleHooks extends Component
+class ForMagicMethods extends Component
 {
     public $foo;
 
