@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportModels;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 
-class ComponentTypedPropertyBindingsTest extends TestCase
+class ComponentTypedPropertyBindingsTest extends \Tests\TestCase
 {
     public function setUp(): void
     {
