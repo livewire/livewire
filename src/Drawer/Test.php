@@ -1,15 +1,12 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Drawer;
 
-use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
-use function Livewire\str;
 
-class ComponentRootHasIdAndComponentDataTest extends TestCase
+class Test extends \Tests\TestCase
 {
     /** @test */
     public function root_element_has_id_and_component_data()
@@ -38,7 +35,8 @@ class ComponentRootHasIdAndComponentDataTest extends TestCase
             <<<EOT
 {&quot;string&quot;:&quot;foo&quot;,&quot;array&quot;:[[&quot;foo&quot;],{&quot;s&quot;:&quot;arr&quot;}],&quot;object&quot;:[{&quot;foo&quot;:&quot;bar&quot;},{&quot;s&quot;:&quot;arr&quot;}],&quot;number&quot;:1,&quot;quote&quot;:&quot;\&quot;&quot;,&quot;singleQuote&quot;:&quot;&#039;&quot;}
 EOT
-            , $component->html()
+            ,
+            $component->html()
         );
     }
 
@@ -52,7 +50,8 @@ EOT
 <!-- Test comment <div>Commented out code</div> -->
 <span wire:initial-data
 EOT
-            , $component->html()
+            ,
+            $component->html()
         );
     }
 
@@ -66,7 +65,8 @@ EOT
 <!-- Test comment <div>Commented out code</div> -->
 <span wire:initial-data
 EOT
-            , $component->html()
+            ,
+            $component->html()
         );
     }
 
