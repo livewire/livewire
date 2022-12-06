@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Concerns;
+namespace Livewire\Concerns\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
