@@ -1,12 +1,11 @@
 <?php
 
-namespace LegacyTests;
+namespace Livewire\Mechanisms\UpdateComponents\Synthesizers\Tests;
 
-use Livewire\Livewire;
 use Livewire\Component;
-use LegacyTests\Unit\TestCase;
+use Livewire\Livewire;
 
-class PublicEnumHydrationHooksTest extends TestCase
+class EnumTest extends \Tests\TestCase
 {
     /**
      * @test
@@ -16,9 +15,14 @@ class PublicEnumHydrationHooksTest extends TestCase
     {
         Livewire::test(ComponentWithPublicEnumCasters::class)
             ->call('storeTypeOf')
-            ->assertSet('typeOf', TestEnum::class)
-            ->assertSet('enum', TestEnum::from('Be excellent to each other'));
+            ->assertSet('typeOf', TestingEnum::class)
+            ->assertSet('enum', TestingEnum::from('Be excellent to each other'));
     }
+}
+
+enum TestingEnum: string
+{
+    case TEST = 'Be excellent to each other';
 }
 
 class ComponentWithPublicEnumCasters extends Component
@@ -28,17 +32,17 @@ class ComponentWithPublicEnumCasters extends Component
 
     public function hydrate()
     {
-        $this->enum = TestEnum::TEST;
+        $this->enum = TestingEnum::TEST;
     }
 
     public function dehydrate()
     {
-        $this->enum = TestEnum::from($this->enum->value);
+        $this->enum = TestingEnum::from($this->enum->value);
     }
 
     public function mount()
     {
-        $this->enum = TestEnum::TEST;
+        $this->enum = TestingEnum::TEST;
     }
 
     public function storeTypeOf()
