@@ -1,12 +1,12 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportUnitTesting\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\LivewireManager;
 
-class TestableLivewireCanAssertNoRedirectTest extends TestCase
+class TestableLivewireCanAssertNoRedirectTest extends \Tests\TestCase
 {
     /** @test */
     public function can_assert_no_redirect()

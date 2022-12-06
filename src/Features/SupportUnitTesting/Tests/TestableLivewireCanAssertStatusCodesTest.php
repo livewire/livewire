@@ -1,12 +1,12 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportUnitTesting\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class TestableLivewireCanAssertStatusCodesTest extends TestCase
+class TestableLivewireCanAssertStatusCodesTest extends \Tests\TestCase
 {
     function setUp(): void
     {

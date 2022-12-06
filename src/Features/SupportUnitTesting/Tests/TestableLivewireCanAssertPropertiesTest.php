@@ -1,13 +1,13 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportUnitTesting\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
 
-class TestableLivewireCanAssertPropertiesTest extends TestCase
+class TestableLivewireCanAssertPropertiesTest extends \Tests\TestCase
 {
     /** @test */
     public function can_assert_basic_property_value()
