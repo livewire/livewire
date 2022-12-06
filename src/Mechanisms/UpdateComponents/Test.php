@@ -1,12 +1,12 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Mechanisms\UpdateComponents;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class TestableLivewireRestoresLaravelMiddlewareTest extends TestCase
+class Test extends \Tests\TestCase
 {
     /** @test */
     public function it_restores_laravel_middleware_after_livewire_test()
