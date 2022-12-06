@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportWireables;
 
 use Illuminate\Support\Collection;
 use Livewire\Component;
