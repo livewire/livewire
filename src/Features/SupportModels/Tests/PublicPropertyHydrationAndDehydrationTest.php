@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Features\SupportModels;
 
 use Livewire\Livewire;
 use Livewire\Component;
@@ -10,11 +10,11 @@ use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
 use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleException;
 use Livewire\HydrationMiddleware\HydratePublicProperties;
 
-class PublicPropertyHydrationAndDehydrationTest extends TestCase
+class PublicPropertyHydrationAndDehydrationTest extends \Tests\TestCase
 {
     public function setUp(): void
     {
-        $this->markTestSkipped('gotta get to this later');
+        // $this->markTestSkipped('gotta get to this later');
 
         parent::setUp();
 
