@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
-class QueryParamsTest extends TestCase
+class QueryParamsTest extends \Tests\TestCase
 {
     /** @test */
     public function it_sets_name_from_query_params()
