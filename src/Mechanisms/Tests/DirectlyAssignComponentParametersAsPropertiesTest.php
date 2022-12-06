@@ -1,10 +1,10 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Mechanisms\Tests;
 
 use Livewire\Livewire;
 
-class DirectlyAssignComponentParametersAsPropertiesTest extends TestCase
+class DirectlyAssignComponentParametersAsPropertiesTest extends \Tests\TestCase
 {
     /** @test */
     public function parameters_are_directly_set_as_properties_without_mount_method()
