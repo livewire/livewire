@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Concerns;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ResetPropertiesTest extends TestCase
+class ResetPropertiesTest extends \Tests\TestCase
 {
     /** @test */
     public function can_reset_properties()
