@@ -26,6 +26,8 @@ jobs:
             laravel: 8.*
           - php: 8.1
             laravel: 7.*
+          - php: 8.2
+            laravel: 7.*
 
     name: PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}
 
