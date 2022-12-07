@@ -3,5 +3,5 @@
 
     @error('test') @enderror
 
-    @component('dump-errors-nested-component')@endcomponent
+    @component('components.dump-errors-nested-component')@endcomponent
 </div>
