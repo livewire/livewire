@@ -183,7 +183,7 @@ class ComponentForTestingNestedThisDirective extends Component
 {
     public function render()
     {
-        return "<div>@component('this-directive')@endcomponent</div>";
+        return "<div>@component('components.this-directive')@endcomponent</div>";
     }
 }
 

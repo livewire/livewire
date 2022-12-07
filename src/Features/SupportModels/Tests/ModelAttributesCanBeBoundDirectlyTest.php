@@ -151,6 +151,12 @@ class ComponentWithModelsProperty extends Component
 
     public function render()
     {
-        return view('foreach-models-arrow-title-view');
+        return <<<'HTML'
+        <div>
+            @foreach ($models as $model)
+                {{ $model->title }}
+            @endforeach
+        </div>
+        HTML;
     }
 }

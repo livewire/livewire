@@ -535,7 +535,7 @@ class HasHtml extends Component
 {
     public function render()
     {
-        return app('view')->make('show-html');
+        return '<div><p style="display: none">Hello HTML</p></div>';
     }
 }
 

@@ -145,7 +145,13 @@ class ComponentWithModelPublicProperty extends Component
 
     public function render()
     {
-        return view('model-arrow-title-view');
+        return <<<'HTML'
+        <div>
+            @if ($model)
+                {{ $this->model->title }}
+            @endif
+        </div>
+        HTML;
     }
 }
 
@@ -162,6 +168,12 @@ class ComponentWithModelsPublicProperty extends Component
 
     public function render()
     {
-        return view('foreach-models-arrow-title-view');
+        return <<<'HTML'
+        <div>
+            @foreach ($models as $model)
+                {{ $model->title }}
+            @endforeach
+        </div>
+        HTML;
     }
 }

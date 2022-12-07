@@ -242,7 +242,19 @@ class ComponentWithWireablePublicProperty extends Component
 
     public function render()
     {
-        return view('wireables');
+        return <<<'HTML'
+        <div>
+            <div>
+                @if ($wireable)
+                    {{ $wireable->message }}
+
+                    @if ($wireable->embeddedWireable ?? false)
+                        {{ $wireable->embeddedWireable->message }}
+                    @endif
+                @endif
+            </div>
+        </div>
+        HTML;
     }
 }
 

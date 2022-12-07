@@ -102,6 +102,6 @@ class ComponentRootExists extends Component
 {
     public function render()
     {
-        return app('view')->make('rootless-view');
+        return 'This all you got?!';
     }
 }

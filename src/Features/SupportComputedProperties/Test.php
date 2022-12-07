@@ -103,7 +103,11 @@ class ComputedPropertyStub extends Component
 
     public function render()
     {
-        return view('var-dump-foo-bar');
+        return <<<'HTML'
+        <div>
+            {{ var_dump($this->foo_bar) }}
+        </div>
+        HTML;
     }
 }
 
@@ -120,7 +124,11 @@ class InjectedComputedPropertyStub extends Component
 
     public function render()
     {
-        return view('var-dump-foo-bar');
+        return <<<'HTML'
+        <div>
+            {{ var_dump($this->foo_bar) }}
+        </div>
+        HTML;
     }
 }
 
@@ -138,7 +146,11 @@ class MemoizedComputedPropertyStub extends Component
         // Access foo once here to start the cache.
         $this->foo;
 
-        return view('var-dump-foo');
+        return <<<'HTML'
+        <div>
+            {{ var_dump($this->foo) }}
+        </div>
+        HTML;
     }
 }
 
@@ -152,7 +164,11 @@ class IssetComputedPropertyStub extends Component{
 
     public function render()
     {
-        return view('isset-foo-bar');
+        return <<<'HTML'
+        <div>
+            {{ var_dump(isset($this->foo_bar)) }}
+        </div>
+        HTML;
     }
 }
 
@@ -166,6 +182,10 @@ class FalseIssetComputedPropertyStub extends Component{
 
     public function render()
     {
-        return view('isset-foo');
+        return <<<'HTML'
+        <div>
+            {{ var_dump(isset($this->foo)) }}
+        </div>
+        HTML;
     }
 }

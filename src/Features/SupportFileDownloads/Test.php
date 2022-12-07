@@ -101,7 +101,13 @@ class FileDownloadComponent extends Component
 
     public function render()
     {
-        return app('view')->make('file-download-component');
+        return <<<'HTML'
+        <div>
+            @if($downloaded)
+                Thanks!
+            @endif
+        </div>
+        HTML;
     }
 }
 

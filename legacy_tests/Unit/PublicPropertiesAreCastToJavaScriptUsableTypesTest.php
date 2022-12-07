@@ -87,7 +87,11 @@ class ComponentWithPropertiesStub extends Component
 
     public function render()
     {
-        return app('view')->make('var-dump-foo');
+        return <<<'HTML'
+        <div>
+            {{ var_dump($this->foo) }}
+        </div>
+        HTML;
     }
 }
 
