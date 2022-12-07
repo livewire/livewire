@@ -30,7 +30,7 @@ class Test extends \Tests\TestCase
             <div>@foo</div>
         ');
 
-        $this->assertCount(3, explode('@foo', $output));
+        $this->assertCount(4, explode('@foo', $output));
     }
 
     /** @test */
@@ -48,7 +48,7 @@ class Test extends \Tests\TestCase
             <div>@foo</div>
         ');
 
-        $this->assertCount(3, explode('@foo', $output));
+        $this->assertCount(4, explode('@foo', $output));
     }
 
     /** @test */
