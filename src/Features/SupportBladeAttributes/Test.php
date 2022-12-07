@@ -8,7 +8,8 @@ use Livewire\Livewire;
 
 class Test extends \Tests\TestCase
 {
-    public function test()
+    /** @test */
+    public function it_adds_wire_macro_to_component_attribute_bag()
     {
         $bag = new ComponentAttributeBag([
             'wire:model.defer' => 'foo',
