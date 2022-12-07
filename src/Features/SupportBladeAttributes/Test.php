@@ -46,6 +46,10 @@ class ComponentWithEntangleDirectiveUsedWithinBladeComponent extends Component
 {
     public function render()
     {
-        return view('entangle');
+        return <<<'HTML'
+        <x-input wire:model.defer="foo"/>
+
+        <x-input wire:model="bar"/>
+        HTML;
     }
 }
