@@ -18,7 +18,7 @@ Contribute to the docs here: https://github.com/livewire/docs
 
 ## From the community
 
-- [Awesome Livewire](https://github.com/imliam/awesome-livewire)
+- [Awesome Livewire](https://github.com/ariaieboy/awesome-livewire)
 
 - [Livewire Best Practices](https://github.com/michael-rubel/livewire-best-practices)
 
