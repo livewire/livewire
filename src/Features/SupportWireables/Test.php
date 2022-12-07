@@ -258,37 +258,11 @@ class ComponentWithWireablePublicProperty extends Component
     }
 }
 
-class ValidatesWireableProperty extends Component
-{
-    public CustomWireableCollection $customCollection;
-
-    public $rules = [
-        'customCollection.*.amount' => 'required|gt:100'
-    ];
-
-    public function mount()
-    {
-        $this->customCollection = new CustomWireableCollection([
-            new CustomWireableDTO(50),
-        ]);
-    }
-
-    public function runValidation()
-    {
-        $this->validate();
-    }
-
-    public function render()
-    {
-        return view('null-view');
-    }
-}
-
 class CustomWireableCollection extends Collection implements Wireable
 {
     public function toLivewire()
     {
-        return $this->mapWithKeys(function($dto, $key) {
+        return $this->mapWithKeys(function ($dto, $key) {
             return [$key => $dto instanceof CustomWireableDTO ? $dto->toLivewire() : $dto];
         })->all();
     }

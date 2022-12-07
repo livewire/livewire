@@ -2,16 +2,18 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use function Livewire\invade;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
 use Livewire\Exceptions\MissingRulesException;
-use Livewire\Livewire;
-use Sushi\Sushi;
 
-use function Livewire\invade;
+use Livewire\Livewire;
+use Livewire\Wireable;
+use Sushi\Sushi;
 
 class Test extends \Tests\TestCase
 {
@@ -535,12 +537,6 @@ class Test extends \Tests\TestCase
     {
         $this->markTestSkipped('Not sure we support setting data on a wireable without requiring a ->set method on the wireable...');
 
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
-        }
-
-        require_once __DIR__.'/WireablesCanBeSetAsPublicPropertiesStubs.php';
-
         Livewire::test(ValidatesWireableProperty::class)
             ->call('runValidation')
             ->assertHasErrors('customCollection.0.amount')
@@ -1062,3 +1058,70 @@ class ValidatesComputedProperty extends Component
     }
 }
 
+class ValidatesWireableProperty extends Component
+{
+    public CustomWireableValidationCollection $customCollection;
+
+    public $rules = [
+        'customCollection.*.amount' => 'required|gt:100'
+    ];
+
+    public function mount()
+    {
+        $this->customCollection = new CustomWireableValidationCollection([
+            new CustomWireableValidationDTO(50),
+        ]);
+    }
+
+    public function runValidation()
+    {
+        $this->validate();
+    }
+
+    public function render()
+    {
+        return view('null-view');
+    }
+}
+
+class CustomWireableValidationCollection extends Collection implements Wireable
+{
+    public function toLivewire()
+    {
+        return $this->mapWithKeys(function($dto, $key) {
+            return [$key => $dto instanceof CustomWireableValidationDTO ? $dto->toLivewire() : $dto];
+        })->all();
+    }
+
+    public static function fromLivewire($value)
+    {
+        return static::wrap($value)
+        ->mapWithKeys(function ($dto, $key) {
+            return [$key => CustomWireableValidationDTO::fromLivewire($dto)];
+        });
+    }
+}
+
+class CustomWireableValidationDTO implements Wireable
+{
+    public $amount;
+
+    public function __construct($amount)
+    {
+        $this->amount = $amount;
+    }
+
+    public function toLivewire()
+    {
+        return [
+            'amount' => $this->amount
+        ];
+    }
+
+    public static function fromLivewire($value)
+    {
+        return new static(
+            $value['amount']
+        );
+    }
+}
