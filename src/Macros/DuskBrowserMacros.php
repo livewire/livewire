@@ -6,6 +6,7 @@ use function Livewire\str;
 use Facebook\WebDriver\WebDriverBy;
 use PHPUnit\Framework\Assert as PHPUnit;
 
+#[AllowDynamicProperties]
 class DuskBrowserMacros
 {
     public function assertAttributeMissing()

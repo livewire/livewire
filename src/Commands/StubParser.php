@@ -5,6 +5,7 @@ namespace Livewire\Commands;
 use Illuminate\Support\Str;
 use function Livewire\str;
 
+#[AllowDynamicProperties]
 class StubParser extends ComponentParser
 {
     public function __construct($classNamespace, $viewPath, $rawCommand)
