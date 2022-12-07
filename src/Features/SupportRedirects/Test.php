@@ -12,11 +12,6 @@ use Livewire\Livewire;
 class Test extends \Tests\TestCase
 {
     /** @test */
-    public function can_()
-    {
-        $this->assertTrue(true);
-    }
-    /** @test */
     public function standard_redirect()
     {
         $component = Livewire::test(TriggersRedirectStub::class);
@@ -293,4 +288,3 @@ class RenderOnRedirectWithSkipRenderMethod extends Component
 HTML;
     }
 }
-

@@ -16,12 +16,6 @@ use function Livewire\invade;
 class Test extends \Tests\TestCase
 {
     /** @test */
-    public function can_()
-    {
-        $this->assertTrue(true);
-    }
-
-    /** @test */
     public function validate_with_rules_property()
     {
         Livewire::test(ComponentWithRulesProperty::class)

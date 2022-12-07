@@ -14,11 +14,6 @@ use Livewire\Livewire;
 class Test extends \Tests\TestCase
 {
     /** @test */
-    public function can_()
-    {
-        $this->assertTrue(true);
-    }
-    /** @test */
     public function component_must_have_file_uploads_trait_to_accept_file_uploads()
     {
         $this->expectException(MissingFileUploadsTraitException::class);

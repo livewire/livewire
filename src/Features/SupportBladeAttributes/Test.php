@@ -8,12 +8,6 @@ use Livewire\Livewire;
 
 class Test extends \Tests\TestCase
 {
-    /** @test */
-    public function can_()
-    {
-        $this->assertTrue(true);
-    }
-
     public function test()
     {
         $bag = new ComponentAttributeBag([

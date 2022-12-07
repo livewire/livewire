@@ -22,12 +22,6 @@ class Test extends \Tests\TestCase
     }
 
     /** @test */
-    public function can_()
-    {
-        $this->assertTrue(true);
-    }
-
-    /** @test */
     public function an_eloquent_model_can_be_set_as_a_public_property()
     {
         $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);

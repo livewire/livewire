@@ -10,12 +10,6 @@ use Livewire\Livewire;
 class Test extends \Tests\TestCase
 {
     /** @test */
-    public function can_()
-    {
-        $this->assertTrue(true);
-    }
-
-    /** @test */
     public function can_download_a_file()
     {
         Livewire::test(FileDownloadComponent::class)

@@ -8,12 +8,6 @@ use Livewire\Livewire;
 class Test extends \Tests\TestCase
 {
     /** @test */
-    public function can_()
-    {
-        $this->assertTrue(true);
-    }
-
-    /** @test */
     public function traits_can_intercept_lifecycle_hooks()
     {
         Livewire::test(ComponentWithTraitStub::class)
