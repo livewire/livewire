@@ -230,6 +230,7 @@ class TestCase extends BaseTestCase
         File::deleteDirectory($this->livewireViewsPath());
         File::cleanDirectory(__DIR__.'/downloads');
         File::deleteDirectory($this->livewireClassesPath());
+        File::deleteDirectory($this->livewireTestsPath());
         File::delete(app()->bootstrapPath('cache/livewire-components.php'));
     }
 
@@ -263,6 +264,12 @@ class TestCase extends BaseTestCase
             'driver' => 'local',
             'root' => __DIR__.'/downloads',
         ]);
+
+        // TODO: Review this and see if this file can be moved to File Downloads feature folder
+        $app['config']->set('filesystems.disks.unit-downloads', [
+            'driver' => 'local',
+            'root' => __DIR__.'/fixtures',
+        ]);
     }
 
     protected function resolveApplicationHttpKernel($app)
@@ -278,6 +285,11 @@ class TestCase extends BaseTestCase
     protected function livewireViewsPath($path = '')
     {
         return resource_path('views').'/livewire'.($path ? '/'.$path : '');
+    }
+
+    protected function livewireTestsPath($path = '')
+    {
+        return base_path('tests/Feature/Livewire'.($path ? '/'.$path : ''));
     }
 
     protected function driver(): RemoteWebDriver

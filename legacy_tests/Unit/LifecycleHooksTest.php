@@ -9,32 +9,11 @@ use PHPUnit\Framework\Assert as PHPUnit;
 
 class LifecycleHooksTest extends TestCase
 {
-    /** @test */
-    public function mount_hook()
-    {
-        $component = Livewire::test(ForLifecycleHooks::class);
-
-        $this->assertEquals([
-            'mount' => true,
-            'hydrate' => 0,
-            'hydrateFoo' => 0,
-            'dehydrate' => 1,
-            'dehydrateFoo' => 1,
-            'updating' => false,
-            'updated' => false,
-            'updatingFoo' => false,
-            'updatedFoo' => false,
-            'updatingBar' => false,
-            'updatingBarBaz' => false,
-            'updatedBar' => false,
-            'updatedBarBaz' => false,
-        ], $component->lifecycles);
-    }
 
     /** @test */
     public function refresh_magic_method()
     {
-        $component = Livewire::test(ForLifecycleHooks::class);
+        $component = Livewire::test(ForMagicMethods::class);
 
         $component->call('$refresh');
 
@@ -56,138 +35,9 @@ class LifecycleHooksTest extends TestCase
     }
 
     /** @test */
-    public function update_property()
-    {
-        $component = Livewire::test(ForLifecycleHooks::class, [
-            'expected' => [
-                'updating' => [[
-                    'foo' => 'bar',
-                ]],
-                'updated' => [[
-                    'foo' => 'bar',
-                ]],
-                'updatingFoo' => ['bar'],
-                'updatedFoo' => ['bar'],
-            ]
-        ])->set('foo', 'bar');
-
-        $this->assertEquals([
-            'mount' => true,
-            'hydrate' => 1,
-            'hydrateFoo' => 1,
-            'dehydrate' => 2,
-            'dehydrateFoo' => 2,
-            'updating' => true,
-            'updated' => true,
-            'updatingFoo' => true,
-            'updatedFoo' => true,
-            'updatingBar' => false,
-            'updatingBarBaz' => false,
-            'updatedBar' => false,
-            'updatedBarBaz' => false,
-        ], $component->lifecycles);
-    }
-
-    /** @test */
-    public function update_nested_properties()
-    {
-        $component = Livewire::test(ForLifecycleHooks::class, [
-            'expected' => [
-                'updating' => [
-                    ['bar.foo' => 'baz',],
-                    ['bar.cocktail.soft' => 'Shirley Ginger'],
-                    ['bar.cocktail.soft' => 'Shirley Cumin']
-                ],
-                'updated' => [
-                    ['bar.foo' => 'baz',],
-                    ['bar.cocktail.soft' => 'Shirley Ginger'],
-                    ['bar.cocktail.soft' => 'Shirley Cumin']
-                ],
-                'updatingBar' => [
-                    ['foo' => [null, 'baz']],
-                    ['cocktail.soft' => [null, 'Shirley Ginger']],
-                    ['cocktail.soft' => ['Shirley Ginger', 'Shirley Cumin']]
-                ],
-                'updatedBar' => [
-                    ['foo' => 'baz'],
-                    ['cocktail.soft' => 'Shirley Ginger'],
-                    ['cocktail.soft' => 'Shirley Cumin']
-                ],
-            ],
-        ]);
-
-        $component->set('bar.foo', 'baz');
-
-        $component->set('bar.cocktail.soft', 'Shirley Ginger');
-
-        $component->set('bar.cocktail.soft', 'Shirley Cumin');
-
-        $this->assertEquals([
-            'mount' => true,
-            'hydrate' => 3,
-            'hydrateFoo' => 3,
-            'dehydrate' => 4,
-            'dehydrateFoo' => 4,
-            'updating' => true,
-            'updated' => true,
-            'updatingFoo' => false,
-            'updatedFoo' => false,
-            'updatingBar' => true,
-            'updatingBarBaz' => false,
-            'updatedBar' => true,
-            'updatedBarBaz' => false,
-        ], $component->lifecycles);
-    }
-
-    /** @test */
-    public function update_nested_properties_with_nested_update_hook()
-    {
-        $component = Livewire::test(ForLifecycleHooks::class, [
-            'expected' => [
-                'updating' => [
-                    ['bar.baz' => 'bop'],
-                ],
-                'updated' => [
-                    ['bar.baz' => 'bop'],
-                ],
-                'updatingBar' => [
-                    ['baz' => [null, 'bop']],
-                ],
-                'updatedBar' => [
-                    ['baz' => 'bop'],
-                ],
-                'updatingBarBaz' => [
-                    ['baz' => [null, 'bop']],
-                ],
-                'updatedBarBaz' => [
-                    ['baz' => 'bop'],
-                ],
-            ]
-        ]);
-
-        $component->set('bar.baz', 'bop');
-
-        $this->assertEquals([
-            'mount' => true,
-            'hydrate' => true,
-            'hydrateFoo' => true,
-            'dehydrate' => true,
-            'dehydrateFoo' => true,
-            'updating' => true,
-            'updated' => true,
-            'updatingFoo' => false,
-            'updatedFoo' => false,
-            'updatingBar' => true,
-            'updatingBarBaz' => true,
-            'updatedBar' => true,
-            'updatedBarBaz' => true,
-        ], $component->lifecycles);
-    }
-
-    /** @test */
     public function set_magic_method()
     {
-        $component = Livewire::test(ForLifecycleHooks::class, [
+        $component = Livewire::test(ForMagicMethods::class, [
             'expected' => [
                 'updating' => [[
                     'foo' => 'bar',
@@ -220,7 +70,7 @@ class LifecycleHooksTest extends TestCase
     }
 }
 
-class ForLifecycleHooks extends Component
+class ForMagicMethods extends Component
 {
     public $foo;
 

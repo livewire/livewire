@@ -6,6 +6,11 @@ use Tests\TestCase;
 
 class Test extends TestCase
 {
+    public function setUp(): void
+    {
+        $this->markTestIncomplete();
+    }
+    
     /** @test */
     function can_disable_auto_injection_using_global_method() {}
     function can_disable_auto_injection_using_config() {}

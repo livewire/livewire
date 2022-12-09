@@ -36,25 +36,6 @@ class PublicPropertiesAreInitializedTest extends TestCase
     /** @test */
     public function uninitialized_public_typed_property_is_null()
     {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
-        }
-
-        $class = <<<'PHP'
-namespace LegacyTests\Unit;
-use Livewire\Component;
-class UninitializedPublicTypedPropertyComponent extends Component
-{
-    public string $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
-}
-PHP;
-        eval($class);
-
         Livewire::test(UninitializedPublicTypedPropertyComponent::class)
             ->assertSet('message', null);
     }
@@ -62,25 +43,6 @@ PHP;
     /** @test */
     public function uninitialized_public_typed_property_is_still_null_after_refresh()
     {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
-        }
-
-        $class = <<<'PHP'
-namespace LegacyTests\Unit;
-use Livewire\Component;
-class UninitializedPublicTypedPropertyAfterRefreshComponent extends Component
-{
-    public string $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
-}
-PHP;
-        eval($class);
-
         Livewire::test(UninitializedPublicTypedPropertyAfterRefreshComponent::class)
             ->call('$refresh')
             ->assertSet('message', null);
@@ -89,25 +51,6 @@ PHP;
     /** @test */
     public function initialized_public_typed_property_shows_value()
     {
-        if (version_compare(PHP_VERSION, '7.4', '<')) {
-            $this->markTestSkipped('Typed Property Initialization not supported prior to PHP 7.4');
-        }
-
-        $class = <<<'PHP'
-namespace LegacyTests\Unit;
-use Livewire\Component;
-class InitializedPublicTypedPropertyComponent extends Component
-{
-    public string $message = 'Typed Properties FTW!';
-
-    public function render()
-    {
-        return app('view')->make('show-property-value');
-    }
-}
-PHP;
-        eval($class);
-
         Livewire::test(InitializedPublicTypedPropertyComponent::class)
             ->assertSee('Typed Properties FTW!');
 
@@ -128,6 +71,36 @@ class InitializedPublicPropertyComponent extends Component
 {
     public $message = 'Non-typed Properties are boring';
     public $some_id = 3;
+
+    public function render()
+    {
+        return app('view')->make('show-property-value');
+    }
+}
+
+class UninitializedPublicTypedPropertyComponent extends Component
+{
+    public string $message;
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class UninitializedPublicTypedPropertyAfterRefreshComponent extends Component
+{
+    public string $message;
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class InitializedPublicTypedPropertyComponent extends Component
+{
+    public string $message = 'Typed Properties FTW!';
 
     public function render()
     {
