@@ -87,6 +87,16 @@ class PublicPropertiesAreCastToJavaScriptUsableTypesTest extends TestCase
         Livewire::test(ComponentWithPropertiesStub::class, ['foo' => $orderedNumericArray])
             ->assertSet('foo', [[0 => 'bar', 1 => 'foo']]);
     }
+
+    /** @test */
+    public function exception_throw_mention_backed_enum_as_possible_type()
+    {
+        $this->expectException(PublicPropertyTypeNotAllowedException::class);
+        $this->expectDeprecationMessageMatches('/BackedEnum/');
+        Livewire::component('foo', ComponentWithPropertiesStub::class);
+
+        View::make('render-component', ['component' => 'foo', 'params' => ['foo' => new \StdClass]])->render();
+    }
 }
 
 class ComponentWithPropertiesStub extends Component
