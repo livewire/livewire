@@ -13,11 +13,15 @@ class Component extends BaseComponent
     public $recursiveArray = ['â', ['â']];
     public $collection;
     public $recursiveCollection;
+    public $model;
+    public $modelCollection;
 
     public function mount()
     {
         $this->collection = collect(['â']);
         $this->recursiveCollection = collect(['â', ['â']]);
+        $this->model = Model::find(1);
+        $this->modelCollection = Model::all();
     }
 
     public function render()
