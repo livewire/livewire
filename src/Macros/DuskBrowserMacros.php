@@ -6,7 +6,6 @@ use function Livewire\str;
 use Facebook\WebDriver\WebDriverBy;
 use PHPUnit\Framework\Assert as PHPUnit;
 
-#[AllowDynamicProperties]
 class DuskBrowserMacros
 {
     public function assertAttributeMissing()
@@ -151,6 +150,9 @@ class DuskBrowserMacros
 
             // If no callback is passed, make ->waitForLivewire a higher-order method.
             return new class($this, $id) {
+                public $browser;
+                public $id;
+                
                 public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
 
                 public function __call($method, $params)
