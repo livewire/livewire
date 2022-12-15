@@ -4,7 +4,7 @@ namespace Livewire\Macros;
 
 use Illuminate\View\AnonymousComponent;
 
-#[AllowDynamicProperties]
+#[\AllowDynamicProperties]
 class ViewMacros
 {
     public function extends()

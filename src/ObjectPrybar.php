@@ -4,7 +4,7 @@ namespace Livewire;
 
 use ReflectionClass;
 
-#[AllowDynamicProperties]
+#[\AllowDynamicProperties]
 class ObjectPrybar
 {
     protected $obj;

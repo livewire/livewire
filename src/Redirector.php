@@ -4,7 +4,7 @@ namespace Livewire;
 
 use Illuminate\Routing\Redirector as BaseRedirector;
 
-#[AllowDynamicProperties]
+#[\AllowDynamicProperties]
 class Redirector extends BaseRedirector
 {
     public function to($path, $status = 302, $headers = [], $secure = null)

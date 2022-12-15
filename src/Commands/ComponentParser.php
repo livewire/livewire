@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 use function Livewire\str;
 
-#[AllowDynamicProperties]
+#[\AllowDynamicProperties]
 class ComponentParser
 {
     protected $appPath;

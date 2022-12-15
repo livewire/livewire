@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use League\MimeTypeDetection\FinfoMimeTypeDetector;
 
-#[AllowDynamicProperties]
+#[\AllowDynamicProperties]
 class TemporaryUploadedFile extends UploadedFile
 {
     protected $storage;

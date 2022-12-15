@@ -4,7 +4,7 @@ namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
 
-#[AllowDynamicProperties]
+#[\AllowDynamicProperties]
 class MoveCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:move {name} {new-name} {--force} {--inline}';
