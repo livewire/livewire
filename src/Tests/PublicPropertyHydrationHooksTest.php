@@ -5,7 +5,6 @@ namespace Livewire\Tests;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Livewire\Component;
-use LegacyTests\Unit\TestCase;
 
 class PublicPropertyHydrationHooksTest extends \Tests\TestCase
 {
