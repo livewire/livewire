@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Livewire;
 use Illuminate\Support\Facades\View;
 
-class LivewireAssetsDirectiveTest extends TestCase
+class LivewireAssetsDirectiveTest extends \Tests\TestCase
 {
     function setUp(): void
     {

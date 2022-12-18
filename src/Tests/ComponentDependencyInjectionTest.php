@@ -1,13 +1,13 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Routing\UrlGenerator;
 use LegacyTests\Unit\Components\ComponentWithUnionTypes;
 
-class ComponentDependencyInjectionTest extends TestCase
+class ComponentDependencyInjectionTest extends \Tests\TestCase
 {
     /** @test */
     public function component_mount_action_with_dependency()
