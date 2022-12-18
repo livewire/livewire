@@ -493,6 +493,7 @@ class ValidationTest extends TestCase
     }
 }
 
+#[\AllowDynamicProperties]
 class ForValidation extends Component
 {
     public $foo = 'foo';

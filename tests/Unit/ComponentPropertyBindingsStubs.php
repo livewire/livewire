@@ -56,6 +56,7 @@ class ComponentWithDependentPropBindings extends Component
     }
 }
 
+#[\AllowDynamicProperties]
 class ComponentWithPropBindingsAndMountMethod extends Component
 {
     public PropBoundModel $child;

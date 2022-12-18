@@ -38,6 +38,7 @@ class ComponentWithDirectlyAssignedProperties extends \Livewire\Component
     }
 }
 
+#[\AllowDynamicProperties]
 class ComponentWithDirectlyAssignedPropertiesAndMountMethod extends \Livewire\Component
 {
     public $foo;

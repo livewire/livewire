@@ -4,6 +4,7 @@ namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
 
+#[\AllowDynamicProperties]
 class MoveCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:move {name} {new-name} {--force} {--inline}';
@@ -80,7 +81,7 @@ class MoveCommand extends FileManipulationCommand
         if (!File::exists($oldTestPath) || File::exists($newTestPath)) {
             return false;
         }
-        
+
         $this->ensureDirectoryExists($newTestPath);
         File::move($oldTestPath, $newTestPath);
         return $newTestPath;
