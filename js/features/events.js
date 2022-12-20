@@ -1,18 +1,20 @@
 import { componentsByName, findComponent } from '../state'
 import { on as hook } from './../synthetic/index'
-import Alpine from 'alpinejs'
 import { Bag, dispatch } from 'utils'
+import Alpine from 'alpinejs'
 
 let globalListeners = new Bag
 
 export default function () {
     hook('effects', (target, effects, path) => {
         let listeners = effects.listeners
+
         if (! listeners) return
 
         listeners.forEach(name => {
             globalListeners.add(name, (...params) => {
                 let component = findComponent(target.__livewireId)
+
                 component.$wire.call('__emit', name, ...params)
             })
 
@@ -27,24 +29,13 @@ export default function () {
     })
 
     hook('decorate', (target, path, addProp, decorator, symbol) => {
-        addProp('$emit', (...params) => {
-            emit(...params)
-        })
-
-        addProp('$emitUp', (...params) => {
+        queueMicrotask(() => {
             let component = findComponent(target.__livewireId)
 
-            emitUp(component.el, ...params)
-        })
-
-        addProp('$emitSelf', (...params) => {
-            let component = findComponent(target.__livewireId)
-
-            emitSelf(component.id, ...params)
-        })
-
-        addProp('$emitTo', (...params) => {
-            emitTo(...params)
+            addProp('$emit', (...params) => emit(...params))
+            addProp('$emitUp', (...params) => emitUp(component.el, ...params))
+            addProp('$emitSelf', (...params) => emitSelf(component.id, ...params))
+            addProp('$emitTo', (...params) => emitTo(...params))
         })
     })
 }

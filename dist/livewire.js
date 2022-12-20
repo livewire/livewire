@@ -4748,19 +4748,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     on("decorate", (target, path, addProp, decorator, symbol) => {
-      addProp("$emit", (...params) => {
-        emit(...params);
-      });
-      addProp("$emitUp", (...params) => {
+      queueMicrotask(() => {
         let component = findComponent(target.__livewireId);
-        emitUp(component.el, ...params);
-      });
-      addProp("$emitSelf", (...params) => {
-        let component = findComponent(target.__livewireId);
-        emitSelf(component.id, ...params);
-      });
-      addProp("$emitTo", (...params) => {
-        emitTo(...params);
+        addProp("$emit", (...params) => emit(...params));
+        addProp("$emitUp", (...params) => emitUp(component.el, ...params));
+        addProp("$emitSelf", (...params) => emitSelf(component.id, ...params));
+        addProp("$emitTo", (...params) => emitTo(...params));
       });
     });
   }
