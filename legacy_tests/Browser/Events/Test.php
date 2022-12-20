@@ -10,11 +10,11 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, Component::class)
+            $this->visitLivewireComponent($browser, [Component::class, 'component-a' => NestedComponentA::class, 'component-b' => NestedComponentB::class])
                 /**
                  * receive event from global fire
                  */
-                ->waitForLivewire()->tap(function ($browser) { $browser->script('window.livewire.emit("foo", "bar")'); })
+                ->waitForLivewire()->tap(function ($browser) { $browser->script('window.Livewire.emit("foo", "bar")'); })
                 ->waitUsing(5, 75, function () use ($browser) {
                     return $browser->assertSeeIn('@lastEventForParent', 'bar')
                              ->assertSeeIn('@lastEventForChildA', 'bar')
@@ -36,7 +36,7 @@ class Test extends TestCase
                  */
                 ->tap(function ($b) { $b->script([
                     "window.lastFooEventValue = ''",
-                    "window.livewire.on('foo', value => { lastFooEventValue = value })",
+                    "window.Livewire.on('foo', value => { lastFooEventValue = value })",
                 ]);})
                 ->waitForLivewire()->click('@emit.bob')
                 ->waitUsing(5, 75, function () use ($browser) {

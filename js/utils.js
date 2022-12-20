@@ -124,3 +124,16 @@ export function monkeyPatchDomSetAttributeToAllowAtSymbols() {
         this.setAttributeNode(attr)
     }
 }
+
+export function dispatch(el, name, detail = {}, bubbles = true) {
+    el.dispatchEvent(
+        new CustomEvent(name, {
+            detail,
+            bubbles,
+            // Allows events to pass the shadow DOM barrier.
+            composed: true,
+            cancelable: true,
+        })
+    )
+}
+

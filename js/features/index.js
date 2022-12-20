@@ -17,6 +17,7 @@ import disableFormsDuringRequest from "./disableFormsDuringRequest";
 import dispatchBrowserEvents from "./dispatchBrowserEvents";
 import queryString from "./queryString";
 import magicMethods from "./magicMethods";
+import events from "./events";
 
 export default function (enabledFeatures) {
     // wireTarget()
@@ -24,6 +25,7 @@ export default function (enabledFeatures) {
     // props(enabledFeatures)
     morphDom(enabledFeatures)
     wireModel(enabledFeatures)
+    events()
     // wireParent(enabledFeatures)
     // wirePoll(enabledFeatures)
     // wireLoading(enabledFeatures)

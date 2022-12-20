@@ -37,31 +37,27 @@ class TestCase extends BaseTestCase
     public static $useSafari = false;
     public static $useAlpineV3 = false;
 
-    function visitLivewireComponent($browser, $class, $queryString = '')
+    function visitLivewireComponent($browser, $classes, $queryString = '')
     {
-        $this->registerComponentForNextTest($class);
+        $classes = (array) $classes;
 
-        $url = '/livewire-dusk/'.urlencode($class).$queryString;
+        $this->registerComponentForNextTest($classes);
+
+        $url = '/livewire-dusk/'.urlencode($classes[0]).$queryString;
 
         return $browser->visit($url)->waitForLivewireToLoad();
     }
 
-    function registerComponentForNextTest($component)
+    function registerComponentForNextTest($components)
     {
-        $tmp = __DIR__ . '/_runtime_components.php';
+        $tmp = __DIR__ . '/_runtime_components.json';
 
-        file_put_contents($tmp, <<<PHP
-        <?php
-
-        return [
-            \\$component::class,
-        ];
-        PHP, LOCK_EX);
+        file_put_contents($tmp, json_encode($components, JSON_PRETTY_PRINT));
     }
 
     function wipeRuntimeComponentRegistration()
     {
-        $tmp = __DIR__ . '/_runtime_components.php';
+        $tmp = __DIR__ . '/_runtime_components.json';
 
         unlink($tmp);
     }
@@ -89,13 +85,17 @@ class TestCase extends BaseTestCase
         $isUsingAlpineV3 = static::$useAlpineV3;
 
         $this->tweakApplication(function () use ($isUsingAlpineV3) {
-            $tmp = __DIR__ . '/_runtime_components.php';
+            $tmp = __DIR__ . '/_runtime_components.json';
             if (file_exists($tmp)) {
                 // We can't just "require" this file because of race conditions...
-                $components = eval((string) str(file_get_contents($tmp))->after('<?php'));
+                $components = json_decode(file_get_contents($tmp));
 
-                foreach ($components as $class) {
-                    app('livewire')->component($class);
+                foreach ($components as $name => $class) {
+                    if (is_numeric($name)) {
+                        app('livewire')->component($class);
+                    } else {
+                        app('livewire')->component($name, $class);
+                    }
                 }
             }
 

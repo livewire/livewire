@@ -16,6 +16,13 @@ export function findComponent(id) {
     return component
 }
 
+export function componentsByName(name) {
+    return Object.values(state.components).filter(component => {
+        debugger
+        return name == component.name
+    })
+}
+
 export function storeComponent(id, component) {
     state.components[id] = component
 }

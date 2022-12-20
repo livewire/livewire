@@ -1,6 +1,7 @@
 import { find, first } from './state'
 import { start } from './lifecycle'
-import { synthetic, on } from './synthetic/index'
+import { emit, on } from './features/events'
+import { synthetic, on as hook } from './synthetic/index'
 import Alpine from 'alpinejs'
 
 /**
@@ -11,13 +12,14 @@ import Alpine from 'alpinejs'
 window.synthetic = synthetic
 
 // @todo - do better. Currently this is here for Laravel dusk tests (waitForLivewire macro).
-window.syntheticOn = on
+window.syntheticOn = hook
 
 export let Livewire = {
     start,
     // @todo: legacy name, offer "on" as the new name?
-    hook: on,
+    hook,
     on,
+    emit,
     first,
     find,
 }

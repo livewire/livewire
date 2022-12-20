@@ -9,8 +9,8 @@
 
     <button wire:click="$emitSelf('foo', 'law')" dusk="emit.law"></button>
 
-    <button wire:click="$emitTo('tests.browser.events.nested-component-b', 'foo', 'blog')" dusk="emit.blog"></button>
+    <button wire:click="$emitTo('component-b', 'foo', 'blog')" dusk="emit.blog"></button>
 
-    @livewire(Tests\Browser\Events\NestedComponentA::class)
-    @livewire(Tests\Browser\Events\NestedComponentB::class)
+    @livewire(LegacyTests\Browser\Events\NestedComponentA::class)
+    @livewire(LegacyTests\Browser\Events\NestedComponentB::class)
 </div>

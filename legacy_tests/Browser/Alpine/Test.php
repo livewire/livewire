@@ -107,7 +107,7 @@ class Test extends TestCase
                 ->tap(function ($b) {
                     $b->script([
                         'window.livewireRequestCount = 0',
-                        "window.Livewire.on('request', () => { window.livewireRequestCount++ })",
+                        "window.Livewire.hook('request', () => { window.livewireRequestCount++ })",
                     ]);
                 })
                 ->assertScript('window.livewireRequestCount', 0)
