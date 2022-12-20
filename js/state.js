@@ -44,6 +44,12 @@ export function resurrect(id) {
     return releasePool[id]
 }
 
+export function find(id) {
+    let component = state.components[id]
+
+    return component && component.$wire
+}
+
 export function first() {
     return Object.values(state.components)[0].$wire
 }

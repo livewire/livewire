@@ -42,47 +42,47 @@ function deepClone(object) {
     return JSON.parse(JSON.stringify(object))
 }
 
-function whenObjectIsMutated(object, callback) {
-    let firstTime = true
+// function whenObjectIsMutated(object, callback) {
+//     let firstTime = true
 
-    let lastObject
+//     let lastObject
 
-    Alpine.effect(() => {
-        if (firstTime) {
-            recursivelyAccessAllObjectProperties(object)
+//     Alpine.effect(() => {
+//         if (firstTime) {
+//             recursivelyAccessAllObjectProperties(object)
 
-            firstTime = false
-        } else {
-            callback(deepDiff(lastObject, object.__v_raw))
-        }
+//             firstTime = false
+//         } else {
+//             callback(deepDiff(lastObject, object.__v_raw))
+//         }
 
-        lastObject = deepClone(object)
-    })
-}
+//         lastObject = deepClone(object)
+//     })
+// }
 
-function recursivelyAccessAllObjectProperties(object) {
-    let throwAway
+// function recursivelyAccessAllObjectProperties(object) {
+//     let throwAway
 
-    Object.entries(object).forEach(([key, value]) => {
-        if (typeof value === 'object' && value !== null) {
-            recursivelyAccessAllObjectProperties(value)
-        }
+//     Object.entries(object).forEach(([key, value]) => {
+//         if (typeof value === 'object' && value !== null) {
+//             recursivelyAccessAllObjectProperties(value)
+//         }
 
-        throwAway = object[key]
-    })
-}
+//         throwAway = object[key]
+//     })
+// }
 
-function deepDiff(before, after) {
-    let diff = {}
+// function deepDiff(before, after) {
+//     let diff = {}
 
-    Object.entries(after).forEach(([key, value]) => {
-        if (JSON.stringify(after[key]) !== JSON.stringify(before[key])) {
-            diff[key] = after[key]
-        }
-    })
+//     Object.entries(after).forEach(([key, value]) => {
+//         if (JSON.stringify(after[key]) !== JSON.stringify(before[key])) {
+//             diff[key] = after[key]
+//         }
+//     })
 
-    return diff
-}
+//     return diff
+// }
 
 export function deferMutation(callback) {
     let holdover = defer
@@ -102,6 +102,10 @@ export function generateWireObject(component) {
 
         get __instance() {
             return component
+        },
+
+        yo(property) {
+            debugger
         },
 
         $refresh() {

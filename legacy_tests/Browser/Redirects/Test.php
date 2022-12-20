@@ -16,7 +16,7 @@ class Test extends TestCase
     public function it_correctly_shows_flash_messages_before_and_after_direct()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 /*
                  * Flashing a message shows up right away, AND
                  * will show up if you redirect to a different
@@ -41,7 +41,7 @@ class Test extends TestCase
         Foo::first()->update(['name' => 'foo']);
 
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class, '?disableBackButtonCache=true')
+            $this->visitLivewireComponent($browser, Component::class, '?disableBackButtonCache=true')
                 ->assertSeeIn('@redirect.blade.model-output', 'foo')
                 ->assertSeeIn('@redirect.alpine.model-output', 'foo')
 
@@ -63,7 +63,7 @@ class Test extends TestCase
         Foo::first()->update(['name' => 'foo']);
 
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class, '?disableBackButtonCache=false')
+            $this->visitLivewireComponent($browser, Component::class, '?disableBackButtonCache=false')
                 ->assertSeeIn('@redirect.blade.model-output', 'foo')
                 ->assertSeeIn('@redirect.alpine.model-output', 'foo')
 

@@ -262,8 +262,6 @@ class UpdateComponents
     }
 
     protected function makeCalls($root, $calls, &$effects) {
-        $returns = [];
-
         foreach ($calls as $call) {
             $method = $call['method'];
             $params = $call['params'];
@@ -289,10 +287,10 @@ class UpdateComponents
 
             $return = $finish($return);
 
-            $return !== null && $addEffect('return', $return);
+            if (! isset($effects[$path])) $effects[$path] = [];
+            if (! isset($effects[$path]['returns'])) $effects[$path]['returns'] = [];
+            $effects[$path]['returns'][] = $return;
         }
-
-        return $returns;
     }
 
     protected function &dataGet(&$target, $key) {

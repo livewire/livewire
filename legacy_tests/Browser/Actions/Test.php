@@ -90,37 +90,37 @@ class Test extends TestCase
                 ->waitForLivewire()->keys('@spa', '{space}')
                 ->assertSeeIn('@output', 'spa')
 
-                // @todo: get to pass...
-                // /**
-                //  * Elements are marked as read-only during form submission
-                //  */
-                // ->tap(function ($b) {
-                //     $this->assertNull($b->attribute('@blog.button', 'disabled'));
-                //     $this->assertNull($b->attribute('@blog.input', 'readonly'));
-                //     $this->assertNull($b->attribute('@blog.input.ignored', 'readonly'));
-                // })
-                // ->press('@blog.button')
-                // ->waitForLivewire()->tap(function ($b) {
-                //     $this->assertEquals('true', $b->attribute('@blog.button', 'disabled'));
-                //     $this->assertEquals('true', $b->attribute('@blog.input', 'readonly'));
-                //     $this->assertNull($b->attribute('@blog.input.ignored', 'readonly'));
-                // })
-                // ->tap(function ($b) {
-                //     $this->assertNull($b->attribute('@blog.button', 'disabled'));
-                //     $this->assertNull($b->attribute('@blog.input', 'readonly'));
-                // })
+                /**
+                 * Elements are marked as read-only during form submission
+                 */
+                ->tap(function ($b) {
+                    $this->assertNull($b->attribute('@blog.button', 'disabled'));
+                    $this->assertNull($b->attribute('@blog.input', 'readonly'));
+                    $this->assertNull($b->attribute('@blog.input.ignored', 'readonly'));
+                })
+                ->press('@blog.button')
+                ->waitForLivewire()->tap(function ($b) {
+                    $this->assertEquals('true', $b->attribute('@blog.button', 'disabled'));
+                    $this->assertEquals('true', $b->attribute('@blog.input', 'readonly'));
+                    $this->assertNull($b->attribute('@blog.input.ignored', 'readonly'));
+                })
+                ->tap(function ($b) {
+                    $this->assertNull($b->attribute('@blog.button', 'disabled'));
+                    $this->assertNull($b->attribute('@blog.input', 'readonly'));
+                })
 
-                // /**
-                //  * Elements are un-marked as readonly when form errors out.
-                //  */
-                // ->press('@boo.button')
-                // ->waitForLivewire()->tap(function ($b) {
-                //     $this->assertEquals('true', $b->attribute('@boo.button', 'disabled'));
-                // })
-                // ->tap(function ($b) {
-                //     $this->assertNull($b->attribute('@blog.button', 'disabled'));
-                // })
-                // ->click('#livewire-error')
+                /**
+                 * Elements are un-marked as readonly when form errors out.
+                 */
+                ->press('@boo.button')
+                ->tap(function ($b) {
+                    $this->assertEquals('true', $b->attribute('@boo.button', 'disabled'));
+                })
+                ->tap(function ($b) {
+                    $this->assertNull($b->attribute('@blog.button', 'disabled'));
+                })
+                ->waitFor('#livewire-error')
+                ->click('#livewire-error')
 
                 /**
                  * keydown.debounce

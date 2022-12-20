@@ -11,7 +11,7 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 /**
                  * Has initial value.
                  */
@@ -46,7 +46,7 @@ class Test extends TestCase
     public function checkboxes_fuzzy_match_integer_values()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, CheckboxesWithIntsComponent::class)
+            $this->visitLivewireComponent($browser, CheckboxesWithIntsComponent::class)
                 // ->tinker()
                 ->assertNotChecked('@int1')
                 ->assertChecked('@int2')

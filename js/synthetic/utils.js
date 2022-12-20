@@ -39,6 +39,26 @@ export function dataGet(object, key) {
 }
 
 /**
+ * Set a property on an object with support for dot-notation.
+ */
+export function dataSet(object, key, value) {
+    let segments = key.split('.')
+
+    if (segments.length === 1) {
+        return object[key] = value
+    }
+
+    let firstSegment = segments.shift()
+    let restOfSegments = segments.join('.')
+
+    if (object[firstSegment] === undefined) {
+        object[firstSegment] = {}
+    }
+
+    dataSet(object[firstSegment], restOfSegments, value)
+}
+
+/**
  * Create a flat, dot-notated diff of two obejcts.
  */
 export function diff(left, right, diffs = {}, path = '') {

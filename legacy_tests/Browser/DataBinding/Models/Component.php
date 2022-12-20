@@ -33,11 +33,11 @@ class Component extends BaseComponent
 <div>
     <div>
         Author Name
-        <input dusk='author.name' wire:model='author.name' />
+        <input dusk='author.name' wire:model.live='author.name' />
         <span dusk='output.author.name'>{{ $author->name }}</span>
 
         Author Email
-        <input dusk='author.email' wire:model='author.email' />
+        <input dusk='author.email' wire:model.live='author.email' />
         <span dusk='output.author.email'>{{ $author->email }}</span>
     </div>
 
@@ -45,7 +45,7 @@ class Component extends BaseComponent
         @foreach($author->posts as $postKey => $post)
             <div>
                 Post Title
-                <input dusk='author.posts.{{ $postKey }}.title' wire:model="author.posts.{{ $postKey }}.title" />
+                <input dusk='author.posts.{{ $postKey }}.title' wire:model.live="author.posts.{{ $postKey }}.title" />
                 <span dusk='output.author.posts.{{ $postKey }}.title'>{{ $post->title }}</span>
 
                 <div>
@@ -54,14 +54,14 @@ class Component extends BaseComponent
                             Comment Comment
                             <input
                                 dusk='author.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment'
-                                wire:model="author.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment"
+                                wire:model.live="author.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment"
                                 />
                             <span dusk='output.author.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment'>{{ $comment->comment }}</span>
 
                             Commment Author Name
                             <input
                                 dusk='author.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name'
-                                wire:model="author.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name"
+                                wire:model.live="author.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name"
                                 />
                             <span dusk='output.author.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name'>{{ optional($comment->author)->name }}</span>
                         </div>

@@ -14,7 +14,7 @@ class Test extends TestCase
     public function it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 // ->tinker()
                 ->assertValue('@author.name', 'Bob')
                 ->assertValue('@author.email', 'bob@bob.com')
@@ -32,7 +32,7 @@ class Test extends TestCase
     public function it_enables_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->type('@author.name', 'Steve')
                 ->assertSeeIn('@output.author.name', 'Steve')
 

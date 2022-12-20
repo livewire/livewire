@@ -12,7 +12,7 @@ class Test extends TestCase
         $this->markTestSkipped('Stacks feature reverted since 2021-10-20');
 
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->assertScript('JSON.stringify(window.stack_output)', json_encode([
                     'parent-scripts',
                 ]))

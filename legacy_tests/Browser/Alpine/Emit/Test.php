@@ -10,7 +10,7 @@ class Test extends TestCase
     public function test_dollar_wire_emit_works()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, EmitComponent::class)
+            $this->visitLivewireComponent($browser, EmitComponent::class)
                 ->assertDontSee('emit worked')
                 ->waitForLivewire()
                 ->click('@emit')

@@ -9,6 +9,11 @@ export default function () {
 
             let attribute = directive.rawName.replace('wire:', 'x-on:')
 
+            // Automatically add .prevent to wire:submit, if they didn't add it themselves...
+            if (directive.type === 'submit' && ! directive.modifiers.includes('prevent')) {
+                attribute = attribute + '.prevent'
+            }
+
             Alpine.bind(el, {
                 [attribute](e) {
                     // Forward these calls directly to $wire. Let them handle

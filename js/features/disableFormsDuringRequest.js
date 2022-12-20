@@ -1,5 +1,8 @@
 import { directives as getDirectives } from '../directives'
-import { on } from '../events'
+import { on } from './../synthetic/index'
+import Alpine from 'alpinejs'
+import { Livewire } from 'index'
+import { findComponent } from 'state'
 
 let cleanupStackByComponentId = {}
 
@@ -53,9 +56,13 @@ export default function () {
         })
     })
 
-    on('component.response', component => cleanup(component))
-    // @todo
-    on('message.received', (message, component) => cleanup(component))
+    on('target.request', (target) => {
+        let component = findComponent(target.__livewireId)
+
+        return () => {
+            cleanup(component)
+        }
+    })
 }
 
 function cleanup(component) {

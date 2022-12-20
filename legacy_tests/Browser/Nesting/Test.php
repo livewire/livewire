@@ -10,7 +10,7 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class, '?showChild=true')
+            $this->visitLivewireComponent($browser, Component::class, '?showChild=true')
                 /**
                  * click inside nested component is assigned to nested component
                  */
@@ -41,7 +41,7 @@ class Test extends TestCase
     public function it_returns_the_render_context_back_to_the_parent_component_after_sub_component_is_rendered()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, RenderContextComponent::class)
+            $this->visitLivewireComponent($browser, RenderContextComponent::class)
                 ->assertSeeIn('@output.blade-component1', 'Blade 1')
                 ->assertSeeIn('@output.blade-component2', 'Blade 2')
                 ->assertSeeIn('@output.nested', 'Sub render')

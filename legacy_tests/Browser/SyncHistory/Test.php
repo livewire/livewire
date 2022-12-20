@@ -162,7 +162,7 @@ class Test extends TestCase
     public function test_that_we_are_not_setting_history_state_unless_there_are_route_bound_params_or_query_string_properties()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, DeferComponent::class)
+            $this->visitLivewireComponent($browser, DeferComponent::class)
                 ->assertScript('history.state', null)
             ;
         });
@@ -171,7 +171,7 @@ class Test extends TestCase
     public function test_that_changing_a_radio_multiple_times_and_hitting_back_multiple_times_works()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, SingleRadioComponent::class)
+            $this->visitLivewireComponent($browser, SingleRadioComponent::class)
                 ->waitForLivewire()->radio('@foo.bar', 'bar')
                 ->assertRadioSelected('@foo.bar', 'bar')
                 ->assertQueryStringHas('foo', 'bar')
@@ -206,7 +206,7 @@ class Test extends TestCase
     public function test_that_alpine_watchers_used_by_entangle_are_fired_when_back_button_is_hit()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, ComponentWithAlpineEntangle::class)
+            $this->visitLivewireComponent($browser, ComponentWithAlpineEntangle::class)
                 ->assertSeeIn('@blade.output', '1')
                 ->assertSeeIn('@alpine.output', 'bar')
                 ->waitForLivewire()->click('@next')

@@ -2,7 +2,7 @@ import { findComponent } from "../state";
 import { on } from './../synthetic/index'
 
 export default function () {
-    on('request.before', (target) => {
+    on('target.request.prepare', (target) => {
         let meta = target.snapshot.data[1]
         let childIds = Object.values(meta.children).map(i => i[1])
 

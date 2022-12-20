@@ -31,7 +31,7 @@ class LazyInputsWithUpdatesDisplayedComponent extends BaseComponent
     <input dusk="name" wire:model.lazy="name">
     <input dusk="description" wire:model.lazy="description">
 
-    <input dusk="is_active" type="checkbox" wire:model="is_active">
+    <input dusk="is_active" type="checkbox" wire:model.live="is_active">
 
     <div dusk="totalNumberUpdates">{{ count($updates) }}</div>
 

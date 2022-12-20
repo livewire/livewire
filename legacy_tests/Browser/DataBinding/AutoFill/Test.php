@@ -23,7 +23,7 @@ class Test extends TestCase
         $this->markTestSkipped();
 
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)->tinker();
+            $this->visitLivewireComponent($browser, Component::class)->tinker();
         });
     }
 }

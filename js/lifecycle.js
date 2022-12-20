@@ -4,8 +4,11 @@ import { synthetic, trigger } from './synthetic/index'
 import { Component } from './component'
 import Alpine from 'alpinejs'
 import morph from '@alpinejs/morph'
+import { monkeyPatchDomSetAttributeToAllowAtSymbols } from 'utils'
 
 export function start(options = {}) {
+    monkeyPatchDomSetAttributeToAllowAtSymbols()
+
     let enabledFeatures = options.features || []
 
     bootFeatures(enabledFeatures)

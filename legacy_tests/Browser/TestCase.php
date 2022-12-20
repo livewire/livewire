@@ -56,7 +56,7 @@ class TestCase extends BaseTestCase
         return [
             \\$component::class,
         ];
-        PHP);
+        PHP, LOCK_EX);
     }
 
     function wipeRuntimeComponentRegistration()
@@ -91,7 +91,9 @@ class TestCase extends BaseTestCase
         $this->tweakApplication(function () use ($isUsingAlpineV3) {
             $tmp = __DIR__ . '/_runtime_components.php';
             if (file_exists($tmp)) {
-                $components = require $tmp;
+                // We can't just "require" this file because of race conditions...
+                $components = eval((string) str(file_get_contents($tmp))->after('<?php'));
+
                 foreach ($components as $class) {
                     app('livewire')->component($class);
                 }
@@ -196,7 +198,7 @@ class TestCase extends BaseTestCase
 
     protected function tearDown(): void
     {
-        // $this->wipeRuntimeComponentRegistration();
+        $this->wipeRuntimeComponentRegistration();
 
         $this->removeApplicationTweaks();
 

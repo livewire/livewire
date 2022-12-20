@@ -19,7 +19,7 @@ class Test extends TestCase
     public function test_dollar_sign_wire()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, DollarSignWireComponent::class);
+            $this->visitLivewireComponent($browser, DollarSignWireComponent::class);
 
             $this->runThroughTransitions($browser);
 
@@ -32,7 +32,7 @@ class Test extends TestCase
     public function test_entangle()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, EntangleComponent::class);
+            $this->visitLivewireComponent($browser, EntangleComponent::class);
 
             $this->runThroughTransitions($browser);
 
@@ -45,7 +45,7 @@ class Test extends TestCase
     public function test_dot_defer()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, EntangleDeferComponent::class);
+            $this->visitLivewireComponent($browser, EntangleDeferComponent::class);
 
             // Because this is .defer, we want to mix Alpine and Livewire toggles.
             $this->runThroughTransitions($browser, 'button', 'button');

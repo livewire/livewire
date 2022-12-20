@@ -11,7 +11,7 @@ class Test extends TestCase
     public function test_core_query_string_pushstate_logic()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class, '?foo=baz&eoo=lob')
+            $this->visitLivewireComponent($browser, Component::class, '?foo=baz&eoo=lob')
                 /*
                  * Check that the intial property value is set from the query string.
                  */
@@ -84,7 +84,7 @@ class Test extends TestCase
     public function test_query_string_format_in_rfc_1738()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->type('@input', 'foo bar')
                 ->assertSeeIn('@output', 'foo bar')
                 ->assertInputValue('@input', 'foo bar')
@@ -100,7 +100,7 @@ class Test extends TestCase
         $this->browse(function (Browser $browser) {
             $queryString = '?qux[hyphen]=quux-quuz&qux[comma]=quux,quuz&qux[ampersand]=quux%26quuz&qux[space]=quux+quuz&qux[array][]=quux&qux[array][]=quuz';
 
-            Livewire::visit($browser, Component::class, $queryString)
+            $this->visitLivewireComponent($browser, Component::class, $queryString)
                 ->assertSeeIn('@qux.hyphen', 'quux-quuz')
                 ->assertSeeIn('@qux.comma', 'quux,quuz')
                 ->assertSeeIn('@qux.ampersand', 'quux&quuz')
@@ -115,7 +115,7 @@ class Test extends TestCase
         $this->browse(function (Browser $browser) {
             $queryString = '?qux%5Bhyphen%5D=quux-quuz&qux%5Bcomma%5D=quux%2Cquuz&qux%5Bampersand%5D=quux%26quuz&qux%5Bspace%5D=quux%20quuz&qux%5Barray%5D%5B%5D=quux&qux%5Barray%5D%5B%5D=quuz';
 
-            Livewire::visit($browser, Component::class, $queryString)
+            $this->visitLivewireComponent($browser, Component::class, $queryString)
                 ->assertSeeIn('@qux.hyphen', 'quux-quuz')
                 ->assertSeeIn('@qux.comma', 'quux,quuz')
                 ->assertSeeIn('@qux.ampersand', 'quux&quuz')
@@ -130,7 +130,7 @@ class Test extends TestCase
         $this->browse(function (Browser $browser) {
             $queryString = '?foo=bar%26quux%26quuz';
 
-            Livewire::visit($browser, Component::class, $queryString)
+            $this->visitLivewireComponent($browser, Component::class, $queryString)
                 ->assertQueryStringHas('foo', 'bar&quux&quuz')
                 ->refresh()
                 ->assertQueryStringHas('foo', 'bar&quux&quuz')
@@ -141,7 +141,7 @@ class Test extends TestCase
     public function test_back_button_after_refresh_works_with_nested_components()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->click('@show-nested')
                 ->waitForLivewire()->type('@baz-input', 'foo')
                 ->assertSeeIn('@baz-output', 'foo')
@@ -160,17 +160,17 @@ class Test extends TestCase
     public function test_excepts_results_in_no_query_string()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, ComponentWithExcepts::class)
+            $this->visitLivewireComponent($browser, ComponentWithExcepts::class)
                 ->assertSeeIn('@output', 'On page 1');
 
             $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
 
-            Livewire::visit($browser, ComponentWithExcepts::class, '?page=1')
+            $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=1')
                 ->assertSeeIn('@output', 'On page 1');
 
             $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
 
-            Livewire::visit($browser, ComponentWithExcepts::class, '?page=2')
+            $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=2')
                 ->assertSeeIn('@output', 'On page 2')
                 ->assertQueryStringHas('page', 2);
         });
@@ -179,7 +179,7 @@ class Test extends TestCase
     public function test_that_input_values_are_set_after_back_button()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, DirtyDataComponent::class)
+            $this->visitLivewireComponent($browser, DirtyDataComponent::class)
                 ->waitForLivewire()->type('@input', 'foo')
                 ->waitForLivewire()->click('@nextPage')
                 ->assertSee('The Next Page')
@@ -195,7 +195,7 @@ class Test extends TestCase
     public function test_that_huge_components_dont_exceed_history_state_or_session_state_storage_limits()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, HugeComponent::class)
+            $this->visitLivewireComponent($browser, HugeComponent::class)
                 ->assertSeeIn('@count', '0')
                 ->waitForLivewire()->click('@increment')
                 ->waitForLivewire()->click('@increment')
@@ -214,7 +214,7 @@ class Test extends TestCase
     public function test_dynamic_query_string_method()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, ComponentWithMethodInsteadOfProperty::class)
+            $this->visitLivewireComponent($browser, ComponentWithMethodInsteadOfProperty::class)
                 ->assertQueryStringHas('foo', 'bar')
             ;
         });
@@ -223,7 +223,7 @@ class Test extends TestCase
     public function test_nested_component_query_string_works_when_parent_is_not_using_query_string()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, ParentComponentWithNoQueryString::class)
+            $this->visitLivewireComponent($browser, ParentComponentWithNoQueryString::class)
                 ->assertPathBeginsWith('/livewire-dusk')
                 ->waitForLivewire()->click('@toggle-nested')
 
@@ -238,7 +238,7 @@ class Test extends TestCase
     public function it_does_not_build_query_string_from_referer_if_it_is_coming_from_a_full_page_redirect()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, RedirectLinkToQueryStringComponent::class)
+            $this->visitLivewireComponent($browser, RedirectLinkToQueryStringComponent::class)
                 ->assertPathBeginsWith('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CRedirectLinkToQueryStringComponent')
                 ->click('@link')
 
@@ -253,7 +253,7 @@ class Test extends TestCase
     public function test_query_string_hooks_from_traits()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, ComponentWithTraits::class)
+            $this->visitLivewireComponent($browser, ComponentWithTraits::class)
                 ->assertSee('Post #1')
                 ->assertSee('Post #2')
                 ->assertSee('Post #3')
@@ -287,7 +287,7 @@ class Test extends TestCase
     public function test_query_string_aliases()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, ComponentWithAliases::class)
+            $this->visitLivewireComponent($browser, ComponentWithAliases::class)
                 ->assertQueryStringMissing('p')
                 ->assertQueryStringMissing('s')
                 // Search for posts where title contains "1".
@@ -312,7 +312,7 @@ class Test extends TestCase
     public function test_query_string_aliases_set_intial_property_values()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, ComponentWithAliases::class, '?s=1')
+            $this->visitLivewireComponent($browser, ComponentWithAliases::class, '?s=1')
                 /*
                  * Check that the intial property value is set from the query string aliases.
                  */

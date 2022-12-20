@@ -135,9 +135,13 @@ class DuskBrowserMacros
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.syntheticOn('request', () => { window.duskIsWaitingForLivewireRequest{$id} = true })",
-                "window.syntheticOn('response.success', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
-                "window.syntheticOn('response.failure', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+                "window.Livewire.on('request', () => {
+                    window.duskIsWaitingForLivewireRequest{$id} = true
+
+                    return () => {
+                        delete window.duskIsWaitingForLivewireRequest{$id}
+                    }
+                })",
             ]);
 
             if ($callback) {

@@ -11,7 +11,7 @@ class Test extends TestCase
     public function test_magic_toggle_can_toggle_properties()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 //Toggle boolean property
                 ->assertSeeIn('@output', 'false')
                 ->waitForLivewire()->click('@toggle')
@@ -32,7 +32,7 @@ class Test extends TestCase
     public function test_magic_event_works()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->assertDontSeeIn('@outputEvent', 'baz')
                 ->waitForLivewire()->click('@fillBar')
                 ->assertSeeIn('@outputEvent', 'baz')

@@ -15,7 +15,7 @@
     <input type="text" wire:keydown.enter="setOutputTo('lob')" dusk="lob">
     <input type="text" wire:keydown.shift.enter="setOutputTo('law')" dusk="law">
     <input type="text" wire:keydown.space="setOutputTo('spa')" dusk="spa">
-    <form wire:submit.prevent="pause">
+    <form wire:submit="pause">
         <div wire:ignore>
             <input type="text" dusk="blog.input.ignored">
         </div>
@@ -23,7 +23,7 @@
         <input type="text" dusk="blog.input">
         <button type="submit" dusk="blog.button">Submit</button>
     </form>
-    <form wire:submit.prevent="throwError">
+    <form wire:submit="throwError">
         <button type="submit" dusk="boo.button">Submit</button>
     </form>
     <input wire:keydown.debounce.75ms="setOutputTo('bap')" dusk="bap"></button>

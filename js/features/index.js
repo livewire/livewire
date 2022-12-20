@@ -2,6 +2,7 @@ import morphDom from "./morphDom";
 import wireModel from "./wireModel";
 import wireWildcard from "./wireWildcard";
 import hotReloading from "./../../src/Features/SupportHotReloading/SupportHotReloading";
+import supportEntangle from "./../../src/Features/SupportEntangle/SupportEntangle";
 import wireLoading from "./wireLoading";
 import wirePoll from "./wirePoll";
 import wireParent from "./wireParent";
@@ -13,23 +14,28 @@ import props from "./props";
 import wireDirty from "./wireDirty";
 import wireIgnore from "./wireIgnore";
 import disableFormsDuringRequest from "./disableFormsDuringRequest";
+import dispatchBrowserEvents from "./dispatchBrowserEvents";
 import queryString from "./queryString";
+import magicMethods from "./magicMethods";
 
 export default function (enabledFeatures) {
     // wireTarget()
     $wire(enabledFeatures)
-    props(enabledFeatures)
+    // props(enabledFeatures)
     morphDom(enabledFeatures)
     wireModel(enabledFeatures)
-    wireParent(enabledFeatures)
-    wirePoll(enabledFeatures)
-    wireLoading(enabledFeatures)
-    wireTransition(enabledFeatures)
-    wireNavigate(enabledFeatures)
+    // wireParent(enabledFeatures)
+    // wirePoll(enabledFeatures)
+    // wireLoading(enabledFeatures)
+    // wireTransition(enabledFeatures)
+    // wireNavigate(enabledFeatures)
     wireWildcard(enabledFeatures)
-    hotReloading(enabledFeatures)
+    magicMethods()
+    dispatchBrowserEvents()
+    // hotReloading(enabledFeatures)
+    disableFormsDuringRequest(enabledFeatures)
+    supportEntangle()
     // wireDirty()
     // wireIgnore()
-    // disableFormsDuringRequest()
     // queryString()
 }

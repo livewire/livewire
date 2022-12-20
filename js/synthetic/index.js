@@ -1,5 +1,5 @@
 import { reactive as r, effect as e, toRaw as tr, stop as s, pauseTracking, enableTracking } from '@vue/reactivity'
-import { each, deeplyEqual, isObjecty, deepClone, diff, dataGet, isObject } from './utils'
+import { each, deeplyEqual, isObjecty, deepClone, diff, dataGet, isObject, dataSet } from './utils'
 import { showHtmlModal } from './modal'
 import { on, trigger } from './events'
 import Alpine from 'alpinejs'
@@ -39,7 +39,6 @@ export function synthetic(dehydrated) {
     // This "target" will be the object representing all the state for this synthetic.
     // Anytime you need to interect with this synthetic, you will need this object.
     let target = {
-        methods: dehydrated.effects['methods'] || [],
         effects: raw(dehydrated.effects),
         snapshot: raw(dehydrated.snapshot),
     }
@@ -128,6 +127,14 @@ function extractDataAndDecorate(payload, symbol) {
         })
         addProp('$watchEffect', (callback) => effect(callback))
         addProp('$refresh', async () => await requestCommit(symbol))
+        addProp('get', property => dataGet(target.reactive, property))
+        addProp('set', async (property, value) => {
+            dataSet(target.reactive, property, value)
+            return await requestCommit(symbol)
+        })
+        addProp('call', (method, ...params) => {
+            return target.reactive[method](...params)
+        })
         addProp('$commit', async (callback) => {
             return await requestCommit(symbol)
         })
@@ -238,16 +245,25 @@ function triggerSend() {
  * This method prepares the network request payload and makes
  * the actual request to the server to update the target,
  * store a new snapshot, and handle any side effects.
+ *
+ * This method should fire the following events:
+ * - request.prepare
+ * - request
+ * - target.request.prepare
+ * - target.request
  */
 async function sendMethodCall() {
+    trigger('request.prepare', requestTargetQueue)
+
     requestTargetQueue.forEach((request, symbol) => {
         let target = store.get(symbol)
 
-        trigger('request.before', target)
+        trigger('target.request.prepare', target)
     })
 
     let payload = []
-    let receivers = []
+    let successReceivers = []
+    let failureReceivers = []
 
     requestTargetQueue.forEach((request, symbol) => {
         let target = store.get(symbol)
@@ -266,28 +282,42 @@ async function sendMethodCall() {
 
         payload.push(targetPaylaod)
 
-        let finish = trigger('target.request', target, targetPaylaod)
+        let finishTarget = trigger('target.request', target, targetPaylaod)
 
-        receivers.push((snapshot, effects) => {
+        failureReceivers.push(() => {
+            let failed = true
+
+            finishTarget(failed)
+        })
+
+        successReceivers.push((snapshot, effects) => {
             mergeNewSnapshot(symbol, snapshot, effects)
 
             processEffects(target)
 
-            for (let i = 0; i < request.calls.length; i++) {
-                let { path, handleReturn } = request.calls[i];
+            // Here we'll match up returned values with their method call handlers. We need to build up
+            // two "stacks" of the same length and walk through them together to handle them properly...
+            let returnHandlerStack = request.calls.map(({ path, handleReturn }) => ([ path, handleReturn ]))
 
-                let forReturn = undefined
+            let returnStack = []
 
-                if (effects) Object.entries(effects).forEach(([iPath, iEffects]) => {
-                    if (path === iPath) {
-                        if (iEffects['return'] !== undefined) forReturn = iEffects['return']
-                    }
-                })
+            Object.entries(effects || []).forEach(([iPath, iEffects]) => {
+                if (! iEffects['returns']) return
 
-                handleReturn(forReturn)
-            }
+                let iReturns = iEffects['returns']
 
-            finish()
+                iReturns.forEach(iReturn => returnStack.push([iPath, iReturn]))
+            })
+
+            returnHandlerStack.forEach(([path, handleReturn], index) => {
+                let [iPath, iReturn] = returnStack[index]
+
+                if (path !== path) return
+
+                handleReturn(iReturn)
+            })
+
+            finishTarget()
 
             request.handleResponse()
         })
@@ -295,7 +325,7 @@ async function sendMethodCall() {
 
     requestTargetQueue.clear()
 
-    let finish = trigger('request', payload)
+    let finish = trigger('request')
 
     let request = await fetch('/synthetic/update', {
         method: 'POST',
@@ -312,19 +342,24 @@ async function sendMethodCall() {
         for (let i = 0; i < response.length; i++) {
             let { snapshot, effects } = response[i];
 
-            receivers[i](snapshot, effects)
+            successReceivers[i](snapshot, effects)
         }
 
+        finish(false)
         trigger('response.success')
     } else {
         let html = await request.text()
 
         showHtmlModal(html)
 
-        trigger('response.failure')
-    }
+        for (let i = 0; i < failureReceivers.length; i++) {
+            failureReceivers[i]();
+        }
 
-    finish()
+        let failed = true
+
+        finish(failed)
+    }
 }
 
 async function requestNew(name) {

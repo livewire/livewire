@@ -3,6 +3,7 @@ import { dataGet, dataSet, debounce, debounce as generateDebounce, throttle } fr
 import { on } from './../synthetic/index'
 import { closestComponent } from '../lifecycle'
 import { deferMutation } from './../data'
+import Alpine from 'alpinejs'
 
 export default function () {
     on('element.init', (el, component) => {

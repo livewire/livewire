@@ -14,7 +14,7 @@ class Test extends TestCase
     public function it_restores_eloquent_colletion_eager_loaded_relations_on_hydrate()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                     ->assertSeeIn('@posts-comments-relation-loaded', 'true')
                     ->waitForLivewire()->click('@refresh-server')
                     ->assertSeeIn('@posts-comments-relation-loaded', 'true')
@@ -26,7 +26,7 @@ class Test extends TestCase
     public function models_without_eager_loaded_relations_are_not_affected()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                     ->assertSeeIn('@comments-has-no-relations', 'true')
                     ->waitForLivewire()->click('@refresh-server')
                     ->assertSeeIn('@comments-has-no-relations', 'true')
