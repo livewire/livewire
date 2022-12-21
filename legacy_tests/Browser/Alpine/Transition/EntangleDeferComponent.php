@@ -13,7 +13,7 @@ class EntangleDeferComponent extends BaseComponent
     {
         return <<<'EOD'
 <div>
-    <div x-data="{ show: @entangle('show').defer }">
+    <div x-data="{ show: @entangle('show') }">
         <button x-on:click="show = ! show" dusk="button">Alpine Toggle</button>
         <button wire:click="$toggle('show')" dusk="livewire-button">Livewire Toggle</button>
         <button wire:click="$toggle('changeDom')" dusk="change-dom">Change DOM</button>

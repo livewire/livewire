@@ -1,5 +1,5 @@
 <div>
-    <div x-data="{ items: @entangle('items') }">
+    <div x-data="{ items: @entangle('items').live }">
         <button @click="items.push('baz')" dusk="button">Add Baz</button>
 
         <div dusk="output.alpine">
@@ -24,7 +24,7 @@
 
         <div>
             @if ($showBob)
-                <div x-data="{ bob: @entangle('bob') }">
+                <div x-data="{ bob: @entangle('bob').live }">
                     <button x-on:click="bob = 'after'" dusk="bob.button">Change Bob</button>
 
                     <div dusk="bob.alpine" x-text="bob"></div>

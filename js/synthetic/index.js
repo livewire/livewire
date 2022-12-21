@@ -80,6 +80,9 @@ async function newUp(name) {
  */
 function extractDataAndDecorate(payload, symbol) {
     return extractData(payload, symbol, (object, meta, symbol, path) => {
+        // We only want to decorate the root-most object...
+        if (path !== '') return object
+
         let target = store.get(symbol)
 
         let decorator = {}
@@ -128,9 +131,12 @@ function extractDataAndDecorate(payload, symbol) {
         addProp('$watchEffect', (callback) => effect(callback))
         addProp('$refresh', async () => await requestCommit(symbol))
         addProp('get', property => dataGet(target.reactive, property))
-        addProp('set', async (property, value) => {
+        addProp('set', async (property, value, live = true) => {
             dataSet(target.reactive, property, value)
-            return await requestCommit(symbol)
+
+            return live
+                ? await requestCommit(symbol)
+                : Promise.resolve()
         })
         addProp('call', (method, ...params) => {
             return target.reactive[method](...params)

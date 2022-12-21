@@ -19,7 +19,7 @@ class DeferArrayDataUpdates extends BaseComponent
     public function render()
     {
         return <<<'HTML'
-<div x-data="{ alpineRole:  @entangle('dataArray.role').defer }">
+<div x-data="{ alpineRole:  @entangle('dataArray.role') }">
     <select x-model="alpineRole" dusk="role-select">
         <option value="guest">Guest</option>
         <option value="user">User</option>

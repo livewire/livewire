@@ -12,7 +12,9 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, Component::class)
+            $this->visitLivewireComponent($browser, [
+                Component::class,
+            ])
                 /**
                  * Can mutate an array in Alpine and reflect in Livewire.
                  */
@@ -128,7 +130,7 @@ class Test extends TestCase
     public function test_entangle_does_not_throw_wire_undefined_error_after_dynamically_adding_child_component()
     {
         $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, EntangleNestedParentComponent::class)
+            $this->visitLivewireComponent($browser, [EntangleNestedParentComponent::class, EntangleNestedChildComponent::class])
                 ->assertSeeIn('@livewire-output-test1', "test1")
                 ->assertSeeIn('@alpine-output-test1', "test1")
                 ->waitForLivewire()->click('@add')
@@ -163,7 +165,7 @@ class Test extends TestCase
                 ->assertDontSeeIn('@livewireOutput', 1)
                 ->assertDontSeeIn('@livewireOutput', 2)
 
-                ->waitForLivewire()->click('@alpineAdd')
+                ->waitForLivewire()->click('@alpineAdd' )
                 ->assertSeeIn('@alpineOutput', 0)
                 ->assertSeeIn('@alpineOutput', 1)
                 ->assertDontSeeIn('@alpineOutput', 2)

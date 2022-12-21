@@ -4,17 +4,17 @@ import Alpine from 'alpinejs'
 
 export default function (enabled) {
     on('decorate', (target, path, addProp, decorator, symbol) => {
-        addProp('entangle', (name, defer = true) => {
+        addProp('entangle', (name, live = false) => {
             let component = findComponent(target.__livewireId)
 
-            return generateEntangleFunction(component)(name, defer)
+            return generateEntangleFunction(component)(name, live)
         })
     })
 }
 
 function generateEntangleFunction(component) {
-    return (name, defer = true) => {
-        let isDeferred = defer
+    return (name, live) => {
+        let isLive = live
         let livewireProperty = name
         let livewireComponent = component.$wire
         let livewirePropertyValue = livewireComponent.get(livewireProperty)
@@ -27,30 +27,35 @@ function generateEntangleFunction(component) {
                 return
             }
 
-            Alpine.entangle({
-                // Outer scope...
-                get() {
-                    return livewireComponent.get(name)
-                },
-                set(value) {
-                    livewireComponent.set(name, value)
-                }
-            }, {
-                // Inner scope...
-                get() {
-                    return getter()
-                },
-                set(value) {
-                    setter(value)
-                }
+            queueMicrotask(() => {
+                Alpine.entangle({
+                    // Outer scope...
+                    get() {
+                        console.log('livewire get', livewireComponent.get(name))
+                        return livewireComponent.get(name)
+                    },
+                    set(value) {
+                        console.log('livewire set', value, isLive)
+                        livewireComponent.set(name, value, isLive)
+                    }
+                }, {
+                    // Inner scope...
+                    get() {
+                        console.log('alpine get', getter())
+                        return getter()
+                    },
+                    set(value) {
+                        console.log('alpine set', value)
+                        setter(value)
+                    }
+                })
             })
-
 
             return livewireComponent.get(name)
         }, obj => {
-            Object.defineProperty(obj, 'defer', {
+            Object.defineProperty(obj, 'live', {
                 get() {
-                    isDeferred = true
+                    isLive = true
 
                     return obj
                 }

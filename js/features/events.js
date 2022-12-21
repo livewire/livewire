@@ -36,6 +36,11 @@ export default function () {
             addProp('$emitUp', (...params) => emitUp(component.el, ...params))
             addProp('$emitSelf', (...params) => emitSelf(component.id, ...params))
             addProp('$emitTo', (...params) => emitTo(...params))
+
+            addProp('emit', (...params) => emit(...params))
+            addProp('emitUp', (...params) => emitUp(component.el, ...params))
+            addProp('emitSelf', (...params) => emitSelf(component.id, ...params))
+            addProp('emitTo', (...params) => emitTo(...params))
         })
     })
 }

@@ -43,7 +43,7 @@ class TestCase extends BaseTestCase
 
         $this->registerComponentForNextTest($classes);
 
-        $url = '/livewire-dusk/'.urlencode($classes[0]).$queryString;
+        $url = '/livewire-dusk/'.urlencode(head($classes)).$queryString;
 
         return $browser->visit($url)->waitForLivewireToLoad();
     }
@@ -59,7 +59,7 @@ class TestCase extends BaseTestCase
     {
         $tmp = __DIR__ . '/_runtime_components.json';
 
-        unlink($tmp);
+        file_exists($tmp) && unlink($tmp);
     }
 
     public function setUp(): void
@@ -177,11 +177,11 @@ class TestCase extends BaseTestCase
             //     return app()->call(new $class);
             // })->middleware(['web', 'auth', 'can:update,post']);
 
-            // Route::middleware('web')->get('/entangle-turbo', function () {
-            //     return view('turbo', [
-            //         'link' => '/livewire-dusk/' . urlencode(\LegacyTests\Browser\Alpine\Entangle\ToggleEntangledTurbo::class),
-            //     ]);
-            // })->name('entangle-turbo');
+            Route::middleware('web')->get('/entangle-turbo', function () {
+                return view('turbo', [
+                    'link' => '/livewire-dusk/' . urlencode(\LegacyTests\Browser\Alpine\Entangle\ToggleEntangledTurbo::class),
+                ]);
+            })->name('entangle-turbo');
 
             // app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 

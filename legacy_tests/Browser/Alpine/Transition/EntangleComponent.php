@@ -13,7 +13,7 @@ class EntangleComponent extends BaseComponent
     {
         return <<<'EOD'
 <div>
-    <div x-data="{ show: @entangle('show') }">
+    <div x-data="{ show: @entangle('show').live }">
         <button x-on:click="show = ! show" dusk="button">Toggle</button>
         <button wire:click="$toggle('changeDom')" dusk="change-dom">Change DOM</button>
 

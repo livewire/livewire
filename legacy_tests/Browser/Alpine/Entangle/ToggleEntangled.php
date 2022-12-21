@@ -15,7 +15,7 @@ class ToggleEntangled extends BaseComponent
 <<<'HTML'
 <div>
     <div x-data="{
-        active: @entangle('active')
+        active: @entangle('active').live
     }">
         <div dusk="output.alpine" x-text="active"></div>
         <div dusk="output.livewire">{{ $active ? 'true' : 'false' }}</div>

@@ -1355,9 +1355,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function dontAutoEvaluateFunctions(callback) {
     let cache = shouldAutoEvaluateFunctions;
     shouldAutoEvaluateFunctions = false;
-    let result = callback();
+    callback();
     shouldAutoEvaluateFunctions = cache;
-    return result;
   }
   function evaluate(el, expression, extras = {}) {
     let result;
@@ -1379,7 +1378,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return generateEvaluatorFromFunction(dataStack, expression);
     }
     let evaluator = generateEvaluatorFromString(dataStack, expression, el);
-    return evaluator;
     return tryCatch.bind(null, el, expression, evaluator);
   }
   function generateEvaluatorFromFunction(dataStack, func) {
@@ -1529,15 +1527,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getDirectiveHandler(el, directive2) {
     let noop = () => {
     };
-    let handler4 = directiveHandlers[directive2.type] || noop;
+    let handler3 = directiveHandlers[directive2.type] || noop;
     let [utilities, cleanup22] = getElementBoundUtilities(el);
     onAttributeRemoved(el, directive2.original, cleanup22);
     let fullHandler = () => {
       if (el._x_ignore || el._x_ignoreSelf)
         return;
-      handler4.inline && handler4.inline(el, directive2, utilities);
-      handler4 = handler4.bind(handler4, el, directive2, utilities);
-      isDeferringHandlers ? directiveHandlerStacks.get(currentHandlerStackKey).push(handler4) : handler4();
+      handler3.inline && handler3.inline(el, directive2, utilities);
+      handler3 = handler3.bind(handler3, el, directive2, utilities);
+      isDeferringHandlers ? directiveHandlerStacks.get(currentHandlerStackKey).push(handler3) : handler3();
     };
     fullHandler.runCleanups = cleanup22;
     return fullHandler;
@@ -2258,21 +2256,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getBinding(el, name, fallback) {
     if (el._x_bindings && el._x_bindings[name] !== void 0)
       return el._x_bindings[name];
-    return getAttributeBinding(el, name, fallback);
-  }
-  function extractProp(el, name, fallback, extract = true) {
-    if (el._x_bindings && el._x_bindings[name] !== void 0)
-      return el._x_bindings[name];
-    if (el._x_inlineBindings && el._x_inlineBindings[name] !== void 0) {
-      let binding = el._x_inlineBindings[name];
-      binding.extract = extract;
-      return dontAutoEvaluateFunctions(() => {
-        return evaluate(el, binding.expression);
-      });
-    }
-    return getAttributeBinding(el, name, fallback);
-  }
-  function getAttributeBinding(el, name, fallback) {
     let attr = el.getAttribute(name);
     if (attr === null)
       return typeof fallback === "function" ? fallback() : fallback;
@@ -2313,7 +2296,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let outer, inner;
       if (firstRun) {
         outer = outerGet();
-        innerSet(outer);
+        innerSet(JSON.parse(JSON.stringify(outer)));
         inner = innerGet();
         firstRun = false;
       } else {
@@ -2326,7 +2309,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           innerSet(outer);
           inner = outer;
         } else {
-          outerSet(inner);
+          outerSet(JSON.parse(JSON.stringify(inner)));
           outer = inner;
         }
       }
@@ -2449,7 +2432,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     interceptInit,
     setEvaluator,
     mergeProxies,
-    extractProp,
     findClosest,
     closestRoot,
     destroyTree,
@@ -3277,7 +3259,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("effect", (el, { expression }, { effect: effect32 }) => effect32(evaluateLater(el, expression)));
   function on2(el, event, modifiers, callback) {
     let listenerTarget = el;
-    let handler4 = (e) => callback(e);
+    let handler3 = (e) => callback(e);
     let options = {};
     let wrapHandler = (callback2, wrapper) => (e) => wrapper(callback2, e);
     if (modifiers.includes("dot"))
@@ -3293,22 +3275,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (modifiers.includes("document"))
       listenerTarget = document;
     if (modifiers.includes("prevent"))
-      handler4 = wrapHandler(handler4, (next, e) => {
+      handler3 = wrapHandler(handler3, (next, e) => {
         e.preventDefault();
         next(e);
       });
     if (modifiers.includes("stop"))
-      handler4 = wrapHandler(handler4, (next, e) => {
+      handler3 = wrapHandler(handler3, (next, e) => {
         e.stopPropagation();
         next(e);
       });
     if (modifiers.includes("self"))
-      handler4 = wrapHandler(handler4, (next, e) => {
+      handler3 = wrapHandler(handler3, (next, e) => {
         e.target === el && next(e);
       });
     if (modifiers.includes("away") || modifiers.includes("outside")) {
       listenerTarget = document;
-      handler4 = wrapHandler(handler4, (next, e) => {
+      handler3 = wrapHandler(handler3, (next, e) => {
         if (el.contains(e.target))
           return;
         if (e.target.isConnected === false)
@@ -3321,12 +3303,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     if (modifiers.includes("once")) {
-      handler4 = wrapHandler(handler4, (next, e) => {
+      handler3 = wrapHandler(handler3, (next, e) => {
         next(e);
-        listenerTarget.removeEventListener(event, handler4, options);
+        listenerTarget.removeEventListener(event, handler3, options);
       });
     }
-    handler4 = wrapHandler(handler4, (next, e) => {
+    handler3 = wrapHandler(handler3, (next, e) => {
       if (isKeyEvent(event)) {
         if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
           return;
@@ -3337,16 +3319,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (modifiers.includes("debounce")) {
       let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
       let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler4 = debounce(handler4, wait);
+      handler3 = debounce(handler3, wait);
     }
     if (modifiers.includes("throttle")) {
       let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
       let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler4 = throttle(handler4, wait);
+      handler3 = throttle(handler3, wait);
     }
-    listenerTarget.addEventListener(event, handler4, options);
+    listenerTarget.addEventListener(event, handler3, options);
     return () => {
-      listenerTarget.removeEventListener(event, handler4, options);
+      listenerTarget.removeEventListener(event, handler3, options);
     };
   }
   function dotSyntax(subject) {
@@ -3502,7 +3484,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getInputValue(el, modifiers, event, currentValue) {
     return mutateDom(() => {
       if (event instanceof CustomEvent && event.detail !== void 0) {
-        return event.detail || event.target.value;
+        return typeof event.detail != "undefined" ? event.detail : event.target.value;
       } else if (el.type === "checkbox") {
         if (Array.isArray(currentValue)) {
           let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
@@ -3568,7 +3550,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   mapAttributes(startingWith(":", into(prefix("bind:"))));
-  var handler2 = (el, { value: value2, modifiers, expression, original }, { effect: effect32 }) => {
+  directive("bind", (el, { value: value2, modifiers, expression, original }, { effect: effect32 }) => {
     if (!value2) {
       let bindingProviders = {};
       injectBindingProviders(bindingProviders);
@@ -3580,9 +3562,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     if (value2 === "key")
       return storeKeyForXFor(el, expression);
-    if (el._x_inlineBindings && el._x_inlineBindings[value2] && el._x_inlineBindings[value2].extract) {
-      return;
-    }
     let evaluate2 = evaluateLater(el, expression);
     effect32(() => evaluate2((result) => {
       if (result === void 0 && typeof expression === "string" && expression.match(/\./)) {
@@ -3590,15 +3569,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       mutateDom(() => bind(el, value2, result, modifiers));
     }));
-  };
-  handler2.inline = (el, { value: value2, modifiers, expression }) => {
-    if (!value2)
-      return;
-    if (!el._x_inlineBindings)
-      el._x_inlineBindings = {};
-    el._x_inlineBindings[value2] = { expression, extract: false };
-  };
-  directive("bind", handler2);
+  });
   function storeKeyForXFor(el, expression) {
     el._x_keyExpression = expression;
   }
@@ -3740,9 +3711,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!!lookup[key]._x_effects) {
           lookup[key]._x_effects.forEach(dequeueJob);
         }
-        if (!!lookup[key]._x_forCleanup) {
-          lookup[key]._x_forCleanup();
-        }
         lookup[key].remove();
         lookup[key] = null;
         delete lookup[key];
@@ -3832,16 +3800,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isNumeric3(subject) {
     return !Array.isArray(subject) && !isNaN(subject);
   }
-  function handler3() {
+  function handler2() {
   }
-  handler3.inline = (el, { expression }, { cleanup: cleanup22 }) => {
+  handler2.inline = (el, { expression }, { cleanup: cleanup22 }) => {
     let root = closestRoot(el);
     if (!root._x_refs)
       root._x_refs = {};
     root._x_refs[expression] = el;
     cleanup22(() => delete root._x_refs[expression]);
   };
-  directive("ref", handler3);
+  directive("ref", handler2);
   directive("if", (el, { expression }, { effect: effect32, cleanup: cleanup22 }) => {
     let evaluate2 = evaluateLater(el, expression);
     let show = () => {
@@ -4081,6 +4049,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function extractDataAndDecorate(payload, symbol) {
     return extractData(payload, symbol, (object2, meta, symbol2, path) => {
+      if (path !== "")
+        return object2;
       let target = store2.get(symbol2);
       let decorator = {};
       let addProp = (key, value2, options = {}) => {
@@ -4120,9 +4090,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       addProp("$watchEffect", (callback) => effect3(callback));
       addProp("$refresh", async () => await requestCommit(symbol2));
       addProp("get", (property2) => dataGet(target.reactive, property2));
-      addProp("set", async (property2, value2) => {
+      addProp("set", async (property2, value2, live = true) => {
         dataSet(target.reactive, property2, value2);
-        return await requestCommit(symbol2);
+        return live ? await requestCommit(symbol2) : Promise.resolve();
       });
       addProp("call", (method, ...params) => {
         return target.reactive[method](...params);
@@ -4604,15 +4574,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // src/Features/SupportEntangle/SupportEntangle.js
   function SupportEntangle_default(enabled) {
     on("decorate", (target, path, addProp, decorator, symbol) => {
-      addProp("entangle", (name, defer = true) => {
+      addProp("entangle", (name, live = false) => {
         let component = findComponent(target.__livewireId);
-        return generateEntangleFunction(component)(name, defer);
+        return generateEntangleFunction(component)(name, live);
       });
     });
   }
   function generateEntangleFunction(component) {
-    return (name, defer = true) => {
-      let isDeferred = defer;
+    return (name, live) => {
+      let isLive = live;
       let livewireProperty = name;
       let livewireComponent = component.$wire;
       let livewirePropertyValue = livewireComponent.get(livewireProperty);
@@ -4621,26 +4591,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`);
           return;
         }
-        module_default.entangle({
-          get() {
-            return livewireComponent.get(name);
-          },
-          set(value2) {
-            livewireComponent.set(name, value2);
-          }
-        }, {
-          get() {
-            return getter();
-          },
-          set(value2) {
-            setter(value2);
-          }
+        queueMicrotask(() => {
+          module_default.entangle({
+            get() {
+              console.log("livewire get", livewireComponent.get(name));
+              return livewireComponent.get(name);
+            },
+            set(value2) {
+              console.log("livewire set", value2, isLive);
+              livewireComponent.set(name, value2, isLive);
+            }
+          }, {
+            get() {
+              console.log("alpine get", getter());
+              return getter();
+            },
+            set(value2) {
+              console.log("alpine set", value2);
+              setter(value2);
+            }
+          });
         });
         return livewireComponent.get(name);
       }, (obj) => {
-        Object.defineProperty(obj, "defer", {
+        Object.defineProperty(obj, "live", {
           get() {
-            isDeferred = true;
+            isLive = true;
             return obj;
           }
         });
@@ -4754,6 +4730,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         addProp("$emitUp", (...params) => emitUp(component.el, ...params));
         addProp("$emitSelf", (...params) => emitSelf(component.id, ...params));
         addProp("$emitTo", (...params) => emitTo(...params));
+        addProp("emit", (...params) => emit(...params));
+        addProp("emitUp", (...params) => emitUp(component.el, ...params));
+        addProp("emitSelf", (...params) => emitSelf(component.id, ...params));
+        addProp("emitTo", (...params) => emitTo(...params));
       });
     });
   }
@@ -4927,6 +4907,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     function patchAttributes(from2, to) {
+      if (from2._x_transitioning)
+        return;
       if (from2._x_isShown && !to._x_isShown) {
         return;
       }
