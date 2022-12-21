@@ -98,9 +98,11 @@ class HydratePublicProperties implements HydrationMiddleware
             ) {
                 data_set($response, 'memo.data.'.$key, $value);
             } else if(is_array($value)) {
+                // The data here needs to be normalised, so that Safari handles special charaters properly without throwing a checksum exception.
                 data_set($response, 'memo.data.'.$key, static::normalizeArray($value));
             } else if(is_string($value)) {
                 data_set($response, 'memo.data.'.$key, \Normalizer::normalize($value));
+                // The data here needs to be normalised, so that Safari handles special charaters properly without throwing a checksum exception.
             } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
                 $response->memo['dataMeta']['wireables'][] = $key;
 
@@ -112,6 +114,7 @@ class HydratePublicProperties implements HydrationMiddleware
             } else if ($value instanceof Collection) {
                 $response->memo['dataMeta']['collections'][] = $key;
 
+                // The data here needs to be normalised, so that Safari handles special charaters properly without throwing a checksum exception.
                 data_set($response, 'memo.data.'.$key, static::normalizeCollection($value)->toArray());
             } else if ($value instanceof DateTimeInterface) {
                 if ($value instanceof IlluminateCarbon) {
