@@ -21,6 +21,7 @@ use Carbon\Carbon;
 use DateTime;
 use DateTimeInterface;
 use stdClass;
+use Normalizer;
 
 class HydratePublicProperties implements HydrationMiddleware
 {
@@ -101,8 +102,8 @@ class HydratePublicProperties implements HydrationMiddleware
                 // The data here needs to be normalised, so that Safari handles special charaters properly without throwing a checksum exception.
                 data_set($response, 'memo.data.'.$key, static::normalizeArray($value));
             } else if(is_string($value)) {
-                data_set($response, 'memo.data.'.$key, \Normalizer::normalize($value));
                 // The data here needs to be normalised, so that Safari handles special charaters properly without throwing a checksum exception.
+                data_set($response, 'memo.data.'.$key, Normalizer::normalize($value));
             } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
                 $response->memo['dataMeta']['wireables'][] = $key;
 
@@ -326,7 +327,7 @@ class HydratePublicProperties implements HydrationMiddleware
     {
         return array_map(function ($item) {
             if (is_string($item)) {
-                return \Normalizer::normalize($item);
+                return Normalizer::normalize($item);
             }
 
             if (is_array($item)) {
@@ -345,7 +346,7 @@ class HydratePublicProperties implements HydrationMiddleware
     {
         return $value->map(function ($item) {
             if (is_string($item)) {
-                return \Normalizer::normalize($item);
+                return Normalizer::normalize($item);
             }
 
             if (is_array($item)) {
