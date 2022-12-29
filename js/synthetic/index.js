@@ -424,71 +424,8 @@ function mergeNewSnapshot(symbol, snapshot, effects) {
     })
 }
 
-/**
- * This method decorates the target's raw data with new behavior.
- * We're using a proxy as a trap to intercept gets and sets.
- * Going to leave this here for now, but avoiding proxies right now.
- */
-function __decorate(object, decorator) {
-    return new Proxy(object, {
-        // These expose the decorator properties as enumerable and such
-        // This is sometimes what you want and sometimes what you don't want
-        // (in the case of JSON.stringify comparisons). For now. I don't want.
-        // has(target, key) {
-        //     return Reflect.has(decorator, key) || Reflect.has(target, key)
-        // },
-
-        // getOwnPropertyDescriptor(target, property) {
-        //     return Reflect.getOwnPropertyDescriptor(decorator, property) || Reflect.getOwnPropertyDescriptor(target, property)
-        // },
-
-        // ownKeys(target) {
-        //     return Array.from(new Set([...Reflect.ownKeys(decorator), ...Reflect.ownKeys(target)]))
-        // },
-
-        get(target, property, receiver) {
-            if (property === '__decorator') return decorator
-
-            let got = Reflect.get(decorator, property, receiver)
-            if (got !== undefined) return got
-
-            got = Reflect.get(target, property, receiver)
-            if (got !== undefined) return got
-
-
-            if ('__get' in decorator) {
-                return decorator.__get(property)
-            }
-        },
-
-        set(target, property, value) {
-            if (property in decorator) {
-                decorator[property] = value
-            } else if (property in target || property === '__v_isRef') {
-                target[property] = value
-            } else if ('__set' in decorator && ! ['then'].includes(property)) {
-                decorator.__set(property, value)
-            }
-
-            return true
-        },
-    })
-}
-
 function processEffects(target) {
     let effects = target.effects
 
     each(effects, (key, value) => trigger('effects', target, value, key))
-}
-
-function getDecoratePropertyFunction(decorator) {
-    return key => {
-
-    }
-    // Apply all the decorator descriptors to the target object.
-    each(Object.getOwnPropertyDescriptors(decorator), (key, value) => {
-        Object.defineProperty(object,key, value)
-    })
-
-    return object
 }

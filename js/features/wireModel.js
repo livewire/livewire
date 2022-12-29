@@ -4,6 +4,8 @@ import { on } from './../synthetic/index'
 import { closestComponent } from '../lifecycle'
 import { deferMutation } from './../data'
 import Alpine from 'alpinejs'
+import { debounceByComponent } from 'debounce'
+import { findComponent } from 'state'
 
 export default function () {
     on('element.init', (el, component) => {
@@ -18,25 +20,13 @@ export default function () {
             return
         }
 
-        // Handle dirty inputs.
-        // on('component.response', (component, response) => {
-        //     if (component !== component) return
-
-        //     if (response.effects.dirty) {
-        //         if (response.effects.dirty.includes(directive.value)) {
-        //             el._x_forceModelUpdate()
-        //         }
-        //     }
-        // })
-
         let lazy = directive.modifiers.includes('lazy')
 
         let modifierTail = getModifierTail(directive.modifiers)
 
         let live = directive.modifiers.includes('live')
 
-        // @todo: change this to throttle?
-        let update = debounce((component) => {
+        let update = debounceByComponent(component, (component) => {
             if (! live) return
 
             component.$wire.$commit()
@@ -45,11 +35,6 @@ export default function () {
         Alpine.bind(el, {
             // "unintrusive" in this case means to not update the value of the input
             // if it is a currently focused text input.
-            ['@change']() {
-                if (lazy) {
-
-                }
-            },
             // ['x-model.unintrusive' + modifierTail]() {
             ['x-model' + modifierTail]() {
                 return {

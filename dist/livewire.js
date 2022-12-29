@@ -24,26 +24,26 @@
   function each(subject, callback) {
     Object.entries(subject).forEach(([key, value2]) => callback(key, value2));
   }
-  function dataGet(object2, key) {
+  function dataGet(object, key) {
     if (key === "")
-      return object2;
+      return object;
     return key.split(".").reduce((carry, i) => {
       if (carry === void 0)
         return void 0;
       return carry[i];
-    }, object2);
+    }, object);
   }
-  function dataSet(object2, key, value2) {
+  function dataSet(object, key, value2) {
     let segments = key.split(".");
     if (segments.length === 1) {
-      return object2[key] = value2;
+      return object[key] = value2;
     }
     let firstSegment = segments.shift();
     let restOfSegments = segments.join(".");
-    if (object2[firstSegment] === void 0) {
-      object2[firstSegment] = {};
+    if (object[firstSegment] === void 0) {
+      object[firstSegment] = {};
     }
-    dataSet(object2[firstSegment], restOfSegments, value2);
+    dataSet(object[firstSegment], restOfSegments, value2);
   }
   function diff(left, right, diffs = {}, path = "") {
     if (left === right)
@@ -2179,7 +2179,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else {
       if (el.value === value2)
         return;
-      el.value = value2;
+      el.value = value2 === void 0 ? "" : value2;
     }
   }
   function bindClasses(el, value2) {
@@ -3467,7 +3467,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     el._x_forceModelUpdate = (value2) => {
-      value2 = value2 === void 0 ? getValue() : value2;
       if (value2 === void 0 && typeof expression === "string" && expression.match(/\./))
         value2 = "";
       window.fromModel = true;
@@ -4048,21 +4047,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return synthetic(await requestNew(name));
   }
   function extractDataAndDecorate(payload, symbol) {
-    return extractData(payload, symbol, (object2, meta, symbol2, path) => {
+    return extractData(payload, symbol, (object, meta, symbol2, path) => {
       if (path !== "")
-        return object2;
+        return object;
       let target = store2.get(symbol2);
       let decorator = {};
       let addProp = (key, value2, options = {}) => {
         let base = { enumerable: false, configurable: true, ...options };
         if (isObject(value2) && deeplyEqual(Object.keys(value2), ["get"]) || deeplyEqual(Object.keys(value2), ["get", "set"])) {
-          Object.defineProperty(object2, key, {
+          Object.defineProperty(object, key, {
             get: value2.get,
             set: value2.set,
             ...base
           });
         } else {
-          Object.defineProperty(object2, key, {
+          Object.defineProperty(object, key, {
             value: value2,
             ...base
           });
@@ -4101,9 +4100,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return await requestCommit(symbol2);
       });
       each(Object.getOwnPropertyDescriptors(decorator), (key, value2) => {
-        Object.defineProperty(object2, key, value2);
+        Object.defineProperty(object, key, value2);
       });
-      return object2;
+      return object;
     });
   }
   function extractData(payload, symbol, decorate2 = (i) => i, path = "") {
@@ -4427,40 +4426,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   };
 
   // js/utils.js
-  function debounce2(func, wait, immediate) {
-    var timeout;
-    return function() {
-      var context = this, args = arguments;
-      var later = function() {
-        timeout = null;
-        if (!immediate)
-          func.apply(context, args);
-      };
-      var callNow = immediate && !timeout;
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-      if (callNow)
-        func.apply(context, args);
-    };
-  }
-  function dataGet2(object2, key) {
+  function dataGet2(object, key) {
     return key.split(".").reduce((carry, i) => {
       if (carry === void 0)
         return void 0;
       return carry[i];
-    }, object2);
+    }, object);
   }
-  function dataSet2(object2, key, value2) {
+  function dataSet2(object, key, value2) {
     let segments = key.split(".");
     if (segments.length === 1) {
-      return object2[key] = value2;
+      return object[key] = value2;
     }
     let firstSegment = segments.shift();
     let restOfSegments = segments.join(".");
-    if (object2[firstSegment] === void 0) {
-      object2[firstSegment] = {};
+    if (object[firstSegment] === void 0) {
+      object[firstSegment] = {};
     }
-    dataSet2(object2[firstSegment], restOfSegments, value2);
+    dataSet2(object[firstSegment], restOfSegments, value2);
   }
   var Bag = class {
     constructor() {
@@ -4473,6 +4456,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     get(key) {
       return this.arrays[key] || [];
+    }
+    each(key, callback) {
+      return this.get(key).forEach(callback);
+    }
+  };
+  var WeakBag = class {
+    constructor() {
+      this.arrays = /* @__PURE__ */ new WeakMap();
+    }
+    add(key, value2) {
+      if (!this.arrays.has(key))
+        this.arrays.set(key, []);
+      this.arrays.get(key).push(value2);
+    }
+    get(key) {
+      return this.arrays.has(key) ? this.arrays.get(key) : [];
     }
     each(key, callback) {
       return this.get(key).forEach(callback);
@@ -4503,6 +4502,36 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/events.js
   var listeners2 = new Bag();
 
+  // js/debounce.js
+  var callbacksByComponent = new WeakBag();
+  function debounceByComponent(component, callback, time) {
+    let callbackRegister = { callback: () => {
+    } };
+    callbacksByComponent.add(component, callbackRegister);
+    var timeout;
+    return (e) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        callback(e);
+        timeout = void 0;
+        callbackRegister.callback = () => {
+        };
+      }, time);
+      callbackRegister.callback = () => {
+        clearTimeout(timeout);
+        callback(e);
+      };
+    };
+  }
+  function callAndClearComponentDebounces(component, callback) {
+    callbacksByComponent.each(component, (callbackRegister) => {
+      callbackRegister.callback();
+      callbackRegister.callback = () => {
+      };
+    });
+    callback();
+  }
+
   // js/features/wireModel.js
   function wireModel_default() {
     on("element.init", (el, component) => {
@@ -4517,16 +4546,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let lazy = directive2.modifiers.includes("lazy");
       let modifierTail = getModifierTail(directive2.modifiers);
       let live = directive2.modifiers.includes("live");
-      let update = debounce2((component2) => {
+      let update = debounceByComponent(component, (component2) => {
         if (!live)
           return;
         component2.$wire.$commit();
       }, 250);
       module_default.bind(el, {
-        ["@change"]() {
-          if (lazy) {
-          }
-        },
         ["x-model" + modifierTail]() {
           return {
             get() {
@@ -4564,7 +4589,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         module_default.bind(el, {
           [attribute](e) {
-            module_default.evaluate(el, "$wire." + directive2.value, { scope: { $event: e } });
+            callAndClearComponentDebounces(component, () => {
+              module_default.evaluate(el, "$wire." + directive2.value, { scope: { $event: e } });
+            });
           }
         });
       });
@@ -4757,12 +4784,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     globalListeners.add(name, callback);
   }
 
+  // js/features/forceClearDirtyInputs.js
+  function forceClearDirtyInputs_default() {
+    on("element.init", (el, component) => {
+      let allDirectives = directives2(el);
+      if (allDirectives.missing("model"))
+        return;
+      let directive2 = allDirectives.get("model");
+      on("target.request", (target) => {
+        let targetComponent = findComponent(target.__livewireId);
+        if (component !== targetComponent)
+          return;
+        return () => {
+          if (target.effects[""].dirty) {
+            if (target.effects[""].dirty.includes(directive2.value)) {
+              el._x_forceModelUpdate();
+            }
+          }
+        };
+      });
+    });
+  }
+
   // js/features/index.js
   function features_default(enabledFeatures) {
     wire_default(enabledFeatures);
     morphDom_default(enabledFeatures);
     wireModel_default(enabledFeatures);
     events_default();
+    forceClearDirtyInputs_default();
     wireWildcard_default(enabledFeatures);
     magicMethods_default();
     dispatchBrowserEvents_default();

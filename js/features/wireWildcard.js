@@ -1,6 +1,7 @@
 import { directives } from '../directives'
 import { on } from './../synthetic/index'
 import Alpine from 'alpinejs'
+import { callAndClearComponentDebounces } from 'debounce'
 
 export default function () {
     on('element.init', (el, component) => {
@@ -18,7 +19,10 @@ export default function () {
                 [attribute](e) {
                     // Forward these calls directly to $wire. Let them handle
                     // firing the request.
-                    Alpine.evaluate(el, '$wire.'+directive.value, { scope: { $event: e }})
+
+                    callAndClearComponentDebounces(component, () => {
+                        Alpine.evaluate(el, '$wire.'+directive.value, { scope: { $event: e }})
+                    })
                 }
             })
         })

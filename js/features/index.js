@@ -18,6 +18,7 @@ import dispatchBrowserEvents from "./dispatchBrowserEvents";
 import queryString from "./queryString";
 import magicMethods from "./magicMethods";
 import events from "./events";
+import forceClearDirtyInputs from "./forceClearDirtyInputs";
 
 export default function (enabledFeatures) {
     // wireTarget()
@@ -26,6 +27,7 @@ export default function (enabledFeatures) {
     morphDom(enabledFeatures)
     wireModel(enabledFeatures)
     events()
+    forceClearDirtyInputs()
     // wireParent(enabledFeatures)
     // wirePoll(enabledFeatures)
     // wireLoading(enabledFeatures)
