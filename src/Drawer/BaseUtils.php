@@ -10,6 +10,13 @@ class BaseUtils
             && isset($payload[1]['s']);
     }
 
+    static function isNotAPrimitive($target) {
+        return
+            ! is_numeric($target) &&
+            ! is_string($target) &&
+            ! is_bool($target);
+    }
+
     static function getPublicPropertiesDefinedOnSubclass($target) {
         return static::getPublicProperties($target, function ($property) use ($target) {
             // dump($property->getDeclaringClass()->getName(), $target::class, $property);

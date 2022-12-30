@@ -42,7 +42,7 @@ class UpdateComponents
                 $diff = $target['diff'];
                 $calls = $target['calls'];
 
-                $response = $this->update($snapshot, $diff, $calls);
+                $response = app($this::class)->update($snapshot, $diff, $calls);
 
                 unset($response['target']);
 
@@ -133,9 +133,9 @@ class UpdateComponents
     }
 
     function dehydrate($root, $target, &$effects, $initial, $annotationsFromParent = [], $path = '') {
-        $synth = $this->synth($target);
+        if (Utils::isNotAPrimitive($target)) {
+            $synth = $this->synth($target);
 
-        if ($synth) {
             $context = new DehydrationContext($root, $target, $initial, $annotationsFromParent, $path);
 
             $finish = trigger('dehydrate', $synth, $target, $context);
@@ -313,19 +313,33 @@ class UpdateComponents
     }
 
     function getSynthesizerByKey($key) {
+        $forReturn = null;
+
         foreach ($this->synthesizers as $synth) {
             if ($synth::getKey() === $key) {
-                return new $synth;
+                $forReturn = new $synth;
+                break;
             }
         }
+
+        throw_unless($forReturn, new \Exception('No synthesizer found for key: "'.$key.'"'));
+
+        return $forReturn;
     }
 
     function getSynthesizerByTarget($target) {
+        $forReturn = null;
+
         foreach ($this->synthesizers as $synth) {
             if ($synth::match($target)) {
-                return new $synth;
+                $forReturn = new $synth;
+                break;
             }
         }
+
+        throw_unless($forReturn, new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']'));
+
+        return $forReturn;
     }
 
     function getParentAndChildKey($path) {
