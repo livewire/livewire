@@ -153,9 +153,7 @@ class UpdateComponents
             $meta['s'] = $synth::getKey();
 
             foreach ($iEffects as $key => $effect) {
-                if (! isset($effects[$path])) $effects[$path] = [];
-
-                $effects[$path][$key] = $effect;
+                $effects[$key] = $effect;
             }
 
             if (is_array($value)) {
@@ -270,9 +268,7 @@ class UpdateComponents
             $target = $this->dataGet($root, $path);
 
             $addEffect = function ($key, $value) use (&$effects, $path) {
-                if (! isset($effects[$path])) $effects[$path] = [];
-
-                $effects[$path][$key] = $value;
+                $effects[$key] = $value;
             };
 
             $synth = $this->synth($target);
@@ -287,9 +283,9 @@ class UpdateComponents
 
             $return = $finish($return);
 
-            if (! isset($effects[$path])) $effects[$path] = [];
-            if (! isset($effects[$path]['returns'])) $effects[$path]['returns'] = [];
-            $effects[$path]['returns'][] = $return;
+            if (! isset($effects['returns'])) $effects['returns'] = [];
+            if (! isset($effects['returns'][$path])) $effects['returns'][$path] = [];
+            $effects['returns'][$path][] = $return;
         }
     }
 

@@ -18,7 +18,6 @@ export function findComponent(id) {
 
 export function componentsByName(name) {
     return Object.values(state.components).filter(component => {
-        debugger
         return name == component.name
     })
 }
@@ -33,7 +32,7 @@ export function releaseComponent(id) {
     let component = state.components[id]
 
     let effects = deepClone(component.synthetic.effects)
-    delete effects['']['html']
+    delete effects['html']
 
     releasePool[id] = {
         effects,

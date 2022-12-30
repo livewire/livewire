@@ -2,7 +2,7 @@ import { on } from './../synthetic/index'
 import { findComponent } from "../state";
 
 export default function () {
-    on('effects', (target, effects, path) => {
+    on('effects', (target, effects) => {
         let dispatches = effects.dispatches
         if (! dispatches) return
 

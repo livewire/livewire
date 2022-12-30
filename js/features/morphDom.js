@@ -3,7 +3,7 @@ import { findComponent } from "../state";
 import { on } from './../synthetic/index'
 
 export default function () {
-    on('effects', (target, effects, path) => {
+    on('effects', (target, effects) => {
         let html = effects.html
         if (! html) return
 

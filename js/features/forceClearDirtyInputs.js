@@ -16,8 +16,8 @@ export default function () {
             if (component !== targetComponent) return
 
             return () => {
-                if (target.effects[''].dirty) {
-                    if (target.effects[''].dirty.includes(directive.value)) {
+                if (target.effects.dirty) {
+                    if (target.effects.dirty.includes(directive.value)) {
                         el._x_forceModelUpdate()
                     }
                 }

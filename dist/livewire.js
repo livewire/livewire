@@ -79,7 +79,6 @@
   }
   function componentsByName(name) {
     return Object.values(state.components).filter((component) => {
-      debugger;
       return name == component.name;
     });
   }
@@ -90,7 +89,7 @@
   function releaseComponent(id) {
     let component = state.components[id];
     let effects = deepClone(component.synthetic.effects);
-    delete effects[""]["html"];
+    delete effects["html"];
     releasePool[id] = {
       effects,
       snapshot: deepClone(component.synthetic.snapshot)
@@ -3878,7 +3877,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/synthetic/features/methods.js
   function methods_default() {
     on("decorate", (target, path, addProp, decorator, symbol) => {
-      let effects = target.effects[path];
+      let effects = target.effects;
       if (!effects)
         return;
       let methods = effects["methods"] || [];
@@ -3892,7 +3891,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     on("decorate", (target, path, addProp) => {
-      let effects = target.effects[path];
+      let effects = target.effects;
       if (!effects)
         return;
       let methods = effects["js"] || [];
@@ -3977,7 +3976,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return decorator;
       };
     });
-    on("effects", (target, effects, path) => {
+    on("effects", (target, effects) => {
       let errors = effects["errors"] || [];
       target.__errors.state = errors;
     });
@@ -4188,10 +4187,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         processEffects(target);
         let returnHandlerStack = request2.calls.map(({ path, handleReturn }) => [path, handleReturn]);
         let returnStack = [];
-        Object.entries(effects || []).forEach(([iPath, iEffects]) => {
-          if (!iEffects["returns"])
-            return;
-          let iReturns = iEffects["returns"];
+        if (!effects["returns"])
+          return;
+        Object.entries(effects["returns"]).forEach(([iPath, iReturns]) => {
           iReturns.forEach((iReturn) => returnStack.push([iPath, iReturn]));
         });
         returnHandlerStack.forEach(([path, handleReturn], index) => {
@@ -4271,7 +4269,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function processEffects(target) {
     let effects = target.effects;
-    each(effects, (key, value2) => trigger2("effects", target, value2, key));
+    trigger2("effects", target, effects);
   }
 
   // js/morph.js
@@ -4349,7 +4347,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/morphDom.js
   function morphDom_default() {
-    on("effects", (target, effects, path) => {
+    on("effects", (target, effects) => {
       let html = effects.html;
       if (!html)
         return;
@@ -4700,7 +4698,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/dispatchBrowserEvents.js
   function dispatchBrowserEvents_default() {
-    on("effects", (target, effects, path) => {
+    on("effects", (target, effects) => {
       let dispatches = effects.dispatches;
       if (!dispatches)
         return;
@@ -4796,8 +4794,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (component !== targetComponent)
           return;
         return () => {
-          if (target.effects[""].dirty) {
-            if (target.effects[""].dirty.includes(directive2.value)) {
+          if (target.effects.dirty) {
+            if (target.effects.dirty.includes(directive2.value)) {
               el._x_forceModelUpdate();
             }
           }

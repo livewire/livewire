@@ -7,7 +7,7 @@ export default function (enabled) {
 
     if (! enabled.includes('hot-reloading')) return
 
-    on('effects', (target, effects, path) => {
+    on('effects', (target, effects) => {
         queueMicrotask(() => {
             let files = effects.hotReload
 

@@ -307,11 +307,9 @@ async function sendMethodCall() {
 
             let returnStack = []
 
-            Object.entries(effects || []).forEach(([iPath, iEffects]) => {
-                if (! iEffects['returns']) return
+            if (! effects['returns']) return
 
-                let iReturns = iEffects['returns']
-
+            Object.entries(effects['returns']).forEach(([iPath, iReturns]) => {
                 iReturns.forEach(iReturn => returnStack.push([iPath, iReturn]))
             })
 
@@ -427,5 +425,5 @@ function mergeNewSnapshot(symbol, snapshot, effects) {
 function processEffects(target) {
     let effects = target.effects
 
-    each(effects, (key, value) => trigger('effects', target, value, key))
+    trigger('effects', target, effects)
 }
