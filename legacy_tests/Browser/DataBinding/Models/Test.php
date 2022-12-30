@@ -15,7 +15,6 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, Component::class)
-                // ->tinker()
                 ->assertValue('@author.name', 'Bob')
                 ->assertValue('@author.email', 'bob@bob.com')
                 ->assertValue('@author.posts.0.title', 'Post 1')
