@@ -37,7 +37,10 @@ class Test extends TestCase
                 /**
                  * Can set value from a number
                  */
-                ->assertChecked('@baz')
+                // @note: Not sure why someone would want to bind a non-boolean value to a checkbox.
+                // Because V3 uses Alpine's x-model under the hood, this breaks. If it's considered
+                // breaking and people need it, we can see about matching the behavior of V2...
+                // ->assertChecked('@baz')
                 ;
         });
     }

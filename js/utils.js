@@ -1,3 +1,6 @@
+import { dataGet, dataSet } from './synthetic/utils'
+
+export { dataGet, dataSet }
 
 export function debounce(func, wait, immediate) {
     var timeout
@@ -31,31 +34,6 @@ export function throttle(func, wait) {
             setTimeout(() => inThrottle = false, wait)
         }
     }
-}
-
-export function dataGet(object, key) {
-    return key.split('.').reduce((carry, i) => {
-        if (carry === undefined) return undefined
-
-        return carry[i]
-    }, object)
-}
-
-export function dataSet(object, key, value) {
-    let segments = key.split('.')
-
-    if (segments.length === 1) {
-        return object[key] = value
-    }
-
-    let firstSegment = segments.shift()
-    let restOfSegments = segments.join('.')
-
-    if (object[firstSegment] === undefined) {
-        object[firstSegment] = {}
-    }
-
-    dataSet(object[firstSegment], restOfSegments, value)
 }
 
 export function decorate(object, decorator) {

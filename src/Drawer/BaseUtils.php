@@ -14,7 +14,8 @@ class BaseUtils
         return
             ! is_numeric($target) &&
             ! is_string($target) &&
-            ! is_bool($target);
+            ! is_bool($target) &&
+            ! is_null($target);
     }
 
     static function getPublicPropertiesDefinedOnSubclass($target) {

@@ -75,19 +75,21 @@ class Test extends TestCase
     }
 
     /** @test */
-    public function it_renders_wire_model_selected_option_even_if_html_selected_is_different()
-    {
-        $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, SelectWithIncorrectSelectedOnOption::class)
-                ->assertSeeIn('@output', '3')
-                ->assertSelected('@select-input', '3')
-                ->waitForLivewire()->click('@toggle')
-                ->assertSeeIn('@output', '3')
-                ->assertSelected('@select-input', '3')
-                ->waitForLivewire()->select('@select-input', '2')
-                ->assertSeeIn('@output', '2')
-                ->assertSelected('@select-input', '2')
-                ;
-        });
-    }
+    // @note: I think I'm skipping this test for V3 as we should just defer to what x-model in Alpine does.
+    // We can always uncomment this and get it working if it's a breaking change for people.
+    // public function it_renders_wire_model_selected_option_even_if_html_selected_is_different()
+    // {
+    //     $this->browse(function (Browser $browser) {
+    //         $this->visitLivewireComponent($browser, SelectWithIncorrectSelectedOnOption::class)
+    //             ->assertSeeIn('@output', '3')
+    //             ->assertSelected('@select-input', '3')
+    //             ->waitForLivewire()->click('@toggle')
+    //             ->assertSeeIn('@output', '3')
+    //             ->assertSelected('@select-input', '3')
+    //             ->waitForLivewire()->select('@select-input', '2')
+    //             ->assertSeeIn('@output', '2')
+    //             ->assertSelected('@select-input', '2')
+    //             ;
+    //     });
+    // }
 }

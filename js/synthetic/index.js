@@ -1,5 +1,6 @@
 import { reactive as r, effect as e, toRaw as tr, stop as s, pauseTracking, enableTracking } from '@vue/reactivity'
-import { each, deeplyEqual, isObjecty, deepClone, diff, dataGet, isObject, dataSet } from './utils'
+import { each, deeplyEqual, isObjecty, deepClone, diff, isObject } from './utils'
+import { dataGet, dataSet } from './../utils'
 import { showHtmlModal } from './modal'
 import { on, trigger } from './events'
 import Alpine from 'alpinejs'
@@ -130,7 +131,7 @@ function extractDataAndDecorate(payload, symbol) {
         })
         addProp('$watchEffect', (callback) => effect(callback))
         addProp('$refresh', async () => await requestCommit(symbol))
-        addProp('get', property => dataGet(target.reactive, property))
+        addProp('get', (property, reactive = true) => dataGet(reactive ? target.reactive : target.ephemeral, property))
         addProp('set', async (property, value, live = true) => {
             dataSet(target.reactive, property, value)
 

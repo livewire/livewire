@@ -36,10 +36,7 @@ class ModelSynth extends Synth {
 
         // $filteredModelData = $this->filterData($context->root, $target, $context->path);
 
-        $data = $this->getDataFromModel($target);
-
-        return $data;
-        // dd($target);
+        // $data = $this->getDataFromModel($target);
 
         // Only include the allowed data (defined by rules) in the response payload
         // return $filteredModelData;

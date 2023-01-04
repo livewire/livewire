@@ -249,7 +249,7 @@ class UpdateComponents
             $toSet = $this->recursivelySetValue($root, $propertyTarget, $leafValue, $segments, $index + 1);
         }
 
-        $method = $leafValue === '__rm__' ? 'unset' : 'set';
+        $method = ($leafValue === '__rm__' && $isLastSegment) ? 'unset' : 'set';
 
         $pathThusFar = collect($segments)->slice(0, $index + 1)->join('.');
         $fullPath = collect($segments)->join('.');

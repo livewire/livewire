@@ -33,7 +33,7 @@ class Test extends TestCase
                  */
                 ->waitForLivewire(function ($b) {
                     $b->click('@foo');
-                    $b->script('window.livewire.first().set("foo", "changed-again")');
+                    $b->script('window.Livewire.first().updateFooTo("changed-again")');
                 })
                 ->assertInputValue('@foo', 'changed-again')
 
@@ -42,7 +42,7 @@ class Test extends TestCase
                  */
                 ->waitForLivewire(function ($b) {
                     $b->click('@foo');
-                    $b->script('window.livewire.first().sync("foo", "changed-alot")');
+                    $b->script('window.Livewire.first().set("foo", "changed-alot")');
                 })
                 ->assertSeeIn('@foo.output', 'changed-alot')
                 ->assertInputValue('@foo', 'changed-again')

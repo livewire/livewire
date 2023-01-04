@@ -29,7 +29,7 @@
     </select>
 
     <h1 dusk="multiple.output">@json($multiple)</h1>
-    <select wire:model.live="multiple" multiple dusk="multiple.input">
+    <select wire:model.live.debounce="multiple" multiple dusk="multiple.input">
         <option>foo</option>
         <option>bar</option>
         <option>baz</option>

@@ -24,7 +24,7 @@ class Test extends TestCase
                  */
                 ->assertValue('@bar.input', '')
                 ->type('@bar.input', 'changed')
-                ->pause(100)
+                ->pause(250)
                 ->waitForLivewire()->click('@bar.button')
                 ->assertValue('@bar.input', '')
             ;

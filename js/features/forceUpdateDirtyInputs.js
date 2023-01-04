@@ -18,7 +18,9 @@ export default function () {
             return () => {
                 if (target.effects.dirty) {
                     if (target.effects.dirty.includes(directive.value)) {
-                        el._x_forceModelUpdate()
+                        el._x_forceModelUpdate(
+                            component.$wire.get(directive.value, false)
+                        )
                     }
                 }
             }
