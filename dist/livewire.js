@@ -4242,17 +4242,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         processEffects(target);
         let returnHandlerStack = request2.calls.map(({ path, handleReturn }) => [path, handleReturn]);
         let returnStack = [];
-        if (!effects["returns"])
-          return;
-        Object.entries(effects["returns"]).forEach(([iPath, iReturns]) => {
-          iReturns.forEach((iReturn) => returnStack.push([iPath, iReturn]));
-        });
-        returnHandlerStack.forEach(([path, handleReturn], index) => {
-          let [iPath, iReturn] = returnStack[index];
-          if (path !== path)
-            return;
-          handleReturn(iReturn);
-        });
+        if (effects["returns"]) {
+          Object.entries(effects["returns"]).forEach(([iPath, iReturns]) => {
+            iReturns.forEach((iReturn) => returnStack.push([iPath, iReturn]));
+          });
+          returnHandlerStack.forEach(([path, handleReturn], index) => {
+            let [iPath, iReturn] = returnStack[index];
+            if (path !== path)
+              return;
+            handleReturn(iReturn);
+          });
+        }
         finishTarget();
         request2.handleResponse();
       });
@@ -4524,12 +4524,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let isLive = directive2.modifiers.includes("live");
       let isLazy = directive2.modifiers.includes("lazy");
       let isDebounced = directive2.modifiers.includes("debounce");
-      let update = () => {
-        if (isLive || isLazy)
-          component.$wire.$commit();
-      };
+      let update = () => component.$wire.$commit();
       let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounceByComponent(component, update, 150) : update;
       module_default.bind(el, {
+        ["@change"]() {
+          isLazy && isTextInput(el) && update();
+        },
         ["x-model.unintrusive" + getModifierTail(directive2.modifiers)]() {
           return {
             get() {
@@ -4537,7 +4537,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             },
             set(value2) {
               dataSet(component.$wire, directive2.value, value2);
-              debouncedUpdate();
+              isLive && debouncedUpdate();
             }
           };
         }
@@ -4545,6 +4545,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function getModifierTail(modifiers) {
+    modifiers = modifiers.filter((i) => ![
+      "lazy",
+      "defer"
+    ].includes(i));
     if (modifiers.length === 0)
       return "";
     return "." + modifiers.join(".");
@@ -4631,6 +4635,85 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/$wire.js
   function wire_default() {
     module_default.magic("wire", (el) => closestComponent(el).$wire);
+  }
+
+  // js/features/wireDirty.js
+  function wireDirty_default() {
+    let refreshDirtyStatesByComponent = new WeakBag();
+    on("target.request", (target) => {
+      let component = findComponent(target.__livewireId);
+      return () => {
+        setTimeout(() => {
+          refreshDirtyStatesByComponent.each(component, (i) => i(false));
+        });
+      };
+    });
+    on("element.init", (el, component) => {
+      let directives3 = directives2(el);
+      if (directives3.missing("dirty"))
+        return;
+      let directive2 = directives3.get("dirty");
+      let inverted = (boolean) => directive2.modifiers.includes("remove") ? !boolean : boolean;
+      let targets = dirtyTargets(directives3);
+      let dirty = Alpine.reactive({ state: false });
+      let oldIsDirty = false;
+      let refreshDirtyState = (isDirty) => {
+        setDirtyState(el, inverted(isDirty));
+        oldIsDirty = isDirty;
+      };
+      refreshDirtyStatesByComponent.add(component, refreshDirtyState);
+      Alpine.effect(() => {
+        let isDirty = false;
+        if (targets.length === 0) {
+          isDirty = JSON.stringify(component.synthetic.canonical) !== JSON.stringify(component.synthetic.reactive);
+        } else {
+          for (let i = 0; i < targets.length; i++) {
+            if (isDirty)
+              break;
+            let target = targets[i];
+            isDirty = JSON.stringify(dataGet(component.synthetic.canonical, target)) !== JSON.stringify(dataGet(component.synthetic.reactive, target));
+          }
+        }
+        if (oldIsDirty !== isDirty) {
+          refreshDirtyState(isDirty);
+        }
+        oldIsDirty = isDirty;
+      });
+    });
+  }
+  function dirtyTargets(directives3) {
+    let targets = [];
+    if (directives3.has("model")) {
+      targets.push(directives3.get("model").value);
+    }
+    if (directives3.has("target")) {
+      targets = targets.concat(directives3.get("target").value.split(",").map((s) => s.trim()));
+    }
+    return targets;
+  }
+  function setDirtyState(el, isDirty) {
+    let directive2 = directives2(el).get("dirty");
+    if (directive2.modifiers.includes("class")) {
+      const classes = directive2.value.split(" ");
+      if (isDirty) {
+        el.classList.add(...classes);
+        el.__livewire_dirty_cleanup = () => el.classList.remove(...classes);
+      } else {
+        el.classList.remove(...classes);
+        el.__livewire_dirty_cleanup = () => el.classList.add(...classes);
+      }
+    } else if (directive2.modifiers.includes("attr")) {
+      if (isDirty) {
+        el.setAttribute(directive2.value, true);
+        el.__livewire_dirty_cleanup = () => el.removeAttribute(directive2.value);
+      } else {
+        el.removeAttribute(directive2.value);
+        el.__livewire_dirty_cleanup = () => el.setAttribute(directive2.value, true);
+      }
+    } else if (!directives2(el).get("model")) {
+      el.style.display = isDirty ? "inline-block" : "none";
+      el.__livewire_dirty_cleanup = () => el.style.display = isDirty ? "none" : "inline-block";
+    }
   }
 
   // js/features/disableFormsDuringRequest.js
@@ -4794,6 +4877,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     dispatchBrowserEvents_default();
     disableFormsDuringRequest_default(enabledFeatures);
     SupportEntangle_default();
+    wireDirty_default();
   }
 
   // js/component.js

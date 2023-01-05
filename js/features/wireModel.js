@@ -24,9 +24,7 @@ export default function () {
         let isDebounced = directive.modifiers.includes('debounce')
 
         // Trigger a network request (only if .live or .lazy is added to wire:model)...
-        let update = () => {
-            if (isLive || isLazy) component.$wire.$commit()
-        }
+        let update = () => component.$wire.$commit()
 
         // If a plain wire:model is added to a text input, debounce the
         // trigerring of network requests.
@@ -35,6 +33,9 @@ export default function () {
             : update
 
         Alpine.bind(el, {
+            ['@change']() {
+                isLazy && isTextInput(el) && update()
+            },
             // "unintrusive" in this case means to not update the value of the input
             // if it is a currently focused text input.
             // ['x-model.unintrusive' + modifierTail]() {
@@ -46,7 +47,7 @@ export default function () {
                     set(value) {
                         dataSet(component.$wire, directive.value, value)
 
-                        debouncedUpdate()
+                        isLive && debouncedUpdate()
                     },
                 }
             }
@@ -55,10 +56,9 @@ export default function () {
 }
 
 function getModifierTail(modifiers) {
-    // I don't think we need this anymore...
-    // modifiers = modifiers.filter(i => ! [
-    //     'lazy', 'defer'
-    // ].includes(i))
+    modifiers = modifiers.filter(i => ! [
+        'lazy', 'defer'
+    ].includes(i))
 
     if (modifiers.length === 0) return ''
 

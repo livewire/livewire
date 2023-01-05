@@ -39,7 +39,7 @@ export default function (enabledFeatures) {
     // hotReloading(enabledFeatures)
     disableFormsDuringRequest(enabledFeatures)
     supportEntangle()
-    // wireDirty()
+    wireDirty()
     // wireIgnore()
     // queryString()
 }

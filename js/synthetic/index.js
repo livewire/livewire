@@ -308,19 +308,19 @@ async function sendMethodCall() {
 
             let returnStack = []
 
-            if (! effects['returns']) return
+            if (effects['returns']) {
+                Object.entries(effects['returns']).forEach(([iPath, iReturns]) => {
+                    iReturns.forEach(iReturn => returnStack.push([iPath, iReturn]))
+                })
 
-            Object.entries(effects['returns']).forEach(([iPath, iReturns]) => {
-                iReturns.forEach(iReturn => returnStack.push([iPath, iReturn]))
-            })
+                returnHandlerStack.forEach(([path, handleReturn], index) => {
+                    let [iPath, iReturn] = returnStack[index]
 
-            returnHandlerStack.forEach(([path, handleReturn], index) => {
-                let [iPath, iReturn] = returnStack[index]
+                    if (path !== path) return
 
-                if (path !== path) return
-
-                handleReturn(iReturn)
-            })
+                    handleReturn(iReturn)
+                })
+            }
 
             finishTarget()
 
