@@ -62,7 +62,11 @@ class HttpConnectionHandler extends ConnectionHandler
 
     protected function makeRequestFromUrlAndMethod($url, $method = 'GET')
     {
-        $request = Request::create($url, $method);
+        // Ensure the original script paths are passed into the fake request incase Laravel is running in a subdirectory
+        $request = Request::create($url, $method, [], [], [], [
+            'SCRIPT_FILENAME' => request()->server->get('SCRIPT_FILENAME'),
+            'PHP_SELF' => request()->server->get('PHP_SELF'),
+        ]);
 
         if (request()->hasSession()) {
             $request->setLaravelSession(request()->session());
