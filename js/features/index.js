@@ -3,7 +3,9 @@ import wireModel from "./wireModel";
 import wireWildcard from "./wireWildcard";
 import hotReloading from "./../../src/Features/SupportHotReloading/SupportHotReloading";
 import supportEntangle from "./../../src/Features/SupportEntangle/SupportEntangle";
+import supportFileDownloads from "./../../src/Features/SupportFileDownloads/SupportFileDownloads";
 import wireLoading from "./wireLoading";
+import wireInit from "./wireInit";
 import wirePoll from "./wirePoll";
 import wireParent from "./wireParent";
 import wireTransition from "./wireTransition";
@@ -28,9 +30,10 @@ export default function (enabledFeatures) {
     wireModel(enabledFeatures)
     events()
     forceUpdateDirtyInputs()
+    supportFileDownloads()
     // wireParent(enabledFeatures)
     // wirePoll(enabledFeatures)
-    // wireLoading(enabledFeatures)
+    wireLoading(enabledFeatures)
     // wireTransition(enabledFeatures)
     // wireNavigate(enabledFeatures)
     wireWildcard(enabledFeatures)
@@ -40,6 +43,7 @@ export default function (enabledFeatures) {
     disableFormsDuringRequest(enabledFeatures)
     supportEntangle()
     wireDirty()
-    // wireIgnore()
+    wireIgnore()
+    wireInit()
     // queryString()
 }

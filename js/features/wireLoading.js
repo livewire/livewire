@@ -1,5 +1,6 @@
-import { on } from "../events"
+import { on } from './../synthetic/index'
 import { directives } from "../directives"
+import { findComponent } from 'state'
 
 export default function () {
     on('element.init', (el, component) => {
@@ -7,249 +8,27 @@ export default function () {
 
         if (elDirectives.missing('loading')) return
 
-        Alpine.bind(el, {
-            'x-show'() { return component.$wire.$loading },
-        })
+        let targets = getTargets(elDirectives)
 
-        // const loadingDirectives = elDirectives.directives.filter(
-        //     i => i.type === 'loading'
-        // )
+        let loadingDirectives = elDirectives.directives.filter(i => i.type === 'loading')
 
-        // loadingDirectives.forEach(directive => {
-        //     processLoadingDirective(component, el, directive)
-        // })
-    })
+        loadingDirectives.forEach(directive => {
+            let [delay, abortDelay] = applyDelay(directive)
 
-    // on('component.request', (component, payload) => {
-    //     const actions = payload.updates
-    //         .filter(action => {
-    //             return action.type === 'callMethod'
-    //         })
-    //         .map(action => action.payload.method)
+            let inverted = boolean => directive.modifiers.includes('remove') ? ! boolean : boolean
 
-    //     const actionsWithParams = payload.updates
-    //         .filter(action => {
-    //             return action.type === 'callMethod'
-    //         })
-    //         .map(action =>
-    //             generateSignatureFromMethodAndParams(
-    //                 action.payload.method,
-    //                 action.payload.params
-    //             )
-    //         )
+            setLoading(el, directive, inverted(false))
 
-    //     const models = payload.updates
-    //         .filter(action => {
-    //             return action.type === 'syncInput'
-    //         })
-    //         .map(action => {
-    //             let name = action.payload.name
-    //             if (! name.includes('.')) {
-    //                 return name
-    //             }
-
-    //             let modelActions = []
-
-    //             modelActions.push(
-    //                 name.split('.').reduce((fullAction, part) => {
-    //                     modelActions.push(fullAction)
-
-    //                     return fullAction + '.' + part
-    //                 })
-    //             )
-
-    //             return modelActions
-    //         })
-    //         .flat()
-
-    //     setLoading(component, actions.concat(actionsWithParams).concat(models))
-    // })
-
-    // on('component.error', (component) => {
-    //     unsetLoading(component)
-    // })
-
-    // on('component.response', component => {
-    //     unsetLoading(component)
-    // })
-
-    // store.registerHook('element.removed', (el, component) => {
-    //     removeLoadingEl(component, el)
-    // })
-}
-
-function processLoadingDirective(component, el, directive) {
-    // If this element is going to be dealing with loading states.
-    // We will initialize an "undo" stack upfront, so we don't
-    // have to deal with isset() type conditionals later.
-    el.__livewire_on_finish_loading = []
-
-    var actionNames = false
-
-    let elDirectives = directives(el)
-
-    if (elDirectives.get('target')) {
-        let target = elDirectives.get('target')
-        if (target.params.length > 0) {
-            actionNames = [
-                generateSignatureFromMethodAndParams(
-                    target.method,
-                    target.params
-                ),
-            ]
-        } else {
-            // wire:target overrides any automatic loading scoping we do.
-            actionNames = target.value.split(',').map(s => s.trim())
-        }
-    } else {
-        // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
-        // and automatically scope this loading directive to that action.
-        const nonActionOrModelLivewireDirectives = [
-            'init',
-            'dirty',
-            'offline',
-            'target',
-            'loading',
-            'poll',
-            'ignore',
-            'key',
-            'id',
-        ]
-
-        actionNames = elDirectives
-            .all()
-            .filter(i => !nonActionOrModelLivewireDirectives.includes(i.type))
-            .map(i => i.method)
-
-        // If we found nothing, just set the loading directive to the global component. (run on every request)
-        if (actionNames.length < 1) actionNames = false
-    }
-
-    addLoadingEl(component, el, directive, actionNames)
-}
-
-function addLoadingEl(component, el, directive, actionsNames) {
-    if (actionsNames) {
-        actionsNames.forEach(actionsName => {
-            if (component.targetedLoadingElsByAction[actionsName]) {
-                component.targetedLoadingElsByAction[actionsName].push({
-                    el,
-                    directive,
-                })
-            } else {
-                component.targetedLoadingElsByAction[actionsName] = [
-                    { el, directive },
-                ]
-            }
-        })
-    } else {
-        component.genericLoadingEls.push({ el, directive })
-    }
-}
-
-function removeLoadingEl(component, el) {
-    // Look through the global/generic elements for the element to remove.
-    component.genericLoadingEls.forEach((element, index) => {
-        if (element.el.isSameNode(el)) {
-            component.genericLoadingEls.splice(index, 1)
-        }
-    })
-
-    // Look through the targeted elements to remove.
-    Object.keys(component.targetedLoadingElsByAction).forEach(key => {
-        component.targetedLoadingElsByAction[
-            key
-        ] = component.targetedLoadingElsByAction[key].filter(element => {
-            return ! element.el.isSameNode(el)
+            whenTargetsArePartOfRequest(component, targets, [
+                () => delay(() => setLoading(el, directive, inverted(true))),
+                () => abortDelay(() => setLoading(el, directive, inverted(false))),
+            ])
         })
     })
-}
 
-function setLoading(component, actions) {
-    const actionTargetedEls = actions
-        .map(action => component.targetedLoadingElsByAction[action])
-        .filter(el => el)
-        .flat()
+    function applyDelay(directive) {
+        if (! directive.modifiers.includes('delay')) return [i => i(), i => i()]
 
-    const allEls = removeDuplicates(component.genericLoadingEls.concat(actionTargetedEls))
-
-    startLoading(allEls)
-
-    component.currentlyActiveLoadingEls = allEls
-}
-
-export function setUploadLoading(component, modelName) {
-    const actionTargetedEls =
-        component.targetedLoadingElsByAction[modelName] || []
-
-    const allEls = removeDuplicates(component.genericLoadingEls.concat(actionTargetedEls))
-
-    startLoading(allEls)
-
-    component.currentlyActiveUploadLoadingEls = allEls
-}
-
-export function unsetUploadLoading(component) {
-    endLoading(component.currentlyActiveUploadLoadingEls)
-
-    component.currentlyActiveUploadLoadingEls = []
-}
-
-function unsetLoading(component) {
-    endLoading(component.currentlyActiveLoadingEls)
-
-    component.currentlyActiveLoadingEls = []
-}
-
-function startLoading(els) {
-    els.forEach(({ el, directive }) => {
-        if (directive.modifiers.includes('class')) {
-            let classes = directive.value.split(' ').filter(Boolean)
-
-            doAndSetCallbackOnElToUndo(
-                el,
-                directive,
-                () => el.classList.add(...classes),
-                () => el.classList.remove(...classes)
-            )
-        } else if (directive.modifiers.includes('attr')) {
-            doAndSetCallbackOnElToUndo(
-                el,
-                directive,
-                () => el.setAttribute(directive.value, true),
-                () => el.removeAttribute(directive.value)
-            )
-        } else {
-            let cache = window
-                .getComputedStyle(el, null)
-                .getPropertyValue('display')
-
-            doAndSetCallbackOnElToUndo(
-                el,
-                directive,
-                () => {
-                    el.style.display = directive.modifiers.includes('remove')
-                        ? cache
-                        : getDisplayProperty(directive)
-                },
-                () => {
-                    el.style.display = 'none'
-                }
-            )
-        }
-    })
-}
-
-function getDisplayProperty(directive) {
-    return (['inline', 'block', 'table', 'flex', 'grid', 'inline-flex']
-        .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
-}
-
-function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
-    if (directive.modifiers.includes('remove'))
-        [doCallback, undoCallback] = [undoCallback, doCallback]
-
-    if (directive.modifiers.includes('delay')) {
         let duration = 200
 
         let delayModifiers = {
@@ -262,36 +41,121 @@ function doAndSetCallbackOnElToUndo(el, directive, doCallback, undoCallback) {
         }
 
         Object.keys(delayModifiers).some(key => {
-            if(directive.modifiers.includes(key)) {
+            if (directive.modifiers.includes(key)) {
                 duration = delayModifiers[key]
+
                 return true
             }
         })
 
-        let timeout = setTimeout(() => {
-            doCallback()
-            el.__livewire_on_finish_loading.push(() => undoCallback())
-        }, duration)
+        let timeout
+        let started = false
 
-        el.__livewire_on_finish_loading.push(() => clearTimeout(timeout))
-    } else {
-        doCallback()
-        el.__livewire_on_finish_loading.push(() => undoCallback())
+        return [
+            (callback) => { // Initiate delay...
+                timeout = setTimeout(() => {
+                    callback()
+
+                    started = true
+                }, duration)
+            },
+            (callback) => { // Execute or abort...
+                if (started) {
+                    callback()
+                } else {
+                    clearTimeout(timeout)
+                }
+            },
+        ]
     }
-}
 
-function endLoading(els) {
-    els.forEach(({ el }) => {
-        while (el.__livewire_on_finish_loading.length > 0) {
-            el.__livewire_on_finish_loading.shift()()
+    function whenTargetsArePartOfRequest(component, targets, [ startLoading, endLoading ]) {
+        on('target.request', (target, payload) => {
+            if (findComponent(target.__livewireId) !== component) return
+
+            if (targets.length > 0 && ! containsTargets(payload, targets)) return
+
+            startLoading()
+
+            return () => {
+                endLoading()
+            }
+        })
+    }
+
+    function containsTargets(payload, targets) {
+        let { diff, calls } = payload
+
+        return targets.some(({ target, params }) => {
+            if (params) {
+                return calls.some(({ method, params: methodParams}) => {
+                    return target === method
+                        && params === quickHash(methodParams.toString())
+                })
+            }
+
+            if (Object.keys(diff).map(i => i.split('.')[0]).includes(target)) return true
+
+            if (calls.map(i => i.method).includes(target)) return true
+        })
+    }
+
+    function setLoading(el, directive, isLoading) {
+        if (directive.modifiers.includes('class')) {
+            let classes = directive.value.split(' ')
+
+            if (isLoading) {
+                el.classList.add(...classes)
+            } else {
+                el.classList.remove(...classes)
+            }
+        } else if (directive.modifiers.includes('attr')) {
+            if (isLoading) {
+                el.setAttribute(directive.value, true)
+            } else {
+                el.removeAttribute(directive.value)
+            }
+        } else {
+            let display = (['inline', 'block', 'table', 'flex', 'grid', 'inline-flex']
+                .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
+
+            el.style.display = isLoading ? display : 'none'
         }
-    })
-}
+    }
 
-function generateSignatureFromMethodAndParams(method, params) {
-    return method + btoa(encodeURIComponent(params.toString()))
-}
+    function getTargets(elDirectives) {
+        let targets = []
 
-function removeDuplicates(arr) {
-    return Array.from(new Set(arr))
+        if (elDirectives.has('target')) {
+            let directive = elDirectives.get('target')
+
+            let raw = directive.value
+
+            if (raw.includes('(') && raw.includes(')')) {
+                targets.push({ target: directive.method, params: quickHash(directive.params.toString()) })
+            } else if (raw.includes(',')) {
+                raw.split(',').map(i => i.trim()).forEach(target => {
+                    targets.push({ target })
+                })
+            } else {
+                targets.push({ target: raw })
+            }
+        } else {
+           // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
+            // and automatically scope this loading directive to that action.
+            let nonActionOrModelLivewireDirectives = [ 'init', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore', 'key', 'id' ]
+
+            elDirectives
+                .all()
+                .filter(i => ! nonActionOrModelLivewireDirectives.includes(i.type))
+                .map(i => i.value.split('(')[0])
+                .forEach(target => targets.push({ target }))
+        }
+
+        return targets
+    }
+
+    function quickHash(subject) {
+        return btoa(encodeURIComponent(subject))
+    }
 }

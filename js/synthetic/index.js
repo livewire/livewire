@@ -351,7 +351,6 @@ async function sendMethodCall() {
         }
 
         finish(false)
-        trigger('response.success')
     } else {
         let html = await request.text()
 

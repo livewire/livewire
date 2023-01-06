@@ -15,7 +15,7 @@ class Test extends TestCase
                 ->tap(function (Browser $browser) {
                     $browser->script([
                         'window.renameMe = false',
-                        "window.livewire.directive('foo', (el, directive, component) => {
+                        "window.Livewire.directive('foo', (el, directive, component) => {
                             window.renameMe = true
                         })",
                     ]);

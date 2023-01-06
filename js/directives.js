@@ -1,3 +1,16 @@
+import { on } from './synthetic/index'
+
+export function registerDirective(name, callback) {
+    on('element.init', (el, component) => {
+        let allDirectives = directives(el)
+
+        if (allDirectives.missing(name)) return
+
+        let directive = allDirectives.get(name)
+
+        callback(el, directive, component)
+    })
+}
 
 export function directives(el) {
     return new DirectiveManager(el)

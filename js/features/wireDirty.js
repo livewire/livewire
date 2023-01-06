@@ -86,27 +86,20 @@ function setDirtyState(el, isDirty) {
     let directive = getDirectives(el).get('dirty')
 
     if (directive.modifiers.includes('class')) {
-        const classes = directive.value.split(' ')
+        let classes = directive.value.split(' ')
+
         if (isDirty) {
             el.classList.add(...classes)
-            el.__livewire_dirty_cleanup = () => el.classList.remove(...classes)
         } else {
             el.classList.remove(...classes)
-            el.__livewire_dirty_cleanup = () => el.classList.add(...classes)
         }
     } else if (directive.modifiers.includes('attr')) {
         if (isDirty) {
             el.setAttribute(directive.value, true)
-            el.__livewire_dirty_cleanup = () =>
-                el.removeAttribute(directive.value)
         } else {
             el.removeAttribute(directive.value)
-            el.__livewire_dirty_cleanup = () =>
-                el.setAttribute(directive.value, true)
         }
     } else if (! getDirectives(el).get('model')) {
         el.style.display = isDirty ? 'inline-block' : 'none'
-        el.__livewire_dirty_cleanup = () =>
-            (el.style.display = isDirty ? 'none' : 'inline-block')
     }
 }

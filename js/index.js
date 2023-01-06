@@ -1,6 +1,7 @@
 import { find, first } from './state'
 import { start } from './lifecycle'
 import { emit, on } from './features/events'
+import { registerDirective } from './directives'
 import { synthetic, on as hook } from './synthetic/index'
 import Alpine from 'alpinejs'
 
@@ -16,12 +17,12 @@ window.syntheticOn = hook
 
 export let Livewire = {
     start,
-    // @todo: legacy name, offer "on" as the new name?
-    hook,
+    hook, // @todo: legacy name, offer "on" as the new name?
     on,
     emit,
     first,
     find,
+    directive: registerDirective,
 }
 
 if (window.Livewire) console.warn('Detected multiple instances of Livewire running')

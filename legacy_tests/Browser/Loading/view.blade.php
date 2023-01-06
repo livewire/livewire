@@ -16,7 +16,7 @@
 
     <h1 wire:loading wire:target="foo" dusk="targeting">Loading...</h1>
     <h1 wire:loading wire:target="foo, bar" dusk="targeting-both">Loading...</h1>
-    <h1 wire:loading wire:target="foo('bar')" dusk="targeting-param">Loading...</h1>
+    <h1 wire:loading wire:target="foo('bar')" dusk="targeting-param">Param Loading...</h1>
 
     <h1 wire:loading.delay dusk="show-w-delay">Loading with delay...</h1>
 
@@ -25,9 +25,9 @@
 
     <button wire:click="bar" wire:loading.class="foo" dusk="self-target-button">self-targeted button</button>
 
-    <input type="checkbox" wire:model="baz" wire:loading.class="foo" dusk="self-target-model">self-targeted-model input</input>
+    <input type="checkbox" wire:model.live="baz" wire:loading.class="foo" dusk="self-target-model">self-targeted-model input</input>
 
     <h1 wire:loading wire:target='bob' dusk="target-top-level-property">Loading with top level property target</h1>
 
-    <input type="name" wire:model='bob.name' dusk="nested-property-input" />Nested property input
+    <input type="name" wire:model.live='bob.name' dusk="nested-property-input" />Nested property input
 </div>

@@ -4274,7 +4274,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         successReceivers[i](snapshot, effects);
       }
       finish(false);
-      trigger2("response.success");
     } else {
       let html = await request.text();
       showHtmlModal(html);
@@ -4414,6 +4413,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives.js
+  function registerDirective(name, callback) {
+    on("element.init", (el, component) => {
+      let allDirectives = directives2(el);
+      if (allDirectives.missing(name))
+        return;
+      let directive2 = allDirectives.get(name);
+      callback(el, directive2, component);
+    });
+  }
   function directives2(el) {
     return new DirectiveManager(el);
   }
@@ -4632,6 +4640,181 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
 
+  // src/Features/SupportFileDownloads/SupportFileDownloads.js
+  function SupportFileDownloads_default(enabled) {
+    on("target.request", (target) => {
+      let component = findComponent(target.__livewireId);
+      return () => {
+        let download = target.effects.download;
+        if (!download)
+          return;
+        let urlObject = window.webkitURL || window.URL;
+        let url = urlObject.createObjectURL(base64toBlob(download.content, download.contentType));
+        let invisibleLink = document.createElement("a");
+        invisibleLink.style.display = "none";
+        invisibleLink.href = url;
+        invisibleLink.download = download.name;
+        document.body.appendChild(invisibleLink);
+        invisibleLink.click();
+        setTimeout(function() {
+          urlObject.revokeObjectURL(url);
+        }, 0);
+      };
+    });
+  }
+  function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
+    const byteCharacters = atob(b64Data);
+    const byteArrays = [];
+    if (contentType === null)
+      contentType = "";
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+      let slice = byteCharacters.slice(offset, offset + sliceSize);
+      let byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+      let byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+    return new Blob(byteArrays, { type: contentType });
+  }
+
+  // js/features/wireLoading.js
+  function wireLoading_default() {
+    on("element.init", (el, component) => {
+      let elDirectives = directives2(el);
+      if (elDirectives.missing("loading"))
+        return;
+      let targets = getTargets(elDirectives);
+      let loadingDirectives = elDirectives.directives.filter((i) => i.type === "loading");
+      loadingDirectives.forEach((directive2) => {
+        let [delay, abortDelay] = applyDelay(directive2);
+        let inverted = (boolean) => directive2.modifiers.includes("remove") ? !boolean : boolean;
+        setLoading(el, directive2, inverted(false));
+        whenTargetsArePartOfRequest(component, targets, [
+          () => delay(() => setLoading(el, directive2, inverted(true))),
+          () => abortDelay(() => setLoading(el, directive2, inverted(false)))
+        ]);
+      });
+    });
+    function applyDelay(directive2) {
+      if (!directive2.modifiers.includes("delay"))
+        return [(i) => i(), (i) => i()];
+      let duration = 200;
+      let delayModifiers = {
+        "shortest": 50,
+        "shorter": 100,
+        "short": 150,
+        "long": 300,
+        "longer": 500,
+        "longest": 1e3
+      };
+      Object.keys(delayModifiers).some((key) => {
+        if (directive2.modifiers.includes(key)) {
+          duration = delayModifiers[key];
+          return true;
+        }
+      });
+      let timeout;
+      let started = false;
+      return [
+        (callback) => {
+          timeout = setTimeout(() => {
+            callback();
+            started = true;
+          }, duration);
+        },
+        (callback) => {
+          if (started) {
+            callback();
+          } else {
+            clearTimeout(timeout);
+          }
+        }
+      ];
+    }
+    function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
+      on("target.request", (target, payload) => {
+        if (findComponent(target.__livewireId) !== component)
+          return;
+        if (targets.length > 0 && !containsTargets(payload, targets))
+          return;
+        startLoading();
+        return () => {
+          endLoading();
+        };
+      });
+    }
+    function containsTargets(payload, targets) {
+      let { diff: diff2, calls } = payload;
+      return targets.some(({ target, params }) => {
+        if (params) {
+          return calls.some(({ method, params: methodParams }) => {
+            return target === method && params === quickHash(methodParams.toString());
+          });
+        }
+        if (Object.keys(diff2).map((i) => i.split(".")[0]).includes(target))
+          return true;
+        if (calls.map((i) => i.method).includes(target))
+          return true;
+      });
+    }
+    function setLoading(el, directive2, isLoading) {
+      if (directive2.modifiers.includes("class")) {
+        let classes = directive2.value.split(" ");
+        if (isLoading) {
+          el.classList.add(...classes);
+        } else {
+          el.classList.remove(...classes);
+        }
+      } else if (directive2.modifiers.includes("attr")) {
+        if (isLoading) {
+          el.setAttribute(directive2.value, true);
+        } else {
+          el.removeAttribute(directive2.value);
+        }
+      } else {
+        let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
+        el.style.display = isLoading ? display : "none";
+      }
+    }
+    function getTargets(elDirectives) {
+      let targets = [];
+      if (elDirectives.has("target")) {
+        let directive2 = elDirectives.get("target");
+        let raw3 = directive2.value;
+        if (raw3.includes("(") && raw3.includes(")")) {
+          targets.push({ target: directive2.method, params: quickHash(directive2.params.toString()) });
+        } else if (raw3.includes(",")) {
+          raw3.split(",").map((i) => i.trim()).forEach((target) => {
+            targets.push({ target });
+          });
+        } else {
+          targets.push({ target: raw3 });
+        }
+      } else {
+        let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
+        elDirectives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.type)).map((i) => i.value.split("(")[0]).forEach((target) => targets.push({ target }));
+      }
+      return targets;
+    }
+    function quickHash(subject) {
+      return btoa(encodeURIComponent(subject));
+    }
+  }
+
+  // js/features/wireInit.js
+  function wireInit_default() {
+    on("element.init", (el, component) => {
+      let allDirectives = directives2(el);
+      if (allDirectives.missing("init"))
+        return;
+      let directive2 = allDirectives.get("init");
+      const method = directive2.value ? directive2.method : "$refresh";
+      module_default.evaluate(el, "$wire." + method);
+    });
+  }
+
   // js/features/$wire.js
   function wire_default() {
     module_default.magic("wire", (el) => closestComponent(el).$wire);
@@ -4694,26 +4877,36 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function setDirtyState(el, isDirty) {
     let directive2 = directives2(el).get("dirty");
     if (directive2.modifiers.includes("class")) {
-      const classes = directive2.value.split(" ");
+      let classes = directive2.value.split(" ");
       if (isDirty) {
         el.classList.add(...classes);
-        el.__livewire_dirty_cleanup = () => el.classList.remove(...classes);
       } else {
         el.classList.remove(...classes);
-        el.__livewire_dirty_cleanup = () => el.classList.add(...classes);
       }
     } else if (directive2.modifiers.includes("attr")) {
       if (isDirty) {
         el.setAttribute(directive2.value, true);
-        el.__livewire_dirty_cleanup = () => el.removeAttribute(directive2.value);
       } else {
         el.removeAttribute(directive2.value);
-        el.__livewire_dirty_cleanup = () => el.setAttribute(directive2.value, true);
       }
     } else if (!directives2(el).get("model")) {
       el.style.display = isDirty ? "inline-block" : "none";
-      el.__livewire_dirty_cleanup = () => el.style.display = isDirty ? "none" : "inline-block";
     }
+  }
+
+  // js/features/wireIgnore.js
+  function wireIgnore_default() {
+    on("element.init", (el, component) => {
+      let allDirectives = directives2(el);
+      if (allDirectives.missing("ignore"))
+        return;
+      let directive2 = allDirectives.get("ignore");
+      if (directive2.modifiers.includes("self")) {
+        el.__livewire_ignore_self = true;
+      } else {
+        el.__livewire_ignore = true;
+      }
+    });
   }
 
   // js/features/disableFormsDuringRequest.js
@@ -4872,12 +5065,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     wireModel_default(enabledFeatures);
     events_default();
     forceUpdateDirtyInputs_default();
+    SupportFileDownloads_default();
+    wireLoading_default(enabledFeatures);
     wireWildcard_default(enabledFeatures);
     magicMethods_default();
     dispatchBrowserEvents_default();
     disableFormsDuringRequest_default(enabledFeatures);
     SupportEntangle_default();
     wireDirty_default();
+    wireIgnore_default();
+    wireInit_default();
   }
 
   // js/component.js
@@ -5276,7 +5473,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     on: on4,
     emit,
     first,
-    find
+    find,
+    directive: registerDirective
   };
   if (window.Livewire)
     console.warn("Detected multiple instances of Livewire running");

@@ -48,7 +48,7 @@ class Test extends TestCase
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@button');
 
-                    $browser->pause(201);
+                    $browser->pause(225);
 
                     $browser->assertVisible('@show-w-delay');
                 })
