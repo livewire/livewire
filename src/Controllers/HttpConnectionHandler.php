@@ -33,7 +33,7 @@ class HttpConnectionHandler extends ConnectionHandler
             );
         } catch (NotFoundHttpException $e) {
             $request = $this->makeRequestFromUrlAndMethod(
-                Str::replaceFirst(request('fingerprint')['locale'].'/', '', Livewire::originalUrl()),
+                Str::replaceFirst('/'.request('fingerprint')['locale'], '', Livewire::originalUrl()),
                 Livewire::originalMethod()
             );
         }
