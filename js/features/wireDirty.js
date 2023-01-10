@@ -1,3 +1,4 @@
+import { toggleBooleanStateDirective } from 'directives/shared'
 import { findComponent } from 'state'
 import { dataGet, WeakBag } from 'utils'
 import { directives as getDirectives } from '../directives'
@@ -32,7 +33,7 @@ export default function () {
         let oldIsDirty = false
 
         let refreshDirtyState = (isDirty) => {
-            setDirtyState(el, inverted(isDirty))
+            toggleBooleanStateDirective(el, directive, isDirty)
 
             oldIsDirty = isDirty
         }
@@ -82,7 +83,7 @@ function dirtyTargets(directives) {
     return targets
 }
 
-function setDirtyState(el, isDirty) {
+function setToggleDirective(el, directive, isTruthy) {
     let directive = getDirectives(el).get('dirty')
 
     if (directive.modifiers.includes('class')) {

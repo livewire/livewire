@@ -1409,8 +1409,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function dontAutoEvaluateFunctions(callback) {
     let cache = shouldAutoEvaluateFunctions;
     shouldAutoEvaluateFunctions = false;
-    callback();
+    let result = callback();
     shouldAutoEvaluateFunctions = cache;
+    return result;
   }
   function evaluate(el, expression, extras = {}) {
     let result;
@@ -1432,6 +1433,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return generateEvaluatorFromFunction(dataStack, expression);
     }
     let evaluator = generateEvaluatorFromString(dataStack, expression, el);
+    return evaluator;
     return tryCatch.bind(null, el, expression, evaluator);
   }
   function generateEvaluatorFromFunction(dataStack, func) {
@@ -1506,12 +1508,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function directive(name, callback) {
     directiveHandlers[name] = callback;
     return {
-      before(directive2) {
-        if (!directiveHandlers[directive2]) {
+      before(directive22) {
+        if (!directiveHandlers[directive22]) {
           console.warn("Cannot find directive `${directive}`. `${name}` will use the default order of execution");
           return;
         }
-        const pos = directiveOrder.indexOf(directive2) ?? directiveOrder.indexOf("DEFAULT");
+        const pos = directiveOrder.indexOf(directive22) ?? directiveOrder.indexOf("DEFAULT");
         if (pos >= 0) {
           directiveOrder.splice(pos, 0, name);
         }
@@ -1536,8 +1538,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     let transformedAttributeMap = {};
     let directives22 = attributes.map(toTransformedAttributes((newName, oldName) => transformedAttributeMap[newName] = oldName)).filter(outNonAlpineAttributes).map(toParsedDirectives(transformedAttributeMap, originalAttributeOverride)).sort(byPriority);
-    return directives22.map((directive2) => {
-      return getDirectiveHandler(el, directive2);
+    return directives22.map((directive22) => {
+      return getDirectiveHandler(el, directive22);
     });
   }
   function attributesOnly(attributes) {
@@ -1578,18 +1580,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let doCleanup = () => cleanups.forEach((i) => i());
     return [utilities, doCleanup];
   }
-  function getDirectiveHandler(el, directive2) {
+  function getDirectiveHandler(el, directive22) {
     let noop = () => {
     };
-    let handler3 = directiveHandlers[directive2.type] || noop;
+    let handler4 = directiveHandlers[directive22.type] || noop;
     let [utilities, cleanup22] = getElementBoundUtilities(el);
-    onAttributeRemoved(el, directive2.original, cleanup22);
+    onAttributeRemoved(el, directive22.original, cleanup22);
     let fullHandler = () => {
       if (el._x_ignore || el._x_ignoreSelf)
         return;
-      handler3.inline && handler3.inline(el, directive2, utilities);
-      handler3 = handler3.bind(handler3, el, directive2, utilities);
-      isDeferringHandlers ? directiveHandlerStacks.get(currentHandlerStackKey).push(handler3) : handler3();
+      handler4.inline && handler4.inline(el, directive22, utilities);
+      handler4 = handler4.bind(handler4, el, directive22, utilities);
+      isDeferringHandlers ? directiveHandlerStacks.get(currentHandlerStackKey).push(handler4) : handler4();
     };
     fullHandler.runCleanups = cleanup22;
     return fullHandler;
@@ -2219,7 +2221,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else if (el.type === "checkbox") {
       if (Number.isInteger(value2)) {
         el.value = value2;
-      } else if (!Array.isArray(value2) && typeof value2 !== "boolean" && ![null, void 0].includes(value2)) {
+      } else if (!Number.isInteger(value2) && !Array.isArray(value2) && typeof value2 !== "boolean" && ![null, void 0].includes(value2)) {
         el.value = String(value2);
       } else {
         if (Array.isArray(value2)) {
@@ -2233,7 +2235,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else {
       if (el.value === value2)
         return;
-      el.value = value2 === void 0 ? "" : value2;
+      el.value = value2;
     }
   }
   function bindClasses(el, value2) {
@@ -2310,6 +2312,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getBinding(el, name, fallback) {
     if (el._x_bindings && el._x_bindings[name] !== void 0)
       return el._x_bindings[name];
+    return getAttributeBinding(el, name, fallback);
+  }
+  function extractProp(el, name, fallback, extract = true) {
+    if (el._x_bindings && el._x_bindings[name] !== void 0)
+      return el._x_bindings[name];
+    if (el._x_inlineBindings && el._x_inlineBindings[name] !== void 0) {
+      let binding = el._x_inlineBindings[name];
+      binding.extract = extract;
+      return dontAutoEvaluateFunctions(() => {
+        return evaluate(el, binding.expression);
+      });
+    }
+    return getAttributeBinding(el, name, fallback);
+  }
+  function getAttributeBinding(el, name, fallback) {
     let attr = el.getAttribute(name);
     if (attr === null)
       return typeof fallback === "function" ? fallback() : fallback;
@@ -2350,7 +2367,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let outer, inner;
       if (firstRun) {
         outer = outerGet();
-        innerSet(JSON.parse(JSON.stringify(outer)));
+        innerSet(outer);
         inner = innerGet();
         firstRun = false;
       } else {
@@ -2363,7 +2380,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           innerSet(outer);
           inner = outer;
         } else {
-          outerSet(JSON.parse(JSON.stringify(inner)));
+          outerSet(inner);
           outer = inner;
         }
       }
@@ -2486,6 +2503,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     interceptInit,
     setEvaluator,
     mergeProxies,
+    extractProp,
     findClosest,
     closestRoot,
     destroyTree,
@@ -3313,7 +3331,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("effect", (el, { expression }, { effect: effect32 }) => effect32(evaluateLater(el, expression)));
   function on2(el, event, modifiers, callback) {
     let listenerTarget = el;
-    let handler3 = (e) => callback(e);
+    let handler4 = (e) => callback(e);
     let options = {};
     let wrapHandler = (callback2, wrapper) => (e) => wrapper(callback2, e);
     if (modifiers.includes("dot"))
@@ -3329,22 +3347,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (modifiers.includes("document"))
       listenerTarget = document;
     if (modifiers.includes("prevent"))
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         e.preventDefault();
         next(e);
       });
     if (modifiers.includes("stop"))
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         e.stopPropagation();
         next(e);
       });
     if (modifiers.includes("self"))
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         e.target === el && next(e);
       });
     if (modifiers.includes("away") || modifiers.includes("outside")) {
       listenerTarget = document;
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         if (el.contains(e.target))
           return;
         if (e.target.isConnected === false)
@@ -3357,12 +3375,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     if (modifiers.includes("once")) {
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         next(e);
-        listenerTarget.removeEventListener(event, handler3, options);
+        listenerTarget.removeEventListener(event, handler4, options);
       });
     }
-    handler3 = wrapHandler(handler3, (next, e) => {
+    handler4 = wrapHandler(handler4, (next, e) => {
       if (isKeyEvent(event)) {
         if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
           return;
@@ -3373,16 +3391,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (modifiers.includes("debounce")) {
       let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
       let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler3 = debounce(handler3, wait);
+      handler4 = debounce(handler4, wait);
     }
     if (modifiers.includes("throttle")) {
       let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
       let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler3 = throttle(handler3, wait);
+      handler4 = throttle(handler4, wait);
     }
-    listenerTarget.addEventListener(event, handler3, options);
+    listenerTarget.addEventListener(event, handler4, options);
     return () => {
-      listenerTarget.removeEventListener(event, handler3, options);
+      listenerTarget.removeEventListener(event, handler4, options);
     };
   }
   function dotSyntax(subject) {
@@ -3521,6 +3539,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     el._x_forceModelUpdate = (value2) => {
+      value2 = value2 === void 0 ? getValue() : value2;
       if (value2 === void 0 && typeof expression === "string" && expression.match(/\./))
         value2 = "";
       window.fromModel = true;
@@ -3537,7 +3556,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getInputValue(el, modifiers, event, currentValue) {
     return mutateDom(() => {
       if (event instanceof CustomEvent && event.detail !== void 0) {
-        return typeof event.detail != "undefined" ? event.detail : event.target.value;
+        return event.detail || event.target.value;
       } else if (el.type === "checkbox") {
         if (Array.isArray(currentValue)) {
           let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
@@ -3603,7 +3622,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   mapAttributes(startingWith(":", into(prefix("bind:"))));
-  directive("bind", (el, { value: value2, modifiers, expression, original }, { effect: effect32 }) => {
+  var handler2 = (el, { value: value2, modifiers, expression, original }, { effect: effect32 }) => {
     if (!value2) {
       let bindingProviders = {};
       injectBindingProviders(bindingProviders);
@@ -3615,6 +3634,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     if (value2 === "key")
       return storeKeyForXFor(el, expression);
+    if (el._x_inlineBindings && el._x_inlineBindings[value2] && el._x_inlineBindings[value2].extract) {
+      return;
+    }
     let evaluate2 = evaluateLater(el, expression);
     effect32(() => evaluate2((result) => {
       if (result === void 0 && typeof expression === "string" && expression.match(/\./)) {
@@ -3622,7 +3644,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       mutateDom(() => bind(el, value2, result, modifiers));
     }));
-  });
+  };
+  handler2.inline = (el, { value: value2, modifiers, expression }) => {
+    if (!value2)
+      return;
+    if (!el._x_inlineBindings)
+      el._x_inlineBindings = {};
+    el._x_inlineBindings[value2] = { expression, extract: false };
+  };
+  directive("bind", handler2);
   function storeKeyForXFor(el, expression) {
     el._x_keyExpression = expression;
   }
@@ -3764,6 +3794,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!!lookup[key]._x_effects) {
           lookup[key]._x_effects.forEach(dequeueJob);
         }
+        if (!!lookup[key]._x_forCleanup) {
+          lookup[key]._x_forCleanup();
+        }
         lookup[key].remove();
         lookup[key] = null;
         delete lookup[key];
@@ -3853,16 +3886,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isNumeric3(subject) {
     return !Array.isArray(subject) && !isNaN(subject);
   }
-  function handler2() {
+  function handler3() {
   }
-  handler2.inline = (el, { expression }, { cleanup: cleanup22 }) => {
+  handler3.inline = (el, { expression }, { cleanup: cleanup22 }) => {
     let root = closestRoot(el);
     if (!root._x_refs)
       root._x_refs = {};
     root._x_refs[expression] = el;
     cleanup22(() => delete root._x_refs[expression]);
   };
-  directive("ref", handler2);
+  directive("ref", handler3);
   directive("if", (el, { expression }, { effect: effect32, cleanup: cleanup22 }) => {
     let evaluate2 = evaluateLater(el, expression);
     let show = () => {
@@ -4413,13 +4446,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives.js
-  function registerDirective(name, callback) {
+  function directive2(name, callback) {
     on("element.init", (el, component) => {
       let allDirectives = directives2(el);
       if (allDirectives.missing(name))
         return;
-      let directive2 = allDirectives.get(name);
-      callback(el, directive2, component);
+      let directive3 = allDirectives.get(name);
+      callback(el, directive3, {
+        component,
+        cleanup: () => {
+        }
+      });
     });
   }
   function directives2(el) {
@@ -4434,13 +4471,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return this.directives;
     }
     has(type) {
-      return this.directives.map((directive2) => directive2.type).includes(type);
+      return this.directives.map((directive3) => directive3.type).includes(type);
     }
     missing(type) {
       return !this.has(type);
     }
     get(type) {
-      return this.directives.find((directive2) => directive2.type === type);
+      return this.directives.find((directive3) => directive3.type === type);
     }
     extractTypeModifiersAndValue() {
       return Array.from(this.el.getAttributeNames().filter((name) => name.match(new RegExp("wire:"))).map((name) => {
@@ -4525,26 +4562,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let directives3 = directives2(el);
       if (directives3.missing("model"))
         return;
-      let directive2 = directives3.get("model");
-      if (!directive2.value) {
+      let directive3 = directives3.get("model");
+      if (!directive3.value) {
         return console.warn("Livewire: [wire:model] is missing a value.", el);
       }
-      let isLive = directive2.modifiers.includes("live");
-      let isLazy = directive2.modifiers.includes("lazy");
-      let isDebounced = directive2.modifiers.includes("debounce");
+      let isLive = directive3.modifiers.includes("live");
+      let isLazy = directive3.modifiers.includes("lazy");
+      let isDebounced = directive3.modifiers.includes("debounce");
       let update = () => component.$wire.$commit();
       let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounceByComponent(component, update, 150) : update;
       module_default.bind(el, {
         ["@change"]() {
           isLazy && isTextInput(el) && update();
         },
-        ["x-model.unintrusive" + getModifierTail(directive2.modifiers)]() {
+        ["x-model.unintrusive" + getModifierTail(directive3.modifiers)]() {
           return {
             get() {
-              return dataGet(component.$wire, directive2.value);
+              return dataGet(component.$wire, directive3.value);
             },
             set(value2) {
-              dataSet(component.$wire, directive2.value, value2);
+              dataSet(component.$wire, directive3.value, value2);
               isLive && debouncedUpdate();
             }
           };
@@ -4568,17 +4605,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/wireWildcard.js
   function wireWildcard_default() {
     on("element.init", (el, component) => {
-      directives2(el).all().forEach((directive2) => {
-        if (["model", "init", "loading", "poll", "ignore", "id", "initial-data", "key", "target", "dirty"].includes(directive2.type))
+      directives2(el).all().forEach((directive3) => {
+        if (["model", "init", "loading", "poll", "ignore", "id", "initial-data", "key", "target", "dirty"].includes(directive3.type))
           return;
-        let attribute = directive2.rawName.replace("wire:", "x-on:");
-        if (directive2.type === "submit" && !directive2.modifiers.includes("prevent")) {
+        let attribute = directive3.rawName.replace("wire:", "x-on:");
+        if (directive3.type === "submit" && !directive3.modifiers.includes("prevent")) {
           attribute = attribute + ".prevent";
         }
         module_default.bind(el, {
           [attribute](e) {
             callAndClearComponentDebounces(component, () => {
-              module_default.evaluate(el, "$wire." + directive2.value, { scope: { $event: e } });
+              module_default.evaluate(el, "$wire." + directive3.value, { scope: { $event: e } });
             });
           }
         });
@@ -4687,18 +4724,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       let targets = getTargets(elDirectives);
       let loadingDirectives = elDirectives.directives.filter((i) => i.type === "loading");
-      loadingDirectives.forEach((directive2) => {
-        let [delay, abortDelay] = applyDelay(directive2);
-        let inverted = (boolean) => directive2.modifiers.includes("remove") ? !boolean : boolean;
-        setLoading(el, directive2, inverted(false));
+      loadingDirectives.forEach((directive3) => {
+        let [delay, abortDelay] = applyDelay(directive3);
+        let inverted = (boolean) => directive3.modifiers.includes("remove") ? !boolean : boolean;
+        setLoading(el, directive3, inverted(false));
         whenTargetsArePartOfRequest(component, targets, [
-          () => delay(() => setLoading(el, directive2, inverted(true))),
-          () => abortDelay(() => setLoading(el, directive2, inverted(false)))
+          () => delay(() => setLoading(el, directive3, inverted(true))),
+          () => abortDelay(() => setLoading(el, directive3, inverted(false)))
         ]);
       });
     });
-    function applyDelay(directive2) {
-      if (!directive2.modifiers.includes("delay"))
+    function applyDelay(directive3) {
+      if (!directive3.modifiers.includes("delay"))
         return [(i) => i(), (i) => i()];
       let duration = 200;
       let delayModifiers = {
@@ -4710,7 +4747,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "longest": 1e3
       };
       Object.keys(delayModifiers).some((key) => {
-        if (directive2.modifiers.includes(key)) {
+        if (directive3.modifiers.includes(key)) {
           duration = delayModifiers[key];
           return true;
         }
@@ -4759,32 +4796,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return true;
       });
     }
-    function setLoading(el, directive2, isLoading) {
-      if (directive2.modifiers.includes("class")) {
-        let classes = directive2.value.split(" ");
+    function setLoading(el, directive3, isLoading) {
+      if (directive3.modifiers.includes("class")) {
+        let classes = directive3.value.split(" ");
         if (isLoading) {
           el.classList.add(...classes);
         } else {
           el.classList.remove(...classes);
         }
-      } else if (directive2.modifiers.includes("attr")) {
+      } else if (directive3.modifiers.includes("attr")) {
         if (isLoading) {
-          el.setAttribute(directive2.value, true);
+          el.setAttribute(directive3.value, true);
         } else {
-          el.removeAttribute(directive2.value);
+          el.removeAttribute(directive3.value);
         }
       } else {
-        let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
+        let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
         el.style.display = isLoading ? display : "none";
       }
     }
     function getTargets(elDirectives) {
       let targets = [];
       if (elDirectives.has("target")) {
-        let directive2 = elDirectives.get("target");
-        let raw3 = directive2.value;
+        let directive3 = elDirectives.get("target");
+        let raw3 = directive3.value;
         if (raw3.includes("(") && raw3.includes(")")) {
-          targets.push({ target: directive2.method, params: quickHash(directive2.params.toString()) });
+          targets.push({ target: directive3.method, params: quickHash(directive3.params.toString()) });
         } else if (raw3.includes(",")) {
           raw3.split(",").map((i) => i.trim()).forEach((target) => {
             targets.push({ target });
@@ -4809,8 +4846,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let allDirectives = directives2(el);
       if (allDirectives.missing("init"))
         return;
-      let directive2 = allDirectives.get("init");
-      const method = directive2.value ? directive2.method : "$refresh";
+      let directive3 = allDirectives.get("init");
+      const method = directive3.value ? directive3.method : "$refresh";
       module_default.evaluate(el, "$wire." + method);
     });
   }
@@ -4835,8 +4872,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let directives3 = directives2(el);
       if (directives3.missing("dirty"))
         return;
-      let directive2 = directives3.get("dirty");
-      let inverted = (boolean) => directive2.modifiers.includes("remove") ? !boolean : boolean;
+      let directive3 = directives3.get("dirty");
+      let inverted = (boolean) => directive3.modifiers.includes("remove") ? !boolean : boolean;
       let targets = dirtyTargets(directives3);
       let dirty = Alpine.reactive({ state: false });
       let oldIsDirty = false;
@@ -4874,25 +4911,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return targets;
   }
-  function setDirtyState(el, isDirty) {
-    let directive2 = directives2(el).get("dirty");
-    if (directive2.modifiers.includes("class")) {
-      let classes = directive2.value.split(" ");
-      if (isDirty) {
-        el.classList.add(...classes);
-      } else {
-        el.classList.remove(...classes);
-      }
-    } else if (directive2.modifiers.includes("attr")) {
-      if (isDirty) {
-        el.setAttribute(directive2.value, true);
-      } else {
-        el.removeAttribute(directive2.value);
-      }
-    } else if (!directives2(el).get("model")) {
-      el.style.display = isDirty ? "inline-block" : "none";
-    }
-  }
 
   // js/features/wireIgnore.js
   function wireIgnore_default() {
@@ -4900,8 +4918,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let allDirectives = directives2(el);
       if (allDirectives.missing("ignore"))
         return;
-      let directive2 = allDirectives.get("ignore");
-      if (directive2.modifiers.includes("self")) {
+      let directive3 = allDirectives.get("ignore");
+      if (directive3.modifiers.includes("self")) {
         el.__livewire_ignore_self = true;
       } else {
         el.__livewire_ignore = true;
@@ -5042,15 +5060,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let allDirectives = directives2(el);
       if (allDirectives.missing("model"))
         return;
-      let directive2 = allDirectives.get("model");
+      let directive3 = allDirectives.get("model");
       on("target.request", (target) => {
         let targetComponent = findComponent(target.__livewireId);
         if (component !== targetComponent)
           return;
         return () => {
           if (target.effects.dirty) {
-            if (target.effects.dirty.includes(directive2.value)) {
-              el._x_forceModelUpdate(component.$wire.get(directive2.value, false));
+            if (target.effects.dirty.includes(directive3.value)) {
+              el._x_forceModelUpdate(component.$wire.get(directive3.value, false));
             }
           }
         };
@@ -5214,8 +5232,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     function patchAttributes(from2, to) {
-      if (from2._x_transitioning)
-        return;
       if (from2._x_isShown && !to._x_isShown) {
         return;
       }
@@ -5414,6 +5430,46 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
+  // js/directives/wire:offline.js
+  var offlineHandlers = /* @__PURE__ */ new Set();
+  var onlineHandlers = /* @__PURE__ */ new Set();
+  directive2("offline", (el, directive3, { cleanup: cleanup3 }) => {
+    let setOffline = () => toggleOffline(el, true);
+    let setOnline = () => toggleOffline(el, false);
+    offlineHandlers.add(setOffline);
+    onlineHandlers.add(setOnline);
+    cleanup3(() => {
+      offlineHandlers.delete(setOffline);
+      onlineHandlers.delete(setOnline);
+    });
+  });
+  window.addEventListener("offline", () => {
+    offlineHandlers.forEach((i) => i());
+  });
+  window.addEventListener("online", () => {
+    onlineHandlers.forEach((i) => i());
+  });
+  function toggleOffline(el, isOffline) {
+    let directives3 = directives2(el);
+    let directive3 = directives3.get("offline");
+    if (directive3.modifiers.includes("class")) {
+      const classes = directive3.value.split(" ");
+      if (directive3.modifiers.includes("remove") !== isOffline) {
+        el.classList.add(...classes);
+      } else {
+        el.classList.remove(...classes);
+      }
+    } else if (directive3.modifiers.includes("attr")) {
+      if (directive3.modifiers.includes("remove") !== isOffline) {
+        el.setAttribute(directive3.value, true);
+      } else {
+        el.removeAttribute(directive3.value);
+      }
+    } else if (!directives3.get("model")) {
+      el.style.display = isOffline ? "inline-block" : "none";
+    }
+  }
+
   // js/lifecycle.js
   function start2(options = {}) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
@@ -5474,7 +5530,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     emit,
     first,
     find,
-    directive: registerDirective
+    directive: directive2
   };
   if (window.Livewire)
     console.warn("Detected multiple instances of Livewire running");

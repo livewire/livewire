@@ -1,6 +1,6 @@
 import { on } from './synthetic/index'
 
-export function registerDirective(name, callback) {
+export function directive(name, callback) {
     on('element.init', (el, component) => {
         let allDirectives = directives(el)
 
@@ -8,7 +8,10 @@ export function registerDirective(name, callback) {
 
         let directive = allDirectives.get(name)
 
-        callback(el, directive, component)
+        callback(el, directive, {
+            component,
+            cleanup: () => { /** @todo */ }
+        })
     })
 }
 

@@ -1,6 +1,7 @@
 import { on } from './../synthetic/index'
 import { directives } from "../directives"
 import { findComponent } from 'state'
+import { toggleBooleanStateDirective } from 'directives/shared'
 
 export default function () {
     on('element.init', (el, component) => {
@@ -15,13 +16,11 @@ export default function () {
         loadingDirectives.forEach(directive => {
             let [delay, abortDelay] = applyDelay(directive)
 
-            let inverted = boolean => directive.modifiers.includes('remove') ? ! boolean : boolean
-
-            setLoading(el, directive, inverted(false))
+            toggleBooleanStateDirective(el, directive, false)
 
             whenTargetsArePartOfRequest(component, targets, [
-                () => delay(() => setLoading(el, directive, inverted(true))),
-                () => abortDelay(() => setLoading(el, directive, inverted(false))),
+                () => delay(() => toggleBooleanStateDirective(el, directive, true)),
+                () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
             ])
         })
     })
@@ -98,29 +97,6 @@ export default function () {
 
             if (calls.map(i => i.method).includes(target)) return true
         })
-    }
-
-    function setLoading(el, directive, isLoading) {
-        if (directive.modifiers.includes('class')) {
-            let classes = directive.value.split(' ')
-
-            if (isLoading) {
-                el.classList.add(...classes)
-            } else {
-                el.classList.remove(...classes)
-            }
-        } else if (directive.modifiers.includes('attr')) {
-            if (isLoading) {
-                el.setAttribute(directive.value, true)
-            } else {
-                el.removeAttribute(directive.value)
-            }
-        } else {
-            let display = (['inline', 'block', 'table', 'flex', 'grid', 'inline-flex']
-                .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
-
-            el.style.display = isLoading ? display : 'none'
-        }
     }
 
     function getTargets(elDirectives) {

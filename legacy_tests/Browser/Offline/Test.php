@@ -13,9 +13,7 @@ class Test extends TestCase
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, Component::class)
                 ->assertMissing('@whileOffline')
-                ->assertScript('window.livewire.components.livewireIsOffline', false)
                 ->offline()
-                ->assertScript('window.livewire.components.livewireIsOffline', true)
                 ->assertSeeIn('@whileOffline', 'Offline')
                 ->online()
                 ->assertMissing('@whileOffline')

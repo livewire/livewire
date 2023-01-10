@@ -6,6 +6,8 @@ import Alpine from 'alpinejs'
 import morph from '@alpinejs/morph'
 import { monkeyPatchDomSetAttributeToAllowAtSymbols } from 'utils'
 
+import './directives/index'
+
 export function start(options = {}) {
     monkeyPatchDomSetAttributeToAllowAtSymbols()
 
