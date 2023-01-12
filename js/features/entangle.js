@@ -1,16 +1,14 @@
-import { findComponent, state } from "../../../js/state";
-import { on } from '../../../js/synthetic/index'
+import { findComponent, state } from "../state";
+import { on } from '../synthetic/index'
 import Alpine from 'alpinejs'
 
-export default function (enabled) {
-    on('decorate', (target, path, addProp, decorator, symbol) => {
-        addProp('entangle', (name, live = false) => {
-            let component = findComponent(target.__livewireId)
+on('decorate', (target, path, addProp, decorator, symbol) => {
+    addProp('entangle', (name, live = false) => {
+        let component = findComponent(target.__livewireId)
 
-            return generateEntangleFunction(component)(name, live)
-        })
+        return generateEntangleFunction(component)(name, live)
     })
-}
+})
 
 function generateEntangleFunction(component) {
     return (name, live) => {

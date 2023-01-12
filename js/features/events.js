@@ -5,45 +5,43 @@ import Alpine from 'alpinejs'
 
 let globalListeners = new Bag
 
-export default function () {
-    hook('effects', (target, effects, path) => {
-        let listeners = effects.listeners
+hook('effects', (target, effects, path) => {
+    let listeners = effects.listeners
 
-        if (! listeners) return
+    if (! listeners) return
 
-        listeners.forEach(name => {
-            globalListeners.add(name, (...params) => {
-                let component = findComponent(target.__livewireId)
+    listeners.forEach(name => {
+        globalListeners.add(name, (...params) => {
+            let component = findComponent(target.__livewireId)
 
-                component.$wire.call('__emit', name, ...params)
-            })
-
-            queueMicrotask(() => {
-                let component = findComponent(target.__livewireId)
-
-                component.el.addEventListener('__lwevent:'+name, (e) => {
-                    component.$wire.call('__emit', name, ...e.detail.params)
-                })
-            })
+            component.$wire.call('__emit', name, ...params)
         })
-    })
 
-    hook('decorate', (target, path, addProp, decorator, symbol) => {
         queueMicrotask(() => {
             let component = findComponent(target.__livewireId)
 
-            addProp('$emit', (...params) => emit(...params))
-            addProp('$emitUp', (...params) => emitUp(component.el, ...params))
-            addProp('$emitSelf', (...params) => emitSelf(component.id, ...params))
-            addProp('$emitTo', (...params) => emitTo(...params))
-
-            addProp('emit', (...params) => emit(...params))
-            addProp('emitUp', (...params) => emitUp(component.el, ...params))
-            addProp('emitSelf', (...params) => emitSelf(component.id, ...params))
-            addProp('emitTo', (...params) => emitTo(...params))
+            component.el.addEventListener('__lwevent:'+name, (e) => {
+                component.$wire.call('__emit', name, ...e.detail.params)
+            })
         })
     })
-}
+})
+
+hook('decorate', (target, path, addProp, decorator, symbol) => {
+    queueMicrotask(() => {
+        let component = findComponent(target.__livewireId)
+
+        addProp('$emit', (...params) => emit(...params))
+        addProp('$emitUp', (...params) => emitUp(component.el, ...params))
+        addProp('$emitSelf', (...params) => emitSelf(component.id, ...params))
+        addProp('$emitTo', (...params) => emitTo(...params))
+
+        addProp('emit', (...params) => emit(...params))
+        addProp('emitUp', (...params) => emitUp(component.el, ...params))
+        addProp('emitSelf', (...params) => emitSelf(component.id, ...params))
+        addProp('emitTo', (...params) => emitTo(...params))
+    })
+})
 
 export function emit(name, ...params) {
     globalListeners.each(name, i => i(...params))

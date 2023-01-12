@@ -17,7 +17,7 @@ trait HandlesEvents
     }
 
     public function __emit($name, ...$params) {
-        SupportEvents::receive($this, $name, $params);
+        return SupportEvents::receive($this, $name, $params);
     }
 
     public function emit($event, ...$params)

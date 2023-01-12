@@ -1,19 +1,12 @@
-import bootFeatures from './features'
 import { findComponent, hasComponent, releaseComponent, resurrect, state, storeComponent } from './state'
+import { monkeyPatchDomSetAttributeToAllowAtSymbols } from 'utils'
 import { synthetic, trigger } from './synthetic/index'
 import { Component } from './component'
-import Alpine from 'alpinejs'
 import morph from '@alpinejs/morph'
-import { monkeyPatchDomSetAttributeToAllowAtSymbols } from 'utils'
+import Alpine from 'alpinejs'
 
-import './directives/index'
-
-export function start(options = {}) {
+export function start() {
     monkeyPatchDomSetAttributeToAllowAtSymbols()
-
-    let enabledFeatures = options.features || []
-
-    bootFeatures(enabledFeatures)
 
     Alpine.interceptInit(Alpine.skipDuringClone(el => {
         initElement(el)
@@ -25,9 +18,7 @@ export function start(options = {}) {
 
     Alpine.start()
 
-    setTimeout(() => {
-        window.Livewire.initialRenderIsFinished = true
-    })
+    setTimeout(() => window.Livewire.initialRenderIsFinished = true)
 }
 
 function initElement(el) {
@@ -54,8 +45,6 @@ function initElement(el) {
         })
 
         storeComponent(component.id, component)
-
-        trigger('component.initialized', component)
     }
 
     let component

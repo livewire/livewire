@@ -122,7 +122,7 @@ class DuskBrowserMacros
         return function () {
             /** @var \Laravel\Dusk\Browser $this */
             return $this->waitUsing(6, 25, function () {
-                return $this->driver->executeScript("return !! window.Livewire.components.initialRenderIsFinished");
+                return $this->driver->executeScript("return !! window.Livewire.initialRenderIsFinished");
             });
         };
     }

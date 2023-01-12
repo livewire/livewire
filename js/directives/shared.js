@@ -3,7 +3,7 @@ export function toggleBooleanStateDirective(el, directive, isTruthy) {
     isTruthy = directive.modifiers.includes('remove') ? ! isTruthy : isTruthy
 
     if (directive.modifiers.includes('class')) {
-        let classes = directive.value.split(' ')
+        let classes = directive.expression.split(' ')
 
         if (isTruthy) {
             el.classList.add(...classes)
@@ -12,9 +12,9 @@ export function toggleBooleanStateDirective(el, directive, isTruthy) {
         }
     } else if (directive.modifiers.includes('attr')) {
         if (isTruthy) {
-            el.setAttribute(directive.value, true)
+            el.setAttribute(directive.expression, true)
         } else {
-            el.removeAttribute(directive.value)
+            el.removeAttribute(directive.expression)
         }
     } else {
         let display = (['inline', 'block', 'table', 'flex', 'grid', 'inline-flex']

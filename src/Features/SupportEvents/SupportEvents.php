@@ -39,7 +39,7 @@ class SupportEvents
 
         $method = static::getListenerMethodName($component, $name);
 
-        wrap($component)->$method(...$params);
+        return wrap($component)->$method(...$params);
     }
 
     static function getListenerEventNames($component)

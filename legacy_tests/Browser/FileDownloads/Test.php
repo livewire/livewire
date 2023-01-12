@@ -74,8 +74,10 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
                         })",
                     ]);
                 })
@@ -96,8 +98,10 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
                         })",
                     ]);
                 })
@@ -121,9 +125,11 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                        document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
-                    })",
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
+                        })",
                     ]);
                 })
                 ->waitForLivewire()->click('@download-an-untitled-file-with-invalid-content-type-header')
@@ -145,8 +151,10 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
                         })",
                     ]);
                 })
@@ -170,8 +178,10 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
                         })",
                     ]);
                 })

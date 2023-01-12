@@ -2,15 +2,13 @@ import { on } from "../events";
 
 let componentTargets = {}
 
-export default function () {
-    on('component.request', (component, payload) => {
-        componentTargets[component.id] = getTargetsFromPayload(payload)
-    })
+on('component.request', (component, payload) => {
+    componentTargets[component.id] = getTargetsFromPayload(payload)
+})
 
-    on('component.response', (component) => {
-        delete componentTargets[component.id]
-    })
-}
+on('component.response', (component) => {
+    delete componentTargets[component.id]
+})
 
 export function componentHasTargets(component, targetDirective) {
     let actionNames = []

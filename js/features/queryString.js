@@ -2,39 +2,37 @@ import { trigger, on } from "../events";
 import { closestComponent } from "../lifecycle";
 import { dataGet, dataSet } from "../utils";
 
-export default function () {
-    on('component.initialized', component => {
-        let queryString = component.effects.queryString
-        if (! queryString) return
+on('component.initialized', component => {
+    let queryString = component.effects.queryString
+    if (! queryString) return
 
-        Object.entries(queryString).forEach(([key, value]) => {
-            if (isNumeric(key)) {
-                key = value
+    Object.entries(queryString).forEach(([key, value]) => {
+        if (isNumeric(key)) {
+            key = value
 
-                // Handle normal queryString key.
-                Alpine.persist(key, {
-                    get() {
-                        return dataGet(component.dataReactive, key)
-                    },
-                    set(value) {
-                        dataSet(component.dataReactive, key, value)
-                    },
-                }, {
-                    getItem(key) {
-                        let value = getFromQueryString(key)
+            // Handle normal queryString key.
+            Alpine.persist(key, {
+                get() {
+                    return dataGet(component.dataReactive, key)
+                },
+                set(value) {
+                    dataSet(component.dataReactive, key, value)
+                },
+            }, {
+                getItem(key) {
+                    let value = getFromQueryString(key)
 
-                        return JSON.stringify(value)
-                    },
-                    setItem(key, value) {
-                        pushToQueryString(key, JSON.parse(value))
-                    }
-                })
-            } else {
-                // Handle queryString with exclude/default/as config.
-            }
-        })
+                    return JSON.stringify(value)
+                },
+                setItem(key, value) {
+                    pushToQueryString(key, JSON.parse(value))
+                }
+            })
+        } else {
+            // Handle queryString with exclude/default/as config.
+        }
     })
-}
+})
 
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);

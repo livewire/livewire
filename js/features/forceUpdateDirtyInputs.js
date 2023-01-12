@@ -1,29 +1,21 @@
-import { directives } from '../directives'
-import { on } from './../synthetic/index'
-import { findComponent } from 'state'
+import { directive, getDirectives } from '@/directives'
+import { findComponent } from '@/state'
+import { on } from '@synthetic/index'
 
-export default function () {
-    on('element.init', (el, component) => {
-        let allDirectives = directives(el)
+directive('model', (el, { expression }, { component }) => {
+    on('target.request', (target) => {
+        let targetComponent = findComponent(target.__livewireId)
 
-        if (allDirectives.missing('model')) return
+        if (component !== targetComponent) return
 
-        let directive = allDirectives.get('model')
-
-        on('target.request', (target) => {
-            let targetComponent = findComponent(target.__livewireId)
-
-            if (component !== targetComponent) return
-
-            return () => {
-                if (target.effects.dirty) {
-                    if (target.effects.dirty.includes(directive.value)) {
-                        el._x_forceModelUpdate(
-                            component.$wire.get(directive.value, false)
-                        )
-                    }
+        return () => {
+            if (target.effects.dirty) {
+                if (target.effects.dirty.includes(expression)) {
+                    el._x_forceModelUpdate(
+                        component.$wire.get(expression, false)
+                    )
                 }
             }
-        })
+        }
     })
-}
+})

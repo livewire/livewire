@@ -2,7 +2,8 @@
     "compilerOptions": {
       "baseUrl": ".",
       "paths": {
-        "@synthetic/*": ["synthetic/*"]
+        "@synthetic/*": ["synthetic/*"],
+        "@/*": ["*"]
       }
     }
   }

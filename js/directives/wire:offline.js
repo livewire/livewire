@@ -1,5 +1,5 @@
-import { directive, directives as getDirectives } from './../directives'
 import { toggleBooleanStateDirective } from './shared'
+import { directive } from '@/directives'
 
 let offlineHandlers = new Set
 let onlineHandlers = new Set

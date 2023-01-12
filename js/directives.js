@@ -1,21 +1,20 @@
-import { on } from './synthetic/index'
+import { on } from '@synthetic/index'
 
 export function directive(name, callback) {
     on('element.init', (el, component) => {
-        let allDirectives = directives(el)
-
-        if (allDirectives.missing(name)) return
-
-        let directive = allDirectives.get(name)
-
-        callback(el, directive, {
-            component,
-            cleanup: () => { /** @todo */ }
-        })
+        getDirectives(el)
+            .directives
+            .filter(({ value }) => value === name)
+            .forEach(directive => {
+                callback(el, directive, {
+                    component,
+                    cleanup: () => { /** @todo */ }
+                })
+            })
     })
 }
 
-export function directives(el) {
+export function getDirectives(el) {
     return new DirectiveManager(el)
 }
 
@@ -29,16 +28,16 @@ class DirectiveManager {
         return this.directives
     }
 
-    has(type) {
-        return this.directives.map(directive => directive.type).includes(type)
+    has(value) {
+        return this.directives.map(directive => directive.value).includes(value)
     }
 
-    missing(type) {
-        return ! this.has(type)
+    missing(value) {
+        return ! this.has(value)
     }
 
-    get(type) {
-        return this.directives.find(directive => directive.type === type)
+    get(value) {
+        return this.directives.find(directive => directive.value === value)
     }
 
     extractTypeModifiersAndValue() {
@@ -47,34 +46,32 @@ class DirectiveManager {
             .filter(name => name.match(new RegExp('wire:')))
             // Parse out the type, modifiers, and value from it.
             .map(name => {
-                const [type, ...modifiers] = name.replace(new RegExp('wire:'), '').split('.')
+                const [value, ...modifiers] = name.replace(new RegExp('wire:'), '').split('.')
 
-                return new Directive(type, modifiers, name, this.el)
+                return new Directive(value, modifiers, name, this.el)
             }))
     }
 }
 
 class Directive {
-    constructor(type, modifiers, rawName, el) {
-        this.type = type
-        this.modifiers = modifiers
+    constructor(value, modifiers, rawName, el) {
         this.rawName = rawName
         this.el = el
         this.eventContext
-    }
 
-    get value() {
-        return this.el.getAttribute(this.rawName)
+        this.value = value
+        this.modifiers = modifiers
+        this.expression = this.el.getAttribute(this.rawName)
     }
 
     get method() {
-        const { method } = this.parseOutMethodAndParams(this.value)
+        const { method } = this.parseOutMethodAndParams(this.expression)
 
         return method
     }
 
     get params() {
-        const { params } = this.parseOutMethodAndParams(this.value)
+        const { params } = this.parseOutMethodAndParams(this.expression)
 
         return params
     }
