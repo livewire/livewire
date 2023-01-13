@@ -31,7 +31,9 @@ class TestableLivewireCanAssertReturnedValueTest extends TestCase
     {
         $component = Livewire::test(AssertReturnedValueOfMethodComponent::class);
 
-        $component->call('someMethod')->assertReturned(fn ($value) => $value === 'foo');
+        $component->call('someMethod')->assertReturned(function ($value) {
+            return $value === 'foo';
+        });
     }
 
     /** @test */
@@ -41,7 +43,9 @@ class TestableLivewireCanAssertReturnedValueTest extends TestCase
 
         $this->expectException(\PHPUnit\Framework\AssertionFailedError::class);
 
-        $component->call('someMethod')->assertReturned(fn ($value) => $value !== 'foo');
+        $component->call('someMethod')->assertReturned(function ($value) {
+            return $value !== 'foo';
+        });
     }
 }
 
