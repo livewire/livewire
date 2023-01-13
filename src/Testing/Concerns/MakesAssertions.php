@@ -400,4 +400,15 @@ trait MakesAssertions
 
         return $this;
     }
+
+    public function assertReturned($value)
+    {
+        if (is_callable($value)) {
+            PHPUnit::assertTrue($value(array_values(data_get($this->lastResponse, 'effects.returns'))[0]));
+        } else {
+            PHPUnit::assertEquals($value, array_values(data_get($this->lastResponse, 'effects.returns'))[0]);
+        }
+
+        return $this;
+    }
 }
