@@ -29,6 +29,9 @@ class HttpConnectionHandler extends ConnectionHandler
         try {
             $originalUrl = Livewire::originalUrl();
 
+            // If the original path was the root route, updated the original URL to have
+            // a suffix of '/' to ensure that the route matching works correctly when
+            // a prefix is used (such as running Laravel in a subdirectory).
             if (Livewire::originalPath() == '/') {
                 $originalUrl .= '/';
             }
@@ -41,6 +44,9 @@ class HttpConnectionHandler extends ConnectionHandler
 
             $originalUrl = Str::replaceFirst('/'.request('fingerprint')['locale'], '', Livewire::originalUrl());
 
+            // If the original path was the root route, updated the original URL to have
+            // a suffix of '/' to ensure that the route matching works correctly when
+            // a prefix is used (such as running Laravel in a subdirectory).
             if (Livewire::originalPath() == request('fingerprint')['locale']) {
                 $originalUrl .= '/';
             }
