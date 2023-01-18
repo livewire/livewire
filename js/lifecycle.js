@@ -3,6 +3,7 @@ import { monkeyPatchDomSetAttributeToAllowAtSymbols } from 'utils'
 import { synthetic, trigger } from './synthetic/index'
 import { Component } from './component'
 import morph from '@alpinejs/morph'
+import history from '@alpinejs/history'
 import Alpine from 'alpinejs'
 
 export function start() {
@@ -13,6 +14,7 @@ export function start() {
     }))
 
     Alpine.plugin(morph)
+    Alpine.plugin(history)
 
     Alpine.addRootSelector(() => '[wire\\:id]')
 
@@ -33,6 +35,8 @@ function initElement(el) {
         let component = new Component(synthetic(initialData).__target, el, id)
 
         el.__livewire = component
+
+        trigger('component.init', component)
 
         // This makes anything that would normally be available on $wire
         // available directly without needing to prefix "$wire.".

@@ -1,5 +1,5 @@
 <div>
     <span dusk="baz-output">{{ $baz }}</span>
 
-    <input wire:model="baz" type="text" dusk="baz-input">
+    <input wire:model.live="baz" type="text" dusk="baz-input">
 </div>

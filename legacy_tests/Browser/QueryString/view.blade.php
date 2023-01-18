@@ -1,4 +1,13 @@
 <div>
+    {{-- <div x-data="{ count: $queryString(1) }">
+        <input type="text" x-model="count">
+        <span x-text="count"></span>
+    </div>
+
+    <br>
+    <br>
+    <br> --}}
+
     <span dusk="output">{{ $foo }}</span>
     <span dusk="bar-output">{{ $bar }}</span>
 
@@ -8,8 +17,8 @@
     <span dusk="qux.space">{{ $qux['space'] }}</span>
     <span dusk="qux.array">{{ json_encode($qux['array']) }}</span>
 
-    <input wire:model="foo" type="text" dusk="input">
-    <input wire:model="bar" type="text" dusk="bar-input">
+    <input wire:model.live="foo" type="text" dusk="input">
+    <input wire:model.live="bar" type="text" dusk="bar-input">
 
     <button wire:click="$set('showNestedComponent', true)" dusk="show-nested">Show Nested Component</button>
 
@@ -17,6 +26,6 @@
     <span dusk="bob.output">@json($bob)</span>
 
     @if ($showNestedComponent)
-        @livewire(\Tests\Browser\QueryString\NestedComponent::class)
+        @livewire('nested')
     @endif
 </div>

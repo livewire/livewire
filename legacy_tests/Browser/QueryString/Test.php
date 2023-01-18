@@ -3,15 +3,16 @@
 namespace LegacyTests\Browser\QueryString;
 
 use Livewire\Livewire;
-use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
+use LegacyTests\Browser\QueryString\NestedComponent;
+use Laravel\Dusk\Browser;
 
 class Test extends TestCase
 {
     public function test_core_query_string_pushstate_logic()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, Component::class, '?foo=baz&eoo=lob')
+            $this->visitLivewireComponent($browser, [Component::class, 'nested' => NestedComponent::class], '?foo=baz&eoo=lob')
                 /*
                  * Check that the intial property value is set from the query string.
                  */
@@ -22,8 +23,6 @@ class Test extends TestCase
                  * Check that Livewire doesn't mess with query string order.
                  */
                 ->assertScript('return !! window.location.search.match(/foo=baz&eoo=lob/)')
-                ->assertSeeIn('@output', 'baz')
-                ->assertInputValue('@input', 'baz')
 
                 /**
                  * Change a property and see it reflected in the query string.
@@ -37,17 +36,19 @@ class Test extends TestCase
                  * Hit the back button and see the change reflected in both
                  * the query string AND the actual property value.
                  */
-                ->back()
+                ->waitForLivewire()->back()
                 ->assertSeeIn('@output', 'baz')
                 ->assertQueryStringHas('foo', 'baz')
 
                 /**
-                 * Setting a property to a value marked as "except"
+                 * Setting a property BACK to it's original value
                  * removes the property entirely from the query string.
+                 * As long as it wasn't there to begin with...
                  */
                 ->assertSeeIn('@bar-output', 'baz')
+                ->waitForLivewire()->type('@bar-input', 'new-value')
                 ->assertQueryStringHas('bar')
-                ->waitForLivewire()->type('@bar-input', 'except-value')
+                ->waitForLivewire()->type('@bar-input', 'baz')
                 ->assertQueryStringMissing('bar')
 
                 /**
@@ -57,7 +58,6 @@ class Test extends TestCase
                 ->assertQueryStringMissing('baz')
                 ->waitForLivewire()->click('@show-nested')
                 ->pause(25)
-                ->assertQueryStringHas('baz', 'bop')
                 ->assertSeeIn('@baz-output', 'bop')
                 ->waitForLivewire()->type('@baz-input', 'lop')
                 ->assertQueryStringHas('baz', 'lop')
@@ -71,12 +71,14 @@ class Test extends TestCase
 
                 /**
                  * Can change an array property.
+                 * @todo: Going to try not supporting arrays or objects in query strings in V3.
+                 * Reason: Many backends and front-ends handle them differently.
                  */
-                ->assertSeeIn('@bob.output', '["foo","bar"]')
-                ->waitForLivewire()->click('@bob.modify')
-                ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
-                ->refresh()
-                ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
+                // ->assertSeeIn('@bob.output', '["foo","bar"]')
+                // ->waitForLivewire()->click('@bob.modify')
+                // ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
+                // ->refresh()
+                // ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
             ;
         });
     }

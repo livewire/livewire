@@ -69,6 +69,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
             \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
+            \Livewire\Features\SupportQueryString\SupportQueryString::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             // \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,

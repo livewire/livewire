@@ -20,11 +20,11 @@ class SupportDirtyDetection
             $this->storeThisHashMapForLaterComparison($component, $hashMap);
         });
 
-        $this->whenComponentDataIsUpdated(function ($component, $property) {
-            $value = $component->$property;
+        // $this->whenComponentDataIsUpdated(function ($component, $property) {
+        //     $value = $component->$property;
 
-            $this->rehashProperty($component, $property, $value);
-        });
+        //     $this->rehashProperty($component, $property, $value);
+        // });
 
         $this->whenAComponentIsDehydrated(function ($component, $addDirtyPropertiesToPayload) {
             $this->onlyIfItWasHydratedEarlier($component, function () use ($component, $addDirtyPropertiesToPayload) {
@@ -119,7 +119,10 @@ class SupportDirtyDetection
         $earlierOne = store($component)->get('dirtyHashMap');
 
         return array_keys(
-            array_diff_assoc($earlierOne, $hashMap)
+            array_merge(
+                array_diff_assoc($earlierOne, $hashMap),
+                array_diff_assoc($hashMap, $earlierOne)
+            )
         );
     }
 }

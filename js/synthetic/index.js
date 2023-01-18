@@ -220,7 +220,14 @@ function requestMethodCall(symbol, path, method, params) {
  */
 function requestCommit(symbol) {
     if (! requestTargetQueue.has(symbol)) {
-        requestTargetQueue.set(symbol, { calls: [], receivers: [] })
+        requestTargetQueue.set(symbol, {
+            calls: [],
+            receivers: [],
+            resolvers: [],
+            handleResponse() {
+                this.resolvers.forEach(i => i())
+            }
+        })
     }
 
     triggerSend()
@@ -228,7 +235,7 @@ function requestCommit(symbol) {
     return new Promise((resolve, reject) => {
         let queue = requestTargetQueue.get(symbol)
 
-        queue.handleResponse = () => resolve()
+        queue.resolvers.push(resolve)
     })
 }
 

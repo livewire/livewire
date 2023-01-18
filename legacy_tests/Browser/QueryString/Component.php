@@ -24,11 +24,11 @@ class Component extends BaseComponent
     public $showNestedComponent = false;
 
     protected $queryString = [
-        'foo',
-        'bar' => ['except' => 'except-value'],
-        'bob',
-        'qux',
-        'showNestedComponent',
+        'foo' => ['use' => 'push'],
+        'bar' => ['use' => 'push'],
+        // 'bob' => ['use' => 'push'],
+        // 'qux' => ['use' => 'push'],
+        'showNestedComponent' => ['use' => 'push'],
     ];
 
     public function modifyBob()

@@ -2481,8 +2481,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs2 = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr22 = /* @__PURE__ */ makeMap2(specialBooleanAttrs2 + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ2 = true ? Object.freeze({}) : {};
-  var EMPTY_ARR2 = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ2 = false ? Object.freeze({}) : {};
+  var EMPTY_ARR2 = false ? Object.freeze([]) : [];
   var extend2 = Object.assign;
   var hasOwnProperty2 = Object.prototype.hasOwnProperty;
   var hasOwn2 = (val, key) => hasOwnProperty2.call(val, key);
@@ -2516,8 +2516,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap2 = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect2;
-  var ITERATE_KEY2 = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY2 = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY2 = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY2 = Symbol(false ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2607,7 +2607,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect2)) {
       dep.add(activeEffect2);
       activeEffect2.deps.push(dep);
-      if (activeEffect2.options.onTrack) {
+      if (false) {
         activeEffect2.options.onTrack({
           effect: activeEffect2,
           target,
@@ -2671,7 +2671,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect32) => {
-      if (effect32.options.onTrigger) {
+      if (false) {
         effect32.options.onTrigger({
           effect: effect32,
           target,
@@ -2809,13 +2809,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers2 = {
     get: readonlyGet2,
     set(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2884,7 +2884,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3.call(target, key);
@@ -2903,7 +2903,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2916,7 +2916,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear2() {
     const target = toRaw2(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger3(target, "clear", void 0, void 0, oldTarget);
@@ -2961,7 +2961,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod2(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize2(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
       }
@@ -3060,13 +3060,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var shallowReadonlyCollectionHandlers = {
     get: createInstrumentationGetter2(true, true)
   };
-  function checkIdentityKeys(target, has22, key) {
-    const rawKey = toRaw2(key);
-    if (rawKey !== key && has22.call(target, rawKey)) {
-      const type = toRawType2(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap2 = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap2 = /* @__PURE__ */ new WeakMap();
   var readonlyMap2 = /* @__PURE__ */ new WeakMap();
@@ -3099,7 +3092,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject2(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject3(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -4157,12 +4150,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function requestCommit(symbol) {
     if (!requestTargetQueue.has(symbol)) {
-      requestTargetQueue.set(symbol, { calls: [], receivers: [] });
+      requestTargetQueue.set(symbol, {
+        calls: [],
+        receivers: [],
+        resolvers: [],
+        handleResponse() {
+          this.resolvers.forEach((i) => i());
+        }
+      });
     }
     triggerSend();
     return new Promise((resolve, reject) => {
       let queue2 = requestTargetQueue.get(symbol);
-      queue2.handleResponse = () => resolve();
+      queue2.resolvers.push(resolve);
     });
   }
   var requestBufferTimeout;
@@ -4336,10 +4336,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/events.js
   var globalListeners = new Bag();
   on("effects", (target, effects, path) => {
-    let listeners3 = effects.listeners;
-    if (!listeners3)
+    let listeners2 = effects.listeners;
+    if (!listeners2)
       return;
-    listeners3.forEach((name) => {
+    listeners2.forEach((name) => {
       globalListeners.add(name, (...params) => {
         let component = findComponent(target.__livewireId);
         component.$wire.call("__emit", name, ...params);
@@ -4796,6 +4796,87 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
+  // ../alpine/packages/history/dist/module.esm.js
+  function history(Alpine3) {
+    Alpine3.magic("queryString", (el, { interceptor: interceptor2 }) => {
+      let alias;
+      return interceptor2((initialSeedValue, getter, setter, path, key) => {
+        let queryKey = alias || path;
+        let { initial, replace: replace2 } = track3(queryKey, initialSeedValue);
+        Alpine3.effect(() => replace2(getter()));
+        return initial;
+      }, (func) => {
+        func.as = (key) => {
+          alias = key;
+          return func;
+        };
+      });
+    });
+    Alpine3.history = { track: track3 };
+  }
+  function track3(name, initialSeedValue) {
+    let url = new URL(window.location.href);
+    let isInitiallyPresentInUrl = url.searchParams.has(name);
+    let initialValue = isInitiallyPresentInUrl ? url.searchParams.get(name) : initialSeedValue;
+    replace(url.toString(), name, { value: initialValue });
+    let lock = false;
+    let update = (strategy, newValue) => {
+      if (lock)
+        return;
+      let url2 = new URL(window.location.href);
+      if (!isInitiallyPresentInUrl && newValue === initialValue) {
+        url2.searchParams.delete(name);
+      } else {
+        url2.searchParams.set(name, newValue);
+      }
+      strategy(url2.toString(), name, { value: newValue });
+    };
+    return {
+      initial: initialValue,
+      replace(newValue) {
+        update(replace, newValue);
+      },
+      push(newValue) {
+        update(push, newValue);
+      },
+      pop(receiver) {
+        window.addEventListener("popstate", (e) => {
+          if (!e.state || !e.state.alpine)
+            return;
+          Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
+            if (iName !== name)
+              return;
+            lock = true;
+            let result = receiver(newValue);
+            if (result instanceof Promise) {
+              result.finally(() => lock = false);
+            } else {
+              lock = false;
+            }
+          });
+        });
+      }
+    };
+  }
+  function replace(url, key, object) {
+    ensureSimpleValue(key, object.value);
+    let state2 = window.history.state || {};
+    if (!state2.alpine)
+      state2.alpine = {};
+    state2.alpine[key] = object;
+    window.history.replaceState(state2, "", url);
+  }
+  function push(url, key, object) {
+    ensureSimpleValue(key, object.value);
+    let state2 = { alpine: { ...window.history.state.alpine, ...{ [key]: object } } };
+    window.history.pushState(state2, "", url);
+  }
+  function ensureSimpleValue(key, value) {
+    if (Array.isArray(value) || typeof value === "object" && value !== null)
+      throw `Alpine: Arrays and Objects are NOT supported as query params: [${key}]`;
+  }
+  var module_default3 = history;
+
   // js/lifecycle.js
   function start2() {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
@@ -4803,6 +4884,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       initElement(el);
     }));
     module_default.plugin(module_default2);
+    module_default.plugin(module_default3);
     module_default.addRootSelector(() => "[wire\\:id]");
     module_default.start();
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
@@ -4816,6 +4898,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let component2 = new Component(synthetic(initialData).__target, el, id);
       el.__livewire = component2;
+      trigger2("component.init", component2);
       module_default.bind(el, {
         "x-data"() {
           return component2.synthetic.reactive;
@@ -4887,14 +4970,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (component !== targetComponent)
         return;
       return () => {
-        if (target.effects.dirty) {
-          if (target.effects.dirty.includes(expression)) {
-            el._x_forceModelUpdate(component.$wire.get(expression, false));
-          }
+        let dirty = target.effects.dirty;
+        if (!dirty)
+          return;
+        if (isDirty(expression, dirty)) {
+          el._x_forceModelUpdate(component.$wire.get(expression, false));
         }
       };
     });
   });
+  function isDirty(subject, dirty) {
+    if (dirty.includes(subject))
+      return true;
+    return dirty.some((i) => subject.startsWith(i));
+  }
 
   // js/features/dispatchBrowserEvents.js
   on("effects", (target, effects) => {
@@ -4961,56 +5050,49 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
-  // js/events.js
-  var listeners2 = new Bag();
-  function on4(name, callback) {
-    listeners2.add(name, callback);
-  }
-
   // js/features/queryString.js
-  on4("component.initialized", (component) => {
-    let queryString = component.effects.queryString;
+  on("component.init", (component) => {
+    let effects = component.synthetic.effects;
+    let queryString = effects["queryString"];
     if (!queryString)
       return;
     Object.entries(queryString).forEach(([key, value]) => {
-      if (isNumeric4(key)) {
-        key = value;
-        Alpine.persist(key, {
-          get() {
-            return dataGet(component.dataReactive, key);
-          },
-          set(value2) {
-            dataSet(component.dataReactive, key, value2);
-          }
-        }, {
-          getItem(key2) {
-            let value2 = getFromQueryString(key2);
-            return JSON.stringify(value2);
-          },
-          setItem(key2, value2) {
-            pushToQueryString(key2, JSON.parse(value2));
-          }
+      let { name, as, except, use } = normalizeQueryStringEntry(key, value);
+      let initialValue = dataGet(component.synthetic.ephemeral, name);
+      let { initial, replace: replace2, push: push2, pop } = track3(as, initialValue, except);
+      if (use === "replace") {
+        module_default.effect(() => {
+          replace2(dataGet(component.synthetic.reactive, name));
         });
-      } else {
+      } else if (use === "push") {
+        on("target.request", (target, payload) => {
+          if (target !== module_default.raw(component.synthetic))
+            return;
+          return () => {
+            let diff2 = payload.diff;
+            let dirty = target.effects.dirty || [];
+            if (!Object.keys(payload.diff).includes(name) && !dirty.some((i) => i.startsWith(name)))
+              return;
+            push2(dataGet(component.synthetic.ephemeral, name));
+          };
+        });
+        pop(async (newValue) => {
+          await component.$wire.set(name, newValue);
+          document.querySelectorAll("input").forEach((el) => {
+            el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get());
+          });
+        });
       }
     });
   });
-  function isNumeric4(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
-  }
-  function getFromQueryString(key) {
-    let url = new URL(window.location.href);
-    let value = url.searchParams.get(key);
-    if (value === "true")
-      return true;
-    if (value === "false")
-      return false;
-    return value;
-  }
-  function pushToQueryString(key, value) {
-    let url = new URL(window.location.href);
-    url.searchParams.set(key, value);
-    window.history.replaceState({}, "", url.toString());
+  function normalizeQueryStringEntry(key, value) {
+    let defaults = { except: null, use: "replace" };
+    if (typeof value === "string") {
+      return { ...defaults, name: value, as: value };
+    } else {
+      let fullerDefaults = { ...defaults, name: key, as: key };
+      return { ...fullerDefaults, ...value };
+    }
   }
 
   // js/morph.js
@@ -5401,27 +5483,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let targets = dirtyTargets(el);
     let dirty = Alpine.reactive({ state: false });
     let oldIsDirty = false;
-    let refreshDirtyState = (isDirty) => {
-      toggleBooleanStateDirective(el, directive3, isDirty);
-      oldIsDirty = isDirty;
+    let refreshDirtyState = (isDirty2) => {
+      toggleBooleanStateDirective(el, directive3, isDirty2);
+      oldIsDirty = isDirty2;
     };
     refreshDirtyStatesByComponent.add(component, refreshDirtyState);
     Alpine.effect(() => {
-      let isDirty = false;
+      let isDirty2 = false;
       if (targets.length === 0) {
-        isDirty = JSON.stringify(component.synthetic.canonical) !== JSON.stringify(component.synthetic.reactive);
+        isDirty2 = JSON.stringify(component.synthetic.canonical) !== JSON.stringify(component.synthetic.reactive);
       } else {
         for (let i = 0; i < targets.length; i++) {
-          if (isDirty)
+          if (isDirty2)
             break;
           let target = targets[i];
-          isDirty = JSON.stringify(dataGet(component.synthetic.canonical, target)) !== JSON.stringify(dataGet(component.synthetic.reactive, target));
+          isDirty2 = JSON.stringify(dataGet(component.synthetic.canonical, target)) !== JSON.stringify(dataGet(component.synthetic.reactive, target));
         }
       }
-      if (oldIsDirty !== isDirty) {
-        refreshDirtyState(isDirty);
+      if (oldIsDirty !== isDirty2) {
+        refreshDirtyState(isDirty2);
       }
-      oldIsDirty = isDirty;
+      oldIsDirty = isDirty2;
     });
   });
   function dirtyTargets(el) {
