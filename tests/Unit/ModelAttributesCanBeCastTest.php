@@ -171,16 +171,16 @@ class ModelAttributesCanBeCastTest extends TestCase
             ->call('validateAttribute', 'model.decimal_with_one_digit')
             ->assertHasNoErrors('model.decimal_with_one_digit');
 
-        if (version_compare(app()->version(), '9.46.0', '<')) {
+        if (version_compare(app()->version(), '9.46.0', '>=') && version_compare(app()->version(), '9.48.0', '<')) {
                 // Laravel 9.46 changed how decimal property rounding is handled,
                 // where rounding up will no longer be applied laravel/framework PR#45492
             $component
-                ->assertSet('model.decimal_with_one_digit', 5.6)
-                ->assertPayloadSet('model.decimal_with_one_digit', 5.6);
-        } else {
-            $component
                 ->assertSet('model.decimal_with_one_digit', 5.5)
                 ->assertPayloadSet('model.decimal_with_one_digit', 5.5);
+        } else {
+            $component
+                ->assertSet('model.decimal_with_one_digit', 5.6)
+                ->assertPayloadSet('model.decimal_with_one_digit', 5.6);
         }
     }
 
@@ -195,7 +195,7 @@ class ModelAttributesCanBeCastTest extends TestCase
             ->call('validateAttribute', 'model.decimal_with_two_digits')
             ->assertHasNoErrors('model.decimal_with_two_digits');
 
-        if (version_compare(app()->version(), '9.46.0', '>=')) {
+        if (version_compare(app()->version(), '9.46.0', '>=') && version_compare(app()->version(), '9.48.0', '<')) {
                 // Laravel 9.46 changed how decimal property rounding is handled,
                 // where rounding up will no longer be applied laravel/framework PR#45492
             $component
