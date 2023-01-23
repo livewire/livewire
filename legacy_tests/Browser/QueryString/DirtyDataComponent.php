@@ -7,7 +7,7 @@ use Livewire\Component as BaseComponent;
 
 class DirtyDataComponent extends BaseComponent
 {
-    protected $queryString = ['page'];
+    protected $queryString = ['page' => ['use' => 'push']];
 
     public $page = 1;
     public $foo = ['bar' => ''];

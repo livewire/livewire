@@ -4800,12 +4800,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function history(Alpine3) {
     Alpine3.magic("queryString", (el, { interceptor: interceptor2 }) => {
       let alias;
+      let alwaysShow = false;
+      let usePush = false;
       return interceptor2((initialSeedValue, getter, setter, path, key) => {
         let queryKey = alias || path;
-        let { initial, replace: replace2 } = track3(queryKey, initialSeedValue);
-        Alpine3.effect(() => replace2(getter()));
+        let { initial, replace: replace2, push: push2, pop } = track3(queryKey, initialSeedValue, alwaysShow);
+        setter(initial);
+        if (!usePush) {
+          Alpine3.effect(() => replace2(getter()));
+        } else {
+          Alpine3.effect(() => push2(getter()));
+          pop(async (newValue) => {
+            setter(newValue);
+            let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
+            await tillTheEndOfTheMicrotaskQueue();
+          });
+        }
         return initial;
       }, (func) => {
+        func.alwaysShow = () => {
+          alwaysShow = true;
+          return func;
+        };
+        func.usePush = () => {
+          usePush = true;
+          return func;
+        };
         func.as = (key) => {
           alias = key;
           return func;
@@ -4814,22 +4834,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     Alpine3.history = { track: track3 };
   }
-  function track3(name, initialSeedValue) {
+  function track3(name, initialSeedValue, alwaysShow = false) {
+    let { has: has3, get: get3, set: set3, remove } = queryStringUtils();
     let url = new URL(window.location.href);
-    let isInitiallyPresentInUrl = url.searchParams.has(name);
-    let initialValue = isInitiallyPresentInUrl ? url.searchParams.get(name) : initialSeedValue;
-    replace(url.toString(), name, { value: initialValue });
+    let isInitiallyPresentInUrl = has3(url, name);
+    let initialValue = isInitiallyPresentInUrl ? get3(url, name) : initialSeedValue;
+    let initialValueMemo = JSON.stringify(initialValue);
+    let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
+    if (alwaysShow)
+      url = set3(url, name, initialValue);
+    replace(url, name, { value: initialValue });
     let lock = false;
     let update = (strategy, newValue) => {
       if (lock)
         return;
       let url2 = new URL(window.location.href);
-      if (!isInitiallyPresentInUrl && newValue === initialValue) {
-        url2.searchParams.delete(name);
+      if (!alwaysShow && !isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
+        url2 = remove(url2, name);
       } else {
-        url2.searchParams.set(name, newValue);
+        url2 = set3(url2, name, newValue);
       }
-      strategy(url2.toString(), name, { value: newValue });
+      strategy(url2, name, { value: newValue });
     };
     return {
       initial: initialValue,
@@ -4859,21 +4884,90 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   function replace(url, key, object) {
-    ensureSimpleValue(key, object.value);
     let state2 = window.history.state || {};
     if (!state2.alpine)
       state2.alpine = {};
-    state2.alpine[key] = object;
-    window.history.replaceState(state2, "", url);
+    state2.alpine[key] = unwrap(object);
+    window.history.replaceState(state2, "", url.toString());
   }
   function push(url, key, object) {
-    ensureSimpleValue(key, object.value);
-    let state2 = { alpine: { ...window.history.state.alpine, ...{ [key]: object } } };
-    window.history.pushState(state2, "", url);
+    let state2 = { alpine: { ...window.history.state.alpine, ...{ [key]: unwrap(object) } } };
+    window.history.pushState(state2, "", url.toString());
   }
-  function ensureSimpleValue(key, value) {
-    if (Array.isArray(value) || typeof value === "object" && value !== null)
-      throw `Alpine: Arrays and Objects are NOT supported as query params: [${key}]`;
+  function unwrap(object) {
+    return JSON.parse(JSON.stringify(object));
+  }
+  function queryStringUtils() {
+    return {
+      has(url, key) {
+        let search = url.search;
+        if (!search)
+          return false;
+        let data2 = fromQueryString(search);
+        return Object.keys(data2).includes(key);
+      },
+      get(url, key) {
+        let search = url.search;
+        if (!search)
+          return false;
+        let data2 = fromQueryString(search);
+        return data2[key];
+      },
+      set(url, key, value) {
+        let data2 = fromQueryString(url.search);
+        data2[key] = value;
+        url.search = toQueryString(data2);
+        return url;
+      },
+      remove(url, key) {
+        let data2 = fromQueryString(url.search);
+        delete data2[key];
+        url.search = toQueryString(data2);
+        return url;
+      }
+    };
+  }
+  function toQueryString(data2) {
+    let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;
+    let buildQueryStringEntries = (data22, entries2 = {}, baseKey = "") => {
+      Object.entries(data22).forEach(([iKey, iValue]) => {
+        let key = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
+        if (!isObjecty2(iValue)) {
+          entries2[key] = encodeURIComponent(iValue).replaceAll("%20", "+");
+        } else {
+          entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key) };
+        }
+      });
+      return entries2;
+    };
+    let entries = buildQueryStringEntries(data2);
+    return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
+  }
+  function fromQueryString(search) {
+    search = search.replace("?", "");
+    if (search === "")
+      return {};
+    let insertDotNotatedValueIntoData = (key, value, data22) => {
+      let [first2, second, ...rest] = key.split(".");
+      if (!second)
+        return data22[key] = value;
+      if (data22[first2] === void 0) {
+        data22[first2] = isNaN(second) ? {} : [];
+      }
+      insertDotNotatedValueIntoData([second, ...rest].join("."), value, data22[first2]);
+    };
+    let entries = search.split("&").map((i) => i.split("="));
+    let data2 = {};
+    entries.forEach(([key, value]) => {
+      value = decodeURIComponent(value.replaceAll("+", "%20"));
+      if (!key.includes("[")) {
+        data2[key] = value;
+      } else {
+        let dotNotatedKey = key.replaceAll("[", ".").replaceAll("]", "");
+        insertDotNotatedValueIntoData(dotNotatedKey, value, data2);
+      }
+    });
+    return data2;
   }
   var module_default3 = history;
 
@@ -5057,9 +5151,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!queryString)
       return;
     Object.entries(queryString).forEach(([key, value]) => {
-      let { name, as, except, use } = normalizeQueryStringEntry(key, value);
+      let { name, as, except, use, alwaysShow } = normalizeQueryStringEntry(key, value);
       let initialValue = dataGet(component.synthetic.ephemeral, name);
-      let { initial, replace: replace2, push: push2, pop } = track3(as, initialValue, except);
+      let { initial, replace: replace2, push: push2, pop } = track3(as, initialValue, alwaysShow);
       if (use === "replace") {
         module_default.effect(() => {
           replace2(dataGet(component.synthetic.reactive, name));
@@ -5086,7 +5180,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   function normalizeQueryStringEntry(key, value) {
-    let defaults = { except: null, use: "replace" };
+    let defaults = { except: null, use: "replace", alwaysShow: false };
     if (typeof value === "string") {
       return { ...defaults, name: value, as: value };
     } else {

@@ -3,8 +3,6 @@ import { dataGet, dataSet } from '@synthetic/utils'
 import Alpine from 'alpinejs'
 import { track } from '@alpinejs/history'
 
-// What do we do here? Do we track the snapshot and return to that?
-
 on('component.init', component => {
     let effects = component.synthetic.effects
     let queryString = effects['queryString']
@@ -12,11 +10,11 @@ on('component.init', component => {
     if (! queryString) return
 
     Object.entries(queryString).forEach(([key, value]) => {
-        let { name, as, except, use } = normalizeQueryStringEntry(key, value)
+        let { name, as, except, use, alwaysShow } = normalizeQueryStringEntry(key, value)
 
         let initialValue = dataGet(component.synthetic.ephemeral, name)
 
-        let { initial, replace, push, pop } = track(as, initialValue, except)
+        let { initial, replace, push, pop } = track(as, initialValue, alwaysShow)
 
         if (use === 'replace') {
             Alpine.effect(() => {
@@ -49,7 +47,7 @@ on('component.init', component => {
 })
 
 function normalizeQueryStringEntry(key, value) {
-    let defaults = { except: null, use: 'replace' }
+    let defaults = { except: null, use: 'replace', alwaysShow: false }
 
     if (typeof value === 'string') {
         return {...defaults, name: value, as: value }

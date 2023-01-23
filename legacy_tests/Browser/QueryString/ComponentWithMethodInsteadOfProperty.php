@@ -11,7 +11,7 @@ class ComponentWithMethodInsteadOfProperty extends BaseComponent
 
     public function queryString()
     {
-        return ['foo'];
+        return ['foo' => ['alwaysShow' => true]];
     }
 
     public function render()

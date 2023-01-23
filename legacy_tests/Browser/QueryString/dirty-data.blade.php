@@ -3,7 +3,7 @@
 
     @if ($page === 1)
         <div>
-            <input type="text" wire:model="foo.bar" dusk="input">
+            <input type="text" wire:model.live="foo.bar" dusk="input">
         </div>
     @else
         <div>

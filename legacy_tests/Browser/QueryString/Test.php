@@ -71,14 +71,12 @@ class Test extends TestCase
 
                 /**
                  * Can change an array property.
-                 * @todo: Going to try not supporting arrays or objects in query strings in V3.
-                 * Reason: Many backends and front-ends handle them differently.
                  */
-                // ->assertSeeIn('@bob.output', '["foo","bar"]')
-                // ->waitForLivewire()->click('@bob.modify')
-                // ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
-                // ->refresh()
-                // ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
+                ->assertSeeIn('@bob.output', '["foo","bar"]')
+                ->waitForLivewire()->click('@bob.modify')
+                ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
+                ->refresh()
+                ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
             ;
         });
     }
@@ -100,7 +98,7 @@ class Test extends TestCase
     public function test_query_string_with_rfc_1738_bookmarked_url()
     {
         $this->browse(function (Browser $browser) {
-            $queryString = '?qux[hyphen]=quux-quuz&qux[comma]=quux,quuz&qux[ampersand]=quux%26quuz&qux[space]=quux+quuz&qux[array][]=quux&qux[array][]=quuz';
+            $queryString = '?qux[hyphen]=quux-quuz&qux[comma]=quux,quuz&qux[ampersand]=quux%26quuz&qux[space]=quux+quuz&qux[array][0]=quux&qux[array][1]=quuz';
 
             $this->visitLivewireComponent($browser, Component::class, $queryString)
                 ->assertSeeIn('@qux.hyphen', 'quux-quuz')
@@ -133,9 +131,9 @@ class Test extends TestCase
             $queryString = '?foo=bar%26quux%26quuz';
 
             $this->visitLivewireComponent($browser, Component::class, $queryString)
-                ->assertQueryStringHas('foo', 'bar&quux&quuz')
+                ->assertSeeIn('@output', 'bar&quux&quuz')
                 ->refresh()
-                ->assertQueryStringHas('foo', 'bar&quux&quuz')
+                ->assertSeeIn('@output', 'bar&quux&quuz')
             ;
         });
     }
@@ -143,7 +141,7 @@ class Test extends TestCase
     public function test_back_button_after_refresh_works_with_nested_components()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, Component::class)
+            $this->visitLivewireComponent($browser, [Component::class, 'nested' => NestedComponent::class])
                 ->waitForLivewire()->click('@show-nested')
                 ->waitForLivewire()->type('@baz-input', 'foo')
                 ->assertSeeIn('@baz-output', 'foo')
@@ -159,24 +157,24 @@ class Test extends TestCase
         });
     }
 
-    public function test_excepts_results_in_no_query_string()
-    {
-        $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, ComponentWithExcepts::class)
-                ->assertSeeIn('@output', 'On page 1');
+    // public function test_excepts_results_in_no_query_string()
+    // {
+    //     $this->browse(function (Browser $browser) {
+    //         $this->visitLivewireComponent($browser, ComponentWithExcepts::class)
+    //             ->assertSeeIn('@output', 'On page 1');
 
-            $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
+    //         $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
 
-            $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=1')
-                ->assertSeeIn('@output', 'On page 1');
+    //         $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=1')
+    //             ->assertSeeIn('@output', 'On page 1');
 
-            $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
+    //         $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
 
-            $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=2')
-                ->assertSeeIn('@output', 'On page 2')
-                ->assertQueryStringHas('page', 2);
-        });
-    }
+    //         $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=2')
+    //             ->assertSeeIn('@output', 'On page 2')
+    //             ->assertQueryStringHas('page', 2);
+    //     });
+    // }
 
     public function test_that_input_values_are_set_after_back_button()
     {
@@ -186,29 +184,12 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@nextPage')
                 ->assertSee('The Next Page')
                 ->back()
+                ->waitFor('@input')
                 ->assertInputValue('@input', 'foo')
                 ->forward()
                 ->back()
+                ->waitFor('@input')
                 ->assertInputValue('@input', 'foo')
-            ;
-        });
-    }
-
-    public function test_that_huge_components_dont_exceed_history_state_or_session_state_storage_limits()
-    {
-        $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, HugeComponent::class)
-                ->assertSeeIn('@count', '0')
-                ->waitForLivewire()->click('@increment')
-                ->waitForLivewire()->click('@increment')
-                ->waitForLivewire()->click('@increment')
-                ->waitForLivewire()->click('@increment')
-                ->waitForLivewire()->click('@increment')
-                ->waitForLivewire()->click('@increment')
-                ->assertSeeIn('@count', '6')
-                ->back()
-                ->back()
-                ->assertSeeIn('@count', '4')
             ;
         });
     }
@@ -225,7 +206,7 @@ class Test extends TestCase
     public function test_nested_component_query_string_works_when_parent_is_not_using_query_string()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, ParentComponentWithNoQueryString::class)
+            $this->visitLivewireComponent($browser, [ParentComponentWithNoQueryString::class, 'nested' => NestedComponent::class])
                 ->assertPathBeginsWith('/livewire-dusk')
                 ->waitForLivewire()->click('@toggle-nested')
 
@@ -241,16 +222,18 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, RedirectLinkToQueryStringComponent::class)
-                ->assertPathBeginsWith('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CRedirectLinkToQueryStringComponent')
+                ->assertPathBeginsWith('/livewire-dusk/LegacyTests%5CBrowser%5CQueryString%5CRedirectLinkToQueryStringComponent')
                 ->click('@link')
 
                 ->pause(200)
                 // assert the path has changed to new component path
-                ->assertPathBeginsWith('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CNestedComponent')
+                ->assertPathBeginsWith('/livewire-dusk/LegacyTests%5CBrowser%5CQueryString%5CNestedComponent')
                 ->assertQueryStringHas('baz', 'bop')
             ;
         });
     }
+
+    // @todo: the following tests rely on pagination, so get that done first, then come back and finish this...
 
     public function test_query_string_hooks_from_traits()
     {

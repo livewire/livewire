@@ -26,9 +26,9 @@ class Component extends BaseComponent
     protected $queryString = [
         'foo' => ['use' => 'push'],
         'bar' => ['use' => 'push'],
-        // 'bob' => ['use' => 'push'],
-        // 'qux' => ['use' => 'push'],
-        'showNestedComponent' => ['use' => 'push'],
+        'bob' => ['use' => 'push', 'alwaysShow' => true],
+        'qux' => ['use' => 'push', 'alwaysShow' => true],
+        'showNestedComponent' => ['use' => 'push', 'alwaysShow' => true],
     ];
 
     public function modifyBob()
