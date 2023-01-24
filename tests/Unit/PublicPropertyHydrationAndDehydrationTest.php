@@ -40,6 +40,14 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             $table->foreignId('author_id');
             $table->timestamps();
         });
+
+        Schema::create('other_comments', function ($table) {
+            $table->bigIncrements('id');
+            $table->string('comment');
+            $table->foreignId('post_id');
+            $table->foreignId('author_id');
+            $table->timestamps();
+        });
     }
 
     /** @test */
@@ -91,6 +99,64 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
     }
 
     /** @test */
+    public function an_eloquent_model_properties_with_deep_relations_and_multiword_relations_can_have_dirty_data_reapplied()
+    {
+        Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
+        Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
+
+        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'author_id' => 1]);
+        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'author_id' => 1]);
+
+        Comment::create(['id' => 1, 'comment' => 'Comment 1', 'post_id' => 1, 'author_id' => 1]);
+        Comment::create(['id' => 2, 'comment' => 'Comment 2', 'post_id' => 1, 'author_id' => 2]);
+
+        OtherComment::create(['id' => 1, 'comment' => 'Other Comment 1', 'post_id' => 1, 'author_id' => 1]);
+        OtherComment::create(['id' => 2, 'comment' => 'Other Comment 2', 'post_id' => 1, 'author_id' => 2]);
+        
+        $model = Author::with(['posts', 'posts.comments', 'posts.comments.author', 'posts.otherComments', 'posts.otherComments.author'])->first();
+
+        $dirtyData = [
+            'title' => 'oof',
+            'name' => 'rab',
+            'email' => 'zab',
+            'posts' => [
+                [
+                    'title' => '1 Post',
+                    'description' => 'Description 1 Post',
+                    'content' => 'Content 1 Post',
+                    'comments' => [
+                        [],
+                        [
+                            'comment' => '2 Comment',
+                            'author' => [
+                                'name' => 'gniht'
+                            ]
+                        ]
+                    ],
+                    'otherComments' => [
+                        [],
+                        [
+                            'comment' => '2 Other Comment',
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $results = HydratePublicProperties::setDirtyData($model, $dirtyData);
+
+        $this->assertEquals($model->title, 'oof');
+        $this->assertEquals($model->name, 'rab');
+        $this->assertEquals($model->email, 'zab');
+        $this->assertEquals($model->posts[0]->title, '1 Post');
+        $this->assertEquals($model->posts[0]->description, 'Description 1 Post');
+        $this->assertEquals($model->posts[0]->content, 'Content 1 Post');
+        $this->assertEquals($model->posts[0]->comments[1]->comment, '2 Comment');
+        $this->assertEquals($model->posts[0]->comments[1]->author->name, 'gniht');
+        $this->assertEquals($model->posts[0]->otherComments[1]->comment, '2 Other Comment');
+    }
+
+    /** @test */
     public function an_eloquent_model_with_a_properties_dirty_data_set_to_an_empty_array_gets_hydrated_properly()
     {
         $model = new Author();
@@ -119,6 +185,7 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
             'posts.*.title',
             'posts.*.content',
             'posts.*.author.name',
+            'posts.*.otherComments.*.name',
         ];
 
         $expected = [
@@ -150,6 +217,11 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
                     'content',
                     'author' => [
                         'name',
+                    ],
+                    'otherComments' => [
+                        '*' => [
+                            'name',
+                        ],
                     ],
                 ],
             ],
@@ -286,6 +358,81 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
         ];
 
         $results = HydratePublicProperties::extractData($models->toArray(), HydratePublicProperties::processRules($rules)['author']->toArray(), []);
+
+        $this->assertEquals($expected, $results);
+    }
+
+    /** @test */
+    public function an_eloquent_model_properties_with_deep_relations_and_multiword_relations_can_be_serialised()
+    {
+        Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
+        Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
+
+        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'author_id' => 1]);
+        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'author_id' => 1]);
+
+        Comment::create(['id' => 1, 'comment' => 'Comment 1', 'post_id' => 1, 'author_id' => 1]);
+        Comment::create(['id' => 2, 'comment' => 'Comment 2', 'post_id' => 1, 'author_id' => 2]);
+
+        OtherComment::create(['id' => 1, 'comment' => 'Other Comment 1', 'post_id' => 1, 'author_id' => 1]);
+        OtherComment::create(['id' => 2, 'comment' => 'Other Comment 2', 'post_id' => 1, 'author_id' => 2]);
+
+        $models = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
+
+        $rules = [
+            'author.title',
+            'author.email',
+            'author.posts.*.title',
+            'author.posts.*.comments.*.comment',
+            'author.posts.*.comments.*.author.name',
+            'author.posts.*.otherComments.*.comment',
+            'author.posts.*.otherComments.*.author.name',
+        ];
+
+        $expected = [
+            'title' => 'foo',
+            'email' => 'baz',
+            'posts' => [
+                [
+                    'title' => 'Post 1',
+                    'comments' => [
+                        [
+                            'comment' => 'Comment 1',
+                            'author' => [
+                                'name' => 'bar'
+                            ],
+                        ],
+                        [
+                            'comment' => 'Comment 2',
+                            'author' => [
+                                'name' => 'thing'
+                            ],
+                        ],
+                    ],
+                    'otherComments' => [
+                        [
+                            'comment' => 'Other Comment 1',
+                            'author' => [
+                                'name' => 'bar'
+                            ],
+                        ],
+                        [
+                            'comment' => 'Other Comment 2',
+                            'author' => [
+                                'name' => 'thing'
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'title' => 'Post 2',
+                    'comments' => [],
+                    'otherComments' => [],
+                ],
+            ],
+        ];
+
+        $results = HydratePublicProperties::extractData($models, HydratePublicProperties::processRules($rules)['author'], []);
 
         $this->assertEquals($expected, $results);
     }
@@ -481,6 +628,88 @@ class PublicPropertyHydrationAndDehydrationTest extends TestCase
     }
 
     /** @test */
+    public function an_eloquent_collection_properties_with_deep_relations_and_multiword_relations_can_be_serialised()
+    {
+        Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
+        Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
+
+        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'author_id' => 1]);
+        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'author_id' => 1]);
+
+        Comment::create(['id' => 1, 'comment' => 'Comment 1', 'post_id' => 1, 'author_id' => 1]);
+        Comment::create(['id' => 2, 'comment' => 'Comment 2', 'post_id' => 1, 'author_id' => 2]);
+
+        OtherComment::create(['id' => 1, 'comment' => 'Other Comment 1', 'post_id' => 1, 'author_id' => 1]);
+        OtherComment::create(['id' => 2, 'comment' => 'Other Comment 2', 'post_id' => 1, 'author_id' => 2]);
+
+        $models = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->get();
+
+        $rules = [
+            'authors.*.title',
+            'authors.*.email',
+            'authors.*.posts.*.title',
+            'authors.*.posts.*.comments.*.comment',
+            'authors.*.posts.*.comments.*.author.name',
+            'authors.*.posts.*.otherComments.*.comment',
+            'authors.*.posts.*.otherComments.*.author.name',
+        ];
+
+        $expected = [
+            [
+                'title' => 'foo',
+                'email' => 'baz',
+                'posts' => [
+                    [
+                        'title' => 'Post 1',
+                        'comments' => [
+                            [
+                                'comment' => 'Comment 1',
+                                'author' => [
+                                    'name' => 'bar'
+                                ],
+                            ],
+                            [
+                                'comment' => 'Comment 2',
+                                'author' => [
+                                    'name' => 'thing'
+                                ],
+                            ],
+                        ],
+                        'otherComments' => [
+                            [
+                                'comment' => 'Other Comment 1',
+                                'author' => [
+                                    'name' => 'bar'
+                                ],
+                            ],
+                            [
+                                'comment' => 'Other Comment 2',
+                                'author' => [
+                                    'name' => 'thing'
+                                ],
+                            ],
+                        ],
+                    ],
+                    [
+                        'title' => 'Post 2',
+                        'comments' => [],
+                        'otherComments' => [],
+                    ],
+                ],
+            ],
+            [
+                'title' => 'sample',
+                'email' => 'todo',
+                'posts' => [],
+            ],
+        ];
+
+        $results = HydratePublicProperties::extractData($models, HydratePublicProperties::processRules($rules)['authors'], []);
+
+        $this->assertEquals($expected, $results);
+    }
+
+    /** @test */
     public function an_eloquent_collection_properties_with_deep_relations_with_skipped_relations_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
@@ -644,6 +873,11 @@ class Author extends Model
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function otherComments()
+    {
+        return $this->hasMany(Comment::class);
+    }
 }
 
 class Post extends Model
@@ -660,9 +894,30 @@ class Post extends Model
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function otherComments()
+    {
+        return $this->hasMany(OtherComment::class);
+    }
 }
 
 class Comment extends Model
+{
+    protected $connection = 'testbench';
+    protected $guarded = [];
+
+    public function author()
+    {
+        return $this->belongsTo(Author::class);
+    }
+
+    public function post()
+    {
+        return $this->belongsTo(Post::class);
+    }
+}
+
+class OtherComment extends Model
 {
     protected $connection = 'testbench';
     protected $guarded = [];
