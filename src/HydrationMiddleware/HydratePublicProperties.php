@@ -241,7 +241,12 @@ class HydratePublicProperties implements HydrationMiddleware
     }
 
     public static function filterData($instance, $property) {
+        $cacheSnakeAttributes = Model::$snakeAttributes;
+        Model::$snakeAttributes = false;
+
         $data = $instance->$property->toArray();
+
+        Model::$snakeAttributes = $cacheSnakeAttributes;
 
         $rules = $instance->rulesForModel($property)->keys();
 

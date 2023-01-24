@@ -14,11 +14,13 @@ class Component extends BaseComponent
         'author.posts.*.title' => '',
         'author.posts.*.comments.*.comment' => '',
         'author.posts.*.comments.*.author.name' => '',
+        'author.posts.*.otherComments.*.comment' => '',
+        'author.posts.*.otherComments.*.author.name' => '',
     ];
 
     public function mount()
     {
-        $this->author = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
+        $this->author = Author::with(['posts', 'posts.comments', 'posts.comments.author', 'posts.otherComments', 'posts.otherComments.author'])->first();
     }
 
     public function save()
@@ -64,6 +66,26 @@ class Component extends BaseComponent
                                 wire:model="author.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name"
                                 />
                             <span dusk='output.author.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name'>{{ optional($comment->author)->name }}</span>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div>
+                    @foreach($post->otherComments as $commentKey => $comment)
+                        <div>
+                            Other Comment Comment
+                            <input
+                                dusk='author.posts.{{ $postKey }}.otherComments.{{ $commentKey }}.comment'
+                                wire:model="author.posts.{{ $postKey }}.otherComments.{{ $commentKey }}.comment"
+                                />
+                            <span dusk='output.author.posts.{{ $postKey }}.otherComments.{{ $commentKey }}.comment'>{{ $comment->comment }}</span>
+
+                            Other Commment Author Name
+                            <input
+                                dusk='author.posts.{{ $postKey }}.otherComments.{{ $commentKey }}.author.name'
+                                wire:model="author.posts.{{ $postKey }}.otherComments.{{ $commentKey }}.author.name"
+                                />
+                            <span dusk='output.author.posts.{{ $postKey }}.otherComments.{{ $commentKey }}.author.name'>{{ optional($comment->author)->name }}</span>
                         </div>
                     @endforeach
                 </div>

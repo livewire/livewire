@@ -63,6 +63,37 @@ class Test extends TestCase
         $author->posts[0]->comments[1]->author->name = 'John';
         $author->push();
     }
+
+    /** @test */
+    public function it_supports_multiword_relations_in_nested_data()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, Component::class)
+                ->assertValue('@author.posts.0.otherComments.0.comment', 'Other Comment 1')
+                ->assertValue('@author.posts.0.otherComments.0.author.name', 'Bob')
+                ->assertValue('@author.posts.0.otherComments.1.comment', 'Other Comment 2')
+                ->assertValue('@author.posts.0.otherComments.1.author.name', 'John')
+
+                ->waitForLivewire()->type('@author.posts.0.otherComments.0.comment', 'Other Message 1')
+                ->assertSeeIn('@output.author.posts.0.otherComments.0.comment', 'Other Message 1')
+
+                ->waitForLivewire()->type('@author.posts.0.otherComments.1.author.name', 'Randall')
+                ->assertSeeIn('@output.author.posts.0.otherComments.1.author.name', 'Randall')
+
+                ->waitForLivewire()->click('@save')
+                ;
+        });
+
+        $author = Author::with(['posts', 'posts.comments', 'posts.comments.author', 'posts.otherComments', 'posts.otherComments.author'])->first();
+
+        $this->assertEquals('Other Message 1', $author->posts[0]->otherComments[0]->comment);
+        $this->assertEquals('Randall', $author->posts[0]->otherComments[1]->author->name);
+
+        // Reset back after finished.
+        $author->posts[0]->otherComments[0]->comment = 'Other Comment 1';
+        $author->posts[0]->otherComments[1]->author->name = 'John';
+        $author->push();
+    }
 }
 
 class Author extends Model
@@ -84,6 +115,11 @@ class Author extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function otherComments()
+    {
+        return $this->hasMany(OtherComment::class);
     }
 }
 
@@ -107,6 +143,11 @@ class Post extends Model
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function otherComments()
+    {
+        return $this->hasMany(OtherComment::class);
+    }
 }
 
 class Comment extends Model
@@ -118,6 +159,28 @@ class Comment extends Model
     protected $rows = [
         ['id' => 1, 'comment' => 'Comment 1', 'post_id' => 1, 'author_id' => 1],
         ['id' => 2, 'comment' => 'Comment 2', 'post_id' => 1, 'author_id' => 2]
+    ];
+
+    public function author()
+    {
+        return $this->belongsTo(Author::class);
+    }
+
+    public function post()
+    {
+        return $this->belongsTo(Post::class);
+    }
+}
+
+class OtherComment extends Model
+{
+    use Sushi;
+
+    protected $guarded = [];
+
+    protected $rows = [
+        ['id' => 1, 'comment' => 'Other Comment 1', 'post_id' => 1, 'author_id' => 1],
+        ['id' => 2, 'comment' => 'Other Comment 2', 'post_id' => 1, 'author_id' => 2]
     ];
 
     public function author()
