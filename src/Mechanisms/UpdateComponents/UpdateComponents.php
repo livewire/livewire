@@ -230,7 +230,9 @@ class UpdateComponents
 
         $property = $segments[$index];
 
-        assert($synth = $this->synth($target));
+        $synth = $this->synth($target);
+
+        assert($synth);
 
         if ($isLastSegment) {
             $toSet = $leafValue;
