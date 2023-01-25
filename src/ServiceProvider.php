@@ -72,7 +72,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportQueryString\SupportQueryString::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
-            // \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
+            \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
             \Livewire\Features\SupportFileUploads\SupportFileUploads::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
             \Livewire\Features\SupportWireables\SupportWireables::class,
