@@ -44,7 +44,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
-          composer update --prefer-stable --no-interaction --no-suggest
+          composer update --prefer-stable --no-interaction
 
       - name: Setup dusk/chrome
         run: vendor/bin/dusk-updater detect --no-interaction
