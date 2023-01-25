@@ -23,7 +23,7 @@ class BaseTestable
     function __construct($dehydrated, $target) {
         $this->target = $target;
         $this->methods = $dehydrated['effects']['methods'] ?? [];
-        $this->effects = $dehydrated['effects'][''] ?? [];
+        $this->effects = $dehydrated['effects'] ?? [];
         $this->snapshot = $dehydrated['snapshot'];
         $this->canonical = $this->extractData($this->snapshot['data']);
     }
@@ -67,7 +67,7 @@ class BaseTestable
         // ]));
 
         $this->target = $dehydrated['target'];
-        $this->effects = $dehydrated['effects'][''];
+        $this->effects = $dehydrated['effects'];
         $this->snapshot = $dehydrated['snapshot'];
         $this->canonical = $this->extractData($this->snapshot['data']);
 
@@ -126,7 +126,7 @@ class BaseTestable
         $dehydrated = app('livewire')->update($this->snapshot, $diff = [], $calls = []);
 
         $this->target = $dehydrated['target'];
-        $this->effects = $dehydrated['effects'][''];
+        $this->effects = $dehydrated['effects'];
         $this->snapshot = $dehydrated['snapshot'];
         $this->canonical = $this->extractData($this->snapshot['data']);
 
@@ -147,7 +147,7 @@ class BaseTestable
         ]]);
 
         $this->target = $dehydrated['target'];
-        $this->effects = $dehydrated['effects'][''];
+        $this->effects = $dehydrated['effects'];
         $this->snapshot = $dehydrated['snapshot'];
         $this->canonical = $this->extractData($this->snapshot['data']);
 

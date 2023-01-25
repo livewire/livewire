@@ -63,7 +63,7 @@ class Test extends \Tests\TestCase
     {
         Livewire::test(ComponentForTestingDirectives::class)
             ->assertDontSee('@this')
-            ->assertSee('window.livewire.find(');
+            ->assertSee('window.Livewire.find(');
     }
 
     /** @test */
@@ -71,7 +71,7 @@ class Test extends \Tests\TestCase
     {
         Livewire::test(ComponentForTestingNestedThisDirective::class)
             ->assertDontSee('@this')
-            ->assertSee('window.livewire.find(');
+            ->assertSee('window.Livewire.find(');
     }
 
     /** @test */
