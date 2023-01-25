@@ -12,7 +12,7 @@ class PaginationComponentWithQueryStringAliasForPage extends BaseComponent
     use WithPagination;
 
     protected $queryString = [
-        'page' => ['as' => 'p']
+        'paginators.page' => ['as' => 'p']
     ];
 
     public function render()

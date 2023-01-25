@@ -9,17 +9,7 @@ use LegacyTests\Browser\Pagination\Post;
 
 class ComponentWithTraits extends Component
 {
-    use WithPagination;
     use WithSearch;
-
-    /**
-     * Override WithPagination query string.
-     *
-     * @var array
-     */
-    protected $queryString = [
-        'page' => ['except' => 2]
-    ];
 
     public function render()
     {

@@ -4229,7 +4229,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         _token: getCsrfToken(),
         targets: payload
       }),
-      headers: { "Content-type": "application/json" }
+      headers: { "Content-type": "application/json", "X-Synthetic": "" }
     });
     if (request.ok) {
       let response = await request.json();
@@ -4987,9 +4987,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (el.hasAttribute("wire:id")) {
       let id = el.getAttribute("wire:id");
       let initialData = JSON.parse(el.getAttribute("wire:initial-data"));
-      if (!initialData) {
+      if (!initialData)
         initialData = resurrect(id);
-      }
       let component2 = new Component(synthetic(initialData).__target, el, id);
       el.__livewire = component2;
       trigger2("component.init", component2);
@@ -5656,6 +5655,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("init", (el, directive3) => {
     let fullMethod = directive3.expression ? directive3.method : "$refresh";
     module_default.evaluate(el, `$wire.${fullMethod}`);
+  });
+
+  // js/directives/wire:poll.js
+  directive2("poll", (el, directive3, { component, cleanup: cleanup3 }) => {
+    console.log(component.$wire);
+    return;
+    component.$wire.$poll(() => {
+      directive3.value ? module_default.evaluate(el, "$wire." + directive3.value) : module_default.evaluate(el, "$wire.$commit()");
+    });
+    cleanup3(() => {
+    });
   });
 
   // js/index.js

@@ -12,15 +12,7 @@ trait WithSearch
     /**
      * @var array
      */
-    protected $queryStringWithSearch = ['search' => ['except' => '']];
-
-    /**
-     * @return void
-     */
-    public function updatedSearch()
-    {
-        $this->resetPage();
-    }
+    protected $queryStringWithSearch = ['search' => []];
 
     /**
      * @return void

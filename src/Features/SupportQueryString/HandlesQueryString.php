@@ -9,7 +9,7 @@ trait HandlesQueryString
         $componentQueryString = [];
 
         if (method_exists($this, 'queryString')) $componentQueryString = $this->queryString();
-        if (property_exists($this, 'queryString')) $componentQueryString = $this->queryString;
+        elseif (property_exists($this, 'queryString')) $componentQueryString = $this->queryString;
 
         return collect(class_uses_recursive($class = static::class))
             ->map(function ($trait) use ($class) {

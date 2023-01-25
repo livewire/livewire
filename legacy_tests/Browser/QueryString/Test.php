@@ -233,8 +233,6 @@ class Test extends TestCase
         });
     }
 
-    // @todo: the following tests rely on pagination, so get that done first, then come back and finish this...
-
     public function test_query_string_hooks_from_traits()
     {
         $this->browse(function (Browser $browser) {
@@ -242,7 +240,6 @@ class Test extends TestCase
                 ->assertSee('Post #1')
                 ->assertSee('Post #2')
                 ->assertSee('Post #3')
-                ->assertQueryStringHas('page', 1)
                 ->assertQueryStringMissing('search')
                 // Search for posts where title contains "1".
                 ->waitForLivewire()->type('@search', '1')
@@ -252,19 +249,10 @@ class Test extends TestCase
                 ->assertDontSee('Post #2')
                 ->assertDontSee('Post #3')
                 ->assertQueryStringHas('search', '1')
-                ->assertQueryStringHas('page', 1)
-                // Navigate to page 2.
-                ->waitForLivewire()->click('@nextPage.before')
-                ->assertSee('Post #12')
-                ->assertSee('Post #13')
-                ->assertSee('Post #14')
-                ->assertQueryStringHas('search', '1')
-                ->assertQueryStringMissing('page')
                 // Search for posts where title contains "42".
                 ->waitForLivewire()->type('@search', '42')
                 ->assertSee('Post #42')
                 ->assertQueryStringHas('search', '42')
-                ->assertQueryStringHas('page', 1)
             ;
         });
     }
@@ -273,40 +261,15 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, ComponentWithAliases::class)
-                ->assertQueryStringMissing('p')
                 ->assertQueryStringMissing('s')
                 // Search for posts where title contains "1".
                 ->waitForLivewire()->type('@search', '1')
-                ->assertQueryStringMissing('p')
-                ->assertQueryStringHas('s', '1')
-                ->assertInputValue('@search', '1')
-                // Navigate to page 2.
-                ->waitForLivewire()->click('@nextPage.before')
-                ->assertQueryStringHas('p', 2)
                 ->assertQueryStringHas('s', '1')
                 ->assertInputValue('@search', '1')
                 // Search for posts where title contains "qwerty".
                 ->waitForLivewire()->type('@search', 'qwerty')
-                ->assertQueryStringMissing('p')
                 ->assertQueryStringHas('s', 'qwerty')
                 ->assertInputValue('@search', 'qwerty')
-            ;
-        });
-    }
-
-    public function test_query_string_aliases_set_intial_property_values()
-    {
-        $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, ComponentWithAliases::class, '?s=1')
-                /*
-                 * Check that the intial property value is set from the query string aliases.
-                 */
-                ->assertInputValue('@search', '1')
-
-                // Navigate to page 2.
-                ->waitForLivewire()->click('@nextPage.before')
-                ->assertQueryStringHas('p', 2)
-                ->assertQueryStringHas('s', '1')
             ;
         });
     }

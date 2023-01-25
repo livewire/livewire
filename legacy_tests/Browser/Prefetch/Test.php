@@ -9,6 +9,8 @@ class Test extends TestCase
 {
     public function test()
     {
+        $this->markTestSkipped(); // @todo: Considering leaving this feature out of V3 at least initially. Not many use it...
+
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, Component::class)
                 ->assertSeeIn('@count', '1')

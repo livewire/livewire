@@ -83,7 +83,7 @@ class Manager
 
     function isLivewireRequest()
     {
-        return request()->hasHeader('X-Livewire');
+        return request()->hasHeader('X-Livewire') || request()->hasHeader('X-Synthetic');
     }
 
     function isRunningServerless()

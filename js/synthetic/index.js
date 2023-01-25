@@ -345,7 +345,7 @@ async function sendMethodCall() {
             _token: getCsrfToken(),
             targets: payload,
         }),
-        headers: {'Content-type': 'application/json'},
+        headers: {'Content-type': 'application/json', 'X-Synthetic': '' },
     })
 
     if (request.ok) {

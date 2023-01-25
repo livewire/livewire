@@ -28,9 +28,7 @@ function initElement(el) {
         let id = el.getAttribute('wire:id')
         let initialData = JSON.parse(el.getAttribute('wire:initial-data'))
 
-        if (! initialData) {
-            initialData = resurrect(id)
-        }
+        if (! initialData) initialData = resurrect(id)
 
         let component = new Component(synthetic(initialData).__target, el, id)
 

@@ -9,8 +9,6 @@ class Test extends TestCase
 {
     public function test()
     {
-        $this->markTestSkipped(); // @todo: this test requires the QueryString functionality to work...
-
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, [Component::class, 'nested' => NestedComponent::class], '?showChild=true')
                 /**

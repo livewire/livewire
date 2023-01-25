@@ -2,9 +2,9 @@
 
 namespace LegacyTests\Browser\Pagination;
 
+use Livewire\Component as BaseComponent;
 use LegacyTests\Browser\Pagination\Post;
 use Illuminate\Support\Facades\View;
-use Livewire\Component as BaseComponent;
 use Livewire\WithPagination;
 
 class Tailwind extends BaseComponent

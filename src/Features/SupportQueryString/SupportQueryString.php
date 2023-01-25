@@ -13,7 +13,9 @@ class SupportQueryString
     {
         before('mount', function ($name, $params, $parent, $key, $hijack) {
             return function ($component) {
-                $this->fillPropertiesFromInitialQueryString($component);
+                if (empty($options = $component->getQueryString())) return;
+
+                $this->fillPropertiesFromInitialQueryString($component, $options);
             };
         });
 
@@ -27,15 +29,14 @@ class SupportQueryString
         });
     }
 
-    protected function fillPropertiesFromInitialQueryString($component)
+    protected function fillPropertiesFromInitialQueryString($component, $options)
     {
-        if (! $properties = $this->getQueryParamsFromComponentProperties($component)->keys()) return;
-
         $queryParams = request()->query();
 
-        foreach ($component->getQueryString() ?? [] as $property => $options) {
+        foreach ($options as $property => $options) {
             if (! is_array($options)) {
                 $property = $options;
+                $options = [];
             }
 
             $fromQueryString = Arr::get($queryParams, $options['as'] ?? $property);
@@ -48,20 +49,8 @@ class SupportQueryString
                 ? json_decode(json_encode($fromQueryString), true)
                 : json_decode($fromQueryString, true);
 
-            $component->$property = $decoded === null ? $fromQueryString : $decoded;
+            data_set($component, $property, $decoded === null ? $fromQueryString : $decoded);
         }
-    }
-
-    protected function getExceptsFromComponent($component)
-    {
-        return collect($component->getQueryString())
-            ->filter(function ($value) {
-                return isset($value['except']);
-            })
-            ->mapWithKeys(function ($value, $key) {
-                $key = $value['as'] ?? $key;
-                return [$key => $value['except']];
-            });
     }
 
     protected function getQueryParamsFromComponentProperties($component)
@@ -71,7 +60,7 @@ class SupportQueryString
                 $key = is_string($key) ? $key : $value;
                 $alias = $value['as'] ?? $key;
 
-                return [$alias => $component->{$key}];
+                return [$alias => data_get($component, $key)];
             });
     }
 }

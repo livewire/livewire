@@ -8,36 +8,25 @@ use Illuminate\Pagination\Paginator;
 
 trait WithPagination
 {
-    public $page = 1;
-
     public $paginators = [];
 
     protected $numberOfPaginatorsRendered = [];
 
     public function queryStringWithPagination()
     {
-        foreach ($this->paginators as $key => $value) {
-            $this->$key = $value;
-        }
-
-        return array_fill_keys(array_keys($this->paginators), ['except' => 1]);
+        return collect($this->paginators)->mapWithKeys(function ($page, $pageName) {
+            return ['paginators.'.$pageName => ['use' => 'push', 'as' => $pageName]];
+        });
     }
 
     public function initializeWithPagination()
     {
-        foreach ($this->paginators as $key => $value) {
-            $this->$key = $value;
-        }
-
-        $this->page = $this->resolvePage();
-
-        $this->paginators['page'] = $this->page;
-
         if (class_exists(CursorPaginator::class)) {
             CursorPaginator::currentCursorResolver(function ($pageName){
                 if (! isset($this->paginators[$pageName])) {
                     $this->paginators[$pageName] = request()->query($pageName, '');
                 }
+
                 return Cursor::fromEncoded($this->paginators[$pageName]);
             });
         }
@@ -86,10 +75,10 @@ trait WithPagination
 
     public function setPage($page, $pageName = 'page')
     {
-        if (is_numeric($page)){
-            $page = (int)$page;
-            $page = $page <= 0 ? 1 : $page ;
+        if (is_numeric($page)) {
+            $page = (int) ($page <= 0 ? 1 : $page);
         }
+
         $beforePaginatorMethod = 'updatingPaginators';
         $afterPaginatorMethod = 'updatedPaginators';
 
@@ -104,9 +93,7 @@ trait WithPagination
             $this->{$beforeMethod}($page, null);
         }
 
-        $this->paginators[$pageName] =  $page;
-
-        $this->{$pageName} = $page;
+        $this->paginators[$pageName] = $page;
 
         if (method_exists($this, $afterPaginatorMethod)) {
             $this->{$afterPaginatorMethod}($page, $pageName);
@@ -115,17 +102,5 @@ trait WithPagination
         if (method_exists($this, $afterMethod)) {
             $this->{$afterMethod}($page, null);
         }
-    }
-
-    public function resolvePage()
-    {
-        // The "page" query string item should only be available
-        // from within the original component mount run.
-        // Avoid cast to integer to prevent hydrate error
-        if (property_exists($this, 'queryString')) {
-            return request()->query(data_get($this->queryString, 'page.as', 'page'), $this->page);
-        }
-
-        return request()->query('page', $this->page);
     }
 }
