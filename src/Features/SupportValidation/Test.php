@@ -698,6 +698,10 @@ class ForValidation extends Component
     public $password = '';
     public $passwordConfirmation = '';
 
+    public $messages = [];
+    public $validationAttributes = [];
+    public $validationCustomValues = [];
+
     public function runValidation()
     {
         $this->validate([

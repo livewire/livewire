@@ -10,6 +10,8 @@ class CopyCommand extends FileManipulationCommand
 
     protected $description = 'Copy a Livewire component';
 
+    protected $newParser;
+
     public function handle()
     {
         $this->parser = new ComponentParser(

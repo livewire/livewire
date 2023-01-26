@@ -10,6 +10,7 @@ use League\MimeTypeDetection\FinfoMimeTypeDetector;
 
 class TemporaryUploadedFile extends UploadedFile
 {
+    protected $disk;
     protected $storage;
     protected $path;
 

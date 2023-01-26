@@ -10,6 +10,8 @@ class MoveCommand extends FileManipulationCommand
 
     protected $description = 'Move a Livewire component';
 
+    protected $newParser;
+
     public function handle()
     {
         $this->parser = new ComponentParser(

@@ -42,6 +42,8 @@ class ComponentWithDirectlyAssignedPropertiesAndMountMethod extends \Livewire\Co
 {
     public $foo;
     public $baz;
+    public $fooFromMount;
+    public $bazFromMount;
 
     public function mount($foo, $baz)
     {
