@@ -71,12 +71,12 @@ abstract class Component
     function __isset($property)
     {
         try {
-            $this->__get($property);
+            $value = $this->__get($property);
 
-            return true;
-        } catch(PropertyNotFoundException $e) {
-            return false;
-        }
+            if (isset($value)) {
+                return true;
+            }
+        } catch(PropertyNotFoundException $ex) {}
 
         return false;
     }

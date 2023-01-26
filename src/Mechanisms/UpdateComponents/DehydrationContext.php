@@ -11,6 +11,7 @@ class DehydrationContext
     public $effects = [];
     public $meta = [];
     public $annotations;
+    public $annotationsFromParent;
     public $initial;
     public $path;
 

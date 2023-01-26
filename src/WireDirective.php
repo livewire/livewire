@@ -8,6 +8,10 @@ use Illuminate\Contracts\Support\Htmlable;
 
 class WireDirective implements Htmlable, Stringable
 {
+    protected $name;
+    protected $directive;
+    protected $value;
+    
     public function __construct($name, $directive, $value)
     {
         $this->name = $name;

@@ -91,6 +91,13 @@ class Test extends TestCase
         Livewire::test(FalseIssetComputedPropertyStub::class)
             ->assertSee('false');
     }
+
+    /** @test */
+    public function isset_is_false_on_null_computed_property()
+    {
+        Livewire::test(NullIssetComputedPropertyStub::class)
+            ->assertSee('false');
+    }
 }
 
 class ComputedPropertyStub extends Component
@@ -179,6 +186,24 @@ class FalseIssetComputedPropertyStub extends Component{
     public function getFooBarProperty()
     {
         return strtolower($this->upperCasedFoo);
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ var_dump(isset($this->foo)) }}
+        </div>
+        HTML;
+    }
+}
+
+class NullIssetComputedPropertyStub extends Component{
+    public $upperCasedFoo = 'FOO_BAR';
+
+    public function getFooProperty()
+    {
+        return null;
     }
 
     public function render()
