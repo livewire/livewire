@@ -10,7 +10,7 @@ class Test extends TestCase
 {
     public function test()
     {
-        $this->markTestSkipped(); // @todo: Get test running by copying implementation from PR and updating to V3 style https://github.com/livewire/livewire/pull/4942 
+        $this->markTestSkipped(); // @todo: Get test running by copying implementation from both PR's and updating to V3 style https://github.com/livewire/livewire/pull/4942 and https://github.com/livewire/livewire/pull/5379 
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, Component::class)
                 /**
