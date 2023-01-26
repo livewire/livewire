@@ -21,7 +21,6 @@ $command('make:feature {name}', function ($name) {
     File::copyDirectory($stubDir, $featureDir);
 
     // Rename the files...
-    File::move($featureDir.'/FEATURE.js.stub', $js = $featureDir.'/'.$fullname.'.js');
     File::move($featureDir.'/FEATURE.php.stub', $php = $featureDir.'/'.$fullname.'.php');
     File::move($featureDir.'/Test.php.stub', $test = $featureDir.'/Test.php');
 

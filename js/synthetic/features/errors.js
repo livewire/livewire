@@ -22,7 +22,7 @@ export default function () {
         }
     })
 
-    on('effects', (target, effects, path) => {
+    on('effects', (target, effects) => {
         let errors = effects['errors'] || []
 
         target.__errors.state = errors

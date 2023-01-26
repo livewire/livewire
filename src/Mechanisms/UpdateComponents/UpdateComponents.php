@@ -42,7 +42,7 @@ class UpdateComponents
                 $diff = $target['diff'];
                 $calls = $target['calls'];
 
-                $response = $this->update($snapshot, $diff, $calls);
+                $response = app($this::class)->update($snapshot, $diff, $calls);
 
                 unset($response['target']);
 
@@ -133,9 +133,9 @@ class UpdateComponents
     }
 
     function dehydrate($root, $target, &$effects, $initial, $annotationsFromParent = [], $path = '') {
-        $synth = $this->synth($target);
+        if (Utils::isNotAPrimitive($target)) {
+            $synth = $this->synth($target);
 
-        if ($synth) {
             $context = new DehydrationContext($root, $target, $initial, $annotationsFromParent, $path);
 
             $finish = trigger('dehydrate', $synth, $target, $context);
@@ -153,9 +153,7 @@ class UpdateComponents
             $meta['s'] = $synth::getKey();
 
             foreach ($iEffects as $key => $effect) {
-                if (! isset($effects[$path])) $effects[$path] = [];
-
-                $effects[$path][$key] = $effect;
+                $effects[$key] = $effect;
             }
 
             if (is_array($value)) {
@@ -232,7 +230,9 @@ class UpdateComponents
 
         $property = $segments[$index];
 
-        assert($synth = $this->synth($target));
+        $synth = $this->synth($target);
+
+        assert($synth);
 
         if ($isLastSegment) {
             $toSet = $leafValue;
@@ -251,7 +251,7 @@ class UpdateComponents
             $toSet = $this->recursivelySetValue($root, $propertyTarget, $leafValue, $segments, $index + 1);
         }
 
-        $method = $leafValue === '__rm__' ? 'unset' : 'set';
+        $method = ($leafValue === '__rm__' && $isLastSegment) ? 'unset' : 'set';
 
         $pathThusFar = collect($segments)->slice(0, $index + 1)->join('.');
         $fullPath = collect($segments)->join('.');
@@ -262,8 +262,6 @@ class UpdateComponents
     }
 
     protected function makeCalls($root, $calls, &$effects) {
-        $returns = [];
-
         foreach ($calls as $call) {
             $method = $call['method'];
             $params = $call['params'];
@@ -272,9 +270,7 @@ class UpdateComponents
             $target = $this->dataGet($root, $path);
 
             $addEffect = function ($key, $value) use (&$effects, $path) {
-                if (! isset($effects[$path])) $effects[$path] = [];
-
-                $effects[$path][$key] = $value;
+                $effects[$key] = $value;
             };
 
             $synth = $this->synth($target);
@@ -289,10 +285,10 @@ class UpdateComponents
 
             $return = $finish($return);
 
-            $return !== null && $addEffect('return', $return);
+            if (! isset($effects['returns'])) $effects['returns'] = [];
+            if (! isset($effects['returns'][$path])) $effects['returns'][$path] = [];
+            $effects['returns'][$path][] = $return;
         }
-
-        return $returns;
     }
 
     protected function &dataGet(&$target, $key) {
@@ -319,19 +315,33 @@ class UpdateComponents
     }
 
     function getSynthesizerByKey($key) {
+        $forReturn = null;
+
         foreach ($this->synthesizers as $synth) {
             if ($synth::getKey() === $key) {
-                return new $synth;
+                $forReturn = new $synth;
+                break;
             }
         }
+
+        throw_unless($forReturn, new \Exception('No synthesizer found for key: "'.$key.'"'));
+
+        return $forReturn;
     }
 
     function getSynthesizerByTarget($target) {
+        $forReturn = null;
+
         foreach ($this->synthesizers as $synth) {
             if ($synth::match($target)) {
-                return new $synth;
+                $forReturn = new $synth;
+                break;
             }
         }
+
+        throw_unless($forReturn, new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']'));
+
+        return $forReturn;
     }
 
     function getParentAndChildKey($path) {

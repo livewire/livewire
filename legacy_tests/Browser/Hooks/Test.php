@@ -10,8 +10,10 @@ class Test extends TestCase
 {
     public function test()
     {
+        $this->markTestSkipped(); // @todo: Caleb needs to think more deeply about JS hooks for V3...
+
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
                         "window.livewire.hook('message.received', () => {

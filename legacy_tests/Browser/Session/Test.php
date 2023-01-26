@@ -11,7 +11,7 @@ class Test extends TestCase
     public function it_shows_page_expired_dialog_when_session_has_expired()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->click('@regenerateSession')
                 ->click('@refresh')
                 // Wait for Livewire to respond, but dusk helper won't
@@ -28,7 +28,7 @@ class Test extends TestCase
     public function it_shows_custom_hook_dialog_when_session_has_expired()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class, '?useCustomPageExpiredHook=true')
+            $this->visitLivewireComponent($browser, Component::class, '?useCustomPageExpiredHook=true')
                 ->waitForLivewire()->click('@regenerateSession')
                 ->click('@refresh')
                 // Wait for Livewire to respond, but dusk helper won't

@@ -15,7 +15,7 @@ class SelectWithIncorrectSelectedOnOption extends BaseComponent
         return <<<'HTML'
 <div>
     <h1 dusk="output">{{ $selectedOption }}</h1>
-    <select wire:model="selectedOption" dusk="select-input">
+    <select wire:model.live="selectedOption" dusk="select-input">
         <option value="1" @if(! $showOtherSelected && $selectedOption == '1') selected @endif>Option 1</option>
         <option value="2" @if(! $showOtherSelected && $selectedOption == '2') selected @endif>Option 2</option>
         <option value="3" @if(! $showOtherSelected && $selectedOption == '3') selected @endif>Option 3</option>

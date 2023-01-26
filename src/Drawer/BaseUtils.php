@@ -10,11 +10,18 @@ class BaseUtils
             && isset($payload[1]['s']);
     }
 
+    static function isNotAPrimitive($target) {
+        return
+            ! is_numeric($target) &&
+            ! is_string($target) &&
+            ! is_bool($target) &&
+            ! is_null($target);
+    }
+
     static function getPublicPropertiesDefinedOnSubclass($target) {
         return static::getPublicProperties($target, function ($property) use ($target) {
-            // dump($property->getDeclaringClass()->getName(), $target::class, $property);
-            // Filter out any properties from parents...
-            return $property->getDeclaringClass()->getName() === $target::class;
+            // Filter out any properties from the first-party Component class...
+            return $property->getDeclaringClass()->getName() !== \Livewire\Component::class;
         });
     }
 

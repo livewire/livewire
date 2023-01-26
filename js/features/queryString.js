@@ -1,60 +1,59 @@
-import { trigger, on } from "../events";
-import { closestComponent } from "../lifecycle";
-import { dataGet, dataSet } from "../utils";
+import { on } from '@synthetic/events'
+import { dataGet, dataSet } from '@synthetic/utils'
+import Alpine from 'alpinejs'
+import { track } from '@alpinejs/history'
 
-export default function () {
-    on('component.initialized', component => {
-        let queryString = component.effects.queryString
-        if (! queryString) return
+on('component.init', component => {
+    let effects = component.synthetic.effects
+    let queryString = effects['queryString']
 
-        Object.entries(queryString).forEach(([key, value]) => {
-            if (isNumeric(key)) {
-                key = value
+    if (! queryString) return
 
-                // Handle normal queryString key.
-                Alpine.persist(key, {
-                    get() {
-                        return dataGet(component.dataReactive, key)
-                    },
-                    set(value) {
-                        dataSet(component.dataReactive, key, value)
-                    },
-                }, {
-                    getItem(key) {
-                        let value = getFromQueryString(key)
+    Object.entries(queryString).forEach(([key, value]) => {
+        let { name, as, except, use, alwaysShow } = normalizeQueryStringEntry(key, value)
 
-                        return JSON.stringify(value)
-                    },
-                    setItem(key, value) {
-                        pushToQueryString(key, JSON.parse(value))
-                    }
+        let initialValue = dataGet(component.synthetic.ephemeral, name)
+
+        let { initial, replace, push, pop } = track(as, initialValue, alwaysShow)
+
+        if (use === 'replace') {
+            Alpine.effect(() => {
+                replace(dataGet(component.synthetic.reactive, name))
+            })
+        } else if (use === 'push') {
+            on('target.request', (target, payload) => {
+                if (target !== Alpine.raw(component.synthetic)) return // @todo: get rid of Alpine.raw by making .synthetic NOT a proxy
+
+                return () => {
+                    let diff = payload.diff
+                    let dirty = target.effects.dirty || []
+
+                    if (! Object.keys(payload.diff).includes(name) && ! dirty.some(i => i.startsWith(name))) return
+
+                    push(dataGet(component.synthetic.ephemeral, name))
+                }
+            })
+
+            pop(async newValue => {
+                await component.$wire.set(name, newValue)
+
+                // @todo: this is the absolute worst thing ever I'm so sorry this needs to be refactored stat:
+                document.querySelectorAll('input').forEach(el => {
+                    el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get())
                 })
-            } else {
-                // Handle queryString with exclude/default/as config.
-            }
-        })
+            })
+        }
     })
-}
+})
 
-function isNumeric(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
-}
+function normalizeQueryStringEntry(key, value) {
+    let defaults = { except: null, use: 'replace', alwaysShow: false }
 
-function getFromQueryString(key) {
-    let url = new URL(window.location.href)
+    if (typeof value === 'string') {
+        return {...defaults, name: value, as: value }
+    } else {
+        let fullerDefaults = {...defaults, name: key, as: key }
 
-    let value = url.searchParams.get(key)
-
-    if (value === 'true') return true
-    if (value === 'false') return false
-
-    return value
-}
-
-function pushToQueryString(key, value) {
-    let url = new URL(window.location.href)
-
-    url.searchParams.set(key, value)
-
-    window.history.replaceState({}, '', url.toString())
+        return {...fullerDefaults, ...value }
+    }
 }

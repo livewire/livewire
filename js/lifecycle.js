@@ -1,22 +1,26 @@
-import bootFeatures from './features'
 import { findComponent, hasComponent, releaseComponent, resurrect, state, storeComponent } from './state'
+import { monkeyPatchDomSetAttributeToAllowAtSymbols } from 'utils'
 import { synthetic, trigger } from './synthetic/index'
 import { Component } from './component'
-import Alpine from 'alpinejs'
 import morph from '@alpinejs/morph'
+import history from '@alpinejs/history'
+import Alpine from 'alpinejs'
 
-export function start(options = {}) {
-    let enabledFeatures = options.features || []
-
-    bootFeatures(enabledFeatures)
+export function start() {
+    monkeyPatchDomSetAttributeToAllowAtSymbols()
 
     Alpine.interceptInit(Alpine.skipDuringClone(el => {
         initElement(el)
     }))
 
     Alpine.plugin(morph)
+    Alpine.plugin(history)
+
+    Alpine.addRootSelector(() => '[wire\\:id]')
 
     Alpine.start()
+
+    setTimeout(() => window.Livewire.initialRenderIsFinished = true)
 }
 
 function initElement(el) {
@@ -24,13 +28,13 @@ function initElement(el) {
         let id = el.getAttribute('wire:id')
         let initialData = JSON.parse(el.getAttribute('wire:initial-data'))
 
-        if (! initialData) {
-            initialData = resurrect(id)
-        }
+        if (! initialData) initialData = resurrect(id)
 
         let component = new Component(synthetic(initialData).__target, el, id)
 
         el.__livewire = component
+
+        trigger('component.init', component)
 
         // This makes anything that would normally be available on $wire
         // available directly without needing to prefix "$wire.".
@@ -43,8 +47,6 @@ function initElement(el) {
         })
 
         storeComponent(component.id, component)
-
-        trigger('component.initialized', component)
     }
 
     let component

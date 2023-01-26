@@ -11,7 +11,7 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 /**
                  * If a value is changed server-side, the input updates.
                  */
@@ -24,6 +24,7 @@ class Test extends TestCase
                  */
                 ->assertValue('@bar.input', '')
                 ->type('@bar.input', 'changed')
+                ->pause(250)
                 ->waitForLivewire()->click('@bar.button')
                 ->assertValue('@bar.input', '')
             ;

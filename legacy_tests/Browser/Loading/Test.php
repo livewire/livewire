@@ -11,7 +11,7 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@button');
@@ -48,7 +48,7 @@ class Test extends TestCase
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@button');
 
-                    $browser->pause(201);
+                    $browser->pause(225);
 
                     $browser->assertVisible('@show-w-delay');
                 })
@@ -117,7 +117,7 @@ class Test extends TestCase
     public function test_different_display_properties_when_loading()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, CustomDisplayProperty::class)
+            $this->visitLivewireComponent($browser, CustomDisplayProperty::class)
                 ->assertScript('getComputedStyle(document.querySelector(\'[dusk="default"]\')).display', 'none')
                 ->assertScript('getComputedStyle(document.querySelector(\'[dusk="inline-block"]\')).display', 'none')
                 ->assertScript('getComputedStyle(document.querySelector(\'[dusk="inline"]\')).display', 'none')
@@ -145,7 +145,7 @@ class Test extends TestCase
     public function test_different_delay_durations()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, ComponentWithLoadingDelays::class)
+            $this->visitLivewireComponent($browser, ComponentWithLoadingDelays::class)
                 ->assertNotVisible('@delay-shortest')
                 ->waitForLivewire(function (Browser $browser) {
                     $browser->click('@load')

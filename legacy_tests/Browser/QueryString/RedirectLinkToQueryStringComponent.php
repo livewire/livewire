@@ -12,7 +12,7 @@ class RedirectLinkToQueryStringComponent extends BaseComponent
     {
         return <<< 'HTML'
 <div>
-    <a dusk="link" href="{{ url('/livewire-dusk/Tests%5CBrowser%5CQueryString%5CNestedComponent') }}">Link</a>
+    <a dusk="link" href="{{ url('/livewire-dusk/LegacyTests%5CBrowser%5CQueryString%5CNestedComponent') }}">Link</a>
 </div>
 HTML;
     }

@@ -14,7 +14,7 @@ class Test extends TestCase
         $this->onlyRunOnChrome();
 
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->click('@download')
                 ->waitUsing(5, 75, function () {
                     return Storage::disk('dusk-downloads')->exists('download-target.txt');
@@ -25,7 +25,7 @@ class Test extends TestCase
                 Storage::disk('dusk-downloads')->get('download-target.txt')
             );
 
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->click('@download-quoted-disposition-filename')
                 ->waitUsing(5, 75, function () {
                     return Storage::disk('dusk-downloads')->exists('download & target.txt');
@@ -39,7 +39,7 @@ class Test extends TestCase
             /**
              * Trigger download with a response return.
              */
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->click('@download-from-response')
                 ->waitUsing(5, 75, function () {
                     return Storage::disk('dusk-downloads')->exists('download-target2.txt');
@@ -50,7 +50,7 @@ class Test extends TestCase
                 Storage::disk('dusk-downloads')->get('download-target2.txt')
             );
 
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->click('@download-from-response-quoted-disposition-filename')
                 ->waitUsing(5, 75, function () {
                     return Storage::disk('dusk-downloads')->exists('download & target2.txt');
@@ -71,11 +71,13 @@ class Test extends TestCase
         $this->browse(function ($browser) {
 
             // Download with content-type header.
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
                         })",
                     ]);
                 })
@@ -93,11 +95,13 @@ class Test extends TestCase
             );
 
             // Download with null content-type header.
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
                         })",
                     ]);
                 })
@@ -118,12 +122,14 @@ class Test extends TestCase
              * Download an untitled file with "invalid" content-type header.
              * It mimics this test: dusk="download-an-untitled-file-with-content-type-header"
              */
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                        document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
-                    })",
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
+                        })",
                     ]);
                 })
                 ->waitForLivewire()->click('@download-an-untitled-file-with-invalid-content-type-header')
@@ -142,11 +148,13 @@ class Test extends TestCase
             );
 
             // Download an untitled file with content-type header.
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
                         })",
                     ]);
                 })
@@ -167,11 +175,13 @@ class Test extends TestCase
              * Trigger download with a response return.
              */
 
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.livewire.hook('message.received', (message, component) => {
-                            document.querySelector('[dusk=\"content-type\"]').value = message.response.effects.download.contentType;
+                        "window.Livewire.hook('target.request', (target) => {
+                            return () => {
+                                document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
+                            }
                         })",
                     ]);
                 })
@@ -196,7 +206,7 @@ class Test extends TestCase
         $this->onlyRunOnChrome();
 
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->click('@emit-download')
                 ->waitUsing(5, 75, function () {
                     return Storage::disk('dusk-downloads')->exists('download-target.txt');

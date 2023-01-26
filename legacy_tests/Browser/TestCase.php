@@ -37,11 +37,29 @@ class TestCase extends BaseTestCase
     public static $useSafari = false;
     public static $useAlpineV3 = false;
 
-    function livewireVisit($browser, $class, $queryString = '')
+    function visitLivewireComponent($browser, $classes, $queryString = '')
     {
-        $url = '/livewire-dusk/'.urlencode($class).$queryString;
+        $classes = (array) $classes;
+
+        $this->registerComponentForNextTest($classes);
+
+        $url = '/livewire-dusk/'.urlencode(head($classes)).$queryString;
 
         return $browser->visit($url)->waitForLivewireToLoad();
+    }
+
+    function registerComponentForNextTest($components)
+    {
+        $tmp = __DIR__ . '/_runtime_components.json';
+
+        file_put_contents($tmp, json_encode($components, JSON_PRETTY_PRINT));
+    }
+
+    function wipeRuntimeComponentRegistration()
+    {
+        $tmp = __DIR__ . '/_runtime_components.json';
+
+        file_exists($tmp) && unlink($tmp);
     }
 
     public function setUp(): void
@@ -50,7 +68,7 @@ class TestCase extends BaseTestCase
             DuskOptions::withoutUI();
         }
 
-        Browser::mixin(new DuskBrowserMacros);
+        Browser::mixin(new \Tests\DuskBrowserMacros);
 
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();
@@ -67,51 +85,65 @@ class TestCase extends BaseTestCase
         $isUsingAlpineV3 = static::$useAlpineV3;
 
         $this->tweakApplication(function () use ($isUsingAlpineV3) {
-            // Autoload all Livewire components in this test suite.
-            collect(File::allFiles(__DIR__))
-                ->map(function ($file) {
-                    return 'Tests\\Browser\\'.str($file->getRelativePathname())->before('.php')->replace('/', '\\');
-                })
-                ->filter(function ($computedClassName) {
-                    return class_exists($computedClassName);
-                })
-                ->filter(function ($class) {
-                    return is_subclass_of($class, Component::class);
-                })->each(function ($componentClass) {
-                    app('livewire')->component($componentClass);
-                });
+            $tmp = __DIR__ . '/_runtime_components.json';
+            if (file_exists($tmp)) {
+                // We can't just "require" this file because of race conditions...
+                $components = json_decode(file_get_contents($tmp));
 
-            Route::get(
-                '/livewire-dusk/tests/browser/sync-history-without-mount/{id}',
-                \LegacyTests\Browser\SyncHistory\ComponentWithMount::class
-            )->middleware('web')->name('sync-history-without-mount');
+                foreach ($components as $name => $class) {
+                    if (is_numeric($name)) {
+                        app('livewire')->component($class);
+                    } else {
+                        app('livewire')->component($name, $class);
+                    }
+                }
+            }
 
-            // This needs to be registered for Dusk to test the route-parameter binding
-            // See: \LegacyTests\Browser\SyncHistory\Test.php
-            Route::get(
-                '/livewire-dusk/tests/browser/sync-history/{step}',
-                \LegacyTests\Browser\SyncHistory\Component::class
-            )->middleware('web')->name('sync-history');
+            // // Autoload all Livewire components in this test suite.
+            // collect(File::allFiles(__DIR__))
+            //     ->map(function ($file) {
+            //         return 'Tests\\Browser\\'.str($file->getRelativePathname())->before('.php')->replace('/', '\\');
+            //     })
+            //     ->filter(function ($computedClassName) {
+            //         return class_exists($computedClassName);
+            //     })
+            //     ->filter(function ($class) {
+            //         return is_subclass_of($class, Component::class);
+            //     })->each(function ($componentClass) {
+            //         app('livewire')->component($componentClass);
+            //     });
 
-            Route::get(
-                '/livewire-dusk/tests/browser/sync-history-without-query-string/{step}',
-                \LegacyTests\Browser\SyncHistory\ComponentWithoutQueryString::class
-            )->middleware('web')->name('sync-history-without-query-string');
+            // Route::get(
+            //     '/livewire-dusk/tests/browser/sync-history-without-mount/{id}',
+            //     \LegacyTests\Browser\SyncHistory\ComponentWithMount::class
+            // )->middleware('web')->name('sync-history-without-mount');
 
-            Route::get(
-                '/livewire-dusk/tests/browser/sync-history-with-optional-parameter/{step?}',
-                \LegacyTests\Browser\SyncHistory\ComponentWithOptionalParameter::class
-            )->middleware('web')->name('sync-history-with-optional-parameter');
+            // // This needs to be registered for Dusk to test the route-parameter binding
+            // // See: \LegacyTests\Browser\SyncHistory\Test.php
+            // Route::get(
+            //     '/livewire-dusk/tests/browser/sync-history/{step}',
+            //     \LegacyTests\Browser\SyncHistory\Component::class
+            // )->middleware('web')->name('sync-history');
 
-            // The following two routes belong together. The first one serves a view which in return
-            // loads and renders a component dynamically. There may not be a POST route for the first one.
-            Route::get('/livewire-dusk/tests/browser/load-dynamic-component', function () {
-                return View::file(__DIR__ . '/DynamicComponentLoading/view-load-dynamic-component.blade.php');
-            })->middleware('web')->name('load-dynamic-component');
+            // Route::get(
+            //     '/livewire-dusk/tests/browser/sync-history-without-query-string/{step}',
+            //     \LegacyTests\Browser\SyncHistory\ComponentWithoutQueryString::class
+            // )->middleware('web')->name('sync-history-without-query-string');
 
-            Route::post('/livewire-dusk/tests/browser/dynamic-component', function () {
-                return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
-            })->middleware('web')->name('dynamic-component');
+            // Route::get(
+            //     '/livewire-dusk/tests/browser/sync-history-with-optional-parameter/{step?}',
+            //     \LegacyTests\Browser\SyncHistory\ComponentWithOptionalParameter::class
+            // )->middleware('web')->name('sync-history-with-optional-parameter');
+
+            // // The following two routes belong together. The first one serves a view which in return
+            // // loads and renders a component dynamically. There may not be a POST route for the first one.
+            // Route::get('/livewire-dusk/tests/browser/load-dynamic-component', function () {
+            //     return View::file(__DIR__ . '/DynamicComponentLoading/view-load-dynamic-component.blade.php');
+            // })->middleware('web')->name('load-dynamic-component');
+
+            // Route::post('/livewire-dusk/tests/browser/dynamic-component', function () {
+            //     return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
+            // })->middleware('web')->name('dynamic-component');
 
             Route::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
@@ -119,31 +151,31 @@ class TestCase extends BaseTestCase
                 return app()->call(new $class);
             })->middleware('web', AllowListedMiddleware::class, BlockListedMiddleware::class);
 
-            Route::get('/force-login/{userId}', function ($userId) {
-                Auth::login(User::find($userId));
+            // Route::get('/force-login/{userId}', function ($userId) {
+            //     Auth::login(User::find($userId));
 
-                return 'You\'re logged in.';
-            })->middleware('web');
+            //     return 'You\'re logged in.';
+            // })->middleware('web');
 
-            Route::get('/force-logout', function () {
-                Auth::logout();
+            // Route::get('/force-logout', function () {
+            //     Auth::logout();
 
-                return 'You\'re logged out.';
-            })->middleware('web');
+            //     return 'You\'re logged out.';
+            // })->middleware('web');
 
-            Route::get('/with-authentication/livewire-dusk/{component}', function ($component) {
-                $class = urldecode($component);
+            // Route::get('/with-authentication/livewire-dusk/{component}', function ($component) {
+            //     $class = urldecode($component);
 
-                return app()->call(new $class);
-            })->middleware(['web', 'auth']);
+            //     return app()->call(new $class);
+            // })->middleware(['web', 'auth']);
 
-            Gate::policy(Post::class, PostPolicy::class);
+            // Gate::policy(Post::class, PostPolicy::class);
 
-            Route::get('/with-authorization/{post}/livewire-dusk/{component}', function (Post $post, $component) {
-                $class = urldecode($component);
+            // Route::get('/with-authorization/{post}/livewire-dusk/{component}', function (Post $post, $component) {
+            //     $class = urldecode($component);
 
-                return app()->call(new $class);
-            })->middleware(['web', 'auth', 'can:update,post']);
+            //     return app()->call(new $class);
+            // })->middleware(['web', 'auth', 'can:update,post']);
 
             Route::middleware('web')->get('/entangle-turbo', function () {
                 return view('turbo', [
@@ -151,23 +183,23 @@ class TestCase extends BaseTestCase
                 ]);
             })->name('entangle-turbo');
 
-            app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
+            // app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
-            app('config')->set('view.paths', [
-                __DIR__.'/views',
-                resource_path('views'),
-            ]);
+            // app('config')->set('view.paths', [
+            //     __DIR__.'/views',
+            //     resource_path('views'),
+            // ]);
 
             config()->set('app.debug', true);
 
-            Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
-
-            app('config')->set('use_alpine_v3', $isUsingAlpineV3);
+            // Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
         });
     }
 
     protected function tearDown(): void
     {
+        $this->wipeRuntimeComponentRegistration();
+
         $this->removeApplicationTweaks();
 
         parent::tearDown();
@@ -185,15 +217,12 @@ class TestCase extends BaseTestCase
         File::cleanDirectory(__DIR__.'/downloads');
         File::deleteDirectory($this->livewireClassesPath());
         File::delete(app()->bootstrapPath('cache/livewire-components.php'));
-
-
     }
 
     protected function getPackageProviders($app)
     {
         return [
             ServiceProvider::class,
-            SyntheticServiceProvider::class,
         ];
     }
 
@@ -223,7 +252,7 @@ class TestCase extends BaseTestCase
 
     protected function resolveApplicationHttpKernel($app)
     {
-        $app->singleton('Illuminate\Contracts\Http\Kernel', 'Tests\HttpKernel');
+        $app->singleton('Illuminate\Contracts\Http\Kernel', 'LegacyTests\HttpKernel');
     }
 
     protected function livewireClassesPath($path = '')

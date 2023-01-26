@@ -11,7 +11,7 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 /**
                  * Has initial value.
                  */
@@ -35,7 +35,7 @@ class Test extends TestCase
                  */
                 ->waitForLivewire(function ($b) {
                     $b->click('@foo')
-                    ->tap(function ($b) { $b->script('window.livewire.first().set("foo", "changed-again")'); });
+                    ->tap(function ($b) { $b->script('window.Livewire.first().updateFooTo("changed-again")'); });
                 })
                 ->assertInputValue('@foo', 'changed-again')
 
@@ -44,7 +44,7 @@ class Test extends TestCase
                  */
                 ->waitForLivewire(function ($b) {
                     $b->click('@foo')
-                    ->tap(function ($b) { $b->script('window.livewire.first().sync("foo", "changed-alot")'); });
+                    ->tap(function ($b) { $b->script('window.Livewire.first().set("foo", "changed-alot")'); });
                 })
                 ->assertSeeIn('@foo.output', 'changed-alot')
                 ->assertInputValue('@foo', 'changed-again')
@@ -84,7 +84,7 @@ class Test extends TestCase
     public function it_provides_a_nice_warning_in_console_for_an_empty_wire_model()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, EmptyWireModelComponent::class)
+            $this->visitLivewireComponent($browser, EmptyWireModelComponent::class)
                 ->assertConsoleLogHasWarning('Livewire: [wire:model] is missing a value.')
                 ;
         });

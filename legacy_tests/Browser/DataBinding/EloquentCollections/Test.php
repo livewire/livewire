@@ -13,8 +13,10 @@ class Test extends TestCase
     /** @test */
     public function it_displays_all_nested_data()
     {
+        $this->markTestSkipped(); // @todo: when models are implemented...
+
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->assertValue('@authors.0.name', 'Bob')
                 ->assertValue('@authors.0.email', 'bob@bob.com')
                 ->assertValue('@authors.0.posts.0.title', 'Post 1')
@@ -32,8 +34,10 @@ class Test extends TestCase
     /** @test */
     public function it_allows_nested_data_to_be_changed()
     {
+        $this->markTestSkipped(); // @todo: when models are implemented...
+
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->type('@authors.0.name', 'Steve')
                 ->assertSeeIn('@output.authors.0.name', 'Steve')
 

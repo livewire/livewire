@@ -16,10 +16,10 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
         return parent::get($path, $data);
     }
 
-    protected function evaluatePath($path, $data)
+    protected function evaluatePath($__path, $__data)
     {
         if (! ExtendBlade::isRenderingLivewireComponent()) {
-            return parent::evaluatePath($path, $data);
+            return parent::evaluatePath($__path, $__data);
         }
 
         $obLevel = ob_get_level();
@@ -32,9 +32,9 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
         try {
             $component = ExtendBlade::currentRendering();
 
-            \Closure::bind(function () use ($path, $data) {
-                extract($data, EXTR_SKIP);
-                include $path;
+            \Closure::bind(function () use ($__path, $__data) {
+                extract($__data, EXTR_SKIP);
+                include $__path;
             }, $component, $component)();
         } catch (\Exception $e) {
             $this->handleViewException($e, $obLevel);

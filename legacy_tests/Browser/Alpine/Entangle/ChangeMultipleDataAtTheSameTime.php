@@ -26,8 +26,8 @@ class ChangeMultipleDataAtTheSameTime extends BaseComponent
 <<<'HTML'
 <div>
     <div x-data="{
-        alpineList: @entangle('livewireList'),
-        alpineSearch: @entangle('livewireSearch')
+        alpineList: @entangle('livewireList').live,
+        alpineSearch: @entangle('livewireSearch').live
     }">
         <div>
             <h1>Javascript show:</h1>

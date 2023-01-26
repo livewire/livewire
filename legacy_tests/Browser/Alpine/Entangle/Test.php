@@ -12,7 +12,9 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, [
+                Component::class,
+            ])
                 /**
                  * Can mutate an array in Alpine and reflect in Livewire.
                  */
@@ -40,7 +42,7 @@ class Test extends TestCase
     public function test_watcher_is_fired_when_entangled_update_changes_other_entangled_data()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, ChangeMultipleDataAtTheSameTime::class)
+            $this->visitLivewireComponent($browser, ChangeMultipleDataAtTheSameTime::class)
                 ->assertSeeIn('@output.alpine', 1)
                 ->assertSeeIn('@output.alpine', 2)
                 ->assertSeeIn('@output.alpine', 3)
@@ -65,7 +67,7 @@ class Test extends TestCase
     public function test_watcher_is_fired_each_time_entangled_data_changes()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, ToggleEntangled::class)
+            $this->visitLivewireComponent($browser, ToggleEntangled::class)
                 ->assertSeeIn('@output.alpine', 'false')
                 ->assertSeeIn('@output.livewire', 'false')
                 ->waitForLivewire()->click('@toggle')
@@ -81,7 +83,7 @@ class Test extends TestCase
     public function test_dot_defer()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, DeferDataUpdates::class)
+            $this->visitLivewireComponent($browser, DeferDataUpdates::class)
                 ->type('@input', 's')
                 ->waitForLivewire()->click('@submit')
                 ->assertSeeIn('@output.alpine', 's')
@@ -97,7 +99,7 @@ class Test extends TestCase
     public function test_dot_defer_with_nested_data()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, DeferArrayDataUpdates::class)
+            $this->visitLivewireComponent($browser, DeferArrayDataUpdates::class)
                 ->assertSeeIn('@output.alpine', 'guest')
                 ->assertSeeIn('@output.livewire', 'guest')
                 ->select('@role-select', 'user')
@@ -113,7 +115,7 @@ class Test extends TestCase
     public function test_entangle_does_not_throw_error_after_nested_array_removed()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, EntangleNestedArray::class)
+            $this->visitLivewireComponent($browser, EntangleNestedArray::class)
                 ->waitForLivewire()->click('@add')
                 ->waitForLivewire()->click('@add')
                 ->assertSeeIn('@output', "Item0")
@@ -128,7 +130,7 @@ class Test extends TestCase
     public function test_entangle_does_not_throw_wire_undefined_error_after_dynamically_adding_child_component()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, EntangleNestedParentComponent::class)
+            $this->visitLivewireComponent($browser, [EntangleNestedParentComponent::class, EntangleNestedChildComponent::class])
                 ->assertSeeIn('@livewire-output-test1', "test1")
                 ->assertSeeIn('@alpine-output-test1', "test1")
                 ->waitForLivewire()->click('@add')
@@ -141,7 +143,7 @@ class Test extends TestCase
     public function test_entangle_equality_check_ensures_alpine_does_not_update_livewire()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, EntangleResponseCheck::class)
+            $this->visitLivewireComponent($browser, EntangleResponseCheck::class)
                 ->assertSeeIn('@output', "false")
                 ->waitForLivewire()->click('@add')
                 ->assertSeeIn('@output', "false")
@@ -152,7 +154,7 @@ class Test extends TestCase
     public function test_entangle_watchers_fire_on_consecutive_changes()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, EntangleConsecutiveActions::class)
+            $this->visitLivewireComponent($browser, EntangleConsecutiveActions::class)
 
                 // Trigger some consecutive alpine changes
                 ->waitForLivewire()->click('@alpineAdd')
@@ -163,7 +165,7 @@ class Test extends TestCase
                 ->assertDontSeeIn('@livewireOutput', 1)
                 ->assertDontSeeIn('@livewireOutput', 2)
 
-                ->waitForLivewire()->click('@alpineAdd')
+                ->waitForLivewire()->click('@alpineAdd' )
                 ->assertSeeIn('@alpineOutput', 0)
                 ->assertSeeIn('@alpineOutput', 1)
                 ->assertDontSeeIn('@alpineOutput', 2)

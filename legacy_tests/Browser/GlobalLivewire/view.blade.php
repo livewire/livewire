@@ -9,7 +9,7 @@
     <script>
         window.isLoaded = false
         window.loadEventWasFired = false
-        window.livewire.onLoad(() => { window.isLoaded = true })
+        window.Livewire.onLoad(() => { window.isLoaded = true })
         document.addEventListener("livewire:load", function(event) {
             window.loadEventWasFired = true
         });

@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportTraits;
 
+use function Livewire\before;
 use function Livewire\on;
 use function Livewire\wrap;
 

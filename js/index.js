@@ -1,50 +1,40 @@
-import { first } from './state'
+import { synthetic, on as hook } from './synthetic/index'
+import { emit, on } from './features/events'
+import { directive } from './directives'
+import { find, first } from './state'
 import { start } from './lifecycle'
-import { synthetic, on } from './synthetic/index'
+import Alpine from 'alpinejs'
 
 /**
  * This is the single entrypoint into "synthetic". Users can pass
  * either a full snapshot, rendered on the backend, or they can
  * pass a string identifier and request a snapshot via fetch.
  */
- window.synthetic = synthetic
+window.synthetic = synthetic
 
- // @todo - do better. Currently this is here for Laravel dusk tests (waitForLivewire macro).
- window.syntheticOn = on
-
+// Livewire global...
 export let Livewire = {
+    directive,
     start,
-    // @todo: legacy name, offer "on" as the new name?
-    hook: on,
-    on,
     first,
+    find,
+    hook,
+    emit,
+    on,
 }
 
-if (! window.Livewire) window.Livewire = Livewire
+if (window.Livewire) console.warn('Detected multiple instances of Livewire running')
+if (window.Alpine) console.warn('Detected multiple instances of Alpine running')
 
-function monkeyPatchDomSetAttributeToAllowAtSymbols() {
-    // Because morphdom may add attributes to elements containing "@" symbols
-    // like in the case of an Alpine `@click` directive, we have to patch
-    // the standard Element.setAttribute method to allow this to work.
-    let original = Element.prototype.setAttribute
+// Register features...
+import './features/index'
 
-    let hostDiv = document.createElement('div')
+// Register directives...
+import './directives/index'
 
-    Element.prototype.setAttribute = function newSetAttribute(name, value) {
-        if (! name.includes('@')) {
-            return original.call(this, name, value)
-        }
+// Make globals...
+window.Livewire = Livewire
+window.Alpine = Alpine
 
-        hostDiv.innerHTML = `<span ${name}="${value}"></span>`
-
-        let attr = hostDiv.firstElementChild.getAttributeNode(name)
-
-        hostDiv.firstElementChild.removeAttributeNode(attr)
-
-        this.setAttributeNode(attr)
-    }
-}
-
-monkeyPatchDomSetAttributeToAllowAtSymbols()
-
+// Start Livewire...
 Livewire.start()

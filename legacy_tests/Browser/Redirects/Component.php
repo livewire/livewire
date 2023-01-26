@@ -9,7 +9,7 @@ use Livewire\Livewire;
 class Component extends BaseComponent
 {
     public $message = 'foo';
-    public $foo;
+    public $foo = 'hey';
 
     public $disableBackButtonCache = true;
 
@@ -23,10 +23,10 @@ class Component extends BaseComponent
 
     public function mount()
     {
-        $this->foo = Foo::first();
+        // $this->foo = Foo::first();
 
         // Set "disable back button cache" flag based off of query string
-        $this->disableBackButtonCache ? Livewire::disableBackButtonCache() : Livewire::enableBackButtonCache();
+        // $this->disableBackButtonCache ? Livewire::disableBackButtonCache() : Livewire::enableBackButtonCache();
     }
 
     public function flashMessage()
@@ -38,19 +38,20 @@ class Component extends BaseComponent
     {
         session()->flash('message', 'some-message');
 
-        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent');
+        return $this->redirect('/livewire-dusk/LegacyTests%5CBrowser%5CRedirects%5CComponent');
     }
 
     public function redirectPage()
     {
         $this->message = 'bar';
 
-        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc');
+        return $this->redirect('/livewire-dusk/LegacyTests%5CBrowser%5CRedirects%5CComponent?abc');
     }
 
     public function redirectPageWithModel()
     {
-        $this->foo->update(['name' => 'bar']);
+        // $this->foo->update(['name' => 'bar']);
+        $this->foo = 'bar';
 
         return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc&disableBackButtonCache='. ($this->disableBackButtonCache ? 'true' : 'false'));
     }

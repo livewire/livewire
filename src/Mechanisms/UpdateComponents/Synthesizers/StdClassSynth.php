@@ -30,13 +30,4 @@ class StdClassSynth extends Synth {
     function set(&$target, $key, $value) {
         $target->$key = $value;
     }
-
-    function methods($target)
-    {
-        return [];
-    }
-
-    function call($target, $method, $params, $addEffect) {
-        //
-    }
 }

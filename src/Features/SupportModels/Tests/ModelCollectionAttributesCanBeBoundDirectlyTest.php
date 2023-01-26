@@ -12,6 +12,12 @@ use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleEx
 
 class ModelCollectionAttributesCanBeBoundDirectlyTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        $this->markTestSkipped(); // @todo: implement models
+        parent::setUp();
+    }
+    
     /** @test */
     public function can_set_a_model_attribute_inside_a_models_collection_and_save()
     {

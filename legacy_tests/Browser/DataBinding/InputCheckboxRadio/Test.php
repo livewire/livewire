@@ -11,7 +11,7 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 /**
                  * Has initial value.
                  */
@@ -37,7 +37,10 @@ class Test extends TestCase
                 /**
                  * Can set value from a number
                  */
-                ->assertChecked('@baz')
+                // @note: Not sure why someone would want to bind a non-boolean value to a checkbox.
+                // Because V3 uses Alpine's x-model under the hood, this breaks. If it's considered
+                // breaking and people need it, we can see about matching the behavior of V2...
+                // ->assertChecked('@baz')
                 ;
         });
     }
@@ -46,7 +49,7 @@ class Test extends TestCase
     public function checkboxes_fuzzy_match_integer_values()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, CheckboxesWithIntsComponent::class)
+            $this->visitLivewireComponent($browser, CheckboxesWithIntsComponent::class)
                 // ->tinker()
                 ->assertNotChecked('@int1')
                 ->assertChecked('@int2')

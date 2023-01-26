@@ -16,7 +16,7 @@ class EmitNestedComponent extends BaseComponent
     </div>
 
     <div x-data>
-        <button dusk="emitTo" @click="$wire.emitTo('tests.browser.alpine.emit.emit-component', 'emit', 'emitTo')">Emit To</button>
+        <button dusk="emitTo" @click="$wire.emitTo('parent', 'emit', 'emitTo')">Emit To</button>
     </div>
 </div>
 HTML;

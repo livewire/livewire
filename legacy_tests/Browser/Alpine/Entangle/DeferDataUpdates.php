@@ -6,12 +6,12 @@ use Livewire\Component as BaseComponent;
 
 class DeferDataUpdates extends BaseComponent
 {
-    public $testing;
+    public $testing = null;
 
     public function render()
     {
         return <<<'HTML'
-<div x-data="{ testing:  @entangle('testing').defer }">
+<div x-data="{ testing:  @entangle('testing') }">
     <input type="text" x-model="testing" dusk="input">
 
     <p>Alpine: <span dusk="output.alpine" x-text="testing"></span></p>

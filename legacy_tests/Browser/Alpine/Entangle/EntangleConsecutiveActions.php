@@ -17,7 +17,7 @@ class EntangleConsecutiveActions extends BaseComponent
     {
         return
 <<<'HTML'
-<div x-data="{ alpineList: @entangle('livewireList') }">
+<div x-data="{ alpineList: @entangle('livewireList').live }">
     <div>Alpine</div>
     <div dusk="alpineOutput">
         <template x-for="(item, key) in alpineList" :key="key">

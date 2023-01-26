@@ -122,7 +122,7 @@ class DuskBrowserMacros
         return function () {
             /** @var \Laravel\Dusk\Browser $this */
             return $this->waitUsing(6, 25, function () {
-                return $this->driver->executeScript("return !! window.Livewire.components.initialRenderIsFinished");
+                return $this->driver->executeScript("return !! window.Livewire.initialRenderIsFinished");
             });
         };
     }
@@ -135,9 +135,13 @@ class DuskBrowserMacros
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.syntheticOn('request', () => { window.duskIsWaitingForLivewireRequest{$id} = true })",
-                "window.syntheticOn('response.success', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
-                "window.syntheticOn('response.failure', () => { delete window.duskIsWaitingForLivewireRequest{$id} })",
+                "window.Livewire.hook('request', () => {
+                    window.duskIsWaitingForLivewireRequest{$id} = true
+
+                    return () => {
+                        delete window.duskIsWaitingForLivewireRequest{$id}
+                    }
+                })",
             ]);
 
             if ($callback) {

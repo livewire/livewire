@@ -16,7 +16,7 @@ class ParentComponentWithNoQueryString extends BaseComponent
 
     <div>
         @if ($showNestedComponent)
-            @livewire(\Tests\Browser\QueryString\NestedComponent::class)
+            @livewire('nested')
         @endif
     </div>
 </div>

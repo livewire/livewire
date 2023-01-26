@@ -10,7 +10,7 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 /**
                  * Basic action (click).
                  */
@@ -113,12 +113,13 @@ class Test extends TestCase
                  * Elements are un-marked as readonly when form errors out.
                  */
                 ->press('@boo.button')
-                ->waitForLivewire()->tap(function ($b) {
+                ->tap(function ($b) {
                     $this->assertEquals('true', $b->attribute('@boo.button', 'disabled'));
                 })
                 ->tap(function ($b) {
                     $this->assertNull($b->attribute('@blog.button', 'disabled'));
                 })
+                ->waitFor('#livewire-error')
                 ->click('#livewire-error')
 
                 /**

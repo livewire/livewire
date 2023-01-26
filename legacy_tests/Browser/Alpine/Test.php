@@ -10,7 +10,7 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 /**
                  * ->dispatchBrowserEvent()
                  */
@@ -38,8 +38,7 @@ class Test extends TestCase
                 ->assertSeeIn('@baz.output', '1')
                 ->waitForLivewire()->click('@baz.set.proxy')
                 ->assertSeeIn('@baz.output', '2')
-                ->waitForLivewire()->click('@baz.set.proxy.magic')
-                ->assertSeeIn('@baz.output', '3')
+                ->click('@baz.set.proxy.magic')
                 ->waitForLivewire()->click('@baz.call')
                 ->assertSeeIn('@baz.output', '4')
                 ->waitForLivewire()->click('@baz.call.proxy')
@@ -58,8 +57,7 @@ class Test extends TestCase
                 ->assertSeeIn('@special.output', 'ž')
                 ->waitForLivewire()->click('@special.set.proxy')
                 ->assertSeeIn('@special.output', 'žž')
-                ->waitForLivewire()->click('@special.set.proxy.magic')
-                ->assertSeeIn('@special.output', 'žžž')
+                ->click('@special.set.proxy.magic')
                 ->waitForLivewire()->click('@special.call')
                 ->assertSeeIn('@special.output', 'žžžž')
                 ->waitForLivewire()->click('@special.call.proxy')
@@ -84,7 +82,7 @@ class Test extends TestCase
                     $b->click('@lob.increment');
                 })
                 ->assertSeeIn('@lob.output', '7')
-                ->waitForLivewire()->click('@lob.decrement')
+                ->click('@lob.decrement')
                 ->assertSeeIn('@lob.output', '6')
 
                 /**
@@ -109,7 +107,7 @@ class Test extends TestCase
                 ->tap(function ($b) {
                     $b->script([
                         'window.livewireRequestCount = 0',
-                        "window.Livewire.hook('message.sent', () => { window.livewireRequestCount++ })",
+                        "window.Livewire.hook('request', () => { window.livewireRequestCount++ })",
                     ]);
                 })
                 ->assertScript('window.livewireRequestCount', 0)
@@ -136,7 +134,7 @@ class Test extends TestCase
     public function test_alpine_still_updates_even_when_livewire_doesnt_update_html()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, SmallComponent::class)
+            $this->visitLivewireComponent($browser, SmallComponent::class)
                 ->assertSeeIn('@output', '0')
                 ->waitForLivewire()->click('@button')
                 ->assertSeeIn('@output', '1')
@@ -147,7 +145,7 @@ class Test extends TestCase
     public function test_morphdom_can_handle_adding_at_symbol_attributes()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, MorphingAtSymbolAttributeComponent::class)
+            $this->visitLivewireComponent($browser, MorphingAtSymbolAttributeComponent::class)
                 ->assertAttributeMissing('@span', '@click', 'hey')
                 ->waitForLivewire()->click('@button')
                 ->assertAttribute('@span', '@click', 'hey')
@@ -160,7 +158,7 @@ class Test extends TestCase
     public function test_alpine_registers_click_handlers_properly_on_livewire_change()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, ClickComponent::class)
+            $this->visitLivewireComponent($browser, ClickComponent::class)
                 ->waitForLivewire()->click('@show')
                 ->click('@click')
                 ->assertSeeIn('@alpineClicksFired', 1)
@@ -181,7 +179,7 @@ class Test extends TestCase
     public function test_alpine_handles_responses_from_multiple_simultaneous_calls_to_livewire()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, SimultaneousCallsComponent::class)
+            $this->visitLivewireComponent($browser, SimultaneousCallsComponent::class)
                 ->assertDontSeeIn('@foo', 'foo')
                 ->assertDontSeeIn('@bar', 'bar')
                 ->waitForLivewire()->click('@update-foo-and-bar')

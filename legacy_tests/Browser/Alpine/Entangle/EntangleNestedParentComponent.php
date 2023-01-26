@@ -27,7 +27,7 @@ class EntangleNestedParentComponent extends BaseComponent
 <div x-data>
     <div dusk="output">
         @foreach($list as $key => $item)
-            @livewire(Tests\Browser\Alpine\Entangle\EntangleNestedChildComponent::class, ['item' => $item], key($key))
+            @livewire(LegacyTests\Browser\Alpine\Entangle\EntangleNestedChildComponent::class, ['item' => $item], key($key))
         @endforeach
     </div>
 

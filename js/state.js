@@ -16,6 +16,12 @@ export function findComponent(id) {
     return component
 }
 
+export function componentsByName(name) {
+    return Object.values(state.components).filter(component => {
+        return name == component.name
+    })
+}
+
 export function storeComponent(id, component) {
     state.components[id] = component
 }
@@ -26,7 +32,7 @@ export function releaseComponent(id) {
     let component = state.components[id]
 
     let effects = deepClone(component.synthetic.effects)
-    delete effects['']['html']
+    delete effects['html']
 
     releasePool[id] = {
         effects,
@@ -42,6 +48,12 @@ export function resurrect(id) {
     }
 
     return releasePool[id]
+}
+
+export function find(id) {
+    let component = state.components[id]
+
+    return component && component.$wire
 }
 
 export function first() {

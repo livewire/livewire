@@ -5,7 +5,7 @@ import { callMethod } from "../index"
 export default function () {
     // Normal, request-triggering, methods...
     on('decorate', (target, path, addProp, decorator, symbol) => {
-        let effects = target.effects[path]
+        let effects = target.effects
 
         if (! effects) return
 
@@ -27,7 +27,7 @@ export default function () {
 
     // Pure "js" methods...
     on('decorate', (target, path, addProp) => {
-        let effects = target.effects[path]
+        let effects = target.effects
 
         if (! effects) return
 

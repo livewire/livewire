@@ -2,16 +2,17 @@
 
 namespace Livewire;
 
-use Livewire\Drawer\Utils as SyntheticUtils;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
+use Livewire\Features\SupportQueryString\HandlesQueryString;
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;
 use Livewire\Features\SupportNestingComponents\HandlesNestingComponents;
 use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Drawer\Utils;
+use Livewire\Drawer\Utils as SyntheticUtils;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Str;
@@ -29,6 +30,7 @@ abstract class Component
     use HandlesEvents;
     use HandlesRedirects;
     use HandlesValidation;
+    use HandlesQueryString;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
     use HandlesNestingComponents;

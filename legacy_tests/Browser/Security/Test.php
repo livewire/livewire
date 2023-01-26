@@ -11,7 +11,7 @@ class Test extends TestCase
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
     {
         $this->browse(function (Browser $browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 // See allow-listed middleware from original request.
                 ->assertSeeIn('@middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware","Tests\\\\Browser\\\\BlockListedMiddleware"]')
                 ->assertDontSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')

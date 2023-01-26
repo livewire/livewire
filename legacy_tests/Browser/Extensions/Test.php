@@ -11,11 +11,11 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
-            Livewire::visit($browser, Component::class)
+            $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function (Browser $browser) {
                     $browser->script([
                         'window.renameMe = false',
-                        "window.livewire.directive('foo', (el, directive, component) => {
+                        "window.Livewire.directive('foo', (el, directive, component) => {
                             window.renameMe = true
                         })",
                     ]);

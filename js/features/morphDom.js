@@ -2,20 +2,18 @@ import { morph } from "../morph";
 import { findComponent } from "../state";
 import { on } from './../synthetic/index'
 
-export default function () {
-    on('effects', (target, effects, path) => {
-        let html = effects.html
-        if (! html) return
+on('effects', (target, effects) => {
+    let html = effects.html
+    if (! html) return
 
-        let component = findComponent(target.__livewireId)
+    let component = findComponent(target.__livewireId)
 
-        // Doing this so all the state of components in a nested tree has a chance
-        // to update on synthetic's end. (mergeSnapshots kinda deal).
-        queueMicrotask(() => {
-            morph(component, component.el, html)
-        })
+    // Doing this so all the state of components in a nested tree has a chance
+    // to update on synthetic's end. (mergeSnapshots kinda deal).
+    queueMicrotask(() => {
+        morph(component, component.el, html)
     })
-}
+})
 
 
 

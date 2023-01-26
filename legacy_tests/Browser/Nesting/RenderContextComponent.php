@@ -18,7 +18,7 @@ class RenderContextComponent extends BaseComponent
     <x-blade-component dusk="output.blade-component2" property="two" />
 
     <div>
-        @livewire(Tests\Browser\Nesting\NestedComponent::class, ['output' => 'Sub render'])
+        @livewire('nested', ['output' => 'Sub render'])
     </div>
 
     <x-blade-component dusk="output.blade-component3" property="three" />

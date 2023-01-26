@@ -15,12 +15,27 @@ class LazyInputsWithUpdatesDisplayedComponent extends BaseComponent
 
     public function updated()
     {
-        $this->updates = request('updates');
+        $this->updateUpdates();
     }
 
     public function submit()
     {
-        $this->updates = request('updates');
+        $this->updateUpdates();
+    }
+
+    function updateUpdates()
+    {
+        // To keep the test from V2, I'm going to massage the V3 schema update data
+        // back into the V2 schema here...
+        $this->updates = [];
+
+        foreach (request('targets.0.diff') as $key => $value) {
+            $this->updates[] = ['type' => 'syncInput', 'payload' => ['name' => $key]];
+        }
+
+        foreach (request('targets.0.calls') as $call) {
+            $this->updates[] = ['type' => 'callMethod', 'payload' => ['method' => $call['method']]];
+        }
     }
 
     public function render()
@@ -31,7 +46,7 @@ class LazyInputsWithUpdatesDisplayedComponent extends BaseComponent
     <input dusk="name" wire:model.lazy="name">
     <input dusk="description" wire:model.lazy="description">
 
-    <input dusk="is_active" type="checkbox" wire:model="is_active">
+    <input dusk="is_active" type="checkbox" wire:model.live="is_active">
 
     <div dusk="totalNumberUpdates">{{ count($updates) }}</div>
 

@@ -90,7 +90,7 @@ class ComponentRegistry
         // Check the aliases...
         if (isset($this->aliases[$name])) {
             if (is_object($this->aliases[$name])) return $this->aliases[$name]::class;
-            
+
             return $this->aliases[$name];
         }
 

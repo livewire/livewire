@@ -44,7 +44,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Mechanisms\FrontendAssets::class,
             \Livewire\Mechanisms\DataStore::class,
         ] as $mechanism) {
-            (new $mechanism)->boot();
+            (new $mechanism)->boot($this);
         }
     }
 
@@ -69,10 +69,12 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
             \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
+            \Livewire\Features\SupportQueryString\SupportQueryString::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
             \Livewire\Features\SupportFileUploads\SupportFileUploads::class,
+            \Livewire\Features\SupportPagination\SupportPagination::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
             \Livewire\Features\SupportWireables\SupportWireables::class,
             \Livewire\Features\SupportRedirects\SupportRedirects::class,
@@ -82,7 +84,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportTraits\SupportTraits::class,
             \Livewire\Features\SupportEvents\SupportEvents::class,
         ] as $feature) {
-            (new $feature)->boot();
+            (new $feature)->boot($this);
         }
     }
 }
