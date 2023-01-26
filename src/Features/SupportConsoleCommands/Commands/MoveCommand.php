@@ -32,7 +32,7 @@ class MoveCommand extends FileManipulationCommand
 
         $test = $this->renameTest();
 
-        $this->line("<options=bold,reverse;fg=green> COMPONENT MOVED </> 🤙\n");
+        if ($class) $this->line("<options=bold,reverse;fg=green> COMPONENT MOVED </> 🤙\n");
         $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()} <options=bold;fg=green>=></> {$this->newParser->relativeClassPath()}");
         if (! $inline) $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
         if ($test) $test && $this->line("<options=bold;fg=green>Test:</>  {$this->parser->relativeTestPath()} <options=bold;fg=green>=></> {$this->newParser->relativeTestPath()}");
