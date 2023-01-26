@@ -1,13 +1,13 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Support\Stringable;
 use PHPUnit\Framework\Assert as PHPUnit;
 
-class LifecycleHooksTest extends TestCase
+class LifecycleHooksTest extends \Tests\TestCase
 {
 
     /** @test */

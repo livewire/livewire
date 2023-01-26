@@ -1,11 +1,11 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
-class PublicPropertiesAreInitializedTest extends TestCase
+class PublicPropertiesAreInitializedTest extends \Tests\TestCase
 {
     /** @test */
     public function uninitialized_public_property_is_null()

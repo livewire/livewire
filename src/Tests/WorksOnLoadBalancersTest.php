@@ -1,13 +1,13 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 
-class WorksOnLoadBalancersTest extends TestCase
+class WorksOnLoadBalancersTest extends \Tests\TestCase
 {
     /** @test */
     public function livewire_renders_chidren_properly_across_load_balancers()
