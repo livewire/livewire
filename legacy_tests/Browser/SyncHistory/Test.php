@@ -9,6 +9,14 @@ use LegacyTests\Browser\DataBinding\Defer\Component as DeferComponent;
 
 class Test extends TestCase
 {
+    function setUp(): void
+    {
+        parent::setUp();
+
+        $this->markTestSkipped(); // Removed this entire system in favor of SPA mode.
+        // Leaving this test here in case we want to use these tests for SPA mode...
+    }
+
     public function test_route_bound_properties_are_synced_with_browser_history()
     {
         $this->browse(function (Browser $browser) {

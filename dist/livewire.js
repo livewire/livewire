@@ -541,7 +541,7 @@
     }
     return result;
   }
-  function clear() {
+  function clear2() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
     const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
@@ -608,7 +608,7 @@
       add,
       set: set$1,
       delete: deleteEntry,
-      clear,
+      clear: clear2,
       forEach: createForEach(false, false)
     };
     const shallowInstrumentations3 = {
@@ -622,7 +622,7 @@
       add,
       set: set$1,
       delete: deleteEntry,
-      clear,
+      clear: clear2,
       forEach: createForEach(false, true)
     };
     const readonlyInstrumentations3 = {
@@ -2913,7 +2913,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return result;
   }
-  function clear2() {
+  function clear3() {
     const target = toRaw2(this);
     const hadItems = target.size !== 0;
     const oldTarget = false ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
@@ -2979,7 +2979,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     add: add2,
     set: set$12,
     delete: deleteEntry2,
-    clear: clear2,
+    clear: clear3,
     forEach: createForEach2(false, false)
   };
   var shallowInstrumentations2 = {
@@ -2993,7 +2993,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     add: add2,
     set: set$12,
     delete: deleteEntry2,
-    clear: clear2,
+    clear: clear3,
     forEach: createForEach2(false, true)
   };
   var readonlyInstrumentations2 = {
@@ -3948,29 +3948,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
 
-  // js/synthetic/features/polling.js
-  function polling_default() {
-    on("decorate", (target, path, addProp, decorator, symbol) => {
-      addProp("$poll", (callback) => {
-        syncronizedInterval(2500, () => {
-          callback();
-          target.ephemeral.$commit();
-        });
-      });
-    });
-  }
-  var clocks = [];
-  function syncronizedInterval(ms, callback) {
-    if (!clocks[ms]) {
-      let clock = {
-        timer: setInterval(() => each(clock.callbacks, (key, value) => value()), ms),
-        callbacks: []
-      };
-      clocks[ms] = clock;
-    }
-    clocks[ms].callbacks.push(callback);
-  }
-
   // js/synthetic/features/errors.js
   function errors_default() {
     on("new", (target, path) => {
@@ -4020,7 +3997,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   prefetch_default();
   redirect_default();
   loading_default();
-  polling_default();
   errors_default();
   dirty_default();
 
@@ -5658,15 +5634,109 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire:poll.js
-  directive2("poll", (el, directive3, { component, cleanup: cleanup3 }) => {
-    console.log(component.$wire);
-    return;
-    component.$wire.$poll(() => {
-      directive3.value ? module_default.evaluate(el, "$wire." + directive3.value) : module_default.evaluate(el, "$wire.$commit()");
-    });
-    cleanup3(() => {
-    });
+  directive2("poll", (el, directive3, { component }) => {
+    let interval = extractDurationFrom(directive3.modifiers, 2e3);
+    let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+      triggerComponentRequest(el, directive3);
+    }, interval);
+    start3();
+    throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive3));
+    pauseWhile(() => theDirectiveHasVisible(directive3) && theElementIsNotInTheViewport(el));
+    pauseWhile(() => theDirectiveIsOffTheElement(el));
+    pauseWhile(() => livewireIsOffline());
+    stopWhen(() => theElementIsDisconnected(el));
   });
+  function triggerComponentRequest(el, directive3) {
+    module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$commit()");
+  }
+  function poll(callback, interval = 2e3) {
+    let pauseConditions = [];
+    let throttleConditions = [];
+    let stopConditions = [];
+    return {
+      start() {
+        clear = syncronizedInterval(interval, () => {
+          if (stopConditions.some((i) => i()))
+            return clear();
+          if (pauseConditions.some((i) => i()))
+            return;
+          if (throttleConditions.some((i) => i()) && Math.random() < 0.95)
+            return;
+          callback();
+        });
+      },
+      pauseWhile(condition) {
+        pauseConditions.push(condition);
+      },
+      throttleWhile(condition) {
+        throttleConditions.push(condition);
+      },
+      stopWhen(condition) {
+        stopConditions.push(condition);
+      }
+    };
+  }
+  var clocks = [];
+  function syncronizedInterval(ms, callback) {
+    if (!clocks[ms]) {
+      let clock = {
+        timer: setInterval(() => clock.callbacks.forEach((i) => i()), ms),
+        callbacks: /* @__PURE__ */ new Set()
+      };
+      clocks[ms] = clock;
+    }
+    clocks[ms].callbacks.add(callback);
+    return () => {
+      clocks[ms].callbacks.delete(callback);
+      if (clocks[ms].callbacks.size === 0) {
+        clearInterval(clocks[ms].timer);
+        delete clocks[ms];
+      }
+    };
+  }
+  var isOffline = false;
+  window.addEventListener("offline", () => isOffline = true);
+  window.addEventListener("online", () => isOffline = false);
+  function livewireIsOffline() {
+    return isOffline;
+  }
+  var inBackground = false;
+  document.addEventListener("visibilitychange", () => {
+    inBackground = document.hidden;
+  }, false);
+  function theTabIsInTheBackground() {
+    return inBackground;
+  }
+  function theDirectiveIsMissingKeepAlive(directive3) {
+    return !directive3.modifiers.includes("keep-alive");
+  }
+  function theDirectiveIsOffTheElement(el) {
+    return !getDirectives(el).has("poll");
+  }
+  function theDirectiveIsMissingKeepAlive(directive3) {
+    return !directive3.modifiers.includes("keep-alive");
+  }
+  function theDirectiveHasVisible(directive3) {
+    return directive3.modifiers.includes("visible");
+  }
+  function theElementIsNotInTheViewport(el) {
+    let bounding = el.getBoundingClientRect();
+    return !(bounding.top < (window.innerHeight || document.documentElement.clientHeight) && bounding.left < (window.innerWidth || document.documentElement.clientWidth) && bounding.bottom > 0 && bounding.right > 0);
+  }
+  function theElementIsDisconnected(el) {
+    return el.isConnected === false;
+  }
+  function extractDurationFrom(modifiers, defaultDuration) {
+    let durationInMilliSeconds;
+    let durationInMilliSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)ms/));
+    let durationInSecondsString = modifiers.find((mod) => mod.match(/([0-9]+)s/));
+    if (durationInMilliSecondsString) {
+      durationInMilliSeconds = Number(durationInMilliSecondsString.replace("ms", ""));
+    } else if (durationInSecondsString) {
+      durationInMilliSeconds = Number(durationInSecondsString.replace("s", "")) * 1e3;
+    }
+    return durationInMilliSeconds || defaultDuration;
+  }
 
   // js/index.js
   window.synthetic = synthetic;

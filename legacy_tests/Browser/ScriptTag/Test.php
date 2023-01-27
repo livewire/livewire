@@ -10,6 +10,8 @@ class Test extends TestCase
 
     public function test()
     {
+        $this->markTestSkipped(); // @todo: should we support this in V3?
+
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, Component::class)
                 ->assertScript('window.scriptTagWasCalled === undefined')

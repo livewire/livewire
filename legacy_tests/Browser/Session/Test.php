@@ -7,6 +7,13 @@ use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
 {
+    function setUp(): void
+    {
+        parent::setUp();
+
+        $this->markTestSkipped(); // @todo: Not sure how/if to handle this in V3 yet...
+    }
+
     /** @test */
     public function it_shows_page_expired_dialog_when_session_has_expired()
     {

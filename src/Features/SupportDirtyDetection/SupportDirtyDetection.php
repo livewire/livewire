@@ -20,11 +20,11 @@ class SupportDirtyDetection
             $this->storeThisHashMapForLaterComparison($component, $hashMap);
         });
 
-        // $this->whenComponentDataIsUpdated(function ($component, $property) {
-        //     $value = $component->$property;
+        $this->whenComponentDataIsUpdated(function ($component, $property) {
+            $value = $component->$property;
 
-        //     $this->rehashProperty($component, $property, $value);
-        // });
+            $this->rehashProperty($component, $property, $value);
+        });
 
         $this->whenAComponentIsDehydrated(function ($component, $addDirtyPropertiesToPayload) {
             $this->onlyIfItWasHydratedEarlier($component, function () use ($component, $addDirtyPropertiesToPayload) {
