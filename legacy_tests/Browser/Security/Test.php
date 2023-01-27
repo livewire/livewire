@@ -17,6 +17,7 @@ class Test extends TestCase
 
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
     {
+        // @todo: Copy implementation from V2 for persistent middleware and ensure localisation and subdirectory hosting are supported. https://github.com/livewire/livewire/pull/5490
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, Component::class)
                 // See allow-listed middleware from original request.

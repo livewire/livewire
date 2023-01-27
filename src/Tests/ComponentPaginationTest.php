@@ -12,9 +12,9 @@ class ComponentPaginationTest extends \Tests\TestCase
     public function can_navigate_to_previous_page()
     {
         Livewire::test(ComponentWithPaginationStub::class)
-            ->set('page', 2)
+            ->set('paginators.page', 2)
             ->call('previousPage')
-            ->assertSet('page', 1);
+            ->assertSet('paginators.page', 1);
     }
 
     /** @test */
@@ -22,7 +22,7 @@ class ComponentPaginationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithPaginationStub::class)
             ->call('nextPage')
-            ->assertSet('page', 2);
+            ->assertSet('paginators.page', 2);
     }
 
     /** @test */
@@ -30,7 +30,7 @@ class ComponentPaginationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithPaginationStub::class)
             ->call('gotoPage', 5)
-            ->assertSet('page', 5);
+            ->assertSet('paginators.page', 5);
     }
 
     /** @test */
@@ -38,7 +38,7 @@ class ComponentPaginationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithPaginationStub::class)
             ->call('previousPage')
-            ->assertSet('page', 1);
+            ->assertSet('paginators.page', 1);
     }
 
     /** @test */
@@ -46,7 +46,7 @@ class ComponentPaginationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithPaginationStub::class)
             ->call('gotoPage', 2.5)
-            ->assertSet('page', 2);
+            ->assertSet('paginators.page', 2);
     }
 }
 

@@ -1,13 +1,13 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
 const PROPERTY_NAME = 'virtualProperty';
 
-class VirtualPropertyTest extends TestCase
+class VirtualPropertyTest extends \Tests\TestCase
 {
     /** @test */
     public function virtual_property_is_accessible()

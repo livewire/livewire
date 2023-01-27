@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\UrlGenerator;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ComponentMethodBindingsTest extends TestCase
+class ComponentMethodBindingsTest extends \Tests\TestCase
 {
     /** @test */
     public function mount_method_receives_explicit_binding()

@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Unit;
+namespace Livewire\Tests;
 
 use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
@@ -8,7 +8,7 @@ use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Component;
 
-class ComponentsAreSecureTest extends TestCase
+class ComponentsAreSecureTest extends \Tests\TestCase
 {
     /** @test */
     public function throws_method_not_found_exception_when_action_missing()

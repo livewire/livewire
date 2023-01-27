@@ -9,6 +9,12 @@ use function Livewire\str;
 
 class ComponentParser
 {
+    protected $baseClassNamespace;
+    protected $baseTestNamespace;
+    protected $baseClassPath;
+    protected $baseViewPath;
+    protected $baseTestPath;
+    protected $stubDirectory;
     protected $appPath;
     protected $viewPath;
     protected $component;

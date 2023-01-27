@@ -12,3 +12,10 @@
 /tests              export-ignore
 /.editorconfig      export-ignore
 /github_banner.png  export-ignore
+/.github            export-ignore
+/babel.config.js    export-ignore
+/jest.config.js     export-ignore
+/rollup.config.js   export-ignore
+/.prettierrc        export-ignore
+/.all-contributorsrc export-ignore
+/squishy            export-ignore
