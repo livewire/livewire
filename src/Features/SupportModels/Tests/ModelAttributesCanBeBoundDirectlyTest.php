@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportModels;
+namespace Livewire\Features\SupportModels\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;

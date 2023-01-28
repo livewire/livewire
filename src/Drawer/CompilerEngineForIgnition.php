@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Drawer;
 
 use Illuminate\View\Engines\PhpEngine;
 use Facade\Ignition\Views\Engines\CompilerEngine;
