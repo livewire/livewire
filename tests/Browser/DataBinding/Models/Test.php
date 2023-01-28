@@ -152,7 +152,7 @@ if(class_exists(Attribute::class)) {
             return $this->hasMany(OtherComment::class);
         }
 
-        public function firstName(): Attribute
+        public function firstName()
         {
             return Attribute::make(
                 function() {
@@ -161,7 +161,7 @@ if(class_exists(Attribute::class)) {
             );
         }
 
-        public function lastName(): Attribute
+        public function lastName()
         {
             return Attribute::make(
                 function() {
