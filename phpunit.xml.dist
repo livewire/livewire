@@ -15,5 +15,8 @@
             <directory suffix="Test.php">./tests</directory>
             <directory suffix="Test.php">./legacy_tests/Unit</directory>
         </testsuite>
+        <testsuite name="Browser">
+            <directory suffix="Test.php">./legacy_tests/Browser</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
