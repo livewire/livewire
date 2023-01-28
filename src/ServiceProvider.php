@@ -25,7 +25,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function registerConfig()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/livewire.php', 'livewire');
+        $config = __DIR__.'/../config/livewire.php';
+
+        $this->publishes([$config => base_path('config/livewire.php')], ['livewire', 'livewire:config']);
+
+        $this->mergeConfigFrom($config, 'livewire');
     }
 
     protected function bootEventBus()

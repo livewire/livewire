@@ -4,6 +4,7 @@ import { synthetic, trigger } from './synthetic/index'
 import { Component } from './component'
 import morph from '@alpinejs/morph'
 import history from '@alpinejs/history'
+import intersect from '@alpinejs/intersect'
 import Alpine from 'alpinejs'
 
 export function start() {
@@ -15,6 +16,7 @@ export function start() {
 
     Alpine.plugin(morph)
     Alpine.plugin(history)
+    Alpine.plugin(intersect)
 
     Alpine.addRootSelector(() => '[wire\\:id]')
 

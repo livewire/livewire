@@ -26,7 +26,6 @@ class RenderComponent
         Blade::directive('livewire', [static::class, 'livewire']);
 
         on('dehydrate', function ($synth, $target, $context) {
-            if ($context->initial) return;
             if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
 
             $html = static::render($target);
@@ -103,16 +102,14 @@ EOT;
 
         $receiveInstance($component);
 
-        $html = static::render($component);
-
-        // When "skipRender" is called in "mount" from a subsequent request...
-        if (! $html) $html = '<div></div>';
-
         // Trigger the dehydrate...
         $payload = app('livewire')->snapshot($component, initial: true);
 
+        // When "skipRender" is called in "mount" from a subsequent request...
+        $html = $payload['effects']['html'] ?? '<div></div>';
+
         // Remove it from effects...
-        if (isset($payload['effects']['']['html'])) unset($payload['effects']['']['html']);
+        if (isset($payload['effects']['html'])) unset($payload['effects']['html']);
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:initial-data' => $payload,

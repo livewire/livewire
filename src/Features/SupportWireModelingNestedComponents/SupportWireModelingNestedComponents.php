@@ -7,6 +7,7 @@ use Livewire\Mechanisms\DataStore;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Drawer\Utils;
 
+use function Livewire\after;
 use function Livewire\on;
 use function Livewire\store;
 
@@ -52,7 +53,7 @@ class SupportWireModelingNestedComponents
 
         // We need to add a note that everytime we render this thing, we'll need to add
         // those extra Alpine attributes.
-        on('dehydrate', function ($synth, $target, $context) {
+        after('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
             $wireModels = store($target)->get('wireModels', false);
             if (! $wireModels) return;
@@ -60,6 +61,8 @@ class SupportWireModelingNestedComponents
             $context->addMeta('wireModels', $wireModels);
 
             return function ($thing) use ($target, $context, $wireModels) {
+                if (! $context->effects['html']) return $thing;
+
                 foreach ($wireModels as $outer => $inner) {
                     $context->effects['html'] = Utils::insertAttributesIntoHtmlRoot($context->effects['html'], [
                         'x-model' => '$wire.$parent.'.$outer,

@@ -5,24 +5,29 @@ namespace Livewire\Features\SupportAutoInjectedAssets;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Foundation\Http\Events\RequestHandled;
+use Livewire\Mechanisms\FrontendAssets;
 
 use function Livewire\on;
 
 class SupportAutoInjectedAssets
 {
-    public static $hasRenderedAComponentThisRequest = false;
+    public $hasRenderedAComponentThisRequest = false;
 
     public function boot()
     {
+        app()->singleton($this::class);
+
         on('dehydrate', function ($synth, $target, $context) {
             if (! $synth instanceof LivewireSynth) return;
 
-            static::$hasRenderedAComponentThisRequest = true;
+            $this->hasRenderedAComponentThisRequest = true;
         });
 
         app('events')->listen(RequestHandled::class, function ($handled) {
             if (! str($handled->response->headers->get('content-type'))->contains('text/html')) return;
             if ($handled->response->status() !== 200) return;
+            if (! $this->hasRenderedAComponentThisRequest) return;
+            if (app(FrontendAssets::class)->hasRenderedScripts) return;
 
             $html = $handled->response->getContent();
 
