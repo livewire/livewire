@@ -9,7 +9,7 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/upgrade.sh)
 
 **Update to latest V3:**
 ```
-composer reinstall livewire/livewire
+composer clear-cache && composer reinstall livewire/livewire
 ```
 
 **Revert back to V2:**
