@@ -1,6 +1,6 @@
 
 ## V3 Upgrade instructions:
-You can use the following commands from the root directory of your Livewire V2 project to test out V3:
+From the root directory of a V2 project, you can run the following commands to test out V3:
 
 **Upgrade from V2 to V3:**
 ```
