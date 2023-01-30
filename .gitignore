@@ -7,6 +7,8 @@ composer.lock
 .idea
 phpunit.xml
 
+upload-bin.sh
+
 # OS generated files
 .DS_Store
 ._*
