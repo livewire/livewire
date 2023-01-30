@@ -7,7 +7,9 @@ composer.lock
 .idea
 phpunit.xml
 
+# Files used to upload zips for early access folks
 upload-bin.sh
+main.zip
 
 # OS generated files
 .DS_Store
