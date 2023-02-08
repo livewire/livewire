@@ -14,6 +14,3 @@ on('effects', (target, effects) => {
         morph(component, component.el, html)
     })
 })
-
-
-

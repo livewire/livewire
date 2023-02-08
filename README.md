@@ -17,3 +17,16 @@ composer clear-cache && composer reinstall livewire/livewire
 source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 ```
 
+## Todo:
+
+- [ ] SPA Mode (`wire:navigate`, `@persist`)
+- [ ] Reactive properties
+- [ ] `@modelable` props
+- [ ] PHP Attributes
+- [ ] Hot-reloading
+- [ ] Lazy components
+- [ ] `wire:transition`
+- [ ] JavaScript functions
+- [ ] "locked" properties
+- [ ] `$parent`
+- [ ] `@teleport`
