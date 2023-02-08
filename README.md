@@ -19,6 +19,7 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 
 ## Todo:
 
+#### V3 Features
 - [ ] SPA Mode (`wire:navigate`, `@persist`)
 - [ ] Reactive properties
 - [ ] `@modelable` props
@@ -30,3 +31,22 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] "locked" properties
 - [ ] `$parent`
 - [ ] `@teleport`
+- [ ] `@if` markers
+
+#### V2 Parity
+- [ ] Persistant middleware
+- [ ] Eloquent model support
+- [ ] Session expriration
+- [ ] Detect multiple root elements
+- [ ] JS hooks and `Livewire.?`
+- [ ] Work through all `@todo` comments
+- [ ] Remove all `->markTestSkipped()` statements
+
+#### Finishing touches
+- [ ] Performance testing
+- [ ] Refactor JS
+- [ ] Brainstorm Form Object solution
+- [ ] Brainstorm 3rd party plugin API
+
+#### Documentation
+- [ ] Rewrite it lol
