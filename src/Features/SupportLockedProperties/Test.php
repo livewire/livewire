@@ -2,36 +2,29 @@
 
 namespace Livewire\Features\SupportLockedProperties;
 
+use Livewire\Livewire;
 use Livewire\Component;
 
 class Test extends \Tests\TestCase
 {
     /** @test */
-    function can_lock_property()
+    function cant_update_locked_property()
     {
-        $this->markTestSkipped(); // @todo: Reenable this failing test
-        $this->visit(new class extends Component {
-            /** @locked */
-            public $foo = 'bar';
+        $this->expectExceptionMessage(
+            'Cannot update locked property: [count]'
+        );
 
-            public function sync() {}
+        Livewire::test(new class extends Component {
+            #[\Is\Locked]
+            public $count = 1;
 
-            public function render()
-            {
-                return <<<'HTML'
-                <div>
-                    <input wire:model="foo" dusk="input">
-                    <button wire:click="sync" dusk="sync">sync</button>
+            function increment() { $this->count++; }
 
-                    <span dusk="output">{{ $foo }}</span>
-                </div>
-                HTML;
+            public function render() {
+                return '<div></div>';
             }
-        }, function ($browser) {
-            $browser->assertSeeIn('@output', 'bar');
-            $browser->type('@input', 'baz');
-            $browser->waitForLivewire()->click('@sync');
-            $browser->assertSeeIn('@output', 'bar');
-        });
+        })
+        ->assertSet('count', 1)
+        ->set('count', 2);
     }
 }

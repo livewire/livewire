@@ -16,7 +16,7 @@ class SupportUnitTesting
     {
         if (! app()->environment('testing')) return;
 
-        \Tests\TestCase::onApplicationBoot();
+        \Tests\DuskTestCase::onApplicationBoot();
 
         $this->registerTestingMacros();
 

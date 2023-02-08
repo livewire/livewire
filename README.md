@@ -28,10 +28,11 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] Lazy components
 - [ ] `wire:transition`
 - [ ] JavaScript functions
-- [ ] "locked" properties
+- [x] "locked" properties
 - [ ] `$parent`
 - [ ] `@teleport`
 - [ ] `@if` markers
+- [x] Auto inject assets
 
 #### V2 Parity
 - [ ] Persistant middleware
@@ -45,6 +46,8 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 #### Finishing touches
 - [ ] Performance testing
 - [ ] Refactor JS
+- [ ] Finalize internal event names
+- [ ] Finalize internal exceptions
 - [ ] Brainstorm Form Object solution
 - [ ] Brainstorm 3rd party plugin API
 

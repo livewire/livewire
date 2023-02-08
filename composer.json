@@ -30,7 +30,8 @@
             "src/helpers.php"
         ],
         "psr-4": {
-            "Livewire\\": "src/"
+            "Livewire\\": "src/",
+            "Is\\": "attributes/"
         }
     },
     "autoload-dev": {

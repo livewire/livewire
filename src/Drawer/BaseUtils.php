@@ -2,6 +2,8 @@
 
 namespace Livewire\Drawer;
 
+use ReflectionClass;
+
 class BaseUtils
 {
     static function isSyntheticTuple($payload) {
@@ -58,6 +60,22 @@ class BaseUtils
         return array_map(function ($method) {
             return $method->getName();
         }, $methods);
+    }
+
+    static function hasAttribute($target, $property, $attributeClass) {
+        $property = static::getProperty($target, $property);
+
+        foreach ($property->getAttributes() as $attribute) {
+            $instance = $attribute->newInstance();
+
+            if ($instance instanceof $attributeClass) return true;
+        }
+
+        return false;
+    }
+
+    static function getProperty($target, $property) {
+        return (new ReflectionClass($target))->getProperty($property);
     }
 
     static function propertyHasAnnotation($target, $property, $annotation) {

@@ -56,16 +56,6 @@ class BaseTestable
 
         $dehydrated = app('livewire')->update($this->snapshot, [$key => $value], $calls = []);
 
-        // FakeRequest::get('/synthetic/update', [
-        //     'targets' => [
-        //         'snapshot' => $this->snapshot,
-        //         'diff' => [
-        //             $key => $value,
-        //         ],
-        //         'calls' => [],
-        //     ],
-        // ]));
-
         $this->target = $dehydrated['target'];
         $this->effects = $dehydrated['effects'];
         $this->snapshot = $dehydrated['snapshot'];

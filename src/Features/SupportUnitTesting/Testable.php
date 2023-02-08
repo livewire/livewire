@@ -27,6 +27,10 @@ class Testable extends BaseTestable
 
     static function create($name, $params = [], $queryParams = [])
     {
+        if (is_object($name)) {
+            $name = $name::class;
+        }
+
         $uri = 'livewire-test';
 
         $symfonyRequest = \Symfony\Component\HttpFoundation\Request::create(
