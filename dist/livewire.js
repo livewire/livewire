@@ -10,8 +10,8 @@
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = true ? Object.freeze({}) : {};
-  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ = false ? Object.freeze({}) : {};
+  var EMPTY_ARR = false ? Object.freeze([]) : [];
   var extend = Object.assign;
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
@@ -48,9 +48,6 @@
   };
 
   // node_modules/@vue/reactivity/dist/reactivity.esm-bundler.js
-  function warn(msg, ...args) {
-    console.warn(`[Vue warn] ${msg}`, ...args);
-  }
   var activeEffectScope;
   function recordEffectScope(effect4, scope2 = activeEffectScope) {
     if (scope2 && scope2.active) {
@@ -94,8 +91,8 @@
   var trackOpBit = 1;
   var maxMarkerBits = 30;
   var activeEffect;
-  var ITERATE_KEY = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
   var ReactiveEffect = class {
     constructor(fn, scheduler2 = null, scope2) {
       this.fn = fn;
@@ -206,7 +203,7 @@
       if (!dep) {
         depsMap.set(key, dep = createDep());
       }
-      const eventInfo = true ? { effect: activeEffect, target, type, key } : void 0;
+      const eventInfo = false ? { effect: activeEffect, target, type, key } : void 0;
       trackEffects(dep, eventInfo);
     }
   }
@@ -223,7 +220,7 @@
     if (shouldTrack3) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (activeEffect.onTrack) {
+      if (false) {
         activeEffect.onTrack(Object.assign({ effect: activeEffect }, debuggerEventExtraInfo));
       }
     }
@@ -273,10 +270,10 @@
           break;
       }
     }
-    const eventInfo = true ? { target, type, key, newValue, oldValue, oldTarget } : void 0;
+    const eventInfo = false ? { target, type, key, newValue, oldValue, oldTarget } : void 0;
     if (deps.length === 1) {
       if (deps[0]) {
-        if (true) {
+        if (false) {
           triggerEffects(deps[0], eventInfo);
         } else {
           triggerEffects(deps[0]);
@@ -289,7 +286,7 @@
           effects.push(...dep);
         }
       }
-      if (true) {
+      if (false) {
         triggerEffects(createDep(effects), eventInfo);
       } else {
         triggerEffects(createDep(effects));
@@ -311,7 +308,7 @@
   }
   function triggerEffect(effect4, debuggerEventExtraInfo) {
     if (effect4 !== activeEffect || effect4.allowRecurse) {
-      if (effect4.onTrigger) {
+      if (false) {
         effect4.onTrigger(extend({ effect: effect4 }, debuggerEventExtraInfo));
       }
       if (effect4.scheduler) {
@@ -445,13 +442,13 @@
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (true) {
+      if (false) {
         warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -515,8 +512,8 @@
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has3.call(target, key);
-    } else if (true) {
-      checkIdentityKeys2(target, has3, key);
+    } else if (false) {
+      checkIdentityKeys(target, has3, key);
     }
     const oldValue = get3.call(target, key);
     target.set(key, value);
@@ -534,8 +531,8 @@
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has3.call(target, key);
-    } else if (true) {
-      checkIdentityKeys2(target, has3, key);
+    } else if (false) {
+      checkIdentityKeys(target, has3, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
     const result = target.delete(key);
@@ -547,7 +544,7 @@
   function clear2() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger(target, "clear", void 0, void 0, oldTarget);
@@ -592,7 +589,7 @@
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -694,13 +691,6 @@
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
-  function checkIdentityKeys2(target, has3, key) {
-    const rawKey = toRaw(key);
-    if (rawKey !== key && has3.call(target, rawKey)) {
-      const type = toRawType(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -733,7 +723,7 @@
   }
   function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -1654,12 +1644,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       node = node.nextElementSibling;
     }
   }
-  function warn2(message2, ...args) {
+  function warn(message2, ...args) {
     console.warn(`Alpine Warning: ${message2}`, ...args);
   }
   function start() {
     if (!document.body)
-      warn2("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
+      warn("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
     dispatch2(document, "alpine:init");
     dispatch2(document, "alpine:initializing");
     startObservingMutations();
@@ -2491,8 +2481,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs2 = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr22 = /* @__PURE__ */ makeMap2(specialBooleanAttrs2 + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ2 = false ? Object.freeze({}) : {};
-  var EMPTY_ARR2 = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ2 = true ? Object.freeze({}) : {};
+  var EMPTY_ARR2 = true ? Object.freeze([]) : [];
   var extend2 = Object.assign;
   var hasOwnProperty2 = Object.prototype.hasOwnProperty;
   var hasOwn2 = (val, key) => hasOwnProperty2.call(val, key);
@@ -2526,8 +2516,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap2 = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect2;
-  var ITERATE_KEY2 = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY2 = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY2 = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY2 = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2617,7 +2607,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect2)) {
       dep.add(activeEffect2);
       activeEffect2.deps.push(dep);
-      if (false) {
+      if (activeEffect2.options.onTrack) {
         activeEffect2.options.onTrack({
           effect: activeEffect2,
           target,
@@ -2681,7 +2671,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect32) => {
-      if (false) {
+      if (effect32.options.onTrigger) {
         effect32.options.onTrigger({
           effect: effect32,
           target,
@@ -2819,13 +2809,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers2 = {
     get: readonlyGet2,
     set(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2894,7 +2884,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3.call(target, key);
@@ -2913,7 +2903,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2926,7 +2916,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear3() {
     const target = toRaw2(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger3(target, "clear", void 0, void 0, oldTarget);
@@ -2971,7 +2961,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod2(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize2(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
       }
@@ -3070,6 +3060,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var shallowReadonlyCollectionHandlers = {
     get: createInstrumentationGetter2(true, true)
   };
+  function checkIdentityKeys(target, has22, key) {
+    const rawKey = toRaw2(key);
+    if (rawKey !== key && has22.call(target, rawKey)) {
+      const type = toRawType2(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap2 = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap2 = /* @__PURE__ */ new WeakMap();
   var readonlyMap2 = /* @__PURE__ */ new WeakMap();
@@ -3102,7 +3099,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject2(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject3(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3194,7 +3191,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
   function warnMissingPluginMagic(name, magicName, slug) {
-    magic(magicName, (el) => warn2(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   directive("modelable", (el, { expression }, { effect: effect32, evaluateLater: evaluateLater2, cleanup: cleanup22 }) => {
     let func = evaluateLater2(expression);
@@ -3235,14 +3232,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var teleportContainerDuringClone = document.createElement("div");
   directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup22 }) => {
     if (el.tagName.toLowerCase() !== "template")
-      warn2("x-teleport can only be used on a <template> tag", el);
+      warn("x-teleport can only be used on a <template> tag", el);
     let target = skipDuringClone(() => {
       return document.querySelector(expression);
     }, () => {
       return teleportContainerDuringClone;
     })();
     if (!target)
-      warn2(`Cannot find x-teleport element for selector: "${expression}"`);
+      warn(`Cannot find x-teleport element for selector: "${expression}"`);
     let clone2 = el.content.cloneNode(true).firstElementChild;
     el._x_teleport = clone2;
     clone2._x_teleportBack = el;
@@ -3764,7 +3761,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           initTree(clone2);
         });
         if (typeof key === "object") {
-          warn2("x-for key cannot be an object, it must be a string or an integer", templateEl);
+          warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
         }
         lookup[key] = clone2;
       }
@@ -3889,7 +3886,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginDirective("Focus", "trap", "focus");
   warnMissingPluginDirective("Mask", "mask", "mask");
   function warnMissingPluginDirective(name, directiveName2, slug) {
-    directive(directiveName2, (el) => warn2(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    directive(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   alpine_default.setEvaluator(normalEvaluator);
   alpine_default.setReactivityEngine({ reactive: reactive22, effect: effect22, release: stop2, raw: toRaw2 });
@@ -5368,9 +5365,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/$parent.js
   on("decorate", (target, path, addProp, decorator, symbol) => {
+    let memo;
     addProp("$parent", { get() {
+      if (memo)
+        return memo.$wire;
       let component = findComponent(target.__livewireId);
       let parent = closestComponent(component.el.parentElement);
+      memo = parent;
       return parent.$wire;
     } });
   });

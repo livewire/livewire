@@ -44,6 +44,8 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] Remove all `->markTestSkipped()` statements
 
 #### Finishing touches
+- [ ] Unify modern/legacy tests and "TestCase"s
+- [ ] Add JS element & component
 - [ ] Performance testing
 - [ ] Refactor JS
 - [ ] Finalize internal event names
