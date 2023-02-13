@@ -44,6 +44,8 @@ export function morph(component, el, html) {
 
         removing: (el, skip) => {
             if (isntElement(el)) return
+
+            trigger('morph.removing', el, skip)
         },
 
         removed: (el) => {

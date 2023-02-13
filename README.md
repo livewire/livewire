@@ -29,7 +29,7 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] `wire:transition`
 - [ ] JavaScript functions
 - [x] "locked" properties
-- [ ] `$parent`
+- [x] `$parent`
 - [ ] `@teleport`
 - [ ] `@if` markers
 - [x] Auto inject assets
@@ -47,7 +47,7 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] Unify modern/legacy tests and "TestCase"s
 - [ ] Add JS element & component
 - [ ] Performance testing
-- [ ] Refactor JS
+- [ ] Refactor JS (hooks helpers, synthetic, etc.)
 - [ ] Finalize internal event names
 - [ ] Finalize internal exceptions
 - [ ] Brainstorm Form Object solution

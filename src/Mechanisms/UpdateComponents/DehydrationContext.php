@@ -29,9 +29,22 @@ class DehydrationContext
     {
         if (is_array($key)) {
             foreach ($key as $iKey => $iValue) $this->addEffect($iKey, $iValue);
+            return;
         }
 
         $this->effects[$key] = $value;
+    }
+
+    public function pushEffect($key, $value, $iKey = null)
+    {
+        if (! isset($this->effects[$key])) $this->effects[$key] = [];
+
+        if ($iKey) {
+            $this->effects[$key][$iKey] = $value;
+        } else {
+            $this->effects[$key][] = $value;
+        }
+
     }
 
     public function addMeta($key, $value)

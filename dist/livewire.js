@@ -5259,6 +5259,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       removing: (el2, skip) => {
         if (isntElement(el2))
           return;
+        trigger2("morph.removing", el2, skip);
       },
       removed: (el2) => {
         if (isntElement(el2))
@@ -5397,7 +5398,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on("morph.added", (el) => {
     el.__addedByMorph = true;
   });
+  var removalCallbacks = new WeakBag();
+  on("morph.removing", (el, skip) => {
+    removalCallbacks.each(el, (callback) => callback(skip));
+  });
   directive2("transition", (el, directive3, { component }) => {
+    el.__hasLivewireTransition = true;
     if (!el.__addedByMorph)
       return;
     let visibility = module_default.reactive({ state: false });
@@ -5409,6 +5415,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "x-init"() {
         setTimeout(() => visibility.state = true);
       }
+    });
+    removalCallbacks.add(el, (skip) => {
+      skip();
+      el.addEventListener("transitionend", () => {
+        el.remove();
+      });
+      visibility.state = false;
     });
   });
 
