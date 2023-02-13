@@ -15,7 +15,7 @@ class Test extends \Tests\TestCase
         );
 
         Livewire::test(new class extends Component {
-            #[\Is\Locked]
+            #[Locked]
             public $count = 1;
 
             function increment() { $this->count++; }
