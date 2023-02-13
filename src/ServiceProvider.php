@@ -54,7 +54,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function bootFeatures()
     {
-        app('livewire')->componentHook(\Livewire\Features\SupportLockedProperties\SupportLockedProperties::class);
+        // By providing this feature only as an attribute we lose the ability to scan the service provider to see it,
+        // probably not a big deal, but feels a little weird...
+        // app('livewire')->componentHook(\Livewire\Features\SupportLockedProperties\SupportLockedProperties::class);
         app('livewire')->componentHook(\Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class);
         app('livewire')->componentHook(\Livewire\Features\SupportFileDownloads\SupportFileDownloads::class);
         app('livewire')->componentHook(\Livewire\Features\SupportQueryString\SupportQueryString::class);
