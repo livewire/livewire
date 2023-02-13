@@ -7,13 +7,14 @@ trait HandlesEvents
     protected $eventQueue = [];
     protected $dispatchQueue = [];
     protected $listeners = [];
+    public $__propertyAnnotations = [];
 
     protected function getListeners() {
         return $this->listeners;
     }
 
     public function __getListeners() {
-        return $this->getListeners();
+        return array_merge($this->getListeners(), $this->__propertyAnnotations);
     }
 
     public function __emit($name, ...$params) {

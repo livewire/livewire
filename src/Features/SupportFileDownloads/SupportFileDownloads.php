@@ -7,54 +7,46 @@ use function Livewire\on;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
-use Illuminate\Contracts\Support\Responsable;
 use Livewire\Mechanisms\DataStore;
+use Livewire\ComponentHook;
+use Illuminate\Contracts\Support\Responsable;
 
-class SupportFileDownloads
+class SupportFileDownloads extends ComponentHook
 {
-    // static function init() { return new static; }
-
-    // protected $downloadsById = [];
-
-    function boot()
+    function call($method)
     {
-        on('call', function ($synth, $target, $method, $params, $addEffect) {
-            if (! $synth instanceof LivewireSynth) return;
+        return function ($return) {
+            if ($return instanceof Responsable){
+                $return = $return->toResponse(request());
+            }
 
-            return function ($returned) use ($target) {
-                if($returned instanceof Responsable){
-                    $returned = $returned->toResponse(request());
-                }
+            if ($this->valueIsntAFileResponse($return)) return;
 
-                if ($this->valueIsntAFileResponse($returned)) return;
+            $response = $return;
 
-                $response = $returned;
+            $name = $this->getFilenameFromContentDispositionHeader(
+                $response->headers->get('Content-Disposition')
+            );
 
-                $name = $this->getFilenameFromContentDispositionHeader(
-                    $response->headers->get('Content-Disposition')
-                );
+            $binary = $this->captureOutput(function () use ($response) {
+                $response->sendContent();
+            });
 
-                $binary = $this->captureOutput(function () use ($response) {
-                    $response->sendContent();
-                });
+            $content = base64_encode($binary);
 
-                $content = base64_encode($binary);
+            $this->storeSet('download', [
+                'name' => $name,
+                'content' => $content,
+                'contentType' => $response->headers->get('Content-Type'),
+            ]);
+        };
+    }
 
-                store($target)->set('download', [
-                    'name' => $name,
-                    'content' => $content,
-                    'contentType' => $response->headers->get('Content-Type'),
-                ]);
-            };
-        });
+    function dehydrate($context)
+    {
+        if (! $download = $this->storeGet('download')) return;
 
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
-
-            if (! $download = store($target)->get('download')) return;
-
-            $context->addEffect('download', $download);
-        });
+        $context->addEffect('download', $download);
     }
 
     function valueIsntAFileResponse($value)

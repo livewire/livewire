@@ -8,6 +8,26 @@ use Livewire\Livewire;
 class Test extends \Tests\TestCase
 {
     /** @test */
+    public function receive_event_with_attribute()
+    {
+        $component = Livewire::test(new class extends Component {
+            public $foo = 'bar';
+
+            #[Listener('bar')]
+            public function onBar($param)
+            {
+                $this->foo = $param;
+            }
+
+            public function render() { return '<div></div>'; }
+        });
+
+        $component->emit('bar', 'baz');
+
+        $this->assertEquals($component->get('foo'), 'baz');
+    }
+
+    /** @test */
     public function receive_event()
     {
         $component = Livewire::test(ReceivesEvents::class);

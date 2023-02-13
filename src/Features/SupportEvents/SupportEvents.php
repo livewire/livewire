@@ -5,28 +5,32 @@ namespace Livewire\Features\SupportEvents;
 use function Livewire\on;
 use function Livewire\store;
 use function Livewire\wrap;
+
+use Livewire\ComponentHook;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 
-class SupportEvents
+class SupportEvents extends ComponentHook
 {
     function boot()
     {
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof LivewireSynth) return;
-
-            $listeners = static::getListenerEventNames($target);
-            $emits = $this->getServerEmittedEvents($target);
-            $dispatches = $this->getServerDispatchedEvents($target);
-
-            $listeners && $context->addEffect('listeners', $listeners);
-            $emits && $context->addEffect('emits', $emits);
-            $dispatches && $context->addEffect('dispatches', $dispatches);
-        });
-
+        // @todo: refactor this out. Ew.
         on('methods', function ($target, $addMethod) {
+            if ($target !== $this->component) return;
+
             $addMethod('__emit');
         });
+    }
+
+    function dehydrate($context)
+    {
+        $listeners = static::getListenerEventNames($this->component);
+        $emits = $this->getServerEmittedEvents($this->component);
+        $dispatches = $this->getServerDispatchedEvents($this->component);
+
+        $listeners && $context->addEffect('listeners', $listeners);
+        $emits && $context->addEffect('emits', $emits);
+        $dispatches && $context->addEffect('dispatches', $dispatches);
     }
 
     static function receive($component, $name, $params)

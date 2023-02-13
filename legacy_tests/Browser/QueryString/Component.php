@@ -24,8 +24,8 @@ class Component extends BaseComponent
     public $showNestedComponent = false;
 
     protected $queryString = [
-        'foo' => ['use' => 'push'],
-        'bar' => ['use' => 'push'],
+        'foo' => ['use' => 'push', 'alwaysShow' => false],
+        'bar' => ['use' => 'push', 'alwaysShow' => false],
         'bob' => ['use' => 'push', 'alwaysShow' => true],
         'qux' => ['use' => 'push', 'alwaysShow' => true],
         'showNestedComponent' => ['use' => 'push', 'alwaysShow' => true],

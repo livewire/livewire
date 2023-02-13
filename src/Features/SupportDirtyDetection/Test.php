@@ -10,7 +10,6 @@ class Test extends \Tests\TestCase
     /** @test */
     public function property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action()
     {
-        $this->markTestSkipped(); // @todo: Reenable this failing test
         $component = Livewire::test(DirtyDataBindingStub::class);
 
         $component->set('foo', 'bar');
@@ -27,7 +26,6 @@ class Test extends \Tests\TestCase
     /** @test */
     public function nested_property_is_marked_as_dirty_if_changed_as_side_effect_of_an_action()
     {
-        $this->markTestSkipped(); // @todo: Reenable this failing test
         $component = Livewire::test(DirtyDataBindingStub::class);
 
         $component->set('arrayProperty.1', 'baz');

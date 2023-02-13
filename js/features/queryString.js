@@ -5,7 +5,7 @@ import { track } from '@alpinejs/history'
 
 on('component.init', component => {
     let effects = component.synthetic.effects
-    let queryString = effects['queryString']
+    let queryString = effects['url']
 
     if (! queryString) return
 

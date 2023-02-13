@@ -54,41 +54,54 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function bootFeatures()
     {
+        app('livewire')->componentHook(\Livewire\Features\SupportLockedProperties\SupportLockedProperties::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportFileDownloads\SupportFileDownloads::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportQueryString\SupportQueryString::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportRedirects\SupportRedirects::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportLocales\SupportLocales::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportEvents\SupportEvents::class);
+
+        // Refactor this...
+        $hooks = app(\Livewire\Mechanisms\ComponentRegistry::class)->getComponentHooks();
+        (new HookAdapter)->adapt($hooks);
+
         foreach ([
+            // V3
             \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
-            \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
-            \Livewire\Features\SupportJavaScriptOrderedArrays\SupportJavaScriptOrderedArrays::class,
             \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
+            \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
+            \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
+            \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
+            \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
+            \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
+
+            // Core
+            \Livewire\Features\SupportJavaScriptOrderedArrays\SupportJavaScriptOrderedArrays::class,
             \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
             \Livewire\Features\SupportNestingComponents\SupportNestingComponents::class,
-            \Livewire\Features\SupportLockedProperties\SupportLockedProperties::class,
-            \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
             \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class,
             \Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
-            \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
-            \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,
-            \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
-            \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
-            \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
-            \Livewire\Features\SupportQueryString\SupportQueryString::class,
-            \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
-            \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
             \Livewire\Features\SupportFileUploads\SupportFileUploads::class,
             \Livewire\Features\SupportPagination\SupportPagination::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
-            \Livewire\Features\SupportWireables\SupportWireables::class,
-            \Livewire\Features\SupportRedirects\SupportRedirects::class,
             \Livewire\Features\SupportEntangle\SupportEntangle::class,
-            \Livewire\Features\SupportLocales\SupportLocales::class,
             \Livewire\Features\SupportModels\SupportModels::class,
             \Livewire\Features\SupportTraits\SupportTraits::class,
-            \Livewire\Features\SupportEvents\SupportEvents::class,
+
+            // V2 parity
+            \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
+            \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
+            \Livewire\Features\SupportWireables\SupportWireables::class,
+
         ] as $feature) {
             (new $feature)->boot($this);
         }
     }
 }
+
+

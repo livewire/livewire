@@ -2,20 +2,14 @@
 
 namespace Livewire\Features\SupportLockedProperties;
 
-use Livewire\Drawer\Utils;
+use Livewire\ComponentHook;
 
-use function Livewire\on;
-
-class SupportLockedProperties
+class SupportLockedProperties extends ComponentHook
 {
-    public function boot()
+    public function update($propertyName)
     {
-        on('update', function ($root, $path, $value) {
-            $prop = Utils::beforeFirstDot($path);
+        if (! $this->hasAttribute($propertyName, Locked::class)) return;
 
-            if (Utils::hasAttribute($root, $prop, Locked::class)) {
-               throw new \Exception('Cannot update locked property: ['.$prop.']');
-            }
-        });
+        throw new \Exception('Cannot update locked property: ['.$propertyName.']');
     }
 }

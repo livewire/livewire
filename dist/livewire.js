@@ -5185,7 +5185,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/queryString.js
   on("component.init", (component) => {
     let effects = component.synthetic.effects;
-    let queryString = effects["queryString"];
+    let queryString = effects["url"];
     if (!queryString)
       return;
     Object.entries(queryString).forEach(([key, value]) => {

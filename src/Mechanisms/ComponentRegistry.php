@@ -9,6 +9,7 @@ class ComponentRegistry
 {
     protected $nonAliasedClasses = [];
     protected $aliases = [];
+    protected $componentHooks = [];
 
     function boot()
     {
@@ -22,6 +23,16 @@ class ComponentRegistry
         } else {
             $this->aliases[$name] = $class;
         }
+    }
+
+    function componentHook($hook)
+    {
+        $this->componentHooks[] = $hook;
+    }
+
+    function getComponentHooks()
+    {
+        return $this->componentHooks;
     }
 
     function new($nameOrClass, $params = [], $id = null)

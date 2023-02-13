@@ -8,7 +8,7 @@ use Illuminate\Routing\Redirector as BaseRedirector;
 class Redirector extends BaseRedirector
 {
     protected $component;
-    
+
     public function to($path, $status = 302, $headers = [], $secure = null)
     {
         $this->component->redirect($this->generator->to($path, [], $secure));

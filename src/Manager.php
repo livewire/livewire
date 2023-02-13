@@ -18,6 +18,11 @@ class Manager
         app(ComponentRegistry::class)->register($name, $class);
     }
 
+    function componentHook($hook)
+    {
+        app(ComponentRegistry::class)->componentHook($hook);
+    }
+
     function synth($synthClass)
     {
         app(UpdateComponents::class)->registerSynth($synthClass);

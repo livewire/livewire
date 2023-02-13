@@ -2,68 +2,40 @@
 
 namespace Livewire\Features\SupportDirtyDetection;
 
-use function Livewire\before;
-use function Livewire\store;
-use function Livewire\on;
-use Livewire\Mechanisms\DataStore;
-
-use Livewire\Drawer\Utils;
+use Livewire\ComponentHook;
 use Illuminate\Support\Arr;
 
-class SupportDirtyDetection
+class SupportDirtyDetection extends ComponentHook
 {
-    function boot()
-    {
-        $this->whenAComponentIsHydrated(function ($component) {
-            $hashMap = $this->generateAHashMapOfItsProperties($component);
+    function hydrate() {
+        $hashMap = $this->generateAHashMapOfItsProperties(
+            $this->getProperties()
+        );
 
-            $this->storeThisHashMapForLaterComparison($component, $hashMap);
-        });
-
-        $this->whenComponentDataIsUpdated(function ($component, $property) {
-            $value = $component->$property;
-
-            $this->rehashProperty($component, $property, $value);
-        });
-
-        $this->whenAComponentIsDehydrated(function ($component, $addDirtyPropertiesToPayload) {
-            $this->onlyIfItWasHydratedEarlier($component, function () use ($component, $addDirtyPropertiesToPayload) {
-                $hashMap = $this->generateAHashMapOfItsProperties($component);
-
-                $dirtyProperties = $this->compareThisHashMapAgainstTheEarlierOne($component, $hashMap);
-
-                $addDirtyPropertiesToPayload($dirtyProperties);
-            });
-        });
+        $this->storeThisHashMapForLaterComparison($hashMap);
     }
 
-    function whenAComponentIsHydrated($callback)
-    {
-        on('hydrate', function ($synth, $rawValue, $meta) use ($callback) {
-            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
+    function update($propertyName) {
+        return function () use ($propertyName) {
+            $value = $this->getProperty($propertyName);
 
-            return function ($target) use ($callback) {
-                $callback($target);
-            };
-        });
+            $this->rehashProperty($propertyName, $value);
+        };
     }
 
-    function whenComponentDataIsUpdated($callback)
-    {
-        before('update', function ($target, $path, $value) use ($callback) {
-            if (! $target instanceof \Livewire\Component) return;
+    function dehydrate($context) {
+        if (! $this->storeHas('dirtyHashMap')) return;
 
-            return function ($newValue) use ($target, $path, $callback) {
-                $property = Utils::beforeFirstDot($path);
+        $hashMap = $this->generateAHashMapOfItsProperties($this->getProperties());
 
-                $callback($target, $property);
-            };
-        });
+        $dirtyProperties = $this->compareThisHashMapAgainstTheEarlierOne($hashMap);
+
+        $context->addEffect('dirty', $dirtyProperties);
     }
 
-    function rehashProperty($component, $key, $value)
+    function rehashProperty($key, $value)
     {
-        $hashMap = store($component)->get('dirtyHashMap');
+        $hashMap = $this->storeGet('dirtyHashMap');
 
         if (is_array($value)) {
             foreach (Arr::dot($value, $key.'.') as $dottedKey => $value) {
@@ -73,14 +45,14 @@ class SupportDirtyDetection
             $hashMap[$key] = crc32(json_encode($value));
         }
 
-        $this->storeThisHashMapForLaterComparison($component, $hashMap);
+        $this->storeThisHashMapForLaterComparison($hashMap);
     }
 
-    function generateAHashMapOfItsProperties($component)
+    function generateAHashMapOfItsProperties($properties)
     {
         $hashes = [];
 
-        foreach ($component->all() as $key => $value) {
+        foreach ($properties as $key => $value) {
             if (is_array($value)) {
                 foreach (Arr::dot($value, $key.'.') as $dottedKey => $value) {
                     $hashes[$dottedKey] = crc32(json_encode($value));
@@ -93,30 +65,14 @@ class SupportDirtyDetection
         return $hashes;
     }
 
-    function storeThisHashMapForLaterComparison($component, $hashMap)
+    function storeThisHashMapForLaterComparison($hashMap)
     {
-        store($component)->set('dirtyHashMap', $hashMap);
+        $this->storeSet('dirtyHashMap', $hashMap);
     }
 
-    function whenAComponentIsDehydrated($callback)
+    function compareThisHashMapAgainstTheEarlierOne($hashMap)
     {
-        on('dehydrate', function ($synth, $target, $context) use ($callback) {
-            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
-
-            $callback($target, function ($dirtyProperties) use ($context) {
-                $context->addEffect('dirty', $dirtyProperties);
-            });
-        });
-    }
-
-    function onlyIfItWasHydratedEarlier($component, $callback)
-    {
-        store($component)->has('dirtyHashMap') && $callback();
-    }
-
-    function compareThisHashMapAgainstTheEarlierOne($component, $hashMap)
-    {
-        $earlierOne = store($component)->get('dirtyHashMap');
+        $earlierOne = $this->storeGet('dirtyHashMap');
 
         return array_keys(
             array_merge(
