@@ -15,10 +15,10 @@ class HookAdapter
 
         foreach ($hooks as $hook) {
             on('mount', function ($name, $params, $parent, $key, $hijack) use ($hook) {
-                return function ($instance) use ($hook) {
+                return function ($instance) use ($hook, $params) {
                     $hook = $this->initializeHook($hook, $instance);
                     $hook->callBoot();
-                    return $hook->callMount();
+                    return $hook->callMount($params);
                 };
             });
 

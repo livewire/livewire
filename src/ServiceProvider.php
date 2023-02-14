@@ -75,7 +75,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         app('livewire')->componentHook(\Livewire\Features\SupportEntangle\SupportEntangle::class);
         app('livewire')->componentHook(\Livewire\Features\SupportLocales\SupportLocales::class);
         app('livewire')->componentHook(\Livewire\Features\SupportEvents\SupportEvents::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportTraits\SupportTraits::class);
 
         // Refactor this...
         $hooks = app(\Livewire\Mechanisms\ComponentRegistry::class)->getComponentHooks();

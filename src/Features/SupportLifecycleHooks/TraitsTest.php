@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\Features\SupportTraits;
+namespace Livewire\Features\SupportLifecycleHooks;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
-class Test extends \Tests\TestCase
+class TraitsTest extends \Tests\TestCase
 {
     /** @test */
     public function traits_can_intercept_lifecycle_hooks()

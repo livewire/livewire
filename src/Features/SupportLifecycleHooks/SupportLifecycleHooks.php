@@ -3,29 +3,82 @@
 namespace Livewire\Features\SupportLifecycleHooks;
 
 use function Livewire\wrap;
-use function Livewire\trigger;
-
-use function Livewire\on;
-use function Livewire\of;
-use function Livewire\after;
-
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
-use Livewire\Drawer\ImplicitlyBoundMethod;
 use Livewire\ComponentHook;
 
 class SupportLifecycleHooks extends ComponentHook
 {
-    static function provide()
+    public function mount($params)
     {
-        static::preventLifecycleHooksFromBeingCalledDirectly();
-        static::handleBootHooks();
-        static::handleMountHooks();
-        static::handleHydrateHooks();
-        static::handleDehydrateHooks();
-        static::handleUpdateHooks();
+        $this->callHook('boot');
+        $this->callTraitHook('boot');
+
+        $this->callTraitHook('initialize');
+
+        $this->callHook('mount', $params);
+        $this->callTraitHook('mount', $params);
+
+        $this->callHook('booted');
+        $this->callTraitHook('booted');
     }
 
-    static function preventLifecycleHooksFromBeingCalledDirectly()
+    public function hydrate()
+    {
+        $this->callHook('boot');
+        $this->callTraitHook('boot');
+
+        $this->callTraitHook('initialize');
+
+        $this->callHook('hydrate');
+        $this->callTraitHook('hydrate');
+
+        // Call "hydrateXx" hooks for each property...
+        foreach ($this->getProperties() as $property => $value) {
+            $this->callHook('hydrate'.str($property)->studly(), [$value]);
+        }
+
+        $this->callHook('booted');
+        $this->callTraitHook('booted');
+    }
+
+    public function update($propertyName, $fullPath, $newValue)
+    {
+        $name = str($fullPath);
+
+        $propertyName = $name->studly()->before('.');
+        $keyAfterFirstDot = $name->contains('.') ? $name->after('.')->__toString() : null;
+        $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.')->__toString() : null;
+
+        $beforeMethod = 'updating'.$propertyName;
+        $afterMethod = 'updated'.$propertyName;
+
+        $beforeNestedMethod = $name->contains('.')
+            ? 'updating'.$name->replace('.', '_')->studly()
+            : false;
+
+        $afterNestedMethod = $name->contains('.')
+            ? 'updated'.$name->replace('.', '_')->studly()
+            : false;
+
+        $name = $name->__toString();
+
+        $this->callHook('updating', [$fullPath, $newValue]);
+        $this->callTraitHook('updating', [$fullPath, $newValue]);
+
+        $this->callHook($beforeMethod, [$newValue, $keyAfterFirstDot]);
+
+        $this->callHook($beforeNestedMethod, [$newValue, $keyAfterLastDot]);
+
+        return function () use ($fullPath, $afterMethod, $afterNestedMethod, $keyAfterFirstDot, $keyAfterLastDot, $newValue) {
+            $this->callHook('updated', [$fullPath, $newValue]);
+            $this->callTraitHook('updated', [$fullPath, $newValue]);
+
+            $this->callHook($afterMethod, [$newValue, $keyAfterFirstDot]);
+
+            $this->callHook($afterNestedMethod, [$newValue, $keyAfterLastDot]);
+        };
+    }
+
+    public function call($methodName)
     {
         $protectedMethods = [
             'mount',
@@ -35,162 +88,47 @@ class SupportLifecycleHooks extends ComponentHook
             'updated*',
         ];
 
-        on('call', function ($synth, $target, $method, $params, $addEffect) use ($protectedMethods) {
-            if (! $synth instanceof LivewireSynth) return;
-
-            throw_if(
-                str($method)->is($protectedMethods),
-                new DirectlyCallingLifecycleHooksNotAllowedException($method, $target->getName())
-            );
-        });
+        throw_if(
+            str($methodName)->is($protectedMethods),
+            new DirectlyCallingLifecycleHooksNotAllowedException($methodName, $this->component->getName())
+        );
     }
 
-    static function handleBootHooks()
+    public function render($view)
     {
-        // Cover the initial request, mounting, scenario...
-        on('mount', function ($name, $params, $parent, $key, $hijack) {
-            return function ($target) use ($params) {
-                if (method_exists($target, 'boot')) wrap($target)->boot();
+        $this->callTraitHook('rendering');
 
-                trigger('component.boot', $target);
-            };
-        });
-
-        after('mount', function ($name, $params) {
-            return function ($target) use ($params) {
-                if (method_exists($target, 'booted')) wrap($target)->booted();
-
-                trigger('component.booted', $target);
-            };
-        });
-
-        // Cover the subsequent request, hydration, scenario...
-        on('hydrate', function ($synth, $rawValue, $meta) {
-            if (! $synth instanceof LivewireSynth) return;
-
-            return function ($target) {
-                if (method_exists($target, 'boot')) wrap($target)->boot();
-
-                trigger('component.boot', $target);
-            };
-        });
-
-        after('hydrate.root', function () {
-            return function ($target) {
-                if (! $target instanceof \Livewire\Component) return;
-
-                if (method_exists($target, 'booted')) wrap($target)->booted();
-
-                trigger('component.booted', $target);
-            };
-        });
+        return function () use ($view) {
+            $this->callTraitHook('rendered', ['view' => $view]);
+        };
     }
 
-    static function handleMountHooks()
+    public function dehydrate()
     {
-        // Note: "mount" is the only one of these events fired by Livewire...
-        on('mount', function ($name, $params, $parent, $key, $hijack) {
-            return function ($target) use ($params) {
-                if (method_exists($target, 'mount')) {
-                    wrap($target)->__call('mount', $params);
-                }
+        $this->callHook('dehydrate');
+        $this->callTraitHook('dehydrate');
 
-                trigger('component.mount', $target, $params);
-            };
-        });
+        // Call "dehydrateXx" hooks for each property...
+        foreach ($this->getProperties() as $property => $value) {
+            $this->callHook('dehydrate'.str($property)->studly(), [$value]);
+        }
     }
 
-    static function handleHydrateHooks()
+    public function callHook($name, $params = [])
     {
-        on('hydrate.root', function () {
-            return function ($target) {
-                if (! $target instanceof \Livewire\Component) return;
-
-                // Call general "hydrate" hook...
-                if (method_exists($target, 'hydrate')) wrap($target)->hydrate();
-
-                // Call "hydrateXx" hooks for each property...
-                foreach ($target->all() as $property => $value) {
-                    $method = 'hydrate'.str($property)->studly();
-
-                    if (method_exists($target, $method)) wrap($target)->$method($value);
-                }
-
-                trigger('component.hydrate', $target);
-            };
-        });
+        if (method_exists($this->component, $name)) {
+            wrap($this->component)->__call($name, $params);
+        }
     }
 
-    static function handleDehydrateHooks()
+    function callTraitHook($name, $params = [])
     {
-        on('dehydrate.root', function ($target) {
-            if (! $target instanceof \Livewire\Component) return;
+        foreach (class_uses_recursive($this->component) as $trait) {
+            $method = $name.class_basename($trait);
 
-            // Call general "dehydrate" hook...
-            if (method_exists($target, 'dehydrate')) wrap($target)->dehydrate();
-
-            // Call "dehydrateXx" hooks for each property...
-            foreach ($target->all() as $property => $value) {
-                $method = 'dehydrate'.str($property)->studly();
-
-                if (method_exists($target, $method)) wrap($target)->$method($value);
+            if (method_exists($this->component, $method)) {
+                wrap($this->component)->$method(...$params);
             }
-
-            return function () use ($target) {
-                trigger('component.dehydrate', $target);
-            };
-        });
-    }
-
-    static function handleUpdateHooks()
-    {
-        on('update', function ($target, $path, $value) {
-            if (! $target instanceof \Livewire\Component) return;
-
-            $name = str($path);
-
-            $propertyName = $name->studly()->before('.');
-            $keyAfterFirstDot = $name->contains('.') ? $name->after('.')->__toString() : null;
-            $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.')->__toString() : null;
-
-            $beforeMethod = 'updating'.$propertyName;
-            $afterMethod = 'updated'.$propertyName;
-
-            $beforeNestedMethod = $name->contains('.')
-                ? 'updating'.$name->replace('.', '_')->studly()
-                : false;
-
-            $afterNestedMethod = $name->contains('.')
-                ? 'updated'.$name->replace('.', '_')->studly()
-                : false;
-
-            $name = $name->__toString();
-
-            if (method_exists($target, 'updating')) wrap($target)->updating($path, $value);
-
-            if (method_exists($target, $beforeMethod)) {
-                wrap($target)->{$beforeMethod}($value, $keyAfterFirstDot);
-            }
-
-            if ($beforeNestedMethod && method_exists($target, $beforeNestedMethod)) {
-                wrap($target)->{$beforeNestedMethod}($value, $keyAfterLastDot);
-            }
-
-            trigger('component.updating', $target, $path, $value);
-
-            return function ($newValue) use ($target, $path, $afterMethod, $afterNestedMethod, $keyAfterFirstDot, $keyAfterLastDot) {
-                if (method_exists($target, 'updated')) wrap($target)->updated($path, $newValue);
-
-                if (method_exists($target, $afterMethod)) {
-                    wrap($target)->{$afterMethod}($newValue, $keyAfterFirstDot);
-                }
-
-                if ($afterNestedMethod && method_exists($target, $afterNestedMethod)) {
-                    wrap($target)->{$afterNestedMethod}($newValue, $keyAfterLastDot);
-                }
-
-                trigger('component.updated', $target, $path, $newValue);
-            };
-        });
+        }
     }
 }
