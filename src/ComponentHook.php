@@ -99,10 +99,10 @@ abstract class ComponentHook
         };
     }
 
-    function callCall($method, $params) {
+    function callCall($method, $params, $returnEarly) {
         $callbacks = [];
 
-        if (method_exists($this, 'call')) $callbacks[] = $this->call($method, $params);
+        if (method_exists($this, 'call')) $callbacks[] = $this->call($method, $params, $returnEarly);
 
         foreach ($this->propertyHooks as $property => $hooks) {
             // Only run "call" on the appropriate hooks...
@@ -194,9 +194,14 @@ abstract class ComponentHook
         store($this->component)->set($key, $value);
     }
 
-    function storeGet($key)
+    function storePush($key, $value, $iKey = null)
     {
-        return store($this->component)->get($key);
+        store($this->component)->push($key, $value, $iKey);
+    }
+
+    function storeGet($key, $default = null)
+    {
+        return store($this->component)->get($key, $default);
     }
 
     function storeHas($key)

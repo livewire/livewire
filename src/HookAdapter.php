@@ -41,10 +41,10 @@ class HookAdapter
             return $this->proxyCallToHooks($root, 'callUpdate')($propertyName, $fullPath, $newValue);
         });
 
-        on('call', function ($synth, $target, $method, $params, $addEffect) {
+        on('call', function ($synth, $target, $method, $params, $addEffect, $earlyReturn) {
             if (! is_object($target)) return;
 
-            return $this->proxyCallToHooks($target, 'callCall')($method, $params);
+            return $this->proxyCallToHooks($target, 'callCall')($method, $params, $earlyReturn);
         });
 
         on('render', function ($target, $view, $data) {

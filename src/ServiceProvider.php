@@ -42,7 +42,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function bootMechanisms()
     {
         foreach ([
-            \Livewire\Mechanisms\NestingComponents\NestingComponents::class,
             \Livewire\Mechanisms\UpdateComponents\UpdateComponents::class,
             \Livewire\Mechanisms\ExtendBlade\ExtendBlade::class,
             \Livewire\Mechanisms\CompileLivewireTags::class,
@@ -59,6 +58,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         app('livewire')->componentHook(\Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class);
         app('livewire')->componentHook(\Livewire\Features\SupportComputedProperties\SupportComputedProperties::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportNestingComponents\SupportNestingComponents::class);
         app('livewire')->componentHook(\Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class);
         app('livewire')->componentHook(\Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class);
         app('livewire')->componentHook(\Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class);
@@ -85,7 +85,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             // \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
             // \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
             // \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
-            // \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
+            \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             // \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
             // \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             // \Livewire\Features\SupportHotReloading\SupportHotReloading::class,

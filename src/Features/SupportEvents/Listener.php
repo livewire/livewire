@@ -4,6 +4,8 @@ namespace Livewire\Features\SupportEvents;
 
 use Livewire\PropertyHook;
 
+use function Livewire\store;
+
 #[\Attribute]
 class Listener extends PropertyHook
 {
@@ -11,6 +13,6 @@ class Listener extends PropertyHook
 
     public function boot()
     {
-        $this->component->__propertyAnnotations[$this->event] = $this->getName();
+        store($this->component)->push('listenersFromPropertyHooks', $this->getName(), $this->event);
     }
 }

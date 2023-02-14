@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms\NestingComponents;
+namespace Livewire\Features\SupportNestingComponents;
 
 use Livewire\Component;
 

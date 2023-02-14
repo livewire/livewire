@@ -3,6 +3,8 @@
 namespace Livewire\Features\SupportValidation;
 
 use function Livewire\invade;
+use function Livewire\store;
+
 use Livewire\Wireable;
 use Livewire\Exceptions\MissingRulesException;
 use Livewire\Drawer\Utils;
@@ -16,13 +18,11 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 trait HandlesValidation
 {
-    protected $errorBag;
-
     protected $withValidatorCallback;
 
     public function getErrorBag()
     {
-        return $this->errorBag ?? new MessageBag;
+        return store($this)->get('errorBag', new MessageBag);
     }
 
     public function addError($name, $message)
@@ -32,9 +32,10 @@ trait HandlesValidation
 
     public function setErrorBag($bag)
     {
-        return $this->errorBag = $bag instanceof MessageBag
+        return store($this)->set('errorBag', $bag instanceof MessageBag
             ? $bag
-            : new MessageBag($bag);
+            : new MessageBag($bag)
+        );
     }
 
     public function resetErrorBag($field = null)
@@ -42,7 +43,11 @@ trait HandlesValidation
         $fields = (array) $field;
 
         if (empty($fields)) {
-            return $this->errorBag = new MessageBag;
+            $errorBag = new MessageBag;
+
+            $this->setErrorBag($errorBag);
+
+            return $errorBag;
         }
 
         $this->setErrorBag(

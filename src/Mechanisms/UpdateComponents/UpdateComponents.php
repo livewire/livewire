@@ -279,9 +279,18 @@ class UpdateComponents
                 throw new MethodNotFoundException($method);
             }
 
-            $finish = trigger('call', $synth, $target, $method, $params, $addEffect);
+            $earlyReturnCalled = false;
+            $earlyReturn = null;
+            $returnEarly = function ($return = null) use (&$earlyReturnCalled, &$earlyReturn) {
+                $earlyReturnCalled = true;
+                $earlyReturn = $return;
+            };
 
-            $return = $this->synth($target)->call($target, $method, $params, $addEffect);
+            $finish = trigger('call', $synth, $target, $method, $params, $addEffect, $returnEarly);
+
+            $return = $earlyReturnCalled
+                ? $earlyReturn
+                : $this->synth($target)->call($target, $method, $params, $addEffect);
 
             $return = $finish($return);
 

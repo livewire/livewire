@@ -2,28 +2,23 @@
 
 namespace Livewire\Features\SupportEvents;
 
+use function Livewire\store;
+
 trait HandlesEvents
 {
-    protected $eventQueue = [];
-    protected $dispatchQueue = [];
     protected $listeners = [];
-    public $__propertyAnnotations = [];
 
     protected function getListeners() {
         return $this->listeners;
     }
 
-    public function __getListeners() {
-        return array_merge($this->getListeners(), $this->__propertyAnnotations);
-    }
-
-    public function __emit($name, ...$params) {
-        return SupportEvents::receive($this, $name, $params);
-    }
-
     public function emit($event, ...$params)
     {
-        return SupportEvents::emit($this, $event, ...$params);
+        $event = new Event($event, $params);
+
+        store($this)->push('emitted', $event);
+
+        return $event;
     }
 
     public function emitUp($event, ...$params)
@@ -43,40 +38,9 @@ trait HandlesEvents
 
     public function dispatchBrowserEvent($event, $data = null)
     {
-        SupportEvents::dispatch($this, $event, $data);
-    }
-
-    public function getEventQueue()
-    {
-        return collect($this->eventQueue)->map->serialize()->toArray();
-    }
-
-    public function getDispatchQueue()
-    {
-        return $this->dispatchQueue;
-    }
-
-    protected function getEventsAndHandlers()
-    {
-        return collect($this->getListeners())
-            ->mapWithKeys(function ($value, $key) {
-                $key = is_numeric($key) ? $value : $key;
-
-                return [$key => $value];
-            })->toArray();
-    }
-
-    public function getEventsBeingListenedFor()
-    {
-        return array_keys($this->getEventsAndHandlers());
-    }
-
-    public function fireEvent($event, $params, $id)
-    {
-        $method = $this->getEventsAndHandlers()[$event];
-
-        // $this->callMethod($method, $params, function ($returned) use ($event, $id) {
-        //     Livewire::dispatch('action.returned', $this, $event, $returned, $id);
-        // });
+        store($this)->push('dispatched', [
+            'event' => $event,
+            'data' => $data,
+        ]);
     }
 }

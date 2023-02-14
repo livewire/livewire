@@ -30,10 +30,8 @@ abstract class Component
     use HandlesEvents;
     use HandlesRedirects;
     use HandlesValidation;
-    use HandlesQueryString;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
-    use HandlesNestingComponents;
 
     protected $__id;
     protected $__name;
