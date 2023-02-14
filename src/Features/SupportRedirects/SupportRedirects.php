@@ -15,28 +15,51 @@ use Synthetic\ShortcircuitResponse;
 
 class SupportRedirects extends ComponentHook
 {
-    public $redirectorCacheStack = [];
+    public static $redirectorCacheStack = [];
 
-    public function boot()
+    public static function provide()
     {
-        // Put Laravel's redirector aside and replace it with our own custom one.
-        $this->redirectorCacheStack[] = app('redirect');
+        before('mount', function () {
+            return function ($component) {
+                // Put Laravel's redirector aside and replace it with our own custom one.
+                static::$redirectorCacheStack[] = app('redirect');
 
-        app()->bind('redirect', function () {
-            $redirector = app(Redirector::class)->component($this->component);
+                app()->bind('redirect', function () use ($component) {
+                    $redirector = app(Redirector::class)->component($component);
 
-            if (app()->has('session.store')) {
-                $redirector->setSession(app('session.store'));
-            }
+                    if (app()->has('session.store')) {
+                        $redirector->setSession(app('session.store'));
+                    }
 
-            return $redirector;
+                    return $redirector;
+                });
+            };
+        });
+
+        before('hydrate', function ($synth, $rawValue, $meta) {
+            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
+
+            return function ($component) {
+                // Put Laravel's redirector aside and replace it with our own custom one.
+                static::$redirectorCacheStack[] = app('redirect');
+
+                app()->bind('redirect', function () use ($component) {
+                    $redirector = app(Redirector::class)->component($component);
+
+                    if (app()->has('session.store')) {
+                        $redirector->setSession(app('session.store'));
+                    }
+
+                    return $redirector;
+                });
+            };
         });
     }
 
     public function dehydrate($context)
     {
         // Put the old redirector back into the container.
-        app()->instance('redirect', array_pop($this->redirectorCacheStack));
+        app()->instance('redirect', array_pop(static::$redirectorCacheStack));
 
         $to = $this->storeGet('redirect');
 

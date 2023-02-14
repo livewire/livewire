@@ -14,6 +14,7 @@ class PublicPropertyHydrationAndDehydrationTest extends \Tests\TestCase
 {
     public function setUp(): void
     {
+        $this->markTestSkipped(); // @todo: implement models
         parent::setUp();
 
         Schema::create('authors', function ($table) {

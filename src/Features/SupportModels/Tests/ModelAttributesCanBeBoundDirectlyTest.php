@@ -14,7 +14,7 @@ class ModelAttributesCanBeBoundDirectlyTest extends \Tests\TestCase
     public function setUp(): void
     {
         $this->markTestSkipped(); // @todo: implement models
-        
+
         parent::setUp();
 
         Schema::create('model_for_attribute_bindings', function ($table) {
