@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportNestingComponents;
+namespace Livewire\Mechanisms\NestingComponents;
 
 use function Livewire\store;
 use function Livewire\on;
@@ -8,7 +8,7 @@ use function Livewire\trigger;
 
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 
-class SupportNestingComponents
+class NestingComponents
 {
     function boot()
     {

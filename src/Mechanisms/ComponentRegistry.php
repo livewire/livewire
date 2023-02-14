@@ -9,7 +9,6 @@ class ComponentRegistry
 {
     protected $nonAliasedClasses = [];
     protected $aliases = [];
-    protected $componentHooks = [];
 
     function boot()
     {
@@ -25,8 +24,12 @@ class ComponentRegistry
         }
     }
 
+    protected $componentHooks = [];
+
     function componentHook($hook)
     {
+        if (method_exists($hook, 'provide')) $hook::provide();
+
         $this->componentHooks[] = $hook;
     }
 

@@ -2,29 +2,30 @@
 
 namespace Livewire\Features\SupportLifecycleHooks;
 
-use function Livewire\after;
 use function Livewire\wrap;
-
 use function Livewire\trigger;
-use function Livewire\of;
+
 use function Livewire\on;
+use function Livewire\of;
+use function Livewire\after;
 
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Drawer\ImplicitlyBoundMethod;
+use Livewire\ComponentHook;
 
-class SupportLifecycleHooks
+class SupportLifecycleHooks extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
-        $this->preventLifecycleHooksFromBeingCalledDirectly();
-        $this->handleBootHooks();
-        $this->handleMountHooks();
-        $this->handleHydrateHooks();
-        $this->handleDehydrateHooks();
-        $this->handleUpdateHooks();
+        static::preventLifecycleHooksFromBeingCalledDirectly();
+        static::handleBootHooks();
+        static::handleMountHooks();
+        static::handleHydrateHooks();
+        static::handleDehydrateHooks();
+        static::handleUpdateHooks();
     }
 
-    function preventLifecycleHooksFromBeingCalledDirectly()
+    static function preventLifecycleHooksFromBeingCalledDirectly()
     {
         $protectedMethods = [
             'mount',
@@ -44,7 +45,7 @@ class SupportLifecycleHooks
         });
     }
 
-    function handleBootHooks()
+    static function handleBootHooks()
     {
         // Cover the initial request, mounting, scenario...
         on('mount', function ($name, $params, $parent, $key, $hijack) {
@@ -85,7 +86,7 @@ class SupportLifecycleHooks
         });
     }
 
-    function handleMountHooks()
+    static function handleMountHooks()
     {
         // Note: "mount" is the only one of these events fired by Livewire...
         on('mount', function ($name, $params, $parent, $key, $hijack) {
@@ -99,7 +100,7 @@ class SupportLifecycleHooks
         });
     }
 
-    function handleHydrateHooks()
+    static function handleHydrateHooks()
     {
         on('hydrate.root', function () {
             return function ($target) {
@@ -120,7 +121,7 @@ class SupportLifecycleHooks
         });
     }
 
-    function handleDehydrateHooks()
+    static function handleDehydrateHooks()
     {
         on('dehydrate.root', function ($target) {
             if (! $target instanceof \Livewire\Component) return;
@@ -141,7 +142,7 @@ class SupportLifecycleHooks
         });
     }
 
-    function handleUpdateHooks()
+    static function handleUpdateHooks()
     {
         on('update', function ($target, $path, $value) {
             if (! $target instanceof \Livewire\Component) return;

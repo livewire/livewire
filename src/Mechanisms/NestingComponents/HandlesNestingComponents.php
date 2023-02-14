@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportNestingComponents;
+namespace Livewire\Mechanisms\NestingComponents;
 
 trait HandlesNestingComponents
 {

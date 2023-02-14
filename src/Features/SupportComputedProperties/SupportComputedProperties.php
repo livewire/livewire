@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportComputedProperties;
 
+use Livewire\ComponentHook;
 use Livewire\Drawer\ImplicitlyBoundMethod;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Drawer\Utils as SyntheticUtils;
@@ -10,9 +11,9 @@ use function Livewire\on;
 use function Livewire\store;
 use function Livewire\wrap;
 
-class SupportComputedProperties
+class SupportComputedProperties extends ComponentHook
 {
-    public function boot()
+    static function provide()
     {
         on('render', function ($target, $view, $data) {
             foreach (static::getComputedProperties($target) as $property => $value) {

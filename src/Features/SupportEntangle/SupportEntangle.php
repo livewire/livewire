@@ -2,11 +2,12 @@
 
 namespace Livewire\Features\SupportEntangle;
 
+use Livewire\ComponentHook;
 use Illuminate\Support\Facades\Blade;
 
-class SupportEntangle
+class SupportEntangle extends ComponentHook
 {
-    function boot()
+    public static function provide()
     {
         Blade::directive('entangle', function ($expression) {
             return <<<EOT

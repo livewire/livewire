@@ -2,9 +2,11 @@
 
 namespace Livewire\Features\SupportWireables;
 
-class SupportWireables
+use Livewire\ComponentHook;
+
+class SupportWireables extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
         app('livewire')->synth(WireableSynth::class);
     }

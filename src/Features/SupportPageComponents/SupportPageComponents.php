@@ -9,20 +9,19 @@ use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\Mechanisms\DataStore;
 use Illuminate\Support\Facades\View as ViewFacade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Livewire\ComponentHook;
 
 use function Livewire\off;
 use function Livewire\on;
 
-class SupportPageComponents
+class SupportPageComponents extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
-        app()->singleton($this::class);
-
-        $this->registerLayoutViewMacros();
+        static::registerLayoutViewMacros();
     }
 
-    public function registerLayoutViewMacros()
+    static function registerLayoutViewMacros()
     {
         View::macro('layoutData', function ($data = []) {
             $this->layoutConfig['params'] = $data;
@@ -65,7 +64,7 @@ class SupportPageComponents
         });
     }
 
-    function interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration($callback)
+    static function interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration($callback)
     {
         $layoutConfig = null;
 
@@ -85,7 +84,7 @@ class SupportPageComponents
         return $layoutConfig;
     }
 
-    function gatherMountMethodParamsFromRouteParameters($component)
+    static function gatherMountMethodParamsFromRouteParameters($component)
     {
         // This allows for route parameters like "slug" in /post/{slug},
         // to be passed into a Livewire component's mount method...
@@ -109,7 +108,7 @@ class SupportPageComponents
         return $params;
     }
 
-    function mergeLayoutDefaults($layoutConfig)
+    static function mergeLayoutDefaults($layoutConfig)
     {
         $defaultLayoutConfig = [
             'view' => config('livewire.layout'),
@@ -120,10 +119,10 @@ class SupportPageComponents
 
         $layoutConfig = array_merge($defaultLayoutConfig, $layoutConfig ?: []);
 
-        return $this->normalizeViewNameAndParamsForBladeComponents($layoutConfig);
+        return static::normalizeViewNameAndParamsForBladeComponents($layoutConfig);
     }
 
-    function normalizeViewNameAndParamsForBladeComponents($layoutConfig)
+    static function normalizeViewNameAndParamsForBladeComponents($layoutConfig)
     {
         // If a user passes the class name of a Blade component to the
         // layout macro (or uses inside their config), we need to
@@ -151,7 +150,7 @@ class SupportPageComponents
         return $layoutConfig;
     }
 
-    function renderContentsIntoLayout($content, $layoutConfig)
+    static function renderContentsIntoLayout($content, $layoutConfig)
     {
         if ($layoutConfig['type'] === 'component') {
             return Blade::render(<<<'HTML'

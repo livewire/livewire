@@ -4,72 +4,67 @@ namespace Livewire\Features\SupportUnitTesting;
 
 use function Livewire\store;
 use function Livewire\on;
-use Livewire\Mechanisms\DataStore;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\DataStore;
+use Livewire\Mechanisms\ComponentRegistry;
+use Livewire\ComponentHook;
 use Livewire\Component;
 use Illuminate\Validation\ValidationException;
-use Livewire\Mechanisms\ComponentRegistry;
 
-class SupportUnitTesting
+class SupportUnitTesting extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
         if (! app()->environment('testing')) return;
 
         \Tests\DuskTestCase::onApplicationBoot();
 
-        $this->registerTestingMacros();
-
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof LivewireSynth) return;
-
-            return function ($value) use ($context, $target) {
-                store($target)->set('testing.html', $context->effects['html'] ?? null);
-
-                $errors = $target->getErrorBag();
-
-                if (! $errors->isEmpty()) {
-                    store($target)->set('testing.errors', $errors);
-                }
-
-                // ??
-                // Componentstore($target)->set('testing.view', null);
-
-                return $value;
-            };
-        });
-
-        on('render', function ($target, $view, $data) {
-            return function () use ($target, $view) {
-                store($target)->set('testing.view', $view);
-            };
-        });
-
-        on('mount', function ($name, $params, $parent, $key, $hijack) {
-            return function ($target) {
-                return function ($html) use ($target) {
-                    store($target)->set('testing.html', $html);
-                };
-            };
-        });
-
-        on('hydrate', function ($synth, $rawValue, $meta) {
-            if (! $synth instanceof LivewireSynth) return;
-
-            return function ($target) {
-                store($target)->set('testing.validator', null);
-            };
-        });
-
-        on('exception', function ($target, $e, $stopPropagation) {
-            if (! $target instanceof Component) return;
-            if (! $e instanceof ValidationException) return;
-
-            store($target)->set('testing.validator', $e->validator);
-        });
+        static::registerTestingMacros();
     }
 
-    protected function registerTestingMacros()
+    function dehydrate($context)
+    {
+        return function ($value) use ($context) {
+            $target = $this->component;
+
+            $this->storeSet('testing.html', $context->effects['html'] ?? null);
+
+            $errors = $target->getErrorBag();
+
+            if (! $errors->isEmpty()) {
+                $this->storeSet('testing.errors', $errors);
+            }
+
+            return $value;
+        };
+    }
+
+    function render($view, $data)
+    {
+        return function () use ($view) {
+            $this->storeSet('testing.view', $view);
+        };
+    }
+
+    function mount()
+    {
+        return function ($html) {
+            $this->storeSet('testing.html', $html);
+        };
+    }
+
+    function hydrate()
+    {
+        $this->storeSet('testing.validator', null);
+    }
+
+    function exception($e, $stopPropagation) {
+        if (! $e instanceof ValidationException) return;
+
+        $this->storeSet('testing.validator', $e->validator);
+    }
+
+    protected static function registerTestingMacros()
     {
         // Usage: $this->assertSeeLivewire('counter');
         \Illuminate\Testing\TestResponse::macro('assertSeeLivewire', function ($component) {

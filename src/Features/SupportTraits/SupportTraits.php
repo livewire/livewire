@@ -2,56 +2,57 @@
 
 namespace Livewire\Features\SupportTraits;
 
-use function Livewire\before;
-use function Livewire\on;
 use function Livewire\wrap;
+use function Livewire\on;
+use function Livewire\before;
+use Livewire\ComponentHook;
 
 /**
  * Depends on: SupportLifecycleHooks to trigger "component." events
  */
-class SupportTraits
+class SupportTraits extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
         on('component.boot', function ($component) {
-            $this->callTraitSuffixedMethod($component, 'boot');
-            $this->callTraitSuffixedMethod($component, 'initialize');
+            static::callTraitSuffixedMethod($component, 'boot');
+            static::callTraitSuffixedMethod($component, 'initialize');
         });
 
         on('component.booted', function ($component) {
-            $this->callTraitSuffixedMethod($component, 'booted');
+            static::callTraitSuffixedMethod($component, 'booted');
         });
 
         on('component.hydrate', function ($component) {
-            $this->callTraitSuffixedMethod($component, 'hydrate');
+            static::callTraitSuffixedMethod($component, 'hydrate');
         });
 
         on('component.mount', function ($component) {
-            $this->callTraitSuffixedMethod($component, 'mount');
+            static::callTraitSuffixedMethod($component, 'mount');
         });
 
         on('render', function ($component, $view, $data) {
-            $this->callTraitSuffixedMethod($component, 'rendering');
+            static::callTraitSuffixedMethod($component, 'rendering');
 
             return function () use ($component, $view) {
-                $this->callTraitSuffixedMethod($component, 'rendered', [$view]);
+                static::callTraitSuffixedMethod($component, 'rendered', [$view]);
             };
         });
 
         on('component.dehydrate', function ($component) {
-            $this->callTraitSuffixedMethod($component, 'dehydrate');
+            static::callTraitSuffixedMethod($component, 'dehydrate');
         });
 
         on('component.updating', function ($component, $name, $value) {
-            $this->callTraitSuffixedMethod($component, 'updating', [$name, $value]);
+            static::callTraitSuffixedMethod($component, 'updating', [$name, $value]);
         });
 
         on('component.updated', function ($component, $name, $value) {
-            $this->callTraitSuffixedMethod($component, 'updated', [$name, $value]);
+            static::callTraitSuffixedMethod($component, 'updated', [$name, $value]);
         });
     }
 
-    function callTraitSuffixedMethod($component, $name, $params = [])
+    static function callTraitSuffixedMethod($component, $name, $params = [])
     {
         foreach (class_uses_recursive($component) as $trait) {
             $method = $name.class_basename($trait);

@@ -5,12 +5,13 @@ namespace Livewire\Features\SupportDisablingBackButtonCache;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Support\Facades\Event;
 use Livewire\Mechanisms\DataStore;
+use Livewire\ComponentHook;
 
-class SupportDisablingBackButtonCache
+class SupportDisablingBackButtonCache extends ComponentHook
 {
     public static $disableBackButtonCache = false;
 
-    function boot()
+    static function provide()
     {
         app('events')->listen(RequestHandled::class, function ($handled) {
             if (static::$disableBackButtonCache) {

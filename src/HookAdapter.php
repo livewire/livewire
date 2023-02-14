@@ -18,7 +18,7 @@ class HookAdapter
                 return function ($instance) use ($hook) {
                     $hook = $this->initializeHook($hook, $instance);
                     $hook->callBoot();
-                    $hook->callMount();
+                    return $hook->callMount();
                 };
             });
 
@@ -47,10 +47,18 @@ class HookAdapter
             return $this->proxyCallToHooks($target, 'callCall')($method, $params);
         });
 
+        on('render', function ($target, $view, $data) {
+            return $this->proxyCallToHooks($target, 'callRender')($view, $data);
+        });
+
         on('dehydrate', function ($synth, $target, $context) {
             if (! is_object($target)) return;
 
             return $this->proxyCallToHooks($target, 'callDehydrate')($context);
+        });
+
+        on('exception', function ($target, $e, $stopPropagation) {
+            return $this->proxyCallToHooks($target, 'callException')($e, $stopPropagation);
         });
     }
 

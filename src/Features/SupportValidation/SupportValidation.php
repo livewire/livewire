@@ -11,55 +11,50 @@ use Livewire\Component;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\MessageBag;
+use Livewire\ComponentHook;
 
-class SupportValidation
+class SupportValidation extends ComponentHook
 {
-    function boot()
+    function hydrate($meta)
     {
-        on('exception', function ($target, $e, $stopPropagation) {
-            if (! $target instanceof Component) return;
-            if (! $e instanceof ValidationException) return;
+        $this->component->setErrorBag(
+            $meta['errors'] ?? []
+        );
+    }
 
-            $target->setErrorBag($e->validator->errors());
+    function render($view, $data)
+    {
+        $errors = (new ViewErrorBag)->put('default', $this->component->getErrorBag());
 
-            $stopPropagation();
-        });
+        $revert = Utils::shareWithViews('errors', $errors);
 
-        on('render', function ($target, $view, $data) {
-            $errors = (new ViewErrorBag)->put('default', $target->getErrorBag());
+        return function () use ($revert) {
+            // After the component has rendered, let's revert our global
+            // sharing of the "errors" variable with blade views...
+            $revert();
+        };
+    }
 
-            $revert = Utils::shareWithViews('errors', $errors);
+    function dehydrate($context)
+    {
+        $errors = $this->component->getErrorBag()->toArray();
 
-            return function () use ($revert) {
-                // After the component has rendered, let's revert our global
-                // sharing of the "errors" variable with blade views...
-                $revert();
-            };
-        });
+        // Only persist errors that were born from properties on the component
+        // and not from custom validators (Validator::make) that were run.
+        $context->addMeta('errors', collect($errors)
+            ->filter(function ($value, $key) {
+                return Utils::hasProperty($this->component, $key);
+            })
+            ->toArray()
+        );
+    }
 
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof LivewireSynth) return;
+    function exception($e, $stopPropagation)
+    {
+        if (! $e instanceof ValidationException) return;
 
-            $errors = $target->getErrorBag()->toArray();
+        $this->component->setErrorBag($e->validator->errors());
 
-            // Only persist errors that were born from properties on the component
-            // and not from custom validators (Validator::make) that were run.
-            $context->addMeta('errors', collect($errors)
-                ->filter(function ($value, $key) use ($target) {
-                    return Utils::hasProperty($target, $key);
-                })
-                ->toArray()
-            );
-        });
-
-        on('hydrate', function ($synth, $rawValue, $meta) {
-            if (! $synth instanceof LivewireSynth) return;
-
-            return function ($target) use ($meta) {
-                $target->setErrorBag(
-                    $meta['errors'] ?? []
-                );
-            };
-        });
+        $stopPropagation();
     }
 }

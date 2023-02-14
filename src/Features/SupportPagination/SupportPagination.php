@@ -3,13 +3,13 @@
 namespace Livewire\Features\SupportPagination;
 
 use function Livewire\invade;
-use function Livewire\on;
+use Livewire\ComponentHook;
 
-class SupportPagination
+class SupportPagination extends ComponentHook
 {
-    function boot($serviceProvider)
+    static function provide()
     {
-        $provider = invade($serviceProvider);
+        $provider = invade(app('livewire.provider'));
 
         $provider->loadViewsFrom(__DIR__.'/views', 'livewire');
 

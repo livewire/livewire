@@ -8,10 +8,11 @@ use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Component;
 use Illuminate\Support\Facades\Route;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
+use Livewire\ComponentHook;
 
-class SupportFileUploads
+class SupportFileUploads extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
         if (app()->runningUnitTests()) {
             // Don't actually generate S3 signedUrls during testing.

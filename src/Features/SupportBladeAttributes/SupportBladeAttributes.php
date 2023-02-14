@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportBladeAttributes;
 
 use Livewire\WireDirective;
 use Illuminate\View\ComponentAttributeBag;
+use Livewire\ComponentHook;
 
-class SupportBladeAttributes
+class SupportBladeAttributes extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
         ComponentAttributeBag::macro('wire', function ($name) {
             $entries = head((array) $this->whereStartsWith('wire:'.$name));

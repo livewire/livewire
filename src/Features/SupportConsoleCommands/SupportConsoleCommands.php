@@ -3,14 +3,16 @@
 namespace Livewire\Features\SupportConsoleCommands;
 
 use Illuminate\Console\Application as Artisan;
+use LegacyTests\Browser\Actions\Component;
+use Livewire\ComponentHook;
 
-class SupportConsoleCommands
+class SupportConsoleCommands extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
         if (! app()->runningInConsole()) return;
 
-        $this->commands([
+        static::commands([
             \Livewire\Features\SupportConsoleCommands\Commands\MakeLivewireCommand::class, // make:livewire
             \Livewire\Features\SupportConsoleCommands\Commands\MakeCommand::class,         // livewire:make
             \Livewire\Features\SupportConsoleCommands\Commands\TouchCommand::class,        // livewire:touch
@@ -26,7 +28,7 @@ class SupportConsoleCommands
         ]);
     }
 
-    public function commands($commands)
+    static function commands($commands)
     {
         $commands = is_array($commands) ? $commands : func_get_args();
 

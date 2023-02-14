@@ -120,6 +120,24 @@ abstract class ComponentHook
         };
     }
 
+    function callRender(...$params) {
+        $callbacks = [];
+
+        if (method_exists($this, 'render')) $callbacks[] = $this->render(...$params);
+
+        foreach ($this->propertyHooks as $property => $hooks) {
+            foreach ($hooks as $hook) {
+                if (method_exists($hook, 'render')) $callbacks[] = $hook->render(...$params);
+            }
+        }
+
+        return function (...$params) use ($callbacks) {
+            foreach ($callbacks as $callback) {
+                if (is_callable($callback)) $callback(...$params);
+            }
+        };
+    }
+
     function callDehydrate(...$params) {
         $callbacks = [];
 
@@ -128,6 +146,24 @@ abstract class ComponentHook
         foreach ($this->propertyHooks as $property => $hooks) {
             foreach ($hooks as $hook) {
                 if (method_exists($hook, 'dehydrate')) $callbacks[] = $hook->dehydrate(...$params);
+            }
+        }
+
+        return function (...$params) use ($callbacks) {
+            foreach ($callbacks as $callback) {
+                if (is_callable($callback)) $callback(...$params);
+            }
+        };
+    }
+
+    function callException(...$params) {
+        $callbacks = [];
+
+        if (method_exists($this, 'exception')) $callbacks[] = $this->exception(...$params);
+
+        foreach ($this->propertyHooks as $property => $hooks) {
+            foreach ($hooks as $hook) {
+                if (method_exists($hook, 'exception')) $callbacks[] = $hook->exception(...$params);
             }
         }
 
