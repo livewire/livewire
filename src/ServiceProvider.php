@@ -64,6 +64,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         app('livewire')->componentHook(\Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class);
         app('livewire')->componentHook(\Livewire\Features\SupportPageComponents\SupportPageComponents::class);
         app('livewire')->componentHook(\Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportReactiveProps\SupportReactiveProps::class);
         app('livewire')->componentHook(\Livewire\Features\SupportFileDownloads\SupportFileDownloads::class);
         app('livewire')->componentHook(\Livewire\Features\SupportQueryString\SupportQueryString::class);
         app('livewire')->componentHook(\Livewire\Features\SupportUnitTesting\SupportUnitTesting::class);

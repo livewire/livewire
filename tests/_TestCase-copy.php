@@ -2,17 +2,16 @@
 
 namespace Tests;
 
+use Synthetic\SyntheticServiceProvider;
+use Orchestra\Testbench\TestCase as BaseTestCase;
+use Livewire\ServiceProvider;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
-use function Livewire\trigger;
-
-class TestCase extends \Orchestra\Testbench\Dusk\TestCase
+class TestCase extends BaseTestCase
 {
     public function setUp(): void
     {
-        $finish = trigger('testCase.setUp', $this);
-
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();
         });
@@ -22,17 +21,6 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
         });
 
         parent::setUp();
-
-        $finish();
-    }
-
-    public function tearDown(): void
-    {
-        $finish = trigger('testCase.tearDown', $this);
-
-        parent::tearDown();
-
-        $finish();
     }
 
     public function makeACleanSlate()
@@ -48,7 +36,7 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
     protected function getPackageProviders($app)
     {
         return [
-            \Livewire\ServiceProvider::class,
+            ServiceProvider::class,
         ];
     }
 
@@ -74,10 +62,10 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
         ]);
     }
 
-    // protected function resolveApplicationHttpKernel($app)
-    // {
-    //     $app->singleton('Illuminate\Contracts\Http\Kernel', 'Tests\HttpKernel');
-    // }
+    protected function resolveApplicationHttpKernel($app)
+    {
+        $app->singleton('Illuminate\Contracts\Http\Kernel', 'Tests\HttpKernel');
+    }
 
     protected function livewireClassesPath($path = '')
     {

@@ -17,7 +17,8 @@ class SupportUnitTesting extends ComponentHook
     {
         if (! app()->environment('testing')) return;
 
-        \Tests\DuskTestCase::onApplicationBoot();
+        \Livewire\Features\SupportUnitTesting\DuskTestable::provide();
+        // \Tests\DuskTestCase::onApplicationBoot();
 
         static::registerTestingMacros();
     }

@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportReactiveProps;
 
+use Livewire\ComponentHook;
 use Livewire\Drawer\Utils as SyntheticUtils;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
@@ -9,26 +10,25 @@ use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use function Livewire\on;
 use function Livewire\store;
 
-class SupportReactiveProps
+class SupportReactiveProps extends ComponentHook
 {
     public static $pendingChildParams = [];
 
-    public function boot()
+    public static function provide()
     {
+        return;
         on('flush-state', fn() => static::$pendingChildParams = []);
 
-        on('mount', function ($name, $params, $parent, $key, $hijack) {
-            return function ($target) use ($params) {
-                $props = [];
+        on('mount', function ($component, $params) {
+            $props = [];
 
-                foreach (SyntheticUtils::getAnnotations($target) as $key => $value) {
-                    if (isset($value['prop']) && isset($params[$key])) {
-                        $props[] = $key;
-                    }
+            foreach (SyntheticUtils::getAnnotations($component) as $key => $value) {
+                if (isset($value['prop']) && isset($params[$key])) {
+                    $props[] = $key;
                 }
+            }
 
-                store($target)->set('props', $props);
-            };
+            store($component)->set('props', $props);
         });
 
         on('dummy-mount', function ($tag, $id, $params, $parent, $key) {

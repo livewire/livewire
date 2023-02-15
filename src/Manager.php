@@ -10,6 +10,7 @@ use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 
 use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportUnitTesting\Testable;
+use Livewire\Features\SupportUnitTesting\DuskTestable;
 
 class Manager
 {
@@ -77,6 +78,11 @@ class Manager
     function test($name, $params = [])
     {
         return Testable::create($name, $params, $this->queryParamsForTesting);
+    }
+
+    function visit($name)
+    {
+        return DuskTestable::create($name, $params = [], $this->queryParamsForTesting);
     }
 
     function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)

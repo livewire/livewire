@@ -1,3 +1,12 @@
-@yield('content')
+<html>
+<head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+<body>
+    {{ $slot }}
 
-{{ $slot }}{{ $customParam ?? '' }}
+    @stack('scripts')
+</body>
+</html>
+
+

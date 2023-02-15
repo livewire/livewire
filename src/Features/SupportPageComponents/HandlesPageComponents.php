@@ -17,6 +17,7 @@ trait HandlesPageComponents
             [$html] = app('livewire')->mount($this::class, $params);
         });
 
+
         $layoutConfig = SupportPageComponents::mergeLayoutDefaults($layoutConfig);
 
         return SupportPageComponents::renderContentsIntoLayout($html, $layoutConfig);

@@ -504,7 +504,7 @@ class ComponentWithCustomParams extends Component
 {
     public function render()
     {
-        return view('null-view')->layoutData([
+        return view('null-view')->layout('layouts.old-app')->layoutData([
             'customParam' => 'foo'
         ]);
     }

@@ -114,6 +114,34 @@ class DuskTestCase extends BaseTestCase
         parent::setUp();
 
         $this->tweakApplication(function () {
+            Route::get('/foo', function () {
+                [$class, $method] = explode(':', base64_decode(request('test')));
+
+                config()->set('something', true);
+
+                try {
+                    (new $class)->$method();
+                } catch (\Exception $e) {
+                    if (! $e->isDuskShortcircuit) throw $e;
+
+                    $component = $e->component;
+                }
+
+                config()->set('something', false);
+
+                if (is_object($component)) {
+                    $component = $component::class;
+                }
+
+                Livewire::component($id = 'foo', $component);
+
+                return Blade::render(<<<HTML
+                <html>
+                    Hi!
+                   <livewire:$id />
+                </html>
+                HTML);
+            });
             // Autoload all Livewire components in this test suite.
 
             // collect(File::allFiles(__DIR__))
