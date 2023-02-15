@@ -27,7 +27,7 @@ class SupportUnitTesting extends ComponentHook
         return function ($value) use ($context) {
             $target = $this->component;
 
-            $this->storeSet('testing.html', $context->effects['html'] ?? null);
+            // $this->storeSet('testing.html', $context->effects['html'] ?? null);
 
             $errors = $target->getErrorBag();
 
@@ -41,14 +41,8 @@ class SupportUnitTesting extends ComponentHook
 
     function render($view, $data)
     {
-        return function () use ($view) {
+        return function ($html) use ($view) {
             $this->storeSet('testing.view', $view);
-        };
-    }
-
-    function mount()
-    {
-        return function ($html) {
             $this->storeSet('testing.html', $html);
         };
     }

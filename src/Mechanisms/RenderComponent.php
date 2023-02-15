@@ -93,14 +93,14 @@ EOT;
         $hijackedHtml = null;
         $hijack = function ($html) use (&$hijackedHtml) { $hijackedHtml = $html; };
 
-        [$receiveInstance, $finishMount] = trigger('mount', $name, $params, $parent, $key, $hijack);
+        $finishPreMount = trigger('pre-mount', $name, $params, $parent, $key, $hijack);
 
         if ($hijackedHtml !== null) return [$hijackedHtml];
 
         // Now we're ready to actually create a Livewire component instance...
         $component = app(ComponentRegistry::class)->new($name, $params);
 
-        $receiveInstance($component);
+        trigger('mount', $component, $params);
 
         // Trigger the dehydrate...
         $payload = app('livewire')->snapshot($component, initial: true);
@@ -113,10 +113,9 @@ EOT;
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:initial-data' => $payload,
-            'wire:id' => $component->getId(),
         ]);
 
-        $finishMount($html);
+        $finishPreMount($component, $html);
 
         return [$html, $payload];
     }
@@ -140,16 +139,18 @@ EOT;
         $revertA = Utils::shareWithViews('__livewire', $target);
         $revertB = Utils::shareWithViews('_instance', $target); // @legacy
 
-        $rawHtml = $view->render();
+        $html = $view->render();
 
         $revertA();
         $revertB();
 
-        $rawHtml = $finish($rawHtml);
+        $html = Utils::insertAttributesIntoHtmlRoot($html, [
+            'wire:id' => $target->getId(),
+        ]);
+
+        $html = $finish($html);
 
         array_pop(static::$renderStack);
-
-        $html = Utils::insertAttributesIntoHtmlRoot($rawHtml, [ 'wire:id' => $target->getId() ]);
 
         return $html;
     }

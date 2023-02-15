@@ -67,80 +67,19 @@ class EventBus
         // Here's we're returning an anonymous class that behaves both
         // as a function and also optionally as an array to be destructed.
         // This way we can support single and multiple middlware returns.
-        return new class ($middlewares) implements \ArrayAccess {
-            function __construct(public $middlewares) {}
+        return function (&$forward = null, ...$extras) use ($middlewares) {
+            foreach ($middlewares as $finisher) {
+                if ($finisher === null) continue;
 
-            function __invoke(&$forward = null)
-            {
-                return $this->runThroughMiddlewares($this->middlewares, $forward);
+                $finisher = is_array($finisher) ? last($finisher) : $finisher;
+
+                $result = $finisher($forward, ...$extras);
+
+                // Only overwrite previous "forward" if something is returned from the callback.
+                $forward = $result === null ? $forward : $result;
             }
 
-            public $accessedOffsets = [];
-
-            function offsetGet($key): mixed
-            {
-                $this->accessedOffsets[] = $key;
-
-                $this->accessedOffsets = array_unique($this->accessedOffsets);
-
-                return function (&$forward) use ($key) {
-                    $currentOffset = array_shift($this->accessedOffsets);
-
-                    if (! $currentOffset === $key) {
-                        throw new \Exception('Calling middlewares out of order...');
-                    }
-
-                    // This is the last call...
-                    if (count($this->accessedOffsets) === 0) {
-                        return $this->runThroughMiddlewares($this->middlewares, $forward);
-                    }
-
-                    foreach ($this->middlewares as $index => $finisher) {
-                        if ($finisher === null) {
-                            unset($this->middlewares[$index]);
-                            return;
-                        }
-
-                        $this->middlewares[$index] = $finisher($forward);
-                    }
-                };
-
-                $middlewares = collect($this->middlewares)->pluck($key);
-
-                return function (&$forward = null) use ($middlewares) {
-                    return $this->runThroughMiddlewares($middlewares, $forward);
-                };
-            }
-
-            function runThroughMiddlewares($middlewares, &$forward) {
-                foreach ($middlewares as $finisher) {
-                    if ($finisher === null) continue;
-
-                    $finisher = is_array($finisher) ? last($finisher) : $finisher;
-
-                    $result = $finisher($forward);
-
-                    // Only overwrite previous "forward" if something is returned from the callback.
-                    $forward = $result === null ? $forward : $result;
-                }
-
-                return $forward;
-            }
-
-            function offsetExists($key): bool
-            {
-                return isset($this->middlewares[$key]);
-            }
-
-            function offsetSet($key, $value): void
-            {
-                //
-            }
-
-            function offsetUnset($key): void
-            {
-                //
-            }
+            return $forward;
         };
     }
 }

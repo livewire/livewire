@@ -60,15 +60,15 @@ class Testable extends BaseTestable
 
         $component = null;
 
-        $forget = on('mount', function () use (&$component, &$forget) {
+        $forget = on('mount', function ($instance) use (&$component, &$forget) {
             $forget();
 
-            return function ($instance) use (&$component) {
-                $component = $instance;
-            };
+            $component = $instance;
         });
 
         [$html, $dehydrated] = app('livewire')->mount($name, $params);
+
+        store($component)->set('testing.html', $html);
 
         return new static($dehydrated, $component);
     }

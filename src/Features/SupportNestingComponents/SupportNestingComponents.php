@@ -13,7 +13,7 @@ class SupportNestingComponents extends ComponentHook
 {
     static function provide()
     {
-        on('mount', function ($name, $params, $parent, $key, $hijack) {
+        on('pre-mount', function ($name, $params, $parent, $key, $hijack) {
             // If this has already been rendered spoof it...
             if ($parent && static::hasPreviouslyRenderedChild($parent, $key)) {
                 [$tag, $childId] = static::getPreviouslyRenderedChild($parent, $key);
@@ -27,14 +27,12 @@ class SupportNestingComponents extends ComponentHook
                 return $hijack($html);
             }
 
-            return function ($component) use ($parent, $key) {
-                return function ($html) use ($component, $parent, $key) {
-                    if ($parent) {
-                        preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
-                        $tag = $matches[1][0];
-                        static::setParentChild($parent, $key, $tag, $component->getId());
-                    }
-                };
+            return function ($component, $html) use ($parent, $key) {
+                if ($parent) {
+                    preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
+                    $tag = $matches[1][0];
+                    static::setParentChild($parent, $key, $tag, $component->getId());
+                }
             };
         });
     }
