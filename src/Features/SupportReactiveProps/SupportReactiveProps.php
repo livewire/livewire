@@ -16,23 +16,10 @@ class SupportReactiveProps extends ComponentHook
 
     public static function provide()
     {
-        return;
         on('flush-state', fn() => static::$pendingChildParams = []);
 
-        on('mount', function ($component, $params) {
-            $props = [];
-
-            foreach (SyntheticUtils::getAnnotations($component) as $key => $value) {
-                if (isset($value['prop']) && isset($params[$key])) {
-                    $props[] = $key;
-                }
-            }
-
-            store($component)->set('props', $props);
-        });
-
         on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
-            $this->storeChildParams($id, $params);
+            static::storeChildParams($id, $params);
         });
 
         on('dehydrate', function ($synth, $target, $context) {

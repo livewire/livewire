@@ -21,7 +21,7 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 
 #### V3 Features
 - [ ] SPA Mode (`wire:navigate`, `@persist`)
-- [ ] Reactive properties
+- [x] Reactive properties
 - [ ] `@modelable` props
 - [ ] PHP Attributes
 - [ ] Hot-reloading

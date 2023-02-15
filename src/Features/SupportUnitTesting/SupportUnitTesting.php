@@ -18,7 +18,6 @@ class SupportUnitTesting extends ComponentHook
         if (! app()->environment('testing')) return;
 
         \Livewire\Features\SupportUnitTesting\DuskTestable::provide();
-        // \Tests\DuskTestCase::onApplicationBoot();
 
         static::registerTestingMacros();
     }
@@ -27,8 +26,6 @@ class SupportUnitTesting extends ComponentHook
     {
         return function ($value) use ($context) {
             $target = $this->component;
-
-            // $this->storeSet('testing.html', $context->effects['html'] ?? null);
 
             $errors = $target->getErrorBag();
 

@@ -21,6 +21,9 @@ use Illuminate\Support\Arr;
 
 class DuskTestable
 {
+    public static $currentTestCase;
+    public static $shortCircuitCreateCall = false;
+
     static function provide() {
         Route::get('livewire-dusk/{component}', function ($component) {
             $class = urldecode($component);
@@ -29,17 +32,19 @@ class DuskTestable
         })->middleware('web');
 
         on('testCase.setUp', function ($testCase) {
-            return function () use ($testCase) {
-                invade($testCase)->tweakApplication(function () {
-                    config()->set('app.debug', true);
+            static::$currentTestCase = $testCase;
 
-                    static::loadTestComponents();
-                });
-            };
+            invade($testCase)->tweakApplication(function () {
+                config()->set('app.debug', true);
+
+                static::loadTestComponents();
+            });
         });
 
         on('testCase.tearDown', function () {
             static::wipeRuntimeComponentRegistration();
+
+            static::$currentTestCase = null;
         });
 
         if (isset($_SERVER['CI'])) {
@@ -49,33 +54,35 @@ class DuskTestable
         \Laravel\Dusk\Browser::mixin(new \Tests\DuskBrowserMacros);
     }
 
-    static function create($name, $params = [], $queryParams = [])
+    static function create($components, $params = [], $queryParams = [])
     {
-        if (config('something')) {
-            throw new class ($name) extends \Exception {
-                public $component;
+        if (static::$shortCircuitCreateCall) {
+            throw new class ($components) extends \Exception {
+                public $components;
                 public $isDuskShortcircuit = true;
-                public function __construct($component) {
-                    $this->component = $component;
+                public function __construct($components) {
+                    $this->components = $components;
                 }
             };
         }
 
-        if (is_object($name)) {
-            $name = $name::class;
-        }
+        $components = (array) $components;
+
+        $firstComponent = array_shift($components);
+
+        $id = 'a'.str()->random(10);
+
+        $components = [$id => $firstComponent, ...$components];
 
         [$class, $method] = static::findTestClassAndMethodThatCalledThis();
 
-        static::registerComponentsForNextTest([
-            'foo' => [$class, $method],
-        ]);
+        static::registerComponentsForNextTest([$id, $class, $method]);
 
-        $testCase = invade(app()->make('current.test-case'));
+        $testCase = invade(static::$currentTestCase);
 
         $browser = $testCase->newBrowser($testCase->createWebDriver());
 
-        return $browser->visit('/livewire-dusk/foo')->waitForLivewireToLoad();
+        return $browser->visit('/livewire-dusk/'.$id)->waitForLivewireToLoad();
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
@@ -102,26 +109,30 @@ class DuskTestable
 
         if (file_exists($tmp)) {
             // We can't just "require" this file because of race conditions...
-            $components = json_decode(file_get_contents($tmp));
+            [$id, $testClass, $method] = json_decode(file_get_contents($tmp), associative: true);
 
-            foreach ($components as $name => $class) {
-               if (is_numeric($name)) {
+            if (! method_exists($testClass, $method)) return;
+
+            static::$shortCircuitCreateCall = true;
+
+            $components = null;
+
+            try { (new $testClass)->$method(); } catch (\Exception $e) {
+                if (! $e->isDuskShortcircuit) throw $e;
+                $components = $e->components;
+            }
+
+            $firstComponent = array_shift($components);
+
+            $components = [$id => $firstComponent, ...$components];
+
+            static::$shortCircuitCreateCall = false;
+
+            foreach ((array) $components as $name => $class) {
+                if (is_object($class)) $class = $class::class;
+
+                if (is_numeric($name)) {
                     app('livewire')->component($class);
-                } elseif (is_array($class)) {
-                    [$testClass, $method] = $class;
-
-                    if (! method_exists($testClass, $method)) return;
-
-                    config()->set('something', true);
-                    try { (new $testClass)->$method(); } catch (\Exception $e) {
-                        if (! $e->isDuskShortcircuit) throw $e;
-                        $class = $e->component;
-                    }
-
-                    if (is_object($class)) $class = $class::class;
-                    config()->set('something', false);
-
-                    app('livewire')->component($name, $class);
                 } else {
                     app('livewire')->component($name, $class);
                 }

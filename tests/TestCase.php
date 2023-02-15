@@ -11,7 +11,6 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 {
     public function setUp(): void
     {
-        $finish = trigger('testCase.setUp', $this);
 
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();
@@ -23,16 +22,14 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 
         parent::setUp();
 
-        $finish();
+        trigger('testCase.setUp', $this);
     }
 
     public function tearDown(): void
     {
-        $finish = trigger('testCase.tearDown', $this);
-
         parent::tearDown();
 
-        $finish();
+        trigger('testCase.tearDown', $this);
     }
 
     public function makeACleanSlate()
@@ -73,11 +70,6 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
             'root' => __DIR__.'/fixtures',
         ]);
     }
-
-    // protected function resolveApplicationHttpKernel($app)
-    // {
-    //     $app->singleton('Illuminate\Contracts\Http\Kernel', 'Tests\HttpKernel');
-    // }
 
     protected function livewireClassesPath($path = '')
     {

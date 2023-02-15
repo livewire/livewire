@@ -44,16 +44,22 @@ class DehydrationContext
         } else {
             $this->effects[$key][] = $value;
         }
-
     }
 
     public function addMeta($key, $value)
     {
-        if (is_array($key)) {
-            foreach ($key as $iKey => $iValue) $this->addEffect($iKey, $iValue);
-        }
-
         $this->meta[$key] = $value;
+    }
+
+    public function pushMeta($key, $value, $iKey = null)
+    {
+        if (! isset($this->meta[$key])) $this->meta[$key] = [];
+
+        if ($iKey) {
+            $this->meta[$key][$iKey] = $value;
+        } else {
+            $this->meta[$key][] = $value;
+        }
     }
 
     public function annotations()

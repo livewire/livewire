@@ -88,7 +88,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             // \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             // \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
-            // \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             // \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
             // \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             // \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
