@@ -20,19 +20,19 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 ## Todo:
 
 #### V3 Features
-- [ ] SPA Mode (`wire:navigate`, `@persist`)
-- [x] Reactive properties
-- [ ] `@modelable` props
-- [ ] PHP Attributes
-- [ ] Hot-reloading
-- [ ] Lazy components
-- [ ] `wire:transition`
-- [ ] JavaScript functions
+- [x] Auto inject assets
 - [x] "locked" properties
 - [x] `$parent`
+- [x] Reactive properties
 - [ ] `@teleport`
+- [ ] Lazy components
+- [ ] `@modelable` props
+- [ ] `wire:transition`
+- [ ] PHP Attributes
+- [ ] SPA Mode (`wire:navigate`, `@persist`)
+- [ ] JavaScript functions
 - [ ] `@if` markers
-- [x] Auto inject assets
+- [ ] Hot-reloading
 
 #### V2 Parity
 - [ ] Persistant middleware
