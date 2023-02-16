@@ -37,7 +37,7 @@ class ExtendBlade
 
     function boot()
     {
-        app()->singleton($this::class);
+        app()->singleton($this::class, fn () => $this);
 
         Blade::directive('this', fn() => "window.Livewire.find('{{ \$_instance->getId() }}')");
 

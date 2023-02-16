@@ -122,13 +122,15 @@ class DuskTestable
                 $components = $e->components;
             }
 
+            $components = is_array($components) ? $components : [$components];
+
             $firstComponent = array_shift($components);
 
             $components = [$id => $firstComponent, ...$components];
 
             static::$shortCircuitCreateCall = false;
 
-            foreach ((array) $components as $name => $class) {
+            foreach ($components as $name => $class) {
                 if (is_object($class)) $class = $class::class;
 
                 if (is_numeric($name)) {

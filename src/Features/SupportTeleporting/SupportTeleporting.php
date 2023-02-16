@@ -2,9 +2,11 @@
 
 namespace Livewire\Features\SupportTeleporting;
 
-class SupportTeleporting
+use Livewire\ComponentHook;
+
+class SupportTeleporting extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
         app('livewire')->directive('teleport', function ($expression) {
             return '<template x-teleport="<?php echo e('.$expression.'); ?>">';

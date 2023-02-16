@@ -24,7 +24,7 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [x] "locked" properties
 - [x] `$parent`
 - [x] Reactive properties
-- [ ] `@teleport`
+- [x] `@teleport`
 - [ ] Lazy components
 - [ ] `@modelable` props
 - [ ] `wire:transition`

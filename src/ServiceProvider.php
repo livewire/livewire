@@ -69,6 +69,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         app('livewire')->componentHook(\Livewire\Features\SupportQueryString\SupportQueryString::class);
         app('livewire')->componentHook(\Livewire\Features\SupportUnitTesting\SupportUnitTesting::class);
         app('livewire')->componentHook(\Livewire\Features\SupportFileUploads\SupportFileUploads::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportTeleporting\SupportTeleporting::class);
         app('livewire')->componentHook(\Livewire\Features\SupportPagination\SupportPagination::class);
         app('livewire')->componentHook(\Livewire\Features\SupportValidation\SupportValidation::class);
         app('livewire')->componentHook(\Livewire\Features\SupportRedirects\SupportRedirects::class);
@@ -90,7 +91,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             // \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
             // \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
             // \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
-            // \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
 
             // Core
             // \Livewire\Features\SupportJavaScriptOrderedArrays\SupportJavaScriptOrderedArrays::class, @todo: there might be a better way than this...
