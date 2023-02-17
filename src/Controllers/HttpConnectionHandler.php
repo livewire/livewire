@@ -75,7 +75,7 @@ class HttpConnectionHandler extends ConnectionHandler
             ->send($request)
             ->through($filteredMiddleware)
             ->then(function() {
-                // noop
+                return response('noop');
             });
     }
 
