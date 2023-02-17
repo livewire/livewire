@@ -113,7 +113,7 @@ EOT;
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:initial-data' => $payload,
-        ], override: true);
+        ]);
 
         $finishPreMount($component, $html);
 
@@ -146,7 +146,7 @@ EOT;
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:id' => $target->getId(),
-        ], override: true);
+        ]);
 
         $html = $finish($html);
 

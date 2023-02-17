@@ -9,51 +9,31 @@ use function Livewire\invade;
 
 class Utils extends BaseUtils
 {
-    static function insertAttributesIntoHtmlRoot($html, $attributes, $override) {
-        preg_match('/(?:\n\s*|^\s*)(<([a-zA-Z0-9\-]+).*?>)/', $html, $matches, PREG_OFFSET_CAPTURE);
+    static function insertAttributesIntoHtmlRoot($html, $attributes) {
+        $attributesFormattedForHtmlElement = collect($attributes)
+            ->mapWithKeys(function ($value, $key) {
+                return [$key => static::escapeStringForHtml($value)];
+            })->map(function ($value, $key) {
+                return sprintf('%s="%s"', $key, $value);
+            })->implode(' ');
 
-        throw_unless(count($matches), new RootTagMissingFromViewException);
+        preg_match('/(?:\n\s*|^\s*)<([a-zA-Z0-9\-]+)/', $html, $matches, PREG_OFFSET_CAPTURE);
 
-        $openingTag = $matches[0][0];
-        $closingTagName = $matches[2][0];
-        $closingTag = '</'.$closingTagName.'>';
-        $fauxRootTag = $openingTag.$closingTag;
-
-        $doc = new \DOMDocument;
-        $doc->formatOutput = false;
-        $doc->loadHTML(
-            // Give DOMDocument will mess with the encoding...
-            mb_convert_encoding($fauxRootTag, 'HTML-ENTITIES', 'UTF-8'),
-            // Prevent DOMDocument from adding its own tags...
-            LIBXML_HTML_NODEFDTD|LIBXML_HTML_NOIMPLIED
+        throw_unless(
+            count($matches),
+            new RootTagMissingFromViewException
         );
-        $fauxRootElement = $doc->documentElement;
 
-        foreach ($attributes as $key => $value) {
-            if (! $override && $fauxRootElement->hasAttribute($key)) continue;
+        $tagName = $matches[1][0];
+        $lengthOfTagName = strlen($tagName);
+        $positionOfFirstCharacterInTagName = $matches[1][1];
 
-            if (! (is_string($value) || is_numeric($value))) $value = json_encode($value);
-
-            // Take out single and double quotes and replace the back at the end.
-            // The reason is because DOMDocument will not encode quotes.
-            // If we encode double quotes, it will double encode the "&" used in the encoding...
-            // If we don't AND the content contains a double quote, rather than encoding it,
-            // the output attribute will use single quotes which we don't want: foo='..."...'
-            $value = str($value)->replace("'", '--single--')->replace('"', '--double--');
-
-            $value = (string) str($value)->replace("'", '');
-
-            $fauxRootElement->setAttribute($key, $value);
-        }
-
-        $output = $doc->saveHTML();
-
-        $newOpeningTag = (string) str($output)
-            ->replace('--single--', '&#039;')
-            ->replace('--double--', '&quot;')
-            ->beforeLast($closingTag);
-
-        return (string) str($html)->replaceFirst($openingTag, $newOpeningTag);
+        return substr_replace(
+            $html,
+            ' '.$attributesFormattedForHtmlElement,
+            $positionOfFirstCharacterInTagName + $lengthOfTagName,
+            0
+        );
     }
 
     static function escapeStringForHtml($subject)
