@@ -23,6 +23,7 @@ class DuskTestable
 {
     public static $currentTestCase;
     public static $shortCircuitCreateCall = false;
+    public static $isTestProcess = false;
 
     static function provide() {
         Route::get('livewire-dusk/{component}', function ($component) {
@@ -33,6 +34,7 @@ class DuskTestable
 
         on('testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
+            static::$isTestProcess = true;
 
             invade($testCase)->tweakApplication(function () {
                 config()->set('app.debug', true);
@@ -105,6 +107,8 @@ class DuskTestable
 
     static function loadTestComponents()
     {
+        if (static::$isTestProcess) return;
+
         $tmp = __DIR__ . '/_runtime_components.json';
 
         if (file_exists($tmp)) {
@@ -154,5 +158,24 @@ class DuskTestable
         $tmp = __DIR__ . '/_runtime_components.json';
 
         file_exists($tmp) && unlink($tmp);
+    }
+
+    public function breakIntoATinkerShell($browsers, $e)
+    {
+        $sh = new \Psy\Shell();
+
+        $sh->add(new \Laravel\Dusk\Console\DuskCommand($this, $e));
+
+        $sh->setScopeVariables([
+            'browsers' => $browsers,
+        ]);
+
+        $sh->addInput('dusk');
+
+        $sh->setBoundObject($this);
+
+        $sh->run();
+
+        return $sh->getScopeVariables(false);
     }
 }

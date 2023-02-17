@@ -26,30 +26,7 @@ export function start() {
 }
 
 function initElement(el) {
-    if (el.hasAttribute('wire:id')) {
-        let id = el.getAttribute('wire:id')
-        let initialData = JSON.parse(el.getAttribute('wire:initial-data'))
-
-        if (! initialData) initialData = resurrect(id)
-
-        let component = new Component(synthetic(initialData).__target, el, id)
-
-        el.__livewire = component
-
-        trigger('component.init', component)
-
-        // This makes anything that would normally be available on $wire
-        // available directly without needing to prefix "$wire.".
-        Alpine.bind(el, {
-            'x-data'() { return component.synthetic.reactive },
-            // Disabling this for laracon...
-            'x-destroy'() {
-                releaseComponent(component.id)
-            }
-        })
-
-        storeComponent(component.id, component)
-    }
+    if (el.hasAttribute('wire:id')) initComponent(el)
 
     let component
 
@@ -60,6 +37,33 @@ function initElement(el) {
     try { component = closestComponent(el) } catch (e) {}
 
     component && trigger('element.init', el, component)
+}
+
+export function initComponent(el) {
+    if (el.__livewire) return;
+
+    let id = el.getAttribute('wire:id')
+    let initialData = JSON.parse(el.getAttribute('wire:initial-data'))
+
+    if (! initialData) initialData = resurrect(id)
+
+    let component = new Component(synthetic(initialData).__target, el, id)
+
+    el.__livewire = component
+
+    trigger('component.init', component)
+
+    // This makes anything that would normally be available on $wire
+    // available directly without needing to prefix "$wire.".
+    Alpine.bind(el, {
+        'x-data'() { return component.synthetic.reactive },
+        // Disabling this for laracon...
+        'x-destroy'() {
+            releaseComponent(component.id)
+        }
+    })
+
+    storeComponent(component.id, component)
 }
 
 export function closestComponent(el) {

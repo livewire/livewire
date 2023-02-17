@@ -25,13 +25,13 @@ class Lazy extends Component
         }
 
         return <<<HTML
-        <div x-intersect="\$wire.show = true; \$wire.firstTime = false; \$wire.\$commit()">
-            @if (\$show)
-                <livewire:dynamic-component :component="\$componentName" :apply="\$forwards" />
-            @else
+        @if (\$show)
+            <livewire:dynamic-component :component="\$componentName" :apply="\$forwards" />
+        @else
+            <div x-intersect="\$wire.show = true; \$wire.firstTime = false; \$wire.\$commit()">
                 {$placeholder}
-            @endif
-        </div>
+            </div>
+        @endif
         HTML;
     }
 }

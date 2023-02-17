@@ -27,6 +27,15 @@ class Testable extends BaseTestable
 
     static function create($name, $params = [], $queryParams = [])
     {
+        if (is_array($otherComponents = $name)) {
+            $name = array_shift($otherComponents);
+
+            foreach ($name as $key => $value) {
+                if (is_numeric($key)) app('livewire')->component($value);
+                else app('livewire')->component($key, $value);
+            }
+        }
+
         if (is_object($name)) {
             $name = $name::class;
         }

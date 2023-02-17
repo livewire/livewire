@@ -5023,30 +5023,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   }
   function initElement(el) {
-    if (el.hasAttribute("wire:id")) {
-      let id = el.getAttribute("wire:id");
-      let initialData = JSON.parse(el.getAttribute("wire:initial-data"));
-      if (!initialData)
-        initialData = resurrect(id);
-      let component2 = new Component(synthetic(initialData).__target, el, id);
-      el.__livewire = component2;
-      trigger2("component.init", component2);
-      module_default.bind(el, {
-        "x-data"() {
-          return component2.synthetic.reactive;
-        },
-        "x-destroy"() {
-          releaseComponent(component2.id);
-        }
-      });
-      storeComponent(component2.id, component2);
-    }
+    if (el.hasAttribute("wire:id"))
+      initComponent(el);
     let component;
     try {
       component = closestComponent(el);
     } catch (e) {
     }
     component && trigger2("element.init", el, component);
+  }
+  function initComponent(el) {
+    if (el.__livewire)
+      return;
+    let id = el.getAttribute("wire:id");
+    let initialData = JSON.parse(el.getAttribute("wire:initial-data"));
+    if (!initialData)
+      initialData = resurrect(id);
+    let component = new Component(synthetic(initialData).__target, el, id);
+    el.__livewire = component;
+    trigger2("component.init", component);
+    module_default.bind(el, {
+      "x-data"() {
+        return component.synthetic.reactive;
+      },
+      "x-destroy"() {
+        releaseComponent(component.id);
+      }
+    });
+    storeComponent(component.id, component);
   }
   function closestComponent(el) {
     let closestRoot2 = module_default.findClosest(el, (i) => i.__livewire);
