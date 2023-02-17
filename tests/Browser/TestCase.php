@@ -26,7 +26,6 @@ use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Illuminate\Support\Facades\View;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
-use Tests\Browser\Security\Component as SecurityComponent;
 
 class TestCase extends BaseTestCase
 {
@@ -281,26 +280,6 @@ class TestCase extends BaseTestCase
         $sh->run();
 
         return $sh->getScopeVariables(false);
-    }
-}
-
-class AllowListedMiddleware
-{
-    public function handle($request, $next)
-    {
-        SecurityComponent::$loggedMiddleware[] = static::class;
-
-        return $next($request);
-    }
-}
-
-class BlockListedMiddleware
-{
-    public function handle($request, $next)
-    {
-        SecurityComponent::$loggedMiddleware[] = static::class;
-
-        return $next($request);
     }
 }
 
