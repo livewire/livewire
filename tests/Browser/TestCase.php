@@ -38,7 +38,7 @@ class TestCase extends BaseTestCase
     public function setUp(): void
     {
         if (isset($_SERVER['CI'])) {
-            DuskOptions::withoutUI();
+            DuskOptions::disableGpu()->addArgument('headless=new');
         }
 
         Browser::mixin(new DuskBrowserMacros);
