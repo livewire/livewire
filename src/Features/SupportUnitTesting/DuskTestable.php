@@ -32,7 +32,7 @@ class DuskTestable
             return app()->call(app('livewire')->new($class));
         })->middleware('web');
 
-        on('testCase.setUp', function ($testCase) {
+        on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
             static::$isTestProcess = true;
 
@@ -43,7 +43,7 @@ class DuskTestable
             });
         });
 
-        on('testCase.tearDown', function () {
+        on('browser.testCase.tearDown', function () {
             static::wipeRuntimeComponentRegistration();
 
             static::$currentTestCase = null;

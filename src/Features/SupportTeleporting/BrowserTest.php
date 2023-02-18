@@ -4,9 +4,9 @@ namespace Livewire\Features\SupportTeleporting;
 
 use Livewire\Component;
 use Livewire\Livewire;
-use Tests\TestCase;
+use Tests\BrowserTestCase;
 
-class Test extends TestCase
+class BrowserTest extends BrowserTestCase
 {
     /** @test */
     public function can_teleport_dom_via_blade_directive()

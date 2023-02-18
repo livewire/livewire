@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportReactiveProps;
 use Livewire\Livewire;
 use Livewire\Component;
 
-class Test extends \Tests\TestCase
+class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
     public function can_pass_a_reactive_property_from_parent_to_child()

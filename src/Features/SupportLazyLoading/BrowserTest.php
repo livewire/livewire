@@ -2,11 +2,11 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
-use Tests\TestCase;
+use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
 
-class Test extends TestCase
+class BrowserTest extends BrowserTestCase
 {
     public function setUp(): void
     {

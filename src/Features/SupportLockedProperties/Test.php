@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportLockedProperties;
 use Livewire\Livewire;
 use Livewire\Component;
 
-class Test extends \Tests\TestCase
+class UnitTest extends \Tests\TestCase
 {
     /** @test */
     function cant_update_locked_property()

@@ -21,15 +21,11 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
         });
 
         parent::setUp();
-
-        trigger('testCase.setUp', $this);
     }
 
     public function tearDown(): void
     {
         parent::tearDown();
-
-        trigger('testCase.tearDown', $this);
     }
 
     public function makeACleanSlate()
