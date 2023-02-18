@@ -5,6 +5,10 @@ namespace Tests\Browser;
 use Closure;
 use Exception;
 use Psy\Shell;
+use Tests\Browser\Stubs\AllowListedMiddleware;
+use Tests\Browser\Stubs\AllowListedMiddlewareTyped;
+use Tests\Browser\Stubs\BlockListedMiddleware;
+use Tests\Browser\Stubs\BlockListedMiddlewareTyped;
 use Throwable;
 use Sushi\Sushi;
 use Livewire\Livewire;
@@ -103,11 +107,17 @@ class TestCase extends BaseTestCase
                 return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
             })->middleware('web')->name('dynamic-component');
 
+            if (version_compare(PHP_VERSION, '7.4', '>=')) {
+                $middleware = ['web', AllowListedMiddlewareTyped::class, BlockListedMiddlewareTyped::class];
+            } else {
+                $middleware = ['web', AllowListedMiddleware::class, BlockListedMiddleware::class];
+            }
+
             Route::get('/livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
 
                 return app()->call(new $class);
-            })->middleware('web', AllowListedMiddleware::class, BlockListedMiddleware::class);
+            })->middleware($middleware);
 
             Route::get('/force-login/{userId}', function ($userId) {
                 Auth::login(User::find($userId));
@@ -150,7 +160,11 @@ class TestCase extends BaseTestCase
 
             config()->set('app.debug', true);
 
-            Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
+            if (version_compare(PHP_VERSION, '7.4', '>=')) {
+                Livewire::addPersistentMiddleware(AllowListedMiddlewareTyped::class);
+            } else {
+                Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
+            }
 
             app('config')->set('use_alpine_v3', $isUsingAlpineV3);
         });
