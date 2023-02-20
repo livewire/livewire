@@ -39,7 +39,7 @@ class LivewireManager
         }
 
         if (is_object($viewClass)) {
-            $viewClass = $viewClass::class;
+            $viewClass = get_class($viewClass);
         }
 
         $this->componentAliases[$alias] = $viewClass;
