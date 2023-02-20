@@ -27,7 +27,7 @@ class LivewireManager
     ];
 
     public static $isLivewireRequestTestingOverride = false;
-    
+
     public static $currentCompilingViewPath;
     public static $currentCompilingChildCounter;
 
@@ -37,6 +37,11 @@ class LivewireManager
             $viewClass = $alias;
             $alias = $viewClass::getName();
         }
+
+        if (is_object($viewClass)) {
+            $viewClass = $viewClass::class;
+        }
+
 
         $this->componentAliases[$alias] = $viewClass;
     }
@@ -462,7 +467,7 @@ HTML;
         static::$isLivewireRequestTestingOverride = false;
         static::$currentCompilingChildCounter = null;
         static::$currentCompilingViewPath = null;
-        
+
         $this->shouldDisableBackButtonCache = false;
 
         $this->dispatch('flush-state');
