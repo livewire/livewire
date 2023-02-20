@@ -4,7 +4,7 @@ namespace Tests\Browser\QueryString;
 
 use Livewire\Livewire;
 use Laravel\Dusk\Browser;
-use QueryString\ComponentWithSort;
+use Tests\Browser\QueryString\ComponentWithSort;
 use Tests\Browser\TestCase;
 
 class Test extends TestCase
@@ -332,7 +332,9 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             Livewire::visit($browser, ComponentWithSort::class, '?page=2&search=1')
-                ->assertScript('return !! window.location.search.match(/search=1&page=2/)');
+                ->waitForLivewire()
+                ->type('@search','p')
+                ->assertScript('return !! window.location.search.match(/search=p&page=2/)');
         });
     }
 }

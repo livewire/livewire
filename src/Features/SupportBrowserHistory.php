@@ -161,15 +161,19 @@ class SupportBrowserHistory
         }
 
         $excepts = $this->getExceptsFromComponent($component);
-
+        $sorts = $this->getSortsFromComponent($component);
         $this->mergedQueryParamsFromDehydratedComponents = collect(request()->query())
             ->merge($this->mergedQueryParamsFromDehydratedComponents)
             ->merge($this->getQueryParamsFromComponentProperties($component))
             ->reject(function ($value, $key) use ($excepts) {
                 return isset($excepts[$key]) && $excepts[$key] === $value;
             })
+            ->map(function ($property,$key) use ($sorts){
+                return ['value'=>$property,'sort'=>$sorts[$key]??0];
+            })
+            ->sortBy('sort')
             ->map(function ($property) {
-                return is_bool($property) ? json_encode($property) : $property;
+                return is_bool($property['value']) ? json_encode($property['value']) : $property['value'];
             });
 
         return $this->mergedQueryParamsFromDehydratedComponents;
@@ -186,7 +190,13 @@ class SupportBrowserHistory
                 return [$key => $value['except']];
             });
     }
-
+    protected function getSortsFromComponent($component){
+        return collect($component->getQueryString())
+            ->mapWithKeys(function ($value, $key){
+                $key = $value['as']??$key;
+                return [$key=>$value['sort']??0];
+            });
+    }
     protected function getQueryParamsFromComponentProperties($component)
     {
         return collect($component->getQueryString())
