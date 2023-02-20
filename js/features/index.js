@@ -2,6 +2,7 @@
 import './disableFormsDuringRequest';
 import './forceUpdateDirtyInputs';
 import './dispatchBrowserEvents';
+import './wireModelChild';
 import './fileDownloads';
 import './magicMethods';
 // import './hotReloading';

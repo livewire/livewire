@@ -18,7 +18,7 @@ class SupportReactiveProps extends ComponentHook
     {
         on('flush-state', fn() => static::$pendingChildParams = []);
 
-        on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
+        on('mount.stub', function ($tag, $id, $params, $parent, $key) {
             static::storeChildParams($id, $params);
         });
 

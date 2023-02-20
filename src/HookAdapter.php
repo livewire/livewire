@@ -14,10 +14,10 @@ class HookAdapter
         $this->components = new WeakMap;
 
         foreach ($hooks as $hook) {
-            on('mount', function ($component, $params) use ($hook) {
+            on('mount', function ($component, $params, $parent) use ($hook) {
                 $hook = $this->initializeHook($hook, $component);
                 $hook->callBoot();
-                $hook->callMount($params);
+                $hook->callMount($params, $parent, $parent);
             });
 
             on('hydrate', function ($synth, $rawValue, $meta) use ($hook) {

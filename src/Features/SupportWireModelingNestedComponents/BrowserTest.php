@@ -7,19 +7,19 @@ use Livewire\Livewire;
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
-    public function can_()
+    public function can_bind_a_propert_from_parent_to_property_from_child()
     {
-        $this->markTestSkipped();
-
         Livewire::visit([
             new class extends \Livewire\Component {
                 public $foo = 0;
 
                 public function render() { return <<<'HTML'
                 <div>
-                    <span>Parent: {{ $foo }}</span>
+                    <span dusk="parent">Parent: {{ $foo }}</span>
 
-                    <livewire wire:model="foo" />
+                    <livewire:child wire:model="foo" />
+
+                    <button wire:click="$refresh" dusk="refresh">refresh</button>
                 </div>
                 HTML; }
             },
@@ -29,12 +29,20 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() { return <<<'HTML'
                 <div>
-                    <span>Child: {{ $foo }}</span>
+                    <span dusk="child">Child: {{ $bar }}</span>
+                    <button wire:click="bar++" dusk="increment">increment</button>
                 </div>
                 HTML; }
             },
         ])
-        ->tinker()
+        ->assertSeeIn('@parent', 'Parent: 0')
+        ->assertSeeIn('@child', 'Child: 0')
+        ->click('@increment')
+        ->assertSeeIn('@parent', 'Parent: 0')
+        ->assertSeeIn('@child', 'Child: 0')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@parent', 'Parent: 1')
+        ->assertSeeIn('@child', 'Child: 1')
         ;
     }
 }

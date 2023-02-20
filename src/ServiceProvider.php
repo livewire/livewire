@@ -56,7 +56,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function bootFeatures()
     {
-        // app('livewire')->componentHook(\Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class);
         app('livewire')->componentHook(\Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class);
         app('livewire')->componentHook(\Livewire\Features\SupportComputedProperties\SupportComputedProperties::class);
         app('livewire')->componentHook(\Livewire\Features\SupportNestingComponents\SupportNestingComponents::class);

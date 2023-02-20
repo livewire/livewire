@@ -5137,6 +5137,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
+  // js/features/wireModelChild.js
+  on("target.request.prepare", (target) => {
+    let meta = target.snapshot.data[1];
+    let childIds = Object.values(meta.children).map((i) => i[1]);
+    childIds.forEach((id) => {
+      let child = findComponent(id);
+      let childSynthetic = child.synthetic;
+      let childMeta = childSynthetic.snapshot.data[1];
+      let bindings = childMeta.bindings;
+      if (bindings)
+        childSynthetic.ephemeral.$commit();
+    });
+  });
+
   // js/features/fileDownloads.js
   on("target.request", (target) => {
     let component = findComponent(target.__livewireId);

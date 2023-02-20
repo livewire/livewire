@@ -3,14 +3,10 @@
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Livewire\ComponentHook;
-use Livewire\Drawer\Utils as SyntheticUtils;
-use Livewire\Mechanisms\DataStore;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Livewire\Drawer\Utils;
-
-use function Livewire\after;
 use function Livewire\on;
 use function Livewire\store;
+
 
 class SupportWireModelingNestedComponents extends ComponentHook
 {
@@ -20,55 +16,62 @@ class SupportWireModelingNestedComponents extends ComponentHook
     {
         on('flush-state', fn() => static::$outersByComponentId = []);
 
-        on('dummy-mount', function ($tag, $id, $params, $parent, $key) {
+        // On a subsequent request, a parent encounters a child component
+        // with wire:model on it, and that child has already been mounted
+        // in a previous request, capture the value being passed in so we
+        // can later set the child's property if it exists in this request.
+        on('mount.stub', function ($tag, $id, $params, $parent, $key) {
             if (! isset($params['wire:model'])) return;
 
             $outer = $params['wire:model'];
 
             static::$outersByComponentId[$id] = [$outer => $parent->$outer];
         });
-
-        // When a Livewire component is rendered, we'll check to see if "wire:model" is set.
-        on('mount', function ($name, $params, $parent, $key, $hijack) {
-            return function ($target) use ($parent, $params) {
-
-            };
-        });
     }
 
-    // We need to add a note that everytime we render this thing, we'll need to add
-    // those extra Alpine attributes.
-    public function dehydrate($context)
-    {
-        $wireModels = store($this->component)->get('wireModels', false);
-
-        if (! $wireModels) return;
-
-        $context->addMeta('wireModels', $wireModels);
-
-        return function () use ($context, $wireModels) {
-            if (! $context->effects['html']) return;
-
-            foreach ($wireModels as $outer => $inner) {
-            }
-        };
-    }
-
-    // Now on subsequent renders, we can make a note...
     public function hydrate($meta)
     {
-        if (! isset($meta['wireModels'])) return;
+        if (! isset($meta['bindings'])) return;
 
-        $wireModels = $meta['wireModels'];
+        $bindings = $meta['bindings'];
 
-        store($this->component)->set('wireModels', $wireModels);
+        // Store the bindings for later dehydration...
+        store($this->component)->set('bindings', $bindings);
 
+        // If this child's parent already rendered its stub, retrieve
+        // the memo'd value and set it.
         if (! isset(static::$outersByComponentId[$meta['id']])) return;
 
         $outers = static::$outersByComponentId[$meta['id']];
 
-        foreach ($wireModels as $outer => $inner) {
+        foreach ($bindings as $outer => $inner) {
             $this->component->$inner = $outers[$outer];
         }
+    }
+
+    public function dehydrate($context)
+    {
+        $bindings = store($this->component)->get('bindings', false);
+
+        if (! $bindings) return;
+
+        // Add the bindings metadata to the payload for later reference...
+        $context->addMeta('bindings', $bindings);
+
+        return function () use ($bindings, $context) {
+            // Currently we can only support a single wire:model bound value,
+            // so we'll just get the first one. But in the future we will
+            // likely want to support named bindings, so we'll keep
+            // this value as an array.
+            $outer = array_keys($bindings)[0];
+            $inner = array_values($bindings)[0];
+
+            // Attach the necessary Alpine directives so that the child and
+            // parent's JS, ephemeral, values are bound.
+            $context->effects['html'] = Utils::insertAttributesIntoHtmlRoot($context->effects['html'], [
+                'x-model' => '$wire.$parent.'.$outer,
+                'x-modelable' => '$wire.'.$inner,
+            ]);
+        };
     }
 }

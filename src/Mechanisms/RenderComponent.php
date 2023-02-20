@@ -100,7 +100,7 @@ EOT;
         // Now we're ready to actually create a Livewire component instance...
         $component = app(ComponentRegistry::class)->new($name, $params);
 
-        trigger('mount', $component, $params);
+        trigger('mount', $component, $params, $parent);
 
         // Trigger the dehydrate...
         $payload = app('livewire')->snapshot($component, initial: true);

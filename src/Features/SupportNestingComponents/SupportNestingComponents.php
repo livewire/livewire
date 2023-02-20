@@ -18,7 +18,7 @@ class SupportNestingComponents extends ComponentHook
             if ($parent && static::hasPreviouslyRenderedChild($parent, $key)) {
                 [$tag, $childId] = static::getPreviouslyRenderedChild($parent, $key);
 
-                $finish = trigger('dummy-mount', $tag, $childId, $params, $parent, $key);
+                $finish = trigger('mount.stub', $tag, $childId, $params, $parent, $key);
 
                 $html  = "<{$tag} wire:id=\"{$childId}\"></{$tag}>";
 
