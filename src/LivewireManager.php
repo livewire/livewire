@@ -42,7 +42,6 @@ class LivewireManager
             $viewClass = $viewClass::class;
         }
 
-
         $this->componentAliases[$alias] = $viewClass;
     }
 
