@@ -11,31 +11,39 @@ class Test extends TestCase
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
     {
         $this->browse(function (Browser $browser) {
+            if (version_compare(PHP_VERSION, '7.4', '>=')) {
+                $allowListedMiddleware = \Tests\Browser\Stubs\AllowListedMiddlewareTyped::class;
+                $blockListedMiddleware = \Tests\Browser\Stubs\BlockListedMiddlewareTyped::class;
+            } else {
+                $allowListedMiddleware = \Tests\Browser\Stubs\AllowListedMiddleware::class;
+                $blockListedMiddleware = \Tests\Browser\Stubs\BlockListedMiddleware::class;
+            }
+
             Livewire::visit($browser, Component::class)
                 // See allow-listed middleware from original request.
-                ->assertSeeIn('@middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware","Tests\\\\Browser\\\\BlockListedMiddleware"]')
+                ->assertSeeIn('@middleware', json_encode([$allowListedMiddleware, $blockListedMiddleware]))
                 ->assertDontSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
 
                 ->waitForLivewire()->click('@refresh')
 
                 // See that the original request middleware was re-applied.
-                ->assertSeeIn('@middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
+                ->assertSeeIn('@middleware', json_encode([$allowListedMiddleware]))
                 ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
 
                 ->waitForLivewire()->click('@showNested')
 
                 // Even to nested components shown AFTER the first load.
-                ->assertSeeIn('@middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
+                ->assertSeeIn('@middleware', json_encode([$allowListedMiddleware]))
                 ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
-                ->assertSeeIn('@nested-middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
+                ->assertSeeIn('@nested-middleware', json_encode([$allowListedMiddleware]))
                 ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
 
                 ->waitForLivewire()->click('@refreshNested')
 
                 // Make sure they are still applied when stand-alone requests are made to that component.
-                ->assertSeeIn('@middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
+                ->assertSeeIn('@middleware', json_encode([$allowListedMiddleware]))
                 ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
-                ->assertSeeIn('@nested-middleware', '["Tests\\\\Browser\\\\AllowListedMiddleware"]')
+                ->assertSeeIn('@nested-middleware', json_encode([$allowListedMiddleware]))
                 ->assertSeeIn('@path', 'livewire-dusk/Tests%5CBrowser%5CSecurity%5CComponent')
             ;
         });
