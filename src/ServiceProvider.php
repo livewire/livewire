@@ -91,7 +91,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             // \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
             // \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
-            // \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
 
             // Core
             // \Livewire\Features\SupportJavaScriptOrderedArrays\SupportJavaScriptOrderedArrays::class, @todo: there might be a better way than this...
