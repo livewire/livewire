@@ -2,9 +2,11 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
-class SupportMorphAwareIfStatement
+use Livewire\ComponentHook;
+
+class SupportMorphAwareIfStatement extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
         $if = '\B@(@?if(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?';
         $endif = '@endif';

@@ -28,10 +28,10 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [x] `wire:model` props
 - [x] `wire:transition`
 - [x] JavaScript functions
+- [x] `@if` markers
 - [ ] Lazy components
 - [ ] PHP Attributes
 - [ ] SPA Mode (`wire:navigate`, `@persist`)
-- [ ] `@if` markers
 - [ ] Hot-reloading
 
 #### V2 Parity

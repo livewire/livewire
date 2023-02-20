@@ -58,6 +58,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         app('livewire')->componentHook(\Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class);
         app('livewire')->componentHook(\Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class);
         app('livewire')->componentHook(\Livewire\Features\SupportComputedProperties\SupportComputedProperties::class);
         app('livewire')->componentHook(\Livewire\Features\SupportNestingComponents\SupportNestingComponents::class);
         app('livewire')->componentHook(\Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class);
@@ -87,7 +88,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         foreach ([
             // V3
             // \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
-            // \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             // \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
             // \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
