@@ -3,40 +3,48 @@ import { WeakBag } from "@/utils"
 import { on } from '@synthetic/index'
 import Alpine from 'alpinejs'
 
-on('morph.added', (el) => {
-    el.__addedByMorph = true
-})
+on('morph.added', el => el.__addedByMorph = true)
 
-let removalCallbacks = new WeakBag
-
-on('morph.removing', (el, skip) => {
-    removalCallbacks.each(el, callback => callback(skip))
-})
-
-directive('transition', (el, directive, { component }) => {
-    el.__hasLivewireTransition = true
-
-    if (! el.__addedByMorph) return
-
+directive('transition', (el, directive, { component, cleanup }) => {
     let visibility = Alpine.reactive({ state: false })
 
+    // We're going to control the element's transition with Alpine transitions...
     Alpine.bind(el, {
         [directive.rawName.replace('wire:', 'x-')]: '',
-        'x-show'() {
-            return visibility.state
-        },
-        'x-init'() {
-            setTimeout(() => visibility.state = true)
-        }
+        'x-show'() { return visibility.state },
     })
 
-    removalCallbacks.add(el, skip => {
+    // If it's not the initial page load, transition the element in...
+    el.__addedByMorph && setTimeout(() => visibility.state = true)
+
+    let cleanups = []
+
+    cleanups.push(on('morph.removing', (el, skip) => {
+        // Here we interupt morphdom from removing an element...
         skip()
 
+        // When the transition ends...
         el.addEventListener('transitionend', () => {
+            // We can actually remove the element and all the listeners along with it...
             el.remove()
         })
 
+        // Now we can trigger a transition:
         visibility.state = false
-    })
+
+        cleanups.push(on('morph', (from, to, morphComponent) => {
+            if (morphComponent !== component) return
+
+            // While this element is transitioning out, a new morph is about to occur.
+            // Let's expidite this one and clean it up so it doesn't interfere...
+            el.remove()
+
+            cleanups.forEach(i => i())
+        }))
+    }))
+
+    cleanup(() => cleanups.forEach(i => i()))
 })
+
+
+

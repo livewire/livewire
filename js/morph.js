@@ -18,6 +18,8 @@ export function morph(component, el, html) {
 
     to.__livewire = component
 
+    trigger('morph', el, to, component)
+
     Alpine.morph(el, to, {
         updating: (el, toEl, childrenOnly, skip) => {
             if (isntElement(el)) return

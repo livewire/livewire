@@ -26,8 +26,8 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [x] Reactive properties
 - [x] `@teleport`
 - [x] `wire:model` props
+- [x] `wire:transition`
 - [ ] Lazy components
-- [ ] `wire:transition`
 - [ ] PHP Attributes
 - [ ] SPA Mode (`wire:navigate`, `@persist`)
 - [ ] JavaScript functions

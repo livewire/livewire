@@ -19,6 +19,11 @@ export function on(name, callback) {
     if (! listeners[name]) listeners[name] = []
 
     listeners[name].push(callback)
+
+    // Return an "off" callback to remove the listener...
+    return () => {
+        listeners[name] = listeners[name].filter(i => i !== callback)
+    }
 }
 
 /**

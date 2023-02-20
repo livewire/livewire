@@ -934,6 +934,9 @@
     if (!listeners[name])
       listeners[name] = [];
     listeners[name].push(callback);
+    return () => {
+      listeners[name] = listeners[name].filter((i) => i !== callback);
+    };
   }
   function trigger2(name, ...params) {
     let callbacks = listeners[name] || [];
@@ -5257,6 +5260,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     parentComponent && (wrapper.__livewire = parentComponent);
     let to = wrapper.firstElementChild;
     to.__livewire = component;
+    trigger2("morph", el, to, component);
     module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip) => {
         if (isntElement(el2))
@@ -5413,34 +5417,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   module_default.magic("wire", (el) => closestComponent(el).$wire);
 
   // js/directives/wire:transition.js
-  on("morph.added", (el) => {
-    el.__addedByMorph = true;
-  });
-  var removalCallbacks = new WeakBag();
-  on("morph.removing", (el, skip) => {
-    removalCallbacks.each(el, (callback) => callback(skip));
-  });
-  directive2("transition", (el, directive3, { component }) => {
-    el.__hasLivewireTransition = true;
-    if (!el.__addedByMorph)
-      return;
+  on("morph.added", (el) => el.__addedByMorph = true);
+  directive2("transition", (el, directive3, { component, cleanup: cleanup3 }) => {
     let visibility = module_default.reactive({ state: false });
     module_default.bind(el, {
       [directive3.rawName.replace("wire:", "x-")]: "",
       "x-show"() {
         return visibility.state;
-      },
-      "x-init"() {
-        setTimeout(() => visibility.state = true);
       }
     });
-    removalCallbacks.add(el, (skip) => {
+    el.__addedByMorph && setTimeout(() => visibility.state = true);
+    let cleanups = [];
+    cleanups.push(on("morph.removing", (el2, skip) => {
       skip();
-      el.addEventListener("transitionend", () => {
-        el.remove();
+      el2.addEventListener("transitionend", () => {
+        el2.remove();
       });
       visibility.state = false;
-    });
+      cleanups.push(on("morph", (from, to, morphComponent) => {
+        if (morphComponent !== component)
+          return;
+        el2.remove();
+        cleanups.forEach((i) => i());
+      }));
+    }));
+    cleanup3(() => cleanups.forEach((i) => i()));
   });
 
   // js/debounce.js
