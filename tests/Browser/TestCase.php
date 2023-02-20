@@ -253,11 +253,11 @@ class TestCase extends BaseTestCase
             try {
                 $callback(...$browsers);
             } catch (Exception $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+                if (DuskOptions::hasUI() && !DuskOptions::hasArgument('--headless=new')) $this->breakIntoATinkerShell($browsers, $e);
 
                 throw $e;
             } catch (Throwable $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+                if (DuskOptions::hasUI() && !DuskOptions::hasArgument('--headless=new')) $this->breakIntoATinkerShell($browsers, $e);
 
                 throw $e;
             }
