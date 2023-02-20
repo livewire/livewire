@@ -4,6 +4,7 @@ namespace Tests\Browser\QueryString;
 
 use Livewire\Livewire;
 use Laravel\Dusk\Browser;
+use QueryString\ComponentWithSort;
 use Tests\Browser\TestCase;
 
 class Test extends TestCase
@@ -323,6 +324,15 @@ class Test extends TestCase
                 ->assertQueryStringHas('p', 2)
                 ->assertQueryStringHas('s', '1')
             ;
+        });
+    }
+
+
+    public function test_query_string_sort_params()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithSort::class, '?page=2&search=1')
+                ->assertScript('return !! window.location.search.match(/search=1&page=2/)');
         });
     }
 }
