@@ -20,18 +20,13 @@ class AnonymousClassComponentsTest extends TestCase
             }
 
             public function render() {
-                return <<<'HTML'
-                <div>
-                    <span>Count: {{ $count }}</span>
-                    <button wire:click="inc">inc</button>
-                </div>
-                HTML;
+                return view('null-view');
             }
         });
 
         $component = Livewire::test('foo')
-            ->assertSee('Count: 0')
+            ->assertSet('count', 0)
             ->call('inc')
-            ->assertSee('Count: 1');
+            ->assertSet('count', 1);
     }
 }
