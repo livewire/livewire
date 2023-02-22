@@ -2,11 +2,13 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\Livewire;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Redirect;
 
 class RedirectTest extends TestCase
 {
@@ -163,6 +165,14 @@ class RedirectTest extends TestCase
         $this->assertNull($component->payload['effects']['html']);
     }
 
+    /** @test */
+    public function it_redirects_properly_even_if_persistent_middleware_feature_returns_an_empty_response()
+    {
+        Livewire::test(RedirectFromActionComponent::class)
+            ->call('runAction')
+            ->assertRedirect('/home');
+    }
+
     protected function registerNamedRoute()
     {
         Route::get('foo', function () {
@@ -281,5 +291,33 @@ class RenderOnRedirectWithSkipRenderMethod extends Component
     Render has run
 </div>
 HTML;
+    }
+}
+
+class RedirectFromActionComponent extends Component
+{
+    public function runAction()
+    {
+        return app(RedirectAction::class);
+    }
+
+    public function render()
+    {
+        return '<div></div>';
+    }
+}
+
+class RedirectAction implements Responsable
+{
+    protected $response;
+
+    public function __construct(ResponseFactory $response)
+    {
+        $this->response = $response;
+    }
+
+    public function toResponse($request)
+    {
+        return $this->response->redirectTo('/home');
     }
 }
