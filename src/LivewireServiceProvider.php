@@ -138,6 +138,7 @@ class LivewireServiceProvider extends ServiceProvider
         $locale = Livewire::getPayloadLocale();
 
         if (isset($locale)) {
+            // `app()->setLocale()` can't be called here as the translator doesn't exist yet.
             config()->set('app.locale', $locale);
         }
     }
