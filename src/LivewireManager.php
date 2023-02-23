@@ -356,6 +356,13 @@ HTML;
         return request()->hasHeader('X-Livewire');
     }
 
+    public function getPayloadLocale()
+    {
+        $fingerprint = request()->only('fingerprint')['fingerprint'] ?? [];
+
+        return data_get($fingerprint, 'locale');
+    }
+
     public function originalUrl()
     {
         if ($this->isDefinitelyLivewireRequest()) {
