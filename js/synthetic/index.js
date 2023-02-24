@@ -401,8 +401,8 @@ function getCsrfToken() {
         return document.querySelector('meta[name="csrf"]').content
     }
 
-    if (document.querySelector('[data-livewire-scripts]')) {
-        return document.querySelector('[data-livewire-scripts]').getAttribute('data-csrf')
+    if (document.querySelector('[data-csrf]')) {
+        return document.querySelector('[data-csrf]').getAttribute('data-csrf')
     }
 
     return window.__csrf

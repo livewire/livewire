@@ -108,7 +108,7 @@ class FrontendAssets
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
         return <<<HTML
-        <script src="{$fullAssetPath}" {$nonce} data-livewire-scripts data-csrf="{$jsLivewireToken}"></script>
+        <script src="{$fullAssetPath}" {$nonce} data-csrf="{$jsLivewireToken}"></script>
         HTML;
     }
 
