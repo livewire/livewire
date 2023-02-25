@@ -4,13 +4,14 @@ namespace Livewire;
 
 use function Livewire\trigger;
 use Orchestra\DuskUpdater\UpdateCommand;
-use Livewire\Mechanisms\UpdateComponents\UpdateComponents;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\RenderComponent;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-
 use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportUnitTesting\Testable;
 use Livewire\Features\SupportUnitTesting\DuskTestable;
+use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
+use Livewire\Mechanisms\UpdateComponents\UpdateComponents;
 
 class Manager
 {
@@ -64,6 +65,16 @@ class Manager
     function updateProperty($component, $path, $value, $skipHydrate = false)
     {
         return app(UpdateComponents::class)->updateProperty($component, $path, $value, $skipHydrate);
+    }
+
+    function setUpdateRoute($callback)
+    {
+        return app(HandleRequests::class)->setUpdateRoute($callback);
+    }
+
+    function setJavaScriptRoute($callback)
+    {
+        return app(FrontendAssets::class)->setJavaScriptRoute($callback);
     }
 
     protected $queryParamsForTesting = [];

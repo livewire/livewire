@@ -43,11 +43,12 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         foreach ([
             \Livewire\Mechanisms\UpdateComponents\UpdateComponents::class,
+            \Livewire\Mechanisms\HandleRequests\HandleRequests::class,
+            \Livewire\Mechanisms\FrontendAssets\FrontendAssets::class,
             \Livewire\Mechanisms\ExtendBlade\ExtendBlade::class,
             \Livewire\Mechanisms\CompileLivewireTags::class,
             \Livewire\Mechanisms\ComponentRegistry::class,
             \Livewire\Mechanisms\RenderComponent::class,
-            \Livewire\Mechanisms\FrontendAssets::class,
             \Livewire\Mechanisms\DataStore::class,
         ] as $mechanism) {
             (new $mechanism)->boot($this);

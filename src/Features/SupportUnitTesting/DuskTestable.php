@@ -84,7 +84,7 @@ class DuskTestable
 
         $browser = $testCase->newBrowser($testCase->createWebDriver());
 
-        return $browser->visit('/livewire-dusk/'.$id)->waitForLivewireToLoad();
+        return $browser->visit('/livewire-dusk/'.$id);
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)

@@ -10,4 +10,3 @@ export class Component {
         synthetic.__livewireId = this.id
     }
 }
-

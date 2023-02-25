@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms;
+namespace Livewire\Mechanisms\FrontendAssets;
 
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Js;
@@ -12,34 +12,47 @@ class FrontendAssets
     public $hasRenderedScripts = false;
     public $hasRenderedStyles = false;
 
+    public $javaScriptRoute;
+
     public function boot()
     {
         app()->singleton($this::class);
 
-        Route::get('/livewire/livewire.js', [static::class, 'source']);
+        app($this::class)->setJavaScriptRoute(function ($handle) {
+            return Route::get('/livewire/livewire.js', $handle);
+        });
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
         Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
     }
 
+    function setJavaScriptRoute($callback)
+    {
+        $route = $callback(function () {
+            return $this->returnJavaScriptAsFile();
+        });
+
+        $this->javaScriptRoute = $route;
+    }
+
     public static function livewireScripts($expression)
     {
-        return '{!! \Livewire\Mechanisms\FrontendAssets::scripts('.$expression.') !!}';
+        return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts('.$expression.') !!}';
     }
 
     public static function livewireStyles($expression)
     {
-        return '{!! \Livewire\Mechanisms\FrontendAssets::styles('.$expression.') !!}';
+        return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::styles('.$expression.') !!}';
     }
 
-    public function source()
+    public function returnJavaScriptAsFile()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../../dist/livewire.js');
+        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.js');
     }
 
     public function maps()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../../dist/livewire.js.map');
+        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.js.map');
     }
 
     public static function styles($options = [])
@@ -83,32 +96,41 @@ class FrontendAssets
         // HTML Label.
         $html = $debug ? ['<!-- Livewire Scripts -->'] : [];
 
-        // JavaScript assets.
-        $html[] = $debug ? $scripts : static::minify($scripts);
+        $html[] = $scripts;
 
         return implode("\n", $html);
     }
 
     public static function js($options)
     {
-        $assetsUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
+        // Use the default endpoint...
+        $url = app(static::class)->javaScriptRoute->uri;
 
-        $appUrl = config('livewire.app_url')
-            ?: rtrim($options['app_url'] ?? '', '/')
-            ?: $assetsUrl;
 
-        $jsLivewireToken = app()->has('session.store') ? csrf_token() : '';
+        // Use the configured one...
+        $url = config('livewire.asset_url') ?: $url;
 
-        $manifest = json_decode(file_get_contents(__DIR__.'/../../dist/manifest.json'), true);
-        $versionedFileName = $manifest['/livewire.js'];
+        // Use the legacy passed in one...
+        $url = $options['asset_url'] ?? $url;
 
-        // Default to dynamic `livewire.js` (served by a Laravel route).
-        $fullAssetPath = "{$assetsUrl}/livewire{$versionedFileName}";
+        // Use the new passed in one...
+        $url = $options['url'] ?? $url;
+
+        $url = rtrim($url, '/');
+
+        $url = (string) str($url)->start('/');
+
+        // Add the build manifest hash to it...
+        $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
+        $versionHash = $manifest['/livewire.js'];
+        $url = "{$url}?id={$versionHash}";
+
+        $token = app()->has('session.store') ? csrf_token() : '';
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
         return <<<HTML
-        <script src="{$fullAssetPath}" {$nonce} data-csrf="{$jsLivewireToken}"></script>
+        <script src="{$url}" {$nonce} data-csrf="{$token}"></script>
         HTML;
     }
 

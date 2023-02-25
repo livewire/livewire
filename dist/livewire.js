@@ -4022,6 +4022,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     raw2 = module_default.raw;
   });
   var store2 = /* @__PURE__ */ new Map();
+  var uri;
   function synthetic(dehydrated) {
     if (typeof dehydrated === "string")
       return newUp(dehydrated);
@@ -4029,6 +4030,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       effects: raw2(dehydrated.effects),
       snapshot: raw2(dehydrated.snapshot)
     };
+    if (target.effects.uri)
+      uri = target.effects.uri;
     let symbol = Symbol();
     store2.set(symbol, target);
     let canonical = extractData(deepClone(target.snapshot.data), symbol);
@@ -4209,7 +4212,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     requestTargetQueue.clear();
     let finish = trigger2("request");
-    let request = await fetch("/synthetic/update", {
+    let request = await fetch(uri, {
       method: "POST",
       body: JSON.stringify({
         _token: getCsrfToken(),
@@ -4251,13 +4254,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function getCsrfToken() {
-    if (document.querySelector('meta[name="csrf"]')) {
-      return document.querySelector('meta[name="csrf"]').content;
+    if (document.querySelector("[data-csrf]")) {
+      return document.querySelector("[data-csrf]").getAttribute("data-csrf");
     }
-    if (document.querySelector("[data-livewire-scripts]")) {
-      return document.querySelector("[data-livewire-scripts]").getAttribute("data-csrf");
-    }
-    return window.__csrf;
+    throw "Livewire: No CSRF token detected";
   }
   function mergeNewSnapshot(symbol, snapshot, effects) {
     let target = store2.get(symbol);

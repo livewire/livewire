@@ -32,26 +32,6 @@ class UpdateComponents
     {
         app()->singleton($this::class);
 
-        Route::post('/synthetic/update', function () {
-            $targets = request('targets');
-
-            $responses = [];
-
-            foreach ($targets as $target) {
-                $snapshot = $target['snapshot'];
-                $diff = $target['diff'];
-                $calls = $target['calls'];
-
-                $response = app($this::class)->update($snapshot, $diff, $calls);
-
-                unset($response['target']);
-
-                $responses[] = $response;
-            }
-
-            return $responses;
-        })->middleware('web')->name('synthetic.update');
-
         $this->skipRequestPayloadTamperingMiddleware();
     }
 

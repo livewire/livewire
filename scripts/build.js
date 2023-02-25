@@ -13,7 +13,7 @@ build({
 let hash = crypto.randomBytes(4).toString('hex');
 
 fs.writeFileSync(__dirname+'/../dist/manifest.json', `
-{"/livewire.js":"/livewire.js?id=${hash}"}
+{"/livewire.js":"${hash}"}
 `)
 
 // Build a minified version.

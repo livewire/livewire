@@ -65,7 +65,9 @@ This can be a problem for some applications that use localization or multi-tenan
 In those case, you can register your own endpoint however you like, and as long as you use `Livewire::handleUpdate()` as the route handler, Livewire will know to use this endpoint for all component updates.
 
 ```php
-Route::get('/custom/livewire/endpoint', Livewire::handleUpdate());
+Livewire::setUpdateRoute(function ($handle) {
+	return Route::post('/custom/livewire/update', $handle);
+});
 ```
 
 <a name="custom-asset-url"></a>
@@ -81,7 +83,9 @@ If your application has global route prefixes because of something like localiza
 
 ```php
 Route::prefix('acme', function () {
-	Route::get('livewire.js', Livewire::handleJavaScript());
+	Livewire::setJavaScriptRoute(function ($handle) {
+		return Route::get('/livewire.js', $handle);
+	});
 });
 ```
 

@@ -34,6 +34,8 @@ import './features'
  */
 let store = new Map
 
+let uri
+
 export function synthetic(dehydrated) {
     if (typeof dehydrated === 'string') return newUp(dehydrated)
 
@@ -43,6 +45,8 @@ export function synthetic(dehydrated) {
         effects: raw(dehydrated.effects),
         snapshot: raw(dehydrated.snapshot),
     }
+
+    if (target.effects.uri) uri = target.effects.uri
 
     // These will be used as an identifier in a lookup for this synthetic.
     let symbol = Symbol()
@@ -339,7 +343,7 @@ async function sendMethodCall() {
 
     let finish = trigger('request')
 
-    let request = await fetch('/synthetic/update', {
+    let request = await fetch(uri, {
         method: 'POST',
         body: JSON.stringify({
             _token: getCsrfToken(),
@@ -397,15 +401,11 @@ async function requestNew(name) {
  * along with the payload. Here, we'll try and locate one.
  */
 function getCsrfToken() {
-    if (document.querySelector('meta[name="csrf"]')) {
-        return document.querySelector('meta[name="csrf"]').content
-    }
-
     if (document.querySelector('[data-csrf]')) {
         return document.querySelector('[data-csrf]').getAttribute('data-csrf')
     }
 
-    return window.__csrf
+    throw 'Livewire: No CSRF token detected'
 }
 
 /**

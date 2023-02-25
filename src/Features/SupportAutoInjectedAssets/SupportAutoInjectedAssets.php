@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportAutoInjectedAssets;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Foundation\Http\Events\RequestHandled;
-use Livewire\Mechanisms\FrontendAssets;
+use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 
 use function Livewire\on;
 
