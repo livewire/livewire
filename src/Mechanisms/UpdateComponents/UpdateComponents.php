@@ -280,11 +280,11 @@ class UpdateComponents
         }
     }
 
-    protected function &dataGet(&$target, $key) {
+    protected function dataGet($target, $key) {
         if (str($key)->exactly('')) return $target;
 
         if (! str($key)->contains('.')) {
-            $thing =& $this->synth($target)->get($target, $key);
+            $thing = $this->synth($target)->get($target, $key);
 
             return $thing;
         }
@@ -292,7 +292,7 @@ class UpdateComponents
         $parentKey = str($key)->before('.')->__toString();
         $childKey = str($key)->after('.')->__toString();
 
-        $parent =& $this->synth($target)->get($target, $parentKey);
+        $parent = $this->synth($target)->get($target, $parentKey);
 
         return $this->dataGet($parent, $childKey);
     }
