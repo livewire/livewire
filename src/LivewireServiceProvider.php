@@ -146,6 +146,10 @@ class LivewireServiceProvider extends ServiceProvider
             ->name('livewire.message')
             ->middleware(config('livewire.middleware_group', ''));
 
+        RouteFacade::post('/{locale}/livewire/message/{name}', HttpConnectionHandler::class)
+            ->name('livewire.message-localized')
+            ->middleware(config('livewire.middleware_group', ''));
+
         RouteFacade::post('/livewire/upload-file', [FileUploadHandler::class, 'handle'])
             ->name('livewire.upload-file')
             ->middleware(config('livewire.middleware_group', ''));

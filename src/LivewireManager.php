@@ -233,6 +233,8 @@ HTML;
             ?: rtrim($options['app_url'] ?? '', '/')
             ?: $assetsUrl;
 
+        $appLocale = app()->getLocale();
+
         $jsLivewireToken = app()->has('session.store') ? "'" . csrf_token() . "'" : 'null';
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/manifest.json'), true);
@@ -300,6 +302,7 @@ HTML;
     {$devTools}
     window.Livewire = window.livewire;
     window.livewire_app_url = '{$appUrl}';
+    window.livewire_app_locale = '{$appLocale}';
     window.livewire_token = {$jsLivewireToken};
 
 	{$windowAlpineCheck}
@@ -346,7 +349,7 @@ HTML;
 
         if (! $route) return false;
 
-        return $route->named('livewire.message');
+        return $route->named('livewire.message') || $route->named('livewire.message-localized');
     }
 
     public function isProbablyLivewireRequest()
