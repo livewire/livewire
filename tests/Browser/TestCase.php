@@ -119,6 +119,12 @@ class TestCase extends BaseTestCase
                 return app()->call(new $class);
             })->middleware($middleware);
 
+            Route::get('/{locale}/livewire-dusk/{component}', function ($locale, $component) {
+                $class = urldecode($component);
+
+                return app()->call(new $class);
+            })->middleware($middleware);
+
             Route::get('/force-login/{userId}', function ($userId) {
                 Auth::login(User::find($userId));
 
