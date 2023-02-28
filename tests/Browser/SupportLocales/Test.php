@@ -8,7 +8,7 @@ use Tests\Browser\TestCase;
 class Test extends TestCase
 {
     /** @test */
-    public function it_functions_without_locale()
+    public function it_functions_without_locale_prefix_in_url()
     {
         /**
          * We can't use `Livewire::visit()` as we need the URL to run
@@ -32,7 +32,7 @@ class Test extends TestCase
     }
 
     /** @test */
-    public function it_functions_with_locale()
+    public function it_functions_with_locale_prefix_in_url()
     {
         /**
          * We can't use `Livewire::visit()` as we need to prefix the locale
@@ -58,7 +58,7 @@ class Test extends TestCase
     }
 
     /** @test */
-    public function it_uses_app_default_if_locale_has_been_tampered_with()
+    public function it_uses_app_default_if_locale_has_been_tampered_with_and_is_not_a_valid_locale()
     {
         /**
          * We can't use `Livewire::visit()` as we need to prefix the locale
