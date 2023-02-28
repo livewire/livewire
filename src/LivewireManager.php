@@ -346,7 +346,7 @@ HTML;
 
         if (! $route) return false;
 
-        return $route->named('livewire.message');
+        return $route->named('livewire.message') || $route->named('livewire.message-localized');
     }
 
     public function isProbablyLivewireRequest()
