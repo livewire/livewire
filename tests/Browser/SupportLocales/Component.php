@@ -4,6 +4,7 @@ namespace Tests\Browser\SupportLocales;
 
 use Illuminate\Support\Facades\App;
 use Livewire\Component as BaseComponent;
+use function Livewire\str;
 
 class Component extends BaseComponent
 {
