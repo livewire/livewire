@@ -18,6 +18,18 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "338d9a8f357edbca",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "installation.md",
+                "mode": "source",
+                "source": false
+              }
+            }
           }
         ]
       }
@@ -148,9 +160,10 @@
   },
   "active": "ccd8e8ca0483a046",
   "lastOpenFiles": [
+    "_guidelines.md",
     "installation.md",
+    "Untitled.md",
     "Places next year.md",
-    "Untitled.canvas",
-    "_guidelines.md"
+    "Untitled.canvas"
   ]
 }

@@ -82,11 +82,8 @@ By default, Livewire will serve its JavaScript assets from the following URL: `y
 If your application has global route prefixes because of something like localization or multi-tenancy, you can register your own endpoint to be used by Livewire internally for fetching its JavaScript.
 
 ```php
-Route::prefix('acme', function () {
-	Livewire::setJavaScriptRoute(function ($handle) {
-		return Route::get('/livewire.js', $handle);
-	});
-});
+
+
 ```
 
 Now, Livewire will use a `<script src` like the following:
