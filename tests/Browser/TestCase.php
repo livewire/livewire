@@ -113,18 +113,6 @@ class TestCase extends BaseTestCase
                 $middleware = ['web', AllowListedMiddleware::class, BlockListedMiddleware::class];
             }
 
-            Route::get('/livewire-dusk/{component}', function ($component) {
-                $class = urldecode($component);
-
-                return app()->call(new $class);
-            })->middleware($middleware);
-
-            Route::get('/{locale}/livewire-dusk/{component}', function ($locale, $component) {
-                $class = urldecode($component);
-
-                return app()->call(new $class);
-            })->middleware($middleware);
-
             Route::get('/force-login/{userId}', function ($userId) {
                 Auth::login(User::find($userId));
 
@@ -156,6 +144,18 @@ class TestCase extends BaseTestCase
                     'link' => '/livewire-dusk/' . urlencode(\Tests\Browser\Alpine\Entangle\ToggleEntangledTurbo::class),
                 ]);
             })->name('entangle-turbo');
+
+            Route::get('/livewire-dusk/{component}', function ($component) {
+                $class = urldecode($component);
+
+                return app()->call(new $class);
+            })->middleware($middleware);
+
+            Route::get('/{locale}/livewire-dusk/{component}', function ($locale, $component) {
+                $class = urldecode($component);
+
+                return app()->call(new $class);
+            })->middleware($middleware);
 
             app('session')->put('_token', 'this-is-a-hack-because-something-about-validating-the-csrf-token-is-broken');
 
