@@ -13,15 +13,21 @@ class StdClassSynth extends Synth {
         return $target instanceof stdClass;
     }
 
-    function dehydrate($target, $context) {
-        return (array) $target;
+    function dehydrate($target, $context, $dehydrateChild) {
+        $data = (array) $target;
+
+        foreach ($target as $key => $child) {
+            $data[$key] = $dehydrateChild($child);
+        }
+
+        return $data;
     }
 
-    function hydrate($value, $meta) {
+    function hydrate($value, $meta, $hydrateChild) {
         $obj = new stdClass;
 
-        foreach ($value as $key => $value) {
-            $obj->$key = $value;
+        foreach ($value as $key => $child) {
+            $obj->$key = $hydrateChild($child);
         }
 
         return $obj;

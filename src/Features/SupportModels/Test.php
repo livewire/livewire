@@ -3,178 +3,112 @@
 namespace Livewire\Features\SupportModels;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
-use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
+use Sushi\Sushi;
 
 class Test extends \Tests\TestCase
 {
-    public function setUp(): void
+    /** @test */
+    public function model_properties_are_persisted()
     {
-        $this->markTestSkipped(); // @todo: implement models
-        parent::setUp();
+        (new Post)::resolveConnection()->enableQueryLog();
 
-        Schema::create('model_for_serializations', function ($table) {
-            $table->bigIncrements('id');
-            $table->string('title');
-            $table->timestamps();
-        });
+        Livewire::test(new class extends \Livewire\Component {
+            public Post $post;
+
+            public function mount() {
+                $this->post = Post::first();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $post->title }}</div>
+            HTML; }
+        })
+        ->assertSee('First')
+        ->call('$refresh')
+        ->assertSee('First');
+
+        $this->assertCount(2, Post::resolveConnection()->getQueryLog());
     }
 
     /** @test */
-    public function an_eloquent_model_can_be_set_as_a_public_property()
+    public function cant_update_a_model_property()
     {
-        $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
+        $this->expectExceptionMessage("Can't set model properties directly");
 
-        Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model])
-            ->assertSee('foo')
-            ->call('refresh')
-            ->assertSee('foo');
+        Livewire::test(new class extends \Livewire\Component {
+            public Post $post;
+
+            public function mount() {
+                $this->post = Post::first();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $post->title }}</div>
+            HTML; }
+        })
+        ->assertSee('First')
+        ->set('post.title', 'bar');
     }
 
     /** @test */
-    public function an_eloquent_model_can_be_set_then_removed_as_a_public_property()
+    public function cant_view_model_data_in_javascript()
     {
-        $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
+        $data = Livewire::test(new class extends \Livewire\Component {
+            public Post $post;
 
-        Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model])
-            ->assertSee('foo')
-            ->call('deleteAndRemoveModel')
-            ->assertDontSee('foo')
-            ->call('$refresh');
+            public function mount() {
+                $this->post = Post::first();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $post->title }}</div>
+            HTML; }
+        })->canonical;
+
+        $this->assertNull($data['post']);
     }
 
     /** @test */
-    public function an_eloquent_model_cannot_be_hijacked_by_binding_to_id_data()
+    public function model_properties_are_lazy_loaded()
     {
-        $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
+        (new Post)::resolveConnection()->enableQueryLog();
 
-        $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
-        ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
+        Livewire::test(new class extends \Livewire\Component {
+            #[Lazy]
+            public Post $post;
 
-        Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model])
-            ->set('model.id', 2);
-    }
+            public function mount() {
+                $this->post = Post::first();
+            }
 
-    /** @test */
-    public function an_eloquent_model_cannot_be_hijacked_by_tampering_with_data()
-    {
-        $this->expectException(CorruptComponentPayloadException::class);
+            public function save()
+            {
+                $this->post->save();
+            }
 
-        $model = ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
-        ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
+            public function render() { return <<<'HTML'
+                <div></div>
+            HTML; }
+        })
+        ->call('$refresh')
+        ->call('save');
 
-        $component = Livewire::test(ComponentWithModelPublicProperty::class, ['model' => $model]);
-
-        $component->snapshot['data']['model']['id'] = 2;
-
-        $component->call('refresh');
-    }
-
-    /** @test */
-    public function an_eloquent_model_collection_can_be_set_as_a_public_property()
-    {
-        ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
-        ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
-
-        $models = ModelForSerialization::all();
-
-        Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models])
-            ->assertSee('foo')
-            ->assertSee('bar')
-            ->call('refresh')
-            ->assertSee('foo')
-            ->assertSee('bar');
-    }
-
-    /** @test */
-    public function a_support_collection_of_models_can_be_preserved_as_a_public_property()
-    {
-        ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
-        ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
-
-        $models = ModelForSerialization::all()->toBase();
-
-        Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models])
-            ->assertSet('models', $models);
-    }
-
-    /** @test */
-    public function a_sorted_eloquent_model_collection_can_be_set_as_a_public_property()
-    {
-        $this->markTestSkipped('Not sure what to do with property sorting still...');
-
-        ModelForSerialization::create(['id' => 1, 'title' => 'foo']);
-        ModelForSerialization::create(['id' => 2, 'title' => 'bar']);
-
-        $models = ModelForSerialization::all()->sortKeysDesc();
-
-        $component = Livewire::test(ComponentWithModelsPublicProperty::class, ['models' => $models]);
-
-        $component->assertSee("bar\n            foo\n");
-
-        $component ->call('refresh');
-
-        $component->assertSee("bar\n            foo\n");
+        $this->assertCount(2, Post::resolveConnection()->getQueryLog());
     }
 }
 
-class ModelForSerialization extends Model
-{
-    protected $connection = 'testbench';
-    protected $guarded = [];
+#[\Attribute]
+class Lazy {
+    //
 }
 
-class ComponentWithModelPublicProperty extends Component
+class Post extends Model
 {
-    public $model;
+    use Sushi;
 
-    public function mount(ModelForSerialization $model)
-    {
-        $this->model = $model;
-    }
-
-    public function refresh() {}
-
-    public function deleteAndRemoveModel()
-    {
-        $this->model->delete();
-
-        $this->model = null;
-    }
-
-    public function render()
-    {
-        return <<<'HTML'
-        <div>
-            @if ($model)
-                {{ $this->model->title }}
-            @endif
-        </div>
-        HTML;
-    }
-}
-
-class ComponentWithModelsPublicProperty extends Component
-{
-    public $models;
-
-    public function mount($models)
-    {
-        $this->models = $models;
-    }
-
-    public function refresh() {}
-
-    public function render()
-    {
-        return <<<'HTML'
-        <div>
-            @foreach ($models as $model)
-                {{ $model->title }}
-            @endforeach
-        </div>
-        HTML;
-    }
+    protected $rows = [
+        ['title' => 'First'],
+        ['title' => 'Second'],
+    ];
 }

@@ -11,6 +11,7 @@ use Livewire\Mechanisms\RenderComponent;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Drawer\Utils;
+use Livewire\Features\SupportModels\Lazy;
 
 class LivewireSynth extends Synth
 {
@@ -22,17 +23,36 @@ class LivewireSynth extends Synth
         return $target instanceof \Livewire\Component;
     }
 
-    function dehydrate($target, $context) {
+    function dehydrate($target, $context, $dehydrateChild) {
         $context->addMeta('id', $target->getId());
         $context->addMeta('name', $target->getName());
 
-        return Utils::getPublicPropertiesDefinedOnSubclass($target);
+        $data = Utils::getPublicPropertiesDefinedOnSubclass($target);
+
+        foreach ($data as $key => $value) {
+            $data[$key] = $dehydrateChild($value);
+        }
+
+        return $data;
     }
 
-    function hydrate($value, $meta) {
+    function hydrate($data, $meta, $hydrateChild) {
         ['name' => $name, 'id' => $id] = $meta;
 
-        return app(ComponentRegistry::class)->new($name, $value, $id);
+        $component = app(ComponentRegistry::class)->new($name, [], $id);
+
+        foreach ($data as $key => $rawChild) {
+            if (! property_exists($component, $key)) continue;
+
+            $child = $hydrateChild($rawChild);
+
+            // Typed properties shouldn't be set back to "null". It will throw an error...
+            if ((new \ReflectionProperty($component, $key))->getType() && is_null($child)) continue;
+
+            $component->$key = $child;
+        }
+
+        return $component;
     }
 
     function set(&$target, $key, $value) {

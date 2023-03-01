@@ -37,7 +37,7 @@ class SupportReactiveProps extends ComponentHook
             $props && $context->addMeta('props', $props);
         });
 
-        on('hydrate', function ($synth, $rawValue, $meta) {
+        on('hydrate', function ($synth, $meta) {
             if (! $synth instanceof LivewireSynth) return;
             if (! isset($meta['props'])) return;
 

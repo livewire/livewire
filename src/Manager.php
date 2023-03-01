@@ -62,9 +62,9 @@ class Manager
         return app(UpdateComponents::class)->update($snapshot, $diff, $calls);
     }
 
-    function updateProperty($component, $path, $value, $skipHydrate = false)
+    function updateProperty($component, $path, $value)
     {
-        return app(UpdateComponents::class)->updateProperty($component, $path, $value, $skipHydrate);
+        return app(UpdateComponents::class)->updateProperty($component, $path, $value);
     }
 
     function setUpdateRoute($callback)

@@ -20,7 +20,7 @@ class HookAdapter
                 $hook->callMount($params, $parent, $parent);
             });
 
-            on('hydrate', function ($synth, $rawValue, $meta) use ($hook) {
+            on('hydrate', function ($synth, $meta) use ($hook) {
                 if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
 
                 return function ($target) use ($hook, $meta) {

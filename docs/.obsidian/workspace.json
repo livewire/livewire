@@ -23,12 +23,8 @@
             "id": "aef384a7aa875d54",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "quickstart.md",
-                "mode": "source",
-                "source": false
-              }
+              "type": "empty",
+              "state": {}
             }
           },
           {
@@ -110,7 +106,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "quickstart.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -127,7 +122,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "quickstart.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -149,9 +143,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "quickstart.md"
-              }
+              "state": {}
             }
           }
         ]
@@ -171,11 +163,12 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "aef384a7aa875d54",
+  "active": "ee8d69bcfbf4b70f",
   "lastOpenFiles": [
+    "quickstart.md",
+    "Untitled.md",
     "installation.md",
     "_guidelines.md",
-    "Untitled.md",
     "Places next year.md",
     "Untitled.canvas"
   ]

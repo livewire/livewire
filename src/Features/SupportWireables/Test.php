@@ -157,6 +157,7 @@ class Test extends \Tests\TestCase
             ->call('removeWireable');
     }
 }
+
 class WireableClass implements Wireable
 {
     public $message;

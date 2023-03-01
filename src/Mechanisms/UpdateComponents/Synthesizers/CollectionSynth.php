@@ -13,13 +13,23 @@ class CollectionSynth extends ArraySynth {
         return $target instanceof Collection;
     }
 
-    function dehydrate($target, $context) {
+    function dehydrate($target, $context, $dehydrateChild) {
         $context->addMeta('class', get_class($target));
 
-        return $target->all();
+        $data = $target->all();
+
+        foreach ($data as $key => $child) {
+            $data[$key] = $dehydrateChild($child);
+        }
+
+        return $data;
     }
 
-    function hydrate($value, $meta) {
+    function hydrate($value, $meta, $hydrateChild) {
+        foreach ($value as $key => $child) {
+            $value[$key] = $hydrateChild($child);
+        }
+
         return new $meta['class']($value);
     }
 

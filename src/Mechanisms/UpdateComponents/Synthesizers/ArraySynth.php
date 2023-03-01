@@ -9,11 +9,19 @@ class ArraySynth extends Synth {
         return is_array($target);
     }
 
-    function dehydrate($target, $context) {
+    function dehydrate($target, $context, $dehydrateChild) {
+        foreach ($target as $key => $child) {
+            $target[$key] = $dehydrateChild($child);
+        }
+
         return $target;
     }
 
-    function hydrate($value, $meta) {
+    function hydrate($value, $meta, $hydrateChild) {
+        foreach ($value as $key => $child) {
+            $value[$key] = $hydrateChild($child);
+        }
+
         return $value;
     }
 

@@ -12,12 +12,12 @@ class BaseUtils
             && isset($payload[1]['s']);
     }
 
-    static function isNotAPrimitive($target) {
+    static function isAPrimitive($target) {
         return
-            ! is_numeric($target) &&
-            ! is_string($target) &&
-            ! is_bool($target) &&
-            ! is_null($target);
+            is_numeric($target) ||
+            is_string($target) ||
+            is_bool($target) ||
+            is_null($target);
     }
 
     static function getPublicPropertiesDefinedOnSubclass($target) {

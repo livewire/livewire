@@ -80,6 +80,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         app('livewire')->componentHook(\Livewire\Features\SupportWireables\SupportWireables::class);
         app('livewire')->componentHook(\Livewire\Features\SupportEntangle\SupportEntangle::class);
         app('livewire')->componentHook(\Livewire\Features\SupportLocales\SupportLocales::class);
+        app('livewire')->componentHook(\Livewire\Features\SupportModels\SupportModels::class);
         app('livewire')->componentHook(\Livewire\Features\SupportEvents\SupportEvents::class);
 
         // Refactor this...

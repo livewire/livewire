@@ -79,8 +79,23 @@ abstract class Component
         return false;
     }
 
+    protected $lazyProperties = [];
+
+    function makeLazy($property, $callback)
+    {
+        unset($this->$property);
+
+        $this->lazyProperties[$property] = $callback;
+    }
+
     function __get($property)
     {
+        if (isset($this->lazyProperties[$property])) {
+            $this->$property = dd($this->lazyProperties[$property]());
+
+            unset($this->lazyProperties[$property]);
+        }
+
         $value = 'noneset';
 
         $returnValue = function ($newValue) use (&$value) {

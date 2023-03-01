@@ -37,7 +37,7 @@ class SupportLazyLoading extends ComponentHook
             $hijack($html);
         });
 
-        on('hydrate', function ($synth, $rawValue, $meta) {
+        on('hydrate', function ($synth, $meta) {
             if (! $synth instanceof LivewireSynth) return;
             if (! $meta['name'] === '__lazy') return;
 

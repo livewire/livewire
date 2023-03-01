@@ -53,8 +53,6 @@ class UpdateComponents
         }
     }
 
-    protected $metasByPath = [];
-
     function update($snapshot, $diff, $calls)
     {
         $effects = [];
@@ -79,11 +77,9 @@ class UpdateComponents
     function toSnapshot($root, &$effects = [], $initial = false) {
         $finish = trigger('dehydrate.root', $root);
 
-        $data = $this->dehydrate($root, $root, $effects, $initial);
+        $data = $this->dehydrate($root, $effects, $initial);
 
         $finish($data, $effects);
-
-        $this->metasByPath = [];
 
         $snapshot = ['data' => $data];
 
@@ -97,7 +93,7 @@ class UpdateComponents
 
         $finish = trigger('hydrate.root', $snapshot);
 
-        $root = $this->hydrate($snapshot['data']);
+        $root = $this->hydrate($data = $snapshot['data']);
 
         trigger('boot', $root);
 
@@ -105,96 +101,91 @@ class UpdateComponents
 
         $finish = trigger('update.root', $root);
 
-        $this->updateProperties($root, $diff);
+        $this->updateProperties($root, $diff, $data);
 
         $finish();
 
         return $root;
     }
 
-    function dehydrate($root, $target, &$effects, $initial, $annotationsFromParent = [], $path = '') {
-        if (Utils::isNotAPrimitive($target)) {
-            $synth = $this->synth($target);
+    function dehydrate($target, &$effects, $initial) {
+        if (Utils::isAPrimitive($target)) return $target;
 
-            $context = new DehydrationContext($root, $target, $initial, $annotationsFromParent, $path);
+        $synth = $this->synth($target);
 
-            $finish = trigger('dehydrate', $synth, $target, $context);
+        $context = new DehydrationContext($target, $initial);
 
-            $methods = $synth->methods($target);
+        $finish = trigger('dehydrate', $synth, $target, $context);
 
-            if ($methods) $context->addEffect('methods', $methods);
+        $methods = $synth->methods($target);
 
-            $value = $synth->dehydrate($target, $context);
+        if ($methods) $context->addEffect('methods', $methods);
 
-            $value = $finish($value);
+        $value = $synth->dehydrate($target, $context, function ($childValue) use (&$effects, $initial) {
+            return $this->dehydrate($childValue, $effects, $initial);
+        });
 
-            [$meta, $iEffects] = $context->retrieve();
+        $value = $finish($value);
 
-            $meta['s'] = $synth::getKey();
+        [$meta, $iEffects] = $context->retrieve();
 
-            foreach ($iEffects as $key => $effect) {
-                $effects[$key] = $effect;
-            }
+        $meta['s'] = $synth::getKey();
 
-            if (is_array($value)) {
-                foreach ($value as $key => $child) {
-                    $annotationsFromParent = $context->annotations[$key] ?? [];
-
-                    $value[$key] = $this->dehydrate($root, $child, $effects, $initial, $annotationsFromParent, $path === '' ? $key : $path.'.'.$key);
-                }
-            }
-
-            return [$value, $meta];
-        } else {
-            if (is_array($target)) {
-                foreach ($target as $key => $child) {
-                    $target[$key] = $this->dehydrate($child, $effects, $initial, $path === '' ? $key : $path.'.'.$key);
-                }
-            }
+        foreach ($iEffects as $key => $effect) {
+            $effects[$key] = $effect;
         }
 
-        return $target;
+        return [$value, $meta];
     }
 
-    function hydrate($data, $path = null) {
-        if (Utils::isSyntheticTuple($data)) {
-            [$rawValue, $meta] = $data;
-            $synthKey = $meta['s'];
-            $synth = $this->synth($synthKey);
-            $this->metasByPath[$path] = $meta;
+    function hydrate($data) {
+        if (! Utils::isSyntheticTuple($data)) return $data;
 
-            if (is_array($rawValue)) {
-                foreach ($rawValue as $key => $i) {
-                    $rawValue[$key] = $this->hydrate($i, $path ? $path.'.'.$key : $key);
-                }
-            }
+        [$rawValue, $meta] = $data;
+        $synthKey = $meta['s'];
+        $synth = $this->synth($synthKey);
 
-            $finish = trigger('hydrate', $synth, $rawValue, $meta);
+        $finish = trigger('hydrate', $synth, $meta);
 
-            $return = $synth->hydrate($rawValue, $meta);
+        $return = $synth->hydrate($rawValue, $meta, function ($childValue) {
+            return $this->hydrate($childValue);
+        });
 
-            return $finish($return);
-        }
-
-        return $data;
+        return $finish($return);
     }
 
-    function updateProperties($root, $diff) {
+    function updateProperties($root, $diff, $data) {
         foreach ($diff as $path => $value) {
+            $value = $this->hydrateForUpdate($data, $path, $value);
+
             $this->updateProperty($root, $path, $value);
         }
     }
 
-    function updateProperty(&$root, $path, $value, $skipHydrate = false)
+    function hydrateForUpdate($raw, $path, $value)
     {
-        if (! $skipHydrate) {
-            if (isset($this->metasByPath[$path])) {
-                $value = [$value, $this->metasByPath[$path]];
-            }
+        $meta = $this->getMetaForPath($raw, $path);
 
-            $value = $this->hydrate($value, $path);
-        }
+        if ($meta) return $this->hydrate([$value, $meta]);
 
+        return $value;
+    }
+
+    function getMetaForPath($raw, $path)
+    {
+        $segments = explode('.', $path);
+
+        $first = array_shift($segments);
+
+        [$data, $meta] = Utils::isSyntheticTuple($raw) ? $raw : [$raw, null];
+
+        if ($path !== '') return $this->getMetaForPath($data[$first], implode('.', $segments));
+
+        return $meta;
+    }
+
+    function updateProperty(&$root, $path, $value)
+    {
         $finish = trigger('update', $root, $path, $value);
 
         $segments = Utils::dotSegments($path);
@@ -241,7 +232,7 @@ class UpdateComponents
         return $target;
     }
 
-    protected function makeCalls($root, $calls, &$effects) {
+    function makeCalls($root, $calls, &$effects) {
         foreach ($calls as $call) {
             $method = $call['method'];
             $params = $call['params'];
@@ -280,7 +271,7 @@ class UpdateComponents
         }
     }
 
-    protected function dataGet($target, $key) {
+    function dataGet($target, $key) {
         if (str($key)->exactly('')) return $target;
 
         if (! str($key)->contains('.')) {
@@ -343,4 +334,9 @@ class UpdateComponents
 
         return [$parentKey, $childKey];
     }
+}
+
+
+class AI {
+    static function stringContainsDots() {}
 }

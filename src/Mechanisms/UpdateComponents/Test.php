@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\UpdateComponents;
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -26,6 +27,30 @@ class Test extends \Tests\TestCase
         $this->post('laravel', ['name' => '    aaa    '])
         ->assertSee('laravelaaalaravel');
     }
+
+    /** @test */
+    public function synthesized_property_types_are_preserved_after_update()
+    {
+        Livewire::test(new class extends Component {
+            public $foo;
+            public $isStringable;
+            public function mount() { $this->foo = str('bar'); }
+            public function checkStringable()
+            {
+                $this->isStringable = $this->foo instanceof Stringable;
+            }
+            public function render() { return '<div></div>'; }
+        })
+            ->assertSet('foo', 'bar')
+            ->call('checkStringable')
+            ->assertSet('isStringable', true)
+            ->set('foo', 'baz')
+            ->assertSet('foo', 'baz')
+            ->call('checkStringable')
+            ->assertSet('isStringable', true)
+        ;
+    }
+
     /** @test */
     public function livewire_request_data_doesnt_get_manipulated()
     {

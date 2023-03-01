@@ -34,7 +34,7 @@ class SupportRedirects extends ComponentHook
             });
         });
 
-        before('hydrate', function ($synth, $rawValue, $meta) {
+        before('hydrate', function ($synth, $meta) {
             if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
 
             return function ($component) {

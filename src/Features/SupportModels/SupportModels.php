@@ -2,29 +2,16 @@
 
 namespace Livewire\Features\SupportModels;
 
+use Livewire\ComponentHook;
+
 use function Livewire\on;
 
-/**
- * Depends on: SupportValidation for ->missingRuleFor() method on component. (inside ModelSynth)
- */
-class SupportModels
+class SupportModels extends ComponentHook
 {
-    function boot()
+    static function provide()
     {
         app('livewire')->synth([
             ModelSynth::class,
-            CastableSynth::class,
         ]);
-
-        on('update', function ($target, $path, $value) {
-            if (! $target instanceof \Livewire\Component) return;
-
-            // dd($path, $value);
-            // if ()
-        });
-
-        // on('update', function ($component, ) {
-        //     Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException
-        // });
     }
 }

@@ -6,23 +6,15 @@ use Livewire\Drawer\Utils;
 
 class DehydrationContext
 {
-    public $root;
     public $target;
     public $effects = [];
     public $meta = [];
-    public $annotations;
-    public $annotationsFromParent;
     public $initial;
-    public $path;
 
-    public function __construct($root, $target, $initial, $annotationsFromParent, $path)
+    public function __construct($target, $initial)
     {
-        $this->root = $root;
         $this->target = $target;
         $this->initial = $initial;
-        $this->annotations = Utils::getAnnotations($target);
-        $this->annotationsFromParent = $annotationsFromParent;
-        $this->path = $path;
     }
 
     public function addEffect($key, $value)
@@ -62,23 +54,8 @@ class DehydrationContext
         }
     }
 
-    public function annotations()
-    {
-        return $this->annotations;
-    }
-
-    public function annotationsFromParent()
-    {
-        return $this->annotationsFromParent;
-    }
-
     public function retrieve()
     {
         return [$this->meta, $this->effects];
     }
-
-    // function rules()
-    // {
-
-    // }
 }

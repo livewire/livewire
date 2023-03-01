@@ -14,17 +14,11 @@ class FileUploadSynth extends Synth {
     public static $key = 'fil';
 
     static function match($target) {
-        // return $target instanceof TemporaryUploadedFile;
         return $target instanceof UploadedFile;
     }
 
     function dehydrate($target, $context) {
-        $value = $this->dehydratePropertyFromWithFileUploads($target);
-
-        return $value;
-        // if ($newValue !== $value) {
-        //     $target->{$property} = $newValue;
-        // }
+        return $this->dehydratePropertyFromWithFileUploads($target);
     }
 
     public function dehydratePropertyFromWithFileUploads($value)
