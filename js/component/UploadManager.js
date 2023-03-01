@@ -103,6 +103,10 @@ class UploadManager {
             request.setRequestHeader(key, value)
         })
 
+        request.addEventListener('error', e => {
+            this.component.call('uploadErrored', name, null, this.uploadBag.first(name).multiple)
+        })
+
         request.upload.addEventListener('progress', e => {
             e.detail = {}
             e.detail.progress = Math.round((e.loaded * 100) / e.total)
