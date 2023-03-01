@@ -155,4 +155,19 @@ return [
 
     'render_on_redirect' => false,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Eloquent Model Binding
+    |--------------------------------------------------------------------------
+    |
+    | This value determines whether Livewire can bind to Eloquent Collections
+    | and Eloquent Models. By default, this is disabled as it is no longer
+    | recommended to use Eloquent Model binding. But you can enable it,
+    | if you require it, for backward compatibility to enable you to
+    | migrate away from using it.
+    |
+    */
+
+    'eloquent_model_binding' => false,
+
 ];

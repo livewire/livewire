@@ -83,6 +83,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         app('livewire')->componentHook(\Livewire\Features\SupportModels\SupportModels::class);
         app('livewire')->componentHook(\Livewire\Features\SupportEvents\SupportEvents::class);
 
+        // Load last so, if it is enabled, it has priority over ModelsSupport
+        app('livewire')->componentHook(\Livewire\Features\SupportLegacyModels\SupportLegacyModels::class);
+
         // Refactor this...
         $hooks = app(\Livewire\Mechanisms\ComponentRegistry::class)->getComponentHooks();
         (new HookAdapter)->adapt($hooks);
