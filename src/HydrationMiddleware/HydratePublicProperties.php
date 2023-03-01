@@ -7,6 +7,7 @@ use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Contracts\Database\ModelIdentifier;
 use Illuminate\Support\Carbon as IlluminateCarbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -147,12 +148,13 @@ class HydratePublicProperties implements HydrationMiddleware
 
     protected static function hydrateModel($serialized, $property, $request, $instance)
     {
+        $connection = self::getConnection($serialized);
         if (isset($serialized['id'])) {
             $model = (new static)->getRestoredPropertyValue(
-                new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
+                new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $connection)
             );
         } else {
-            $model = new $serialized['class'];
+            $model = (new $serialized['class'])->setConnection($connection);
         }
 
         $dirtyModelData = $request->memo['data'][$property];
@@ -167,7 +169,7 @@ class HydratePublicProperties implements HydrationMiddleware
         $idsWithNullsIntersparsed = $serialized['id'];
 
         $models = (new static)->getRestoredPropertyValue(
-            new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
+            new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], self::getConnection($serialized))
         );
 
         // Use `loadMissing` here incase loading collection relations gets fixed in Laravel framework,
@@ -186,6 +188,14 @@ class HydratePublicProperties implements HydrationMiddleware
         }
 
         $instance->$property = $models;
+    }
+
+    // Connection is used forced from the model
+    // $serialized['connection'] is inherited incorrectly
+    // when the included widget uses model with the different connection
+    protected static function getConnection($serialized)
+    {
+        return resolve($serialized['class'])->getConnectionName() ?: DB::connection()->getName();
     }
 
     public static function setDirtyData($model, $data) {
