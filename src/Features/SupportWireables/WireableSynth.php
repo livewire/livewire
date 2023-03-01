@@ -21,15 +21,15 @@ class WireableSynth extends Synth
         $data = $target->toLivewire();
 
         foreach ($data as $key => $child) {
-            $data[$key] = $dehydrateChild($key, $child);
+            $data[$key] = $dehydrateChild($child);
         }
 
         return $data;
     }
 
     function hydrate($value, $meta, $hydrateChild) {
-        foreach ($value as $key => $iValue) {
-            $value[$key] = $hydrateChild($key, $iValue);
+        foreach ($value as $key => $child) {
+            $value[$key] = $hydrateChild($child);
         }
 
         return $meta['class']::fromLivewire($value);

@@ -11,9 +11,9 @@
          convertWarningsToExceptions="true">
     <testsuites>
         <testsuite name="Unit">
-            <directory suffix="Test.php">./src</directory>
+            <!-- <directory suffix="Test.php">./src</directory> -->
             <directory suffix="UnitTest.php">./src</directory>
-            <exclude>*BrowserTest.php</exclude>
+            <!-- <exclude>*BrowserTest.php</exclude> -->
             <!-- <directory suffix="UnitTest.php/">./tests</directory> -->
             <!-- <directory suffix="Test.php">./legacy_tests/Unit</directory> -->
         </testsuite>

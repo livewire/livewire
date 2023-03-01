@@ -179,7 +179,11 @@ class UpdateComponents
 
         [$data, $meta] = Utils::isSyntheticTuple($raw) ? $raw : [$raw, null];
 
-        if ($path !== '') return $this->getMetaForPath($data[$first], implode('.', $segments));
+        if ($path !== '') {
+            $value = $data[$first] ?? null;
+
+            return $this->getMetaForPath($value, implode('.', $segments));
+        }
 
         return $meta;
     }
