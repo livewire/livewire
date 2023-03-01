@@ -15,7 +15,7 @@ class EloquentCollectionSynth extends Synth
         return $target instanceof EloquentCollection;
     }
 
-    public function dehydrate(EloquentCollection $target, $context)
+    public function dehydrate(EloquentCollection $target, $context, $dehydrateChild)
     {
         $class = $target::class;
         $modelClass = $target->getQueueableClass();
@@ -34,7 +34,13 @@ class EloquentCollectionSynth extends Synth
             $context->addMeta('relations', $relations);
         }
 
-        return $this->getDataFromCollection($target, $context);
+        $data = $this->getDataFromCollection($target, $context);
+
+        foreach ($data as $key => $child) {
+            $data[$key] = $dehydrateChild($child);
+        }
+
+        return $data;
     }
 
     public function getConnection(EloquentCollection $collection)
@@ -66,18 +72,10 @@ class EloquentCollectionSynth extends Synth
 
     public function filterData($data, $context)
     {
-        return array_filter($data, function ($key) use ($context) {
-            return SupportLegacyModels::hasRuleFor($context->root, $context->path . '.' . $key);
-        }, ARRAY_FILTER_USE_KEY);
-    }
-
-    public function load($meta, $loaded)
-    {
-        if ($loaded) {
-            return $loaded;
-        }
-
-        return $this->loadCollection($meta);
+        return $data;
+        // return array_filter($data, function ($key) use ($context) {
+        //     return SupportLegacyModels::hasRuleFor($context->root, $context->path . '.' . $key);
+        // }, ARRAY_FILTER_USE_KEY);
     }
 
     public function loadCollection($meta)
@@ -113,14 +111,16 @@ class EloquentCollectionSynth extends Synth
         return new $meta['class']();
     }
 
-    public function hydrate($value, $meta, $collection = null)
+    public function hydrate($data, $meta, $hydrateChild)
     {
-        if (is_null($collection)) {
-            $collection = $this->loadCollection($meta);
-        }
+        $collection = $this->loadCollection($meta);
 
-        if (count($value)) {
-            return $collection::wrap($value);
+        if (count($data)) {
+            foreach ($data as $key => $child) {
+                $data[$key] = $hydrateChild($child);
+            }
+
+            return $collection::wrap($data);
         }
 
         return $collection;
@@ -133,9 +133,9 @@ class EloquentCollectionSynth extends Synth
 
     public function set(&$target, $key, $value, $pathThusFar, $fullPath, $root)
     {
-        if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
-            throw new CannotBindToModelDataWithoutValidationRuleException($pathThusFar, $root->getName());
-        }
+        // if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
+        //     throw new CannotBindToModelDataWithoutValidationRuleException($pathThusFar, $root->getName());
+        // }
 
         $target->put($key, $value);
     }

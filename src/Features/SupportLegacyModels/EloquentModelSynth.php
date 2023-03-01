@@ -16,7 +16,7 @@ class EloquentModelSynth extends Synth
         return $target instanceof Model;
     }
 
-    public function dehydrate($target, &$context)
+    public function dehydrate($target, $context, $dehydrateChild)
     {
         $class = $target::class;
 
@@ -36,7 +36,13 @@ class EloquentModelSynth extends Synth
             $context->addMeta('relations', $relations);
         }
 
-        return $this->getDataFromModel($target, $context);
+        $data = $this->getDataFromModel($target, $context);
+
+        foreach ($data as $key => $child) {
+            $data[$key] = $dehydrateChild($child);
+        }
+
+        return $data;
     }
 
     public function getDataFromModel(Model $model, $context)
@@ -67,39 +73,31 @@ class EloquentModelSynth extends Synth
 
     public function filterData($data, $context)
     {
-        return array_filter($data, function ($key) use ($context) {
-            return SupportLegacyModels::hasRuleFor($context->root, $context->path . '.' . $key);
-        }, ARRAY_FILTER_USE_KEY);
+        return $data;
+        // return array_filter($data, function ($key) use ($context) {
+        //     return SupportLegacyModels::hasRuleFor($context->root, $context->path . '.' . $key);
+        // }, ARRAY_FILTER_USE_KEY);
     }
 
-    public function load($meta, $loaded)
+    public function hydrate($data, $meta, $hydrateChild)
     {
-        if ($loaded) {
-            return $loaded;
+        $model = $this->loadModel($meta);
+
+        foreach ($data as $key => $child) {
+            $data[$key] = $hydrateChild($child);
         }
 
-        return $this->loadModel($meta);
-    }
-
-    public function hydrate($value, $meta, $model = null)
-    {
-        if (is_null($model)) {
-            $model = $this->loadModel($meta);
-        }
-
-        // Change this to it is a `with()` query
-        // instead of being applied after the fact.
         if (isset($meta['relations'])) {
             foreach($meta['relations'] as $relation) {
-                if (! isset($value[$relation])) continue;
+                if (! isset($data[$relation])) continue;
 
-                $model->setRelation($relation, $value[$relation]);
+                $model->setRelation($relation, $data[$relation]);
 
-                unset($value[$relation]);
+                unset($data[$relation]);
             }
         }
 
-        $this->setDataOnModel($model, $value);
+        $this->setDataOnModel($model, $data);
 
         return $model;
     }
@@ -150,9 +148,9 @@ class EloquentModelSynth extends Synth
 
     public function set(Model &$target, $key, $value, $pathThusFar, $fullPath, $root)
     {
-        if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
-            throw new CannotBindToModelDataWithoutValidationRuleException($pathThusFar, $root->getName());
-        }
+        // if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
+        //     throw new CannotBindToModelDataWithoutValidationRuleException($pathThusFar, $root->getName());
+        // }
 
         if ($target->relationLoaded($key)) {
             return $target->setRelation($key, $value);
