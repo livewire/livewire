@@ -28,13 +28,6 @@ class SupportLegacyModels extends ComponentHook
         });
     }
 
-    public function dehydrate()
-    {
-        // Flush rules when component is dehydrated to ensure they're not
-        // memoized when the next component is loaded
-        $this->flushRules();
-    }
-
     static function flushRules()
     {
         static::$rules = null;
