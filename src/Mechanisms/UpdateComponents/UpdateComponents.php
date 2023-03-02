@@ -77,7 +77,9 @@ class UpdateComponents
     function toSnapshot($root, &$effects = [], $initial = false) {
         $finish = trigger('dehydrate.root', $root);
 
-        $data = $this->dehydrate($root, $effects, $initial);
+        $context = new DehydrationContext($root, $initial, []);
+
+        $data = $this->dehydrate($root, $context, $effects);
 
         $finish($data, $effects);
 
@@ -108,12 +110,12 @@ class UpdateComponents
         return $root;
     }
 
-    function dehydrate($target, &$effects, $initial) {
+    function dehydrate($target, &$context, &$effects) {
         if (Utils::isAPrimitive($target)) return $target;
 
         $synth = $this->synth($target);
 
-        $context = new DehydrationContext($target, $initial);
+        $initial = $context->initial;
 
         $finish = trigger('dehydrate', $synth, $target, $context);
 
@@ -121,8 +123,10 @@ class UpdateComponents
 
         if ($methods) $context->addEffect('methods', $methods);
 
-        $value = $synth->dehydrate($target, $context, function ($childValue) use (&$effects, $initial) {
-            return $this->dehydrate($childValue, $effects, $initial);
+        $value = $synth->dehydrate($target, $context, function ($childValue, $dataFromParent = []) use (&$effects, $initial, $target) {
+            $childContext = new DehydrationContext($childValue, $initial, $dataFromParent);
+
+            return $this->dehydrate($childValue, $childContext, $effects);
         });
 
         $value = $finish($value);

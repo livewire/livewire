@@ -30,7 +30,7 @@ class LivewireSynth extends Synth
         $data = Utils::getPublicPropertiesDefinedOnSubclass($target);
 
         foreach ($data as $key => $value) {
-            $data[$key] = $dehydrateChild($value);
+            $data[$key] = $dehydrateChild($value, ['parent' => $target, 'key' => $key]);
         }
 
         return $data;

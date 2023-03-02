@@ -6,6 +6,8 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Livewire\Component;
+use PhpParser\Node\Expr\Cast\Array_;
 
 class EloquentModelSynth extends Synth
 {
@@ -18,6 +20,7 @@ class EloquentModelSynth extends Synth
 
     public function dehydrate($target, $context, $dehydrateChild)
     {
+        // ray('dehydrate', $target, $context);
         $class = $target::class;
 
         // If no alias is found, this just returns the class name
@@ -36,20 +39,41 @@ class EloquentModelSynth extends Synth
             $context->addMeta('relations', $relations);
         }
 
-        $data = $this->getDataFromModel($target, $context);
+        $rules = $this->getRules($context);
+
+        if (empty($rules)) return [];
+
+        $data = $this->getDataFromModel($target, $rules);
 
         foreach ($data as $key => $child) {
-            $data[$key] = $dehydrateChild($child);
+            $data[$key] = $dehydrateChild($child, ['key' => $key, 'rules' => $rules[$key] ?? []]);
         }
 
         return $data;
     }
 
-    public function getDataFromModel(Model $model, $context)
+    public function getRules($context)
+    {
+        $key = $context->dataFromParent['key'] ?? null;
+
+        if (is_null($key)) return [];
+
+        if (isset($context->dataFromParent['parent']) && $context->dataFromParent['parent'] instanceof Component) {
+            return SupportLegacyModels::getRulesFor($context->dataFromParent['parent'], $key);
+        }
+
+        if (isset($context->dataFromParent['rules'])) {
+            return $context->dataFromParent['rules'];
+        }
+
+        return [];
+    }
+
+    public function getDataFromModel(Model $model, $rules)
     {
         return [
-            ...$this->filterData($this->getAttributes($model), $context),
-            ...$this->filterData($model->getRelations(), $context),
+            ...$this->filterAttributes($this->getAttributes($model), $rules),
+            ...$this->filterRelations($model->getRelations(), $rules),
         ];
     }
 
@@ -71,12 +95,18 @@ class EloquentModelSynth extends Synth
         return $attributes;
     }
 
-    public function filterData($data, $context)
+    public function filterAttributes($data, $rules)
     {
-        return $data;
-        // return array_filter($data, function ($key) use ($context) {
-        //     return SupportLegacyModels::hasRuleFor($context->root, $context->path . '.' . $key);
-        // }, ARRAY_FILTER_USE_KEY);
+        return array_filter($data, function ($key) use ($rules) {
+            return in_array($key, $rules);
+        }, ARRAY_FILTER_USE_KEY);
+    }
+
+    public function filterRelations($data, $rules)
+    {
+        return array_filter($data, function ($key) use ($rules) {
+            return array_key_exists($key, $rules) || in_array($key, $rules);
+        }, ARRAY_FILTER_USE_KEY);
     }
 
     public function hydrate($data, $meta, $hydrateChild)

@@ -10,11 +10,13 @@ class DehydrationContext
     public $effects = [];
     public $meta = [];
     public $initial;
+    public $dataFromParent = [];
 
-    public function __construct($target, $initial)
+    public function __construct($target, $initial, $dataFromParent)
     {
         $this->target = $target;
         $this->initial = $initial;
+        $this->dataFromParent = $dataFromParent;
     }
 
     public function addEffect($key, $value)

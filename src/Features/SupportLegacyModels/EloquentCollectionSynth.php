@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Livewire\Component;
 use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
 use LogicException;
 
@@ -34,13 +35,34 @@ class EloquentCollectionSynth extends Synth
             $context->addMeta('relations', $relations);
         }
 
-        $data = $this->getDataFromCollection($target, $context);
+        $rules = $this->getRules($context);
+
+        if (empty($rules)) return [];
+
+        $data = $this->getDataFromCollection($target, $rules);
 
         foreach ($data as $key => $child) {
-            $data[$key] = $dehydrateChild($child);
+            $data[$key] = $dehydrateChild($child, ['key' => $key, 'rules' => $rules['*'] ?? []]);
         }
 
         return $data;
+    }
+
+    public function getRules($context)
+    {
+        $key = $context->dataFromParent['key'] ?? null;
+
+        if (is_null($key)) return [];
+
+        if (isset($context->dataFromParent['parent']) && $context->dataFromParent['parent'] instanceof Component) {
+            return SupportLegacyModels::getRulesFor($context->dataFromParent['parent'], $key);
+        }
+
+        if (isset($context->dataFromParent['rules'])) {
+            return $context->dataFromParent['rules'];
+        }
+
+        return [];
     }
 
     public function getConnection(EloquentCollection $collection)
@@ -65,17 +87,16 @@ class EloquentCollectionSynth extends Synth
         return $connection;
     }
 
-    public function getDataFromCollection(EloquentCollection $collection, $context)
+    public function getDataFromCollection(EloquentCollection $collection, $rules)
     {
-        return $this->filterData($collection->all(), $context);
+        return $this->filterData($collection->all(), $rules);
     }
 
-    public function filterData($data, $context)
+    public function filterData($data, $rules)
     {
-        return $data;
-        // return array_filter($data, function ($key) use ($context) {
-        //     return SupportLegacyModels::hasRuleFor($context->root, $context->path . '.' . $key);
-        // }, ARRAY_FILTER_USE_KEY);
+        return array_filter($data, function ($key) use ($rules) {
+            return array_key_exists('*', $rules);
+        }, ARRAY_FILTER_USE_KEY);
     }
 
     public function loadCollection($meta)
