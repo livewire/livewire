@@ -81,20 +81,28 @@ class EloquentModelSynth extends Synth
 
     public function hydrate($data, $meta, $hydrateChild)
     {
-        $model = $this->loadModel($meta);
+        if (isset($meta['__child_from_parent'])) {
+            $model = $meta['__child_from_parent'];
 
-        foreach ($data as $key => $child) {
-            $data[$key] = $hydrateChild($child);
+            unset($meta['__child_from_parent']);
+        } else {
+            $model = $this->loadModel($meta);
         }
 
         if (isset($meta['relations'])) {
-            foreach($meta['relations'] as $relation) {
-                if (! isset($data[$relation])) continue;
+            foreach($meta['relations'] as $relationKey) {
+                if (! isset($data[$relationKey])) continue;
 
-                $model->setRelation($relation, $data[$relation]);
+                $data[$relationKey][1]['__child_from_parent'] = $model->getRelation($relationKey);
 
-                unset($data[$relation]);
+                $model->setRelation($relationKey, $hydrateChild($data[$relationKey]));
+
+                unset($data[$relationKey]);
             }
+        }
+
+        foreach ($data as $key => $child) {
+            $data[$key] = $hydrateChild($child);
         }
 
         $this->setDataOnModel($model, $data);

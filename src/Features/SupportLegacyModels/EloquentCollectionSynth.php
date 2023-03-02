@@ -113,11 +113,19 @@ class EloquentCollectionSynth extends Synth
 
     public function hydrate($data, $meta, $hydrateChild)
     {
-        $collection = $this->loadCollection($meta);
+        if (isset($meta['__child_from_parent'])) {
+            $collection = $meta['__child_from_parent'];
+
+            unset($meta['__child_from_parent']);
+        } else {
+            $collection = $this->loadCollection($meta);
+        }
 
         if (count($data)) {
-            foreach ($data as $key => $child) {
-                $data[$key] = $hydrateChild($child);
+            foreach ($data as $key => $childData) {
+                $childData[1]['__child_from_parent'] = $collection->get($key);
+
+                $data[$key] = $hydrateChild($childData);
             }
 
             return $collection::wrap($data);
