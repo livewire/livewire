@@ -142,6 +142,10 @@ class EloquentCollectionSynth extends Synth
             $collection = $this->loadCollection($meta);
         }
 
+        if (isset($meta['relations'])) {
+            $collection->loadMissing($meta['relations']);
+        }
+
         if (count($data)) {
             foreach ($data as $key => $childData) {
                 $childData[1]['__child_from_parent'] = $collection->get($key);
