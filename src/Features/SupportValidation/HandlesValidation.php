@@ -80,7 +80,7 @@ trait HandlesValidation
         );
     }
 
-    protected function getRules()
+    public function getRules()
     {
         if (method_exists($this, 'rules')) return $this->rules();
         if (property_exists($this, 'rules')) return $this->rules;

@@ -156,9 +156,9 @@ class EloquentModelSynth extends Synth
 
     public function set(Model &$target, $key, $value, $pathThusFar, $fullPath, $root)
     {
-        // if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
-        //     throw new CannotBindToModelDataWithoutValidationRuleException($pathThusFar, $root->getName());
-        // }
+        if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
+            throw new CannotBindToModelDataWithoutValidationRuleException($fullPath, $root->getName());
+        }
 
         if ($target->relationLoaded($key)) {
             return $target->setRelation($key, $value);

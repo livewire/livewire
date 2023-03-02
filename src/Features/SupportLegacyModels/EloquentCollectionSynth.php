@@ -141,9 +141,9 @@ class EloquentCollectionSynth extends Synth
 
     public function set(&$target, $key, $value, $pathThusFar, $fullPath, $root)
     {
-        // if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
-        //     throw new CannotBindToModelDataWithoutValidationRuleException($pathThusFar, $root->getName());
-        // }
+        if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
+            throw new CannotBindToModelDataWithoutValidationRuleException($fullPath, $root->getName());
+        }
 
         $target->put($key, $value);
     }
