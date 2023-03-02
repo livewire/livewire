@@ -20,7 +20,6 @@ class EloquentModelSynth extends Synth
 
     public function dehydrate($target, $context, $dehydrateChild)
     {
-        // ray('dehydrate', $target, $context);
         $class = $target::class;
 
         // If no alias is found, this just returns the class name
