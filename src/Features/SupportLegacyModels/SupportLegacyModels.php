@@ -93,10 +93,6 @@ class SupportLegacyModels extends ComponentHook
 
     static function getRulesFor($component, $key)
     {
-        // ray('getRulesFor', $key);
-        // ray('hasRulesFor', static::hasRuleFor($component, $key));
-        // ray(static::getRules($component));
-        
         $rules = static::getRules($component);
 
         return $rules[$key] ?? [];
