@@ -4,15 +4,14 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\Browser;
-use Livewire\Component as BaseComponent;
-use Livewire\Livewire;
-use Sushi\Sushi;
 use LegacyTests\Browser\TestCase;
+use Livewire\Component as BaseComponent;
+use Sushi\Sushi;
 
 class DataBindingModelsBrowserTest extends TestCase
 {
-    use WithLegacyModels;
-    
+    use Concerns\EnableLegacyModels;
+
     /** @test */
     public function it_displays_all_nested_data()
     {

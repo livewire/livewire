@@ -10,7 +10,7 @@ use Sushi\Sushi;
 
 class EloquentCollectionsBrowserTest extends TestCase
 {
-    use WithLegacyModels;
+    use Concerns\EnableLegacyModels;
 
     /** @test */
     public function it_displays_all_nested_data()

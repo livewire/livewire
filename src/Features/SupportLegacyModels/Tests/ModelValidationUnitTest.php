@@ -11,7 +11,7 @@ use Sushi\Sushi;
 
 class ModelValidationUnitTest extends \Tests\TestCase
 {
-    use WithLegacyModels;
+    use Concerns\EnableLegacyModels;
 
     /** @test */
     public function can_validate_uniqueness_on_a_model()

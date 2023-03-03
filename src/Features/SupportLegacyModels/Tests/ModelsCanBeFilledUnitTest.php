@@ -8,7 +8,7 @@ use Livewire\Livewire;
 
 class ModelsCanBeFilledUnitTest extends \Tests\TestCase
 {
-    use WithLegacyModels;
+    use Concerns\EnableLegacyModels;
 
     /** @test */
     public function can_fill_binded_model_properties()

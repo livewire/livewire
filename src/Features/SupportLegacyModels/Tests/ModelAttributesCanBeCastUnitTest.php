@@ -3,15 +3,14 @@
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
-use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
 
 class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
 {
-    use WithLegacyModels;
-    
+    use Concerns\EnableLegacyModels;
+
     public function setUp(): void
     {
         parent::setUp();

@@ -9,7 +9,7 @@ use Sushi\Sushi;
 
 class EloquentModelValidationUnitTest extends \Tests\TestCase
 {
-    use WithLegacyModels;
+    use Concerns\EnableLegacyModels;
 
     // @todo: Fix model array keys now legacy models have been implemented
 

@@ -5,12 +5,11 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
-use Livewire\Features\SupportLegacyModels\Tests\WithLegacyModels;
 use Livewire\Livewire;
 
 class ComponentTypedPropertyBindingsUnitTest extends \Tests\TestCase
 {
-    use WithLegacyModels;
+    use Concerns\EnableLegacyModels;
 
     /** @test */
     public function props_are_set_via_mount()

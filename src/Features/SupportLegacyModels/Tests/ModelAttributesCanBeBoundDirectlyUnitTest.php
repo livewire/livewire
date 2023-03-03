@@ -2,17 +2,16 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
-use Livewire\Livewire;
-use Livewire\Component;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Features\SupportLegacyModels\Tests\WithLegacyModels;
-use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
+use Illuminate\Support\Facades\Schema;
+use Livewire\Component;
 use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidationRuleException;
+use Livewire\Livewire;
+use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
 
 class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 {
-    use WithLegacyModels;
+    use Concerns\EnableLegacyModels;
 
     public function setUp(): void
     {

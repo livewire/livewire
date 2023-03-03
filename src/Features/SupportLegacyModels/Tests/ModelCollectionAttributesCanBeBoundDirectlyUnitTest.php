@@ -2,17 +2,17 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
-use Sushi\Sushi;
-use Livewire\Livewire;
-use Livewire\Component;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
+use Illuminate\Database\Eloquent\Model;
+use Livewire\Component;
 use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidationRuleException;
+use Livewire\Livewire;
+use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
+use Sushi\Sushi;
 
 class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 {
-    use WithLegacyModels;
+    use Concerns\EnableLegacyModels;
 
     /** @test */
     public function can_set_a_model_attribute_inside_a_models_collection_and_save()

@@ -10,7 +10,7 @@ use Sushi\Sushi;
 
 class EagerLoadingBrowserTest extends TestCase
 {
-    use WithLegacyModels;
+    use Concerns\EnableLegacyModels;
 
     /** @test */
     public function it_restores_eloquent_colletion_eager_loaded_relations_on_hydrate()

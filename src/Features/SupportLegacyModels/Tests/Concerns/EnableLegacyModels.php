@@ -1,8 +1,8 @@
 <?php
 
-namespace Livewire\Features\SupportLegacyModels\Tests;
+namespace Livewire\Features\SupportLegacyModels\Tests\Concerns;
 
-trait WithLegacyModels
+trait EnableLegacyModels
 {   
     // Enable model binding for these tests
     protected function getEnvironmentSetUp($app)

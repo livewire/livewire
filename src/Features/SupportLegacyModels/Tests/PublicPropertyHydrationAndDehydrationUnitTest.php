@@ -10,7 +10,7 @@ use Livewire\Livewire;
 
 class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 {
-    use WithLegacyModels;
+    use Concerns\EnableLegacyModels;
 
     public function setUp(): void
     {
