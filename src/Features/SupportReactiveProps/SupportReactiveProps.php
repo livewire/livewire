@@ -22,9 +22,7 @@ class SupportReactiveProps extends ComponentHook
             static::storeChildParams($id, $params);
         });
 
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof LivewireSynth) return;
-
+        on('dehydrate', function ($target, $context) {
             $props = store($target)->get('props', []);
             $propHashes = store($target)->get('propHashes', []);
 
@@ -37,30 +35,27 @@ class SupportReactiveProps extends ComponentHook
             $props && $context->addMeta('props', $props);
         });
 
-        on('hydrate', function ($synth, $meta) {
-            if (! $synth instanceof LivewireSynth) return;
+        on('hydrate', function ($target, $meta) {
             if (! isset($meta['props'])) return;
 
             $propKeys = $meta['props'];
 
             $props = static::getProps($meta['id'], $propKeys);
 
-            return function ($target) use ($props, $propKeys) {
-                $propHashes = [];
+            $propHashes = [];
 
-                foreach ($props as $key => $value) {
-                    $target->{$key} = $value;
-                }
+            foreach ($props as $key => $value) {
+                $target->{$key} = $value;
+            }
 
-                foreach ($propKeys as $key) {
-                    $propHashes[$key] = crc32(json_encode($target->{$key}));
-                }
+            foreach ($propKeys as $key) {
+                $propHashes[$key] = crc32(json_encode($target->{$key}));
+            }
 
-                store($target)->set('props', $propKeys);
-                store($target)->set('propHashes', $propHashes);
+            store($target)->set('props', $propKeys);
+            store($target)->set('propHashes', $propHashes);
 
-                return $target;
-            };
+            return $target;
         });
     }
 

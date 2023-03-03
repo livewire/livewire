@@ -24,6 +24,8 @@ class LivewireSynth extends Synth
     }
 
     function dehydrate($target, $context, $dehydrateChild) {
+        trigger('dehydrate', $target, $context);
+
         $context->addMeta('id', $target->getId());
         $context->addMeta('name', $target->getName());
 
@@ -51,6 +53,8 @@ class LivewireSynth extends Synth
 
             $component->$key = $child;
         }
+
+        trigger('hydrate', $component, $meta);
 
         return $component;
     }

@@ -78,7 +78,7 @@ function wrap($subject) {
     return new Wrapped($subject);
 }
 
-function trigger($name, &...$params) {
+function trigger($name, ...$params) {
     return app(\Livewire\EventBus::class)->trigger($name, ...$params);
 }
 

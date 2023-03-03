@@ -47,7 +47,7 @@ class EventBus
         elseif ($indexBefore !== false) unset($this->listenersBefore[$name][$indexBefore]);
     }
 
-    function trigger($name, &...$params) {
+    function trigger($name, ...$params) {
         $middlewares = [];
 
         $listeners = array_merge(

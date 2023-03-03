@@ -47,14 +47,12 @@ class Manager
 
     function mount($name, $params = [], $key = null)
     {
-        return app(RenderComponent::class)->mount($name, $params, $key);
+        return app(UpdateComponents::class)->mount($name, $params, $key);
     }
 
-    function snapshot($component, $initial = false)
+    function current()
     {
-        $effects = [];
-
-        return app(UpdateComponents::class)->toSnapshot($component, $effects, $initial);
+        return last(app(RenderComponent::class)::$renderStack);
     }
 
     function update($snapshot, $diff, $calls)

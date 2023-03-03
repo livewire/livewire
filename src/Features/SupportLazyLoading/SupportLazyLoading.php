@@ -13,6 +13,8 @@ class SupportLazyLoading extends ComponentHook
 {
     static function provide()
     {
+        // @todo: This needs a complete overhaul...
+        return;
         on('pre-mount', function ($name, $params, $parent, $key, $hijack) {
             if (! array_key_exists('lazy', $params)) return;
             unset($params['lazy']);
@@ -37,42 +39,38 @@ class SupportLazyLoading extends ComponentHook
             $hijack($html);
         });
 
-        on('hydrate', function ($synth, $meta) {
-            if (! $synth instanceof LivewireSynth) return;
+        on('hydrate', function ($target, $meta) {
             if (! $meta['name'] === '__lazy') return;
 
-            return function ($target) {
-                store($target)->set('lazyReadyForSwap', true);
-                $target->swap = true;
-            };
+            store($target)->set('lazyReadyForSwap', true);
+            $target->swap = true;
         });
 
-        after('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof LivewireSynth) return;
-            if (! store($target)->get('lazyReadyForSwap')) return;
+        // after('dehydrate', function ($target, $context) {
+        //     if (! store($target)->get('lazyReadyForSwap')) return;
 
-            return function ($data) use ($context, $target) {
-                $childContext = null;
-                $childData = null;
+        //     return function ($data) use ($context, $target) {
+        //         $childContext = null;
+        //         $childData = null;
 
-                $off = on('dehydrate', function ($synth, $target, $context) use (&$childContext, &$childData) {
-                    if (! $childContext) $childContext = $context;
+        //         // $off = on('dehydrate', function ($synth, $target, $context) use (&$childContext, &$childData) {
+        //         //     if (! $childContext) $childContext = $context;
 
-                    return function ($data) use (&$childData) {
-                        if (! $childData) $childData = $data;
-                    };
-                });
+        //         //     return function ($data) use (&$childData) {
+        //         //         if (! $childData) $childData = $data;
+        //         //     };
+        //         // });
 
-                [$html, $data] = app('livewire')->mount($target->componentName, [], id: $target->getId());
+        //         [$html, $data] = app('livewire')->mount($target->componentName, [], id: $target->getId());
 
-                $off();
+        //         $off();
 
 
-                $context->effects = $childContext->effects;
-                $context->meta = $childContext->meta;
+        //         $context->effects = $childContext->effects;
+        //         $context->meta = $childContext->meta;
 
-                return $childData;
-            };
-        });
+        //         return $childData;
+        //     };
+        // });
     }
 }

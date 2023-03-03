@@ -20,14 +20,10 @@ class HookAdapter
                 $hook->callMount($params, $parent, $parent);
             });
 
-            on('hydrate', function ($synth, $meta) use ($hook) {
-                if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
-
-                return function ($target) use ($hook, $meta) {
-                    $hook = $this->initializeHook($hook, $target);
-                    $hook->callBoot();
-                    $hook->callHydrate($meta);
-                };
+            on('hydrate', function ($target, $meta) use ($hook) {
+                $hook = $this->initializeHook($hook, $target);
+                $hook->callBoot();
+                $hook->callHydrate($meta);
             });
         }
 
@@ -49,10 +45,10 @@ class HookAdapter
             return $this->proxyCallToHooks($target, 'callRender')($view, $data);
         });
 
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! is_object($target)) return;
+        on('dehydrate', function ($target, $context) {
+            $this->proxyCallToHooks($target, 'callDehydrate')($context);
 
-            return $this->proxyCallToHooks($target, 'callDehydrate')($context);
+            $this->proxyCallToHooks($target, 'callDestroy')($context);
         });
 
         on('exception', function ($target, $e, $stopPropagation) {

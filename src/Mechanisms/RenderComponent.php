@@ -24,14 +24,6 @@ class RenderComponent
         app()->singleton($this::class);
 
         Blade::directive('livewire', [static::class, 'livewire']);
-
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
-
-            $html = static::render($target);
-
-            $html && $context->addEffect('html', $html);
-        });
     }
 
     public static function livewire($expression)
@@ -74,50 +66,6 @@ unset(\$__split);
 if (isset(\$__slots)) unset(\$__slots);
 ?>
 EOT;
-    }
-
-    static function mount($name, $params = [], $key = null)
-    {
-        // Support for "spreading" or "applying" an array of parameters by a single "apply" key.
-        // Used so far exclusively for forwarding properties by the "SupportsLazy" feature...
-        if (isset($params['apply'])) {
-            $params = [...$params, ...$params['apply']];
-
-            unset($params['apply']);
-        }
-
-        // Grab the parent component that this component is mounted within (if one exists)...
-        $parent = last(static::$renderStack);
-
-        // Provide a way to interupt a mounting component and render entirely different html...
-        $hijackedHtml = null;
-        $hijack = function ($html) use (&$hijackedHtml) { $hijackedHtml = $html; };
-
-        $finishPreMount = trigger('pre-mount', $name, $params, $parent, $key, $hijack);
-
-        if ($hijackedHtml !== null) return [$hijackedHtml];
-
-        // Now we're ready to actually create a Livewire component instance...
-        $component = app(ComponentRegistry::class)->new($name, $params);
-
-        trigger('mount', $component, $params, $parent);
-
-        // Trigger the dehydrate...
-        $payload = app('livewire')->snapshot($component, initial: true);
-
-        // When "skipRender" is called in "mount" from a subsequent request...
-        $html = $payload['effects']['html'] ?? '<div></div>';
-
-        // Remove it from effects...
-        if (isset($payload['effects']['html'])) unset($payload['effects']['html']);
-
-        $html = Utils::insertAttributesIntoHtmlRoot($html, [
-            'wire:initial-data' => $payload,
-        ]);
-
-        $finishPreMount($component, $html);
-
-        return [$html, $payload];
     }
 
     static function render($target)

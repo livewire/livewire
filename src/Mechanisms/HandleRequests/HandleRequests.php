@@ -20,9 +20,7 @@ class HandleRequests
             return Route::post('/livewire/update', $handle)->middleware('web');
         });
 
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof LivewireSynth) return;
-
+        on('dehydrate', function ($target, $context) {
             $uri = (string) str(app($this::class)->updateRoute->uri)->start('/');
 
             if ($context->initial) $context->addEffect('uri', $uri);

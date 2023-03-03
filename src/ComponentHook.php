@@ -156,6 +156,24 @@ abstract class ComponentHook
         };
     }
 
+    function callDestroy(...$params) {
+        $callbacks = [];
+
+        if (method_exists($this, 'destroy')) $callbacks[] = $this->destroy(...$params);
+
+        foreach ($this->propertyHooks as $property => $hooks) {
+            foreach ($hooks as $hook) {
+                if (method_exists($hook, 'destroy')) $callbacks[] = $hook->destroy(...$params);
+            }
+        }
+
+        return function (...$params) use ($callbacks) {
+            foreach ($callbacks as $callback) {
+                if (is_callable($callback)) $callback(...$params);
+            }
+        };
+    }
+
     function callException(...$params) {
         $callbacks = [];
 

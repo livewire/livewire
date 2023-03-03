@@ -17,40 +17,19 @@ class SupportRedirects extends ComponentHook
 {
     public static $redirectorCacheStack = [];
 
-    public static function provide()
+    public function boot()
     {
-        before('mount', function ($component) {
-            // Put Laravel's redirector aside and replace it with our own custom one.
-            static::$redirectorCacheStack[] = app('redirect');
+        // Put Laravel's redirector aside and replace it with our own custom one.
+        static::$redirectorCacheStack[] = app('redirect');
 
-            app()->bind('redirect', function () use ($component) {
-                $redirector = app(Redirector::class)->component($component);
+        app()->bind('redirect', function () {
+            $redirector = app(Redirector::class)->component($this->component);
 
-                if (app()->has('session.store')) {
-                    $redirector->setSession(app('session.store'));
-                }
+            if (app()->has('session.store')) {
+                $redirector->setSession(app('session.store'));
+            }
 
-                return $redirector;
-            });
-        });
-
-        before('hydrate', function ($synth, $meta) {
-            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
-
-            return function ($component) {
-                // Put Laravel's redirector aside and replace it with our own custom one.
-                static::$redirectorCacheStack[] = app('redirect');
-
-                app()->bind('redirect', function () use ($component) {
-                    $redirector = app(Redirector::class)->component($component);
-
-                    if (app()->has('session.store')) {
-                        $redirector->setSession(app('session.store'));
-                    }
-
-                    return $redirector;
-                });
-            };
+            return $redirector;
         });
     }
 

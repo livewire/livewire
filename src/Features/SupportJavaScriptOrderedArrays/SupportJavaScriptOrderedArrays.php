@@ -8,13 +8,14 @@ class SupportJavaScriptOrderedArrays
 {
     function boot()
     {
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
+        // @todo: instead of we're gonna try just not tampering with the decoded string in JS...
+        // on('dehydrate', function ($synth, $target, $context) {
+        //     if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
 
-            return function ($value) {
-                return $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
-            };
-        });
+        //     return function ($value) {
+        //         return $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);
+        //     };
+        // });
     }
 
     function reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value)

@@ -6,6 +6,8 @@ use function Livewire\trigger;
 
 use Livewire\Mechanisms\UpdateComponents\DehydrationContext;
 use Livewire\Mechanisms\UpdateComponents\Checksum;
+use Livewire\Mechanisms\RenderComponent;
+use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +40,7 @@ class UpdateComponents
     function skipRequestPayloadTamperingMiddleware()
     {
         ConvertEmptyStringsToNull::skipWhen(function () {
+            // @todo: update this...
             return request()->is('synthetic/update');
         });
 
@@ -46,35 +49,69 @@ class UpdateComponents
         });
     }
 
-    public function registerSynth($synthClass)
+    function registerSynth($synthClass)
     {
         foreach ((array) $synthClass as $class) {
             array_unshift($this->synthesizers, $class);
         }
     }
 
+    function mount($name, $params = [], $key = null)
+    {
+        $parent = app('livewire')->current();
+
+        // Provide a way to interupt a mounting component and render entirely different html...
+        try {
+            $finishPreMount = trigger('pre-mount', $name, $params, $parent, $key, function ($html) {
+                throw tap(new \Exception, fn ($e) => $e->__html = $html);
+            });
+        } catch (\Exception $e) {
+            if ($e->__html) return [ $e->__html ];
+            else throw $e;
+        }
+
+        $component = app('livewire')->new($name, $params);
+
+        trigger('mount', $component, $params, $parent);
+
+        $html = app(RenderComponent::class)::render($component) ?: '<div></div>';
+
+
+        $payload = $this->snapshot($component, initial: true);
+
+        $html = Utils::insertAttributesIntoHtmlRoot($html, [
+            'wire:initial-data' => $payload,
+        ]);
+
+        $finishPreMount($component, $html);
+
+        return [$html, $payload];
+    }
+
     function update($snapshot, $diff, $calls)
     {
         $effects = [];
 
-        $root = $this->fromSnapshot($snapshot, $diff);
+        Checksum::verify($snapshot);
 
-        $finish = trigger('call.root', $root, $calls);
+        $component = $this->hydrate($data = $snapshot['data']);
 
-        $this->makeCalls($root, $calls, $effects);
+        $this->updateProperties($component, $diff, $data);
 
-        $finish();
+        $this->makeCalls($component, $calls, $effects);
 
-        $payload = $this->toSnapshot($root, $effects);
+        $effects['html'] = app(\Livewire\Mechanisms\RenderComponent::class)::render($component);
+
+        $payload = $this->snapshot($component, $effects);
 
         return [
-            'target' => $root,
+            'target' => $component,
             'snapshot' => $payload['snapshot'],
             'effects' => $effects,
         ];
     }
 
-    function toSnapshot($root, &$effects = [], $initial = false) {
+    function snapshot($root, &$effects = [], $initial = false) {
         $finish = trigger('dehydrate.root', $root);
 
         $context = new DehydrationContext($root, $initial, []);
@@ -90,34 +127,12 @@ class UpdateComponents
         return ['snapshot' => $snapshot, 'effects' => $effects];
     }
 
-    function fromSnapshot($snapshot, $diff) {
-        Checksum::verify($snapshot);
-
-        $finish = trigger('hydrate.root', $snapshot);
-
-        $root = $this->hydrate($data = $snapshot['data']);
-
-        trigger('boot', $root);
-
-        $finish($root);
-
-        $finish = trigger('update.root', $root);
-
-        $this->updateProperties($root, $diff, $data);
-
-        $finish();
-
-        return $root;
-    }
-
     function dehydrate($target, &$context, &$effects) {
         if (Utils::isAPrimitive($target)) return $target;
 
         $synth = $this->synth($target);
 
         $initial = $context->initial;
-
-        $finish = trigger('dehydrate', $synth, $target, $context);
 
         $methods = $synth->methods($target);
 
@@ -128,8 +143,6 @@ class UpdateComponents
 
             return $this->dehydrate($childValue, $childContext, $effects);
         });
-
-        $value = $finish($value);
 
         [$meta, $iEffects] = $context->retrieve();
 
@@ -149,13 +162,9 @@ class UpdateComponents
         $synthKey = $meta['s'];
         $synth = $this->synth($synthKey);
 
-        $finish = trigger('hydrate', $synth, $meta);
-
-        $return = $synth->hydrate($rawValue, $meta, function ($childValue) {
+        return $synth->hydrate($rawValue, $meta, function ($childValue) {
             return $this->hydrate($childValue);
         });
-
-        return $finish($return);
     }
 
     function updateProperties($root, $diff, $data) {

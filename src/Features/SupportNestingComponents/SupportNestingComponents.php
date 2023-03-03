@@ -50,9 +50,7 @@ class SupportNestingComponents extends ComponentHook
 
         if ($skipRender) $this->keepRenderedChildren();
 
-        return function () use ($context) {
-            $context->addMeta('children', $this->getChildren());
-        };
+        $context->addMeta('children', $this->getChildren());
     }
 
     function getChildren() { return $this->storeGet('children', []); }

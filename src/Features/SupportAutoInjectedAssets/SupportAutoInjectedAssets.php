@@ -17,9 +17,7 @@ class SupportAutoInjectedAssets
     {
         app()->singleton($this::class);
 
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $synth instanceof LivewireSynth) return;
-
+        on('dehydrate', function ($target, $context) {
             $this->hasRenderedAComponentThisRequest = true;
         });
 

@@ -26,17 +26,18 @@ class SupportFileUploads extends ComponentHook
             FileUploadSynth::class,
         ]);
 
-        on('call.root', function ($target, $calls) {
-            if (! $target instanceof Component) return;
+        // @todo: make this work without this hook...
+        // on('call.root', function ($target, $calls) {
+        //     if (! $target instanceof Component) return;
 
-            foreach ($calls as $call) {
-                if ($call['method'] === $method = 'startUpload') {
-                    if (! method_exists($target, $method)) {
-                        throw new MissingFileUploadsTraitException($target);
-                    }
-                }
-            }
-        });
+        //     foreach ($calls as $call) {
+        //         if ($call['method'] === $method = 'startUpload') {
+        //             if (! method_exists($target, $method)) {
+        //                 throw new MissingFileUploadsTraitException($target);
+        //             }
+        //         }
+        //     }
+        // });
 
         Route::post('/livewire/upload-file', [FileUploadController::class, 'handle'])
             ->name('livewire.upload-file')

@@ -1,5 +1,5 @@
 [
-    "azH7ZX7hQQU",
-    "Livewire\\Mechanisms\\HandleRequests\\BrowserTest",
-    "can_register_a_custom_update_endpoint"
+    "av8GOSprcEt",
+    "Livewire\\Features\\SupportReactiveProps\\BrowserTest",
+    "can_pass_a_reactive_property_from_parent_to_child"
 ]

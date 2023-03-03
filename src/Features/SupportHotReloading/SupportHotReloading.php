@@ -28,21 +28,20 @@ class SupportHotReloading
             }
         });
 
-        on('dehydrate', function ($synth, $target, $context) {
-            if (! $context->initial) return;
-            if (! $synth instanceof LivewireSynth) return;
+        // on('dehydrate', function ($target, $context) {
+        //     if (! $context->initial) return;
 
-            $path = (new \ReflectionObject($target))->getFileName();
+        //     $path = (new \ReflectionObject($target))->getFileName();
 
-            return function ($stuff) use ($target, $context, $path) {
-                $context->addEffect('hotReload', [
-                    $path,
-                    ...array_values($this->pathsByComponentId[$target->getId()] ?? [])
-                ]);
+        //     return function ($stuff) use ($target, $context, $path) {
+        //         $context->addEffect('hotReload', [
+        //             $path,
+        //             ...array_values($this->pathsByComponentId[$target->getId()] ?? [])
+        //         ]);
 
-                return $stuff;
-            };
-        });
+        //         return $stuff;
+        //     };
+        // });
 
         Route::get('/livewire/hot-reload', function () {
             return response()->stream(function () {
