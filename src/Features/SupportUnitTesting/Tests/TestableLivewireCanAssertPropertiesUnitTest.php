@@ -2,10 +2,8 @@
 
 namespace Livewire\Features\SupportUnitTesting\Tests;
 
-use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Livewire\Livewire;
-use Sushi\Sushi;
 
 class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
 {
@@ -16,17 +14,6 @@ class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
             ->assertSet('foo', 'bar')
             ->set('foo', 'baz')
             ->assertSet('foo', 'baz');
-    }
-
-    /** @test */
-    public function can_assert_model_property_value()
-    {
-        $this->markTestSkipped(); // @todo: implement eloquent models...
-
-        Livewire::test(PropertyTestingComponent::class, [
-                'model' => ModelForPropertyTesting::first(),
-            ])
-            ->assertSet('model.foo.bar', 'baz');
     }
 
     /** @test */
@@ -55,24 +42,9 @@ class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
     }
 }
 
-class ModelForPropertyTesting extends Model
-{
-    use Sushi;
-
-    protected $casts = ['foo' => 'array'];
-
-    protected function getRows()
-    {
-        return [
-            ['foo' => json_encode(['bar' => 'baz'])],
-        ];
-    }
-}
-
 class PropertyTestingComponent extends Component
 {
     public $foo = 'bar';
-    public $model;
 
     public function getBobProperty()
     {
@@ -81,7 +53,7 @@ class PropertyTestingComponent extends Component
 
     public function render()
     {
-        return view('null-view');
+        return '<div></div>';
     }
 }
 
@@ -94,6 +66,6 @@ class ComputedPropertyWithExceptionTestingComponent extends Component
 
     public function render()
     {
-        return view('null-view');
+        return '<div></div>';
     }
 }
