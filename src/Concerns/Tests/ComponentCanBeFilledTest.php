@@ -5,6 +5,7 @@ namespace Livewire\Concerns\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Blade;
 use Synthetic\Testing\FauxJsTarget;
 
 class ComponentCanBeFilledTest extends \Tests\TestCase
@@ -73,23 +74,6 @@ class ComponentCanBeFilledTest extends \Tests\TestCase
             ->assertSet('dotProperty.foo', 'bar')
             ->assertSet('dotProperty.bob', 'lob');
     }
-
-    /** @test */
-    public function can_fill_binded_model_properties()
-    {
-        $this->markTestSkipped(); // @todo: implement models
-        
-        $component = Livewire::test(ComponentWithFillableProperties::class, ['user' => new UserModel()]);
-
-        $this->assertInstanceOf(UserModel::class, $component->get('user'));
-
-        $component
-            ->assertSet('user.name', null)
-            ->call('callFill', [
-                'user.name' => 'Caleb'
-            ])
-            ->assertSet('user.name', 'Caleb');
-    }
 }
 
 class User {
@@ -126,8 +110,6 @@ class ComponentWithFillableProperties extends Component
 
     public $dotProperty = [];
 
-    public $user;
-
     public function callFill($values)
     {
         $this->fill($values);
@@ -135,10 +117,19 @@ class ComponentWithFillableProperties extends Component
 
     public function render()
     {
-        return view('fillable-view', [
-            'publicProperty' => $this->publicProperty,
-            'protectedProperty' => $this->protectedProperty,
-            'privateProperty' => $this->privateProperty,
-        ]);
+        return Blade::render(
+            <<<'HTML'
+                <div>
+                    {{ $publicProperty }}
+                    {{ $protectedProperty }}
+                    {{ $privateProperty }}
+                </div>
+            HTML,
+            [
+                'publicProperty' => $this->publicProperty,
+                'protectedProperty' => $this->protectedProperty,
+                'privateProperty' => $this->privateProperty,
+            ]
+        );
     }
 }
