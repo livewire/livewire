@@ -7,7 +7,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
 
-class EloquentModelValidationTest extends \Tests\TestCase
+class EloquentModelValidationUnitTest extends \Tests\TestCase
 {
     use WithLegacyModels;
 

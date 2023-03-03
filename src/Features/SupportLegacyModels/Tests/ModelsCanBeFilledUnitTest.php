@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ModelsCanBeFilledTest extends \Tests\TestCase
+class ModelsCanBeFilledUnitTest extends \Tests\TestCase
 {
     use WithLegacyModels;
 
