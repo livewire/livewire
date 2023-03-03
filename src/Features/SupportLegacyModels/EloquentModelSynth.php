@@ -7,7 +7,6 @@ use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Component;
-use PhpParser\Node\Expr\Cast\Array_;
 
 class EloquentModelSynth extends Synth
 {
@@ -71,8 +70,8 @@ class EloquentModelSynth extends Synth
     public function getDataFromModel(Model $model, $rules)
     {
         return [
-            ...$this->filterAttributes($this->getAttributes($model), $rules),
-            ...$this->filterRelations($model->getRelations(), $rules),
+            ...$this->filterData($this->getAttributes($model), $rules),
+            ...$this->filterData($model->getRelations(), $rules),
         ];
     }
 
@@ -94,17 +93,10 @@ class EloquentModelSynth extends Synth
         return $attributes;
     }
 
-    public function filterAttributes($data, $rules)
+    public function filterData($data, $rules)
     {
         return array_filter($data, function ($key) use ($rules) {
-            return in_array($key, $rules) || array_key_exists($key, $rules);
-        }, ARRAY_FILTER_USE_KEY);
-    }
-
-    public function filterRelations($data, $rules)
-    {
-        return array_filter($data, function ($key) use ($rules) {
-            return array_key_exists($key, $rules) || in_array($key, $rules);
+            return array_key_exists($key, $rules) ||in_array($key, $rules);
         }, ARRAY_FILTER_USE_KEY);
     }
 
