@@ -1,20 +1,16 @@
 <?php
 
-namespace Livewire\Features\SupportModels\Tests;
+namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
+use Livewire\Features\SupportLegacyModels\Tests\WithLegacyModels;
 use Livewire\Livewire;
 
 class ComponentTypedPropertyBindingsUnitTest extends \Tests\TestCase
 {
-    public function setUp(): void
-    {
-        $this->markTestSkipped(); // @todo: implement models
-
-        parent::setUp();
-    }
+    use WithLegacyModels;
 
     /** @test */
     public function props_are_set_via_mount()

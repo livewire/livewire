@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportModels\Tests;
+namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
@@ -10,9 +10,10 @@ use Sushi\Sushi;
 
 class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
 {
+    use WithLegacyModels;
+    
     public function setUp(): void
     {
-        $this->markTestSkipped(); // @todo: implement models
         parent::setUp();
     }
 

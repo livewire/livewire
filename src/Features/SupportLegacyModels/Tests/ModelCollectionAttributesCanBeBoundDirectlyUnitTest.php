@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportModels\Tests;
+namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Sushi\Sushi;
 use Livewire\Livewire;
@@ -8,15 +8,11 @@ use Livewire\Component;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
-use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleException;
+use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidationRuleException;
 
 class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 {
-    public function setUp(): void
-    {
-        $this->markTestSkipped(); // @todo: implement models
-        parent::setUp();
-    }
+    use WithLegacyModels;
 
     /** @test */
     public function can_set_a_model_attribute_inside_a_models_collection_and_save()

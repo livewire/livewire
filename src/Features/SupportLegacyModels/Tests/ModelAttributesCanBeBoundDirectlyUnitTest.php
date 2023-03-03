@@ -1,20 +1,21 @@
 <?php
 
-namespace Livewire\Features\SupportModels\Tests;
+namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Features\SupportLegacyModels\Tests\WithLegacyModels;
 use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
-use Livewire\Features\SupportModels\CannotBindToModelDataWithoutValidationRuleException;
+use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidationRuleException;
 
 class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 {
+    use WithLegacyModels;
+
     public function setUp(): void
     {
-        $this->markTestSkipped(); // @todo: implement models
-
         parent::setUp();
 
         Schema::create('model_for_attribute_bindings', function ($table) {
