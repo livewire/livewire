@@ -9,7 +9,7 @@ use Livewire\Livewire;
 use Sushi\Sushi;
 use LegacyTests\Browser\TestCase;
 
-class DataBindingModelsTest extends TestCase
+class DataBindingModelsBrowserTest extends TestCase
 {
     use WithLegacyModels;
     
