@@ -1,29 +1,24 @@
 <?php
 
-namespace Livewire\Features\SupportValidation\Tests;
+namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
-use function collect;
-use function view;
 
-// TODO: Should this be moved to the SupportModels folder
 class EloquentModelValidationTest extends \Tests\TestCase
 {
-    public function setUp(): void
-    {
-        $this->markTestSkipped(); // @todo: implement models
-        parent::setUp();
-    }
-    
+    use WithLegacyModels;
+
+    // @todo: Fix model array keys now legacy models have been implemented
+
     /** @test */
     public function standard_model_property()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.bar', '')
+        ])->set('foo.bar', '')
             ->call('save')
             ->assertHasErrors('foo.bar')
             ->set('foo.bar', 'baz')
@@ -38,7 +33,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.bar', '')
+        ])->set('foo.bar', '')
             ->call('save')
             ->assertHasErrors('foo.bar', 'required')
             ->assertSee('The bar field is required.');
@@ -49,7 +44,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.bar_baz', '')
+        ])->set('foo.bar_baz', '')
             ->call('save')
             ->assertHasErrors('foo.bar_baz', 'required')
             ->assertSee('The bar baz field is required.');
@@ -60,7 +55,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithCamelCasedModelProperty::class, [
             'camelFoo' => $foo = CamelFoo::first(),
-        ])  ->set('camelFoo.bar', '')
+        ])->set('camelFoo.bar', '')
             ->call('save')
             ->assertHasErrors('camelFoo.bar', 'required')
             ->assertSee('The bar field is required.');
@@ -74,7 +69,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
 
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.bar', '')
+        ])->set('foo.bar', '')
             ->call('save')
             ->assertSee('The plop field is required.');
     }
@@ -84,7 +79,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.bar', '')
+        ])->set('foo.bar', '')
             ->call('performValidateOnly', 'foo.bar')
             ->assertHasErrors('foo.bar', 'required')
             ->assertSee('The bar field is required.');
@@ -95,7 +90,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.baz', ['bob'])
+        ])->set('foo.baz', ['bob'])
             ->call('save')
             ->assertHasErrors('foo.baz')
             ->set('foo.baz', ['bob', 'lob'])
@@ -110,7 +105,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.bob', ['b', 'bbo'])
+        ])->set('foo.bob', ['b', 'bbo'])
             ->call('save')
             ->assertHasErrors('foo.bob.*')
             ->set('foo.bob', ['bb', 'bbo'])
@@ -125,7 +120,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.bob.0', 'b')
+        ])->set('foo.bob.0', 'b')
             ->call('save')
             ->assertHasErrors('foo.bob.*')
             ->set('foo.bob.0', 'bbo')
@@ -140,7 +135,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.lob.law', [['blog' => 'glob']])
+        ])->set('foo.lob.law', [['blog' => 'glob']])
             ->call('save')
             ->assertHasErrors('foo.lob.law.*.blog')
             ->set('foo.lob.law', [['blog' => 'globbbbb']])
@@ -155,7 +150,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.lob.law.0', ['blog' => 'glob'])
+        ])->set('foo.lob.law.0', ['blog' => 'glob'])
             ->call('save')
             ->assertHasErrors(['foo.lob.law.*', 'foo.lob.law.*.blog'])
             ->set('foo.lob.law.0', ['blog' => 'globbbbb'])
@@ -170,7 +165,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.lob.law.0.blog', 'glob')
+        ])->set('foo.lob.law.0.blog', 'glob')
             ->call('save')
             ->assertHasErrors('foo.lob.law.*.blog')
             ->set('foo.lob.law.0.blog', 'globbbbb')
@@ -185,7 +180,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
             'foo' => $foo = Foo::first(),
-        ])  ->set('foo.zap.0.0.name', 'ar')
+        ])->set('foo.zap.0.0.name', 'ar')
             ->call('save')
             ->assertHasErrors('foo.zap.*.*.name')
             ->set('foo.zap.0.0.name', 'arise')
@@ -199,7 +194,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     public function collection_model_property_validation_only_includes_relevant_error()
     {
         Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
-            'foos' => collect()->pad(3, Foo::first()),
+            'foos' => \collect()->pad(3, Foo::first()),
         ])
             ->call('performValidateOnly', 'foos.0.bar_baz')
             ->assertHasErrors('foos.0.bar_baz')
@@ -210,7 +205,7 @@ class EloquentModelValidationTest extends \Tests\TestCase
     public function collection_model_property_validation_only_includes_all_errors_when_using_wildcard()
     {
         Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
-            'foos' => collect()->pad(3, Foo::first())
+            'foos' => \collect()->pad(3, Foo::first()),
         ])
             ->call('performValidateOnly', 'foos.*.bar_baz')
             ->assertHasErrors('foos.0.bar_baz')
@@ -258,7 +253,7 @@ class CamelFoo extends Model
     protected function getRows()
     {
         return [[
-            'bar' => 'baz'
+            'bar' => 'baz',
         ]];
     }
 }
@@ -268,7 +263,7 @@ class ComponentWithCamelCasedModelProperty extends Component
     public $camelFoo;
 
     protected $rules = [
-        'camelFoo.bar' => 'required'
+        'camelFoo.bar' => 'required',
     ];
 
     public function save()
@@ -278,7 +273,7 @@ class ComponentWithCamelCasedModelProperty extends Component
 
     public function render()
     {
-        return view('dump-errors');
+        return \view('dump-errors');
     }
 }
 
@@ -309,7 +304,7 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
 
     public function render()
     {
-        return view('dump-errors');
+        return \view('dump-errors');
     }
 }
 
@@ -331,7 +326,7 @@ class ComponentForEloquentModelCollectionHydrationMiddleware extends Component
 
     public function render()
     {
-        return view('dump-errors');
+        return \view('dump-errors');
     }
 }
 
@@ -348,13 +343,11 @@ class Items extends Model
         ['title' => 'Lawn Mower', 'price' => '226.99', 'cart_id' => 3],
         ['title' => 'Leaf Blower', 'price' => '134.99', 'cart_id' => 3],
         ['title' => 'Rake', 'price' => '9.99', 'cart_id' => 3],
-
     ];
 
     protected $schema = [
         'price' => 'float',
     ];
-
 }
 
 class Cart extends Model
@@ -369,9 +362,7 @@ class Cart extends Model
 
     public function items()
     {
-
         return $this->hasMany(Items::class, 'cart_id', 'id');
-
     }
 }
 
@@ -392,6 +383,6 @@ class ComponentForEloquentModelNestedHydrationMiddleware extends Component
 
     public function render()
     {
-        return view('dump-errors');
+        return \view('dump-errors');
     }
 }
