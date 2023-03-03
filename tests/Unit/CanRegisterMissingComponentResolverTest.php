@@ -11,7 +11,7 @@ class CanRegisterMissingComponentResolverTest extends TestCase
     /** @test */
     public function can_register_a_missing_component_resolver()
     {
-        Livewire::component('foo', Foo::class);
+        Livewire::component('foo', MissingResolverFoo::class);
 
         Livewire::test('foo')->assertSee('foo');
 
@@ -25,7 +25,7 @@ class CanRegisterMissingComponentResolverTest extends TestCase
         Livewire::resolveMissingComponent(function ($name) use (&$attempts) {
             $attempts++;
 
-            if ($name === 'bar') return Bar::class;
+            if ($name === 'bar') return MissingResolverBar::class;
         });
 
         Livewire::test('bar')->assertSee('bar');
@@ -37,7 +37,7 @@ class CanRegisterMissingComponentResolverTest extends TestCase
     }
 }
 
-class Foo extends Component
+class MissingResolverFoo extends Component
 {
     public function render()
     {
@@ -45,7 +45,7 @@ class Foo extends Component
     }
 }
 
-class Bar extends Component
+class MissingResolverBar extends Component
 {
     public function render()
     {
