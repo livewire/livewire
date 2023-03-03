@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportLegacyModels\Tests;
+namespace Livewire\Features\SupportModels\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
@@ -12,8 +12,6 @@ class TestableLivewireCanAssertModelUnitTest extends \Tests\TestCase
     /** @test */
     public function can_assert_model_property_value()
     {
-        $this->markTestSkipped(); // @todo: fix this now models has been implemented, it should fail until we add `WithLegacyModels` trait to this test class...
-
         Livewire::test(PropertyTestingComponent::class, [
                 'model' => ModelForPropertyTesting::first(),
             ])
