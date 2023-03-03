@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportModels\Tests;
+namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
