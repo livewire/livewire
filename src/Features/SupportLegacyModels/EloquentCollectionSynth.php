@@ -48,90 +48,6 @@ class EloquentCollectionSynth extends Synth
         return $data;
     }
 
-    public function getRules($context)
-    {
-        $key = $context->dataFromParent['key'] ?? null;
-
-        if (is_null($key)) return [];
-
-        if (isset($context->dataFromParent['parent']) && $context->dataFromParent['parent'] instanceof Component) {
-            return SupportLegacyModels::getRulesFor($context->dataFromParent['parent'], $key);
-        }
-
-        if (isset($context->dataFromParent['rules'])) {
-            return $context->dataFromParent['rules'];
-        }
-
-        return [];
-    }
-
-    public function getConnection(EloquentCollection $collection)
-    {
-        if ($collection->isEmpty()) {
-            return;
-        }
-
-        $connection = $collection->first()->getConnectionName();
-
-        $collection->each(function ($model) use ($connection) {
-            // If there is no connection name, it must be a new model so continue.
-            if (is_null($model->getConnectionName())) {
-                return;
-            }
-
-            if ($model->getConnectionName() !== $connection) {
-                throw new LogicException('Livewire can\'t dehydrate an Eloquent Collection with models from different connections.');
-            }
-        });
-
-        return $connection;
-    }
-
-    public function getDataFromCollection(EloquentCollection $collection, $rules)
-    {
-        return $this->filterData($collection->all(), $rules);
-    }
-
-    public function filterData($data, $rules)
-    {
-        return array_filter($data, function ($key) use ($rules) {
-            return array_key_exists('*', $rules);
-        }, ARRAY_FILTER_USE_KEY);
-    }
-
-    public function loadCollection($meta)
-    {
-        $modelClass = $meta['modelClass'];
-
-        if (isset($meta['keys']) && count($meta['keys']) >= 0) {
-            $model = new $meta['modelClass'];
-
-            if (isset($meta['connection'])) {
-                $model->setConnection($meta['connection']);
-            }
-
-            $query = $model->newQueryForRestoration($meta['keys']);
-
-            if (isset($meta['relations'])) {
-                $query->with($meta['relations']);
-            }
-
-            $query->useWritePdo();
-
-            $collection = $query->get();
-
-            $collection = $collection->keyBy->getKey();
-
-            return new $meta['class'](
-                collect($meta['keys'])->map(function ($id) use ($collection) {
-                    return $collection[$id] ?? null;
-                })->filter()
-            );
-        }
-
-        return new $meta['class']();
-    }
-
     public function hydrate($data, $meta, $hydrateChild)
     {
         if (isset($meta['__child_from_parent'])) {
@@ -180,5 +96,89 @@ class EloquentCollectionSynth extends Synth
 
     public function call($target, $method, $params, $addEffect)
     {
+    }
+
+    protected function getRules($context)
+    {
+        $key = $context->dataFromParent['key'] ?? null;
+
+        if (is_null($key)) return [];
+
+        if (isset($context->dataFromParent['parent']) && $context->dataFromParent['parent'] instanceof Component) {
+            return SupportLegacyModels::getRulesFor($context->dataFromParent['parent'], $key);
+        }
+
+        if (isset($context->dataFromParent['rules'])) {
+            return $context->dataFromParent['rules'];
+        }
+
+        return [];
+    }
+
+    protected function getConnection(EloquentCollection $collection)
+    {
+        if ($collection->isEmpty()) {
+            return;
+        }
+
+        $connection = $collection->first()->getConnectionName();
+
+        $collection->each(function ($model) use ($connection) {
+            // If there is no connection name, it must be a new model so continue.
+            if (is_null($model->getConnectionName())) {
+                return;
+            }
+
+            if ($model->getConnectionName() !== $connection) {
+                throw new LogicException('Livewire can\'t dehydrate an Eloquent Collection with models from different connections.');
+            }
+        });
+
+        return $connection;
+    }
+
+    protected function getDataFromCollection(EloquentCollection $collection, $rules)
+    {
+        return $this->filterData($collection->all(), $rules);
+    }
+
+    protected function filterData($data, $rules)
+    {
+        return array_filter($data, function ($key) use ($rules) {
+            return array_key_exists('*', $rules);
+        }, ARRAY_FILTER_USE_KEY);
+    }
+
+    protected function loadCollection($meta)
+    {
+        $modelClass = $meta['modelClass'];
+
+        if (isset($meta['keys']) && count($meta['keys']) >= 0) {
+            $model = new $meta['modelClass'];
+
+            if (isset($meta['connection'])) {
+                $model->setConnection($meta['connection']);
+            }
+
+            $query = $model->newQueryForRestoration($meta['keys']);
+
+            if (isset($meta['relations'])) {
+                $query->with($meta['relations']);
+            }
+
+            $query->useWritePdo();
+
+            $collection = $query->get();
+
+            $collection = $collection->keyBy->getKey();
+
+            return new $meta['class'](
+                collect($meta['keys'])->map(function ($id) use ($collection) {
+                    return $collection[$id] ?? null;
+                })->filter()
+            );
+        }
+
+        return new $meta['class']();
     }
 }

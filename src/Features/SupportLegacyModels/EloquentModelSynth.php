@@ -50,56 +50,6 @@ class EloquentModelSynth extends Synth
         return $data;
     }
 
-    public function getRules($context)
-    {
-        $key = $context->dataFromParent['key'] ?? null;
-
-        if (is_null($key)) return [];
-
-        if (isset($context->dataFromParent['parent']) && $context->dataFromParent['parent'] instanceof Component) {
-            return SupportLegacyModels::getRulesFor($context->dataFromParent['parent'], $key);
-        }
-
-        if (isset($context->dataFromParent['rules'])) {
-            return $context->dataFromParent['rules'];
-        }
-
-        return [];
-    }
-
-    public function getDataFromModel(Model $model, $rules)
-    {
-        return [
-            ...$this->filterData($this->getAttributes($model), $rules),
-            ...$this->filterData($model->getRelations(), $rules),
-        ];
-    }
-
-    public function getAttributes($model)
-    {
-        $attributes = $model->attributesToArray();
-
-        foreach ($model->getCasts() as $key => $cast) {
-            if (! class_exists($cast)) continue;
-
-            if (
-                in_array(CastsAttributes::class, class_implements($cast))
-                && isset($attributes[$key])
-                ) {
-                $attributes[$key] = $model->getAttributes()[$key];
-            }
-        }
-
-        return $attributes;
-    }
-
-    public function filterData($data, $rules)
-    {
-        return array_filter($data, function ($key) use ($rules) {
-            return array_key_exists($key, $rules) ||in_array($key, $rules);
-        }, ARRAY_FILTER_USE_KEY);
-    }
-
     public function hydrate($data, $meta, $hydrateChild)
     {
         if (isset($meta['__child_from_parent'])) {
@@ -129,6 +79,83 @@ class EloquentModelSynth extends Synth
         $this->setDataOnModel($model, $data);
 
         return $model;
+    }
+
+    public function get(&$target, $key)
+    {
+        return $target->$key;
+    }
+
+    public function set(Model &$target, $key, $value, $pathThusFar, $fullPath, $root)
+    {
+        if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
+            throw new CannotBindToModelDataWithoutValidationRuleException($fullPath, $root->getName());
+        }
+
+        if ($target->relationLoaded($key)) {
+            return $target->setRelation($key, $value);
+        }
+
+        $target->$key = $value;
+    }
+
+    public function methods($target)
+    {
+        return [];
+    }
+
+    public function call($target, $method, $params, $addEffect)
+    {
+    }
+
+    protected function getRules($context)
+    {
+        $key = $context->dataFromParent['key'] ?? null;
+
+        if (is_null($key)) return [];
+
+        if (isset($context->dataFromParent['parent']) && $context->dataFromParent['parent'] instanceof Component) {
+            return SupportLegacyModels::getRulesFor($context->dataFromParent['parent'], $key);
+        }
+
+        if (isset($context->dataFromParent['rules'])) {
+            return $context->dataFromParent['rules'];
+        }
+
+        return [];
+    }
+
+    protected function getDataFromModel(Model $model, $rules)
+    {
+        return [
+            ...$this->filterData($this->getAttributes($model), $rules),
+            ...$this->filterData($model->getRelations(), $rules),
+        ];
+    }
+
+    protected function getAttributes($model)
+    {
+        $attributes = $model->attributesToArray();
+
+        foreach ($model->getCasts() as $key => $cast) {
+            if (! class_exists($cast)) continue;
+
+            if (
+                in_array(CastsAttributes::class, class_implements($cast))
+                && isset($attributes[$key])
+                ) {
+                $attributes[$key] = $model->getAttributes()[$key];
+            }
+        }
+
+        return $attributes;
+    }
+
+    protected function filterData($data, $rules)
+    {
+        return array_filter($data, function ($key) use ($rules) {
+            return array_key_exists($key, $rules) ||in_array($key, $rules);
+        }, ARRAY_FILTER_USE_KEY);
     }
 
     protected function loadModel($meta): ?Model
@@ -163,37 +190,10 @@ class EloquentModelSynth extends Synth
         return $model;
     }
 
-    public function setDataOnModel(Model $model, $data)
+    protected function setDataOnModel(Model $model, $data)
     {
         foreach ($data as $key => $value) {
             $model->$key = $value;
         }
-    }
-
-    public function get(&$target, $key)
-    {
-        return $target->$key;
-    }
-
-    public function set(Model &$target, $key, $value, $pathThusFar, $fullPath, $root)
-    {
-        if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
-            throw new CannotBindToModelDataWithoutValidationRuleException($fullPath, $root->getName());
-        }
-
-        if ($target->relationLoaded($key)) {
-            return $target->setRelation($key, $value);
-        }
-
-        $target->$key = $value;
-    }
-
-    public function methods($target)
-    {
-        return [];
-    }
-
-    public function call($target, $method, $params, $addEffect)
-    {
     }
 }
