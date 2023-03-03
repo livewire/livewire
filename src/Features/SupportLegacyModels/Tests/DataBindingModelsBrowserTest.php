@@ -17,7 +17,7 @@ class DataBindingModelsBrowserTest extends TestCase
     public function it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, Component::class)
+            $this->visitLivewireComponent($browser, DataBindingComponent::class)
                 ->assertValue('@author.name', 'Bob')
                 ->assertValue('@author.email', 'bob@bob.com')
                 ->assertValue('@author.posts.0.title', 'Post 1')
@@ -34,7 +34,7 @@ class DataBindingModelsBrowserTest extends TestCase
     public function it_enables_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, Component::class)
+            $this->visitLivewireComponent($browser, DataBindingComponent::class)
                 ->waitForLivewire()->type('@author.name', 'Steve')
                 ->assertSeeIn('@output.author.name', 'Steve')
 
@@ -51,7 +51,7 @@ class DataBindingModelsBrowserTest extends TestCase
                 ;
         });
 
-        $author = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
+        $author = DataBindingAuthor::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
 
         $this->assertEquals('Steve', $author->name);
         $this->assertEquals('Article 1', $author->posts[0]->title);
@@ -67,7 +67,7 @@ class DataBindingModelsBrowserTest extends TestCase
     }
 }
 
-class Component extends BaseComponent
+class DataBindingComponent extends BaseComponent
 {
     public $author;
 
@@ -81,7 +81,7 @@ class Component extends BaseComponent
 
     public function mount()
     {
-        $this->author = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
+        $this->author = DataBindingAuthor::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
     }
 
     public function save()
@@ -140,7 +140,7 @@ HTML;
     }
 }
 
-class Author extends Model
+class DataBindingAuthor extends Model
 {
     use Sushi;
 
@@ -153,55 +153,55 @@ class Author extends Model
 
     public function posts()
     {
-        return $this->hasMany(Post::class);
+        return $this->hasMany(DataBindingPost::class);
     }
 
     public function comments()
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(DataBindingComment::class);
     }
 }
 
-class Post extends Model
+class DataBindingPost extends Model
 {
     use Sushi;
 
     protected $guarded = [];
 
     protected $rows = [
-        ['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'author_id' => 1],
-        ['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'author_id' => 1]
+        ['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'data_binding_author_id' => 1],
+        ['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'data_binding_author_id' => 1]
     ];
 
     public function author()
     {
-        return $this->belongsTo(Author::class);
+        return $this->belongsTo(DataBindingAuthor::class, 'data_binding_author_id');
     }
 
     public function comments()
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(DataBindingComment::class);
     }
 }
 
-class Comment extends Model
+class DataBindingComment extends Model
 {
     use Sushi;
 
     protected $guarded = [];
 
     protected $rows = [
-        ['id' => 1, 'comment' => 'Comment 1', 'post_id' => 1, 'author_id' => 1],
-        ['id' => 2, 'comment' => 'Comment 2', 'post_id' => 1, 'author_id' => 2]
+        ['id' => 1, 'comment' => 'Comment 1', 'data_binding_post_id' => 1, 'data_binding_author_id' => 1],
+        ['id' => 2, 'comment' => 'Comment 2', 'data_binding_post_id' => 1, 'data_binding_author_id' => 2]
     ];
 
     public function author()
     {
-        return $this->belongsTo(Author::class);
+        return $this->belongsTo(DataBindingAuthor::class, 'data_binding_author_id');
     }
 
     public function post()
     {
-        return $this->belongsTo(Post::class);
+        return $this->belongsTo(DataBindingPost::class, 'data_binding_post_id');
     }
 }
