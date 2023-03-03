@@ -4,11 +4,11 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\Browser;
+use LegacyTests\Browser\TestCase;
 use Livewire\Component as BaseComponent;
 use Sushi\Sushi;
-use LegacyTests\Browser\TestCase;
 
-class EloquentCollectionsTest extends TestCase
+class EloquentCollectionsBrowserTest extends TestCase
 {
     use WithLegacyModels;
 
@@ -16,7 +16,7 @@ class EloquentCollectionsTest extends TestCase
     public function it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, Component::class)
+            $this->visitLivewireComponent($browser, EloquentCollectionsComponent::class)
                 ->assertValue('@authors.0.name', 'Bob')
                 ->assertValue('@authors.0.email', 'bob@bob.com')
                 ->assertValue('@authors.0.posts.0.title', 'Post 1')
@@ -27,7 +27,7 @@ class EloquentCollectionsTest extends TestCase
                 ->assertValue('@authors.0.posts.1.title', 'Post 2')
                 ->assertValue('@authors.1.name', 'John')
                 ->assertValue('@authors.1.email', 'john@john.com')
-                ;
+            ;
         });
     }
 
@@ -35,7 +35,7 @@ class EloquentCollectionsTest extends TestCase
     public function it_allows_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, Component::class)
+            $this->visitLivewireComponent($browser, EloquentCollectionsComponent::class)
                 ->waitForLivewire()->type('@authors.0.name', 'Steve')
                 ->assertSeeIn('@output.authors.0.name', 'Steve')
 
@@ -52,10 +52,10 @@ class EloquentCollectionsTest extends TestCase
 
                 ->waitForLivewire()->type('@authors.1.name', 'Taylor')
                 ->assertSeeIn('@output.authors.1.name', 'Taylor')
-                ;
+            ;
         });
 
-        $author = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
+        $author = EloquentCollectionsAuthor::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
 
         $this->assertEquals('Steve', $author->name);
         $this->assertEquals('Article 1', $author->posts[0]->title);
@@ -68,11 +68,10 @@ class EloquentCollectionsTest extends TestCase
         $author->posts[0]->comments[0]->comment = 'Comment 1';
         $author->posts[0]->comments[1]->author->name = 'John';
         $author->push();
-
     }
 }
 
-class Component extends BaseComponent
+class EloquentCollectionsComponent extends BaseComponent
 {
     public $authors;
 
@@ -86,7 +85,7 @@ class Component extends BaseComponent
 
     public function mount()
     {
-        $this->authors = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->get();
+        $this->authors = EloquentCollectionsAuthor::with(['posts', 'posts.comments', 'posts.comments.author'])->get();
     }
 
     public function save()
@@ -150,8 +149,7 @@ HTML;
     }
 }
 
-
-class Author extends Model
+class EloquentCollectionsAuthor extends Model
 {
     use Sushi;
 
@@ -159,60 +157,60 @@ class Author extends Model
 
     protected $rows = [
         ['id' => 1, 'name' => 'Bob', 'email' => 'bob@bob.com'],
-        ['id' => 2, 'name' => 'John', 'email' => 'john@john.com']
+        ['id' => 2, 'name' => 'John', 'email' => 'john@john.com'],
     ];
 
     public function posts()
     {
-        return $this->hasMany(Post::class);
+        return $this->hasMany(EloquentCollectionsPost::class);
     }
 
     public function comments()
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(EloquentCollectionsComment::class);
     }
 }
 
-class Post extends Model
+class EloquentCollectionsPost extends Model
 {
     use Sushi;
 
     protected $guarded = [];
 
     protected $rows = [
-        ['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'author_id' => 1],
-        ['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'author_id' => 1]
+        ['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content', 'eloquent_collections_author_id' => 1],
+        ['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content', 'eloquent_collections_author_id' => 1],
     ];
 
     public function author()
     {
-        return $this->belongsTo(Author::class);
+        return $this->belongsTo(EloquentCollectionsAuthor::class, 'eloquent_collections_author_id');
     }
 
     public function comments()
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(EloquentCollectionsComment::class);
     }
 }
 
-class Comment extends Model
+class EloquentCollectionsComment extends Model
 {
     use Sushi;
 
     protected $guarded = [];
 
     protected $rows = [
-        ['id' => 1, 'comment' => 'Comment 1', 'post_id' => 1, 'author_id' => 1],
-        ['id' => 2, 'comment' => 'Comment 2', 'post_id' => 1, 'author_id' => 2]
+        ['id' => 1, 'comment' => 'Comment 1', 'eloquent_collections_post_id' => 1, 'eloquent_collections_author_id' => 1],
+        ['id' => 2, 'comment' => 'Comment 2', 'eloquent_collections_post_id' => 1, 'eloquent_collections_author_id' => 2],
     ];
 
     public function author()
     {
-        return $this->belongsTo(Author::class);
+        return $this->belongsTo(EloquentCollectionsAuthor::class, 'eloquent_collections_author_id');
     }
 
     public function post()
     {
-        return $this->belongsTo(Post::class);
+        return $this->belongsTo(EloquentCollectionsPost::class, 'eloquent_collections_post_id');
     }
 }
