@@ -8,19 +8,19 @@ use LegacyTests\Browser\TestCase;
 use Livewire\Component as BaseComponent;
 use Sushi\Sushi;
 
-class EagerLoadingTest extends TestCase
+class EagerLoadingBrowserTest extends TestCase
 {
     use WithLegacyModels;
-    
+
     /** @test */
     public function it_restores_eloquent_colletion_eager_loaded_relations_on_hydrate()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, Component::class)
+            $this->visitLivewireComponent($browser, EagerLoadComponent::class)
                     ->assertSeeIn('@posts-comments-relation-loaded', 'true')
                     ->waitForLivewire()->click('@refresh-server')
                     ->assertSeeIn('@posts-comments-relation-loaded', 'true')
-                    ;
+            ;
         });
     }
 
@@ -28,16 +28,16 @@ class EagerLoadingTest extends TestCase
     public function models_without_eager_loaded_relations_are_not_affected()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, Component::class)
+            $this->visitLivewireComponent($browser, EagerLoadComponent::class)
                     ->assertSeeIn('@comments-has-no-relations', 'true')
                     ->waitForLivewire()->click('@refresh-server')
                     ->assertSeeIn('@comments-has-no-relations', 'true')
-                    ;
+            ;
         });
     }
 }
 
-class Component extends BaseComponent
+class EagerLoadComponent extends BaseComponent
 {
     public $posts;
 
@@ -45,8 +45,8 @@ class Component extends BaseComponent
 
     public function mount()
     {
-        $this->posts = Post::with('comments')->get();
-        $this->comments = Comment::all();
+        $this->posts = EagerLoadPost::with('comments')->get();
+        $this->comments = EagerLoadComment::all();
     }
 
     public function postsCommentsRelationIsLoaded()
@@ -82,7 +82,7 @@ HTML;
     }
 }
 
-class Post extends Model
+class EagerLoadPost extends Model
 {
     use Sushi;
 
@@ -93,25 +93,25 @@ class Post extends Model
 
     public function comments()
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(EagerLoadComment::class);
     }
 }
 
-class Comment extends Model
+class EagerLoadComment extends Model
 {
     use Sushi;
 
     protected $rows = [
-        ['comment' => 'comment1', 'post_id' => 1],
-        ['comment' => 'comment2', 'post_id' => 1],
-        ['comment' => 'comment3', 'post_id' => 1],
-        ['comment' => 'comment4', 'post_id' => 1],
-        ['comment' => 'comment5', 'post_id' => 2],
-        ['comment' => 'comment6', 'post_id' => 2],
+        ['comment' => 'comment1', 'eager_load_post_id' => 1],
+        ['comment' => 'comment2', 'eager_load_post_id' => 1],
+        ['comment' => 'comment3', 'eager_load_post_id' => 1],
+        ['comment' => 'comment4', 'eager_load_post_id' => 1],
+        ['comment' => 'comment5', 'eager_load_post_id' => 2],
+        ['comment' => 'comment6', 'eager_load_post_id' => 2],
     ];
 
     public function post()
     {
-        return $this->belongsTo(Post::class);
+        return $this->belongsTo(EagerLoadPost::class);
     }
 }
