@@ -1,20 +1,20 @@
 <?php
 
-namespace LegacyTests\Browser\DataBinding\EagerLoading;
+namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\Browser;
-use Livewire\Livewire;
-use Sushi\Sushi;
 use LegacyTests\Browser\TestCase;
+use Livewire\Component as BaseComponent;
+use Sushi\Sushi;
 
-class Test extends TestCase
+class EagerLoadingTest extends TestCase
 {
+    use WithLegacyModels;
+    
     /** @test */
     public function it_restores_eloquent_colletion_eager_loaded_relations_on_hydrate()
     {
-        $this->markTestSkipped(); // @todo: when models are implemented.
-
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, Component::class)
                     ->assertSeeIn('@posts-comments-relation-loaded', 'true')
@@ -27,8 +27,6 @@ class Test extends TestCase
     /** @test */
     public function models_without_eager_loaded_relations_are_not_affected()
     {
-        $this->markTestSkipped(); // @todo: when models are implemented.
-
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, Component::class)
                     ->assertSeeIn('@comments-has-no-relations', 'true')
@@ -70,5 +68,50 @@ class Comment extends Model
     public function post()
     {
         return $this->belongsTo(Post::class);
+    }
+}
+
+class Component extends BaseComponent
+{
+    public $posts;
+
+    public $comments;
+
+    public function mount()
+    {
+        $this->posts = Post::with('comments')->get();
+        $this->comments = Comment::all();
+    }
+
+    public function postsCommentsRelationIsLoaded()
+    {
+        return $this->posts->every(function ($post) {
+            return $post->relationLoaded('comments');
+        });
+    }
+
+    public function commentsHaveNoRelations()
+    {
+        return $this->comments->every(function ($comments) {
+            return $comments->getRelations() === [];
+        });
+    }
+
+    public function render()
+    {
+        // ray($this->posts);
+        return <<<'HTML'
+<div>
+    <div dusk="posts-comments-relation-loaded">
+        {{ $this->postsCommentsRelationIsLoaded() ? 'true' : 'false' }}
+    </div>
+
+    <div dusk="comments-has-no-relations">
+        {{ $this->commentsHaveNoRelations() ? 'true' : 'false' }}
+    </div>
+
+    <button dusk="refresh-server" type="button" wire:click="$refresh">Refresh Server</button>
+</div>
+HTML;
     }
 }
