@@ -38,9 +38,19 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "8999a3d458982d37",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.1.16"
+              }
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -163,7 +173,7 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "ee8d69bcfbf4b70f",
+  "active": "8999a3d458982d37",
   "lastOpenFiles": [
     "quickstart.md",
     "Untitled.md",
