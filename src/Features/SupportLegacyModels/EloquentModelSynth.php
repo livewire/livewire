@@ -97,7 +97,7 @@ class EloquentModelSynth extends Synth
     public function filterAttributes($data, $rules)
     {
         return array_filter($data, function ($key) use ($rules) {
-            return in_array($key, $rules);
+            return in_array($key, $rules) || array_key_exists($key, $rules);
         }, ARRAY_FILTER_USE_KEY);
     }
 
