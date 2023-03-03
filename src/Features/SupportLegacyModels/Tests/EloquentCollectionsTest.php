@@ -1,20 +1,20 @@
 <?php
 
-namespace LegacyTests\Browser\DataBinding\EloquentCollections;
+namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\Browser;
-use Livewire\Livewire;
+use Livewire\Component as BaseComponent;
 use Sushi\Sushi;
 use LegacyTests\Browser\TestCase;
 
-class Test extends TestCase
+class EloquentCollectionsTest extends TestCase
 {
+    use WithLegacyModels;
+
     /** @test */
     public function it_displays_all_nested_data()
     {
-        $this->markTestSkipped(); // @todo: when models are implemented...
-
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, Component::class)
                 ->assertValue('@authors.0.name', 'Bob')
@@ -34,8 +34,6 @@ class Test extends TestCase
     /** @test */
     public function it_allows_nested_data_to_be_changed()
     {
-        $this->markTestSkipped(); // @todo: when models are implemented...
-
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, Component::class)
                 ->waitForLivewire()->type('@authors.0.name', 'Steve')
@@ -73,6 +71,85 @@ class Test extends TestCase
 
     }
 }
+
+class Component extends BaseComponent
+{
+    public $authors;
+
+    protected $rules = [
+        'authors.*.name' => '',
+        'authors.*.email' => '',
+        'authors.*.posts.*.title' => '',
+        'authors.*.posts.*.comments.*.comment' => '',
+        'authors.*.posts.*.comments.*.author.name' => '',
+    ];
+
+    public function mount()
+    {
+        $this->authors = Author::with(['posts', 'posts.comments', 'posts.comments.author'])->get();
+    }
+
+    public function save()
+    {
+        $this->authors->each->push();
+    }
+
+    public function render()
+    {
+        return
+        <<<'HTML'
+<div>
+    <button type="button" wire:click="$refresh">Refresh</button>
+    @foreach($authors as $authorKey => $author)
+        <div>
+            <div>
+                Author Name
+                <input dusk='authors.{{ $authorKey }}.name' wire:model.live='authors.{{ $authorKey }}.name' />
+                <span dusk='output.authors.{{ $authorKey }}.name'>{{ $author->name }}</span>
+
+                Author Email
+                <input dusk='authors.{{ $authorKey }}.email' wire:model.live='authors.{{ $authorKey }}.email' />
+                <span dusk='output.authors.{{ $authorKey }}.email'>{{ $author->email }}</span>
+            </div>
+
+            <div>
+                @foreach($author->posts as $postKey => $post)
+                    <div>
+                        Post Title
+                        <input dusk='authors.{{ $authorKey }}.posts.{{ $postKey }}.title' wire:model.live="authors.{{ $authorKey }}.posts.{{ $postKey }}.title" />
+                        <span dusk='output.authors.{{ $authorKey }}.posts.{{ $postKey }}.title'>{{ $post->title }}</span>
+
+                        <div>
+                            @foreach($post->comments as $commentKey => $comment)
+                                <div>
+                                    Comment Comment
+                                    <input
+                                        dusk='authors.{{ $authorKey }}.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment'
+                                        wire:model.live="authors.{{ $authorKey }}.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment"
+                                        />
+                                    <span dusk='output.authors.{{ $authorKey }}.posts.{{ $postKey }}.comments.{{ $commentKey }}.comment'>{{ $comment->comment }}</span>
+
+                                    Commment Author Name
+                                    <input
+                                        dusk='authors.{{ $authorKey }}.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name'
+                                        wire:model.live="authors.{{ $authorKey }}.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name"
+                                        />
+                                    <span dusk='output.authors.{{ $authorKey }}.posts.{{ $postKey }}.comments.{{ $commentKey }}.author.name'>{{ optional($comment->author)->name }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endforeach
+
+    <button wire:click="save" type="button" dusk="save">Save</button>
+</div>
+HTML;
+    }
+}
+
 
 class Author extends Model
 {
