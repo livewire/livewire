@@ -37,40 +37,6 @@ class EagerLoadingTest extends TestCase
     }
 }
 
-class Post extends Model
-{
-    use Sushi;
-
-    protected $rows = [
-        ['id' => 1, 'name' => 'post1'],
-        ['id' => 2, 'name' => 'post2'],
-    ];
-
-    public function comments()
-    {
-        return $this->hasMany(Comment::class);
-    }
-}
-
-class Comment extends Model
-{
-    use Sushi;
-
-    protected $rows = [
-        ['comment' => 'comment1', 'post_id' => 1],
-        ['comment' => 'comment2', 'post_id' => 1],
-        ['comment' => 'comment3', 'post_id' => 1],
-        ['comment' => 'comment4', 'post_id' => 1],
-        ['comment' => 'comment5', 'post_id' => 2],
-        ['comment' => 'comment6', 'post_id' => 2],
-    ];
-
-    public function post()
-    {
-        return $this->belongsTo(Post::class);
-    }
-}
-
 class Component extends BaseComponent
 {
     public $posts;
@@ -113,5 +79,39 @@ class Component extends BaseComponent
     <button dusk="refresh-server" type="button" wire:click="$refresh">Refresh Server</button>
 </div>
 HTML;
+    }
+}
+
+class Post extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'name' => 'post1'],
+        ['id' => 2, 'name' => 'post2'],
+    ];
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+}
+
+class Comment extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['comment' => 'comment1', 'post_id' => 1],
+        ['comment' => 'comment2', 'post_id' => 1],
+        ['comment' => 'comment3', 'post_id' => 1],
+        ['comment' => 'comment4', 'post_id' => 1],
+        ['comment' => 'comment5', 'post_id' => 2],
+        ['comment' => 'comment6', 'post_id' => 2],
+    ];
+
+    public function post()
+    {
+        return $this->belongsTo(Post::class);
     }
 }
