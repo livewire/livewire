@@ -22,15 +22,17 @@ class ModelSynth extends Synth {
         return $target instanceof Model;
     }
 
-    function dehydrate($target, $context) {
+    function dehydrate($target) {
         if (! $target->exists) {
             throw new \Exception('Can\'t set model as property if it hasn\'t been persisted yet');
-        } else {
-            $serializedModel = (array) $this->getSerializedPropertyValue($target);
-
-            $context->addMeta('class', $serializedModel['class']);
-            $context->addMeta('key', $serializedModel['id']);
         }
+
+        $serializedModel = (array) $this->getSerializedPropertyValue($target);
+
+        return [
+            null,
+            ['class' => $serializedModel['class'], 'key' => $serializedModel['id']],
+        ];
     }
 
     function hydrate($data, $meta) {

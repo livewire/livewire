@@ -16,36 +16,39 @@ class EloquentCollectionSynth extends Synth
         return $target instanceof EloquentCollection;
     }
 
-    public function dehydrate(EloquentCollection $target, $context, $dehydrateChild)
+    public function dehydrate(EloquentCollection $target, $dehydrateChild)
     {
         $class = $target::class;
         $modelClass = $target->getQueueableClass();
 
-        $context->addMeta('keys', $target->modelKeys());
-        $context->addMeta('class', $class);
-        $context->addMeta('modelClass', $modelClass);
+        $meta = [];
+
+        $meta['keys'] = $target->modelKeys();
+        $meta['class'] = $class;
+        $meta['modelClass'] = $modelClass;
 
         if ($modelClass && $connection = $this->getConnection($target) !== $modelClass::make()->getConnectionName()) {
-            $context->addMeta('connection', $connection);
+            $meta['connection'] = $connection;
         }
 
         $relations = $target->getQueueableRelations();
 
         if (count($relations)) {
-            $context->addMeta('relations', $relations);
+            $meta['relations'] = $relations;
         }
 
-        $rules = $this->getRules($context);
+        $rules = $this->getRules($this->context);
 
-        if (empty($rules)) return [];
+        if (empty($rules)) return [[], []];
 
         $data = $this->getDataFromCollection($target, $rules);
 
         foreach ($data as $key => $child) {
-            $data[$key] = $dehydrateChild($child, ['key' => $key, 'rules' => $rules['*'] ?? []]);
+
+            $data[$key] = $dehydrateChild($key, $child);
         }
 
-        return $data;
+        return [ $data, $meta ];
     }
 
     public function hydrate($data, $meta, $hydrateChild)
@@ -66,7 +69,7 @@ class EloquentCollectionSynth extends Synth
             foreach ($data as $key => $childData) {
                 $childData[1]['__child_from_parent'] = $collection->get($key);
 
-                $data[$key] = $hydrateChild($childData);
+                $data[$key] = $hydrateChild($key, $childData);
             }
 
             return $collection::wrap($data);
@@ -100,13 +103,11 @@ class EloquentCollectionSynth extends Synth
 
     protected function getRules($context)
     {
-        $key = $context->dataFromParent['key'] ?? null;
+        $key = $this->path ?? null;
 
         if (is_null($key)) return [];
 
-        if (isset($context->dataFromParent['parent']) && $context->dataFromParent['parent'] instanceof Component) {
-            return SupportLegacyModels::getRulesFor($context->dataFromParent['parent'], $key);
-        }
+        return SupportLegacyModels::getRulesFor($context->component, $key);
 
         if (isset($context->dataFromParent['rules'])) {
             return $context->dataFromParent['rules'];

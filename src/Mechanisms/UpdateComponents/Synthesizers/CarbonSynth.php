@@ -24,12 +24,11 @@ class CarbonSynth extends Synth {
         return false;
     }
 
-    function dehydrate($target, $context) {
-        $context->addMeta('type', array_search(get_class($target), static::$types));
-
-        $format = \DateTimeInterface::ISO8601;
-
-        return $target->format($format);
+    function dehydrate($target) {
+        return [
+            $target->format(\DateTimeInterface::ISO8601),
+            ['type' => array_search(get_class($target), static::$types)],
+        ];
     }
 
     function hydrate($value, $meta) {

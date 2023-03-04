@@ -25,7 +25,7 @@ class BaseTestable
         $this->methods = $dehydrated['effects']['methods'] ?? [];
         $this->effects = $dehydrated['effects'] ?? [];
         $this->snapshot = $dehydrated['snapshot'];
-        $this->canonical = $this->extractData($this->snapshot['data']);
+        $this->canonical = $this->extractData($this->snapshot['data'][0]);
     }
 
     function get($key)

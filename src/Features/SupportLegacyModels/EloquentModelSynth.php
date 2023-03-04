@@ -17,37 +17,39 @@ class EloquentModelSynth extends Synth
         return $target instanceof Model;
     }
 
-    public function dehydrate($target, $context, $dehydrateChild)
+    public function dehydrate($target, $dehydrateChild)
     {
         $class = $target::class;
 
         // If no alias is found, this just returns the class name
         $alias = $target->getMorphClass();
 
-        $context->addMeta('key', $target->getKey());
-        $context->addMeta('class', $alias);
+        $meta = [];
+
+        $meta['key'] = $target->getKey();
+        $meta['class'] = $alias;
 
         if ($target->getConnectionName() !== $class::make()->getConnectionName()) {
-            $context->addMeta('connection', $target->getConnectionName());
+            $meta['connection'] = $target->getConnectionName();
         }
 
         $relations = $target->getQueueableRelations();
 
         if (count($relations)) {
-            $context->addMeta('relations', $relations);
+            $meta['relations'] = $relations;
         }
 
-        $rules = $this->getRules($context);
+        $rules = $this->getRules($this->context);
 
-        if (empty($rules)) return [];
+        if (empty($rules)) return [[], $meta];
 
         $data = $this->getDataFromModel($target, $rules);
 
         foreach ($data as $key => $child) {
-            $data[$key] = $dehydrateChild($child, ['key' => $key, 'rules' => $rules[$key] ?? []]);
+            $data[$key] = $dehydrateChild($key, $child);
         }
 
-        return $data;
+        return [$data, $meta];
     }
 
     public function hydrate($data, $meta, $hydrateChild)
@@ -66,14 +68,14 @@ class EloquentModelSynth extends Synth
 
                 $data[$relationKey][1]['__child_from_parent'] = $model->getRelation($relationKey);
 
-                $model->setRelation($relationKey, $hydrateChild($data[$relationKey]));
+                $model->setRelation($relationKey, $hydrateChild($relationKey, $data[$relationKey]));
 
                 unset($data[$relationKey]);
             }
         }
 
         foreach ($data as $key => $child) {
-            $data[$key] = $hydrateChild($child);
+            $data[$key] = $hydrateChild($key, $child);
         }
 
         $this->setDataOnModel($model, $data);
@@ -110,19 +112,13 @@ class EloquentModelSynth extends Synth
 
     protected function getRules($context)
     {
-        $key = $context->dataFromParent['key'] ?? null;
+        $key = $this->path ?? null;
 
         if (is_null($key)) return [];
 
-        if (isset($context->dataFromParent['parent']) && $context->dataFromParent['parent'] instanceof Component) {
-            return SupportLegacyModels::getRulesFor($context->dataFromParent['parent'], $key);
+        if ($context->component) {
+            return SupportLegacyModels::getRulesFor($this->context->component, $key);
         }
-
-        if (isset($context->dataFromParent['rules'])) {
-            return $context->dataFromParent['rules'];
-        }
-
-        return [];
     }
 
     protected function getDataFromModel(Model $model, $rules)
@@ -154,7 +150,7 @@ class EloquentModelSynth extends Synth
     protected function filterData($data, $rules)
     {
         return array_filter($data, function ($key) use ($rules) {
-            return array_key_exists($key, $rules) ||in_array($key, $rules);
+            return array_key_exists($key, $rules) || in_array($key, $rules);
         }, ARRAY_FILTER_USE_KEY);
     }
 

@@ -9,17 +9,17 @@ class ArraySynth extends Synth {
         return is_array($target);
     }
 
-    function dehydrate($target, $context, $dehydrateChild) {
+    function dehydrate($target, $dehydrateChild) {
         foreach ($target as $key => $child) {
-            $target[$key] = $dehydrateChild($child);
+            $target[$key] = $dehydrateChild($key, $child);
         }
 
-        return $target;
+        return [$target, []];
     }
 
     function hydrate($value, $meta, $hydrateChild) {
         foreach ($value as $key => $child) {
-            $value[$key] = $hydrateChild($child);
+            $value[$key] = $hydrateChild($key, $child);
         }
 
         return $value;

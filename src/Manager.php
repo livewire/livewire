@@ -11,6 +11,7 @@ use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportUnitTesting\Testable;
 use Livewire\Features\SupportUnitTesting\DuskTestable;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
+use Livewire\Mechanisms\UpdateComponents\ComponentContext;
 use Livewire\Mechanisms\UpdateComponents\UpdateComponents;
 
 class Manager
@@ -62,7 +63,9 @@ class Manager
 
     function updateProperty($component, $path, $value)
     {
-        return app(UpdateComponents::class)->updateProperty($component, $path, $value);
+        $dummyContext = new ComponentContext($component, false);
+
+        return app(UpdateComponents::class)->updateProperty($component, $path, $value, $dummyContext);
     }
 
     function setUpdateRoute($callback)

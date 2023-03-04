@@ -2,7 +2,14 @@
 
 namespace Livewire\Mechanisms\UpdateComponents\Synthesizers;
 
+use Livewire\Mechanisms\UpdateComponents\ComponentContext;
+
 abstract class Synth {
+    function __construct(
+        public ComponentContext $context,
+        public $path,
+    ) {}
+
     public static function getKey() {
         throw_unless(
             property_exists(static::class, 'key'),

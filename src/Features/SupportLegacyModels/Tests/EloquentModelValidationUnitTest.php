@@ -219,7 +219,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             'cart' => $cart = Cart::with('items')->first(),
         ])
             ->set('cart.items.0.title', 'sparkling')
-            // ->set('cart.items.1.title', 'sparkling')
+            ->set('cart.items.1.title', 'sparkling')
             ->call('save')
             ->assertHasNoErrors();
 

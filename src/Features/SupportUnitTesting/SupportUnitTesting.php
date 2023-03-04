@@ -24,17 +24,13 @@ class SupportUnitTesting extends ComponentHook
 
     function dehydrate($context)
     {
-        return function ($value) use ($context) {
-            $target = $this->component;
+        $target = $this->component;
 
-            $errors = $target->getErrorBag();
+        $errors = $target->getErrorBag();
 
-            if (! $errors->isEmpty()) {
-                $this->storeSet('testing.errors', $errors);
-            }
-
-            return $value;
-        };
+        if (! $errors->isEmpty()) {
+            $this->storeSet('testing.errors', $errors);
+        }
     }
 
     function render($view, $data)

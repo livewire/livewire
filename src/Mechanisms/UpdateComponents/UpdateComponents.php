@@ -3,8 +3,9 @@
 namespace Livewire\Mechanisms\UpdateComponents;
 
 use function Livewire\trigger;
+use function Livewire\wrap;
 
-use Livewire\Mechanisms\UpdateComponents\DehydrationContext;
+use Livewire\Mechanisms\UpdateComponents\ComponentContext;
 use Livewire\Mechanisms\UpdateComponents\Checksum;
 use Livewire\Mechanisms\RenderComponent;
 use Livewire\Mechanisms\ComponentRegistry;
@@ -16,6 +17,7 @@ use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Exception;
 use Closure;
+use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
 
 class UpdateComponents
 {
@@ -72,12 +74,13 @@ class UpdateComponents
 
         $component = app('livewire')->new($name, $params);
 
+        $context = new ComponentContext($component, true);
+
         trigger('mount', $component, $params, $parent);
 
         $html = app(RenderComponent::class)::render($component) ?: '<div></div>';
 
-
-        $payload = $this->snapshot($component, initial: true);
+        $payload = $this->snapshot($component, $context);
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:initial-data' => $payload,
@@ -90,96 +93,116 @@ class UpdateComponents
 
     function update($snapshot, $diff, $calls)
     {
-        $effects = [];
-
         Checksum::verify($snapshot);
 
-        $component = $this->hydrate($data = $snapshot['data']);
+        [$data, $meta] = $snapshot['data'];
 
-        $this->updateProperties($component, $diff, $data);
+        ['name' => $name, 'id' => $id] = $meta;
 
-        $this->makeCalls($component, $calls, $effects);
+        $component = app('livewire')->new($name, [], $id);
 
-        $effects['html'] = app(\Livewire\Mechanisms\RenderComponent::class)::render($component);
+        $context = new ComponentContext($component, false);
 
-        $payload = $this->snapshot($component, $effects);
+        foreach ($data as $key => $rawChild) {
+            if (! property_exists($component, $key)) continue;
+
+            $child = $this->hydrate($rawChild, $context, $key);
+
+            // Typed properties shouldn't be set back to "null". It will throw an error...
+            if ((new \ReflectionProperty($component, $key))->getType() && is_null($child)) continue;
+
+            $component->$key = $child;
+        }
+
+        trigger('hydrate', $component, $meta, $context);
+
+        $this->updateProperties($component, $diff, $data, $context);
+
+        $this->makeCalls($component, $calls, $context);
+
+        $context->addEffect('html', app(\Livewire\Mechanisms\RenderComponent::class)::render($component));
+
+        $payload = $this->snapshot($component, $context);
 
         return [
             'target' => $component,
             'snapshot' => $payload['snapshot'],
-            'effects' => $effects,
+            'effects' => $payload['effects'],
         ];
     }
 
-    function snapshot($root, &$effects = [], $initial = false) {
-        $finish = trigger('dehydrate.root', $root);
+    function snapshot($component, $context) {
+        trigger('dehydrate', $component, $context);
 
-        $context = new DehydrationContext($root, $initial, []);
+        $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
 
-        $data = $this->dehydrate($root, $context, $effects);
+        foreach ($data as $key => $value) {
+            $data[$key] = $this->dehydrate($value, $context, $key);
+        }
 
-        $finish($data, $effects);
+        $metaTuple = [$data, [
+            's' => 'lw',
+            'id' => $component->getId(),
+            'name' => $component->getName(),
+            ...$context->meta,
+        ]];
 
-        $snapshot = ['data' => $data];
+        $context->addEffect('methods', Utils::getPublicMethodsDefinedBySubClass($component));
 
-        $snapshot['checksum'] = Checksum::generate($snapshot);
+        $snapshot = ['data' => $metaTuple];
 
-        return ['snapshot' => $snapshot, 'effects' => $effects];
+        $checkum = Checksum::generate($snapshot);
+
+        $snapshot['checksum'] = $checkum;
+
+        return ['snapshot' => $snapshot, 'effects' => $context->effects];
     }
 
-    function dehydrate($target, &$context, &$effects) {
+    function dehydrate($target, $context, $path) {
         if (Utils::isAPrimitive($target)) return $target;
 
-        $synth = $this->synth($target);
-
-        $initial = $context->initial;
+        $synth = $this->synth($target, $context, $path);
 
         $methods = $synth->methods($target);
 
         if ($methods) $context->addEffect('methods', $methods);
 
-        $value = $synth->dehydrate($target, $context, function ($childValue, $dataFromParent = []) use (&$effects, $initial, $target) {
-            $childContext = new DehydrationContext($childValue, $initial, $dataFromParent);
-
-            return $this->dehydrate($childValue, $childContext, $effects);
+        $metaTuple = $synth->dehydrate($target, function ($name, $childValue) use ($context, $path) {
+            return $this->dehydrate($childValue, $context, "{$path}.{$name}");
         });
 
-        [$meta, $iEffects] = $context->retrieve();
+        [$data, $meta] = $metaTuple;
 
         $meta['s'] = $synth::getKey();
 
-        foreach ($iEffects as $key => $effect) {
-            $effects[$key] = $effect;
-        }
-
-        return [$value, $meta];
+        return [$data, $meta];
     }
 
-    function hydrate($data) {
+    function hydrate($data, $context, $path) {
         if (! Utils::isSyntheticTuple($data)) return $data;
 
         [$rawValue, $meta] = $data;
         $synthKey = $meta['s'];
-        $synth = $this->synth($synthKey);
+        $synth = $this->synth($synthKey, $context, $path);
 
-        return $synth->hydrate($rawValue, $meta, function ($childValue) {
-            return $this->hydrate($childValue);
+        return $synth->hydrate($rawValue, $meta, function ($name, $childValue) use ($context, $path) {
+            return $this->hydrate($childValue, $context, "{$path}.{$name}");
         });
     }
 
-    function updateProperties($root, $diff, $data) {
+    function updateProperties($root, $diff, $data, $context) {
         foreach ($diff as $path => $value) {
-            $value = $this->hydrateForUpdate($data, $path, $value);
+            $value = $this->hydrateForUpdate($data, $path, $value, $context);
 
-            $this->updateProperty($root, $path, $value);
+            $this->updateProperty($root, $path, $value, $context);
         }
     }
 
-    function hydrateForUpdate($raw, $path, $value)
+    function hydrateForUpdate($raw, $path, $value, $context)
     {
         $meta = $this->getMetaForPath($raw, $path);
 
-        if ($meta) return $this->hydrate([$value, $meta]);
+        if ($meta) return $this->hydrate([$value, $meta], $context, $path);
 
         return $value;
     }
@@ -201,24 +224,26 @@ class UpdateComponents
         return $meta;
     }
 
-    function updateProperty(&$root, $path, $value)
+    function updateProperty(&$root, $path, $value, $context)
     {
         $finish = trigger('update', $root, $path, $value);
 
         $segments = Utils::dotSegments($path);
 
-        $this->recursivelySetValue($root, $root, $value, $segments);
+        $this->recursivelySetValue($root, $root, $value, $segments, 0, $context);
 
         $finish($value);
     }
 
-    function recursivelySetValue($root, $target, $leafValue, $segments, $index = 0)
+    function recursivelySetValue($root, $target, $leafValue, $segments, $index = 0, $context = null)
     {
         $isLastSegment = count($segments) === $index + 1;
 
         $property = $segments[$index];
 
-        $synth = $this->synth($target);
+        $path = implode('.', array_slice($segments, 0, $index + 1));
+
+        $synth = $this->synth($target, $context, $path);
 
         assert($synth);
 
@@ -236,7 +261,7 @@ class UpdateComponents
             // to build up that non-existant nesting structure first.
             if ($propertyTarget === null) $propertyTarget = [];
 
-            $toSet = $this->recursivelySetValue($root, $propertyTarget, $leafValue, $segments, $index + 1);
+            $toSet = $this->recursivelySetValue($root, $propertyTarget, $leafValue, $segments, $index + 1, $context);
         }
 
         $method = ($leafValue === '__rm__' && $isLastSegment) ? 'unset' : 'set';
@@ -249,21 +274,28 @@ class UpdateComponents
         return $target;
     }
 
-    function makeCalls($root, $calls, &$effects) {
+    function makeCalls($root, $calls, $context) {
         foreach ($calls as $call) {
             $method = $call['method'];
             $params = $call['params'];
             $path = $call['path'];
 
-            $target = $this->dataGet($root, $path);
+            $methods = Utils::getPublicMethodsDefinedBySubClass($root);
 
-            $addEffect = function ($key, $value) use (&$effects, $path) {
-                $effects[$key] = $value;
+            // @todo: move this elsewhere...
+            // Remove JS methods from method list:
+            // $jsMethods = $this->getJsMethods($target);
+
+            // Also remove "render" from the list...
+            $methods =  array_values(array_diff($methods, ['render']));
+
+            $addMethod = function ($name) use (&$methods) {
+                array_push($methods, $name);
             };
 
-            $synth = $this->synth($target);
+            trigger('methods', $root, $addMethod);
 
-            if (! in_array($method, $synth->methods($target))) {
+            if (! in_array($method, $methods)) {
                 throw new MethodNotFoundException($method);
             }
 
@@ -274,11 +306,11 @@ class UpdateComponents
                 $earlyReturn = $return;
             };
 
-            $finish = trigger('call', $synth, $target, $method, $params, $addEffect, $returnEarly);
+            $finish = trigger('call', $root, $method, $params, $context, $returnEarly);
 
             $return = $earlyReturnCalled
                 ? $earlyReturn
-                : $this->synth($target)->call($target, $method, $params, $addEffect);
+                : wrap($root)->{$method}(...$params);
 
             $return = $finish($return);
 
@@ -288,11 +320,11 @@ class UpdateComponents
         }
     }
 
-    function dataGet($target, $key) {
+    function dataGet($target, $key, $context) {
         if (str($key)->exactly('')) return $target;
 
         if (! str($key)->contains('.')) {
-            $thing = $this->synth($target)->get($target, $key);
+            $thing = $this->synth($target, $context)->get($target, $key);
 
             return $thing;
         }
@@ -300,45 +332,35 @@ class UpdateComponents
         $parentKey = str($key)->before('.')->__toString();
         $childKey = str($key)->after('.')->__toString();
 
-        $parent = $this->synth($target)->get($target, $parentKey);
+        $parent = $this->synth($target, $context)->get($target, $parentKey);
 
-        return $this->dataGet($parent, $childKey);
+        return $this->dataGet($parent, $childKey, $context);
     }
 
-    function synth($keyOrTarget) {
+    function synth($keyOrTarget, $context, $path): Synth {
         return is_string($keyOrTarget)
-            ? $this->getSynthesizerByKey($keyOrTarget)
-            : $this->getSynthesizerByTarget($keyOrTarget);
+            ? $this->getSynthesizerByKey($keyOrTarget, $context, $path)
+            : $this->getSynthesizerByTarget($keyOrTarget, $context, $path);
     }
 
-    function getSynthesizerByKey($key) {
-        $forReturn = null;
-
+    function getSynthesizerByKey($key, $context, $path) {
         foreach ($this->synthesizers as $synth) {
             if ($synth::getKey() === $key) {
-                $forReturn = new $synth;
-                break;
+                return new $synth($context, $path);
             }
         }
 
-        throw_unless($forReturn, new \Exception('No synthesizer found for key: "'.$key.'"'));
-
-        return $forReturn;
+        throw new \Exception('No synthesizer found for key: "'.$key.'"');
     }
 
-    function getSynthesizerByTarget($target) {
-        $forReturn = null;
-
+    function getSynthesizerByTarget($target, $context, $path): Synth {
         foreach ($this->synthesizers as $synth) {
             if ($synth::match($target)) {
-                $forReturn = new $synth;
-                break;
+                return new $synth($context, $path);
             }
         }
 
-        throw_unless($forReturn, new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']'));
-
-        return $forReturn;
+        throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
     }
 
     function getParentAndChildKey($path) {
@@ -351,9 +373,4 @@ class UpdateComponents
 
         return [$parentKey, $childKey];
     }
-}
-
-
-class AI {
-    static function stringContainsDots() {}
 }

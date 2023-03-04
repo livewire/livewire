@@ -14,22 +14,23 @@ class WireableSynth extends Synth
         return is_object($target) && $target instanceof Wireable;
     }
 
-    function dehydrate($target, $context, $dehydrateChild)
+    function dehydrate($target, $dehydrateChild)
     {
-        $context->addMeta('class', get_class($target));
-
         $data = $target->toLivewire();
 
         foreach ($data as $key => $child) {
-            $data[$key] = $dehydrateChild($child);
+            $data[$key] = $dehydrateChild($key, $child);
         }
 
-        return $data;
+        return [
+            $data,
+            ['class' => get_class($target)],
+        ];
     }
 
     function hydrate($value, $meta, $hydrateChild) {
         foreach ($value as $key => $child) {
-            $value[$key] = $hydrateChild($child);
+            $value[$key] = $hydrateChild($key, $child);
         }
 
         return $meta['class']::fromLivewire($value);

@@ -17,8 +17,8 @@ class FileUploadSynth extends Synth {
         return $target instanceof UploadedFile;
     }
 
-    function dehydrate($target, $context) {
-        return $this->dehydratePropertyFromWithFileUploads($target);
+    function dehydrate($target) {
+        return [$this->dehydratePropertyFromWithFileUploads($target), []];
     }
 
     public function dehydratePropertyFromWithFileUploads($value)
@@ -52,7 +52,7 @@ class FileUploadSynth extends Synth {
             }
         }
 
-        if ($value instanceof Wireable) {
+        if ($value instanceof \Livewire\Wireable) {
             $keys = array_keys((array) get_object_vars($value));
 
             foreach ($keys as $key) {
@@ -63,7 +63,7 @@ class FileUploadSynth extends Synth {
         return $value;
     }
 
-    function hydrate($value, $meta) {
+    function hydrate($value) {
         if (TemporaryUploadedFile::canUnserialize($value)) {
             return TemporaryUploadedFile::unserializeFromLivewireRequest($value);
         }

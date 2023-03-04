@@ -2,19 +2,23 @@
 
 namespace Livewire\Mechanisms\UpdateComponents;
 
+use AllowDynamicProperties;
 use Livewire\Drawer\Utils;
 
-class DehydrationContext
+#[AllowDynamicProperties]
+class ComponentContext
 {
     public $target;
+    public $component;
     public $effects = [];
     public $meta = [];
     public $initial;
     public $dataFromParent = [];
 
-    public function __construct($target, $initial, $dataFromParent)
+    public function __construct($target, $initial, $dataFromParent = [])
     {
         $this->target = $target;
+        $this->component = $target;
         $this->initial = $initial;
         $this->dataFromParent = $dataFromParent;
     }

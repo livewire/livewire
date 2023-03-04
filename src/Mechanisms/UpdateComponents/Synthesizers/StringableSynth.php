@@ -12,7 +12,7 @@ class StringableSynth extends Synth {
     }
 
     function dehydrate($target) {
-        return $target->__toString();
+        return [$target->__toString(), []];
     }
 
     function hydrate($value) {

@@ -88,7 +88,47 @@ class SupportLegacyModels extends ComponentHook
     {
         $rules = static::getRules($component);
 
-        return $rules[$key] ?? [];
+        $propertyWithStarsInsteadOfNumbers = static::ruleWithNumbersReplacedByStars($key);
+
+        return static::dataGetWithoutWildcardSupport(
+            $rules,
+            $propertyWithStarsInsteadOfNumbers,
+            data_get($rules, $key, []),
+        );
+    }
+
+    static function dataGetWithoutWildcardSupport($array, $key, $default)
+    {
+        $segments = explode('.', $key);
+
+        $first = array_shift($segments);
+
+        if (! isset($array[$first])) {
+            return value($default);
+        }
+
+        $value = $array[$first];
+
+        if (count($segments) > 0) {
+            return static::dataGetWithoutWildcardSupport($value, implode('.', $segments), $default);
+        }
+
+        return $value;
+    }
+
+    static function ruleWithNumbersReplacedByStars($dotNotatedProperty)
+    {
+        // Convert foo.0.bar.1 -> foo.*.bar.*
+        return (string) str($dotNotatedProperty)
+            // Replace all numeric indexes with an array wildcard: (.0., .10., .007.) => .*.
+            // In order to match overlapping numerical indexes (foo.1.2.3.4.name),
+            // We need to use a positive look-behind, that's technically all the magic here.
+            // For better understanding, see: https://regexr.com/5d1n3
+            ->replaceMatches('/(?<=(\.))\d+\./', '*.')
+            // Replace all numeric indexes at the end of the name with an array wildcard
+            // (Same as the previous regex, but ran only at the end of the string)
+            // For better undestanding, see: https://regexr.com/5d1n6
+            ->replaceMatches('/\.\d+$/', '.*');
     }
 
     protected static function processRules($component)

@@ -11,10 +11,11 @@ class EnumSynth extends Synth {
         return is_object($target) && is_subclass_of($target, 'BackedEnum');
     }
 
-    function dehydrate($target, $context) {
-        $context->addMeta('class', get_class($target));
-
-        return $target->value;
+    function dehydrate($target) {
+        return [
+            $target->value,
+            ['class' => get_class($target)]
+        ];
     }
 
     function hydrate($value, $meta) {
