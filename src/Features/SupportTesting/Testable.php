@@ -13,6 +13,7 @@ use Livewire\Features\SupportEvents\TestsEvents;
 class Testable
 {
     use MakesAssertions,
+        MakesAssertionsOnView,
         TestsEvents,
         TestsRedirects,
         TestsValidation,
