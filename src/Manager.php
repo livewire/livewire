@@ -92,10 +92,16 @@ class Manager
         return app(HandleRequests::class)->setUpdateRoute($callback);
     }
 
+    function getUpdateUri()
+    {
+        return app(HandleRequests::class)->getUpdateUri();
+    }
+
     function setJavaScriptRoute($callback)
     {
         return app(FrontendAssets::class)->setJavaScriptRoute($callback);
     }
+
 
     protected $queryParamsForTesting = [];
 

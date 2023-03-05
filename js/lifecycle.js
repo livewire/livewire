@@ -42,12 +42,9 @@ function initElement(el) {
 export function initComponent(el) {
     if (el.__livewire) return;
 
-    let id = el.getAttribute('wire:id')
-    let initialData = JSON.parse(el.getAttribute('wire:data'))
+    let component = new Component(el)
 
-    if (! initialData) initialData = resurrect(id)
-
-    let component = new Component(synthetic(initialData).__target, el, id)
+    // if (! initialData) initialData = resurrect(id)
 
     el.__livewire = component
 
@@ -56,7 +53,7 @@ export function initComponent(el) {
     // This makes anything that would normally be available on $wire
     // available directly without needing to prefix "$wire.".
     Alpine.bind(el, {
-        'x-data'() { return component.synthetic.reactive },
+        'x-data'() { return component.reactive },
         // Disabling this for laracon...
         'x-destroy'() {
             releaseComponent(component.id)

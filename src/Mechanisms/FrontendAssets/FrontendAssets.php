@@ -129,8 +129,10 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
+        $updateUri = app('livewire')->getUpdateUri();
+
         return <<<HTML
-        <script src="{$url}" {$nonce} data-csrf="{$token}"></script>
+        <script src="{$url}" {$nonce} data-csrf="{$token}" data-uri="{$updateUri}"></script>
         HTML;
     }
 

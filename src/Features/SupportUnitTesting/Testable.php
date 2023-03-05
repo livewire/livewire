@@ -78,16 +78,17 @@ class Testable extends BaseTestable
 
         $html = app('livewire')->mount($name, $params);
 
-        $dehydrated = static::extractInitialDataFromHtml($html);
+        $snapshot = static::extractAttributeDataFromHtml($html, 'wire:snapshot');
+        $effects = static::extractAttributeDataFromHtml($html, 'wire:effects');
 
         store($component)->set('testing.html', $html);
 
-        return new static($dehydrated, $component);
+        return new static($snapshot, $effects, $component);
     }
 
-    static function extractInitialDataFromHtml($html)
+    static function extractAttributeDataFromHtml($html, $attribute)
     {
-        $data = (string) str($html)->betweenFirst('wire:data="', '"');
+        $data = (string) str($html)->betweenFirst($attribute.'="', '"');
 
         return json_decode(
             htmlspecialchars_decode($data, ENT_QUOTES|ENT_SUBSTITUTE),
@@ -112,7 +113,13 @@ class Testable extends BaseTestable
 
         if ($stripInitialData) {
             $removeMe = (string) str($html)->betweenFirst(
-                'wire:data="', '"'
+                'wire:snapshot="', '"'
+            );
+
+            $html = str_replace($removeMe, '', $html);
+
+            $removeMe = (string) str($html)->betweenFirst(
+                'wire:effects="', '"'
             );
 
             $html = str_replace($removeMe, '', $html);

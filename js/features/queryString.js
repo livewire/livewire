@@ -4,7 +4,7 @@ import Alpine from 'alpinejs'
 import { track } from '@alpinejs/history'
 
 on('component.init', component => {
-    let effects = component.synthetic.effects
+    let effects = component.effects
     let queryString = effects['url']
 
     if (! queryString) return
@@ -12,13 +12,13 @@ on('component.init', component => {
     Object.entries(queryString).forEach(([key, value]) => {
         let { name, as, except, use, alwaysShow } = normalizeQueryStringEntry(key, value)
 
-        let initialValue = dataGet(component.synthetic.ephemeral, name)
+        let initialValue = dataGet(component.ephemeral, name)
 
         let { initial, replace, push, pop } = track(as, initialValue, alwaysShow)
 
         if (use === 'replace') {
             Alpine.effect(() => {
-                replace(dataGet(component.synthetic.reactive, name))
+                replace(dataGet(component.reactive, name))
             })
         } else if (use === 'push') {
             on('target.request', (target, payload) => {
@@ -30,7 +30,7 @@ on('component.init', component => {
 
                     if (! Object.keys(payload.diff).includes(name) && ! dirty.some(i => i.startsWith(name))) return
 
-                    push(dataGet(component.synthetic.ephemeral, name))
+                    push(dataGet(component.ephemeral, name))
                 }
             })
 

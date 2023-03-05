@@ -57,10 +57,8 @@ class HandleComponents
         $snapshot['checksum'] = Checksum::generate($snapshot);
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
-            'wire:data' => [
-                'snapshot' => $snapshot,
-                'effects' => $context->effects,
-            ],
+            'wire:snapshot' => $snapshot,
+            'wire:effects' => $context->effects,
         ]);
 
         return $finish($html);
@@ -284,7 +282,7 @@ class HandleComponents
         return $meta;
     }
 
-    protected function recursivelySetValue($baseProperty, $target, $leafValue, $segments, $index = 0, $context)
+    protected function recursivelySetValue($baseProperty, $target, $leafValue, $segments, $index = 0, $context = null)
     {
         $isLastSegment = count($segments) === $index + 1;
 

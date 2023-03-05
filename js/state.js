@@ -31,12 +31,12 @@ let releasePool = {}
 export function releaseComponent(id) {
     let component = state.components[id]
 
-    let effects = deepClone(component.synthetic.effects)
+    let effects = deepClone(component.effects)
     delete effects['html']
 
     releasePool[id] = {
         effects,
-        snapshot: deepClone(component.synthetic.snapshot)
+        snapshot: deepClone(component.snapshot)
     }
 
     delete state.components[id]

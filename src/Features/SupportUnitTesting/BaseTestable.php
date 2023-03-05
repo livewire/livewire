@@ -21,11 +21,11 @@ class BaseTestable
 
     use Macroable { __call as macroCall; }
 
-    function __construct($dehydrated, $target) {
+    function __construct($snapshot, $effects, $target) {
         $this->target = $target;
-        $this->methods = $dehydrated['effects']['methods'] ?? [];
-        $this->effects = $dehydrated['effects'] ?? [];
-        $this->snapshot = $dehydrated['snapshot'];
+        $this->methods = $effects['methods'] ?? [];
+        $this->effects = $effects ?? [];
+        $this->snapshot = $snapshot;
         $this->canonical = $this->extractData($this->snapshot['data']);
     }
 

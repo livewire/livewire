@@ -32,9 +32,9 @@ import './features'
  * We'll store all our "synthetic" instances in a single lookup so that
  * we can pass around an identifier, rather than the actual instance.
  */
-let store = new Map
+export let store = new Map
 
-let uri
+let uri = document.querySelector('[data-uri]').getAttribute('data-uri')
 
 export function synthetic(dehydrated) {
     if (typeof dehydrated === 'string') return newUp(dehydrated)
@@ -48,26 +48,7 @@ export function synthetic(dehydrated) {
 
     if (target.effects.uri) uri = target.effects.uri
 
-    // These will be used as an identifier in a lookup for this synthetic.
-    let symbol = Symbol()
-    store.set(symbol, target)
 
-    // "canonical" data represents the last known server state.
-    let canonical = extractData(deepClone(target.snapshot.data), symbol)
-    // "ephemeral" represents the most current state. (This can be freely manipulated by end users)
-    let ephemeral = extractDataAndDecorate(deepClone(target.snapshot.data), symbol)
-
-    target.canonical = canonical
-    target.ephemeral = ephemeral
-    // "reactive" is just ephemeral, except when you mutate it, front-ends like Vue react.
-    target.reactive = reactive(ephemeral)
-
-    trigger('new', target)
-
-    // Effects will be processed after every request, but we'll also handle them on initialization.
-    processEffects(target)
-
-    return target.reactive
 }
 
 /**
@@ -83,8 +64,11 @@ async function newUp(name) {
  * This is where we add special behavior (deeply) to the synthetic objects
  * that users interact with. Things like "post.$errors" & "form.$loading"
  */
-function extractDataAndDecorate(payload, symbol) {
-    return extractData(payload, symbol, (object, meta, symbol, path) => {
+export function extractDataAndDecorate(payload, symbol) {
+    // This needs to be here to enable decorating. It's a shim:
+    let shimmedPayload = [ payload, { s: '...' } ]
+
+    return extractData(shimmedPayload, symbol, (object, meta, symbol, path) => {
         // We only want to decorate the root-most object...
         if (path !== '') return object
 
@@ -164,7 +148,7 @@ function extractDataAndDecorate(payload, symbol) {
  * nested tuples consisting of the schema: [rawValue, metadata]. In this
  * method we're extracting the plain JS object of only the raw values.
  */
-function extractData(payload, symbol, decorate = i => i, path = '') {
+export function extractData(payload, symbol, decorate = i => i, path = '') {
     let value = isSynthetic(payload) ? payload[0] : payload
     let meta = isSynthetic(payload) ? payload[1] : undefined
 
@@ -289,7 +273,7 @@ async function sendMethodCall() {
         let propertiesDiff = diff(target.canonical, target.ephemeral)
 
         let targetPaylaod = {
-            snapshot: target.snapshot,
+            snapshot: target.encodedSnapshot,
             updates: propertiesDiff,
             calls: request.calls.map(i => ({
                 path: i.path,
@@ -413,9 +397,11 @@ function getCsrfToken() {
  * server and use them to update the existing data that
  * users interact with, triggering reactive effects.
  */
-function mergeNewSnapshot(symbol, snapshot, effects) {
+function mergeNewSnapshot(symbol, encodedSnapshot, effects) {
     let target = store.get(symbol)
 
+    target.encodedSnapshot = encodedSnapshot
+    let snapshot = JSON.parse(encodedSnapshot)
     target.snapshot = snapshot
     target.effects = effects
     target.canonical = extractData(deepClone(snapshot.data), symbol)
@@ -429,7 +415,7 @@ function mergeNewSnapshot(symbol, snapshot, effects) {
     })
 }
 
-function processEffects(target) {
+export function processEffects(target) {
     let effects = target.effects
 
     trigger('effects', target, effects)

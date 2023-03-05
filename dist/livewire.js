@@ -4022,32 +4022,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     raw2 = module_default.raw;
   });
   var store2 = /* @__PURE__ */ new Map();
-  var uri;
-  function synthetic(dehydrated) {
-    if (typeof dehydrated === "string")
-      return newUp(dehydrated);
-    let target = {
-      effects: raw2(dehydrated.effects),
-      snapshot: raw2(dehydrated.snapshot)
-    };
-    if (target.effects.uri)
-      uri = target.effects.uri;
-    let symbol = Symbol();
-    store2.set(symbol, target);
-    let canonical = extractData(deepClone(target.snapshot.data), symbol);
-    let ephemeral = extractDataAndDecorate(deepClone(target.snapshot.data), symbol);
-    target.canonical = canonical;
-    target.ephemeral = ephemeral;
-    target.reactive = reactive3(ephemeral);
-    trigger2("new", target);
-    processEffects(target);
-    return target.reactive;
-  }
-  async function newUp(name) {
-    return synthetic(await requestNew(name));
-  }
+  var uri = document.querySelector("[data-uri]").getAttribute("data-uri");
   function extractDataAndDecorate(payload, symbol) {
-    return extractData(payload, symbol, (object, meta, symbol2, path) => {
+    let shimmedPayload = [payload, { s: "..." }];
+    return extractData(shimmedPayload, symbol, (object, meta, symbol2, path) => {
       if (path !== "")
         return object;
       let target = store2.get(symbol2);
@@ -4176,7 +4154,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let target = store2.get(symbol);
       let propertiesDiff = diff(target.canonical, target.ephemeral);
       let targetPaylaod = {
-        snapshot: target.snapshot,
+        snapshot: target.encodedSnapshot,
         updates: propertiesDiff,
         calls: request2.calls.map((i) => ({
           path: i.path,
@@ -4237,30 +4215,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       finish(failed);
     }
   }
-  async function requestNew(name) {
-    let request = await fetch("/synthetic/new", {
-      method: "POST",
-      body: JSON.stringify({
-        _token: getCsrfToken(),
-        name
-      }),
-      headers: { "Content-type": "application/json" }
-    });
-    if (request.ok) {
-      return await request.json();
-    } else {
-      let html = await request.text();
-      showHtmlModal(html);
-    }
-  }
   function getCsrfToken() {
     if (document.querySelector("[data-csrf]")) {
       return document.querySelector("[data-csrf]").getAttribute("data-csrf");
     }
     throw "Livewire: No CSRF token detected";
   }
-  function mergeNewSnapshot(symbol, snapshot, effects) {
+  function mergeNewSnapshot(symbol, encodedSnapshot, effects) {
     let target = store2.get(symbol);
+    target.encodedSnapshot = encodedSnapshot;
+    let snapshot = JSON.parse(encodedSnapshot);
     target.snapshot = snapshot;
     target.effects = effects;
     target.canonical = extractData(deepClone(snapshot.data), symbol);
@@ -4297,19 +4261,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var releasePool = {};
   function releaseComponent(id) {
     let component = state.components[id];
-    let effects = deepClone(component.synthetic.effects);
+    let effects = deepClone(component.effects);
     delete effects["html"];
     releasePool[id] = {
       effects,
-      snapshot: deepClone(component.synthetic.snapshot)
+      snapshot: deepClone(component.snapshot)
     };
     delete state.components[id];
-  }
-  function resurrect(id) {
-    if (!releasePool[id]) {
-      throw "Cant find holdover resurrection component";
-    }
-    return releasePool[id];
   }
   function find(id) {
     let component = state.components[id];
@@ -4447,13 +4405,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/component.js
   var Component = class {
-    constructor(synthetic2, el, id) {
-      this.synthetic = synthetic2;
-      this.$wire = this.synthetic.reactive;
+    constructor(el) {
+      this.id = el.getAttribute("wire:id");
+      this.effects = JSON.parse(el.getAttribute("wire:effects"));
+      this.encodedSnapshot = el.getAttribute("wire:snapshot");
+      this.snapshot = JSON.parse(this.encodedSnapshot);
+      let symbol = Symbol();
+      store2.set(symbol, this);
+      this.canonical = extractData(deepClone(this.snapshot.data), symbol);
+      this.ephemeral = extractDataAndDecorate(deepClone(this.snapshot.data), symbol);
+      this.reactive = reactive3(this.ephemeral);
+      trigger2("new", this);
+      processEffects(this);
+      this.synthetic = this;
+      this.$wire = this.reactive;
       this.el = el;
-      this.id = id;
-      this.name = this.synthetic.snapshot.memo.name;
-      synthetic2.__livewireId = this.id;
+      this.name = this.snapshot.memo.name;
+      this.__livewireId = this.id;
     }
   };
 
@@ -5038,16 +5006,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function initComponent(el) {
     if (el.__livewire)
       return;
-    let id = el.getAttribute("wire:id");
-    let initialData = JSON.parse(el.getAttribute("wire:data"));
-    if (!initialData)
-      initialData = resurrect(id);
-    let component = new Component(synthetic(initialData).__target, el, id);
+    let component = new Component(el);
     el.__livewire = component;
     trigger2("component.init", component);
     module_default.bind(el, {
       "x-data"() {
-        return component.synthetic.reactive;
+        return component.reactive;
       },
       "x-destroy"() {
         releaseComponent(component.id);
@@ -5205,17 +5169,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/queryString.js
   on("component.init", (component) => {
-    let effects = component.synthetic.effects;
+    let effects = component.effects;
     let queryString = effects["url"];
     if (!queryString)
       return;
     Object.entries(queryString).forEach(([key, value]) => {
       let { name, as, except, use, alwaysShow } = normalizeQueryStringEntry(key, value);
-      let initialValue = dataGet(component.synthetic.ephemeral, name);
+      let initialValue = dataGet(component.ephemeral, name);
       let { initial, replace: replace2, push: push2, pop } = track3(as, initialValue, alwaysShow);
       if (use === "replace") {
         module_default.effect(() => {
-          replace2(dataGet(component.synthetic.reactive, name));
+          replace2(dataGet(component.reactive, name));
         });
       } else if (use === "push") {
         on("target.request", (target, payload) => {
@@ -5226,7 +5190,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let dirty = target.effects.dirty || [];
             if (!Object.keys(payload.diff).includes(name) && !dirty.some((i) => i.startsWith(name)))
               return;
-            push2(dataGet(component.synthetic.ephemeral, name));
+            push2(dataGet(component.ephemeral, name));
           };
         });
         pop(async (newValue) => {
@@ -5659,13 +5623,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Alpine.effect(() => {
       let isDirty2 = false;
       if (targets.length === 0) {
-        isDirty2 = JSON.stringify(component.synthetic.canonical) !== JSON.stringify(component.synthetic.reactive);
+        isDirty2 = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive);
       } else {
         for (let i = 0; i < targets.length; i++) {
           if (isDirty2)
             break;
           let target = targets[i];
-          isDirty2 = JSON.stringify(dataGet(component.synthetic.canonical, target)) !== JSON.stringify(dataGet(component.synthetic.reactive, target));
+          isDirty2 = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target));
         }
       }
       if (oldIsDirty !== isDirty2) {
@@ -5838,7 +5802,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/index.js
-  window.synthetic = synthetic;
   var Livewire = {
     directive: directive2,
     start: start2,

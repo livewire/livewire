@@ -98,8 +98,9 @@ class Test extends TestCase
                     $this->assertNull($b->attribute('@blog.input', 'readonly'));
                     $this->assertNull($b->attribute('@blog.input.ignored', 'readonly'));
                 })
-                ->press('@blog.button')
-                ->waitForLivewire()->tap(function ($b) {
+                ->waitForLivewire(function ($b) {
+                    $b->press('@blog.button');
+
                     $this->assertEquals('true', $b->attribute('@blog.button', 'disabled'));
                     $this->assertEquals('true', $b->attribute('@blog.input', 'readonly'));
                     $this->assertNull($b->attribute('@blog.input.ignored', 'readonly'));

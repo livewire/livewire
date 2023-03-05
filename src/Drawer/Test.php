@@ -48,7 +48,7 @@ EOT
         $this->assertStringContainsString(
             <<<EOT
 <!-- Test comment <div>Commented out code</div> -->
-<span wire:data
+<span wire:snapshot
 EOT
             ,
             $component->html()
@@ -63,7 +63,7 @@ EOT
         $this->assertStringContainsString(
             <<<EOT
 <!-- Test comment <div>Commented out code</div> -->
-<span wire:data
+<span wire:snapshot
 EOT
             ,
             $component->html()

@@ -20,13 +20,12 @@ class HandleRequests
             return Route::post('/livewire/update', $handle)->middleware('web');
         });
 
-        on('dehydrate', function ($target, $context) {
-            $uri = (string) str(app($this::class)->updateRoute->uri)->start('/');
-
-            if ($context->mounting) $context->addEffect('uri', $uri);
-        });
-
         $this->skipRequestPayloadTamperingMiddleware();
+    }
+
+    function getUpdateUri()
+    {
+        return (string) str($this->updateRoute->uri)->start('/');
     }
 
     function skipRequestPayloadTamperingMiddleware()
@@ -57,14 +56,14 @@ class HandleRequests
         $responses = [];
 
         foreach ($components as $component) {
-            $snapshot = $component['snapshot'];
+            $snapshot = json_decode($component['snapshot'], associative: true);
             $updates = $component['updates'];
             $calls = $component['calls'];
 
             [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
 
             $responses[] = [
-                'snapshot' => $snapshot,
+                'snapshot' => json_encode($snapshot),
                 'effects' => $effects,
             ];
         }
