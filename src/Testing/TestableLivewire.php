@@ -33,6 +33,7 @@ class TestableLivewire
     use Macroable { __call as macroCall; }
 
     use Concerns\MakesAssertions,
+        Concerns\MakesAssertionsOnView,
         Concerns\MakesCallsToComponent,
         Concerns\HasFunLittleUtilities;
 
@@ -256,7 +257,7 @@ class TestableLivewire
         }
 
         $this->lastResponse->$method(...$params);
-        
+
         return $this;
     }
 }
