@@ -18,7 +18,7 @@ class SupportLegacyModels extends ComponentHook
         // Only enable this feature if config option is set to `true`.
         if (config('livewire.eloquent_model_binding', false) !== true) return;
 
-        app('livewire')->synth([
+        app('livewire')->propertySynthesizer([
             EloquentModelSynth::class,
             EloquentCollectionSynth::class,
         ]);

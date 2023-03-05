@@ -4177,7 +4177,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let propertiesDiff = diff(target.canonical, target.ephemeral);
       let targetPaylaod = {
         snapshot: target.snapshot,
-        diff: propertiesDiff,
+        updates: propertiesDiff,
         calls: request2.calls.map((i) => ({
           path: i.path,
           method: i.method,
@@ -4216,7 +4216,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       method: "POST",
       body: JSON.stringify({
         _token: getCsrfToken(),
-        targets: payload
+        components: payload
       }),
       headers: { "Content-type": "application/json", "X-Synthetic": "" }
     });
@@ -4452,7 +4452,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.$wire = this.synthetic.reactive;
       this.el = el;
       this.id = id;
-      this.name = this.synthetic.snapshot.data[1].name;
+      this.name = this.synthetic.snapshot.memo.name;
       synthetic2.__livewireId = this.id;
     }
   };
@@ -5039,7 +5039,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (el.__livewire)
       return;
     let id = el.getAttribute("wire:id");
-    let initialData = JSON.parse(el.getAttribute("wire:initial-data"));
+    let initialData = JSON.parse(el.getAttribute("wire:data"));
     if (!initialData)
       initialData = resurrect(id);
     let component = new Component(synthetic(initialData).__target, el, id);
@@ -5142,12 +5142,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/wireModelChild.js
   on("target.request.prepare", (target) => {
-    let meta = target.snapshot.data[1];
+    let meta = target.snapshot.memo;
     let childIds = Object.values(meta.children).map((i) => i[1]);
     childIds.forEach((id) => {
       let child = findComponent(id);
       let childSynthetic = child.synthetic;
-      let childMeta = childSynthetic.snapshot.data[1];
+      let childMeta = childSynthetic.snapshot.memo;
       let bindings = childMeta.bindings;
       if (bindings)
         childSynthetic.ephemeral.$commit();
@@ -5401,12 +5401,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/props.js
   on("target.request.prepare", (target) => {
-    let meta = target.snapshot.data[1];
+    let meta = target.snapshot.memo;
     let childIds = Object.values(meta.children).map((i) => i[1]);
     childIds.forEach((id) => {
       let child = findComponent(id);
       let childSynthetic = child.synthetic;
-      let childMeta = childSynthetic.snapshot.data[1];
+      let childMeta = childSynthetic.snapshot.memo;
       let props = childMeta.props;
       if (props)
         childSynthetic.ephemeral.$commit();
@@ -5477,7 +5477,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire:wildcard.js
   on("element.init", (el, component) => {
     getDirectives(el).all().forEach((directive3) => {
-      if (["model", "init", "loading", "poll", "ignore", "id", "initial-data", "key", "target", "dirty"].includes(directive3.type))
+      if (["model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive3.type))
         return;
       let attribute = directive3.rawName.replace("wire:", "x-on:");
       if (directive3.value === "submit" && !directive3.modifiers.includes("prevent")) {

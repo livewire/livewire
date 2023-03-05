@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportValidation;
 use function Livewire\on;
 use function Livewire\invade;
 use Livewire\Mechanisms\DataStore;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 use Illuminate\Validation\ValidationException;
@@ -15,10 +15,10 @@ use Livewire\ComponentHook;
 
 class SupportValidation extends ComponentHook
 {
-    function hydrate($meta)
+    function hydrate($memo)
     {
         $this->component->setErrorBag(
-            $meta['errors'] ?? []
+            $memo['errors'] ?? []
         );
     }
 
@@ -41,7 +41,7 @@ class SupportValidation extends ComponentHook
 
         // Only persist errors that were born from properties on the component
         // and not from custom validators (Validator::make) that were run.
-        $context->addMeta('errors', collect($errors)
+        $context->addMemo('errors', collect($errors)
             ->filter(function ($value, $key) {
                 return Utils::hasProperty($this->component, $key);
             })

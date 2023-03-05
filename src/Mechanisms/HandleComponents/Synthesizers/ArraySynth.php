@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms\UpdateComponents\Synthesizers;
+namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
 class ArraySynth extends Synth {
     public static $key = 'arr';

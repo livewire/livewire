@@ -290,7 +290,7 @@ async function sendMethodCall() {
 
         let targetPaylaod = {
             snapshot: target.snapshot,
-            diff: propertiesDiff,
+            updates: propertiesDiff,
             calls: request.calls.map(i => ({
                 path: i.path,
                 method: i.method,
@@ -347,7 +347,7 @@ async function sendMethodCall() {
         method: 'POST',
         body: JSON.stringify({
             _token: getCsrfToken(),
-            targets: payload,
+            components: payload,
         }),
         headers: {'Content-type': 'application/json', 'X-Synthetic': '' },
     })

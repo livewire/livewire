@@ -8,6 +8,6 @@ class SupportWireables extends ComponentHook
 {
     static function provide()
     {
-        app('livewire')->synth(WireableSynth::class);
+        app('livewire')->propertySynthesizer(WireableSynth::class);
     }
 }

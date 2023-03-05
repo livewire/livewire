@@ -545,13 +545,13 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(FileUploadComponent::class)
                              ->set('photos', [$file1, $file2, $file3, $file4]);
 
-        $this->assertCount(4, $component->snapshot['data'][0]['photos'][0]);
+        $this->assertCount(4, $component->snapshot['data']['photos'][0]);
 
         $component->call('removePhoto', 3);
-        $this->assertCount(3, $component->snapshot['data'][0]['photos'][0]);
+        $this->assertCount(3, $component->snapshot['data']['photos'][0]);
 
         $component->call('removePhoto', 0);
-        $this->assertCount(2, $component->snapshot['data'][0]['photos'][0]);
+        $this->assertCount(2, $component->snapshot['data']['photos'][0]);
     }
 
     /** @test */
@@ -571,13 +571,13 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame($component->get('obj.last_name'), 'doe');
 
-        $this->assertCount(4, $component->snapshot['data'][0]['obj'][0]['file_uploads'][0]);
+        $this->assertCount(4, $component->snapshot['data']['obj'][0]['file_uploads'][0]);
 
         $component->call('removePhoto', 3);
-        $this->assertCount(3, $component->snapshot['data'][0]['obj'][0]['file_uploads'][0]);
+        $this->assertCount(3, $component->snapshot['data']['obj'][0]['file_uploads'][0]);
 
         $component->call('removePhoto', 0);
-        $this->assertCount(2, $component->snapshot['data'][0]['obj'][0]['file_uploads'][0]);
+        $this->assertCount(2, $component->snapshot['data']['obj'][0]['file_uploads'][0]);
     }
 
     /** @test */
@@ -605,10 +605,10 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame($component->get('obj.second_number'), 99);
 
-        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0][0][0]);
-        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0][1][0]);
-        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0][2][0]);
-        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0][3][0]);
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data']['obj'][0]['file_uploads'][0][0][0]);
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data']['obj'][0]['file_uploads'][0][1][0]);
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data']['obj'][0]['file_uploads'][0][2][0]);
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data']['obj'][0]['file_uploads'][0][3][0]);
 
         $this->assertCount(4, $tmpFiles);
     }
@@ -633,7 +633,7 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame($component->get('obj.second_number'), 99);
 
-        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data'][0]['obj'][0]['file_uploads'][0]);
+        $this->assertStringStartsWith('livewire-file:', $component->snapshot['data']['obj'][0]['file_uploads'][0]);
     }
 
     /** @test */

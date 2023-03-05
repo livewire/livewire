@@ -118,6 +118,32 @@ class Utils extends BaseUtils
         };
     }
 
+    static function generateBladeView($subject, $data = [])
+    {
+        if (! is_string($subject)) {
+            return tap($subject)->with($data);
+        }
+
+        $component = new class($subject) extends \Illuminate\View\Component
+        {
+            protected $template;
+
+            public function __construct($template)
+            {
+                $this->template = $template;
+            }
+
+            public function render()
+            {
+                return $this->template;
+            }
+        };
+
+        $view = app('view')->make($component->resolveView(), $data);
+
+        return $view;
+    }
+
     static function anonymousClassToStringClass($target, $class, $namespace = null)
     {
         $raw = file((new \ReflectionObject($target))->getFilename());

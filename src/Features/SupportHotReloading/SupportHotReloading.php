@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportHotReloading;
 
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
 
@@ -29,7 +29,7 @@ class SupportHotReloading
         });
 
         // on('dehydrate', function ($target, $context) {
-        //     if (! $context->initial) return;
+        //     if (! $context->mounting) return;
 
         //     $path = (new \ReflectionObject($target))->getFileName();
 

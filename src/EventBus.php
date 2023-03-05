@@ -64,9 +64,6 @@ class EventBus
             }
         }
 
-        // Here's we're returning an anonymous class that behaves both
-        // as a function and also optionally as an array to be destructed.
-        // This way we can support single and multiple middlware returns.
         return function (&$forward = null, ...$extras) use ($middlewares) {
             foreach ($middlewares as $finisher) {
                 if ($finisher === null) continue;

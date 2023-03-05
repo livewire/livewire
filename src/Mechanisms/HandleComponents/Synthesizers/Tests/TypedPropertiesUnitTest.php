@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\Mechanisms\UpdateComponents\Synthesizers\Tests;
+namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
-class TypedPropertiesTest extends \Tests\TestCase
+class TypedPropertiesUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function can_set_uninitialized_typed_properties()

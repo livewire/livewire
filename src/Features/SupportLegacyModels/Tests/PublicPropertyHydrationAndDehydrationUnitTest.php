@@ -56,7 +56,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
 
         $component = Livewire::test(PostComponent::class);
-        $this->assertEquals('Livewire\Features\SupportLegacyModels\Tests\Post', $component->snapshot['data'][0]['post'][1]['class']);
+        $this->assertEquals('Livewire\Features\SupportLegacyModels\Tests\Post', $component->snapshot['data']['post'][1]['class']);
     }
 
     /** @test */
@@ -82,7 +82,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(PostComponent::class);
 
-        $this->assertEquals('post', $component->snapshot['data'][0]['post'][1]['class']);
+        $this->assertEquals('post', $component->snapshot['data']['post'][1]['class']);
     }
 
     /** @test */
@@ -137,7 +137,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals('2 Comment', $updatedModel->posts[0]->comments[1]->comment);
         $this->assertEquals('gniht', $updatedModel->posts[0]->comments[1]->author->name);
     }
-    
+
     /** @test */
     public function an_eloquent_model_properties_with_deep_relations_and_multiword_relations_can_have_dirty_data_reapplied()
     {
@@ -211,7 +211,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['model' => $model, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['model'][0];
+        $results = $component->snapshot['data']['model'][0];
 
         $this->assertEquals($expected, $results);
     }
@@ -268,7 +268,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['model' => $model, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['model'][0];
+        $results = $component->snapshot['data']['model'][0];
 
         $this->assertEquals($expected['title'], $results['title']);
         $this->assertEquals($expected['email'], $results['email']);
@@ -278,7 +278,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected['posts'][1]['title'], $results['posts'][0][1][0]['title']);
         $this->assertEquals($expected['posts'][1]['comments'], $results['posts'][0][1][0]['comments'][0]);
     }
-    
+
     /** @test */
     public function an_eloquent_model_properties_with_deep_relations_and_multiword_relations_can_be_serialised()
     {
@@ -351,7 +351,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['model' => $model, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['model'][0];
+        $results = $component->snapshot['data']['model'][0];
 
         $this->assertEquals($expected['title'], $results['title']);
         $this->assertEquals($expected['email'], $results['email']);
@@ -390,7 +390,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['models' => $models, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['models'][0];
+        $results = $component->snapshot['data']['models'][0];
 
         $this->assertEquals($expected[0], $results[0][0]);
         $this->assertEquals($expected[1], $results[1][0]);
@@ -436,7 +436,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['models' => $models, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['models'][0];
+        $results = $component->snapshot['data']['models'][0];
 
         $this->assertEquals($expected[0]['title'], $results[0][0]['title']);
         $this->assertEquals($expected[0]['email'], $results[0][0]['email']);
@@ -501,7 +501,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['models' => $models, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['models'][0];
+        $results = $component->snapshot['data']['models'][0];
 
         $this->assertEquals($expected[0]['title'], $results[0][0]['title']);
         $this->assertEquals($expected[0]['email'], $results[0][0]['email']);
@@ -576,7 +576,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['models' => $models, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['models'][0];
+        $results = $component->snapshot['data']['models'][0];
 
         $this->assertEquals($expected[0]['title'], $results[0][0]['title']);
         $this->assertEquals($expected[0]['email'], $results[0][0]['email']);
@@ -592,7 +592,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected[1]['email'], $results[1][0]['email']);
         $this->assertEquals($expected[1]['posts'], $results[1][0]['posts'][0]);
     }
-    
+
     /** @test */
     public function an_eloquent_collection_properties_with_deep_relations_and_multiword_relations_can_be_serialised()
     {
@@ -672,7 +672,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['models' => $models, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['models'][0];
+        $results = $component->snapshot['data']['models'][0];
 
         $this->assertEquals($expected[0]['title'], $results[0][0]['title']);
         $this->assertEquals($expected[0]['email'], $results[0][0]['email']);
@@ -749,7 +749,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['models' => $models, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['models'][0];
+        $results = $component->snapshot['data']['models'][0];
 
         $this->assertEquals($expected[0]['title'], $results[0][0]['title']);
         $this->assertEquals($expected[0]['email'], $results[0][0]['email']);
@@ -811,7 +811,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['models' => $models, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['models'][0];
+        $results = $component->snapshot['data']['models'][0];
 
         $this->assertEquals($expected[0]['title'], $results[0][0]['title']);
         $this->assertEquals($expected[0]['email'], $results[0][0]['email']);
@@ -846,7 +846,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['model' => $model, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['model'][0];
+        $results = $component->snapshot['data']['model'][0];
 
         $this->assertEquals($expected['title'], $results['title']);
         $this->assertEquals($expected['email'], $results['email']);
@@ -869,7 +869,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ModelsComponent::class, ['model' => $model, 'rules' => $rules]);
 
-        $results = $component->snapshot['data'][0]['model'][0];
+        $results = $component->snapshot['data']['model'][0];
 
         $this->assertArrayNotHasKey('name', $results);
     }
@@ -883,7 +883,7 @@ class PostComponent extends Component
     {
         $this->post = Post::first();
     }
-    
+
     public function render()
     {
         return <<<'HTML'
@@ -944,7 +944,7 @@ class Author extends Model
     {
         return $this->hasMany(Comment::class);
     }
-    
+
     public function otherComments()
     {
         return $this->hasMany(Comment::class);

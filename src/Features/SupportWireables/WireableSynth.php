@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportWireables;
 
 use Livewire\Wireable;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
 class WireableSynth extends Synth
 {

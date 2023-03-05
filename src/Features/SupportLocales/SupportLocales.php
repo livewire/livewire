@@ -3,18 +3,18 @@
 namespace Livewire\Features\SupportLocales;
 
 use function Livewire\on;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\ComponentHook;
 
 class SupportLocales extends ComponentHook
 {
-    function hydrate($meta)
+    function hydrate($memo)
     {
-        if ($locale = $meta['locale']) app()->setLocale($locale);
+        if ($locale = $memo['locale']) app()->setLocale($locale);
     }
 
     function dehydrate($context)
     {
-        $context->addMeta('locale', app()->getLocale());
+        $context->addMemo('locale', app()->getLocale());
     }
 }

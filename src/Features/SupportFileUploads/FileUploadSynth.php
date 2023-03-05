@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use Synthetic\SyntheticValidation;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Database\Eloquent\Model;
@@ -67,23 +67,5 @@ class FileUploadSynth extends Synth {
         if (TemporaryUploadedFile::canUnserialize($value)) {
             return TemporaryUploadedFile::unserializeFromLivewireRequest($value);
         }
-    }
-
-    function methods($target)
-    {
-        return ['save'];
-    }
-
-    function call($target, $method, $params, $addEffect) {
-        if ($method === 'save') {
-            $models = $this->validate(
-                $target->getAttributes(),
-                $target->rules(),
-            );
-
-            return $target->save();
-        }
-
-        throw new Exception;
     }
 }

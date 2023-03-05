@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidationRuleException;
 use Livewire\Livewire;
-use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
 class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 {
@@ -82,7 +82,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ComponentWithModelProperty::class, ['model' => $model]);
 
-        $component->snapshot['data'][0]['model'][0]['id'] = 2;
+        $component->snapshot['data']['model'][0]['id'] = 2;
 
         $component->call('$refresh');
     }

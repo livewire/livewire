@@ -10,7 +10,7 @@ class SupportModels extends ComponentHook
 {
     static function provide()
     {
-        app('livewire')->synth([
+        app('livewire')->propertySynthesizer([
             ModelSynth::class,
         ]);
     }

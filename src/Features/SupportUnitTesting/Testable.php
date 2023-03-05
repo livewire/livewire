@@ -75,11 +75,24 @@ class Testable extends BaseTestable
             $component = $instance;
         });
 
-        [$html, $dehydrated] = app('livewire')->mount($name, $params);
+
+        $html = app('livewire')->mount($name, $params);
+
+        $dehydrated = static::extractInitialDataFromHtml($html);
 
         store($component)->set('testing.html', $html);
 
         return new static($dehydrated, $component);
+    }
+
+    static function extractInitialDataFromHtml($html)
+    {
+        $data = (string) str($html)->betweenFirst('wire:data="', '"');
+
+        return json_decode(
+            htmlspecialchars_decode($data, ENT_QUOTES|ENT_SUBSTITUTE),
+            associative: true,
+        );
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
@@ -99,7 +112,7 @@ class Testable extends BaseTestable
 
         if ($stripInitialData) {
             $removeMe = (string) str($html)->betweenFirst(
-                'wire:initial-data="', '"'
+                'wire:data="', '"'
             );
 
             $html = str_replace($removeMe, '', $html);

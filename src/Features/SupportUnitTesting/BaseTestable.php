@@ -6,6 +6,7 @@ use Livewire\Drawer\Utils;
 use Illuminate\Support\Traits\Macroable;
 use Livewire\Features\SupportFileUploads\FileUploadController;
 
+use function Livewire\on;
 use function Livewire\trigger;
 
 class BaseTestable
@@ -25,7 +26,7 @@ class BaseTestable
         $this->methods = $dehydrated['effects']['methods'] ?? [];
         $this->effects = $dehydrated['effects'] ?? [];
         $this->snapshot = $dehydrated['snapshot'];
-        $this->canonical = $this->extractData($this->snapshot['data'][0]);
+        $this->canonical = $this->extractData($this->snapshot['data']);
     }
 
     function get($key)
@@ -54,11 +55,20 @@ class BaseTestable
             return $this->upload($key, $value, $isMultiple = true);
         }
 
-        $dehydrated = app('livewire')->update($this->snapshot, [$key => $value], $calls = []);
+        $newTargetInstance = null;
 
-        $this->target = $dehydrated['target'];
-        $this->effects = $dehydrated['effects'];
-        $this->snapshot = $dehydrated['snapshot'];
+        $off = on('dehydrate', function ($component) use (&$newTargetInstance) {
+            $newTargetInstance = $component;
+        });
+
+        [ $snapshot, $effects ] = app('livewire')->update($this->snapshot, [$key => $value], $calls = []);
+
+        $off();
+
+        // Find a way to get the target instance...
+        $this->target = $newTargetInstance;
+        $this->effects = $effects;
+        $this->snapshot = $snapshot;
         $this->canonical = $this->extractData($this->snapshot['data']);
 
         return $this;
@@ -113,11 +123,19 @@ class BaseTestable
 
     function commit()
     {
-        $dehydrated = app('livewire')->update($this->snapshot, $diff = [], $calls = []);
+        $newTargetInstance = null;
 
-        $this->target = $dehydrated['target'];
-        $this->effects = $dehydrated['effects'];
-        $this->snapshot = $dehydrated['snapshot'];
+        $off = on('dehydrate', function ($component) use (&$newTargetInstance) {
+            $newTargetInstance = $component;
+        });
+
+        [ $snapshot, $effects ] = app('livewire')->update($this->snapshot, $diff = [], $calls = []);
+
+        $off();
+
+        $this->target = $newTargetInstance;
+        $this->effects = $effects;
+        $this->snapshot = $snapshot;
         $this->canonical = $this->extractData($this->snapshot['data']);
 
         return $this;
@@ -130,15 +148,23 @@ class BaseTestable
 
     function call($method, ...$params)
     {
-        $dehydrated = app('livewire')->update($this->snapshot, $diff = [], $calls = [[
+        $newTargetInstance = null;
+
+        $off = on('dehydrate', function ($component) use (&$newTargetInstance) {
+            $newTargetInstance = $component;
+        });
+
+        [ $snapshot, $effects ] = app('livewire')->update($this->snapshot, $diff = [], $calls = [[
             'method' => $method,
             'params' => $params,
             'path' => '',
         ]]);
 
-        $this->target = $dehydrated['target'];
-        $this->effects = $dehydrated['effects'];
-        $this->snapshot = $dehydrated['snapshot'];
+        $off();
+
+        $this->target = $newTargetInstance;
+        $this->effects = $effects;
+        $this->snapshot = $snapshot;
         $this->canonical = $this->extractData($this->snapshot['data']);
 
         return $this;

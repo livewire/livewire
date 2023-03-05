@@ -1,13 +1,13 @@
 <?php
 
-namespace Livewire\Mechanisms\UpdateComponents\Synthesizers\Tests;
+namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\Livewire;
 use stdClass;
 
-class DataBindingTest extends \Tests\TestCase
+class DataBindingUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function update_component_data()

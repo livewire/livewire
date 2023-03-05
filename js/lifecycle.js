@@ -43,7 +43,7 @@ export function initComponent(el) {
     if (el.__livewire) return;
 
     let id = el.getAttribute('wire:id')
-    let initialData = JSON.parse(el.getAttribute('wire:initial-data'))
+    let initialData = JSON.parse(el.getAttribute('wire:data'))
 
     if (! initialData) initialData = resurrect(id)
 

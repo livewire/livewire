@@ -29,20 +29,20 @@ class SupportWireModelingNestedComponents extends ComponentHook
         });
     }
 
-    public function hydrate($meta)
+    public function hydrate($memo)
     {
-        if (! isset($meta['bindings'])) return;
+        if (! isset($memo['bindings'])) return;
 
-        $bindings = $meta['bindings'];
+        $bindings = $memo['bindings'];
 
         // Store the bindings for later dehydration...
         store($this->component)->set('bindings', $bindings);
 
         // If this child's parent already rendered its stub, retrieve
         // the memo'd value and set it.
-        if (! isset(static::$outersByComponentId[$meta['id']])) return;
+        if (! isset(static::$outersByComponentId[$memo['id']])) return;
 
-        $outers = static::$outersByComponentId[$meta['id']];
+        $outers = static::$outersByComponentId[$memo['id']];
 
         foreach ($bindings as $outer => $inner) {
             $this->component->$inner = $outers[$outer];
@@ -56,7 +56,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
         if (! $bindings) return;
 
         // Add the bindings metadata to the payload for later reference...
-        $context->addMeta('bindings', $bindings);
+        $context->addMemo('bindings', $bindings);
 
         return function () use ($bindings, $context) {
             // Currently we can only support a single wire:model bound value,

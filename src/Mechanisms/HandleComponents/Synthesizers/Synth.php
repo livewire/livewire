@@ -1,8 +1,8 @@
 <?php
 
-namespace Livewire\Mechanisms\UpdateComponents\Synthesizers;
+namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
-use Livewire\Mechanisms\UpdateComponents\ComponentContext;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
 
 abstract class Synth {
     function __construct(
@@ -20,11 +20,6 @@ abstract class Synth {
     }
 
     abstract static function match($target);
-
-    function methods($target)
-    {
-        return [];
-    }
 
     function get(&$target, $key) {
         if (is_array($target)) {

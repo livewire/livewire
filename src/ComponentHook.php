@@ -4,7 +4,6 @@ namespace Livewire;
 
 abstract class ComponentHook
 {
-    // @todo: Work on making this private to support non-class-based Livewire components...
     protected $component;
 
     private $propertyHooks = [];

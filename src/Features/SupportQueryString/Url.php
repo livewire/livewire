@@ -28,7 +28,7 @@ class Url extends PropertyHook
 
     public function dehydrate($context)
     {
-        if (! $context->initial) return;
+        if (! $context->mounting) return;
 
         $queryString = [
             'as' => $this->as,

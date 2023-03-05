@@ -24,20 +24,6 @@ class ComponentRegistry
         }
     }
 
-    protected $componentHooks = [];
-
-    function componentHook($hook)
-    {
-        if (method_exists($hook, 'provide')) $hook::provide();
-
-        $this->componentHooks[] = $hook;
-    }
-
-    function getComponentHooks()
-    {
-        return $this->componentHooks;
-    }
-
     function new($nameOrClass, $params = [], $id = null)
     {
         [$class, $name] = $this->getNameAndClass($nameOrClass);

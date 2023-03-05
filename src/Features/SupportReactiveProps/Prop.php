@@ -22,6 +22,6 @@ class Prop extends PropertyHook
 
     public function dehydrate($context)
     {
-        $context->pushMeta('props', $this->getName());
+        $context->pushMemo('props', $this->getName());
     }
 }

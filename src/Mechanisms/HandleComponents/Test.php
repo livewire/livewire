@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms\UpdateComponents;
+namespace Livewire\Mechanisms\HandleComponents;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;

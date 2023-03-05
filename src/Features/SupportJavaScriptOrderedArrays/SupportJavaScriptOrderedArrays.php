@@ -10,7 +10,7 @@ class SupportJavaScriptOrderedArrays
     {
         // @todo: instead of we're gonna try just not tampering with the decoded string in JS...
         // on('dehydrate', function ($synth, $target, $context) {
-        //     if (! $synth instanceof \Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth) return;
+        //     if (! $synth instanceof \Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth) return;
 
         //     return function ($value) {
         //         return $this->reindexArrayWithNumericKeysOtherwiseJavaScriptWillMessWithTheOrder($value);

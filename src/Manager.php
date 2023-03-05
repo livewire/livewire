@@ -4,18 +4,32 @@ namespace Livewire;
 
 use function Livewire\trigger;
 use Orchestra\DuskUpdater\UpdateCommand;
-use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use Livewire\Mechanisms\HandleComponents\HandleComponents;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\RenderComponent;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportUnitTesting\Testable;
 use Livewire\Features\SupportUnitTesting\DuskTestable;
-use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
-use Livewire\Mechanisms\UpdateComponents\ComponentContext;
-use Livewire\Mechanisms\UpdateComponents\UpdateComponents;
+use Livewire\ComponentHookRegistry;
+use Livewire\ComponentHook;
 
 class Manager
 {
+    protected ServiceProvider $provider;
+
+    function setProvider(ServiceProvider $provider)
+    {
+        $this->provider = $provider;
+    }
+
+    function provide($callback)
+    {
+        \Closure::bind($callback, $this->provider, $this->provider::class)();
+    }
+
     function component($name, $class = null)
     {
         app(ComponentRegistry::class)->register($name, $class);
@@ -23,12 +37,12 @@ class Manager
 
     function componentHook($hook)
     {
-        app(ComponentRegistry::class)->componentHook($hook);
+        ComponentHookRegistry::register($hook);
     }
 
-    function synth($synthClass)
+    function propertySynthesizer($synth)
     {
-        app(UpdateComponents::class)->registerSynth($synthClass);
+        app(HandleComponents::class)->registerPropertySynthesizer($synth);
     }
 
     function directive($name, $callback)
@@ -48,24 +62,29 @@ class Manager
 
     function mount($name, $params = [], $key = null)
     {
-        return app(UpdateComponents::class)->mount($name, $params, $key);
+        return app(HandleComponents::class)->mount($name, $params, $key);
+    }
+
+    function render($component, $default = null)
+    {
+        return app(RenderComponent::class)->render($component, $default);
     }
 
     function current()
     {
-        return last(app(RenderComponent::class)::$renderStack);
+        return last(app(HandleComponents::class)::$renderStack);
     }
 
     function update($snapshot, $diff, $calls)
     {
-        return app(UpdateComponents::class)->update($snapshot, $diff, $calls);
+        return app(HandleComponents::class)->update($snapshot, $diff, $calls);
     }
 
     function updateProperty($component, $path, $value)
     {
         $dummyContext = new ComponentContext($component, false);
 
-        return app(UpdateComponents::class)->updateProperty($component, $path, $value, $dummyContext);
+        return app(HandleComponents::class)->updateProperty($component, $path, $value, $dummyContext);
     }
 
     function setUpdateRoute($callback)

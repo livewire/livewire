@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms\UpdateComponents;
+namespace Livewire\Mechanisms\HandleComponents;
 
 use Livewire\Exceptions\BypassViewHandler;
 

@@ -4,7 +4,7 @@ export class Component {
         this.$wire = this.synthetic.reactive
         this.el = el
         this.id = id
-        this.name = this.synthetic.snapshot.data[1].name
+        this.name = this.synthetic.snapshot.memo.name
 
         // So we can get Livewire components back from synthetic hooks.
         synthetic.__livewireId = this.id

@@ -2,7 +2,7 @@
 
 namespace Livewire\Tests;
 
-use Livewire\Mechanisms\UpdateComponents\CorruptComponentPayloadException;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\MethodNotFoundException;
@@ -65,7 +65,7 @@ class ComponentsAreSecureTest extends \Tests\TestCase
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
 
-        $component->snapshot['data'][1]['id'] = 'different-id';
+        $component->snapshot['memo']['id'] = 'different-id';
 
         $component->call('$refresh');
     }
@@ -80,7 +80,7 @@ class ComponentsAreSecureTest extends \Tests\TestCase
         $component = app('livewire')->test('safe');
 
         // Hijack the "safe" component, with "unsafe"
-        $component->snapshot['data'][1]['name'] = 'unsafe';
+        $component->snapshot['memo']['name'] = 'unsafe';
 
         // If the hijack was stopped, the expected exception will be thrown.
         // If it worked, then an exception will be thrown that will fail the test.

@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportUnitTesting;
 
 use function Livewire\store;
 use function Livewire\on;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\ComponentHook;

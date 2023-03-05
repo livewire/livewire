@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportReactiveProps;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils as SyntheticUtils;
 use Livewire\Mechanisms\DataStore;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 
 use function Livewire\on;
 use function Livewire\store;
@@ -32,15 +32,15 @@ class SupportReactiveProps extends ComponentHook
                 }
             }
 
-            $props && $context->addMeta('props', $props);
+            $props && $context->addMemo('props', $props);
         });
 
-        on('hydrate', function ($target, $meta) {
-            if (! isset($meta['props'])) return;
+        on('hydrate', function ($target, $memo) {
+            if (! isset($memo['props'])) return;
 
-            $propKeys = $meta['props'];
+            $propKeys = $memo['props'];
 
-            $props = static::getProps($meta['id'], $propKeys);
+            $props = static::getProps($memo['id'], $propKeys);
 
             $propHashes = [];
 

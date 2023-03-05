@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Component;
@@ -88,10 +88,10 @@ class EloquentModelSynth extends Synth
         return $target->$key;
     }
 
-    public function set(Model &$target, $key, $value, $pathThusFar, $fullPath, $root)
+    public function set(Model &$target, $key, $value, $pathThusFar, $fullPath)
     {
-        if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
-            throw new CannotBindToModelDataWithoutValidationRuleException($fullPath, $root->getName());
+        if (SupportLegacyModels::missingRuleFor($this->context->component, $fullPath)) {
+            throw new CannotBindToModelDataWithoutValidationRuleException($fullPath, $this->context->component->getName());
         }
 
         if ($target->relationLoaded($key)) {

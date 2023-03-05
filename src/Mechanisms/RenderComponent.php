@@ -17,8 +17,6 @@ use function Livewire\wrap;
 
 class RenderComponent
 {
-    public static $renderStack = [];
-
     function boot()
     {
         app()->singleton($this::class);
@@ -55,7 +53,7 @@ class RenderComponent
 };
 [\$__name, \$__params] = \$__split($expression);
 
-[\$__html] = app('livewire')->mount(\$__name, \$__params, $key, \$__slots ?? [], get_defined_vars());
+\$__html = app('livewire')->mount(\$__name, \$__params, $key, \$__slots ?? [], get_defined_vars());
 
 echo \$__html;
 
@@ -66,66 +64,5 @@ unset(\$__split);
 if (isset(\$__slots)) unset(\$__slots);
 ?>
 EOT;
-    }
-
-    static function render($target)
-    {
-        if (store($target)->get('skipRender', false)) return;
-
-        $blade = method_exists($target, 'render')
-            ? wrap($target)->render()
-            : view("livewire.{$target->getName()}");
-
-        $properties = Utils::getPublicPropertiesDefinedOnSubclass($target);
-
-        array_push(static::$renderStack, $target);
-
-        $view = static::getBladeView($blade, $properties);
-
-        $finish = trigger('render', $target, $view, $properties);
-
-        $revertA = Utils::shareWithViews('__livewire', $target);
-        $revertB = Utils::shareWithViews('_instance', $target); // @legacy
-
-        $html = $view->render();
-
-        $revertA();
-        $revertB();
-
-        $html = Utils::insertAttributesIntoHtmlRoot($html, [
-            'wire:id' => $target->getId(),
-        ]);
-
-        $html = $finish($html);
-
-        array_pop(static::$renderStack);
-
-        return $html;
-    }
-
-    static function getBladeView($subject, $data = [])
-    {
-        if (! is_string($subject)) {
-            return tap($subject)->with($data);
-        }
-
-        $component = new class($subject) extends \Illuminate\View\Component
-        {
-            protected $template;
-
-            public function __construct($template)
-            {
-                $this->template = $template;
-            }
-
-            public function render()
-            {
-                return $this->template;
-            }
-        };
-
-        $view = app('view')->make($component->resolveView(), $data);
-
-        return $view;
     }
 }

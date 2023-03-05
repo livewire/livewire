@@ -2,20 +2,19 @@
 
 namespace Livewire\Features\SupportPagination;
 
-use function Livewire\invade;
 use Livewire\ComponentHook;
 
 class SupportPagination extends ComponentHook
 {
     static function provide()
     {
-        $provider = invade(app('livewire.provider'));
+        app('livewire')->provide(function () {
+            $this->loadViewsFrom(__DIR__.'/views', 'livewire');
 
-        $provider->loadViewsFrom(__DIR__.'/views', 'livewire');
+            $paths = [__DIR__.'/views' => resource_path('views/vendor/livewire')];
 
-        $paths = [__DIR__.'/views' => resource_path('views/vendor/livewire')];
-
-        $provider->publishes($paths, 'livewire');
-        $provider->publishes($paths, 'livewire:pagination');
+            $this->publishes($paths, 'livewire');
+            $this->publishes($paths, 'livewire:pagination');
+        });
     }
 }

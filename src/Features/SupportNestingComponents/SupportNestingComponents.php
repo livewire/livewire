@@ -6,14 +6,14 @@ use function Livewire\trigger;
 use function Livewire\store;
 use function Livewire\on;
 
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\ComponentHook;
 
 class SupportNestingComponents extends ComponentHook
 {
     static function provide()
     {
-        on('pre-mount', function ($name, $params, $parent, $key, $hijack) {
+        on('pre-mount', function ($name, $params, $key, $parent, $hijack) {
             // If this has already been rendered spoof it...
             if ($parent && static::hasPreviouslyRenderedChild($parent, $key)) {
                 [$tag, $childId] = static::getPreviouslyRenderedChild($parent, $key);
@@ -24,10 +24,12 @@ class SupportNestingComponents extends ComponentHook
 
                 static::setParentChild($parent, $key, $tag, $childId);
 
-                return $hijack($html);
+                $hijack($html);
             }
+        });
 
-            return function ($component, $html) use ($parent, $key) {
+        on('mount', function ($component, $params, $key, $parent) {
+            return function ($html) use ($component, $key, $parent) {
                 if ($parent) {
                     preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
                     $tag = $matches[1][0];
@@ -37,9 +39,9 @@ class SupportNestingComponents extends ComponentHook
         });
     }
 
-    function hydrate($meta)
+    function hydrate($memo)
     {
-        $children = $meta['children'];
+        $children = $memo['children'];
 
         $this->setPreviouslyRenderedChildren($this->component, $children);
     }
@@ -50,7 +52,7 @@ class SupportNestingComponents extends ComponentHook
 
         if ($skipRender) $this->keepRenderedChildren();
 
-        $context->addMeta('children', $this->getChildren());
+        $context->addMemo('children', $this->getChildren());
     }
 
     function getChildren() { return $this->storeGet('children', []); }

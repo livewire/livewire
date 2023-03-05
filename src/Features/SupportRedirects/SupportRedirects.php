@@ -9,7 +9,7 @@ use function Livewire\before;
 use function Livewire\on;
 
 use Livewire\ComponentHook;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\DataStore;
 use Synthetic\ShortcircuitResponse;
 

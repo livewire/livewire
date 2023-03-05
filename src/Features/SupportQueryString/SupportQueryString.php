@@ -6,7 +6,7 @@ use function Livewire\on;
 use function Livewire\before;
 use function Livewire\invade;
 
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Illuminate\Support\Arr;
 use Livewire\ComponentHook;
 

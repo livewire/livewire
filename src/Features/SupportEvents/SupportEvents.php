@@ -9,7 +9,7 @@ use function Livewire\wrap;
 
 use Livewire\ComponentHook;
 use Livewire\Mechanisms\DataStore;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 
 class SupportEvents extends ComponentHook
 {

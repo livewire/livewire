@@ -5,7 +5,7 @@ import Alpine from 'alpinejs'
 
 on('element.init', (el, component) => {
     getDirectives(el).all().forEach(directive => {
-        if (['model', 'init', 'loading', 'poll', 'ignore', 'id', 'initial-data', 'key', 'target', 'dirty'].includes(directive.type)) return
+        if (['model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty'].includes(directive.type)) return
 
         let attribute = directive.rawName.replace('wire:', 'x-on:')
 

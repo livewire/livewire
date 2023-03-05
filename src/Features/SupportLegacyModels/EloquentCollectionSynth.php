@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Component;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use LogicException;
 
 class EloquentCollectionSynth extends Synth
@@ -83,10 +83,10 @@ class EloquentCollectionSynth extends Synth
         return $target->get($key);
     }
 
-    public function set(&$target, $key, $value, $pathThusFar, $fullPath, $root)
+    public function set(&$target, $key, $value, $pathThusFar, $fullPath)
     {
-        if (SupportLegacyModels::missingRuleFor($root, $fullPath)) {
-            throw new CannotBindToModelDataWithoutValidationRuleException($fullPath, $root->getName());
+        if (SupportLegacyModels::missingRuleFor($this->context->component, $fullPath)) {
+            throw new CannotBindToModelDataWithoutValidationRuleException($fullPath, $this->context->component->getName());
         }
 
         $target->put($key, $value);

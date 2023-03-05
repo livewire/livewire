@@ -105,11 +105,11 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $children = $component->snapshot['data'][1]['children'];
+        $children = $component->snapshot['memo']['children'];
 
         $component->runAction('skip');
 
-        $this->assertContains($children, $component->snapshot['data'][1]);
+        $this->assertContains($children, $component->snapshot['memo']);
     }
 }
 

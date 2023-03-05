@@ -4,7 +4,7 @@ namespace Livewire\Mechanisms\HandleRequests;
 
 use function Livewire\on;
 
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
 
@@ -23,7 +23,21 @@ class HandleRequests
         on('dehydrate', function ($target, $context) {
             $uri = (string) str(app($this::class)->updateRoute->uri)->start('/');
 
-            if ($context->initial) $context->addEffect('uri', $uri);
+            if ($context->mounting) $context->addEffect('uri', $uri);
+        });
+
+        $this->skipRequestPayloadTamperingMiddleware();
+    }
+
+    function skipRequestPayloadTamperingMiddleware()
+    {
+        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::skipWhen(function () {
+            // @todo: update this...
+            return request()->is('synthetic/update');
+        });
+
+        \Illuminate\Foundation\Http\Middleware\TrimStrings::skipWhen(function () {
+            return request()->is('synthetic/update');
         });
     }
 
@@ -38,20 +52,21 @@ class HandleRequests
 
     function handleUpdate()
     {
-        $targets = request('targets');
+        $components = request('components');
 
         $responses = [];
 
-        foreach ($targets as $target) {
-            $snapshot = $target['snapshot'];
-            $diff = $target['diff'];
-            $calls = $target['calls'];
+        foreach ($components as $component) {
+            $snapshot = $component['snapshot'];
+            $updates = $component['updates'];
+            $calls = $component['calls'];
 
-            $response = Livewire::update($snapshot, $diff, $calls);
+            [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
 
-            unset($response['target']);
-
-            $responses[] = $response;
+            $responses[] = [
+                'snapshot' => $snapshot,
+                'effects' => $effects,
+            ];
         }
 
         return $responses;

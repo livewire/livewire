@@ -6,8 +6,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     public function register()
     {
-        app()->bind('livewire.provider', fn () => $this);
-
         $this->registerLivewireSingleton();
         $this->registerConfig();
     }
@@ -22,7 +20,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function registerLivewireSingleton()
     {
         $this->app->alias(Manager::class, 'livewire');
+
         $this->app->singleton(Manager::class);
+
+        app('livewire')->setProvider($this);
     }
 
     protected function registerConfig()
@@ -42,7 +43,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function bootMechanisms()
     {
         foreach ([
-            \Livewire\Mechanisms\UpdateComponents\UpdateComponents::class,
+            \Livewire\Mechanisms\HandleComponents\HandleComponents::class,
             \Livewire\Mechanisms\HandleRequests\HandleRequests::class,
             \Livewire\Mechanisms\FrontendAssets\FrontendAssets::class,
             \Livewire\Mechanisms\ExtendBlade\ExtendBlade::class,
@@ -57,52 +58,47 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function bootFeatures()
     {
-        app('livewire')->componentHook(\Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportComputedProperties\SupportComputedProperties::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportNestingComponents\SupportNestingComponents::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportPageComponents\SupportPageComponents::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportReactiveProps\SupportReactiveProps::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportFileDownloads\SupportFileDownloads::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportQueryString\SupportQueryString::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportUnitTesting\SupportUnitTesting::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportFileUploads\SupportFileUploads::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportTeleporting\SupportTeleporting::class);
-        // app('livewire')->componentHook(\Livewire\Features\SupportLazyLoading\SupportLazyLoading::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportPagination\SupportPagination::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportValidation\SupportValidation::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportRedirects\SupportRedirects::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportWireables\SupportWireables::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportEntangle\SupportEntangle::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportLocales\SupportLocales::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportModels\SupportModels::class);
-        app('livewire')->componentHook(\Livewire\Features\SupportEvents\SupportEvents::class);
-
-        // Load last so, if it is enabled, it has priority over ModelsSupport
-        app('livewire')->componentHook(\Livewire\Features\SupportLegacyModels\SupportLegacyModels::class);
-
-        // Refactor this...
-        $hooks = app(\Livewire\Mechanisms\ComponentRegistry::class)->getComponentHooks();
-        (new HookAdapter)->adapt($hooks);
-
-        foreach ([
-            // V3
-            // \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
+        foreach([
+            \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
+            \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
+            \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
-            // \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
-            // \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
+            \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
+            \Livewire\Features\SupportNestingComponents\SupportNestingComponents::class,
+            \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class,
+            \Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class,
+            \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,
+            \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
+            \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
+            \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
+            \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
+            \Livewire\Features\SupportQueryString\SupportQueryString::class,
+            \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
+            \Livewire\Features\SupportFileUploads\SupportFileUploads::class,
+            \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
+            // \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
+            \Livewire\Features\SupportPagination\SupportPagination::class,
+            \Livewire\Features\SupportValidation\SupportValidation::class,
+            \Livewire\Features\SupportRedirects\SupportRedirects::class,
+            \Livewire\Features\SupportWireables\SupportWireables::class,
+            \Livewire\Features\SupportEntangle\SupportEntangle::class,
+            \Livewire\Features\SupportLocales\SupportLocales::class,
+            \Livewire\Features\SupportModels\SupportModels::class,
+            \Livewire\Features\SupportEvents\SupportEvents::class,
 
-            // Core
-            // \Livewire\Features\SupportJavaScriptOrderedArrays\SupportJavaScriptOrderedArrays::class, @todo: there might be a better way than this...
-
+            // Load last so, if it is enabled, it has priority over ModelsSupport
+            \Livewire\Features\SupportLegacyModels\SupportLegacyModels::class,
         ] as $feature) {
-            (new $feature)->boot($this);
+            app('livewire')->componentHook($feature);
         }
+
+        ComponentHookRegistry::boot();
+
+        // V3 Todo:
+        // \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
+        // \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
+        // \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
+        // \Livewire\Features\SupportJavaScriptOrderedArrays\SupportJavaScriptOrderedArrays::class, @todo: there might be a better way than this...
     }
 }
 

@@ -6,7 +6,7 @@ use function Livewire\after;
 use function Livewire\on;
 use function Livewire\store;
 
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\ComponentHook;
 
 class SupportLazyLoading extends ComponentHook
@@ -19,8 +19,7 @@ class SupportLazyLoading extends ComponentHook
             if (! array_key_exists('lazy', $params)) return;
             unset($params['lazy']);
 
-            // [$html] = app('livewire')->mount('__lazy', ['componentName' => $name, 'forwards' => $params], $key);
-            [$html] = app(RenderComponent::class)->lazyMount($name, $params, $key);
+            $html = app(RenderComponent::class)->lazyMount($name, $params, $key);
 
             $hijack($html);
         });
@@ -34,13 +33,13 @@ class SupportLazyLoading extends ComponentHook
             dd($params);
             unset($params['lazy']);
 
-            [$html] = app('livewire')->mount('__lazy', ['componentName' => $name, 'forwards' => $params], $key);
+            $html = app('livewire')->mount('__lazy', ['componentName' => $name, 'forwards' => $params], $key);
 
             $hijack($html);
         });
 
-        on('hydrate', function ($target, $meta) {
-            if (! $meta['name'] === '__lazy') return;
+        on('hydrate', function ($target, $memo) {
+            if (! $memo['name'] === '__lazy') return;
 
             store($target)->set('lazyReadyForSwap', true);
             $target->swap = true;

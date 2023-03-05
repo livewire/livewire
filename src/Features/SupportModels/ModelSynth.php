@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportModels;
 
 use stdClass;
 use Synthetic\SyntheticValidation;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\Synth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Stringable;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
@@ -48,7 +48,7 @@ class ModelSynth extends Synth {
         throw new \Exception('Can\'t access model properties directly');
     }
 
-    function set(&$target, $key, $value, $pathThusFar, $fullPath, $root) {
+    function set(&$target, $key, $value, $pathThusFar, $fullPath) {
         throw new \Exception('Can\'t set model properties directly');
     }
 

@@ -6,7 +6,7 @@ use function Livewire\store;
 use function Livewire\on;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Livewire\Mechanisms\UpdateComponents\Synthesizers\LivewireSynth;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\DataStore;
 use Livewire\ComponentHook;
 use Illuminate\Contracts\Support\Responsable;

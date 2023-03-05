@@ -1,4 +1,6 @@
-<?php namespace Livewire\Mechanisms\UpdateComponents;
+<?php
+
+namespace Livewire\Mechanisms\HandleComponents;
 
 use function Livewire\trigger;
 

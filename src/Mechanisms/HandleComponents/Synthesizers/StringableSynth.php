@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Mechanisms\UpdateComponents\Synthesizers;
+namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
 use Illuminate\Support\Stringable as SupportStringable;
 

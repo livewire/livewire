@@ -2,28 +2,40 @@
 
 namespace Livewire;
 
-use Livewire\Drawer\Utils;
 use WeakMap;
+use Livewire\Drawer\Utils;
+use Livewire\ComponentHook;
 
-class HookAdapter
+class ComponentHookRegistry
 {
-    public $components;
+    protected static $components;
 
-    function adapt($hooks)
+    protected static $componentHooks = [];
+
+    static function register($hook)
     {
-        $this->components = new WeakMap;
+        if (method_exists($hook, 'provide')) $hook::provide();
 
-        foreach ($hooks as $hook) {
+        if (in_array($hook, static::$componentHooks)) return;
+
+        static::$componentHooks[] = $hook;
+    }
+
+    static function boot()
+    {
+        static::$components = new WeakMap;
+
+        foreach (static::$componentHooks as $hook) {
             on('mount', function ($component, $params, $parent) use ($hook) {
-                $hook = $this->initializeHook($hook, $component);
+                $hook = static::initializeHook($hook, $component);
                 $hook->callBoot();
                 $hook->callMount($params, $parent, $parent);
             });
 
-            on('hydrate', function ($target, $meta) use ($hook) {
-                $hook = $this->initializeHook($hook, $target);
+            on('hydrate', function ($target, $memo) use ($hook) {
+                $hook = static::initializeHook($hook, $target);
                 $hook->callBoot();
-                $hook->callHydrate($meta);
+                $hook->callHydrate($memo);
             });
         }
 
@@ -32,35 +44,35 @@ class HookAdapter
 
             $propertyName = Utils::beforeFirstDot($fullPath);
 
-            return $this->proxyCallToHooks($root, 'callUpdate')($propertyName, $fullPath, $newValue);
+            return static::proxyCallToHooks($root, 'callUpdate')($propertyName, $fullPath, $newValue);
         });
 
         on('call', function ($target, $method, $params, $addEffect, $earlyReturn) {
             if (! is_object($target)) return;
 
-            return $this->proxyCallToHooks($target, 'callCall')($method, $params, $earlyReturn);
+            return static::proxyCallToHooks($target, 'callCall')($method, $params, $earlyReturn);
         });
 
         on('render', function ($target, $view, $data) {
-            return $this->proxyCallToHooks($target, 'callRender')($view, $data);
+            return static::proxyCallToHooks($target, 'callRender')($view, $data);
         });
 
         on('dehydrate', function ($target, $context) {
-            $this->proxyCallToHooks($target, 'callDehydrate')($context);
+            static::proxyCallToHooks($target, 'callDehydrate')($context);
 
-            $this->proxyCallToHooks($target, 'callDestroy')($context);
+            static::proxyCallToHooks($target, 'callDestroy')($context);
         });
 
         on('exception', function ($target, $e, $stopPropagation) {
-            return $this->proxyCallToHooks($target, 'callException')($e, $stopPropagation);
+            return static::proxyCallToHooks($target, 'callException')($e, $stopPropagation);
         });
     }
 
-    public function initializeHook($hook, $target)
+    static public function initializeHook($hook, $target)
     {
-        if (! isset($this->components[$target])) $this->components[$target] = [];
+        if (! isset(static::$components[$target])) static::$components[$target] = [];
 
-        $this->components[$target][] = $hook = new $hook;
+        static::$components[$target][] = $hook = new $hook;
 
         $hook->setComponent($target);
 
@@ -84,11 +96,11 @@ class HookAdapter
         return $hook;
     }
 
-    function proxyCallToHooks($target, $method) {
+    static function proxyCallToHooks($target, $method) {
         return function (...$params) use ($target, $method) {
             $callbacks = [];
 
-            foreach ($this->components[$target] ?? [] as $hook) {
+            foreach (static::$components[$target] ?? [] as $hook) {
                 $callbacks[] = $hook->{$method}(...$params);
             }
 

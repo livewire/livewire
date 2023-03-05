@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\Mechanisms\UpdateComponents\Synthesizers\Tests;
+namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
-class EnumTest extends \Tests\TestCase
+class EnumUnitTest extends \Tests\TestCase
 {
     /**
      * @test

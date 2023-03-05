@@ -66,6 +66,11 @@ abstract class Component
         store($this)->set('skipRender', true);
     }
 
+    function render()
+    {
+        return view("livewire.{$this->getName()}");
+    }
+
     function __isset($property)
     {
         try {
