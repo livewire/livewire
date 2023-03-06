@@ -14,9 +14,8 @@ trait MakesAssertionsOnView
      */
     public function assertPropertyBound(string $propertyName, int $times = null): self
     {
-        /** @var View $view */
-        $view = $this->lastRenderedView;
-        $html = $view->toHtml();
+        /** @var string $html */
+        $html = $this->lastRenderedDom;
 
         $matchCount = preg_match_all('/wire:model[^>]+"' . preg_quote($propertyName) . '"/msi', $html);
         if (!is_int($matchCount)) $matchCount = 0;
@@ -47,9 +46,8 @@ trait MakesAssertionsOnView
      */
     public function assertActionBound(string $actionName, string $eventName = null, int $times = null): self
     {
-        /** @var View $view */
-        $view = $this->lastRenderedView;
-        $html = $view->toHtml();
+        /** @var string $html */
+        $html = $this->lastRenderedDom;
 
         $regex = '/wire:(?!model)[^>]+"' . preg_quote($actionName) . '"/msi';
         if ($eventName) {
@@ -64,6 +62,8 @@ trait MakesAssertionsOnView
             $matchCount,
             $times === null ? PHPUnit::greaterThan(0) : PHPUnit::equalTo($times),
             $this->boundAmountFailMessage('Action', $actionName, $times));
+
+        PHPUnit::assertTrue(true);
 
         return $this;
     }
