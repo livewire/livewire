@@ -145,6 +145,6 @@ class PropertyBindingTestingComponent extends Component
                 <button type="button" id="twice_2" wire:click="twice"></button>
                 <button wire:keydown.enter="action_on_enter"></button>
             </div>
-        blade;
+blade;
     }
 }
