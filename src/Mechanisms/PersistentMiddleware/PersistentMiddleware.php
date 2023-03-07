@@ -24,19 +24,15 @@ class PersistentMiddleware
 
     function boot()
     {
-        app()->singleton($this::class, function() {
-            return $this;
-        });
+        app()->singleton($this::class);
 
         on('dehydrate', function($component, $context) {
-            $middleware = $this->getFilteredMiddlewareIndexes(request());
+            $middleware = app($this::class)->getFilteredMiddlewareIndexes(request());
 
             $context->addMemo('middleware', $middleware);
         });
 
-        on('flush-state', function() {
-            $this->componentMiddleware = [];
-        });
+        on('flush-state', app($this::class)->flushState(...));
     }
 
     function addPersistentMiddleware($middleware)
@@ -56,7 +52,7 @@ class PersistentMiddleware
 
     function runRequestThroughMiddleware($request, $components, $handle)
     {
-        // Assign to 
+        // Assign to class property so it can be used in dehydration and dynamic child components
         $this->componentMiddleware = $this->getMiddlewareFromComponentsData($components);
 
         // Only send through pipeline if there are middleware found
@@ -68,6 +64,11 @@ class PersistentMiddleware
             ->then(function() use ($handle, $components) {
                 return $handle($components);
             });
+    }
+
+    function flushState()
+    {
+        $this->componentMiddleware = [];
     }
 
     protected function getFilteredMiddlewareIndexes($request)
