@@ -2,10 +2,11 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
-use Illuminate\Pipeline\Pipeline;
-use Livewire\Mechanisms\HandleRequests\HandleRequests;
-
 use function Livewire\on;
+use Illuminate\Pipeline\Pipeline;
+
+use Illuminate\Support\Str;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class PersistentMiddleware
 {
@@ -88,7 +89,10 @@ class PersistentMiddleware
 
         $initialRoute = $request->route();
 
-        return $initialRoute ? $initialRoute->middleware() : [];
+        if (is_null($initialRoute)) return [];
+
+        // Use Laravel to convert string middleware, such as 'auth' to classes
+        return app('router')->gatherRouteMiddleware($initialRoute);
     }
 
     protected function getMiddlewareFromComponentsData($components)
@@ -122,7 +126,20 @@ class PersistentMiddleware
 
         return $persistentMiddleware
             ->filter(function ($value, $key) use ($middleware) {
-                return $middleware->contains($value);
+                
+                return $middleware->contains(function($iValue, $iKey) use ($value) {
+                    $iValue = Str::before($iValue, ':');
+
+                    if ($iValue == $value) return true;
+
+                    if (
+                        class_exists($value) 
+                        && class_exists($iValue)
+                        && is_subclass_of($iValue, $value)
+                    ) return true;
+
+                    return false;
+                });
             })
             ->keys()
             ->all();
