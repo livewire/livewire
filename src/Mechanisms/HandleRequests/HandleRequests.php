@@ -7,6 +7,8 @@ use function Livewire\on;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
+use Livewire\Mechanisms\HandleComponents\Checksum;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
 class HandleRequests
 {
@@ -43,20 +45,54 @@ class HandleRequests
     function setUpdateRoute($callback)
     {
         $route = $callback(function () {
-            return $this->handleUpdate();
+            $components = $this->validateSnapshots();
+
+            return app(PersistentMiddleware::class)->runRequestThroughMiddleware(
+                request(),
+                $components,
+                $this->handleUpdate(...)
+            );
         });
+
+        // Append `livewire.message` to the existing name, if any.
+        $route->name('livewire.message');
 
         $this->updateRoute = $route;
     }
 
-    function handleUpdate()
+    function isDefinitelyLivewireRequest()
     {
+        $route = request()->route();
+
+        if (! $route) return false;
+
+        /*
+         * Check to see if route name ends with `livewire.message`, as if
+         * a custom update route is used and they add a name, then when
+         * we call `->name('livewire.message')` on the route it will
+         * suffix the existing name with `livewire.message`.
+         */
+        return $route->named('*livewire.message');
+    }
+
+    function validateSnapshots() {
         $components = request('components');
 
+        foreach ($components as &$component) {
+            $component['snapshot'] = json_decode($component['snapshot'], associative: true);
+
+            Checksum::verify($component['snapshot']);
+        }
+
+        return $components;
+    }
+
+    function handleUpdate($components)
+    {
         $responses = [];
 
         foreach ($components as $component) {
-            $snapshot = json_decode($component['snapshot'], associative: true);
+            $snapshot = $component['snapshot'];
             $updates = $component['updates'];
             $calls = $component['calls'];
 
@@ -68,6 +104,7 @@ class HandleRequests
             ];
         }
 
-        return $responses;
+        // Due to Laravel 10 middleware return types, we need to ensure we return a response object.
+        return response()->json($responses);
     }
 }

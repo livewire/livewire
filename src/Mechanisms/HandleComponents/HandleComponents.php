@@ -77,8 +77,6 @@ class HandleComponents
 
     public function update($snapshot, $updates, $calls)
     {
-        Checksum::verify($snapshot);
-
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
         $name = $snapshot['memo']['name'];
