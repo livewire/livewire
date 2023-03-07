@@ -1,6 +1,5 @@
 import { getDirectives } from '@/directives'
-import { on } from '@/synthetic/index'
-import { findComponent } from '@/state'
+import { on } from '@/events'
 import { Livewire } from '@/index'
 import Alpine from 'alpinejs'
 
@@ -55,9 +54,7 @@ on('element.init', (el, component) => {
     })
 })
 
-on('target.request', (target) => {
-    let component = findComponent(target.__livewireId)
-
+on('request', (component) => {
     return () => {
         cleanup(component)
     }

@@ -1,7 +1,6 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
-import { findComponent } from '@/state'
-import { on } from '@synthetic/index'
+import { on } from '@/events'
 
 directive('loading', (el, directive, { component }) => {
     let targets = getTargets(el)
@@ -60,8 +59,8 @@ function applyDelay(directive) {
 }
 
 function whenTargetsArePartOfRequest(component, targets, [ startLoading, endLoading ]) {
-    on('target.request', (target, payload) => {
-        if (findComponent(target.__livewireId) !== component) return
+    on('request', (iComponent, payload) => {
+        if (iComponent !== component) return
 
         if (targets.length > 0 && ! containsTargets(payload, targets)) return
 

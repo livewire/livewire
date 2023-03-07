@@ -1,11 +1,8 @@
-import { on } from './../synthetic/index'
-import { findComponent } from "../state";
+import { on } from '@/events'
 
-on('effects', (target, effects) => {
+on('effects', (component, effects) => {
     let dispatches = effects.dispatches
     if (! dispatches) return
-
-    let component = findComponent(target.__livewireId)
 
     dispatches.forEach(({ event, data }) => {
         data = data || {}

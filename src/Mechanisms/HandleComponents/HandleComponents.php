@@ -113,10 +113,6 @@ class HandleComponents
     {
         $data = $this->dehydrateProperties($component, $context);
 
-        $methods = Utils::getPublicMethodsDefinedBySubClass($component);
-
-        $context->addEffect('methods', $methods);
-
         return [
             'data' => $data,
             'memo' => [
@@ -329,12 +325,6 @@ class HandleComponents
 
             // Also remove "render" from the list...
             $methods =  array_values(array_diff($methods, ['render']));
-
-            $addMethod = function ($name) use (&$methods) {
-                array_push($methods, $name);
-            };
-
-            trigger('methods', $root, $addMethod);
 
             if (! in_array($method, $methods)) {
                 throw new MethodNotFoundException($method);

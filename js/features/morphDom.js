@@ -1,12 +1,9 @@
-import { morph } from "../morph";
-import { findComponent } from "../state";
-import { on } from './../synthetic/index'
+import { morph } from '@/morph'
+import { on } from '@/events'
 
-on('effects', (target, effects) => {
+on('effects', (component, effects) => {
     let html = effects.html
     if (! html) return
-
-    let component = findComponent(target.__livewireId)
 
     // Doing this so all the state of components in a nested tree has a chance
     // to update on synthetic's end. (mergeSnapshots kinda deal).

@@ -23,7 +23,6 @@ class BaseTestable
 
     function __construct($snapshot, $effects, $target) {
         $this->target = $target;
-        $this->methods = $effects['methods'] ?? [];
         $this->effects = $effects ?? [];
         $this->snapshot = $snapshot;
         $this->canonical = $this->extractData($this->snapshot['data']);

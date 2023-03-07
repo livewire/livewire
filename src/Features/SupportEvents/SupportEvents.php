@@ -13,16 +13,6 @@ use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 
 class SupportEvents extends ComponentHook
 {
-    function boot()
-    {
-        // @todo: refactor this out. Ew.
-        on('methods', function ($target, $addMethod) {
-            if ($target !== $this->component) return;
-
-            $addMethod('__emit');
-        });
-    }
-
     function call($method, $params, $returnEarly)
     {
         if ($method === '__emit') {

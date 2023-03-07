@@ -1,13 +1,10 @@
-import { findComponent, state } from "../state";
-import { on } from '../synthetic/index'
+import { findComponent } from "../store";
+import { on } from '@/events'
 import Alpine from 'alpinejs'
+import { wireProperty } from "@/wire";
 
-on('decorate', (target, path, addProp, decorator, symbol) => {
-    addProp('entangle', (name, live = false) => {
-        let component = findComponent(target.__livewireId)
-
-        return generateEntangleFunction(component)(name, live)
-    })
+wireProperty('entangle', (component) => (name, live = false) => {
+    return generateEntangleFunction(component)(name, live)
 })
 
 function generateEntangleFunction(component) {

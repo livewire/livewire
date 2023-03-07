@@ -1,15 +1,13 @@
 import { directive, getDirectives } from '@/directives'
-import { findComponent } from '@/state'
-import { on } from '@synthetic/index'
+import { findComponent } from '@/store'
+import { on } from '@/events'
 
 directive('model', (el, { expression }, { component }) => {
-    on('target.request', (target) => {
-        let targetComponent = findComponent(target.__livewireId)
-
-        if (component !== targetComponent) return
+    on('request', (iComponent) => {
+        if (iComponent !== component) return
 
         return () => {
-            let dirty = target.effects.dirty
+            let dirty = component.effects.dirty
 
             if (! dirty) return
 

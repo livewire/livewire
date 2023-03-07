@@ -1,18 +1,15 @@
-import { findComponent, state } from "@/state";
-import { on } from '@synthetic/index'
+import { on } from '@/events'
 
 // // Only allow this in "Simple Preview"...
 // if (! navigator.userAgent.includes('Electron')) return
 
 // if (! enabled.includes('hot-reloading')) return
 
-on('effects', (target, effects) => {
+on('effects', (component, effects) => {
     queueMicrotask(() => {
         let files = effects.hotReload
 
         if (! files) return
-
-        let component = findComponent(target.__livewireId)
 
         if (files) {
             files.forEach(file => {

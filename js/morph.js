@@ -1,6 +1,6 @@
-import { trigger } from './synthetic/index'
-import { closestComponent } from "./lifecycle"
-import Alpine from 'alpinejs'
+import { trigger } from "@vue/reactivity"
+
+const { closestComponent } = '@/store'
 
 export function morph(component, el, html) {
     let wrapper = document.createElement('div')

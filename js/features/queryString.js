@@ -1,5 +1,5 @@
-import { on } from '@synthetic/events'
-import { dataGet, dataSet } from '@synthetic/utils'
+import { on } from '@/events'
+import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { track } from '@alpinejs/history'
 
@@ -21,12 +21,10 @@ on('component.init', component => {
                 replace(dataGet(component.reactive, name))
             })
         } else if (use === 'push') {
-            on('target.request', (target, payload) => {
-                if (target !== Alpine.raw(component.synthetic)) return // @todo: get rid of Alpine.raw by making .synthetic NOT a proxy
-
+            on('request', (component, payload) => {
                 return () => {
                     let diff = payload.diff
-                    let dirty = target.effects.dirty || []
+                    let dirty = component.effects.dirty || []
 
                     if (! Object.keys(payload.diff).includes(name) && ! dirty.some(i => i.startsWith(name))) return
 

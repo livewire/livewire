@@ -1,19 +1,14 @@
-import { on } from '../synthetic/index'
-import { findComponent } from '../state'
-import { closestComponent } from '../lifecycle'
+import { closestComponent } from '@/store'
+import { wireProperty } from '@/wire'
 
-on('decorate', (target, path, addProp, decorator, symbol) => {
-    let memo
+let memo
 
-    addProp('$parent', { get() {
-        if (memo) return memo.$wire
+wireProperty('$parent', component => {
+    if (memo) return memo.$wire
 
-        let component = findComponent(target.__livewireId)
+    let parent = closestComponent(component.el.parentElement)
 
-        let parent = closestComponent(component.el.parentElement)
+    memo = parent
 
-        memo = parent
-
-        return parent.$wire
-    }})
+    return parent.$wire
 })

@@ -1,18 +1,14 @@
-import { findComponent, hasComponent, releaseComponent, resurrect, state, storeComponent } from './state'
 import { monkeyPatchDomSetAttributeToAllowAtSymbols } from 'utils'
-import { synthetic, trigger } from './synthetic/index'
-import { Component } from './component'
-import morph from '@alpinejs/morph'
-import history from '@alpinejs/history'
+import { closestComponent, initComponent } from './store'
+import { initDirectives } from './directives'
+import { trigger } from './events'
 import intersect from '@alpinejs/intersect'
+import history from '@alpinejs/history'
+import morph from '@alpinejs/morph'
 import Alpine from 'alpinejs'
 
 export function start() {
     monkeyPatchDomSetAttributeToAllowAtSymbols()
-
-    Alpine.interceptInit(Alpine.skipDuringClone(el => {
-        initElement(el)
-    }))
 
     Alpine.plugin(morph)
     Alpine.plugin(history)
@@ -20,55 +16,23 @@ export function start() {
 
     Alpine.addRootSelector(() => '[wire\\:id]')
 
+    Alpine.interceptInit(
+        Alpine.skipDuringClone(el => {
+            if (el.hasAttribute('wire:id')) initComponent(el)
+
+            let component = closestComponent(el, false)
+
+            if (component) {
+                initDirectives(el, component)
+
+                trigger('element.init', el, component)
+            }
+        })
+    )
+
     Alpine.start()
 
     setTimeout(() => window.Livewire.initialRenderIsFinished = true)
 }
 
-function initElement(el) {
-    if (el.hasAttribute('wire:id')) initComponent(el)
 
-    let component
-
-    // @todo: This is bad flow.
-    // We have this in a try / catch, becuase if you try to find the "closest component"
-    // and one if not found, it will error out rather than breaking things
-    // downstream, but in this case we don't want to error out.
-    try { component = closestComponent(el) } catch (e) {}
-
-    component && trigger('element.init', el, component)
-}
-
-export function initComponent(el) {
-    if (el.__livewire) return;
-
-    let component = new Component(el)
-
-    // if (! initialData) initialData = resurrect(id)
-
-    el.__livewire = component
-
-    trigger('component.init', component)
-
-    // This makes anything that would normally be available on $wire
-    // available directly without needing to prefix "$wire.".
-    Alpine.bind(el, {
-        'x-data'() { return component.reactive },
-        // Disabling this for laracon...
-        'x-destroy'() {
-            releaseComponent(component.id)
-        }
-    })
-
-    storeComponent(component.id, component)
-}
-
-export function closestComponent(el) {
-    let closestRoot = Alpine.findClosest(el, i => i.__livewire)
-
-    if (! closestRoot) {
-        throw "Could not find Livewire component in DOM tree"
-    }
-
-    return closestRoot.__livewire
-}
