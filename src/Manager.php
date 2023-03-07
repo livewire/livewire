@@ -15,6 +15,7 @@ use Livewire\Features\SupportUnitTesting\Testable;
 use Livewire\Features\SupportUnitTesting\DuskTestable;
 use Livewire\ComponentHookRegistry;
 use Livewire\ComponentHook;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
 class Manager
 {
@@ -87,6 +88,11 @@ class Manager
         return app(HandleComponents::class)->updateProperty($component, $path, $value, $dummyContext);
     }
 
+    function isDefinitelyLivewireRequest()
+    {
+        return app(HandleRequests::class)->isDefinitelyLivewireRequest();
+    }
+
     function setUpdateRoute($callback)
     {
         return app(HandleRequests::class)->setUpdateRoute($callback);
@@ -140,6 +146,21 @@ class Manager
             'vapor',
             'bref',
         ]);
+    }
+
+    function addPersistentMiddleware($middleware)
+    {
+        app(PersistentMiddleware::class)->addPersistentMiddleware($middleware);
+    }
+
+    function setPersistentMiddleware($middleware)
+    {
+        app(PersistentMiddleware::class)->setPersistentMiddleware($middleware);
+    }
+
+    function getPersistentMiddleware()
+    {
+        return app(PersistentMiddleware::class)->getPersistentMiddleware();
     }
 
     function flushState()

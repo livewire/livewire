@@ -151,32 +151,6 @@ class TestCase extends BaseTestCase
                 return app()->call(new $class);
             })->middleware('web', AllowListedMiddleware::class, BlockListedMiddleware::class);
 
-            // Route::get('/force-login/{userId}', function ($userId) {
-            //     Auth::login(User::find($userId));
-
-            //     return 'You\'re logged in.';
-            // })->middleware('web');
-
-            // Route::get('/force-logout', function () {
-            //     Auth::logout();
-
-            //     return 'You\'re logged out.';
-            // })->middleware('web');
-
-            // Route::get('/with-authentication/livewire-dusk/{component}', function ($component) {
-            //     $class = urldecode($component);
-
-            //     return app()->call(new $class);
-            // })->middleware(['web', 'auth']);
-
-            // Gate::policy(Post::class, PostPolicy::class);
-
-            // Route::get('/with-authorization/{post}/livewire-dusk/{component}', function (Post $post, $component) {
-            //     $class = urldecode($component);
-
-            //     return app()->call(new $class);
-            // })->middleware(['web', 'auth', 'can:update,post']);
-
             Route::middleware('web')->get('/entangle-turbo', function () {
                 return view('turbo', [
                     'link' => '/livewire-dusk/' . urlencode(\LegacyTests\Browser\Alpine\Entangle\ToggleEntangledTurbo::class),
@@ -191,8 +165,6 @@ class TestCase extends BaseTestCase
             // ]);
 
             config()->set('app.debug', true);
-
-            // Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
         });
     }
 

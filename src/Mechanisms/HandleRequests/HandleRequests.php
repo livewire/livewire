@@ -2,10 +2,6 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
-use function Livewire\on;
-
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
-use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
 use Livewire\Mechanisms\HandleComponents\Checksum;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;

@@ -3,21 +3,24 @@
 namespace Livewire\Features\SupportUnitTesting;
 
 use function Livewire\invade;
-use function Livewire\store;
 use function Livewire\on;
-use Tests\TestCase;
-use Synthetic\TestableSynthetic;
-use PHPUnit\Framework\Assert as PHPUnit;
-use Livewire\Mechanisms\DataStore;
-use Livewire\Features\SupportValidation\TestsValidation;
-use Livewire\Features\SupportRedirects\TestsRedirects;
-use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
-use Livewire\Features\SupportEvents\TestsEvents;
-use Illuminate\Support\Traits\Macroable;
-
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\Facades\Route;
+use function Livewire\store;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\Traits\Macroable;
+use Livewire\Features\SupportEvents\TestsEvents;
+use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
+use Livewire\Features\SupportRedirects\TestsRedirects;
+use Livewire\Features\SupportValidation\TestsValidation;
+use Livewire\Livewire;
+use Livewire\Mechanisms\DataStore;
+use Livewire\Mechanisms\PersistentMiddleware\AllowListedMiddleware;
+
+use Livewire\Mechanisms\PersistentMiddleware\BlockListedMiddleware;
+use PHPUnit\Framework\Assert as PHPUnit;
+use Synthetic\TestableSynthetic;
+use Tests\TestCase;
 
 class DuskTestable
 {
@@ -30,16 +33,22 @@ class DuskTestable
             $class = urldecode($component);
 
             return app()->call(app('livewire')->new($class));
-        })->middleware('web');
+        })->middleware(['web', AllowListedMiddleware::class, BlockListedMiddleware::class]);
 
         on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
             static::$isTestProcess = true;
+            
+            $hookClosure = $testCase::getApplicationModificationClosure();
 
-            invade($testCase)->tweakApplication(function () {
+            invade($testCase)->tweakApplication(function () use ($hookClosure) {
                 config()->set('app.debug', true);
 
+                $hookClosure();
+
                 static::loadTestComponents();
+
+
             });
         });
 
