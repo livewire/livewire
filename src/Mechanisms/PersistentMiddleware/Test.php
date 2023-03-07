@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Laravel\Dusk\Browser;
 use Livewire\Component as BaseComponent;
+use Livewire\Features\SupportUnitTesting\DuskTestable;
 use Livewire\Livewire;
 use Sushi\Sushi;
 use Symfony\Component\HttpFoundation\Response;
@@ -83,93 +84,89 @@ class Test extends BrowserTestCase
 
     public function test_that_authentication_middleware_is_re_applied()
     {
-        $this->browse(function (Browser $browser) {
-            $browser
-                ->visit('/force-login/1')
-                ->visit('/with-authentication/livewire-dusk/'.urlencode(Component::class))
-                ->waitForLivewireToLoad()
-                // We're going to make a fetch request, but store the request payload
-                // so we can replay it from a different page.
-                ->tap(function ($b) {
-                    $script = <<<'JS'
-                        let unDecoratedFetch = window.fetch
-                        let decoratedFetch = (...args) => {
-                            window.localStorage.setItem(
-                                'lastFetchArgs',
-                                JSON.stringify(args),
-                            )
+        Livewire::visit(Component::class)
+            ->visit('/force-login/1')
+            ->visit('/with-authentication/livewire-dusk/'.urlencode(Component::class))
+            ->waitForLivewireToLoad()
+            // We're going to make a fetch request, but store the request payload
+            // so we can replay it from a different page.
+            ->tap(function ($b) {
+                $script = <<<'JS'
+                    let unDecoratedFetch = window.fetch
+                    let decoratedFetch = (...args) => {
+                        window.localStorage.setItem(
+                            'lastFetchArgs',
+                            JSON.stringify(args),
+                        )
 
-                            return unDecoratedFetch(...args)
-                        }
-                        window.fetch = decoratedFetch
+                        return unDecoratedFetch(...args)
+                    }
+                    window.fetch = decoratedFetch
+                JS;
+
+                $b->script($script);
+            })
+            ->waitForLivewire()->click('@refresh')
+            // Now we logout.
+            ->visit('/force-logout')
+            // Now we try and re-run the request payload, expecting that
+            // the "auth" middleware will be applied, recognize we've
+            // logged out and throw an error in the response.
+            ->tap(function ($b) {
+                $script = <<<'JS'
+                    let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
+
+                    window.fetch(...args).then(i => i.text()).then(response => {
+                        document.body.textContent = 'response-ready: '+JSON.stringify(response)
+                    })
 JS;
 
-                    $b->script($script);
-                })
-                ->waitForLivewire()->click('@refresh')
-                // Now we logout.
-                ->visit('/force-logout')
-                // Now we try and re-run the request payload, expecting that
-                // the "auth" middleware will be applied, recognize we've
-                // logged out and throw an error in the response.
-                ->tap(function ($b) {
-                    $script = <<<'JS'
-                        let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
-
-                        window.fetch(...args).then(i => i.text()).then(response => {
-                            document.body.textContent = 'response-ready: '+JSON.stringify(response)
-                        })
-JS;
-
-                    $b->script($script);
-                })
-                ->waitForText('response-ready: ')
-                ->tinker()
-                ->assertDontSee('Protected Content');
-            ;
-        });
+                $b->script($script);
+            })
+            ->waitForText('response-ready: ')
+            ->assertDontSee('Protected Content');
+        ;
     }
 
     public function test_that_authorization_middleware_is_re_applied()
     {
-        $this->browse(function (Browser $browser) {
-            $browser
-                ->visit('/force-login/1')
-                ->visit('/with-authorization/1/livewire-dusk/'.urlencode(Component::class))
-                ->waitForLivewireToLoad()
-                ->tap(function ($b) {
-                    $script = <<<'JS'
-                        let unDecoratedFetch = window.fetch
-                        let decoratedFetch = (...args) => {
-                            window.localStorage.setItem(
-                                'lastFetchArgs',
-                                JSON.stringify(args),
-                            )
+        Livewire::visit(Component::class)
+            ->visit('/force-login/1')
+            ->visit('/with-authorization/1/livewire-dusk/'.urlencode(Component::class))
+            ->waitForLivewireToLoad()
+            ->tap(function ($b) {
+                $script = <<<'JS'
+                    let unDecoratedFetch = window.fetch
+                    let decoratedFetch = (...args) => {
+                        window.localStorage.setItem(
+                            'lastFetchArgs',
+                            JSON.stringify(args),
+                        )
 
-                            return unDecoratedFetch(...args)
-                        }
-                        window.fetch = decoratedFetch
+                        return unDecoratedFetch(...args)
+                    }
+                    window.fetch = decoratedFetch
 JS;
 
-                    $b->script($script);
-                })
-                ->waitForLivewire()->click('@refresh')
-                ->visit('/force-login/2')
-                ->tap(function ($b) {
-                    $script = <<<'JS'
-                        let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
+                $b->script($script);
+            })
+            ->waitForLivewire()->click('@refresh')
+            ->visit('/force-login/2')
+            ->tap(function ($b) {
+                $script = <<<'JS'
+                    let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
 
-                        window.fetch(...args).then(i => i.text()).then(response => {
-                            document.body.textContent = 'response-ready: '+JSON.stringify(response)
-                        })
+                    window.fetch(...args).then(i => i.text()).then(response => {
+                        document.body.textContent = 'response-ready: '+JSON.stringify(response)
+                    })
 JS;
 
-                    $b->script($script);
-                })
-                ->waitForText('response-ready: ')
-                ->assertDontSee('Protected Content');
-            ;
-        });
+                $b->script($script);
+            })
+            ->waitForText('response-ready: ')
+            ->tinker()
+            ->assertDontSee('Protected Content');
+        ;
     }
 }
 
@@ -289,4 +286,3 @@ class PostPolicy
         return (int) $post->user_id === (int) $user->id;
     }
 }
-
