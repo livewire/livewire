@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         php: [8.1, 8.2]
         laravel: [9.*, 10.*]
@@ -54,7 +54,7 @@ jobs:
         env:
           RUNNING_IN_CI: true
 
-      # - name: Run Browser tests
-      #   run: vendor/bin/phpunit --testsuite Browser
-      #   env:
-      #     RUNNING_IN_CI: true
+      - name: Run Browser tests
+        run: vendor/bin/phpunit --testsuite Browser
+        env:
+          RUNNING_IN_CI: true
