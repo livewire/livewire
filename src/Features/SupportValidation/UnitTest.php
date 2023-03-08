@@ -127,7 +127,7 @@ class UnitTest extends \Tests\TestCase
             $validationMessage = 'emails.1 must be a valid email address.';
         }
 
-        $this->assertStringContainsString($validationMessage, $component->payload['effects']['html']);
+        $this->assertStringContainsString($validationMessage, $component->effects['html']);
     }
 
     /** @test */
