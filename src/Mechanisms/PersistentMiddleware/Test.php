@@ -162,7 +162,6 @@ JS;
                 $b->script($script);
             })
             ->waitForText('response-ready: ')
-            ->tinker()
             ->assertDontSee('Protected Content');
         ;
     }
