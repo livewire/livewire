@@ -81,7 +81,7 @@ class MiddlewareByPathAndMethodTransformer
 
         if (! $originalRoute) return;
 
-        $originalMiddleware = $originalRoute->middleware();
+        $originalMiddleware = app('router')->gatherRouteMiddleware($originalRoute);
 
         return $this->getFilteredMiddleware($originalMiddleware);
     }
@@ -116,13 +116,13 @@ class MiddlewareByPathAndMethodTransformer
 
         $persistentMiddleware = collect(app(PersistentMiddleware::class)->getPersistentMiddleware());
 
-        return $persistentMiddleware
-            ->filter(function ($value, $key) use ($middleware) {
-                return $middleware->contains(function($iValue, $iKey) use ($value) {
+        return $middleware
+            ->filter(function ($value, $key) use ($persistentMiddleware) {
+                return $persistentMiddleware->contains(function($iValue, $iKey) use ($value) {
                     // Some middlewares can be closures.
-                    if (! is_string($iValue)) return false;
+                    if (! is_string($value)) return false;
 
-                    return Str::before($iValue, ':') == $value;
+                    return Str::before($value, ':') == $iValue;
                 });
             })
             ->values()
