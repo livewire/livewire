@@ -24,7 +24,7 @@ class PersistentMiddleware
     {
         app()->singleton($this::class, fn() => $this);
 
-        $this->middlewareTransformer = new MiddlewareByIndexTransformer;
+        $this->middlewareTransformer = new MiddlewareByPathAndMethodTransformer;
 
         on('dehydrate', function($component, $context) {
             $this->middlewareTransformer->addDataToContext($context, request());
