@@ -7,7 +7,7 @@ use Illuminate\Pipeline\Pipeline;
 
 class PersistentMiddleware
 {
-    protected $persistentMiddleware = [
+    protected static $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
         \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
@@ -35,17 +35,17 @@ class PersistentMiddleware
 
     function addPersistentMiddleware($middleware)
     {
-        $this->persistentMiddleware = array_merge($this->persistentMiddleware, (array) $middleware);
+        static::$persistentMiddleware = array_merge(static::$persistentMiddleware, (array) $middleware);
     }
 
     function setPersistentMiddleware($middleware)
     {
-        $this->persistentMiddleware = (array) $middleware;
+        static::$persistentMiddleware = (array) $middleware;
     }
 
     function getPersistentMiddleware()
     {
-        return $this->persistentMiddleware;
+        return static::$persistentMiddleware;
     }
 
     function runRequestThroughMiddleware($request, $componentsData, $handle)
@@ -66,6 +66,21 @@ class PersistentMiddleware
 
     function flushState()
     {
+        /**
+         * We can't access the default static array once it has been
+         * modified, so we have to manually reset it here.
+         */ 
+        $this->setPersistentMiddleware([
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
+            \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\RedirectIfAuthenticated::class,
+            \Illuminate\Auth\Middleware\Authenticate::class,
+            \Illuminate\Auth\Middleware\Authorize::class,
+            \App\Http\Middleware\Authenticate::class,
+        ]);
+
         $this->middlewareTransformer = null;
     }
 }
