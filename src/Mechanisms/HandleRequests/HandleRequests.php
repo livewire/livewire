@@ -100,7 +100,6 @@ class HandleRequests
             ];
         }
 
-        // Due to Laravel 10 middleware return types, we need to ensure we return a response object.
-        return response()->json($responses);
+        return $responses;
     }
 }
