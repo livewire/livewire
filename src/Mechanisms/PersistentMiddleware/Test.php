@@ -162,7 +162,6 @@ JS;
 
                 $b->script($script);
             })
-            ->tinker()
             ->waitForLivewire()->click('@changeProtected')
             ->assertDontSee('Protected Content')
             ->assertSee('Still Secure Content')
