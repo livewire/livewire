@@ -13,7 +13,6 @@ use Livewire\ServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Livewire\Livewire;
 use Livewire\Component;
-use LegacyTests\Browser\Security\Component as SecurityComponent;
 use LegacyTests\Browser\DuskBrowserMacros;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Facades\View;
@@ -149,7 +148,7 @@ class TestCase extends BaseTestCase
                 $class = urldecode($component);
 
                 return app()->call(new $class);
-            })->middleware('web', AllowListedMiddleware::class, BlockListedMiddleware::class);
+            })->middleware('web');
 
             Route::middleware('web')->get('/entangle-turbo', function () {
                 return view('turbo', [
@@ -292,26 +291,6 @@ class TestCase extends BaseTestCase
         $sh->run();
 
         return $sh->getScopeVariables(false);
-    }
-}
-
-class AllowListedMiddleware
-{
-    public function handle($request, $next)
-    {
-        SecurityComponent::$loggedMiddleware[] = static::class;
-
-        return $next($request);
-    }
-}
-
-class BlockListedMiddleware
-{
-    public function handle($request, $next)
-    {
-        SecurityComponent::$loggedMiddleware[] = static::class;
-
-        return $next($request);
     }
 }
 
