@@ -23,11 +23,7 @@ class HandleRequests
 
     function getUpdateUri()
     {
-        $appUrl = config('livewire.app_url') ?? url('');
-
-        $appUrl = rtrim($appUrl, '/');
-
-        return $appUrl . (string) str($this->updateRoute->uri)->start('/');
+        return (string) str($this->updateRoute->uri)->start('/');
     }
 
     function skipRequestPayloadTamperingMiddleware()
