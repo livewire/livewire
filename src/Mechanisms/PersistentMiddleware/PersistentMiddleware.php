@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use function Livewire\on;
+use Illuminate\Http\Response;
 use Illuminate\Pipeline\Pipeline;
 
 class PersistentMiddleware
@@ -48,19 +49,21 @@ class PersistentMiddleware
         return static::$persistentMiddleware;
     }
 
-    function runRequestThroughMiddleware($request, $componentsData, $handle)
+    function runRequestThroughMiddleware($componentsData)
     {
         // Assign to class property so it can be used in dehydration and dynamic child components
         $middleware = $this->middlewareTransformer->getMiddlewareFromComponentsData($componentsData);
 
         // Only send through pipeline if there are middleware found
-        if (is_null($middleware)) return $handle($componentsData);
+        if (is_null($middleware)) return;
+
+        $request = $this->middlewareTransformer->getRequest();
 
         return (new Pipeline(app()))
             ->send($request)
             ->through($middleware)
-            ->then(function() use ($handle, $componentsData) {
-                return $handle($componentsData);
+            ->then(function() {
+                return new Response();
             });
     }
 

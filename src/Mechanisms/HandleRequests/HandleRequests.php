@@ -23,7 +23,11 @@ class HandleRequests
 
     function getUpdateUri()
     {
-        return (string) str($this->updateRoute->uri)->start('/');
+        $appUrl = config('livewire.app_url') ?? url('');
+
+        $appUrl = rtrim($appUrl, '/');
+
+        return $appUrl . (string) str($this->updateRoute->uri)->start('/');
     }
 
     function skipRequestPayloadTamperingMiddleware()
@@ -41,13 +45,13 @@ class HandleRequests
     function setUpdateRoute($callback)
     {
         $route = $callback(function () {
-            $components = $this->validateSnapshots();
+            $componentsData = $this->validateSnapshots();
 
-            return app(PersistentMiddleware::class)->runRequestThroughMiddleware(
-                request(),
-                $components,
-                $this->handleUpdate(...)
+            app(PersistentMiddleware::class)->runRequestThroughMiddleware(
+                $componentsData
             );
+
+            return $this->handleUpdate($componentsData);
         });
 
         // Append `livewire.message` to the existing name, if any.

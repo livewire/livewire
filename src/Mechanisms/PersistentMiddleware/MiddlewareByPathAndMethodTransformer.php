@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Support\Str;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 use function Livewire\invade;
 
@@ -11,6 +12,8 @@ class MiddlewareByPathAndMethodTransformer
 {
     protected $path;
     protected $method;
+    protected $originalRoute;
+    protected $fakeRequest;
 
     public function getMiddlewareFromComponentsData($componentsData)
     {
@@ -21,8 +24,52 @@ class MiddlewareByPathAndMethodTransformer
         return $middleware;
     }
 
+    public function makeRequestFromData()
+    {
+        $originalPath = $this->formatPath($this->path);
+        $originalMethod = $this->method;
+        $currentPath = $this->formatPath(request()->path());
+
+        $serverBag = clone request()->server;
+
+        $serverBag->set(
+            'REQUEST_URI',
+            str_replace($currentPath, $originalPath, $serverBag->get('REQUEST_URI'))
+        );
+
+        $serverBag->set('REQUEST_METHOD', $originalMethod);
+
+        $request = request()->duplicate(
+            server: $serverBag->all()
+        );
+
+        ray('newRequest', $request);
+
+        ray('session', $request->hasSession());
+
+        // ray('routeContainer', invade($this->originalRoute)->container);
+        // ray(app());
+
+        ray('requestResolver', $request);
+        $route = app('router')->getRoutes()->match($request);
+
+        $this->originalRoute = $route;
+
+        $request->setRouteResolver(fn() => $route);
+        ray('requestResolverAfter', $request);
+        ray($route);
+
+        $this->fakeRequest = $request;
+    }
+
+    public function getRequest()
+    {
+        return $this->fakeRequest;
+    }
+
     public function addDataToContext($context, $request)
     {
+        ray('originalRequest', request(), request()->route());
         [$path, $method] = $this->getPathAndMethod($request);
 
         $context->addMemo('path', $path);
@@ -77,37 +124,43 @@ class MiddlewareByPathAndMethodTransformer
 
     protected function getMiddlewareFromPathAndMethod()
     {
-        $originalRoute = $this->getRouteFromPathAndMethod();
+        $this->makeRequestFromData();
+        // $this->originalRoute = $this->getRouteFromPathAndMethod();
 
-        if (! $originalRoute) return;
+        if (! $this->originalRoute) return;
 
-        $originalMiddleware = app('router')->gatherRouteMiddleware($originalRoute);
+        $originalMiddleware = app('router')->gatherRouteMiddleware($this->originalRoute);
 
         return $this->getFilteredMiddleware($originalMiddleware);
     }
 
-    protected function getRouteFromPathAndMethod()
+    // protected function getRouteFromPathAndMethod()
+    // {
+    //     $routes = collect(app('router')->getRoutes()->get($this->method));
+
+    //     [$fallbacks, $routes] = $routes->partition(function ($route) {
+    //         return $route->isFallback;
+    //     });
+
+    //     return $routes->merge($fallbacks)->first(
+    //         fn ($route) => $this->pathMatchesRoute($this->path, $route)
+    //     );
+    // }
+
+    // protected function pathMatchesRoute($path, $route)
+    // {
+    //     $path = rtrim($path, '/') ?: '/';
+
+    //     $path = '/' . ltrim($path, '/');
+
+    //     invade($route)->compileRoute();
+
+    //     return preg_match($route->getCompiled()->getRegex(), rawurldecode($path));
+    // }
+
+    protected function formatPath($uri)
     {
-        $routes = collect(app('router')->getRoutes()->get($this->method));
-
-        [$fallbacks, $routes] = $routes->partition(function ($route) {
-            return $route->isFallback;
-        });
-
-        return $routes->merge($fallbacks)->first(
-            fn ($route) => $this->pathMatchesRoute($this->path, $route)
-        );
-    }
-
-    protected function pathMatchesRoute($path, $route)
-    {
-        $path = rtrim($path, '/') ?: '/';
-
-        $path = '/' . ltrim($path, '/');
-
-        invade($route)->compileRoute();
-
-        return preg_match($route->getCompiled()->getRegex(), rawurldecode($path));
+        return '/' . ltrim($uri, '/');
     }
 
     protected function getFilteredMiddleware($middleware)
@@ -116,7 +169,9 @@ class MiddlewareByPathAndMethodTransformer
 
         $persistentMiddleware = collect(app(PersistentMiddleware::class)->getPersistentMiddleware());
 
-        return $middleware
+        ray('getFilteredMiddleware', $middleware, $persistentMiddleware);
+
+        return ray()->pass($middleware
             ->filter(function ($value, $key) use ($persistentMiddleware) {
                 return $persistentMiddleware->contains(function($iValue, $iKey) use ($value) {
                     // Some middlewares can be closures.
@@ -126,6 +181,6 @@ class MiddlewareByPathAndMethodTransformer
                 });
             })
             ->values()
-            ->all();
+            ->all());
     }
 }
