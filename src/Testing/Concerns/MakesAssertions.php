@@ -176,6 +176,16 @@ trait MakesAssertions
         return $this;
     }
 
+    public function assertEmittedSelf($value, ...$params)
+    {
+        $this->assertEmitted($value, ...$params);
+        $result = $this->testEmittedSelf($value);
+
+        PHPUnit::assertTrue($result, "Failed asserting that an event [{$value}] was fired to itself.");
+
+        return $this;
+    }
+
     protected function testEmitted($value, $params)
     {
         $assertionSuffix = '.';
@@ -222,6 +232,15 @@ trait MakesAssertions
         return (bool) collect(data_get($this->payload, 'effects.emits'))->first(function ($item) use ($value) {
             return $item['event'] === $value
                 && $item['ancestorsOnly'] === true;
+        });
+    }
+
+
+    protected function testEmittedSelf($value)
+    {
+        return (bool) collect(data_get($this->payload, 'effects.emits'))->first(function ($item) use ($value) {
+            return $item['event'] === $value
+                && $item['selfOnly'] === true;
         });
     }
 

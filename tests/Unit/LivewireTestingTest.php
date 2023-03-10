@@ -217,6 +217,21 @@ class LivewireTestingTest extends TestCase
     }
 
     /** @test */
+    public function assert_emitted_self()
+    {
+        Livewire::test(EmitsEventsComponentStub::class)
+            ->call('emitFooSelf')
+            ->assertEmittedSelf('foo')
+            ->call('emitFooSelfWithParam', 'bar')
+            ->assertEmittedSelf('foo', 'bar')
+            ->call('emitFooSelfWithParam', 'bar')
+            ->assertEmittedSelf('foo', function ($event, $params) {
+                return $event === 'foo' && $params === ['bar'];
+            })
+        ;
+    }
+
+    /** @test */
     public function assert_not_emitted()
     {
         Livewire::test(EmitsEventsComponentStub::class)
@@ -386,6 +401,16 @@ class EmitsEventsComponentStub extends Component
     public function emitFooUpWithParam($param)
     {
         $this->emitUp('foo', $param);
+    }
+
+    public function emitFooSelf()
+    {
+        $this->emitSelf('foo');
+    }
+
+    public function emitFooSelfWithParam($param)
+    {
+        $this->emitSelf('foo', $param);
     }
 
     public function render()
