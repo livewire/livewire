@@ -1,5 +1,6 @@
 /vendor/
 /node_modules/
+_runtime_components.json
 SCRATCH.md
 COMMIT_MSG.aim.txt
 composer.lock
