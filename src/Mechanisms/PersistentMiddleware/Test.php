@@ -89,9 +89,12 @@ class Test extends BrowserTestCase
     public function test_that_authentication_middleware_is_re_applied()
     {
         Livewire::visit(Component::class)
+            ->visit('/with-authentication/livewire-dusk/'.urlencode(Component::class))
+            ->assertDontSee('Protected Content')
             ->visit('/force-login/1')
             ->visit('/with-authentication/livewire-dusk/'.urlencode(Component::class))
             ->waitForLivewireToLoad()
+            ->assertSee('Protected Content')
             // We're going to make a fetch request, but store the request payload
             // so we can replay it from a different page.
             ->tap(function ($b) {
@@ -110,7 +113,9 @@ class Test extends BrowserTestCase
 
                 $b->script($script);
             })
-            ->waitForLivewire()->click('@refresh')
+            ->waitForLivewire()->click('@changeProtected')
+            ->assertDontSee('Protected Content')
+            ->assertSee('Still Secure Content')
             // Now we logout.
             ->visit('/force-logout')
             // Now we try and re-run the request payload, expecting that
@@ -135,8 +140,11 @@ JS;
     public function test_that_authorization_middleware_is_re_applied()
     {
         Livewire::visit(Component::class)
+            ->visit('/with-authorization/1/livewire-dusk/'.urlencode(Component::class))
+            ->assertDontSee('Protected Content')
             ->visit('/force-login/1')
             ->visit('/with-authorization/1/livewire-dusk/'.urlencode(Component::class))
+            ->assertSee('Protected Content')
             ->waitForLivewireToLoad()
             ->tap(function ($b) {
                 $script = <<<'JS'
@@ -154,7 +162,10 @@ JS;
 
                 $b->script($script);
             })
-            ->waitForLivewire()->click('@refresh')
+            ->tinker()
+            ->waitForLivewire()->click('@changeProtected')
+            ->assertDontSee('Protected Content')
+            ->assertSee('Still Secure Content')
             ->visit('/force-login/2')
             ->tap(function ($b) {
                 $script = <<<'JS'
@@ -252,10 +263,16 @@ class Component extends BaseComponent
 
     public $middleware = [];
     public $showNested = false;
+    public $changeProtected = false;
 
     public function showNestedComponent()
     {
         $this->showNested = true;
+    }
+
+    public function toggleProtected()
+    {
+        $this->changeProtected = ! $this->changeProtected;
     }
 
     public function render()
@@ -267,9 +284,16 @@ class Component extends BaseComponent
     <span dusk="middleware">@json($middleware)</span>
 
     <button wire:click="$refresh" dusk="refresh">Refresh</button>
+    <button wire:click="toggleProtected" dusk="changeProtected">Change Protected</button>
     <button wire:click="showNestedComponent" dusk="showNested">Show Nested</button>
 
-    <h1>Protected Content</h1>
+    <h1>
+        @unless($changeProtected)
+            Protected Content
+        @else
+            Still Secure Content
+        @endunless
+    </h1>
 
     @if ($showNested)
         @livewire(\Livewire\Mechanisms\PersistentMiddleware\NestedComponent::class)
@@ -328,11 +352,13 @@ class User extends AuthUser
 
     protected $rows = [
         [
+            'id' => 1,
             'name' => 'First User',
             'email' => 'first@laravel-livewire.com',
             'password' => '',
         ],
         [
+            'id' => 2,
             'name' => 'Second user',
             'email' => 'second@laravel-livewire.com',
             'password' => '',
