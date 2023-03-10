@@ -5,7 +5,7 @@ namespace Livewire\Mechanisms\PersistentMiddleware;
 use Illuminate\Support\Str;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
-class MiddlewareByPathAndMethodTransformer
+class MiddlewareTransformer
 {
     protected $path;
     protected $method;

@@ -25,7 +25,7 @@ class PersistentMiddleware
     {
         app()->singleton($this::class, fn() => $this);
 
-        $this->middlewareTransformer = new MiddlewareByPathAndMethodTransformer;
+        $this->middlewareTransformer = new MiddlewareTransformer;
 
         on('dehydrate', function($component, $context) {
             $this->middlewareTransformer->addDataToContext($context, request());
@@ -72,7 +72,7 @@ class PersistentMiddleware
         /**
          * We can't access the default static array once it has been
          * modified, so we have to manually reset it here.
-         */ 
+         */
         $this->setPersistentMiddleware([
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
