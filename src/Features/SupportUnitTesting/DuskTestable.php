@@ -4,22 +4,7 @@ namespace Livewire\Features\SupportUnitTesting;
 
 use function Livewire\invade;
 use function Livewire\on;
-use function Livewire\store;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\Traits\Macroable;
-use Livewire\Features\SupportEvents\TestsEvents;
-use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
-use Livewire\Features\SupportRedirects\TestsRedirects;
-use Livewire\Features\SupportValidation\TestsValidation;
-use Livewire\Livewire;
-use Livewire\Mechanisms\DataStore;
-use Livewire\Mechanisms\PersistentMiddleware\AllowListedMiddleware;
-
-use Livewire\Mechanisms\PersistentMiddleware\BlockListedMiddleware;
-use PHPUnit\Framework\Assert as PHPUnit;
-use Synthetic\TestableSynthetic;
 use Tests\TestCase;
 
 class DuskTestable
@@ -33,22 +18,20 @@ class DuskTestable
             $class = urldecode($component);
 
             return app()->call(app('livewire')->new($class));
-        })->middleware(['web', AllowListedMiddleware::class, BlockListedMiddleware::class]);
+        })->middleware('web');
 
         on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
             static::$isTestProcess = true;
             
-            $hookClosure = $testCase::getApplicationModificationClosure();
+            $tweakApplication = $testCase::tweakApplicationHook();
 
-            invade($testCase)->tweakApplication(function () use ($hookClosure) {
+            invade($testCase)->tweakApplication(function () use ($tweakApplication) {
                 config()->set('app.debug', true);
 
-                $hookClosure();
+                if (is_callable($tweakApplication)) $tweakApplication();
 
                 static::loadTestComponents();
-
-
             });
         });
 

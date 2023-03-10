@@ -29,9 +29,16 @@ class Test extends BrowserTestCase
         $app->singleton(\Illuminate\Contracts\Http\Kernel::class, HttpKernel::class);
     }
 
-    public static function getApplicationModificationClosure() {
+    public static function tweakApplicationHook() {
         return function() {
             Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
+
+            // Overwrite the default route for these tests, so the middleware is included
+            Route::get('livewire-dusk/{component}', function ($component) {
+                $class = urldecode($component);
+    
+                return app()->call(app('livewire')->new($class));
+            })->middleware(['web', AllowListedMiddleware::class, BlockListedMiddleware::class]);
 
             Route::get('/force-login/{userId}', function ($userId) {
                 Auth::login(User::find($userId));
