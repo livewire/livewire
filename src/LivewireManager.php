@@ -58,9 +58,13 @@ class LivewireManager
         return $this->componentAliases;
     }
 
-    public function resolveMissingComponent($resolver)
+    public function resolveMissingComponent($resolver, $replace = false)
     {
-        $this->missingComponentResolvers[] = $resolver;
+        if ($replace) {
+            $this->missingComponentResolvers = [$resolver];
+        } else {
+            $this->missingComponentResolvers[] = $resolver;
+        }
     }
 
     public function getClass($alias)
