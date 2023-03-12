@@ -1,8 +1,6 @@
-import { directive, getDirectives } from '@/directives'
-import { findComponent } from '@/store'
 import { on } from '@/events'
 
-directive('model', (el, { expression }, { component }) => {
+export function forceUpdateOnDirty(component, el, expression) {
     on('request', (iComponent) => {
         if (iComponent !== component) return
 
@@ -18,7 +16,7 @@ directive('model', (el, { expression }, { component }) => {
             }
         }
     })
-})
+}
 
 function isDirty(subject, dirty) {
     // Check for exact match: wire:model="bob" in ['bob']

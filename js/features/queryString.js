@@ -10,7 +10,7 @@ on('component.init', component => {
     if (! queryString) return
 
     Object.entries(queryString).forEach(([key, value]) => {
-        let { name, as, except, use, alwaysShow } = normalizeQueryStringEntry(key, value)
+        let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value)
 
         let initialValue = dataGet(component.ephemeral, name)
 
@@ -23,10 +23,10 @@ on('component.init', component => {
         } else if (use === 'push') {
             on('request', (component, payload) => {
                 return () => {
-                    let diff = payload.diff
+                    let updates = payload.updates
                     let dirty = component.effects.dirty || []
 
-                    if (! Object.keys(payload.diff).includes(name) && ! dirty.some(i => i.startsWith(name))) return
+                    if (! Object.keys(updates).includes(name) && ! dirty.some(i => i.startsWith(name))) return
 
                     push(dataGet(component.ephemeral, name))
                 }
@@ -45,7 +45,7 @@ on('component.init', component => {
 })
 
 function normalizeQueryStringEntry(key, value) {
-    let defaults = { except: null, use: 'replace', alwaysShow: false }
+    let defaults = { use: 'replace', alwaysShow: false }
 
     if (typeof value === 'string') {
         return {...defaults, name: value, as: value }

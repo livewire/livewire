@@ -72,17 +72,17 @@
     const last = trackStack.pop();
     shouldTrack = last === void 0 ? true : last;
   }
-  function track(target2, type, key) {
+  function track(target, type, key) {
     if (shouldTrack && activeEffect) {
-      let depsMap = targetMap.get(target2);
+      let depsMap = targetMap.get(target);
       if (!depsMap) {
-        targetMap.set(target2, depsMap = /* @__PURE__ */ new Map());
+        targetMap.set(target, depsMap = /* @__PURE__ */ new Map());
       }
       let dep = depsMap.get(key);
       if (!dep) {
         depsMap.set(key, dep = createDep());
       }
-      const eventInfo = false ? { effect: activeEffect, target: target2, type, key } : void 0;
+      const eventInfo = false ? { effect: activeEffect, target, type, key } : void 0;
       trackEffects(dep, eventInfo);
     }
   }
@@ -104,15 +104,15 @@
       }
     }
   }
-  function trigger(target2, type, key, newValue, oldValue, oldTarget) {
-    const depsMap = targetMap.get(target2);
+  function trigger(target, type, key, newValue, oldValue, oldTarget) {
+    const depsMap = targetMap.get(target);
     if (!depsMap) {
       return;
     }
     let deps = [];
     if (type === "clear") {
       deps = [...depsMap.values()];
-    } else if (key === "length" && isArray(target2)) {
+    } else if (key === "length" && isArray(target)) {
       const newLength = toNumber(newValue);
       depsMap.forEach((dep, key2) => {
         if (key2 === "length" || key2 >= newLength) {
@@ -125,9 +125,9 @@
       }
       switch (type) {
         case "add":
-          if (!isArray(target2)) {
+          if (!isArray(target)) {
             deps.push(depsMap.get(ITERATE_KEY));
-            if (isMap(target2)) {
+            if (isMap(target)) {
               deps.push(depsMap.get(MAP_KEY_ITERATE_KEY));
             }
           } else if (isIntegerKey(key)) {
@@ -135,21 +135,21 @@
           }
           break;
         case "delete":
-          if (!isArray(target2)) {
+          if (!isArray(target)) {
             deps.push(depsMap.get(ITERATE_KEY));
-            if (isMap(target2)) {
+            if (isMap(target)) {
               deps.push(depsMap.get(MAP_KEY_ITERATE_KEY));
             }
           }
           break;
         case "set":
-          if (isMap(target2)) {
+          if (isMap(target)) {
             deps.push(depsMap.get(ITERATE_KEY));
           }
           break;
       }
     }
-    const eventInfo = false ? { target: target2, type, key, newValue, oldValue, oldTarget } : void 0;
+    const eventInfo = false ? { target, type, key, newValue, oldValue, oldTarget } : void 0;
     if (deps.length === 1) {
       if (deps[0]) {
         if (false) {
@@ -229,26 +229,26 @@
     return instrumentations;
   }
   function createGetter(isReadonly2 = false, shallow = false) {
-    return function get3(target2, key, receiver) {
+    return function get3(target, key, receiver) {
       if (key === "__v_isReactive") {
         return !isReadonly2;
       } else if (key === "__v_isReadonly") {
         return isReadonly2;
       } else if (key === "__v_isShallow") {
         return shallow;
-      } else if (key === "__v_raw" && receiver === (isReadonly2 ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target2)) {
-        return target2;
+      } else if (key === "__v_raw" && receiver === (isReadonly2 ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target)) {
+        return target;
       }
-      const targetIsArray = isArray(target2);
+      const targetIsArray = isArray(target);
       if (!isReadonly2 && targetIsArray && hasOwn(arrayInstrumentations, key)) {
         return Reflect.get(arrayInstrumentations, key, receiver);
       }
-      const res = Reflect.get(target2, key, receiver);
+      const res = Reflect.get(target, key, receiver);
       if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
         return res;
       }
       if (!isReadonly2) {
-        track(target2, "get", key);
+        track(target, "get", key);
       }
       if (shallow) {
         return res;
@@ -264,8 +264,8 @@
   }
   var set = /* @__PURE__ */ createSetter();
   function createSetter(shallow = false) {
-    return function set3(target2, key, value, receiver) {
-      let oldValue = target2[key];
+    return function set3(target, key, value, receiver) {
+      let oldValue = target[key];
       if (isReadonly(oldValue) && isRef(oldValue) && !isRef(value)) {
         return false;
       }
@@ -274,42 +274,42 @@
           oldValue = toRaw(oldValue);
           value = toRaw(value);
         }
-        if (!isArray(target2) && isRef(oldValue) && !isRef(value)) {
+        if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
           oldValue.value = value;
           return true;
         }
       }
-      const hadKey = isArray(target2) && isIntegerKey(key) ? Number(key) < target2.length : hasOwn(target2, key);
-      const result = Reflect.set(target2, key, value, receiver);
-      if (target2 === toRaw(receiver)) {
+      const hadKey = isArray(target) && isIntegerKey(key) ? Number(key) < target.length : hasOwn(target, key);
+      const result = Reflect.set(target, key, value, receiver);
+      if (target === toRaw(receiver)) {
         if (!hadKey) {
-          trigger(target2, "add", key, value);
+          trigger(target, "add", key, value);
         } else if (hasChanged(value, oldValue)) {
-          trigger(target2, "set", key, value, oldValue);
+          trigger(target, "set", key, value, oldValue);
         }
       }
       return result;
     };
   }
-  function deleteProperty(target2, key) {
-    const hadKey = hasOwn(target2, key);
-    const oldValue = target2[key];
-    const result = Reflect.deleteProperty(target2, key);
+  function deleteProperty(target, key) {
+    const hadKey = hasOwn(target, key);
+    const oldValue = target[key];
+    const result = Reflect.deleteProperty(target, key);
     if (result && hadKey) {
-      trigger(target2, "delete", key, void 0, oldValue);
+      trigger(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
-  function has(target2, key) {
-    const result = Reflect.has(target2, key);
+  function has(target, key) {
+    const result = Reflect.has(target, key);
     if (!isSymbol(key) || !builtInSymbols.has(key)) {
-      track(target2, "has", key);
+      track(target, "has", key);
     }
     return result;
   }
-  function ownKeys(target2) {
-    track(target2, "iterate", isArray(target2) ? "length" : ITERATE_KEY);
-    return Reflect.ownKeys(target2);
+  function ownKeys(target) {
+    track(target, "iterate", isArray(target) ? "length" : ITERATE_KEY);
+    return Reflect.ownKeys(target);
   }
   var mutableHandlers = {
     get,
@@ -320,24 +320,24 @@
   };
   var readonlyHandlers = {
     get: readonlyGet,
-    set(target2, key) {
+    set(target, key) {
       if (false) {
-        warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target2);
+        warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
-    deleteProperty(target2, key) {
+    deleteProperty(target, key) {
       if (false) {
-        warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target2);
+        warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     }
   };
   var toShallow = (value) => value;
   var getProto = (v) => Reflect.getPrototypeOf(v);
-  function get$1(target2, key, isReadonly2 = false, isShallow2 = false) {
-    target2 = target2["__v_raw"];
-    const rawTarget = toRaw(target2);
+  function get$1(target, key, isReadonly2 = false, isShallow2 = false) {
+    target = target["__v_raw"];
+    const rawTarget = toRaw(target);
     const rawKey = toRaw(key);
     if (!isReadonly2) {
       if (key !== rawKey) {
@@ -348,16 +348,16 @@
     const { has: has3 } = getProto(rawTarget);
     const wrap = isShallow2 ? toShallow : isReadonly2 ? toReadonly : toReactive;
     if (has3.call(rawTarget, key)) {
-      return wrap(target2.get(key));
+      return wrap(target.get(key));
     } else if (has3.call(rawTarget, rawKey)) {
-      return wrap(target2.get(rawKey));
-    } else if (target2 !== rawTarget) {
-      target2.get(key);
+      return wrap(target.get(rawKey));
+    } else if (target !== rawTarget) {
+      target.get(key);
     }
   }
   function has$1(key, isReadonly2 = false) {
-    const target2 = this["__v_raw"];
-    const rawTarget = toRaw(target2);
+    const target = this["__v_raw"];
+    const rawTarget = toRaw(target);
     const rawKey = toRaw(key);
     if (!isReadonly2) {
       if (key !== rawKey) {
@@ -365,91 +365,91 @@
       }
       track(rawTarget, "has", rawKey);
     }
-    return key === rawKey ? target2.has(key) : target2.has(key) || target2.has(rawKey);
+    return key === rawKey ? target.has(key) : target.has(key) || target.has(rawKey);
   }
-  function size(target2, isReadonly2 = false) {
-    target2 = target2["__v_raw"];
-    !isReadonly2 && track(toRaw(target2), "iterate", ITERATE_KEY);
-    return Reflect.get(target2, "size", target2);
+  function size(target, isReadonly2 = false) {
+    target = target["__v_raw"];
+    !isReadonly2 && track(toRaw(target), "iterate", ITERATE_KEY);
+    return Reflect.get(target, "size", target);
   }
   function add(value) {
     value = toRaw(value);
-    const target2 = toRaw(this);
-    const proto = getProto(target2);
-    const hadKey = proto.has.call(target2, value);
+    const target = toRaw(this);
+    const proto = getProto(target);
+    const hadKey = proto.has.call(target, value);
     if (!hadKey) {
-      target2.add(value);
-      trigger(target2, "add", value, value);
+      target.add(value);
+      trigger(target, "add", value, value);
     }
     return this;
   }
   function set$1(key, value) {
     value = toRaw(value);
-    const target2 = toRaw(this);
-    const { has: has3, get: get3 } = getProto(target2);
-    let hadKey = has3.call(target2, key);
+    const target = toRaw(this);
+    const { has: has3, get: get3 } = getProto(target);
+    let hadKey = has3.call(target, key);
     if (!hadKey) {
       key = toRaw(key);
-      hadKey = has3.call(target2, key);
+      hadKey = has3.call(target, key);
     } else if (false) {
-      checkIdentityKeys(target2, has3, key);
+      checkIdentityKeys(target, has3, key);
     }
-    const oldValue = get3.call(target2, key);
-    target2.set(key, value);
+    const oldValue = get3.call(target, key);
+    target.set(key, value);
     if (!hadKey) {
-      trigger(target2, "add", key, value);
+      trigger(target, "add", key, value);
     } else if (hasChanged(value, oldValue)) {
-      trigger(target2, "set", key, value, oldValue);
+      trigger(target, "set", key, value, oldValue);
     }
     return this;
   }
   function deleteEntry(key) {
-    const target2 = toRaw(this);
-    const { has: has3, get: get3 } = getProto(target2);
-    let hadKey = has3.call(target2, key);
+    const target = toRaw(this);
+    const { has: has3, get: get3 } = getProto(target);
+    let hadKey = has3.call(target, key);
     if (!hadKey) {
       key = toRaw(key);
-      hadKey = has3.call(target2, key);
+      hadKey = has3.call(target, key);
     } else if (false) {
-      checkIdentityKeys(target2, has3, key);
+      checkIdentityKeys(target, has3, key);
     }
-    const oldValue = get3 ? get3.call(target2, key) : void 0;
-    const result = target2.delete(key);
+    const oldValue = get3 ? get3.call(target, key) : void 0;
+    const result = target.delete(key);
     if (hadKey) {
-      trigger(target2, "delete", key, void 0, oldValue);
+      trigger(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
   function clear2() {
-    const target2 = toRaw(this);
-    const hadItems = target2.size !== 0;
-    const oldTarget = false ? isMap(target2) ? new Map(target2) : new Set(target2) : void 0;
-    const result = target2.clear();
+    const target = toRaw(this);
+    const hadItems = target.size !== 0;
+    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const result = target.clear();
     if (hadItems) {
-      trigger(target2, "clear", void 0, void 0, oldTarget);
+      trigger(target, "clear", void 0, void 0, oldTarget);
     }
     return result;
   }
   function createForEach(isReadonly2, isShallow2) {
     return function forEach(callback, thisArg) {
       const observed = this;
-      const target2 = observed["__v_raw"];
-      const rawTarget = toRaw(target2);
+      const target = observed["__v_raw"];
+      const rawTarget = toRaw(target);
       const wrap = isShallow2 ? toShallow : isReadonly2 ? toReadonly : toReactive;
       !isReadonly2 && track(rawTarget, "iterate", ITERATE_KEY);
-      return target2.forEach((value, key) => {
+      return target.forEach((value, key) => {
         return callback.call(thisArg, wrap(value), wrap(key), observed);
       });
     };
   }
   function createIterableMethod(method, isReadonly2, isShallow2) {
     return function(...args) {
-      const target2 = this["__v_raw"];
-      const rawTarget = toRaw(target2);
+      const target = this["__v_raw"];
+      const rawTarget = toRaw(target);
       const targetIsMap = isMap(rawTarget);
       const isPair = method === "entries" || method === Symbol.iterator && targetIsMap;
       const isKeyOnly = method === "keys" && targetIsMap;
-      const innerIterator = target2[method](...args);
+      const innerIterator = target[method](...args);
       const wrap = isShallow2 ? toShallow : isReadonly2 ? toReadonly : toReactive;
       !isReadonly2 && track(rawTarget, "iterate", isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY);
       return {
@@ -553,15 +553,15 @@
   var [mutableInstrumentations, readonlyInstrumentations, shallowInstrumentations, shallowReadonlyInstrumentations] = /* @__PURE__ */ createInstrumentations();
   function createInstrumentationGetter(isReadonly2, shallow) {
     const instrumentations = shallow ? isReadonly2 ? shallowReadonlyInstrumentations : shallowInstrumentations : isReadonly2 ? readonlyInstrumentations : mutableInstrumentations;
-    return (target2, key, receiver) => {
+    return (target, key, receiver) => {
       if (key === "__v_isReactive") {
         return !isReadonly2;
       } else if (key === "__v_isReadonly") {
         return isReadonly2;
       } else if (key === "__v_raw") {
-        return target2;
+        return target;
       }
-      return Reflect.get(hasOwn(instrumentations, key) && key in target2 ? instrumentations : target2, key, receiver);
+      return Reflect.get(hasOwn(instrumentations, key) && key in target ? instrumentations : target, key, receiver);
     };
   }
   var mutableCollectionHandlers = {
@@ -591,35 +591,35 @@
   function getTargetType(value) {
     return value["__v_skip"] || !Object.isExtensible(value) ? 0 : targetTypeMap(toRawType(value));
   }
-  function reactive(target2) {
-    if (isReadonly(target2)) {
-      return target2;
+  function reactive(target) {
+    if (isReadonly(target)) {
+      return target;
     }
-    return createReactiveObject(target2, false, mutableHandlers, mutableCollectionHandlers, reactiveMap);
+    return createReactiveObject(target, false, mutableHandlers, mutableCollectionHandlers, reactiveMap);
   }
-  function readonly(target2) {
-    return createReactiveObject(target2, true, readonlyHandlers, readonlyCollectionHandlers, readonlyMap);
+  function readonly(target) {
+    return createReactiveObject(target, true, readonlyHandlers, readonlyCollectionHandlers, readonlyMap);
   }
-  function createReactiveObject(target2, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
-    if (!isObject(target2)) {
+  function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
+    if (!isObject(target)) {
       if (false) {
-        console.warn(`value cannot be made reactive: ${String(target2)}`);
+        console.warn(`value cannot be made reactive: ${String(target)}`);
       }
-      return target2;
+      return target;
     }
-    if (target2["__v_raw"] && !(isReadonly2 && target2["__v_isReactive"])) {
-      return target2;
+    if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
+      return target;
     }
-    const existingProxy = proxyMap.get(target2);
+    const existingProxy = proxyMap.get(target);
     if (existingProxy) {
       return existingProxy;
     }
-    const targetType = getTargetType(target2);
+    const targetType = getTargetType(target);
     if (targetType === 0) {
-      return target2;
+      return target;
     }
-    const proxy = new Proxy(target2, targetType === 2 ? collectionHandlers : baseHandlers);
-    proxyMap.set(target2, proxy);
+    const proxy = new Proxy(target, targetType === 2 ? collectionHandlers : baseHandlers);
+    proxyMap.set(target, proxy);
     return proxy;
   }
   function isReadonly(value) {
@@ -717,7 +717,7 @@
   function deeplyEqual(a, b) {
     return JSON.stringify(a) === JSON.stringify(b);
   }
-  function dataGet2(object, key) {
+  function dataGet(object, key) {
     if (key === "")
       return object;
     return key.split(".").reduce((carry, i) => {
@@ -726,7 +726,7 @@
       return carry[i];
     }, object);
   }
-  function dataSet2(object, key, value) {
+  function dataSet(object, key, value) {
     let segments = key.split(".");
     if (segments.length === 1) {
       return object[key] = value;
@@ -736,7 +736,7 @@
     if (object[firstSegment] === void 0) {
       object[firstSegment] = {};
     }
-    dataSet2(object[firstSegment], restOfSegments, value);
+    dataSet(object[firstSegment], restOfSegments, value);
   }
   function diff(left, right, diffs = {}, path = "") {
     if (left === right)
@@ -1114,10 +1114,10 @@
       ownKeys: () => {
         return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
       },
-      has: (target2, name) => {
+      has: (target, name) => {
         return objects.some((obj) => obj.hasOwnProperty(name));
       },
-      get: (target2, name) => {
+      get: (target, name) => {
         return (objects.find((obj) => {
           if (obj.hasOwnProperty(name)) {
             let descriptor = Object.getOwnPropertyDescriptor(obj, name);
@@ -1145,7 +1145,7 @@
           return false;
         }) || {})[name];
       },
-      set: (target2, name, value) => {
+      set: (target, name, value) => {
         let closestObjectWithKey = objects.find((obj) => obj.hasOwnProperty(name));
         if (closestObjectWithKey) {
           closestObjectWithKey[name] = value;
@@ -2371,8 +2371,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs2 = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr22 = /* @__PURE__ */ makeMap2(specialBooleanAttrs2 + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ2 = true ? Object.freeze({}) : {};
-  var EMPTY_ARR2 = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ2 = false ? Object.freeze({}) : {};
+  var EMPTY_ARR2 = false ? Object.freeze([]) : [];
   var extend2 = Object.assign;
   var hasOwnProperty2 = Object.prototype.hasOwnProperty;
   var hasOwn2 = (val, key) => hasOwnProperty2.call(val, key);
@@ -2406,8 +2406,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap2 = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect2;
-  var ITERATE_KEY2 = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY2 = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY2 = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY2 = Symbol(false ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2482,13 +2482,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const last = trackStack2.pop();
     shouldTrack2 = last === void 0 ? true : last;
   }
-  function track2(target2, type, key) {
+  function track2(target, type, key) {
     if (!shouldTrack2 || activeEffect2 === void 0) {
       return;
     }
-    let depsMap = targetMap2.get(target2);
+    let depsMap = targetMap2.get(target);
     if (!depsMap) {
-      targetMap2.set(target2, depsMap = /* @__PURE__ */ new Map());
+      targetMap2.set(target, depsMap = /* @__PURE__ */ new Map());
     }
     let dep = depsMap.get(key);
     if (!dep) {
@@ -2497,18 +2497,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect2)) {
       dep.add(activeEffect2);
       activeEffect2.deps.push(dep);
-      if (activeEffect2.options.onTrack) {
+      if (false) {
         activeEffect2.options.onTrack({
           effect: activeEffect2,
-          target: target2,
+          target,
           type,
           key
         });
       }
     }
   }
-  function trigger3(target2, type, key, newValue, oldValue, oldTarget) {
-    const depsMap = targetMap2.get(target2);
+  function trigger3(target, type, key, newValue, oldValue, oldTarget) {
+    const depsMap = targetMap2.get(target);
     if (!depsMap) {
       return;
     }
@@ -2524,7 +2524,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     if (type === "clear") {
       depsMap.forEach(add22);
-    } else if (key === "length" && isArray3(target2)) {
+    } else if (key === "length" && isArray3(target)) {
       depsMap.forEach((dep, key2) => {
         if (key2 === "length" || key2 >= newValue) {
           add22(dep);
@@ -2536,9 +2536,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       switch (type) {
         case "add":
-          if (!isArray3(target2)) {
+          if (!isArray3(target)) {
             add22(depsMap.get(ITERATE_KEY2));
-            if (isMap2(target2)) {
+            if (isMap2(target)) {
               add22(depsMap.get(MAP_KEY_ITERATE_KEY2));
             }
           } else if (isIntegerKey2(key)) {
@@ -2546,25 +2546,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           }
           break;
         case "delete":
-          if (!isArray3(target2)) {
+          if (!isArray3(target)) {
             add22(depsMap.get(ITERATE_KEY2));
-            if (isMap2(target2)) {
+            if (isMap2(target)) {
               add22(depsMap.get(MAP_KEY_ITERATE_KEY2));
             }
           }
           break;
         case "set":
-          if (isMap2(target2)) {
+          if (isMap2(target)) {
             add22(depsMap.get(ITERATE_KEY2));
           }
           break;
       }
     }
     const run = (effect3) => {
-      if (effect3.options.onTrigger) {
+      if (false) {
         effect3.options.onTrigger({
           effect: effect3,
-          target: target2,
+          target,
           key,
           type,
           newValue,
@@ -2612,24 +2612,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   });
   function createGetter2(isReadonly2 = false, shallow = false) {
-    return function get3(target2, key, receiver) {
+    return function get3(target, key, receiver) {
       if (key === "__v_isReactive") {
         return !isReadonly2;
       } else if (key === "__v_isReadonly") {
         return isReadonly2;
-      } else if (key === "__v_raw" && receiver === (isReadonly2 ? shallow ? shallowReadonlyMap2 : readonlyMap2 : shallow ? shallowReactiveMap2 : reactiveMap2).get(target2)) {
-        return target2;
+      } else if (key === "__v_raw" && receiver === (isReadonly2 ? shallow ? shallowReadonlyMap2 : readonlyMap2 : shallow ? shallowReactiveMap2 : reactiveMap2).get(target)) {
+        return target;
       }
-      const targetIsArray = isArray3(target2);
+      const targetIsArray = isArray3(target);
       if (!isReadonly2 && targetIsArray && hasOwn2(arrayInstrumentations2, key)) {
         return Reflect.get(arrayInstrumentations2, key, receiver);
       }
-      const res = Reflect.get(target2, key, receiver);
+      const res = Reflect.get(target, key, receiver);
       if (isSymbol2(key) ? builtInSymbols2.has(key) : isNonTrackableKeys2(key)) {
         return res;
       }
       if (!isReadonly2) {
-        track2(target2, "get", key);
+        track2(target, "get", key);
       }
       if (shallow) {
         return res;
@@ -2647,47 +2647,47 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var set22 = /* @__PURE__ */ createSetter2();
   var shallowSet = /* @__PURE__ */ createSetter2(true);
   function createSetter2(shallow = false) {
-    return function set3(target2, key, value, receiver) {
-      let oldValue = target2[key];
+    return function set3(target, key, value, receiver) {
+      let oldValue = target[key];
       if (!shallow) {
         value = toRaw2(value);
         oldValue = toRaw2(oldValue);
-        if (!isArray3(target2) && isRef2(oldValue) && !isRef2(value)) {
+        if (!isArray3(target) && isRef2(oldValue) && !isRef2(value)) {
           oldValue.value = value;
           return true;
         }
       }
-      const hadKey = isArray3(target2) && isIntegerKey2(key) ? Number(key) < target2.length : hasOwn2(target2, key);
-      const result = Reflect.set(target2, key, value, receiver);
-      if (target2 === toRaw2(receiver)) {
+      const hadKey = isArray3(target) && isIntegerKey2(key) ? Number(key) < target.length : hasOwn2(target, key);
+      const result = Reflect.set(target, key, value, receiver);
+      if (target === toRaw2(receiver)) {
         if (!hadKey) {
-          trigger3(target2, "add", key, value);
+          trigger3(target, "add", key, value);
         } else if (hasChanged2(value, oldValue)) {
-          trigger3(target2, "set", key, value, oldValue);
+          trigger3(target, "set", key, value, oldValue);
         }
       }
       return result;
     };
   }
-  function deleteProperty2(target2, key) {
-    const hadKey = hasOwn2(target2, key);
-    const oldValue = target2[key];
-    const result = Reflect.deleteProperty(target2, key);
+  function deleteProperty2(target, key) {
+    const hadKey = hasOwn2(target, key);
+    const oldValue = target[key];
+    const result = Reflect.deleteProperty(target, key);
     if (result && hadKey) {
-      trigger3(target2, "delete", key, void 0, oldValue);
+      trigger3(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
-  function has2(target2, key) {
-    const result = Reflect.has(target2, key);
+  function has2(target, key) {
+    const result = Reflect.has(target, key);
     if (!isSymbol2(key) || !builtInSymbols2.has(key)) {
-      track2(target2, "has", key);
+      track2(target, "has", key);
     }
     return result;
   }
-  function ownKeys2(target2) {
-    track2(target2, "iterate", isArray3(target2) ? "length" : ITERATE_KEY2);
-    return Reflect.ownKeys(target2);
+  function ownKeys2(target) {
+    track2(target, "iterate", isArray3(target) ? "length" : ITERATE_KEY2);
+    return Reflect.ownKeys(target);
   }
   var mutableHandlers2 = {
     get: get22,
@@ -2698,15 +2698,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   };
   var readonlyHandlers2 = {
     get: readonlyGet2,
-    set(target2, key) {
-      if (true) {
-        console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target2);
+    set(target, key) {
+      if (false) {
+        console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
-    deleteProperty(target2, key) {
-      if (true) {
-        console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target2);
+    deleteProperty(target, key) {
+      if (false) {
+        console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     }
@@ -2722,9 +2722,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var toReadonly2 = (value) => isObject3(value) ? readonly2(value) : value;
   var toShallow2 = (value) => value;
   var getProto2 = (v) => Reflect.getPrototypeOf(v);
-  function get$12(target2, key, isReadonly2 = false, isShallow2 = false) {
-    target2 = target2["__v_raw"];
-    const rawTarget = toRaw2(target2);
+  function get$12(target, key, isReadonly2 = false, isShallow2 = false) {
+    target = target["__v_raw"];
+    const rawTarget = toRaw2(target);
     const rawKey = toRaw2(key);
     if (key !== rawKey) {
       !isReadonly2 && track2(rawTarget, "get", key);
@@ -2733,106 +2733,106 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const { has: has22 } = getProto2(rawTarget);
     const wrap = isShallow2 ? toShallow2 : isReadonly2 ? toReadonly2 : toReactive2;
     if (has22.call(rawTarget, key)) {
-      return wrap(target2.get(key));
+      return wrap(target.get(key));
     } else if (has22.call(rawTarget, rawKey)) {
-      return wrap(target2.get(rawKey));
-    } else if (target2 !== rawTarget) {
-      target2.get(key);
+      return wrap(target.get(rawKey));
+    } else if (target !== rawTarget) {
+      target.get(key);
     }
   }
   function has$12(key, isReadonly2 = false) {
-    const target2 = this["__v_raw"];
-    const rawTarget = toRaw2(target2);
+    const target = this["__v_raw"];
+    const rawTarget = toRaw2(target);
     const rawKey = toRaw2(key);
     if (key !== rawKey) {
       !isReadonly2 && track2(rawTarget, "has", key);
     }
     !isReadonly2 && track2(rawTarget, "has", rawKey);
-    return key === rawKey ? target2.has(key) : target2.has(key) || target2.has(rawKey);
+    return key === rawKey ? target.has(key) : target.has(key) || target.has(rawKey);
   }
-  function size2(target2, isReadonly2 = false) {
-    target2 = target2["__v_raw"];
-    !isReadonly2 && track2(toRaw2(target2), "iterate", ITERATE_KEY2);
-    return Reflect.get(target2, "size", target2);
+  function size2(target, isReadonly2 = false) {
+    target = target["__v_raw"];
+    !isReadonly2 && track2(toRaw2(target), "iterate", ITERATE_KEY2);
+    return Reflect.get(target, "size", target);
   }
   function add2(value) {
     value = toRaw2(value);
-    const target2 = toRaw2(this);
-    const proto = getProto2(target2);
-    const hadKey = proto.has.call(target2, value);
+    const target = toRaw2(this);
+    const proto = getProto2(target);
+    const hadKey = proto.has.call(target, value);
     if (!hadKey) {
-      target2.add(value);
-      trigger3(target2, "add", value, value);
+      target.add(value);
+      trigger3(target, "add", value, value);
     }
     return this;
   }
   function set$12(key, value) {
     value = toRaw2(value);
-    const target2 = toRaw2(this);
-    const { has: has22, get: get3 } = getProto2(target2);
-    let hadKey = has22.call(target2, key);
+    const target = toRaw2(this);
+    const { has: has22, get: get3 } = getProto2(target);
+    let hadKey = has22.call(target, key);
     if (!hadKey) {
       key = toRaw2(key);
-      hadKey = has22.call(target2, key);
-    } else if (true) {
-      checkIdentityKeys(target2, has22, key);
+      hadKey = has22.call(target, key);
+    } else if (false) {
+      checkIdentityKeys(target, has22, key);
     }
-    const oldValue = get3.call(target2, key);
-    target2.set(key, value);
+    const oldValue = get3.call(target, key);
+    target.set(key, value);
     if (!hadKey) {
-      trigger3(target2, "add", key, value);
+      trigger3(target, "add", key, value);
     } else if (hasChanged2(value, oldValue)) {
-      trigger3(target2, "set", key, value, oldValue);
+      trigger3(target, "set", key, value, oldValue);
     }
     return this;
   }
   function deleteEntry2(key) {
-    const target2 = toRaw2(this);
-    const { has: has22, get: get3 } = getProto2(target2);
-    let hadKey = has22.call(target2, key);
+    const target = toRaw2(this);
+    const { has: has22, get: get3 } = getProto2(target);
+    let hadKey = has22.call(target, key);
     if (!hadKey) {
       key = toRaw2(key);
-      hadKey = has22.call(target2, key);
-    } else if (true) {
-      checkIdentityKeys(target2, has22, key);
+      hadKey = has22.call(target, key);
+    } else if (false) {
+      checkIdentityKeys(target, has22, key);
     }
-    const oldValue = get3 ? get3.call(target2, key) : void 0;
-    const result = target2.delete(key);
+    const oldValue = get3 ? get3.call(target, key) : void 0;
+    const result = target.delete(key);
     if (hadKey) {
-      trigger3(target2, "delete", key, void 0, oldValue);
+      trigger3(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
   function clear3() {
-    const target2 = toRaw2(this);
-    const hadItems = target2.size !== 0;
-    const oldTarget = true ? isMap2(target2) ? new Map(target2) : new Set(target2) : void 0;
-    const result = target2.clear();
+    const target = toRaw2(this);
+    const hadItems = target.size !== 0;
+    const oldTarget = false ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
+    const result = target.clear();
     if (hadItems) {
-      trigger3(target2, "clear", void 0, void 0, oldTarget);
+      trigger3(target, "clear", void 0, void 0, oldTarget);
     }
     return result;
   }
   function createForEach2(isReadonly2, isShallow2) {
     return function forEach(callback, thisArg) {
       const observed = this;
-      const target2 = observed["__v_raw"];
-      const rawTarget = toRaw2(target2);
+      const target = observed["__v_raw"];
+      const rawTarget = toRaw2(target);
       const wrap = isShallow2 ? toShallow2 : isReadonly2 ? toReadonly2 : toReactive2;
       !isReadonly2 && track2(rawTarget, "iterate", ITERATE_KEY2);
-      return target2.forEach((value, key) => {
+      return target.forEach((value, key) => {
         return callback.call(thisArg, wrap(value), wrap(key), observed);
       });
     };
   }
   function createIterableMethod2(method, isReadonly2, isShallow2) {
     return function(...args) {
-      const target2 = this["__v_raw"];
-      const rawTarget = toRaw2(target2);
+      const target = this["__v_raw"];
+      const rawTarget = toRaw2(target);
       const targetIsMap = isMap2(rawTarget);
       const isPair = method === "entries" || method === Symbol.iterator && targetIsMap;
       const isKeyOnly = method === "keys" && targetIsMap;
-      const innerIterator = target2[method](...args);
+      const innerIterator = target[method](...args);
       const wrap = isShallow2 ? toShallow2 : isReadonly2 ? toReadonly2 : toReactive2;
       !isReadonly2 && track2(rawTarget, "iterate", isKeyOnly ? MAP_KEY_ITERATE_KEY2 : ITERATE_KEY2);
       return {
@@ -2851,7 +2851,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod2(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize2(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
       }
@@ -2927,15 +2927,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function createInstrumentationGetter2(isReadonly2, shallow) {
     const instrumentations = shallow ? isReadonly2 ? shallowReadonlyInstrumentations2 : shallowInstrumentations2 : isReadonly2 ? readonlyInstrumentations2 : mutableInstrumentations2;
-    return (target2, key, receiver) => {
+    return (target, key, receiver) => {
       if (key === "__v_isReactive") {
         return !isReadonly2;
       } else if (key === "__v_isReadonly") {
         return isReadonly2;
       } else if (key === "__v_raw") {
-        return target2;
+        return target;
       }
-      return Reflect.get(hasOwn2(instrumentations, key) && key in target2 ? instrumentations : target2, key, receiver);
+      return Reflect.get(hasOwn2(instrumentations, key) && key in target ? instrumentations : target, key, receiver);
     };
   }
   var mutableCollectionHandlers2 = {
@@ -2950,13 +2950,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var shallowReadonlyCollectionHandlers = {
     get: createInstrumentationGetter2(true, true)
   };
-  function checkIdentityKeys(target2, has22, key) {
-    const rawKey = toRaw2(key);
-    if (rawKey !== key && has22.call(target2, rawKey)) {
-      const type = toRawType2(target2);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap2 = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap2 = /* @__PURE__ */ new WeakMap();
   var readonlyMap2 = /* @__PURE__ */ new WeakMap();
@@ -2978,35 +2971,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getTargetType2(value) {
     return value["__v_skip"] || !Object.isExtensible(value) ? 0 : targetTypeMap2(toRawType2(value));
   }
-  function reactive22(target2) {
-    if (target2 && target2["__v_isReadonly"]) {
-      return target2;
+  function reactive22(target) {
+    if (target && target["__v_isReadonly"]) {
+      return target;
     }
-    return createReactiveObject2(target2, false, mutableHandlers2, mutableCollectionHandlers2, reactiveMap2);
+    return createReactiveObject2(target, false, mutableHandlers2, mutableCollectionHandlers2, reactiveMap2);
   }
-  function readonly2(target2) {
-    return createReactiveObject2(target2, true, readonlyHandlers2, readonlyCollectionHandlers2, readonlyMap2);
+  function readonly2(target) {
+    return createReactiveObject2(target, true, readonlyHandlers2, readonlyCollectionHandlers2, readonlyMap2);
   }
-  function createReactiveObject2(target2, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
-    if (!isObject3(target2)) {
-      if (true) {
-        console.warn(`value cannot be made reactive: ${String(target2)}`);
+  function createReactiveObject2(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
+    if (!isObject3(target)) {
+      if (false) {
+        console.warn(`value cannot be made reactive: ${String(target)}`);
       }
-      return target2;
+      return target;
     }
-    if (target2["__v_raw"] && !(isReadonly2 && target2["__v_isReactive"])) {
-      return target2;
+    if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
+      return target;
     }
-    const existingProxy = proxyMap.get(target2);
+    const existingProxy = proxyMap.get(target);
     if (existingProxy) {
       return existingProxy;
     }
-    const targetType = getTargetType2(target2);
+    const targetType = getTargetType2(target);
     if (targetType === 0) {
-      return target2;
+      return target;
     }
-    const proxy = new Proxy(target2, targetType === 2 ? collectionHandlers : baseHandlers);
-    proxyMap.set(target2, proxy);
+    const proxy = new Proxy(target, targetType === 2 ? collectionHandlers : baseHandlers);
+    proxyMap.set(target, proxy);
     return proxy;
   }
   function toRaw2(observed) {
@@ -3123,12 +3116,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup22 }) => {
     if (el.tagName.toLowerCase() !== "template")
       warn("x-teleport can only be used on a <template> tag", el);
-    let target2 = skipDuringClone(() => {
+    let target = skipDuringClone(() => {
       return document.querySelector(expression);
     }, () => {
       return teleportContainerDuringClone;
     })();
-    if (!target2)
+    if (!target)
       warn(`Cannot find x-teleport element for selector: "${expression}"`);
     let clone2 = el.content.cloneNode(true).firstElementChild;
     el._x_teleport = clone2;
@@ -3144,11 +3137,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     addScopeToNode(clone2, {}, el);
     mutateDom(() => {
       if (modifiers.includes("prepend")) {
-        target2.parentNode.insertBefore(clone2, target2);
+        target.parentNode.insertBefore(clone2, target);
       } else if (modifiers.includes("append")) {
-        target2.parentNode.insertBefore(clone2, target2.nextSibling);
+        target.parentNode.insertBefore(clone2, target.nextSibling);
       } else {
-        target2.appendChild(clone2);
+        target.appendChild(clone2);
       }
       initTree(clone2);
       clone2._x_ignore = true;
@@ -3794,7 +3787,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function generateWireObject(component, state) {
     return new Proxy({}, {
-      get(target2, property) {
+      get(target, property) {
         if (property in properties) {
           return getProperty(component, property);
         } else if (property in state) {
@@ -3803,7 +3796,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return getFallback(component)(property);
         }
       },
-      set(target2, property, value) {
+      set(target, property, value) {
         if (property in state) {
           state[property] = value;
         }
@@ -3826,7 +3819,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var requestTargetQueue = /* @__PURE__ */ new Map();
   function requestMethodCall(symbol, method, params) {
-    requestCommit2(symbol);
+    requestCommit(symbol);
     return new Promise((resolve, reject) => {
       let queue2 = requestTargetQueue.get(symbol);
       let path = "";
@@ -3840,7 +3833,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function requestCommit2(symbol) {
+  function requestCommit(symbol) {
     if (!requestTargetQueue.has(symbol)) {
       requestTargetQueue.set(symbol, {
         calls: [],
@@ -3868,17 +3861,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   async function sendMethodCall() {
     requestTargetQueue.forEach((request2, symbol) => {
-      let target2 = store2.get(symbol);
-      trigger2("request.prepare", target2);
+      let target = store2.get(symbol);
+      trigger2("request.prepare", target);
     });
     let payload = [];
     let successReceivers = [];
     let failureReceivers = [];
     requestTargetQueue.forEach((request2, symbol) => {
-      let target2 = store2.get(symbol);
-      let propertiesDiff = diff(target2.canonical, target2.ephemeral);
+      let target = store2.get(symbol);
+      let propertiesDiff = diff(target.canonical, target.ephemeral);
       let targetPaylaod = {
-        snapshot: target2.encodedSnapshot,
+        snapshot: target.encodedSnapshot,
         updates: propertiesDiff,
         calls: request2.calls.map((i) => ({
           path: i.path,
@@ -3887,25 +3880,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }))
       };
       payload.push(targetPaylaod);
-      let finishTarget = trigger2("request", target2, targetPaylaod);
+      let finishTarget = trigger2("request", target, targetPaylaod);
       failureReceivers.push(() => {
         let failed = true;
         finishTarget(failed);
       });
       successReceivers.push((snapshot, effects) => {
-        target2.mergeNewSnapshot(snapshot, effects);
-        processEffects(target2);
-        let returnHandlerStack = request2.calls.map(({ path, handleReturn }) => [path, handleReturn]);
-        let returnStack = [];
+        target.mergeNewSnapshot(snapshot, effects);
+        processEffects(target);
         if (effects["returns"]) {
-          Object.entries(effects["returns"]).forEach(([iPath, iReturns]) => {
-            iReturns.forEach((iReturn) => returnStack.push([iPath, iReturn]));
-          });
-          returnHandlerStack.forEach(([path, handleReturn], index) => {
-            let [iPath, iReturn] = returnStack[index];
-            if (path !== path)
-              return;
-            handleReturn(iReturn);
+          let returns = effects["returns"];
+          let returnHandlerStack = request2.calls.map(({ handleReturn }) => handleReturn);
+          returnHandlerStack.forEach((handleReturn, index) => {
+            handleReturn(returns[index]);
           });
         }
         finishTarget();
@@ -3942,9 +3929,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     throw "Livewire: No CSRF token detected";
   }
-  function processEffects(target2) {
-    let effects = target2.effects;
-    trigger2("effects", target2, effects);
+  function processEffects(target) {
+    let effects = target.effects;
+    trigger2("effects", target, effects);
   }
 
   // js/component.js
@@ -4758,7 +4745,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/forceUpdateDirtyInputs.js
-  directive2("model", (el, { expression }, { component }) => {
+  function forceUpdateOnDirty(component, el, expression) {
     on("request", (iComponent) => {
       if (iComponent !== component)
         return;
@@ -4771,7 +4758,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
     });
-  });
+  }
   function isDirty(subject, dirty) {
     if (dirty.includes(subject))
       return true;
@@ -4867,13 +4854,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$watchEffect", (component) => (callback) => effect(callback));
   wireProperty("$refresh", (component) => async () => await requestCommit(component.symbol));
-  wireProperty("get", (component) => (property, reactive3 = true) => dataGet(reactive3 ? target.reactive : target.ephemeral, property));
+  wireProperty("get", (component) => (property, reactive3 = true) => dataGet(reactive3 ? component.reactive : component.ephemeral, property));
   wireProperty("set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
     return live ? await requestCommit(component.symbol) : Promise.resolve();
   });
-  wireProperty("call", (component) => (method, ...params) => {
-    return component.$wire[method](...params);
+  wireProperty("call", (component) => async (method, ...params) => {
+    return await component.$wire[method](...params);
   });
   wireFallback((component) => (property) => async (...params) => {
     if (params.length === 1 && params[0] instanceof Event) {
@@ -4892,21 +4879,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!queryString)
       return;
     Object.entries(queryString).forEach(([key, value]) => {
-      let { name, as, except, use, alwaysShow } = normalizeQueryStringEntry(key, value);
-      let initialValue = dataGet2(component.ephemeral, name);
+      let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value);
+      let initialValue = dataGet(component.ephemeral, name);
       let { initial, replace: replace2, push: push2, pop } = track3(as, initialValue, alwaysShow);
       if (use === "replace") {
         module_default.effect(() => {
-          replace2(dataGet2(component.reactive, name));
+          replace2(dataGet(component.reactive, name));
         });
       } else if (use === "push") {
         on("request", (component2, payload) => {
           return () => {
-            let diff2 = payload.diff;
+            let updates = payload.updates;
             let dirty = component2.effects.dirty || [];
-            if (!Object.keys(payload.diff).includes(name) && !dirty.some((i) => i.startsWith(name)))
+            if (!Object.keys(updates).includes(name) && !dirty.some((i) => i.startsWith(name)))
               return;
-            push2(dataGet2(component2.ephemeral, name));
+            push2(dataGet(component2.ephemeral, name));
           };
         });
         pop(async (newValue) => {
@@ -4919,7 +4906,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   function normalizeQueryStringEntry(key, value) {
-    let defaults = { except: null, use: "replace", alwaysShow: false };
+    let defaults = { use: "replace", alwaysShow: false };
     if (typeof value === "string") {
       return { ...defaults, name: value, as: value };
     } else {
@@ -4929,13 +4916,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/morph.js
-  var { closestComponent: closestComponent2 } = "@/store";
   function morph2(component, el, html) {
     let wrapper = document.createElement("div");
     wrapper.innerHTML = html;
     let parentComponent;
     try {
-      parentComponent = closestComponent2(el.parentElement);
+      parentComponent = closestComponent(el.parentElement);
     } catch (e) {
     }
     parentComponent && (wrapper.__livewire = parentComponent);
@@ -4975,7 +4961,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (isntElement(el2))
           return;
         trigger("morph.added", el2);
-        const closestComponentId = closestComponent2(el2).id;
+        const closestComponentId = closestComponent(el2).id;
         if (closestComponentId === component.id) {
         } else if (isComponentRootEl(el2)) {
           let data2;
@@ -5271,16 +5257,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function containsTargets(payload, targets) {
-    let { diff: diff2, calls } = payload;
-    return targets.some(({ target: target2, params }) => {
+    let { updates, calls } = payload;
+    return targets.some(({ target, params }) => {
       if (params) {
         return calls.some(({ method, params: methodParams }) => {
-          return target2 === method && params === quickHash(methodParams.toString());
+          return target === method && params === quickHash(methodParams.toString());
         });
       }
-      if (Object.keys(diff2).map((i) => i.split(".")[0]).includes(target2))
+      if (Object.keys(updates).map((i) => i.split(".")[0]).includes(target))
         return true;
-      if (calls.map((i) => i.method).includes(target2))
+      if (calls.map((i) => i.method).includes(target))
         return true;
     });
   }
@@ -5293,15 +5279,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (raw2.includes("(") && raw2.includes(")")) {
         targets.push({ target: directive3.method, params: quickHash(directive3.params.toString()) });
       } else if (raw2.includes(",")) {
-        raw2.split(",").map((i) => i.trim()).forEach((target2) => {
-          targets.push({ target: target2 });
+        raw2.split(",").map((i) => i.trim()).forEach((target) => {
+          targets.push({ target });
         });
       } else {
         targets.push({ target: raw2 });
       }
     } else {
       let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
-      directives3.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target2) => targets.push({ target: target2 }));
+      directives3.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
     }
     return targets;
   }
@@ -5344,8 +5330,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         for (let i = 0; i < targets.length; i++) {
           if (isDirty2)
             break;
-          let target2 = targets[i];
-          isDirty2 = JSON.stringify(dataGet2(component.canonical, target2)) !== JSON.stringify(dataGet2(component.reactive, target2));
+          let target = targets[i];
+          isDirty2 = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target));
         }
       }
       if (oldIsDirty !== isDirty2) {
@@ -5371,6 +5357,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!expression) {
       return console.warn("Livewire: [wire:model] is missing a value.", el);
     }
+    forceUpdateOnDirty(component, el, expression);
     let isLive = modifiers.includes("live");
     let isLazy = modifiers.includes("lazy");
     let isDebounced = modifiers.includes("debounce");
@@ -5383,10 +5370,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       ["x-model.unintrusive" + getModifierTail(modifiers)]() {
         return {
           get() {
-            return dataGet2(component.$wire, expression);
+            return dataGet(component.$wire, expression);
           },
           set(value) {
-            dataSet2(component.$wire, expression, value);
+            dataSet(component.$wire, expression, value);
             isLive && debouncedUpdate();
           }
         };

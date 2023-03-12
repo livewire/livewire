@@ -18,8 +18,8 @@
             <!-- <directory suffix="Test.php">./legacy_tests/Unit</directory> -->
         </testsuite>
         <testsuite name="Browser">
-            <directory suffix="BrowserTest.php">./src</directory>
-            <!-- <directory suffix="Test.php">./legacy_tests/Browser</directory> -->
+            <!-- <directory suffix="BrowserTest.php">./src</directory> -->
+            <directory suffix="Test.php">./legacy_tests/Browser</directory>
         </testsuite>
     </testsuites>
 </phpunit>

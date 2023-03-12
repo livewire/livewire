@@ -273,6 +273,10 @@ class TestCase extends BaseTestCase
             'download.default_directory' => __DIR__.'/downloads',
         ]);
 
+        // $options->addArguments([
+        //     'auto-open-devtools-for-tabs',
+        // ]);
+
         return static::$useSafari
             ? RemoteWebDriver::create(
                 'http://localhost:9515', DesiredCapabilities::safari()

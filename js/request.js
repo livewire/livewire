@@ -52,7 +52,7 @@ function requestMethodCall(symbol, method, params) {
  * immediately, because we might want to batch multiple
  * simultaneus commits from other synthetic targets.
  */
-function requestCommit(symbol) {
+export function requestCommit(symbol) {
     if (! requestTargetQueue.has(symbol)) {
         requestTargetQueue.set(symbol, {
             calls: [],
@@ -139,23 +139,15 @@ async function sendMethodCall() {
 
             processEffects(target)
 
-            // Here we'll match up returned values with their method call handlers. We need to build up
-            // two "stacks" of the same length and walk through them together to handle them properly...
-            let returnHandlerStack = request.calls.map(({ path, handleReturn }) => ([ path, handleReturn ]))
-
-            let returnStack = []
-
             if (effects['returns']) {
-                Object.entries(effects['returns']).forEach(([iPath, iReturns]) => {
-                    iReturns.forEach(iReturn => returnStack.push([iPath, iReturn]))
-                })
+                let returns = effects['returns']
 
-                returnHandlerStack.forEach(([path, handleReturn], index) => {
-                    let [iPath, iReturn] = returnStack[index]
+                // Here we'll match up returned values with their method call handlers. We need to build up
+                // two "stacks" of the same length and walk through them together to handle them properly...
+                let returnHandlerStack = request.calls.map(({ handleReturn }) => (handleReturn))
 
-                    if (path !== path) return
-
-                    handleReturn(iReturn)
+                returnHandlerStack.forEach((handleReturn, index) => {
+                    handleReturn(returns[index])
                 })
             }
 

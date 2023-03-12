@@ -73,7 +73,7 @@ function whenTargetsArePartOfRequest(component, targets, [ startLoading, endLoad
 }
 
 function containsTargets(payload, targets) {
-    let { diff, calls } = payload
+    let { updates, calls } = payload
 
     return targets.some(({ target, params }) => {
         if (params) {
@@ -83,7 +83,7 @@ function containsTargets(payload, targets) {
             })
         }
 
-        if (Object.keys(diff).map(i => i.split('.')[0]).includes(target)) return true
+        if (Object.keys(updates).map(i => i.split('.')[0]).includes(target)) return true
 
         if (calls.map(i => i.method).includes(target)) return true
     })

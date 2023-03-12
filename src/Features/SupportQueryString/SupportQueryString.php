@@ -23,7 +23,7 @@ class SupportQueryString extends ComponentHook
             $key = is_string($key) ? $key : $value;
             $alias = $value['as'] ?? $key;
             $use = $value['use'] ?? 'push';
-            $alwaysShow = $value['alwaysShow'] ?? ($value['except'] ? false : true);
+            $alwaysShow = $value['alwaysShow'] ?? false;
 
             $this->setPropertyHook($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
         }
@@ -38,7 +38,7 @@ class SupportQueryString extends ComponentHook
         if (method_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString();
         elseif (property_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString;
 
-        return collect(class_uses_recursive($class = static::class))
+        return collect(class_uses_recursive($class = $this->component::class))
             ->map(function ($trait) use ($class, $component) {
                 $member = 'queryString' . class_basename($trait);
 

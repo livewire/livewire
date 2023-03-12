@@ -26,9 +26,9 @@ class SupportEvents extends ComponentHook
 
             $method = static::getListenerMethodName($this->component, $name);
 
-            wrap($this->component)->$method(...$params);
-
-            $returnEarly();
+            $returnEarly(
+                wrap($this->component)->$method(...$params)
+            );
         }
     }
 

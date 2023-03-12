@@ -1,7 +1,8 @@
 import { closestComponent, findComponent } from '@/store'
 import { on } from '@/events'
 import { wireFallback, wireProperty } from '@/wire'
-import { callMethod } from '@/request'
+import { callMethod, requestCommit } from '@/request'
+import { dataGet, dataSet } from '@/utils'
 
 wireProperty('$set', (component) => (...params) => {
     return component.$wire.set(...params)
@@ -35,7 +36,7 @@ wireProperty('$watch', (component) => (path, callback) => {
 })
 wireProperty('$watchEffect', (component) => (callback) => effect(callback))
 wireProperty('$refresh', (component) => async () => await requestCommit(component.symbol))
-wireProperty('get', (component) => (property, reactive = true) => dataGet(reactive ? target.reactive : target.ephemeral, property))
+wireProperty('get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
 wireProperty('set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
@@ -43,8 +44,8 @@ wireProperty('set', (component) => async (property, value, live = true) => {
         ? await requestCommit(component.symbol)
         : Promise.resolve()
 })
-wireProperty('call', (component) => (method, ...params) => {
-    return component.$wire[method](...params)
+wireProperty('call', (component) => async (method, ...params) => {
+    return await component.$wire[method](...params)
 })
 
 wireFallback((component) => (property) => async (...params) => {

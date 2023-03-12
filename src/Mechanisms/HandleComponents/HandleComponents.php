@@ -204,7 +204,9 @@ class HandleComponents
 
     protected function getView($component)
     {
-        $viewOrString = wrap($component)->render();
+        $viewOrString = method_exists($component, 'render')
+            ? wrap($component)->render()
+            : view("livewire.{$component->getName()}");
 
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
 
@@ -317,6 +319,8 @@ class HandleComponents
 
     protected function callMethods($root, $calls, $context)
     {
+        $returns = [];
+
         foreach ($calls as $call) {
             $method = $call['method'];
             $params = $call['params'];
@@ -346,16 +350,10 @@ class HandleComponents
                 ? $earlyReturn
                 : wrap($root)->{$method}(...$params);
 
-            $return = $finish($return);
-
-            // Deciding if I want to commit to the idea that you can only call
-            // a method on the root component. So leaving this here as a shim.
-            $path = '';
-
-            if (! isset($effects['returns'])) $effects['returns'] = [];
-            if (! isset($effects['returns'][$path])) $effects['returns'][$path] = [];
-            $effects['returns'][$path][] = $return;
+            $returns[] = $finish($return);
         }
+
+        $context->addEffect('returns', $returns);
     }
 
     protected function propertySynth($keyOrTarget, $context, $path): Synth

@@ -1,6 +1,5 @@
 import { trigger } from "@vue/reactivity"
-
-const { closestComponent } = '@/store'
+import { closestComponent } from "@/store"
 
 export function morph(component, el, html) {
     let wrapper = document.createElement('div')

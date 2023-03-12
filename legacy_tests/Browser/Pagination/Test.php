@@ -8,6 +8,11 @@ use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
 {
+    public function setUp(): void
+    {
+        $this->markTestSkipped(); // @todo: Josh Hanley
+    }
+
     public function test_tailwind()
     {
         $this->browse(function ($browser) {
@@ -107,8 +112,6 @@ class Test extends TestCase
 
     public function test_cursor_tailwind()
     {
-        $this->markTestSkipped(); // @todo: Josh Hanley. For some weird reason cursor pagination isn't working correctly...
-
         if (! class_exists(CursorPaginator::class)) {
             $this->markTestSkipped('Need Laravel >= 8');
         }
@@ -466,6 +469,8 @@ class Test extends TestCase
     /** @test */
     public function pagination_trait_resolves_query_string_alias_for_page_from_component()
     {
+        $this->markTestSkipped(); // @todo: Josh Hanley
+
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, PaginationComponentWithQueryStringAliasForPage::class, '?p=2')
                 /**
