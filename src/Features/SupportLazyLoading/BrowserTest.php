@@ -8,12 +8,6 @@ use Livewire\Component;
 
 class BrowserTest extends BrowserTestCase
 {
-    public function setUp(): void
-    {
-        $this->markTestSkipped(); // Will return to this...
-        parent::setUp();
-    }
-
     /** @test */
     public function can_lazy_load_a_component()
     {
@@ -24,12 +18,17 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }, 'child' => new class extends Component {
-            public function mount() { sleep(1); }
-            public function render() { return <<<HTML
-            <div id="child">
-                Child!
-            </div>
-            HTML; }
+            public function mount() {
+                sleep(1);
+            }
+
+            public function render() {
+                return <<<HTML
+                <div id="child">
+                    Child!
+                </div>
+                HTML;
+            }
         }])
         ->assertDontSee('Child!')
         ->waitFor('#child')

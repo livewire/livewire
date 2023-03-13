@@ -178,7 +178,13 @@ class HandleComponents
 
     protected function render($component, $default = null)
     {
-        if (store($component)->get('skipRender', false)) return value($default);
+        if ($html = store($component)->get('skipRender', false)) {
+            $html = value(is_string($html) ? $html : $default);
+
+            return Utils::insertAttributesIntoHtmlRoot($html, [
+                'wire:id' => $component->getId(),
+            ]);
+        }
 
         [ $view, $properties ] = $this->getView($component);
 

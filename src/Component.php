@@ -61,9 +61,9 @@ abstract class Component
         return $this->__name;
     }
 
-    function skipRender()
+    function skipRender($html = null)
     {
-        store($this)->set('skipRender', true);
+        store($this)->set('skipRender', $html ?: true);
     }
 
     function __isset($property)

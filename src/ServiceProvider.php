@@ -76,7 +76,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
             \Livewire\Features\SupportFileUploads\SupportFileUploads::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
-            // \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
+            \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
             \Livewire\Features\SupportPagination\SupportPagination::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
             \Livewire\Features\SupportRedirects\SupportRedirects::class,
