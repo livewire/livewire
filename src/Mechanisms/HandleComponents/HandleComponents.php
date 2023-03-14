@@ -54,14 +54,12 @@ class HandleComponents
 
         $snapshot = $this->snapshot($component, $context);
 
-        $snapshot['checksum'] = Checksum::generate($snapshot);
-
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:snapshot' => $snapshot,
             'wire:effects' => $context->effects,
         ]);
 
-        return $finish($html);
+        return $finish($html, $snapshot);
     }
 
     protected function shortCircuitMount($name, $params, $key, $parent)
@@ -77,18 +75,10 @@ class HandleComponents
 
     public function update($snapshot, $updates, $calls)
     {
-        Checksum::verify($snapshot);
-
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
-        $name = $snapshot['memo']['name'];
-        $id   = $snapshot['memo']['id'];
 
-        $component = app('livewire')->new($name, id: $id);
-
-        $context = new ComponentContext($component);
-
-        $this->hydrateProperties($component, $data, $context);
+        [ $component, $context ] = $this->fromSnapshot($snapshot);
 
         trigger('hydrate', $component, $memo, $context);
 
@@ -104,16 +94,33 @@ class HandleComponents
 
         $snapshot = $this->snapshot($component, $context);
 
-        $snapshot['checksum'] = Checksum::generate($snapshot);
-
         return [ $snapshot, $context->effects ];
     }
 
-    protected function snapshot($component, $context)
+    public function fromSnapshot($snapshot)
     {
+        Checksum::verify($snapshot);
+
+        $data = $snapshot['data'];
+        $name = $snapshot['memo']['name'];
+        $id   = $snapshot['memo']['id'];
+
+        $component = app('livewire')->new($name, id: $id);
+
+        $context = new ComponentContext($component);
+
+        $this->hydrateProperties($component, $data, $context);
+
+        return [ $component, $context ];
+    }
+
+    public function snapshot($component, $context = null)
+    {
+        $context ??= new ComponentContext($component);
+
         $data = $this->dehydrateProperties($component, $context);
 
-        return [
+        $snapshot = [
             'data' => $data,
             'memo' => [
                 'id' => $component->getId(),
@@ -121,6 +128,10 @@ class HandleComponents
                 ...$context->memo,
             ],
         ];
+
+        $snapshot['checksum'] = Checksum::generate($snapshot);
+
+        return $snapshot;
     }
 
     protected function dehydrateProperties($component, $context)
@@ -331,6 +342,22 @@ class HandleComponents
             $method = $call['method'];
             $params = $call['params'];
 
+
+            $earlyReturnCalled = false;
+            $earlyReturn = null;
+            $returnEarly = function ($return = null) use (&$earlyReturnCalled, &$earlyReturn) {
+                $earlyReturnCalled = true;
+                $earlyReturn = $return;
+            };
+
+            $finish = trigger('call', $root, $method, $params, $context, $returnEarly);
+
+            if ($earlyReturnCalled) {
+                $returns[] = $finish($earlyReturn);
+
+                continue;
+            }
+
             $methods = Utils::getPublicMethodsDefinedBySubClass($root);
 
             // Also remove "render" from the list...
@@ -343,18 +370,7 @@ class HandleComponents
                 throw new MethodNotFoundException($method);
             }
 
-            $earlyReturnCalled = false;
-            $earlyReturn = null;
-            $returnEarly = function ($return = null) use (&$earlyReturnCalled, &$earlyReturn) {
-                $earlyReturnCalled = true;
-                $earlyReturn = $return;
-            };
-
-            $finish = trigger('call', $root, $method, $params, $context, $returnEarly);
-
-            $return = $earlyReturnCalled
-                ? $earlyReturn
-                : wrap($root)->{$method}(...$params);
+            $return = wrap($root)->{$method}(...$params);
 
             $returns[] = $finish($return);
         }

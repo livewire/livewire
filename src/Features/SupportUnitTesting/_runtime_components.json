@@ -1,5 +1,5 @@
 [
-    "ar5xzKIk5gg",
-    "Livewire\\Features\\SupportJavaScriptMethods\\BrowserTest",
-    "can_toggle_a_purely_js_property_with_a_purely_js_function"
+    "aDROK3T7GLr",
+    "Livewire\\Features\\SupportLazyLoading\\BrowserTest",
+    "can_pass_reactive_props_to_lazyilly_loaded_component"
 ]

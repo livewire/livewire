@@ -108,7 +108,9 @@ class ComponentRegistry
     protected function classToName($class)
     {
         // Check the aliases...
-        if ($name = array_search($class, $this->aliases)) return $name;
+        $resolvedAliases = array_map(fn ($i) => is_object($i) ? get_class($i) : $i, $this->aliases);
+
+        if ($name = array_search($class, $resolvedAliases)) return $name;
 
         // Check existance in non-aliased classes and hash...
         foreach ($this->nonAliasedClasses as $oneOff) {

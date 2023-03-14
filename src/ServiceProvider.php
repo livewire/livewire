@@ -69,7 +69,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class,
             \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
-            \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
             \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
             \Livewire\Features\SupportQueryString\SupportQueryString::class,
@@ -86,7 +85,8 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportModels\SupportModels::class,
             \Livewire\Features\SupportEvents\SupportEvents::class,
 
-            // Load last so, if it is enabled, it has priority over ModelsSupport
+            // Some features we want to have priority over others...
+            \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
             \Livewire\Features\SupportLegacyModels\SupportLegacyModels::class,
         ] as $feature) {
             app('livewire')->componentHook($feature);

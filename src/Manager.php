@@ -70,6 +70,16 @@ class Manager
         return app(RenderComponent::class)->render($component, $default);
     }
 
+    function snapshot($component)
+    {
+        return app(HandleComponents::class)->snapshot($component);
+    }
+
+    function fromSnapshot($snapshot)
+    {
+        return app(HandleComponents::class)->fromSnapshot($snapshot);
+    }
+
     function current()
     {
         return last(app(HandleComponents::class)::$renderStack);

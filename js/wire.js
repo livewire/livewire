@@ -14,6 +14,8 @@ export function wireFallback(callback) {
 export function generateWireObject(component, state) {
     return new Proxy({}, {
         get(target, property) {
+            if (property === '__target') return component
+
             if (property in properties) {
                 return getProperty(component, property)
             } else if (property in state) {

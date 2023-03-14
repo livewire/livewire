@@ -11,6 +11,6 @@ on('request.prepare', (component) => {
         let bindings = childMeta.bindings
 
         // If this child has a binding from the parent
-        if (bindings) child.ephemeral.$commit()
+        if (bindings) child.$wire.$commit()
     })
 })

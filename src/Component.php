@@ -66,6 +66,16 @@ abstract class Component
         store($this)->set('skipRender', $html ?: true);
     }
 
+    function skipMount()
+    {
+        store($this)->set('skipMount', true);
+    }
+
+    function skipHydrate()
+    {
+        store($this)->set('skipHydrate', true);
+    }
+
     function __isset($property)
     {
         try {

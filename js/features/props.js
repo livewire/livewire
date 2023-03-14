@@ -11,6 +11,6 @@ on('request.prepare', (component) => {
         let props = childMeta.props
 
         // If this child has a prop from the parent
-        if (props) child.ephemeral.$commit()
+        if (props) child.$wire.$commit()
     })
 })

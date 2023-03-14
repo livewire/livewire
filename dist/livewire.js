@@ -3788,6 +3788,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function generateWireObject(component, state) {
     return new Proxy({}, {
       get(target, property) {
+        if (property === "__target")
+          return component;
         if (property in properties) {
           return getProperty(component, property);
         } else if (property in state) {
@@ -4789,7 +4791,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let childMeta = child.snapshot.memo;
       let bindings = childMeta.bindings;
       if (bindings)
-        child.ephemeral.$commit();
+        child.$wire.$commit();
     });
   });
 
@@ -5076,7 +5078,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let childMeta = child.snapshot.memo;
       let props = childMeta.props;
       if (props)
-        child.ephemeral.$commit();
+        child.$wire.$commit();
     });
   });
 

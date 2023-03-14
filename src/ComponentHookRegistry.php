@@ -39,32 +39,28 @@ class ComponentHookRegistry
             });
         }
 
-        on('update', function ($root, $fullPath, $newValue) {
-            if (! is_object($root)) return;
-
+        on('update', function ($component, $fullPath, $newValue) {
             $propertyName = Utils::beforeFirstDot($fullPath);
 
-            return static::proxyCallToHooks($root, 'callUpdate')($propertyName, $fullPath, $newValue);
+            return static::proxyCallToHooks($component, 'callUpdate')($propertyName, $fullPath, $newValue);
         });
 
-        on('call', function ($target, $method, $params, $addEffect, $earlyReturn) {
-            if (! is_object($target)) return;
-
-            return static::proxyCallToHooks($target, 'callCall')($method, $params, $earlyReturn);
+        on('call', function ($component, $method, $params, $addEffect, $earlyReturn) {
+            return static::proxyCallToHooks($component, 'callCall')($method, $params, $earlyReturn);
         });
 
-        on('render', function ($target, $view, $data) {
-            return static::proxyCallToHooks($target, 'callRender')($view, $data);
+        on('render', function ($component, $view, $data) {
+            return static::proxyCallToHooks($component, 'callRender')($view, $data);
         });
 
-        on('dehydrate', function ($target, $context) {
-            static::proxyCallToHooks($target, 'callDehydrate')($context);
+        on('dehydrate', function ($component, $context) {
+            static::proxyCallToHooks($component, 'callDehydrate')($context);
 
-            static::proxyCallToHooks($target, 'callDestroy')($context);
+            static::proxyCallToHooks($component, 'callDestroy')($context);
         });
 
-        on('exception', function ($target, $e, $stopPropagation) {
-            return static::proxyCallToHooks($target, 'callException')($e, $stopPropagation);
+        on('exception', function ($component, $e, $stopPropagation) {
+            return static::proxyCallToHooks($component, 'callException')($e, $stopPropagation);
         });
     }
 

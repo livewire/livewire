@@ -47,7 +47,7 @@ class BrowserTest extends BrowserTestCase
             HTML; }
         }, 'child' => new class extends Component {
             public function mount() { sleep(1); }
-            public static function placeholder() { return <<<HTML
+            public function placeholder() { return <<<HTML
                 <div id="loading">
                     Loading...
                 </div>
@@ -91,6 +91,30 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
+    public function can_pass_props_to_mount_method_to_lazyilly_loaded_component()
+    {
+        Livewire::visit([new class extends Component {
+            public $count = 1;
+            public function render() { return <<<'HTML'
+            <div>
+                <livewire:child :$count lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public $count;
+            public function mount($count) { $this->count = $this->count + 2; }
+            public function render() { return <<<'HTML'
+            <div id="child">
+                Count: {{ $count }}
+            </div>
+            HTML; }
+        }])
+        ->waitFor('#child')
+        ->assertSee('Count: 3')
+        ;
+    }
+
+    /** @test */
     public function can_pass_reactive_props_to_lazyilly_loaded_component()
     {
         Livewire::visit([new class extends Component {
@@ -111,11 +135,13 @@ class BrowserTest extends BrowserTestCase
                 Count: {{ $count }}
             </div>
             HTML; }
-        }])->tinker()
+        }])
         ->waitFor('#child')
         ->assertSee('Count: 1')
         ->waitForLivewire()->click('@button')
         ->assertSee('Count: 2')
+        ->waitForLivewire()->click('@button')
+        ->assertSee('Count: 3')
         ;
     }
 }
