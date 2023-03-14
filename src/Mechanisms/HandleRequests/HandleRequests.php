@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Mechanisms\HandleComponents\Checksum;
+use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
 class HandleRequests
@@ -41,7 +42,7 @@ class HandleRequests
     function setUpdateRoute($callback)
     {
         $route = $callback(function () {
-            $componentsData = $this->validateSnapshots();
+            $componentsData = $this->getComponentsData();
 
             app(PersistentMiddleware::class)->runRequestThroughMiddleware(
                 $componentsData
@@ -71,13 +72,13 @@ class HandleRequests
         return $route->named('*livewire.message');
     }
 
-    function validateSnapshots() {
+    function getComponentsData() {
         $components = request('components');
 
         foreach ($components as &$component) {
             $component['snapshot'] = json_decode($component['snapshot'], associative: true);
 
-            Checksum::verify($component['snapshot']);
+            app(HandleComponents::class)->validateSnapshot($component['snapshot']);
         }
 
         return $components;

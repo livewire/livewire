@@ -97,10 +97,13 @@ class HandleComponents
         return [ $snapshot, $context->effects ];
     }
 
-    public function fromSnapshot($snapshot)
+    public function validateSnapshot($snapshot)
     {
         Checksum::verify($snapshot);
+    }
 
+    public function fromSnapshot($snapshot)
+    {
         $data = $snapshot['data'];
         $name = $snapshot['memo']['name'];
         $id   = $snapshot['memo']['id'];
