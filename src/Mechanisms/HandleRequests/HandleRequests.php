@@ -45,8 +45,8 @@ class HandleRequests
             return $this->handleUpdate();
         });
 
-        // Append `livewire.message` to the existing name, if any.
-        $route->name('livewire.message');
+        // Append `livewire.update` to the existing name, if any.
+        $route->name('livewire.update');
 
         $this->updateRoute = $route;
     }
@@ -58,12 +58,12 @@ class HandleRequests
         if (! $route) return false;
 
         /*
-         * Check to see if route name ends with `livewire.message`, as if
+         * Check to see if route name ends with `livewire.update`, as if
          * a custom update route is used and they add a name, then when
-         * we call `->name('livewire.message')` on the route it will
-         * suffix the existing name with `livewire.message`.
+         * we call `->name('livewire.update')` on the route it will
+         * suffix the existing name with `livewire.update`.
          */
-        return $route->named('*livewire.message');
+        return $route->named('*livewire.update');
     }
 
     function handleUpdate()
