@@ -78,6 +78,10 @@ function wrap($subject) {
     return new Wrapped($subject);
 }
 
+function pipe($subject) {
+    return new Pipe($subject);
+}
+
 function trigger($name, ...$params) {
     return app(\Livewire\EventBus::class)->trigger($name, ...$params);
 }

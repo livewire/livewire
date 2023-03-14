@@ -192,6 +192,8 @@ class HandleComponents
         if ($html = store($component)->get('skipRender', false)) {
             $html = value(is_string($html) ? $html : $default);
 
+            if (! $html) return;
+
             return Utils::insertAttributesIntoHtmlRoot($html, [
                 'wire:id' => $component->getId(),
             ]);

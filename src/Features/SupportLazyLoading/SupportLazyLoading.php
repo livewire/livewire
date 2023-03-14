@@ -2,11 +2,13 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
+use function Livewire\{ on, pipe, wrap };
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
-use function Livewire\{ on, wrap };
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
 use Livewire\Component;
+use Illuminate\Support\Str;
+use Closure;
 
 class SupportLazyLoading extends ComponentHook
 {
@@ -27,11 +29,13 @@ class SupportLazyLoading extends ComponentHook
     {
         if (isset($memo['lazyLoaded'])) return;
 
-        $this->component->skipHydrate();
+        if ($memo['lazyLoaded'] === false) $this->component->skipHydrate();
     }
 
     function dehydrate($context)
     {
+        $context->addMemo('lazyLoaded', false);
+
         if (! $context->mounting) return;
 
         $context->addMemo('lazyLoaded', true);
