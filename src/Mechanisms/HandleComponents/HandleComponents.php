@@ -102,7 +102,7 @@ class HandleComponents
     {
         Checksum::verify($snapshot);
 
-        trigger('forjoshtostressabout', $snapshot);
+        trigger('snapshot-verified', $snapshot);
 
         $data = $snapshot['data'];
         $name = $snapshot['memo']['name'];
