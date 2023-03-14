@@ -51,7 +51,6 @@ class PersistentMiddleware
 
     function runRequestThroughMiddleware($componentsData)
     {
-        // Assign to class property so it can be used in dehydration and dynamic child components
         $middleware = $this->middlewareTransformer->getMiddlewareFromComponentsData($componentsData);
 
         // Only send through pipeline if there are middleware found
