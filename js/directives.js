@@ -1,9 +1,16 @@
-import { on } from '@synthetic/index'
+import { on } from '@/events'
+
+let directives = {}
 
 export function directive(name, callback) {
-    on('element.init', (el, component) => {
-        getDirectives(el)
-            .directives
+    directives[name] = callback
+}
+
+export function initDirectives(el, component) {
+    let elDirectives = getDirectives(el)
+
+    Object.entries(directives).forEach(([name, callback]) => {
+        elDirectives.directives
             .filter(({ value }) => value === name)
             .forEach(directive => {
                 callback(el, directive, {

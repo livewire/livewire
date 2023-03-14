@@ -36,7 +36,7 @@ class Url extends PropertyHook
             'alwaysShow' => $this->alwaysShow,
         ];
 
-        $context->pushEffect('url', $queryString, $this->urlName());
+        $context->pushEffect('url', $queryString, $this->getName());
     }
 
     public function urlName()

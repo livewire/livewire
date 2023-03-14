@@ -1,35 +1,61 @@
-import { store, reactive, processEffects, extractDataAndDecorate, extractData, trigger } from './synthetic/index'
-import { deepClone } from './synthetic/utils'
+import { store, processEffects } from './request'
+import { trigger } from './events'
+import { deepClone, deeplyEqual, extractData} from './utils'
+import { generateWireObject } from './wire'
 
 export class Component {
     constructor(el) {
+        if (el.__livewire) throw 'Component already initialized';
+        el.__livewire = this
+
+        this.symbol = Symbol()
+
+        store.set(this.symbol, this)
+
+        this.el = el
+
         this.id = el.getAttribute('wire:id')
-        this.effects = JSON.parse(el.getAttribute('wire:effects'))
+        this.__livewireId = this.id // @legacy
+
         this.encodedSnapshot = el.getAttribute('wire:snapshot')
+
         this.snapshot = JSON.parse(this.encodedSnapshot)
 
-        let symbol = Symbol()
-        store.set(symbol, this)
+        this.name = this.snapshot.memo.name
+
+        this.effects = JSON.parse(el.getAttribute('wire:effects'))
 
         // "canonical" data represents the last known server state.
-        this.canonical = extractData(deepClone(this.snapshot.data), symbol)
+        this.canonical = extractData(deepClone(this.snapshot.data))
         // "ephemeral" represents the most current state. (This can be freely manipulated by end users)
-        this.ephemeral = extractDataAndDecorate(deepClone(this.snapshot.data), symbol)
-
+        this.ephemeral = extractData(deepClone(this.snapshot.data))
         // "reactive" is just ephemeral, except when you mutate it, front-ends like Vue react.
-        this.reactive = reactive(this.ephemeral)
+        this.reactive = Alpine.reactive(this.ephemeral)
 
-        trigger('new', this)
+        // this.$wire = this.reactive
+        this.$wire = generateWireObject(this, this.reactive)
 
         // Effects will be processed after every request, but we'll also handle them on initialization.
         processEffects(this)
+    }
 
-        this.synthetic = this
-        this.$wire = this.reactive
-        this.el = el
-        this.name = this.snapshot.memo.name
+    mergeNewSnapshot(encodedSnapshot, effects) {
+        this.encodedSnapshot = encodedSnapshot
 
-        // So we can get Livewire components back from synthetic hooks.
-        this.__livewireId = this.id
+        let snapshot = JSON.parse(encodedSnapshot)
+
+        this.snapshot = snapshot
+
+        this.effects = effects
+
+        this.canonical = extractData(deepClone(snapshot.data))
+
+        let newData = extractData(deepClone(snapshot.data))
+
+        Object.entries(this.ephemeral).forEach(([key, value]) => {
+            if (! deeplyEqual(this.ephemeral[key], newData[key])) {
+                this.reactive[key] = newData[key]
+            }
+        })
     }
 }

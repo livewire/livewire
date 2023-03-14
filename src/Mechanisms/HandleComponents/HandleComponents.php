@@ -54,14 +54,12 @@ class HandleComponents
 
         $snapshot = $this->snapshot($component, $context);
 
-        $snapshot['checksum'] = Checksum::generate($snapshot);
-
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:snapshot' => $snapshot,
             'wire:effects' => $context->effects,
         ]);
 
-        return $finish($html);
+        return $finish($html, $snapshot);
     }
 
     protected function shortCircuitMount($name, $params, $key, $parent)
@@ -79,14 +77,8 @@ class HandleComponents
     {
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
-        $name = $snapshot['memo']['name'];
-        $id   = $snapshot['memo']['id'];
 
-        $component = app('livewire')->new($name, id: $id);
-
-        $context = new ComponentContext($component);
-
-        $this->hydrateProperties($component, $data, $context);
+        [ $component, $context ] = $this->fromSnapshot($snapshot);
 
         trigger('hydrate', $component, $memo, $context);
 
@@ -102,20 +94,33 @@ class HandleComponents
 
         $snapshot = $this->snapshot($component, $context);
 
-        $snapshot['checksum'] = Checksum::generate($snapshot);
-
         return [ $snapshot, $context->effects ];
     }
 
-    protected function snapshot($component, $context)
+    public function fromSnapshot($snapshot)
     {
+        Checksum::verify($snapshot);
+
+        $data = $snapshot['data'];
+        $name = $snapshot['memo']['name'];
+        $id   = $snapshot['memo']['id'];
+
+        $component = app('livewire')->new($name, id: $id);
+
+        $context = new ComponentContext($component);
+
+        $this->hydrateProperties($component, $data, $context);
+
+        return [ $component, $context ];
+    }
+
+    public function snapshot($component, $context = null)
+    {
+        $context ??= new ComponentContext($component);
+
         $data = $this->dehydrateProperties($component, $context);
 
-        $methods = Utils::getPublicMethodsDefinedBySubClass($component);
-
-        $context->addEffect('methods', $methods);
-
-        return [
+        $snapshot = [
             'data' => $data,
             'memo' => [
                 'id' => $component->getId(),
@@ -123,6 +128,10 @@ class HandleComponents
                 ...$context->memo,
             ],
         ];
+
+        $snapshot['checksum'] = Checksum::generate($snapshot);
+
+        return $snapshot;
     }
 
     protected function dehydrateProperties($component, $context)
@@ -180,7 +189,13 @@ class HandleComponents
 
     protected function render($component, $default = null)
     {
-        if (store($component)->get('skipRender', false)) return value($default);
+        if ($html = store($component)->get('skipRender', false)) {
+            $html = value(is_string($html) ? $html : $default);
+
+            return Utils::insertAttributesIntoHtmlRoot($html, [
+                'wire:id' => $component->getId(),
+            ]);
+        }
 
         [ $view, $properties ] = $this->getView($component);
 
@@ -206,7 +221,9 @@ class HandleComponents
 
     protected function getView($component)
     {
-        $viewOrString = wrap($component)->render();
+        $viewOrString = method_exists($component, 'render')
+            ? wrap($component)->render()
+            : view("livewire.{$component->getName()}");
 
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
 
@@ -319,24 +336,12 @@ class HandleComponents
 
     protected function callMethods($root, $calls, $context)
     {
+        $returns = [];
+
         foreach ($calls as $call) {
             $method = $call['method'];
             $params = $call['params'];
 
-            $methods = Utils::getPublicMethodsDefinedBySubClass($root);
-
-            // Also remove "render" from the list...
-            $methods =  array_values(array_diff($methods, ['render']));
-
-            $addMethod = function ($name) use (&$methods) {
-                array_push($methods, $name);
-            };
-
-            trigger('methods', $root, $addMethod);
-
-            if (! in_array($method, $methods)) {
-                throw new MethodNotFoundException($method);
-            }
 
             $earlyReturnCalled = false;
             $earlyReturn = null;
@@ -347,20 +352,30 @@ class HandleComponents
 
             $finish = trigger('call', $root, $method, $params, $context, $returnEarly);
 
-            $return = $earlyReturnCalled
-                ? $earlyReturn
-                : wrap($root)->{$method}(...$params);
+            if ($earlyReturnCalled) {
+                $returns[] = $finish($earlyReturn);
 
-            $return = $finish($return);
+                continue;
+            }
 
-            // Deciding if I want to commit to the idea that you can only call
-            // a method on the root component. So leaving this here as a shim.
-            $path = '';
+            $methods = Utils::getPublicMethodsDefinedBySubClass($root);
 
-            if (! isset($effects['returns'])) $effects['returns'] = [];
-            if (! isset($effects['returns'][$path])) $effects['returns'][$path] = [];
-            $effects['returns'][$path][] = $return;
+            // Also remove "render" from the list...
+            $methods =  array_values(array_diff($methods, ['render']));
+
+            // @todo: put this in a better place:
+            $methods[] = '__emit';
+
+            if (! in_array($method, $methods)) {
+                throw new MethodNotFoundException($method);
+            }
+
+            $return = wrap($root)->{$method}(...$params);
+
+            $returns[] = $finish($return);
         }
+
+        $context->addEffect('returns', $returns);
     }
 
     protected function propertySynth($keyOrTarget, $context, $path): Synth

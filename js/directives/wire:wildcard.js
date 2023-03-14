@@ -1,6 +1,6 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { getDirectives } from '@/directives'
-import { on } from '@synthetic/index'
+import { on } from '@/events'
 import Alpine from 'alpinejs'
 
 on('element.init', (el, component) => {

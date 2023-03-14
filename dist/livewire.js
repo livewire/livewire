@@ -12,7 +12,6 @@
   var isBooleanAttr = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
   var EMPTY_OBJ = false ? Object.freeze({}) : {};
   var EMPTY_ARR = false ? Object.freeze([]) : [];
-  var extend = Object.assign;
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray = Array.isArray;
@@ -48,12 +47,6 @@
   };
 
   // node_modules/@vue/reactivity/dist/reactivity.esm-bundler.js
-  var activeEffectScope;
-  function recordEffectScope(effect4, scope2 = activeEffectScope) {
-    if (scope2 && scope2.active) {
-      scope2.effects.push(effect4);
-    }
-  }
   var createDep = (effects) => {
     const dep = new Set(effects);
     dep.w = 0;
@@ -62,30 +55,6 @@
   };
   var wasTracked = (dep) => (dep.w & trackOpBit) > 0;
   var newTracked = (dep) => (dep.n & trackOpBit) > 0;
-  var initDepMarkers = ({ deps }) => {
-    if (deps.length) {
-      for (let i = 0; i < deps.length; i++) {
-        deps[i].w |= trackOpBit;
-      }
-    }
-  };
-  var finalizeDepMarkers = (effect4) => {
-    const { deps } = effect4;
-    if (deps.length) {
-      let ptr = 0;
-      for (let i = 0; i < deps.length; i++) {
-        const dep = deps[i];
-        if (wasTracked(dep) && !newTracked(dep)) {
-          dep.delete(effect4);
-        } else {
-          deps[ptr++] = dep;
-        }
-        dep.w &= ~trackOpBit;
-        dep.n &= ~trackOpBit;
-      }
-      deps.length = ptr;
-    }
-  };
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectTrackDepth = 0;
   var trackOpBit = 1;
@@ -93,101 +62,11 @@
   var activeEffect;
   var ITERATE_KEY = Symbol(false ? "iterate" : "");
   var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
-  var ReactiveEffect = class {
-    constructor(fn, scheduler2 = null, scope2) {
-      this.fn = fn;
-      this.scheduler = scheduler2;
-      this.active = true;
-      this.deps = [];
-      this.parent = void 0;
-      recordEffectScope(this, scope2);
-    }
-    run() {
-      if (!this.active) {
-        return this.fn();
-      }
-      let parent = activeEffect;
-      let lastShouldTrack = shouldTrack;
-      while (parent) {
-        if (parent === this) {
-          return;
-        }
-        parent = parent.parent;
-      }
-      try {
-        this.parent = activeEffect;
-        activeEffect = this;
-        shouldTrack = true;
-        trackOpBit = 1 << ++effectTrackDepth;
-        if (effectTrackDepth <= maxMarkerBits) {
-          initDepMarkers(this);
-        } else {
-          cleanupEffect(this);
-        }
-        return this.fn();
-      } finally {
-        if (effectTrackDepth <= maxMarkerBits) {
-          finalizeDepMarkers(this);
-        }
-        trackOpBit = 1 << --effectTrackDepth;
-        activeEffect = this.parent;
-        shouldTrack = lastShouldTrack;
-        this.parent = void 0;
-        if (this.deferStop) {
-          this.stop();
-        }
-      }
-    }
-    stop() {
-      if (activeEffect === this) {
-        this.deferStop = true;
-      } else if (this.active) {
-        cleanupEffect(this);
-        if (this.onStop) {
-          this.onStop();
-        }
-        this.active = false;
-      }
-    }
-  };
-  function cleanupEffect(effect4) {
-    const { deps } = effect4;
-    if (deps.length) {
-      for (let i = 0; i < deps.length; i++) {
-        deps[i].delete(effect4);
-      }
-      deps.length = 0;
-    }
-  }
-  function effect(fn, options) {
-    if (fn.effect) {
-      fn = fn.effect.fn;
-    }
-    const _effect = new ReactiveEffect(fn);
-    if (options) {
-      extend(_effect, options);
-      if (options.scope)
-        recordEffectScope(_effect, options.scope);
-    }
-    if (!options || !options.lazy) {
-      _effect.run();
-    }
-    const runner = _effect.run.bind(_effect);
-    runner.effect = _effect;
-    return runner;
-  }
-  function stop(runner) {
-    runner.effect.stop();
-  }
   var shouldTrack = true;
   var trackStack = [];
-  function pauseTracking() {
+  function pauseTracking2() {
     trackStack.push(shouldTrack);
     shouldTrack = false;
-  }
-  function enableTracking() {
-    trackStack.push(shouldTrack);
-    shouldTrack = true;
   }
   function resetTracking() {
     const last = trackStack.pop();
@@ -295,26 +174,26 @@
   }
   function triggerEffects(dep, debuggerEventExtraInfo) {
     const effects = isArray(dep) ? dep : [...dep];
-    for (const effect4 of effects) {
-      if (effect4.computed) {
-        triggerEffect(effect4, debuggerEventExtraInfo);
+    for (const effect3 of effects) {
+      if (effect3.computed) {
+        triggerEffect(effect3, debuggerEventExtraInfo);
       }
     }
-    for (const effect4 of effects) {
-      if (!effect4.computed) {
-        triggerEffect(effect4, debuggerEventExtraInfo);
+    for (const effect3 of effects) {
+      if (!effect3.computed) {
+        triggerEffect(effect3, debuggerEventExtraInfo);
       }
     }
   }
-  function triggerEffect(effect4, debuggerEventExtraInfo) {
-    if (effect4 !== activeEffect || effect4.allowRecurse) {
+  function triggerEffect(effect3, debuggerEventExtraInfo) {
+    if (effect3 !== activeEffect || effect3.allowRecurse) {
       if (false) {
-        effect4.onTrigger(extend({ effect: effect4 }, debuggerEventExtraInfo));
+        effect3.onTrigger(extend({ effect: effect3 }, debuggerEventExtraInfo));
       }
-      if (effect4.scheduler) {
-        effect4.scheduler();
+      if (effect3.scheduler) {
+        effect3.scheduler();
       } else {
-        effect4.run();
+        effect3.run();
       }
     }
   }
@@ -341,7 +220,7 @@
     });
     ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
       instrumentations[key] = function(...args) {
-        pauseTracking();
+        pauseTracking2();
         const res = toRaw(this)[key].apply(this, args);
         resetTracking();
         return res;
@@ -750,8 +629,8 @@
     return !!(value && value["__v_isShallow"]);
   }
   function toRaw(observed) {
-    const raw3 = observed && observed["__v_raw"];
-    return raw3 ? toRaw(raw3) : observed;
+    const raw2 = observed && observed["__v_raw"];
+    return raw2 ? toRaw(raw2) : observed;
   }
   var toReactive = (value) => isObject(value) ? reactive(value) : value;
   var toReadonly = (value) => isObject(value) ? readonly(value) : value;
@@ -762,74 +641,6 @@
   _a = "__v_isReadonly";
   var _a$1;
   _a$1 = "__v_isReadonly";
-
-  // js/synthetic/utils.js
-  function isObjecty(subject) {
-    return typeof subject === "object" && subject !== null;
-  }
-  function isObject2(subject) {
-    return isObjecty(subject) && !isArray2(subject);
-  }
-  function isArray2(subject) {
-    return Array.isArray(subject);
-  }
-  function isFunction2(subject) {
-    return typeof subject === "function";
-  }
-  function isPrimitive(subject) {
-    return typeof subject !== "object" || subject === null;
-  }
-  function deepClone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-  function deeplyEqual(a, b) {
-    return JSON.stringify(a) === JSON.stringify(b);
-  }
-  function each(subject, callback) {
-    Object.entries(subject).forEach(([key, value]) => callback(key, value));
-  }
-  function dataGet(object, key) {
-    if (key === "")
-      return object;
-    return key.split(".").reduce((carry, i) => {
-      if (carry === void 0)
-        return void 0;
-      return carry[i];
-    }, object);
-  }
-  function dataSet(object, key, value) {
-    let segments = key.split(".");
-    if (segments.length === 1) {
-      return object[key] = value;
-    }
-    let firstSegment = segments.shift();
-    let restOfSegments = segments.join(".");
-    if (object[firstSegment] === void 0) {
-      object[firstSegment] = {};
-    }
-    dataSet(object[firstSegment], restOfSegments, value);
-  }
-  function diff(left, right, diffs = {}, path = "") {
-    if (left === right)
-      return diffs;
-    if (typeof left !== typeof right || isObject2(left) && isArray2(right) || isArray2(left) && isObject2(right)) {
-      diffs[path] = right;
-      return diffs;
-    }
-    if (isPrimitive(left) || isPrimitive(right)) {
-      diffs[path] = right;
-      return diffs;
-    }
-    let leftKeys = Object.keys(left);
-    Object.entries(right).forEach(([key, value]) => {
-      diffs = { ...diffs, ...diff(left[key], right[key], diffs, path === "" ? key : `${path}.${key}`) };
-      leftKeys = leftKeys.filter((i) => i !== key);
-    });
-    leftKeys.forEach((key) => {
-      diffs[`${path}.${key}`] = "__rm__";
-    });
-    return diffs;
-  }
 
   // js/utils.js
   var Bag = class {
@@ -885,8 +696,84 @@
       cancelable: true
     }));
   }
+  function isObjecty(subject) {
+    return typeof subject === "object" && subject !== null;
+  }
+  function isObject2(subject) {
+    return isObjecty(subject) && !isArray2(subject);
+  }
+  function isArray2(subject) {
+    return Array.isArray(subject);
+  }
+  function isFunction2(subject) {
+    return typeof subject === "function";
+  }
+  function isPrimitive(subject) {
+    return typeof subject !== "object" || subject === null;
+  }
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+  function deeplyEqual(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+  function dataGet(object, key) {
+    if (key === "")
+      return object;
+    return key.split(".").reduce((carry, i) => {
+      if (carry === void 0)
+        return void 0;
+      return carry[i];
+    }, object);
+  }
+  function dataSet(object, key, value) {
+    let segments = key.split(".");
+    if (segments.length === 1) {
+      return object[key] = value;
+    }
+    let firstSegment = segments.shift();
+    let restOfSegments = segments.join(".");
+    if (object[firstSegment] === void 0) {
+      object[firstSegment] = {};
+    }
+    dataSet(object[firstSegment], restOfSegments, value);
+  }
+  function diff(left, right, diffs = {}, path = "") {
+    if (left === right)
+      return diffs;
+    if (typeof left !== typeof right || isObject2(left) && isArray2(right) || isArray2(left) && isObject2(right)) {
+      diffs[path] = right;
+      return diffs;
+    }
+    if (isPrimitive(left) || isPrimitive(right)) {
+      diffs[path] = right;
+      return diffs;
+    }
+    let leftKeys = Object.keys(left);
+    Object.entries(right).forEach(([key, value]) => {
+      diffs = { ...diffs, ...diff(left[key], right[key], diffs, path === "" ? key : `${path}.${key}`) };
+      leftKeys = leftKeys.filter((i) => i !== key);
+    });
+    leftKeys.forEach((key) => {
+      diffs[`${path}.${key}`] = "__rm__";
+    });
+    return diffs;
+  }
+  function extractData(payload) {
+    let value = isSynthetic(payload) ? payload[0] : payload;
+    let meta = isSynthetic(payload) ? payload[1] : void 0;
+    if (isObjecty(value)) {
+      Object.entries(value).forEach(([key, iValue]) => {
+        value[key] = extractData(iValue);
+      });
+    }
+    return value;
+  }
+  function isSynthetic(subject) {
+    return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
+  }
 
-  // js/synthetic/modal.js
+  // js/modal.js
   function showHtmlModal(html) {
     let page = document.createElement("html");
     page.innerHTML = html;
@@ -928,7 +815,7 @@
     document.body.style.overflow = "visible";
   }
 
-  // js/synthetic/events.js
+  // js/events.js
   var listeners = [];
   function on(name, callback) {
     if (!listeners[name])
@@ -1495,8 +1382,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       attributes = attributes.concat(vAttributes);
     }
     let transformedAttributeMap = {};
-    let directives2 = attributes.map(toTransformedAttributes((newName, oldName) => transformedAttributeMap[newName] = oldName)).filter(outNonAlpineAttributes).map(toParsedDirectives(transformedAttributeMap, originalAttributeOverride)).sort(byPriority);
-    return directives2.map((directive22) => {
+    let directives22 = attributes.map(toTransformedAttributes((newName, oldName) => transformedAttributeMap[newName] = oldName)).filter(outNonAlpineAttributes).map(toParsedDirectives(transformedAttributeMap, originalAttributeOverride)).sort(byPriority);
+    return directives22.map((directive22) => {
       return getDirectiveHandler(el, directive22);
     });
   }
@@ -1526,11 +1413,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getElementBoundUtilities(el) {
     let cleanups = [];
     let cleanup22 = (callback) => cleanups.push(callback);
-    let [effect32, cleanupEffect2] = elementBoundEffect(el);
-    cleanups.push(cleanupEffect2);
+    let [effect3, cleanupEffect] = elementBoundEffect(el);
+    cleanups.push(cleanupEffect);
     let utilities = {
       Alpine: alpine_default,
-      effect: effect32,
+      effect: effect3,
       cleanup: cleanup22,
       evaluateLater: evaluateLater.bind(evaluateLater, el),
       evaluate: evaluate.bind(evaluate, el)
@@ -1823,7 +1710,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function kebabCase(subject) {
     return subject.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
   }
-  function once(callback, fallback = () => {
+  function once(callback, fallback2 = () => {
   }) {
     let called = false;
     return function() {
@@ -1831,7 +1718,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         called = true;
         callback.apply(this, arguments);
       } else {
-        fallback.apply(this, arguments);
+        fallback2.apply(this, arguments);
       }
     };
   }
@@ -2086,15 +1973,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function modifierValue(modifiers, key, fallback) {
+  function modifierValue(modifiers, key, fallback2) {
     if (modifiers.indexOf(key) === -1)
-      return fallback;
+      return fallback2;
     const rawValue = modifiers[modifiers.indexOf(key) + 1];
     if (!rawValue)
-      return fallback;
+      return fallback2;
     if (key === "scale") {
       if (isNaN(rawValue))
-        return fallback;
+        return fallback2;
     }
     if (key === "duration") {
       let match = rawValue.match(/([0-9]+)ms/);
@@ -2109,9 +1996,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return rawValue;
   }
   var isCloning = false;
-  function skipDuringClone(callback, fallback = () => {
+  function skipDuringClone(callback, fallback2 = () => {
   }) {
-    return (...args) => isCloning ? fallback(...args) : callback(...args);
+    return (...args) => isCloning ? fallback2(...args) : callback(...args);
   }
   function onlyDuringClone(callback) {
     return (...args) => isCloning && callback(...args);
@@ -2267,12 +2154,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function attributeShouldntBePreservedIfFalsy(name) {
     return !["aria-pressed", "aria-checked", "aria-expanded", "aria-selected"].includes(name);
   }
-  function getBinding(el, name, fallback) {
+  function getBinding(el, name, fallback2) {
     if (el._x_bindings && el._x_bindings[name] !== void 0)
       return el._x_bindings[name];
     let attr = el.getAttribute(name);
     if (attr === null)
-      return typeof fallback === "function" ? fallback() : fallback;
+      return typeof fallback2 === "function" ? fallback2() : fallback2;
     if (attr === "")
       return true;
     if (isBooleanAttr2(name)) {
@@ -2484,8 +2371,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs2 = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr22 = /* @__PURE__ */ makeMap2(specialBooleanAttrs2 + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ2 = true ? Object.freeze({}) : {};
-  var EMPTY_ARR2 = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ2 = false ? Object.freeze({}) : {};
+  var EMPTY_ARR2 = false ? Object.freeze([]) : [];
   var extend2 = Object.assign;
   var hasOwnProperty2 = Object.prototype.hasOwnProperty;
   var hasOwn2 = (val, key) => hasOwnProperty2.call(val, key);
@@ -2519,8 +2406,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap2 = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect2;
-  var ITERATE_KEY2 = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY2 = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY2 = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY2 = Symbol(false ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2528,33 +2415,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (isEffect(fn)) {
       fn = fn.raw;
     }
-    const effect32 = createReactiveEffect(fn, options);
+    const effect3 = createReactiveEffect(fn, options);
     if (!options.lazy) {
-      effect32();
+      effect3();
     }
-    return effect32;
+    return effect3;
   }
-  function stop2(effect32) {
-    if (effect32.active) {
-      cleanup(effect32);
-      if (effect32.options.onStop) {
-        effect32.options.onStop();
+  function stop(effect3) {
+    if (effect3.active) {
+      cleanup(effect3);
+      if (effect3.options.onStop) {
+        effect3.options.onStop();
       }
-      effect32.active = false;
+      effect3.active = false;
     }
   }
   var uid = 0;
   function createReactiveEffect(fn, options) {
-    const effect32 = function reactiveEffect() {
-      if (!effect32.active) {
+    const effect3 = function reactiveEffect() {
+      if (!effect3.active) {
         return fn();
       }
-      if (!effectStack.includes(effect32)) {
-        cleanup(effect32);
+      if (!effectStack.includes(effect3)) {
+        cleanup(effect3);
         try {
           enableTracking2();
-          effectStack.push(effect32);
-          activeEffect2 = effect32;
+          effectStack.push(effect3);
+          activeEffect2 = effect3;
           return fn();
         } finally {
           effectStack.pop();
@@ -2563,27 +2450,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       }
     };
-    effect32.id = uid++;
-    effect32.allowRecurse = !!options.allowRecurse;
-    effect32._isEffect = true;
-    effect32.active = true;
-    effect32.raw = fn;
-    effect32.deps = [];
-    effect32.options = options;
-    return effect32;
+    effect3.id = uid++;
+    effect3.allowRecurse = !!options.allowRecurse;
+    effect3._isEffect = true;
+    effect3.active = true;
+    effect3.raw = fn;
+    effect3.deps = [];
+    effect3.options = options;
+    return effect3;
   }
-  function cleanup(effect32) {
-    const { deps } = effect32;
+  function cleanup(effect3) {
+    const { deps } = effect3;
     if (deps.length) {
       for (let i = 0; i < deps.length; i++) {
-        deps[i].delete(effect32);
+        deps[i].delete(effect3);
       }
       deps.length = 0;
     }
   }
   var shouldTrack2 = true;
   var trackStack2 = [];
-  function pauseTracking2() {
+  function pauseTracking3() {
     trackStack2.push(shouldTrack2);
     shouldTrack2 = false;
   }
@@ -2610,7 +2497,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect2)) {
       dep.add(activeEffect2);
       activeEffect2.deps.push(dep);
-      if (activeEffect2.options.onTrack) {
+      if (false) {
         activeEffect2.options.onTrack({
           effect: activeEffect2,
           target,
@@ -2628,9 +2515,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const effects = /* @__PURE__ */ new Set();
     const add22 = (effectsToAdd) => {
       if (effectsToAdd) {
-        effectsToAdd.forEach((effect32) => {
-          if (effect32 !== activeEffect2 || effect32.allowRecurse) {
-            effects.add(effect32);
+        effectsToAdd.forEach((effect3) => {
+          if (effect3 !== activeEffect2 || effect3.allowRecurse) {
+            effects.add(effect3);
           }
         });
       }
@@ -2673,10 +2560,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           break;
       }
     }
-    const run = (effect32) => {
-      if (effect32.options.onTrigger) {
-        effect32.options.onTrigger({
-          effect: effect32,
+    const run = (effect3) => {
+      if (false) {
+        effect3.options.onTrigger({
+          effect: effect3,
           target,
           key,
           type,
@@ -2685,10 +2572,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           oldTarget
         });
       }
-      if (effect32.options.scheduler) {
-        effect32.options.scheduler(effect32);
+      if (effect3.options.scheduler) {
+        effect3.options.scheduler(effect3);
       } else {
-        effect32();
+        effect3();
       }
     };
     effects.forEach(run);
@@ -2718,7 +2605,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
     const method = Array.prototype[key];
     arrayInstrumentations2[key] = function(...args) {
-      pauseTracking2();
+      pauseTracking3();
       const res = method.apply(this, args);
       resetTracking2();
       return res;
@@ -2812,13 +2699,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers2 = {
     get: readonlyGet2,
     set(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2887,7 +2774,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3.call(target, key);
@@ -2906,7 +2793,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2919,7 +2806,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear3() {
     const target = toRaw2(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger3(target, "clear", void 0, void 0, oldTarget);
@@ -2964,7 +2851,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod2(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize2(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
       }
@@ -3063,13 +2950,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var shallowReadonlyCollectionHandlers = {
     get: createInstrumentationGetter2(true, true)
   };
-  function checkIdentityKeys(target, has22, key) {
-    const rawKey = toRaw2(key);
-    if (rawKey !== key && has22.call(target, rawKey)) {
-      const type = toRawType2(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap2 = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap2 = /* @__PURE__ */ new WeakMap();
   var readonlyMap2 = /* @__PURE__ */ new WeakMap();
@@ -3102,7 +2982,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject2(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject3(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3130,11 +3010,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   magic("nextTick", () => nextTick);
   magic("dispatch", (el) => dispatch2.bind(dispatch2, el));
-  magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect32 }) => (key, callback) => {
+  magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
     let evaluate2 = evaluateLater2(key);
     let firstTime = true;
     let oldValue;
-    let effectReference = effect32(() => evaluate2((value) => {
+    let effectReference = effect3(() => evaluate2((value) => {
       JSON.stringify(value);
       if (!firstTime) {
         queueMicrotask(() => {
@@ -3196,7 +3076,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function warnMissingPluginMagic(name, magicName, slug) {
     magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
-  directive("modelable", (el, { expression }, { effect: effect32, evaluateLater: evaluateLater2, cleanup: cleanup22 }) => {
+  directive("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup22 }) => {
     let func = evaluateLater2(expression);
     let innerGet = () => {
       let result;
@@ -3277,7 +3157,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   };
   directive("ignore", handler);
-  directive("effect", (el, { expression }, { effect: effect32 }) => effect32(evaluateLater(el, expression)));
+  directive("effect", (el, { expression }, { effect: effect3 }) => effect3(evaluateLater(el, expression)));
   function on2(el, event, modifiers, callback) {
     let listenerTarget = el;
     let handler3 = (e) => callback(e);
@@ -3427,7 +3307,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return modifier;
     }).filter((modifier) => modifier);
   }
-  directive("model", (el, { modifiers, expression }, { effect: effect32, cleanup: cleanup22 }) => {
+  directive("model", (el, { modifiers, expression }, { effect: effect3, cleanup: cleanup22 }) => {
     let scopeTarget = el;
     if (modifiers.includes("parent")) {
       scopeTarget = el.parentNode;
@@ -3494,7 +3374,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       mutateDom(() => bind(el, "value", value));
       delete window.fromModel;
     };
-    effect32(() => {
+    effect3(() => {
       let value = getValue();
       if (modifiers.includes("unintrusive") && document.activeElement.isSameNode(el))
         return;
@@ -3546,9 +3426,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return evaluate2(expression, {}, false);
   }));
-  directive("text", (el, { expression }, { effect: effect32, evaluateLater: evaluateLater2 }) => {
+  directive("text", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
     let evaluate2 = evaluateLater2(expression);
-    effect32(() => {
+    effect3(() => {
       evaluate2((value) => {
         mutateDom(() => {
           el.textContent = value;
@@ -3556,9 +3436,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
-  directive("html", (el, { expression }, { effect: effect32, evaluateLater: evaluateLater2 }) => {
+  directive("html", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
     let evaluate2 = evaluateLater2(expression);
-    effect32(() => {
+    effect3(() => {
       evaluate2((value) => {
         mutateDom(() => {
           el.innerHTML = value;
@@ -3570,7 +3450,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   mapAttributes(startingWith(":", into(prefix("bind:"))));
-  directive("bind", (el, { value, modifiers, expression, original }, { effect: effect32 }) => {
+  directive("bind", (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
     if (!value) {
       let bindingProviders = {};
       injectBindingProviders(bindingProviders);
@@ -3583,7 +3463,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (value === "key")
       return storeKeyForXFor(el, expression);
     let evaluate2 = evaluateLater(el, expression);
-    effect32(() => evaluate2((result) => {
+    effect3(() => evaluate2((result) => {
       if (result === void 0 && typeof expression === "string" && expression.match(/\./)) {
         result = "";
       }
@@ -3613,7 +3493,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       undo();
     });
   }));
-  directive("show", (el, { modifiers, expression }, { effect: effect32 }) => {
+  directive("show", (el, { modifiers, expression }, { effect: effect3 }) => {
     let evaluate2 = evaluateLater(el, expression);
     if (!el._x_doHide)
       el._x_doHide = () => {
@@ -3649,7 +3529,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     let oldValue;
     let firstTime = true;
-    effect32(() => evaluate2((value) => {
+    effect3(() => evaluate2((value) => {
       if (!firstTime && value === oldValue)
         return;
       if (modifiers.includes("immediate"))
@@ -3659,13 +3539,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       firstTime = false;
     }));
   });
-  directive("for", (el, { expression }, { effect: effect32, cleanup: cleanup22 }) => {
+  directive("for", (el, { expression }, { effect: effect3, cleanup: cleanup22 }) => {
     let iteratorNames = parseForExpression(expression);
     let evaluateItems = evaluateLater(el, iteratorNames.items);
     let evaluateKey = evaluateLater(el, el._x_keyExpression || "index");
     el._x_prevKeys = [];
     el._x_lookup = {};
-    effect32(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
+    effect3(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
     cleanup22(() => {
       Object.values(el._x_lookup).forEach((el2) => el2.remove());
       delete el._x_prevKeys;
@@ -3830,7 +3710,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     cleanup22(() => delete root._x_refs[expression]);
   };
   directive("ref", handler2);
-  directive("if", (el, { expression }, { effect: effect32, cleanup: cleanup22 }) => {
+  directive("if", (el, { expression }, { effect: effect3, cleanup: cleanup22 }) => {
     let evaluate2 = evaluateLater(el, expression);
     let show = () => {
       if (el._x_currentIfEl)
@@ -3859,7 +3739,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_undoIf();
       delete el._x_undoIf;
     };
-    effect32(() => evaluate2((value) => {
+    effect3(() => evaluate2((value) => {
       value ? show() : hide();
     }));
     cleanup22(() => el._x_undoIf && el._x_undoIf());
@@ -3892,219 +3772,59 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   alpine_default.setEvaluator(normalEvaluator);
-  alpine_default.setReactivityEngine({ reactive: reactive22, effect: effect22, release: stop2, raw: toRaw2 });
+  alpine_default.setReactivityEngine({ reactive: reactive22, effect: effect22, release: stop, raw: toRaw2 });
   var src_default = alpine_default;
   var module_default = src_default;
 
-  // js/synthetic/features/methods.js
-  function methods_default() {
-    on("decorate", (target, path, addProp, decorator, symbol) => {
-      let effects = target.effects;
-      if (!effects)
-        return;
-      let methods = effects["methods"] || [];
-      methods.forEach((method) => {
-        addProp(method, async (...params) => {
-          if (params.length === 1 && params[0] instanceof Event) {
-            params = [];
-          }
-          return await callMethod(symbol, path, method, params);
-        });
-      });
-    });
-    on("decorate", (target, path, addProp) => {
-      let effects = target.effects;
-      if (!effects)
-        return;
-      let methods = effects["js"] || [];
-      let AsyncFunction = Object.getPrototypeOf(async function() {
-      }).constructor;
-      each(methods, (name, expression) => {
-        let func = new AsyncFunction([], expression);
-        addProp(name, () => {
-          func.bind(dataGet(target.reactive, path))();
-        });
-      });
+  // js/wire.js
+  var properties = {};
+  var fallback;
+  function wireProperty(name, callback) {
+    properties[name] = callback;
+  }
+  function wireFallback(callback) {
+    fallback = callback;
+  }
+  function generateWireObject(component, state) {
+    return new Proxy({}, {
+      get(target, property) {
+        if (property === "__target")
+          return component;
+        if (property in properties) {
+          return getProperty(component, property);
+        } else if (property in state) {
+          return state[property];
+        } else if (!["then"].includes(property)) {
+          return getFallback(component)(property);
+        }
+      },
+      set(target, property, value) {
+        if (property in state) {
+          state[property] = value;
+        }
+      }
     });
   }
-
-  // js/synthetic/features/prefetch.js
-  function prefetch_default() {
+  function getProperty(component, name) {
+    return properties[name](component);
+  }
+  function getFallback(component) {
+    return fallback(component);
   }
 
-  // js/synthetic/features/redirect.js
-  function redirect_default() {
-    on("effects", (target, effects) => {
-      if (!effects["redirect"])
-        return;
-      let url = effects["redirect"];
-      window.location.href = url;
-    });
-  }
-
-  // js/synthetic/features/loading.js
-  function loading_default() {
-    on("new", (target) => {
-      target.__loading = reactive3({ state: false });
-    });
-    on("target.request", (target, payload) => {
-      target.__loading.state = true;
-      return () => target.__loading.state = false;
-    });
-    on("decorate", (target, path, addProp, decorator, symbol) => {
-      addProp("$loading", { get() {
-        return target.__loading.state;
-      } });
-    });
-  }
-
-  // js/synthetic/features/errors.js
-  function errors_default() {
-    on("new", (target, path) => {
-      target.__errors = reactive3({ state: [] });
-    });
-    on("decorate", (target, path) => {
-      return (decorator) => {
-        Object.defineProperty(decorator, "$errors", { get() {
-          let errors = {};
-          Object.entries(target.__errors.state).forEach(([key, value]) => {
-            errors[key] = value[0];
-          });
-          return errors;
-        } });
-        return decorator;
-      };
-    });
-    on("effects", (target, effects) => {
-      let errors = effects["errors"] || [];
-      target.__errors.state = errors;
-    });
-  }
-
-  // js/synthetic/features/dirty.js
-  function dirty_default() {
-    on("new", (target) => {
-      target.__dirty = reactive3({ state: 0 });
-    });
-    on("target.request", (target, payload) => {
-      return () => target.__dirty.state = +new Date();
-    });
-    on("decorate", (target, path) => {
-      return (decorator) => {
-        Object.defineProperty(decorator, "$dirty", { get() {
-          let throwaway = target.__dirty.state;
-          let thing1 = dataGet(target.canonical, path);
-          let thing2 = dataGet(target.reactive, path);
-          return !deeplyEqual(thing1, thing2);
-        } });
-        return decorator;
-      };
-    });
-  }
-
-  // js/synthetic/features/index.js
-  methods_default();
-  prefetch_default();
-  redirect_default();
-  loading_default();
-  errors_default();
-  dirty_default();
-
-  // js/synthetic/index.js
-  var reactive3 = reactive;
-  var release2 = stop;
-  var effect3 = effect;
-  var raw2 = toRaw;
-  document.addEventListener("alpine:init", () => {
-    reactive3 = module_default.reactive;
-    effect3 = module_default.effect;
-    release2 = module_default.release;
-    raw2 = module_default.raw;
-  });
+  // js/request.js
   var store2 = /* @__PURE__ */ new Map();
   var uri = document.querySelector("[data-uri]").getAttribute("data-uri");
-  function extractDataAndDecorate(payload, symbol) {
-    let shimmedPayload = [payload, { s: "..." }];
-    return extractData(shimmedPayload, symbol, (object, meta, symbol2, path) => {
-      if (path !== "")
-        return object;
-      let target = store2.get(symbol2);
-      let decorator = {};
-      let addProp = (key, value, options = {}) => {
-        let base = { enumerable: false, configurable: true, ...options };
-        if (isObject2(value) && deeplyEqual(Object.keys(value), ["get"]) || deeplyEqual(Object.keys(value), ["get", "set"])) {
-          Object.defineProperty(object, key, {
-            get: value.get,
-            set: value.set,
-            ...base
-          });
-        } else {
-          Object.defineProperty(object, key, {
-            value,
-            ...base
-          });
-        }
-      };
-      let finish = trigger2("decorate", target, path, addProp, decorator, symbol2);
-      addProp("__target", { get() {
-        return target;
-      } });
-      addProp("$watch", (path2, callback) => {
-        let firstTime = true;
-        let old = void 0;
-        effect3(() => {
-          let value = dataGet(target.reactive, path2);
-          if (firstTime) {
-            firstTime = false;
-            return;
-          }
-          pauseTracking();
-          callback(value, old);
-          old = value;
-          enableTracking();
-        });
-      });
-      addProp("$watchEffect", (callback) => effect3(callback));
-      addProp("$refresh", async () => await requestCommit(symbol2));
-      addProp("get", (property, reactive4 = true) => dataGet(reactive4 ? target.reactive : target.ephemeral, property));
-      addProp("set", async (property, value, live = true) => {
-        dataSet(target.reactive, property, value);
-        return live ? await requestCommit(symbol2) : Promise.resolve();
-      });
-      addProp("call", (method, ...params) => {
-        return target.reactive[method](...params);
-      });
-      addProp("$commit", async (callback) => {
-        return await requestCommit(symbol2);
-      });
-      each(Object.getOwnPropertyDescriptors(decorator), (key, value) => {
-        Object.defineProperty(object, key, value);
-      });
-      return object;
-    });
-  }
-  function extractData(payload, symbol, decorate = (i) => i, path = "") {
-    let value = isSynthetic(payload) ? payload[0] : payload;
-    let meta = isSynthetic(payload) ? payload[1] : void 0;
-    if (isObjecty(value)) {
-      Object.entries(value).forEach(([key, iValue]) => {
-        value[key] = extractData(iValue, symbol, decorate, path === "" ? key : `${path}.${key}`);
-      });
-    }
-    return meta !== void 0 && isObjecty(value) ? decorate(value, meta, symbol, path) : value;
-  }
-  function isSynthetic(subject) {
-    return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
-  }
-  async function callMethod(symbol, path, method, params) {
-    let result = await requestMethodCall(symbol, path, method, params);
+  async function callMethod(symbol, method, params) {
+    let result = await requestMethodCall(symbol, method, params);
     return result;
   }
   var requestTargetQueue = /* @__PURE__ */ new Map();
-  function requestMethodCall(symbol, path, method, params) {
+  function requestMethodCall(symbol, method, params) {
     requestCommit(symbol);
     return new Promise((resolve, reject) => {
       let queue2 = requestTargetQueue.get(symbol);
+      let path = "";
       queue2.calls.push({
         path,
         method,
@@ -4142,10 +3862,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }, 5);
   }
   async function sendMethodCall() {
-    trigger2("request.prepare", requestTargetQueue);
     requestTargetQueue.forEach((request2, symbol) => {
       let target = store2.get(symbol);
-      trigger2("target.request.prepare", target);
+      trigger2("request.prepare", target);
     });
     let payload = [];
     let successReceivers = [];
@@ -4163,25 +3882,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }))
       };
       payload.push(targetPaylaod);
-      let finishTarget = trigger2("target.request", target, targetPaylaod);
+      let finishTarget = trigger2("request", target, targetPaylaod);
       failureReceivers.push(() => {
         let failed = true;
         finishTarget(failed);
       });
       successReceivers.push((snapshot, effects) => {
-        mergeNewSnapshot(symbol, snapshot, effects);
+        target.mergeNewSnapshot(snapshot, effects);
         processEffects(target);
-        let returnHandlerStack = request2.calls.map(({ path, handleReturn }) => [path, handleReturn]);
-        let returnStack = [];
         if (effects["returns"]) {
-          Object.entries(effects["returns"]).forEach(([iPath, iReturns]) => {
-            iReturns.forEach((iReturn) => returnStack.push([iPath, iReturn]));
-          });
-          returnHandlerStack.forEach(([path, handleReturn], index) => {
-            let [iPath, iReturn] = returnStack[index];
-            if (path !== path)
-              return;
-            handleReturn(iReturn);
+          let returns = effects["returns"];
+          let returnHandlerStack = request2.calls.map(({ handleReturn }) => handleReturn);
+          returnHandlerStack.forEach((handleReturn, index) => {
+            handleReturn(returns[index]);
           });
         }
         finishTarget();
@@ -4189,7 +3902,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     requestTargetQueue.clear();
-    let finish = trigger2("request");
     let request = await fetch(uri, {
       method: "POST",
       body: JSON.stringify({
@@ -4204,7 +3916,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let { snapshot, effects } = response[i];
         successReceivers[i](snapshot, effects);
       }
-      finish(false);
     } else {
       let html = await request.text();
       showHtmlModal(html);
@@ -4212,7 +3923,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         failureReceivers[i]();
       }
       let failed = true;
-      finish(failed);
     }
   }
   function getCsrfToken() {
@@ -4221,94 +3931,109 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     throw "Livewire: No CSRF token detected";
   }
-  function mergeNewSnapshot(symbol, encodedSnapshot, effects) {
-    let target = store2.get(symbol);
-    target.encodedSnapshot = encodedSnapshot;
-    let snapshot = JSON.parse(encodedSnapshot);
-    target.snapshot = snapshot;
-    target.effects = effects;
-    target.canonical = extractData(deepClone(snapshot.data), symbol);
-    let newData = extractData(deepClone(snapshot.data), symbol);
-    Object.entries(target.ephemeral).forEach(([key, value]) => {
-      if (!deeplyEqual(target.ephemeral[key], newData[key])) {
-        target.reactive[key] = newData[key];
-      }
-    });
-  }
   function processEffects(target) {
     let effects = target.effects;
     trigger2("effects", target, effects);
   }
 
-  // js/state.js
-  var state = {
-    components: {}
+  // js/component.js
+  var Component = class {
+    constructor(el) {
+      if (el.__livewire)
+        throw "Component already initialized";
+      el.__livewire = this;
+      this.symbol = Symbol();
+      store2.set(this.symbol, this);
+      this.el = el;
+      this.id = el.getAttribute("wire:id");
+      this.__livewireId = this.id;
+      this.encodedSnapshot = el.getAttribute("wire:snapshot");
+      this.snapshot = JSON.parse(this.encodedSnapshot);
+      this.name = this.snapshot.memo.name;
+      this.effects = JSON.parse(el.getAttribute("wire:effects"));
+      this.canonical = extractData(deepClone(this.snapshot.data));
+      this.ephemeral = extractData(deepClone(this.snapshot.data));
+      this.reactive = Alpine.reactive(this.ephemeral);
+      this.$wire = generateWireObject(this, this.reactive);
+      processEffects(this);
+    }
+    mergeNewSnapshot(encodedSnapshot, effects) {
+      this.encodedSnapshot = encodedSnapshot;
+      let snapshot = JSON.parse(encodedSnapshot);
+      this.snapshot = snapshot;
+      this.effects = effects;
+      this.canonical = extractData(deepClone(snapshot.data));
+      let newData = extractData(deepClone(snapshot.data));
+      Object.entries(this.ephemeral).forEach(([key, value]) => {
+        if (!deeplyEqual(this.ephemeral[key], newData[key])) {
+          this.reactive[key] = newData[key];
+        }
+      });
+    }
   };
+
+  // js/store.js
+  var components = {};
+  function initComponent(el) {
+    let component = new Component(el);
+    if (components[component.id])
+      throw "Component already registered";
+    trigger2("component.init", component);
+    components[component.id] = component;
+  }
   function findComponent(id) {
-    let component = state.components[id];
+    let component = components[id];
     if (!component)
       throw "Component not found: ".id;
     return component;
   }
+  function closestComponent(el, strict = true) {
+    let closestRoot2 = Alpine.findClosest(el, (i) => i.__livewire);
+    if (!closestRoot2) {
+      if (strict)
+        throw "Could not find Livewire component in DOM tree";
+      return;
+    }
+    return closestRoot2.__livewire;
+  }
   function componentsByName(name) {
-    return Object.values(state.components).filter((component) => {
+    return Object.values(components).filter((component) => {
       return name == component.name;
     });
   }
-  function storeComponent(id, component) {
-    state.components[id] = component;
-  }
-  var releasePool = {};
-  function releaseComponent(id) {
-    let component = state.components[id];
-    let effects = deepClone(component.effects);
-    delete effects["html"];
-    releasePool[id] = {
-      effects,
-      snapshot: deepClone(component.snapshot)
-    };
-    delete state.components[id];
-  }
   function find(id) {
-    let component = state.components[id];
+    let component = components[id];
     return component && component.$wire;
   }
   function first() {
-    return Object.values(state.components)[0].$wire;
+    return Object.values(components)[0].$wire;
   }
 
   // js/features/events.js
   var globalListeners = new Bag();
-  on("effects", (target, effects, path) => {
+  on("effects", (component, effects, path) => {
     let listeners2 = effects.listeners;
     if (!listeners2)
       return;
     listeners2.forEach((name) => {
       globalListeners.add(name, (...params) => {
-        let component = findComponent(target.__livewireId);
         component.$wire.call("__emit", name, ...params);
       });
       queueMicrotask(() => {
-        let component = findComponent(target.__livewireId);
         component.el.addEventListener("__lwevent:" + name, (e) => {
           component.$wire.call("__emit", name, ...e.detail.params);
         });
       });
     });
   });
-  on("decorate", (target, path, addProp, decorator, symbol) => {
-    queueMicrotask(() => {
-      let component = findComponent(target.__livewireId);
-      addProp("$emit", (...params) => emit(...params));
-      addProp("$emitUp", (...params) => emitUp(component.el, ...params));
-      addProp("$emitSelf", (...params) => emitSelf(component.id, ...params));
-      addProp("$emitTo", (...params) => emitTo(...params));
-      addProp("emit", (...params) => emit(...params));
-      addProp("emitUp", (...params) => emitUp(component.el, ...params));
-      addProp("emitSelf", (...params) => emitSelf(component.id, ...params));
-      addProp("emitTo", (...params) => emitTo(...params));
-    });
-  });
+  wireProperty("$emit", (component) => (...params) => emit(...params));
+  wireProperty("$emitUp", (component) => (...params) => emitUp(component.el, ...params));
+  wireProperty("$emitSelf", (component) => (...params) => emitSelf(component.id, ...params));
+  wireProperty("$emitTo", (component) => (...params) => emitTo(...params));
+  wireProperty("emit", (component) => (...params) => emit(...params));
+  wireProperty("emitUp", (component) => (...params) => emitUp(component.el, ...params));
+  wireProperty("emitSelf", (component) => (...params) => emitSelf(component.id, ...params));
+  wireProperty("emitTo", (component) => (...params) => emitTo(...params));
   function emit(name, ...params) {
     globalListeners.each(name, (i) => i(...params));
   }
@@ -4320,8 +4045,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     dispatch(component.el, "__lwevent:" + name, { params }, false);
   }
   function emitTo(componentName, name, ...params) {
-    let components = componentsByName(componentName);
-    components.forEach((component) => {
+    let components2 = componentsByName(componentName);
+    components2.forEach((component) => {
       dispatch(component.el, "__lwevent:" + name, { params }, false);
     });
   }
@@ -4330,9 +4055,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives.js
+  var directives2 = {};
   function directive2(name, callback) {
-    on("element.init", (el, component) => {
-      getDirectives(el).directives.filter(({ value }) => value === name).forEach((directive3) => {
+    directives2[name] = callback;
+  }
+  function initDirectives(el, component) {
+    let elDirectives = getDirectives(el);
+    Object.entries(directives2).forEach(([name, callback]) => {
+      elDirectives.directives.filter(({ value }) => value === name).forEach((directive3) => {
         callback(el, directive3, {
           component,
           cleanup: () => {
@@ -4403,27 +4133,235 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // js/component.js
-  var Component = class {
-    constructor(el) {
-      this.id = el.getAttribute("wire:id");
-      this.effects = JSON.parse(el.getAttribute("wire:effects"));
-      this.encodedSnapshot = el.getAttribute("wire:snapshot");
-      this.snapshot = JSON.parse(this.encodedSnapshot);
-      let symbol = Symbol();
-      store2.set(symbol, this);
-      this.canonical = extractData(deepClone(this.snapshot.data), symbol);
-      this.ephemeral = extractDataAndDecorate(deepClone(this.snapshot.data), symbol);
-      this.reactive = reactive3(this.ephemeral);
-      trigger2("new", this);
-      processEffects(this);
-      this.synthetic = this;
-      this.$wire = this.reactive;
-      this.el = el;
-      this.name = this.snapshot.memo.name;
-      this.__livewireId = this.id;
+  // ../alpine/packages/intersect/dist/module.esm.js
+  function src_default2(Alpine3) {
+    Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
+      let evaluate2 = evaluateLater2(expression);
+      let options = {
+        rootMargin: getRootMargin(modifiers),
+        threshold: getThreshhold(modifiers)
+      };
+      let observer2 = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting === (value === "leave"))
+            return;
+          evaluate2();
+          modifiers.includes("once") && observer2.disconnect();
+        });
+      }, options);
+      observer2.observe(el);
+      cleanup3(() => {
+        observer2.disconnect();
+      });
+    });
+  }
+  function getThreshhold(modifiers) {
+    if (modifiers.includes("full"))
+      return 0.99;
+    if (modifiers.includes("half"))
+      return 0.5;
+    if (!modifiers.includes("threshold"))
+      return 0;
+    let threshold = modifiers[modifiers.indexOf("threshold") + 1];
+    if (threshold === "100")
+      return 1;
+    if (threshold === "0")
+      return 0;
+    return Number(`.${threshold}`);
+  }
+  function getLengthValue(rawValue) {
+    let match = rawValue.match(/^(-?[0-9]+)(px|%)?$/);
+    return match ? match[1] + (match[2] || "px") : void 0;
+  }
+  function getRootMargin(modifiers) {
+    const key = "margin";
+    const fallback2 = "0px 0px 0px 0px";
+    const index = modifiers.indexOf(key);
+    if (index === -1)
+      return fallback2;
+    let values = [];
+    for (let i = 1; i < 5; i++) {
+      values.push(getLengthValue(modifiers[index + i] || ""));
     }
-  };
+    values = values.filter((v) => v !== void 0);
+    return values.length ? values.join(" ").trim() : fallback2;
+  }
+  var module_default2 = src_default2;
+
+  // ../alpine/packages/history/dist/module.esm.js
+  function history(Alpine3) {
+    Alpine3.magic("queryString", (el, { interceptor: interceptor2 }) => {
+      let alias;
+      let alwaysShow = false;
+      let usePush = false;
+      return interceptor2((initialSeedValue, getter, setter, path, key) => {
+        let queryKey = alias || path;
+        let { initial, replace: replace2, push: push2, pop } = track3(queryKey, initialSeedValue, alwaysShow);
+        setter(initial);
+        if (!usePush) {
+          Alpine3.effect(() => replace2(getter()));
+        } else {
+          Alpine3.effect(() => push2(getter()));
+          pop(async (newValue) => {
+            setter(newValue);
+            let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
+            await tillTheEndOfTheMicrotaskQueue();
+          });
+        }
+        return initial;
+      }, (func) => {
+        func.alwaysShow = () => {
+          alwaysShow = true;
+          return func;
+        };
+        func.usePush = () => {
+          usePush = true;
+          return func;
+        };
+        func.as = (key) => {
+          alias = key;
+          return func;
+        };
+      });
+    });
+    Alpine3.history = { track: track3 };
+  }
+  function track3(name, initialSeedValue, alwaysShow = false) {
+    let { has: has3, get: get3, set: set3, remove } = queryStringUtils();
+    let url = new URL(window.location.href);
+    let isInitiallyPresentInUrl = has3(url, name);
+    let initialValue = isInitiallyPresentInUrl ? get3(url, name) : initialSeedValue;
+    let initialValueMemo = JSON.stringify(initialValue);
+    let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
+    if (alwaysShow)
+      url = set3(url, name, initialValue);
+    replace(url, name, { value: initialValue });
+    let lock = false;
+    let update = (strategy, newValue) => {
+      if (lock)
+        return;
+      let url2 = new URL(window.location.href);
+      if (!alwaysShow && !isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
+        url2 = remove(url2, name);
+      } else {
+        url2 = set3(url2, name, newValue);
+      }
+      strategy(url2, name, { value: newValue });
+    };
+    return {
+      initial: initialValue,
+      replace(newValue) {
+        update(replace, newValue);
+      },
+      push(newValue) {
+        update(push, newValue);
+      },
+      pop(receiver) {
+        window.addEventListener("popstate", (e) => {
+          if (!e.state || !e.state.alpine)
+            return;
+          Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
+            if (iName !== name)
+              return;
+            lock = true;
+            let result = receiver(newValue);
+            if (result instanceof Promise) {
+              result.finally(() => lock = false);
+            } else {
+              lock = false;
+            }
+          });
+        });
+      }
+    };
+  }
+  function replace(url, key, object) {
+    let state = window.history.state || {};
+    if (!state.alpine)
+      state.alpine = {};
+    state.alpine[key] = unwrap(object);
+    window.history.replaceState(state, "", url.toString());
+  }
+  function push(url, key, object) {
+    let state = { alpine: { ...window.history.state.alpine, ...{ [key]: unwrap(object) } } };
+    window.history.pushState(state, "", url.toString());
+  }
+  function unwrap(object) {
+    return JSON.parse(JSON.stringify(object));
+  }
+  function queryStringUtils() {
+    return {
+      has(url, key) {
+        let search = url.search;
+        if (!search)
+          return false;
+        let data2 = fromQueryString(search);
+        return Object.keys(data2).includes(key);
+      },
+      get(url, key) {
+        let search = url.search;
+        if (!search)
+          return false;
+        let data2 = fromQueryString(search);
+        return data2[key];
+      },
+      set(url, key, value) {
+        let data2 = fromQueryString(url.search);
+        data2[key] = value;
+        url.search = toQueryString(data2);
+        return url;
+      },
+      remove(url, key) {
+        let data2 = fromQueryString(url.search);
+        delete data2[key];
+        url.search = toQueryString(data2);
+        return url;
+      }
+    };
+  }
+  function toQueryString(data2) {
+    let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;
+    let buildQueryStringEntries = (data22, entries2 = {}, baseKey = "") => {
+      Object.entries(data22).forEach(([iKey, iValue]) => {
+        let key = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
+        if (!isObjecty2(iValue)) {
+          entries2[key] = encodeURIComponent(iValue).replaceAll("%20", "+");
+        } else {
+          entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key) };
+        }
+      });
+      return entries2;
+    };
+    let entries = buildQueryStringEntries(data2);
+    return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
+  }
+  function fromQueryString(search) {
+    search = search.replace("?", "");
+    if (search === "")
+      return {};
+    let insertDotNotatedValueIntoData = (key, value, data22) => {
+      let [first2, second, ...rest] = key.split(".");
+      if (!second)
+        return data22[key] = value;
+      if (data22[first2] === void 0) {
+        data22[first2] = isNaN(second) ? {} : [];
+      }
+      insertDotNotatedValueIntoData([second, ...rest].join("."), value, data22[first2]);
+    };
+    let entries = search.split("&").map((i) => i.split("="));
+    let data2 = {};
+    entries.forEach(([key, value]) => {
+      value = decodeURIComponent(value.replaceAll("+", "%20"));
+      if (!key.includes("[")) {
+        data2[key] = value;
+      } else {
+        let dotNotatedKey = key.replaceAll("[", ".").replaceAll("]", "");
+        insertDotNotatedValueIntoData(dotNotatedKey, value, data2);
+      }
+    });
+    return data2;
+  }
+  var module_default3 = history;
 
   // ../alpine/packages/morph/dist/module.esm.js
   function createElement(html) {
@@ -4745,293 +4683,36 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       window.Alpine.clone(from, to);
     }
   }
-  function src_default2(Alpine3) {
-    Alpine3.morph = morph;
-  }
-  var module_default2 = src_default2;
-
-  // ../alpine/packages/history/dist/module.esm.js
-  function history(Alpine3) {
-    Alpine3.magic("queryString", (el, { interceptor: interceptor2 }) => {
-      let alias;
-      let alwaysShow = false;
-      let usePush = false;
-      return interceptor2((initialSeedValue, getter, setter, path, key) => {
-        let queryKey = alias || path;
-        let { initial, replace: replace2, push: push2, pop } = track3(queryKey, initialSeedValue, alwaysShow);
-        setter(initial);
-        if (!usePush) {
-          Alpine3.effect(() => replace2(getter()));
-        } else {
-          Alpine3.effect(() => push2(getter()));
-          pop(async (newValue) => {
-            setter(newValue);
-            let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
-            await tillTheEndOfTheMicrotaskQueue();
-          });
-        }
-        return initial;
-      }, (func) => {
-        func.alwaysShow = () => {
-          alwaysShow = true;
-          return func;
-        };
-        func.usePush = () => {
-          usePush = true;
-          return func;
-        };
-        func.as = (key) => {
-          alias = key;
-          return func;
-        };
-      });
-    });
-    Alpine3.history = { track: track3 };
-  }
-  function track3(name, initialSeedValue, alwaysShow = false) {
-    let { has: has3, get: get3, set: set3, remove } = queryStringUtils();
-    let url = new URL(window.location.href);
-    let isInitiallyPresentInUrl = has3(url, name);
-    let initialValue = isInitiallyPresentInUrl ? get3(url, name) : initialSeedValue;
-    let initialValueMemo = JSON.stringify(initialValue);
-    let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
-    if (alwaysShow)
-      url = set3(url, name, initialValue);
-    replace(url, name, { value: initialValue });
-    let lock = false;
-    let update = (strategy, newValue) => {
-      if (lock)
-        return;
-      let url2 = new URL(window.location.href);
-      if (!alwaysShow && !isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
-        url2 = remove(url2, name);
-      } else {
-        url2 = set3(url2, name, newValue);
-      }
-      strategy(url2, name, { value: newValue });
-    };
-    return {
-      initial: initialValue,
-      replace(newValue) {
-        update(replace, newValue);
-      },
-      push(newValue) {
-        update(push, newValue);
-      },
-      pop(receiver) {
-        window.addEventListener("popstate", (e) => {
-          if (!e.state || !e.state.alpine)
-            return;
-          Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
-            if (iName !== name)
-              return;
-            lock = true;
-            let result = receiver(newValue);
-            if (result instanceof Promise) {
-              result.finally(() => lock = false);
-            } else {
-              lock = false;
-            }
-          });
-        });
-      }
-    };
-  }
-  function replace(url, key, object) {
-    let state2 = window.history.state || {};
-    if (!state2.alpine)
-      state2.alpine = {};
-    state2.alpine[key] = unwrap(object);
-    window.history.replaceState(state2, "", url.toString());
-  }
-  function push(url, key, object) {
-    let state2 = { alpine: { ...window.history.state.alpine, ...{ [key]: unwrap(object) } } };
-    window.history.pushState(state2, "", url.toString());
-  }
-  function unwrap(object) {
-    return JSON.parse(JSON.stringify(object));
-  }
-  function queryStringUtils() {
-    return {
-      has(url, key) {
-        let search = url.search;
-        if (!search)
-          return false;
-        let data2 = fromQueryString(search);
-        return Object.keys(data2).includes(key);
-      },
-      get(url, key) {
-        let search = url.search;
-        if (!search)
-          return false;
-        let data2 = fromQueryString(search);
-        return data2[key];
-      },
-      set(url, key, value) {
-        let data2 = fromQueryString(url.search);
-        data2[key] = value;
-        url.search = toQueryString(data2);
-        return url;
-      },
-      remove(url, key) {
-        let data2 = fromQueryString(url.search);
-        delete data2[key];
-        url.search = toQueryString(data2);
-        return url;
-      }
-    };
-  }
-  function toQueryString(data2) {
-    let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;
-    let buildQueryStringEntries = (data22, entries2 = {}, baseKey = "") => {
-      Object.entries(data22).forEach(([iKey, iValue]) => {
-        let key = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
-        if (!isObjecty2(iValue)) {
-          entries2[key] = encodeURIComponent(iValue).replaceAll("%20", "+");
-        } else {
-          entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key) };
-        }
-      });
-      return entries2;
-    };
-    let entries = buildQueryStringEntries(data2);
-    return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
-  }
-  function fromQueryString(search) {
-    search = search.replace("?", "");
-    if (search === "")
-      return {};
-    let insertDotNotatedValueIntoData = (key, value, data22) => {
-      let [first2, second, ...rest] = key.split(".");
-      if (!second)
-        return data22[key] = value;
-      if (data22[first2] === void 0) {
-        data22[first2] = isNaN(second) ? {} : [];
-      }
-      insertDotNotatedValueIntoData([second, ...rest].join("."), value, data22[first2]);
-    };
-    let entries = search.split("&").map((i) => i.split("="));
-    let data2 = {};
-    entries.forEach(([key, value]) => {
-      value = decodeURIComponent(value.replaceAll("+", "%20"));
-      if (!key.includes("[")) {
-        data2[key] = value;
-      } else {
-        let dotNotatedKey = key.replaceAll("[", ".").replaceAll("]", "");
-        insertDotNotatedValueIntoData(dotNotatedKey, value, data2);
-      }
-    });
-    return data2;
-  }
-  var module_default3 = history;
-
-  // ../alpine/packages/intersect/dist/module.esm.js
   function src_default3(Alpine3) {
-    Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
-      let evaluate2 = evaluateLater2(expression);
-      let options = {
-        rootMargin: getRootMargin(modifiers),
-        threshold: getThreshhold(modifiers)
-      };
-      let observer2 = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting === (value === "leave"))
-            return;
-          evaluate2();
-          modifiers.includes("once") && observer2.disconnect();
-        });
-      }, options);
-      observer2.observe(el);
-      cleanup3(() => {
-        observer2.disconnect();
-      });
-    });
-  }
-  function getThreshhold(modifiers) {
-    if (modifiers.includes("full"))
-      return 0.99;
-    if (modifiers.includes("half"))
-      return 0.5;
-    if (!modifiers.includes("threshold"))
-      return 0;
-    let threshold = modifiers[modifiers.indexOf("threshold") + 1];
-    if (threshold === "100")
-      return 1;
-    if (threshold === "0")
-      return 0;
-    return Number(`.${threshold}`);
-  }
-  function getLengthValue(rawValue) {
-    let match = rawValue.match(/^(-?[0-9]+)(px|%)?$/);
-    return match ? match[1] + (match[2] || "px") : void 0;
-  }
-  function getRootMargin(modifiers) {
-    const key = "margin";
-    const fallback = "0px 0px 0px 0px";
-    const index = modifiers.indexOf(key);
-    if (index === -1)
-      return fallback;
-    let values = [];
-    for (let i = 1; i < 5; i++) {
-      values.push(getLengthValue(modifiers[index + i] || ""));
-    }
-    values = values.filter((v) => v !== void 0);
-    return values.length ? values.join(" ").trim() : fallback;
+    Alpine3.morph = morph;
   }
   var module_default4 = src_default3;
 
   // js/lifecycle.js
   function start2() {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
-    module_default.interceptInit(module_default.skipDuringClone((el) => {
-      initElement(el);
-    }));
-    module_default.plugin(module_default2);
-    module_default.plugin(module_default3);
     module_default.plugin(module_default4);
+    module_default.plugin(module_default3);
+    module_default.plugin(module_default2);
     module_default.addRootSelector(() => "[wire\\:id]");
+    module_default.interceptInit(module_default.skipDuringClone((el) => {
+      if (el.hasAttribute("wire:id"))
+        initComponent(el);
+      let component = closestComponent(el, false);
+      if (component) {
+        initDirectives(el, component);
+        trigger2("element.init", el, component);
+      }
+    }));
     module_default.start();
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
-  }
-  function initElement(el) {
-    if (el.hasAttribute("wire:id"))
-      initComponent(el);
-    let component;
-    try {
-      component = closestComponent(el);
-    } catch (e) {
-    }
-    component && trigger2("element.init", el, component);
-  }
-  function initComponent(el) {
-    if (el.__livewire)
-      return;
-    let component = new Component(el);
-    el.__livewire = component;
-    trigger2("component.init", component);
-    module_default.bind(el, {
-      "x-data"() {
-        return component.reactive;
-      },
-      "x-destroy"() {
-        releaseComponent(component.id);
-      }
-    });
-    storeComponent(component.id, component);
-  }
-  function closestComponent(el) {
-    let closestRoot2 = module_default.findClosest(el, (i) => i.__livewire);
-    if (!closestRoot2) {
-      throw "Could not find Livewire component in DOM tree";
-    }
-    return closestRoot2.__livewire;
   }
 
   // js/features/disableFormsDuringRequest.js
   var cleanupStackByComponentId = {};
   on("element.init", (el, component) => {
-    let directives2 = getDirectives(el);
-    if (directives2.missing("submit"))
+    let directives3 = getDirectives(el);
+    if (directives3.missing("submit"))
       return;
     el.addEventListener("submit", () => {
       cleanupStackByComponentId[component.id] = [];
@@ -5052,8 +4733,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
-  on("target.request", (target) => {
-    let component = findComponent(target.__livewireId);
+  on("request", (component) => {
     return () => {
       cleanup2(component);
     };
@@ -5067,13 +4747,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/forceUpdateDirtyInputs.js
-  directive2("model", (el, { expression }, { component }) => {
-    on("target.request", (target) => {
-      let targetComponent = findComponent(target.__livewireId);
-      if (component !== targetComponent)
+  function forceUpdateOnDirty(component, el, expression) {
+    on("request", (iComponent) => {
+      if (iComponent !== component)
         return;
       return () => {
-        let dirty = target.effects.dirty;
+        let dirty = component.effects.dirty;
         if (!dirty)
           return;
         if (isDirty(expression, dirty)) {
@@ -5081,7 +4760,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
     });
-  });
+  }
   function isDirty(subject, dirty) {
     if (dirty.includes(subject))
       return true;
@@ -5089,11 +4768,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/dispatchBrowserEvents.js
-  on("effects", (target, effects) => {
+  on("effects", (component, effects) => {
     let dispatches = effects.dispatches;
     if (!dispatches)
       return;
-    let component = findComponent(target.__livewireId);
     dispatches.forEach(({ event, data: data2 }) => {
       data2 = data2 || {};
       let e = new CustomEvent(event, {
@@ -5105,24 +4783,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/wireModelChild.js
-  on("target.request.prepare", (target) => {
-    let meta = target.snapshot.memo;
+  on("request.prepare", (component) => {
+    let meta = component.snapshot.memo;
     let childIds = Object.values(meta.children).map((i) => i[1]);
     childIds.forEach((id) => {
       let child = findComponent(id);
-      let childSynthetic = child.synthetic;
-      let childMeta = childSynthetic.snapshot.memo;
+      let childMeta = child.snapshot.memo;
       let bindings = childMeta.bindings;
       if (bindings)
-        childSynthetic.ephemeral.$commit();
+        child.$wire.$commit();
     });
   });
 
   // js/features/fileDownloads.js
-  on("target.request", (target) => {
-    let component = findComponent(target.__livewireId);
+  on("request", (component) => {
     return () => {
-      let download = target.effects.download;
+      let download = component.effects.download;
       if (!download)
         return;
       let urlObject = window.webkitURL || window.URL;
@@ -5156,15 +4832,46 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/magicMethods.js
-  on("decorate", (target, path, addProp, decorator, symbol) => {
-    addProp("$set", (...params) => {
-      let component = findComponent(target.__livewireId);
-      return component.$wire.set(...params);
+  wireProperty("$set", (component) => (...params) => {
+    return component.$wire.set(...params);
+  });
+  wireProperty("$toggle", (component) => (name) => {
+    return component.$wire.set(name, !component.$wire.get(name));
+  });
+  wireProperty("__target", (component) => component);
+  wireProperty("$watch", (component) => (path, callback) => {
+    let firstTime = true;
+    let old = void 0;
+    effect(() => {
+      let value = dataGet(component.reactive, path);
+      if (firstTime) {
+        firstTime = false;
+        return;
+      }
+      pauseTracking();
+      callback(value, old);
+      old = value;
+      enableTracking();
     });
-    addProp("$toggle", (name) => {
-      let component = findComponent(target.__livewireId);
-      return component.$wire.set(name, !component.$wire.get(name));
-    });
+  });
+  wireProperty("$watchEffect", (component) => (callback) => effect(callback));
+  wireProperty("$refresh", (component) => async () => await requestCommit(component.symbol));
+  wireProperty("get", (component) => (property, reactive3 = true) => dataGet(reactive3 ? component.reactive : component.ephemeral, property));
+  wireProperty("set", (component) => async (property, value, live = true) => {
+    dataSet(component.reactive, property, value);
+    return live ? await requestCommit(component.symbol) : Promise.resolve();
+  });
+  wireProperty("call", (component) => async (method, ...params) => {
+    return await component.$wire[method](...params);
+  });
+  wireFallback((component) => (property) => async (...params) => {
+    if (params.length === 1 && params[0] instanceof Event) {
+      params = [];
+    }
+    return await callMethod(component.symbol, property, params);
+  });
+  wireProperty("$commit", (component) => async (callback) => {
+    return await requestCommit(component.symbol);
   });
 
   // js/features/queryString.js
@@ -5174,7 +4881,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!queryString)
       return;
     Object.entries(queryString).forEach(([key, value]) => {
-      let { name, as, except, use, alwaysShow } = normalizeQueryStringEntry(key, value);
+      let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value);
       let initialValue = dataGet(component.ephemeral, name);
       let { initial, replace: replace2, push: push2, pop } = track3(as, initialValue, alwaysShow);
       if (use === "replace") {
@@ -5182,15 +4889,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           replace2(dataGet(component.reactive, name));
         });
       } else if (use === "push") {
-        on("target.request", (target, payload) => {
-          if (target !== module_default.raw(component.synthetic))
-            return;
+        on("request", (component2, payload) => {
           return () => {
-            let diff2 = payload.diff;
-            let dirty = target.effects.dirty || [];
-            if (!Object.keys(payload.diff).includes(name) && !dirty.some((i) => i.startsWith(name)))
+            let updates = payload.updates;
+            let dirty = component2.effects.dirty || [];
+            if (!Object.keys(updates).includes(name) && !dirty.some((i) => i.startsWith(name)))
               return;
-            push2(dataGet(component.ephemeral, name));
+            push2(dataGet(component2.ephemeral, name));
           };
         });
         pop(async (newValue) => {
@@ -5203,7 +4908,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   function normalizeQueryStringEntry(key, value) {
-    let defaults = { except: null, use: "replace", alwaysShow: false };
+    let defaults = { use: "replace", alwaysShow: false };
     if (typeof value === "string") {
       return { ...defaults, name: value, as: value };
     } else {
@@ -5224,8 +4929,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     parentComponent && (wrapper.__livewire = parentComponent);
     let to = wrapper.firstElementChild;
     to.__livewire = component;
-    trigger2("morph", el, to, component);
-    module_default.morph(el, to, {
+    trigger("morph", el, to, component);
+    Alpine.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip) => {
         if (isntElement(el2))
           return;
@@ -5245,19 +4950,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       removing: (el2, skip) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.removing", el2, skip);
+        trigger("morph.removing", el2, skip);
       },
       removed: (el2) => {
         if (isntElement(el2))
           return;
       },
       adding: (el2) => {
-        trigger2("morph.adding", el2);
+        trigger("morph.adding", el2);
       },
       added: (el2) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.added", el2);
+        trigger("morph.added", el2);
         const closestComponentId = closestComponent(el2).id;
         if (closestComponentId === component.id) {
         } else if (isComponentRootEl(el2)) {
@@ -5288,22 +4993,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/morphDom.js
-  on("effects", (target, effects) => {
+  on("effects", (component, effects) => {
     let html = effects.html;
     if (!html)
       return;
-    let component = findComponent(target.__livewireId);
     queueMicrotask(() => {
       morph2(component, component.el, html);
     });
   });
 
   // js/features/entangle.js
-  on("decorate", (target, path, addProp, decorator, symbol) => {
-    addProp("entangle", (name, live = false) => {
-      let component = findComponent(target.__livewireId);
-      return generateEntangleFunction(component)(name, live);
-    });
+  wireProperty("entangle", (component) => (name, live = false) => {
+    return generateEntangleFunction(component)(name, live);
   });
   function generateEntangleFunction(component) {
     return (name, live) => {
@@ -5350,30 +5051,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
 
+  // js/features/redirect.js
+  on("effects", (component, effects) => {
+    if (!effects["redirect"])
+      return;
+    let url = effects["redirect"];
+    window.location.href = url;
+  });
+
   // js/features/$parent.js
-  on("decorate", (target, path, addProp, decorator, symbol) => {
-    let memo;
-    addProp("$parent", { get() {
-      if (memo)
-        return memo.$wire;
-      let component = findComponent(target.__livewireId);
-      let parent = closestComponent(component.el.parentElement);
-      memo = parent;
-      return parent.$wire;
-    } });
+  var memo;
+  wireProperty("$parent", (component) => {
+    if (memo)
+      return memo.$wire;
+    let parent = closestComponent(component.el.parentElement);
+    memo = parent;
+    return parent.$wire;
   });
 
   // js/features/props.js
-  on("target.request.prepare", (target) => {
-    let meta = target.snapshot.memo;
+  on("request.prepare", (component) => {
+    let meta = component.snapshot.memo;
     let childIds = Object.values(meta.children).map((i) => i[1]);
     childIds.forEach((id) => {
       let child = findComponent(id);
-      let childSynthetic = child.synthetic;
-      let childMeta = childSynthetic.snapshot.memo;
+      let childMeta = child.snapshot.memo;
       let props = childMeta.props;
       if (props)
-        childSynthetic.ephemeral.$commit();
+        child.$wire.$commit();
     });
   });
 
@@ -5542,8 +5247,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     ];
   }
   function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
-    on("target.request", (target, payload) => {
-      if (findComponent(target.__livewireId) !== component)
+    on("request", (iComponent, payload) => {
+      if (iComponent !== component)
         return;
       if (targets.length > 0 && !containsTargets(payload, targets))
         return;
@@ -5554,37 +5259,37 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function containsTargets(payload, targets) {
-    let { diff: diff2, calls } = payload;
+    let { updates, calls } = payload;
     return targets.some(({ target, params }) => {
       if (params) {
         return calls.some(({ method, params: methodParams }) => {
           return target === method && params === quickHash(methodParams.toString());
         });
       }
-      if (Object.keys(diff2).map((i) => i.split(".")[0]).includes(target))
+      if (Object.keys(updates).map((i) => i.split(".")[0]).includes(target))
         return true;
       if (calls.map((i) => i.method).includes(target))
         return true;
     });
   }
   function getTargets(el) {
-    let directives2 = getDirectives(el);
+    let directives3 = getDirectives(el);
     let targets = [];
-    if (directives2.has("target")) {
-      let directive3 = directives2.get("target");
-      let raw3 = directive3.expression;
-      if (raw3.includes("(") && raw3.includes(")")) {
+    if (directives3.has("target")) {
+      let directive3 = directives3.get("target");
+      let raw2 = directive3.expression;
+      if (raw2.includes("(") && raw2.includes(")")) {
         targets.push({ target: directive3.method, params: quickHash(directive3.params.toString()) });
-      } else if (raw3.includes(",")) {
-        raw3.split(",").map((i) => i.trim()).forEach((target) => {
+      } else if (raw2.includes(",")) {
+        raw2.split(",").map((i) => i.trim()).forEach((target) => {
           targets.push({ target });
         });
       } else {
-        targets.push({ target: raw3 });
+        targets.push({ target: raw2 });
       }
     } else {
       let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
-      directives2.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
+      directives3.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
     }
     return targets;
   }
@@ -5603,8 +5308,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire:dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
-  on("target.request", (target) => {
-    let component = findComponent(target.__livewireId);
+  on("request", (component) => {
     return () => {
       setTimeout(() => {
         refreshDirtyStatesByComponent.each(component, (i) => i(false));
@@ -5639,13 +5343,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   function dirtyTargets(el) {
-    let directives2 = getDirectives(el);
+    let directives3 = getDirectives(el);
     let targets = [];
-    if (directives2.has("model")) {
-      targets.push(directives2.get("model").expression);
+    if (directives3.has("model")) {
+      targets.push(directives3.get("model").expression);
     }
-    if (directives2.has("target")) {
-      targets = targets.concat(directives2.get("target").expression.split(",").map((s) => s.trim()));
+    if (directives3.has("target")) {
+      targets = targets.concat(directives3.get("target").expression.split(",").map((s) => s.trim()));
     }
     return targets;
   }
@@ -5655,6 +5359,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!expression) {
       return console.warn("Livewire: [wire:model] is missing a value.", el);
     }
+    forceUpdateOnDirty(component, el, expression);
     let isLive = modifiers.includes("live");
     let isLazy = modifiers.includes("lazy");
     let isDebounced = modifiers.includes("debounce");
@@ -5804,6 +5509,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/index.js
   var Livewire = {
     directive: directive2,
+    emitTo,
     start: start2,
     first,
     find,

@@ -28,16 +28,16 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [x] `wire:model` props
 - [x] `wire:transition`
 - [x] JavaScript functions
-- [x] `@if` markers
-- [ ] Lazy components
+- [x] Lazy components
+- [ ] `@if` markers
 - [ ] PHP Attributes
 - [ ] SPA Mode (`wire:navigate`, `@persist`)
 - [ ] Hot-reloading
 
 #### V2 Parity
+- [x] Eloquent model support
 - [ ] Persistant middleware
-- [ ] Eloquent model support
-- [ ] Session expriration
+- [ ] Session expiration
 - [ ] Detect multiple root elements
 - [ ] JS hooks and `Livewire.?`
 - [ ] Work through all `@todo` comments

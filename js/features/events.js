@@ -1,25 +1,22 @@
-import { componentsByName, findComponent } from '../state'
-import { on as hook } from './../synthetic/index'
-import { Bag, dispatch } from 'utils'
+import { componentsByName, findComponent } from '../store'
+import { on as hook } from '@/events'
+import { Bag, dispatch } from '@/utils'
 import Alpine from 'alpinejs'
+import { wireProperty } from '@/wire'
 
 let globalListeners = new Bag
 
-hook('effects', (target, effects, path) => {
+hook('effects', (component, effects, path) => {
     let listeners = effects.listeners
 
     if (! listeners) return
 
     listeners.forEach(name => {
         globalListeners.add(name, (...params) => {
-            let component = findComponent(target.__livewireId)
-
             component.$wire.call('__emit', name, ...params)
         })
 
         queueMicrotask(() => {
-            let component = findComponent(target.__livewireId)
-
             component.el.addEventListener('__lwevent:'+name, (e) => {
                 component.$wire.call('__emit', name, ...e.detail.params)
             })
@@ -27,21 +24,15 @@ hook('effects', (target, effects, path) => {
     })
 })
 
-hook('decorate', (target, path, addProp, decorator, symbol) => {
-    queueMicrotask(() => {
-        let component = findComponent(target.__livewireId)
+wireProperty('$emit', (component) => (...params) => emit(...params))
+wireProperty('$emitUp', (component) => (...params) => emitUp(component.el, ...params))
+wireProperty('$emitSelf', (component) => (...params) => emitSelf(component.id, ...params))
+wireProperty('$emitTo', (component) => (...params) => emitTo(...params))
 
-        addProp('$emit', (...params) => emit(...params))
-        addProp('$emitUp', (...params) => emitUp(component.el, ...params))
-        addProp('$emitSelf', (...params) => emitSelf(component.id, ...params))
-        addProp('$emitTo', (...params) => emitTo(...params))
-
-        addProp('emit', (...params) => emit(...params))
-        addProp('emitUp', (...params) => emitUp(component.el, ...params))
-        addProp('emitSelf', (...params) => emitSelf(component.id, ...params))
-        addProp('emitTo', (...params) => emitTo(...params))
-    })
-})
+wireProperty('emit', (component) => (...params) => emit(...params))
+wireProperty('emitUp', (component) => (...params) => emitUp(component.el, ...params))
+wireProperty('emitSelf', (component) => (...params) => emitSelf(component.id, ...params))
+wireProperty('emitTo', (component) => (...params) => emitTo(...params))
 
 export function emit(name, ...params) {
     globalListeners.each(name, i => i(...params))

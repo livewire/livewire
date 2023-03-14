@@ -1,4 +1,4 @@
-import { WeakBag } from "utils"
+import { WeakBag } from './utils'
 
 let callbacksByComponent = new WeakBag
 

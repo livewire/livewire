@@ -1,5 +1,6 @@
 import { debounceByComponent } from '@/debounce'
 import { directive } from '@/directives'
+import { forceUpdateOnDirty } from '@/features/forceUpdateDirtyInputs'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 
@@ -7,6 +8,8 @@ directive('model', (el, { expression, modifiers }, { component }) => {
     if (! expression) {
         return console.warn('Livewire: [wire:model] is missing a value.', el)
     }
+
+    forceUpdateOnDirty(component, el, expression)
 
     let isLive = modifiers.includes('live')
     let isLazy = modifiers.includes('lazy')

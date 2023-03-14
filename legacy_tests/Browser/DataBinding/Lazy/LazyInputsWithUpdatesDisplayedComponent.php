@@ -29,11 +29,11 @@ class LazyInputsWithUpdatesDisplayedComponent extends BaseComponent
         // back into the V2 schema here...
         $this->updates = [];
 
-        foreach (request('targets.0.diff') as $key => $value) {
+        foreach (request('components.0.updates') as $key => $value) {
             $this->updates[] = ['type' => 'syncInput', 'payload' => ['name' => $key]];
         }
 
-        foreach (request('targets.0.calls') as $call) {
+        foreach (request('components.0.calls') as $call) {
             $this->updates[] = ['type' => 'callMethod', 'payload' => ['method' => $call['method']]];
         }
     }

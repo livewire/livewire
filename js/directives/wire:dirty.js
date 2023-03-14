@@ -1,14 +1,11 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from '@/directives'
 import { dataGet, WeakBag } from '@/utils'
-import { findComponent } from '@/state'
-import { on } from '@synthetic/index'
+import { on } from '@/events'
 
 let refreshDirtyStatesByComponent = new WeakBag
 
-on('target.request', (target) => {
-    let component = findComponent(target.__livewireId)
-
+on('request', (component) => {
     return () => {
         setTimeout(() => { // Doing a "setTimeout" to let morphdom do its thing first...
             refreshDirtyStatesByComponent.each(component, i => i(false))

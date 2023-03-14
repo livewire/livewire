@@ -1,11 +1,8 @@
-import { findComponent, state } from "../state";
-import { on } from '../synthetic/index'
+import { on } from '@/events'
 
-on('target.request', (target) => {
-    let component = findComponent(target.__livewireId)
-
+on('request', (component) => {
     return () => {
-        let download = target.effects.download
+        let download = component.effects.download
 
         if (! download) return
 

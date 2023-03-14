@@ -13,16 +13,6 @@ use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 
 class SupportEvents extends ComponentHook
 {
-    function boot()
-    {
-        // @todo: refactor this out. Ew.
-        on('methods', function ($target, $addMethod) {
-            if ($target !== $this->component) return;
-
-            $addMethod('__emit');
-        });
-    }
-
     function call($method, $params, $returnEarly)
     {
         if ($method === '__emit') {
@@ -36,9 +26,9 @@ class SupportEvents extends ComponentHook
 
             $method = static::getListenerMethodName($this->component, $name);
 
-            wrap($this->component)->$method(...$params);
-
-            $returnEarly();
+            $returnEarly(
+                wrap($this->component)->$method(...$params)
+            );
         }
     }
 

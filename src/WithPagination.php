@@ -16,7 +16,7 @@ trait WithPagination
     {
         return collect($this->paginators)->mapWithKeys(function ($page, $pageName) {
             return ['paginators.'.$pageName => ['use' => 'push', 'as' => $pageName]];
-        });
+        })->toArray();
     }
 
     public function initializeWithPagination()

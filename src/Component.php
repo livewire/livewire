@@ -61,14 +61,19 @@ abstract class Component
         return $this->__name;
     }
 
-    function skipRender()
+    function skipRender($html = null)
     {
-        store($this)->set('skipRender', true);
+        store($this)->set('skipRender', $html ?: true);
     }
 
-    function render()
+    function skipMount()
     {
-        return view("livewire.{$this->getName()}");
+        store($this)->set('skipMount', true);
+    }
+
+    function skipHydrate()
+    {
+        store($this)->set('skipHydrate', true);
     }
 
     function __isset($property)

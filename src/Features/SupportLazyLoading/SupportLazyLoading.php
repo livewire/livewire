@@ -2,74 +2,100 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
-use function Livewire\after;
-use function Livewire\on;
-use function Livewire\store;
-
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
+use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
+use function Livewire\{ on, wrap };
+use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
+use Livewire\Component;
 
 class SupportLazyLoading extends ComponentHook
 {
-    static function provide()
+    public function mount($params)
     {
-        // @todo: This needs a complete overhaul...
-        return;
-        on('pre-mount', function ($name, $params, $parent, $key, $hijack) {
-            if (! array_key_exists('lazy', $params)) return;
-            unset($params['lazy']);
+        if (! in_array('lazy', $params)) return;
 
-            $html = app(RenderComponent::class)->lazyMount($name, $params, $key);
+        $this->component->skipMount();
 
-            $hijack($html);
+        $mountParams = array_diff_key($params, array_flip(['lazy']));
+
+        $this->component->skipRender(
+            $this->generatePlaceholderHtml($mountParams)
+        );
+    }
+
+    public function hydrate($memo)
+    {
+        if (isset($memo['lazyLoaded'])) return;
+
+        $this->component->skipHydrate();
+    }
+
+    function dehydrate($context)
+    {
+        if (! $context->mounting) return;
+
+        $context->addMemo('lazyLoaded', true);
+    }
+
+
+    function call($method, $params, $returnEarly)
+    {
+        if ($method !== '__lazyLoad') return;
+
+        [ $encoded ] = $params;
+
+        $mountParams = $this->resurrectMountParams($encoded);
+
+        $this->callMountLifecycleMethod($mountParams);
+
+        $returnEarly();
+    }
+
+    public function generatePlaceholderHtml($params)
+    {
+        $this->registerContainerComponent();
+
+        $snapshot = app('livewire')->snapshot(
+            $container = app('livewire')->new('__mountParamsContainer', ['forMount' => $params])
+        );
+
+        $encoded = base64_encode(json_encode($snapshot));
+
+        $placeholder = wrap($this->component)
+            ->withFallback('<div></div>')
+            ->placeholder();
+
+        $html = Utils::insertAttributesIntoHtmlRoot($placeholder, [
+            'x-intersect' => '$wire.__lazyLoad(\''.$encoded.'\')',
+        ]);
+
+        return $html;
+    }
+
+    function resurrectMountParams($encoded)
+    {
+        $snapshot = json_decode(base64_decode($encoded), associative: true);
+
+        $this->registerContainerComponent();
+
+        [ $container ] = app('livewire')->fromSnapshot($snapshot);
+
+        return $container->forMount;
+    }
+
+    function callMountLifecycleMethod($params)
+    {
+        $hook = new SupportLifecycleHooks;
+
+        $hook->setComponent($this->component);
+
+        $hook->mount($params);
+    }
+
+    public function registerContainerComponent()
+    {
+        app('livewire')->component('__mountParamsContainer', new class extends Component {
+            public $forMount;
         });
-
-        return;
-        app('livewire')->component('__lazy', Lazy::class);
-
-        on('pre-mount', function ($name, $params, $parent, $key, $hijack) {
-            if ($name === '__lazy') return;
-            if (! array_key_exists('lazy', $params)) return;
-            dd($params);
-            unset($params['lazy']);
-
-            $html = app('livewire')->mount('__lazy', ['componentName' => $name, 'forwards' => $params], $key);
-
-            $hijack($html);
-        });
-
-        on('hydrate', function ($target, $memo) {
-            if (! $memo['name'] === '__lazy') return;
-
-            store($target)->set('lazyReadyForSwap', true);
-            $target->swap = true;
-        });
-
-        // after('dehydrate', function ($target, $context) {
-        //     if (! store($target)->get('lazyReadyForSwap')) return;
-
-        //     return function ($data) use ($context, $target) {
-        //         $childContext = null;
-        //         $childData = null;
-
-        //         // $off = on('dehydrate', function ($synth, $target, $context) use (&$childContext, &$childData) {
-        //         //     if (! $childContext) $childContext = $context;
-
-        //         //     return function ($data) use (&$childData) {
-        //         //         if (! $childData) $childData = $data;
-        //         //     };
-        //         // });
-
-        //         [$html, $data] = app('livewire')->mount($target->componentName, [], id: $target->getId());
-
-        //         $off();
-
-
-        //         $context->effects = $childContext->effects;
-        //         $context->meta = $childContext->meta;
-
-        //         return $childData;
-        //     };
-        // });
     }
 }

@@ -1,5 +1,5 @@
 import { getDirectives } from "@/directives"
-import { on } from '@synthetic/index'
+import { on } from '@/events'
 
 // on('element.init', (el, component) => {
 //     let directives = getDirectives(el)

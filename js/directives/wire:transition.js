@@ -1,6 +1,5 @@
 import { directive } from "@/directives"
-import { WeakBag } from "@/utils"
-import { on } from '@synthetic/index'
+import { on } from '@/events'
 import Alpine from 'alpinejs'
 
 on('morph.added', el => el.__addedByMorph = true)

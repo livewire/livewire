@@ -74,7 +74,7 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.Livewire.hook('target.request', (target) => {
+                        "window.Livewire.hook('request', (target) => {
                             return () => {
                                 document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
                             }
@@ -98,7 +98,7 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.Livewire.hook('target.request', (target) => {
+                        "window.Livewire.hook('request', (target) => {
                             return () => {
                                 document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
                             }
@@ -125,7 +125,7 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.Livewire.hook('target.request', (target) => {
+                        "window.Livewire.hook('request', (target) => {
                             return () => {
                                 document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
                             }
@@ -151,7 +151,7 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.Livewire.hook('target.request', (target) => {
+                        "window.Livewire.hook('request', (target) => {
                             return () => {
                                 document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
                             }
@@ -178,7 +178,7 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->tap(function ($b) {
                     $b->script([
-                        "window.Livewire.hook('target.request', (target) => {
+                        "window.Livewire.hook('request', (target) => {
                             return () => {
                                 document.querySelector('[dusk=\"content-type\"]').value = target.effects.download.contentType;
                             }

@@ -1,13 +1,13 @@
-import { synthetic, on as hook } from './synthetic/index'
-import { emit, on } from './features/events'
+import { emit, emitTo, on } from './features/events'
 import { directive } from './directives'
-import { find, first } from './state'
+import { find, first } from './store'
+import { on as hook } from './events'
 import { start } from './lifecycle'
 import Alpine from 'alpinejs'
 
-// Livewire global...
 export let Livewire = {
     directive,
+    emitTo,
     start,
     first,
     find,
