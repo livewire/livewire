@@ -2,14 +2,15 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use Exception;
 use function Livewire\{ store, trigger, wrap };
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Illuminate\Foundation\Http\Middleware\TrimStrings;
-use Livewire\Drawer\Utils;
-use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Drawer\Utils;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Exception;
 
 class HandleComponents
 {
@@ -97,13 +98,12 @@ class HandleComponents
         return [ $snapshot, $context->effects ];
     }
 
-    public function validateSnapshot($snapshot)
-    {
-        Checksum::verify($snapshot);
-    }
-
     public function fromSnapshot($snapshot)
     {
+        Checksum::verify($snapshot);
+
+        trigger('forjoshtostressabout', $snapshot);
+
         $data = $snapshot['data'];
         $name = $snapshot['memo']['name'];
         $id   = $snapshot['memo']['id'];

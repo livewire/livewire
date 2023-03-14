@@ -42,13 +42,7 @@ class HandleRequests
     function setUpdateRoute($callback)
     {
         $route = $callback(function () {
-            $componentsData = $this->getComponentsData();
-
-            app(PersistentMiddleware::class)->runMiddleware(
-                $componentsData
-            );
-
-            return $this->handleUpdate($componentsData);
+            return $this->handleUpdate();
         });
 
         // Append `livewire.message` to the existing name, if any.
@@ -57,7 +51,7 @@ class HandleRequests
         $this->updateRoute = $route;
     }
 
-    function isDefinitelyLivewireRequest()
+    function isLivewireRequest()
     {
         $route = request()->route();
 
@@ -72,24 +66,14 @@ class HandleRequests
         return $route->named('*livewire.message');
     }
 
-    function getComponentsData() {
+    function handleUpdate()
+    {
         $components = request('components');
 
-        foreach ($components as &$component) {
-            $component['snapshot'] = json_decode($component['snapshot'], associative: true);
-
-            app(HandleComponents::class)->validateSnapshot($component['snapshot']);
-        }
-
-        return $components;
-    }
-
-    function handleUpdate($components)
-    {
         $responses = [];
 
         foreach ($components as $component) {
-            $snapshot = $component['snapshot'];
+            $snapshot = json_decode($component['snapshot'], associative: true);
             $updates = $component['updates'];
             $calls = $component['calls'];
 

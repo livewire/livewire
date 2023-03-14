@@ -98,9 +98,9 @@ class Manager
         return app(HandleComponents::class)->updateProperty($component, $path, $value, $dummyContext);
     }
 
-    function isDefinitelyLivewireRequest()
+    function isLivewireRequest()
     {
-        return app(HandleRequests::class)->isDefinitelyLivewireRequest();
+        return app(HandleRequests::class)->isLivewireRequest();
     }
 
     function setUpdateRoute($callback)
@@ -143,11 +143,6 @@ class Manager
          Testable::actingAs($user, $driver);
 
          return $this;
-    }
-
-    function isLivewireRequest()
-    {
-        return request()->hasHeader('X-Livewire') || request()->hasHeader('X-Synthetic');
     }
 
     function isRunningServerless()

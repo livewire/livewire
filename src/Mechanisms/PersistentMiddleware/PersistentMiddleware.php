@@ -23,15 +23,20 @@ class PersistentMiddleware
 
     function boot()
     {
-        app()->singleton($this::class, fn() => $this);
+        app()->singleton($this::class, fn () => $this);
 
-        $this->middlewareTransformer = new MiddlewareTransformer;
+        on('dehydrate', function ($component, $context) {
+            [$path, $method] = $this->extractPathAndMethodFromRequest($request);
 
-        on('dehydrate', function($component, $context) {
-            $this->middlewareTransformer->addDataToContext($context, request());
+            $context->addMemo('path', $path);
+            $context->addMemo('method', $method);
         });
 
-        on('flush-state', $this->flushState(...));
+        on('yope', function ($snapshot) {
+            [ $path, $method ] = $this->extractPathAndMethodFromSnapshot($snapshot);
+
+            $this->applyPersistantMiddleware($path, $method);
+        });
     }
 
     function addPersistentMiddleware($middleware)
@@ -49,7 +54,7 @@ class PersistentMiddleware
         return static::$persistentMiddleware;
     }
 
-    function runMiddleware($componentsData)
+    function runMiddleware($component)
     {
         $middleware = $this->middlewareTransformer->getMiddlewareFromComponentsData($componentsData);
 
@@ -64,25 +69,5 @@ class PersistentMiddleware
             ->then(function() {
                 return new Response();
             });
-    }
-
-    function flushState()
-    {
-        /**
-         * We can't access the default static array once it has been
-         * modified, so we have to manually reset it here.
-         */
-        $this->setPersistentMiddleware([
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
-            \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\RedirectIfAuthenticated::class,
-            \Illuminate\Auth\Middleware\Authenticate::class,
-            \Illuminate\Auth\Middleware\Authorize::class,
-            \App\Http\Middleware\Authenticate::class,
-        ]);
-
-        $this->middlewareTransformer = null;
     }
 }

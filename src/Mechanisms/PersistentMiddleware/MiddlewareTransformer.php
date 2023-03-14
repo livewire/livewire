@@ -34,10 +34,6 @@ class MiddlewareTransformer
 
     public function addDataToContext($context, $request)
     {
-        [$path, $method] = $this->getPathAndMethod($request);
-
-        $context->addMemo('path', $path);
-        $context->addMemo('method', $method);
     }
 
     protected function getPathAndMethodFromComponentsData($componentsData)
@@ -72,7 +68,7 @@ class MiddlewareTransformer
                 throw new \Exception('Something went wrong, path and method are not the same for all the components in this request,');
             }
         }
-        
+
         return [$path, $method];
     }
 
@@ -147,7 +143,7 @@ class MiddlewareTransformer
 
     protected function getPathAndMethod()
     {
-        if (app(HandleRequests::class)->isDefinitelyLivewireRequest()) {
+        if (app(HandleRequests::class)->isLivewireRequest()) {
             return [$this->path, $this->method];
         }
 
