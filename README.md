@@ -43,6 +43,9 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] Work through all `@todo` comments
 - [ ] Remove all `->markTestSkipped()` statements
 
+#### Documentation
+- [ ] Rewrite it lol
+
 #### Finishing touches
 - [ ] Unify modern/legacy tests and "TestCase"s
 - [ ] Add JS element & component
@@ -53,5 +56,3 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] Brainstorm Form Object solution
 - [ ] Brainstorm 3rd party plugin API
 
-#### Documentation
-- [ ] Rewrite it lol

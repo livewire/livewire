@@ -43,9 +43,11 @@
             "id": "8999a3d458982d37",
             "type": "leaf",
             "state": {
-              "type": "release-notes",
+              "type": "markdown",
               "state": {
-                "currentVersion": "1.1.16"
+                "file": "_guidelines.md",
+                "mode": "source",
+                "source": false
               }
             }
           }
@@ -116,6 +118,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "_guidelines.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -132,6 +135,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "_guidelines.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -153,7 +157,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {}
+              "state": {
+                "file": "_guidelines.md"
+              }
             }
           }
         ]
@@ -175,10 +181,10 @@
   },
   "active": "8999a3d458982d37",
   "lastOpenFiles": [
-    "quickstart.md",
-    "Untitled.md",
     "installation.md",
+    "quickstart.md",
     "_guidelines.md",
+    "Untitled.md",
     "Places next year.md",
     "Untitled.canvas"
   ]
