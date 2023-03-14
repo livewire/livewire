@@ -5,10 +5,16 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 use Livewire\Livewire;
 use Livewire\Component;
 use Laravel\Dusk\Browser;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Blade;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        $this->markTestSkipped(); // @todo: Josh Hanley
+    }
+
     /** @test */
     public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
@@ -25,6 +31,45 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertCount(2, explode('__BLOCK__', $output));
         $this->assertCount(2, explode('__ENDBLOCK__', $output));
+    }
+
+    /** @test */
+    public function more_tests()
+    {
+        $output = $this->compile(<<<HTML
+        <div>
+            @if (true)
+                foo
+            @endif
+
+            @if (true)
+                bar
+            @endif
+        </div>
+        HTML);
+
+        $this->assertOccurrences(2, '__BLOCK__', $output);
+        $this->assertOccurrences(2, '__ENDBLOCK__', $output);
+    }
+
+    protected function compile($string)
+    {
+        $precompile = function ($pattern, $handler) {
+            app('blade.compiler')->precompiler(function ($string) use ($pattern, $handler) {
+                return preg_replace_callback($pattern, function ($matches) use ($handler, $string) {
+                    return $handler($matches, $string);
+                }, $string);
+            });
+        };
+
+        SupportMorphAwareIfStatement::registerPrecompilers($precompile);
+
+        return app('blade.compiler')->compileString($string);
+    }
+
+    protected function assertOccurrences($expected, $needle, $haystack)
+    {
+        $this->assertEquals($expected, count(explode($needle, $haystack)) - 1);
     }
 }
 

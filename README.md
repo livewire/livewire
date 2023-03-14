@@ -29,15 +29,15 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [x] `wire:transition`
 - [x] JavaScript functions
 - [x] Lazy components
-- [ ] `@if` markers
+- [ ] `@if` markers (Josh)
 - [ ] PHP Attributes
 - [ ] SPA Mode (`wire:navigate`, `@persist`)
 - [ ] Hot-reloading
 
 #### V2 Parity
 - [x] Eloquent model support
-- [ ] Persistant middleware
-- [ ] Session expiration
+- [ ] Persistant middleware (Josh)
+- [ ] Session expiration (Josh)
 - [ ] Detect multiple root elements
 - [ ] JS hooks and `Livewire.?`
 - [ ] Work through all `@todo` comments
