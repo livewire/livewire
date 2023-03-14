@@ -44,7 +44,7 @@ class HandleRequests
         $route = $callback(function () {
             $componentsData = $this->getComponentsData();
 
-            app(PersistentMiddleware::class)->runRequestThroughMiddleware(
+            app(PersistentMiddleware::class)->runMiddleware(
                 $componentsData
             );
 

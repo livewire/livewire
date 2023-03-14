@@ -49,7 +49,7 @@ class PersistentMiddleware
         return static::$persistentMiddleware;
     }
 
-    function runRequestThroughMiddleware($componentsData)
+    function runMiddleware($componentsData)
     {
         $middleware = $this->middlewareTransformer->getMiddlewareFromComponentsData($componentsData);
 
