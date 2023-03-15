@@ -102,6 +102,11 @@ function off($name, $callback) {
     return app(\Livewire\EventBus::class)->off($name, $callback);
 }
 
+function memoize($subject)
+{
+    return new Memoize($subject);
+}
+
 function store($instance = null)
 {
     if (! $instance) $instance = app(\Livewire\Mechanisms\DataStore::class);
