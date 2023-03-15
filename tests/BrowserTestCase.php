@@ -2,13 +2,14 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Artisan;
-
 use function Livewire\trigger;
 
 class BrowserTestCase extends TestCase
 {
+    public static function tweakApplicationHook() {
+        return function () {};
+    }
+    
     public function setUp(): void
     {
         parent::setUp();

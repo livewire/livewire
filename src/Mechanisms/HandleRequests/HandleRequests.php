@@ -2,11 +2,10 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
-use function Livewire\on;
-
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
-use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
+use Livewire\Mechanisms\HandleComponents\Checksum;
+use Livewire\Mechanisms\HandleComponents\HandleComponents;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
 class HandleRequests
 {
@@ -46,7 +45,25 @@ class HandleRequests
             return $this->handleUpdate();
         });
 
+        // Append `livewire.update` to the existing name, if any.
+        $route->name('livewire.update');
+
         $this->updateRoute = $route;
+    }
+
+    function isLivewireRequest()
+    {
+        $route = request()->route();
+
+        if (! $route) return false;
+
+        /*
+         * Check to see if route name ends with `livewire.update`, as if
+         * a custom update route is used and they add a name, then when
+         * we call `->name('livewire.update')` on the route it will
+         * suffix the existing name with `livewire.update`.
+         */
+        return $route->named('*livewire.update');
     }
 
     function handleUpdate()

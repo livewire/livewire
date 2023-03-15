@@ -13,7 +13,6 @@ use Livewire\ServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Livewire\Livewire;
 use Livewire\Component;
-use LegacyTests\Browser\Security\Component as SecurityComponent;
 use LegacyTests\Browser\DuskBrowserMacros;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Facades\View;
@@ -149,33 +148,7 @@ class TestCase extends BaseTestCase
                 $class = urldecode($component);
 
                 return app()->call(new $class);
-            })->middleware('web', AllowListedMiddleware::class, BlockListedMiddleware::class);
-
-            // Route::get('/force-login/{userId}', function ($userId) {
-            //     Auth::login(User::find($userId));
-
-            //     return 'You\'re logged in.';
-            // })->middleware('web');
-
-            // Route::get('/force-logout', function () {
-            //     Auth::logout();
-
-            //     return 'You\'re logged out.';
-            // })->middleware('web');
-
-            // Route::get('/with-authentication/livewire-dusk/{component}', function ($component) {
-            //     $class = urldecode($component);
-
-            //     return app()->call(new $class);
-            // })->middleware(['web', 'auth']);
-
-            // Gate::policy(Post::class, PostPolicy::class);
-
-            // Route::get('/with-authorization/{post}/livewire-dusk/{component}', function (Post $post, $component) {
-            //     $class = urldecode($component);
-
-            //     return app()->call(new $class);
-            // })->middleware(['web', 'auth', 'can:update,post']);
+            })->middleware('web');
 
             Route::middleware('web')->get('/entangle-turbo', function () {
                 return view('turbo', [
@@ -191,8 +164,6 @@ class TestCase extends BaseTestCase
             // ]);
 
             config()->set('app.debug', true);
-
-            // Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
         });
     }
 
@@ -324,26 +295,6 @@ class TestCase extends BaseTestCase
         $sh->run();
 
         return $sh->getScopeVariables(false);
-    }
-}
-
-class AllowListedMiddleware
-{
-    public function handle($request, $next)
-    {
-        SecurityComponent::$loggedMiddleware[] = static::class;
-
-        return $next($request);
-    }
-}
-
-class BlockListedMiddleware
-{
-    public function handle($request, $next)
-    {
-        SecurityComponent::$loggedMiddleware[] = static::class;
-
-        return $next($request);
     }
 }
 

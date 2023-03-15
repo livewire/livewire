@@ -3,21 +3,9 @@
 namespace Livewire\Features\SupportUnitTesting;
 
 use function Livewire\invade;
-use function Livewire\store;
 use function Livewire\on;
-use Tests\TestCase;
-use Synthetic\TestableSynthetic;
-use PHPUnit\Framework\Assert as PHPUnit;
-use Livewire\Mechanisms\DataStore;
-use Livewire\Features\SupportValidation\TestsValidation;
-use Livewire\Features\SupportRedirects\TestsRedirects;
-use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
-use Livewire\Features\SupportEvents\TestsEvents;
-use Illuminate\Support\Traits\Macroable;
-
-use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Arr;
+use Tests\TestCase;
 
 class DuskTestable
 {
@@ -35,9 +23,13 @@ class DuskTestable
         on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
             static::$isTestProcess = true;
+            
+            $tweakApplication = $testCase::tweakApplicationHook();
 
-            invade($testCase)->tweakApplication(function () {
+            invade($testCase)->tweakApplication(function () use ($tweakApplication) {
                 config()->set('app.debug', true);
+
+                if (is_callable($tweakApplication)) $tweakApplication();
 
                 static::loadTestComponents();
             });

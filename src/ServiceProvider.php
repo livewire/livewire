@@ -43,6 +43,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function bootMechanisms()
     {
         foreach ([
+            \Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware::class,
             \Livewire\Mechanisms\HandleComponents\HandleComponents::class,
             \Livewire\Mechanisms\HandleRequests\HandleRequests::class,
             \Livewire\Mechanisms\FrontendAssets\FrontendAssets::class,
