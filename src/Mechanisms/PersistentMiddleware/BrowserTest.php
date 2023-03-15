@@ -16,7 +16,7 @@ use Sushi\Sushi;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\BrowserTestCase;
 
-class Test extends BrowserTestCase
+class BrowserTest extends BrowserTestCase
 {
     protected function getEnvironmentSetUp($app) {
         parent::getEnvironmentSetUp($app);
@@ -36,7 +36,7 @@ class Test extends BrowserTestCase
             // Overwrite the default route for these tests, so the middleware is included
             Route::get('livewire-dusk/{component}', function ($component) {
                 $class = urldecode($component);
-    
+
                 return app()->call(app('livewire')->new($class));
             })->middleware(['web', AllowListedMiddleware::class, BlockListedMiddleware::class]);
 
