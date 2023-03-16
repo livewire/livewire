@@ -102,9 +102,25 @@ function off($name, $callback) {
     return app(\Livewire\EventBus::class)->off($name, $callback);
 }
 
-function memoize($subject)
-{
-    return new Memoize($subject);
+function memoize($target) {
+    static $memo = new \WeakMap;
+
+    return new class ($target, $memo) {
+        function __construct(
+            protected $target,
+            protected &$memo,
+        ) {}
+
+        function __call($method, $params)
+        {
+            $this->memo[$this->target] ??= [];
+
+            $signature = $method . crc32(json_encode($params));
+
+            return $this->memo[$this->target][$signature]
+               ??= $this->target->$method(...$params);
+        }
+    };
 }
 
 function store($instance = null)
