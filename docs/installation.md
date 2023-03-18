@@ -1,12 +1,14 @@
 ---
 Title: Installation
-Order: 1
+Order: 2
 ---
 
 <a name="installation"></a>
 # Installation
 
-To install Livewire, all you need to do is run the following composer command from your application's root directory:
+Livewire is a Laravel package, so you will need to have a Laravel application up and running before you can install and use Livewire. If you need help setting up a new Laravel application, please see the [official Laravel documentation](https://laravel.com/docs).
+
+To install Livewire, open your terminal and navigate to your Laravel application directory, then run the following command:
 
 ```shell
 composer require livewire/livewire
@@ -17,7 +19,7 @@ That's it. Really. If you want more customization options, keeps reading. Otherw
 > Creating your first Livewire component
 
 <a name="publishing-config"></a>
-# Publishing the config file
+# Publishing the configuration file
 
 Livewire is "zero-config", meaning you can use it by following conventions without any need for special configuration. However, you may still want to customize it further. In those cases, you can publish and customize Livewire's config file by running the following `artisan` command:
 

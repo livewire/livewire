@@ -1,103 +1,49 @@
 ---
 Title: Quickstart
-Order: 2
+Order: 1
 ---
 
-<a name="installation"></a>
-# Quickstart
+<a name="quickstart"></a>
+# Quickstart Guide
 
-## Install Livewire
+Livewire provides a powerful way to create dynamic, interactive user interfaces using only PHP and Blade templates. In this quickstart guide, you'll learn how to create a Livewire component and leverage its real-time communication with your server to build dynamic, responsive web applications with ease.
 
-Installing Livewire is as simple as running the following composer command from your project's root:
+## Prerequisites
+
+Before you start, make sure you have the following installed:
+
+- Laravel version 8 or later
+- PHP version 8.1 or later
+
+## Step 1: Install Livewire
+
+Install Livewire using Composer:
 
 ```shell
 composer require livewire/livewire
 ```
 
-## Create a component
+## Step 2: Create a Livewire Component
 
-Run the following command to generate a new Livewire component called `counter`.
+Create a new Livewire component using the `make:livewire` Artisan command:
 
 ```shell
-php artisan make:livewire counter
+php artisan make:livewire Counter
 ```
 
-Running this command will generate the following two files:
+This will create a new Livewire component called `Counter` in the `app/Http/Livewire` directory along with its corresponding Blade view file in the `resources/views/livewire` directory.
+
+## Step 3: Edit the Livewire Component
+
+Open the `app/Http/Livewire/Counter.php` file and replace its content with the following code:
 
 ```php
+<?php
+
 namespace App\Http\Livewire;
 
 use Livewire\Component;
 
-class Counter extends Component
-{
-    public function render()
-    {
-        return view('livewire.counter');
-    }
-}
-```
-
-```html
-<div>
-    ...
-</div>
-```
-
-Let's add some text to the view so we can see something tangible in the browser.
-
-@component('components.tip')
-Livewire components MUST have a single root element.
-@endcomponent
-
-@component('components.code-component', [
-    'viewName' => 'resources/views/livewire/counter.blade.php',
-])
-@slot('view')
-@verbatim
-<div>
-    <h1>Hello World!</h1>
-</div>
-@endverbatim
-@endslot
-@endcomponent
-
-## Include the component {#include-the-component}
-@verbatim
-Think of Livewire components like Blade includes. You can insert `<livewire:some-component />` anywhere in a Blade view and it will render.
-@endverbatim
-
-@component('components.code', ['lang' => 'blade'])
-@verbatim
-<head>
-    ...
-    @livewireStyles
-</head>
-<body>
-    <livewire:counter /> {{-- [tl! highlight] --}}
-
-    ...
-
-    @livewireScripts
-</body>
-</html>
-@endverbatim
-@endcomponent
-
-## View it in the browser {#view-in-browser}
-
-Load the page you included Livewire on in the browser. You should see "Hello World!".
-
-## Add "counter" functionality {#add-counter}
-
-Replace the generated content of the `counter` component class and view with the following:
-
-@component('components.code-component', [
-    'className' => 'app/Http/Livewire/Counter.php',
-    'viewName' => 'resources/views/livewire/counter.blade.php',
-])
-@slot('class')
-@verbatim
 class Counter extends Component
 {
     public $count = 0;
@@ -107,28 +53,84 @@ class Counter extends Component
         $this->count++;
     }
 
+    public function decrement()
+    {
+        $this->count--;
+    }
+
     public function render()
     {
         return view('livewire.counter');
     }
 }
-@endverbatim
-@endslot
-@slot('view')
-@verbatim
-<div style="text-align: center">
-    <button wire:click="increment">+</button>
+```
+
+In this code, we have defined a Livewire component called `Counter` with a public property `$count` initialized to `0`. We have also defined two methods called `increment` and `decrement` which increment and decrement the `$count` property respectively. Finally, we have defined a `render` method that returns a view called `livewire.counter`.
+
+## Step 4: Edit the Blade View
+
+Open the `resources/views/livewire/counter.blade.php` file and replace its content with the following code:
+
+```html
+<div>
     <h1>{{ $count }}</h1>
+    <button wire:click="increment">+</button>
+    <button wire:click="decrement">-</button>
 </div>
-@endverbatim
-@endslot
-@endcomponent
+```
 
-## View it in the browser {#view-in-browser-finally}
+This code will display the `$count` property and two buttons that increment and decrement the `$count` property respectively.
 
-Now reload the page in the browser, you should see the `counter` component rendered. If you click the "+" button, the page should automatically update without a page reload. Magic 🧙‍♂.️
+## Step 5: Add the Livewire Component to a Route
 
-@component('components.tip')
-In general, something as trivial as this "counter" is more suited for something like AlpineJS, however it's one of the best ways to easily understand the way Livewire works.
-@endcomponent
+Open the `routes/web.php` file and add the following code:
+
+```php
+use App\Http\Livewire\Counter;
+
+Route::get('/counter', Counter::class);
+```
+
+This code will create a new route that points to our `Counter` Livewire component.
+
+## Step 6: Create a Blade Layout for Livewire
+
+To render your Livewire component in the browser, you need to create a base layout for it. Livewire will look for a layout file called `resources/views/components/layout.blade.php`.
+
+Create this file by running the following command:
+
+```shell
+php artisan livewire:layout
+```
+
+This command generates a basic layout file with the following HTML structure:
+
+```html
+<html>
+	<head>
+		<title>{{ $title ?? 'Livewire Quickstart' }}</title>
+	</head>
+
+	<body>
+
+		<!-- // -->
+
+		{{ $slot }}
+
+	</body>
+</html>
+```
+
+This layout file includes an HTML structure with a `<head>` tag for the page title and a `<body>` tag for the component's content. The `$title` variable is used to set the page title and can be overridden in individual components.
+
+## Step 7: Test it out!
+
+Visit `/counter` in your browser and you should see a number displayed on the screen with two buttons to increment and decrement the number.
+
+Click on the buttons to increment and decrement the number. You will notice that the number on the screen updates in real-time without the page reloading. This is the magic of Livewire.
+
+We just scratched the surface of what Livewire is capable of. You can either keep reading along with the documentation, or follow one of our in-depth tutorials that walk you through building real-life applications:
+
+* More Docs
+* Real-life tutorials
 

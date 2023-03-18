@@ -8,51 +8,18 @@
         "type": "tabs",
         "children": [
           {
-            "id": "ccd8e8ca0483a046",
+            "id": "a098ffe46ee55456",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "installation.md",
-                "mode": "source",
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "aef384a7aa875d54",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {}
-            }
-          },
-          {
-            "id": "338d9a8f357edbca",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "installation.md",
-                "mode": "source",
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "8999a3d458982d37",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "_guidelines.md",
+                "file": "properties.md",
                 "mode": "source",
                 "source": false
               }
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -102,7 +69,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200
   },
   "right": {
     "id": "beb80405f3673f72",
@@ -118,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "_guidelines.md",
+                "file": "properties.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -135,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "_guidelines.md",
+                "file": "properties.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -158,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "_guidelines.md"
+                "file": "properties.md"
               }
             }
           }
@@ -179,12 +146,23 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "8999a3d458982d37",
+  "active": "a098ffe46ee55456",
   "lastOpenFiles": [
-    "installation.md",
+    "components.md",
     "quickstart.md",
-    "_guidelines.md",
-    "Untitled.md",
+    "actions.md",
+    "__outline.md",
+    "rules/__rules.md",
+    "rules/Casing rules.md",
+    "nesting.md",
+    "testing.md",
+    "hooks.md",
+    "events.md",
+    "data-binding.md",
+    "installation.md",
+    "properties.md",
+    "rules/Referencing file names in a sentance.md",
+    "rules",
     "Places next year.md",
     "Untitled.canvas"
   ]

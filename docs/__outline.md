@@ -1,7 +1,5 @@
 
 
-## Feedback
-
 * more examples
 * best practices
 	* https://github.com/michael-rubel/livewire-best-practices
@@ -36,11 +34,10 @@ Fundamentals:
 	* Publishing and hosting Livewire's JavaScript
 * Components
 	* Creating a component
-		 * The --test flag
-		 * The --inline flag
 	* The render method
 		* Returning Blade views
 		* Returning template strings
+	       * artisan make --inline
 	- Rendering a single component
 		- Passing parameters
 		- Receiving parameters
@@ -54,22 +51,21 @@ Fundamentals:
 	* Bulk assigning properties (->fill)
 	* Resetting properties (->reset)
 	* Data binding (intro + link to page)
-	* Model binding (intro + link to page)
 	* Wireable properties
 	* Computed properties
-* Data Binding
-	* Live binding
-	* Lazy binding
-	* Debounced binding
-	* Throttled binding
-	* Binding nested data
-	* Binding to eloquent models
 * Actions
 	* Security concerns
 	* Parameters
 	* Event modifiers
 		* Keydown modifiers
 	* Magic actions
+ * Data Binding
+	* Live binding
+	* Lazy binding
+	* Debounced binding
+	* Throttled binding
+	* Binding nested data
+	* Binding to eloquent models
 * Nesting components
 * Events
 	* Basic example
@@ -90,6 +86,7 @@ Fundamentals:
 		* update
 * Testing
 	* Basic test
+        * `artisan make: --test`
 	* Making a test
 	* Testing presence
 	* Passing component data
@@ -144,3 +141,13 @@ Reference
 V3:
 * Lazy loading
 * SPA Mode
+
+
+* Is this even the place I want to order from?
+* What kind of flowers does mom like?
+* How much money should I spend on them?
+* When should I have them delivered?
+* Do I need to call dad and make sure she will like them?
+
+
+

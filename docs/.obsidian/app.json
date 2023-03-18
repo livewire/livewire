@@ -1,3 +1,4 @@
 {
-  "vimMode": true
+  "vimMode": true,
+  "newFileLocation": "current"
 }
