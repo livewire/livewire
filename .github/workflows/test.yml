@@ -55,11 +55,13 @@ jobs:
           RUNNING_IN_CI: true
 
       - name: Run Browser tests
+        if: success() || failure()
         run: vendor/bin/phpunit --testsuite Browser
         env:
           RUNNING_IN_CI: true
 
       - name: Run Legacy Browser tests
+        if: success() || failure()
         run: vendor/bin/phpunit --testsuite LegacyBrowser
         env:
           RUNNING_IN_CI: true
