@@ -58,3 +58,8 @@ jobs:
         run: vendor/bin/phpunit --testsuite Browser
         env:
           RUNNING_IN_CI: true
+
+      - name: Run Legacy Browser tests
+        run: vendor/bin/phpunit --testsuite LegacyBrowser
+        env:
+          RUNNING_IN_CI: true
