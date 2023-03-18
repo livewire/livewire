@@ -26,7 +26,6 @@ class PersistentMiddleware
 
     function boot()
     {
-        return;
         app()->singleton($this::class, fn () => $this);
 
         on('dehydrate', function ($component, $context) {
