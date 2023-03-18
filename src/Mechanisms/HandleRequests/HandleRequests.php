@@ -53,6 +53,14 @@ class HandleRequests
 
     function isLivewireRequest()
     {
+        // @todo: Needed to re-add this as Testable Livewire doesn't use the update route, and instead sets this.
+        // @todo: Also remove `X-Synthetic` from front end and then delete it here.
+        return request()->hasHeader('X-Livewire') || request()->hasHeader('X-Synthetic');
+    }
+
+    function isLivewireRoute()
+    {
+        // @todo: Rename this back to `isLivewireRequest` once the need for it in tests has been fixed.
         $route = request()->route();
 
         if (! $route) return false;

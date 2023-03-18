@@ -26,6 +26,7 @@ class PersistentMiddleware
 
     function boot()
     {
+        return;
         app()->singleton($this::class, fn () => $this);
 
         on('dehydrate', function ($component, $context) {
@@ -36,6 +37,9 @@ class PersistentMiddleware
         });
 
         on('snapshot-verified', function ($snapshot) {
+            // Only apply middleware to requests hitting the Livewire update endpoint, and not any fake requests such as a test.
+            if (! app(HandleRequests::class)->isLivewireRoute()) return;
+
             $this->extractPathAndMethodFromSnapshot($snapshot);
 
             $this->applyPersistentMiddleware();
@@ -65,7 +69,7 @@ class PersistentMiddleware
 
     protected function extractPathAndMethodFromRequest()
     {
-        if (app(HandleRequests::class)->isLivewireRequest()) {
+        if (app(HandleRequests::class)->isLivewireRoute()) {
             return [$this->path, $this->method];
         }
 

@@ -11,6 +11,7 @@ use function Livewire\on;
 use Livewire\ComponentHook;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\DataStore;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Synthetic\ShortcircuitResponse;
 
 class SupportRedirects extends ComponentHook
@@ -40,7 +41,7 @@ class SupportRedirects extends ComponentHook
 
         $to = $this->storeGet('redirect');
 
-        if ($to && ! app('livewire')->isLivewireRequest()) {
+        if ($to && ! app(HandleRequests::class)->isLivewireRequest()) {
             abort(redirect($to));
         }
 
