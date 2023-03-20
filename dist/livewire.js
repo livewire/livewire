@@ -3857,20 +3857,46 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/response.js
-  var invalidResponseHandler;
-  function hasInvalidResponseHandler() {
-    return !!invalidResponseHandler;
+  var errorResponseHandler;
+  function onErrorResponse(handler3) {
+    errorResponseHandler = handler3;
   }
-  function onInvalidResponse(closure) {
-    invalidResponseHandler = closure;
+  async function handleResponse(response, success, fail) {
+    let content = await response.text();
+    if (response.ok && !response.redirected) {
+      if (contentIsFromDump(content)) {
+        content = removeLivewireContentFromDump(content);
+      } else {
+        return await success(content);
+      }
+    }
+    let shouldContinue = true;
+    if (errorResponseHandler) {
+      errorResponseHandler(response, content, () => shouldContinue = false);
+      if (!shouldContinue)
+        return await fail();
+    }
+    if (response.status === 419) {
+      handlePageExpiry();
+      return await fail();
+    }
+    handleFailure(content);
+    await fail();
   }
-  async function handleInvalidResponse(response, defaultHandler = () => {
-  }) {
-    let handler3 = invalidResponseHandler ?? defaultHandler;
-    await handler3(response);
+  function contentIsFromDump(content) {
+    return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
   }
-  function getInvalidResponseHandler() {
-    return invalidResponseHandler;
+  function removeLivewireContentFromDump(content) {
+    return content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+  }
+  function handlePageExpiry() {
+    confirm(
+      "This page has expired.\nWould you like to refresh the page?"
+    ) && window.location.reload();
+  }
+  function handleFailure(content) {
+    let html = content;
+    showHtmlModal(html);
   }
 
   // js/request.js
@@ -3923,20 +3949,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }, 5);
   }
   async function sendMethodCall() {
-    requestTargetQueue.forEach((request2, symbol) => {
+    requestTargetQueue.forEach((request, symbol) => {
       let target = store2.get(symbol);
       trigger2("request.prepare", target);
     });
     let payload = [];
     let successReceivers = [];
     let failureReceivers = [];
-    requestTargetQueue.forEach((request2, symbol) => {
+    requestTargetQueue.forEach((request, symbol) => {
       let target = store2.get(symbol);
       let propertiesDiff = diff(target.canonical, target.ephemeral);
       let targetPaylaod = {
         snapshot: target.encodedSnapshot,
         updates: propertiesDiff,
-        calls: request2.calls.map((i) => ({
+        calls: request.calls.map((i) => ({
           path: i.path,
           method: i.method,
           params: i.params
@@ -3953,18 +3979,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         processEffects(target);
         if (effects["returns"]) {
           let returns = effects["returns"];
-          let returnHandlerStack = request2.calls.map(({ handleReturn }) => handleReturn);
+          let returnHandlerStack = request.calls.map(({ handleReturn }) => handleReturn);
           returnHandlerStack.forEach((handleReturn, index) => {
             handleReturn(returns[index]);
           });
         }
         finishTarget();
-        request2.handleResponse();
+        request.handleResponse();
       });
     });
     requestTargetQueue.clear();
-    let headers = hasInvalidResponseHandler() ? { "Accept": "application/json" } : {};
-    let request = await fetch(uri, {
+    let response = await fetch(uri, {
       method: "POST",
       body: JSON.stringify({
         _token: getCsrfToken(),
@@ -3972,34 +3997,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }),
       headers: {
         "Content-type": "application/json",
-        "X-Synthetic": "",
-        ...headers
+        "X-Synthetic": ""
       }
     });
-    if (request.ok) {
-      if (request.redirected) {
-        handleInvalidResponse(request);
-        for (let i = 0; i < failureReceivers.length; i++) {
-          failureReceivers[i]();
-        }
-        let failed = true;
-        return;
-      }
-      let response = await request.json();
-      for (let i = 0; i < response.length; i++) {
-        let { snapshot, effects } = response[i];
+    console.log(response);
+    let success = async (responseContent) => {
+      let response2 = JSON.parse(responseContent);
+      for (let i = 0; i < response2.length; i++) {
+        let { snapshot, effects } = response2[i];
         successReceivers[i](snapshot, effects);
       }
-    } else {
-      await handleInvalidResponse(request, async () => {
-        let html = await request.text();
-        showHtmlModal(html);
-      });
+    };
+    let fail = async () => {
       for (let i = 0; i < failureReceivers.length; i++) {
         failureReceivers[i]();
       }
       let failed = true;
-    }
+    };
+    await handleResponse(response, success, fail);
   }
   function getCsrfToken() {
     if (document.querySelector("[data-csrf]")) {
@@ -5597,9 +5612,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/index.js
   var Livewire = {
-    onInvalidResponse,
-    hasInvalidResponseHandler,
-    getInvalidResponseHandler,
+    onErrorResponse,
     directive: directive2,
     emitTo,
     start: start2,
