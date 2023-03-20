@@ -4,7 +4,7 @@ import { showHtmlModal } from './modal'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
 import { wireProperty } from './wire'
-import { hasInvalidResponseHandler, handleInvalidResponse } from './response'
+import { hasInvalidResponseHandler, handleResponse } from './response'
 
 /**
  * The Alpine build will need to use it's own reactivity hooks,
@@ -160,9 +160,7 @@ async function sendMethodCall() {
 
     requestTargetQueue.clear()
 
-    let headers = hasInvalidResponseHandler() ? { 'Accept': 'application/json' } : {}
-
-    let request = await fetch(uri, {
+    let response = await fetch(uri, {
         method: 'POST',
         body: JSON.stringify({
             _token: getCsrfToken(),
@@ -171,43 +169,30 @@ async function sendMethodCall() {
         headers: {
             'Content-type': 'application/json',
             'X-Synthetic': '',
-            ...headers
         },
     })
 
-    if (request.ok) {
-        if (request.redirected) {
-            handleInvalidResponse(request)
+    console.log(response)
 
-            for (let i = 0; i < failureReceivers.length; i++) {
-                failureReceivers[i]();
-            }
-    
-            let failed = true
-
-            return;
-        }
-
-        let response = await request.json()
+    let success = async (responseContent) => {
+        let response = JSON.parse(responseContent)
 
         for (let i = 0; i < response.length; i++) {
             let { snapshot, effects } = response[i];
 
             successReceivers[i](snapshot, effects)
         }
-    } else {
-        await handleInvalidResponse(request, async () => {
-            let html = await request.text()
-    
-            showHtmlModal(html)
-        })
+    }
 
+    let fail = async () => {
         for (let i = 0; i < failureReceivers.length; i++) {
             failureReceivers[i]();
         }
 
         let failed = true
     }
+
+    await handleResponse(response, success, fail)
 }
 
 /**

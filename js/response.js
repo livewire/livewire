@@ -1,18 +1,61 @@
-let invalidResponseHandler
+import { showHtmlModal } from "./modal"
+
+let errorResponseHandler
 
 export function hasInvalidResponseHandler() {
-    return !! invalidResponseHandler
+    return !! errorResponseHandler
 }
 
-export function onInvalidResponse(closure) {
-    invalidResponseHandler = closure
+export function onErrorResponse(handler) {
+    errorResponseHandler = handler
 }
 
-export async function handleInvalidResponse(response, defaultHandler = () => {}) {
-    let handler = invalidResponseHandler ?? defaultHandler
-    await handler(response)
+export async function handleResponse(response, success, fail) {
+    let content = await response.text()
+
+    if (response.ok && ! response.redirected) {
+        if (contentIsFromDump(content)) {
+            content = removeLivewireContentFromDump(content)
+        } else {
+            return await success(content)
+        }
+    }
+
+    let shouldContinue = true
+
+    if (errorResponseHandler) {
+        errorResponseHandler(response, content, () => shouldContinue = false)
+
+        if (! shouldContinue) return await fail()
+    }
+
+    if (response.status === 419) {
+        handlePageExpiry()
+
+        return await fail()
+    }
+
+    handleFailure(content)
+    
+    await fail()
 }
 
-export function getInvalidResponseHandler() {
-    return invalidResponseHandler
+function contentIsFromDump(content) {
+    return !! content.match(/<script>Sfdump\(".+"\)<\/script>/)
+}
+
+function removeLivewireContentFromDump(content) {
+    return content.match(/.*<script>Sfdump\(".+"\)<\/script>/s)
+}
+
+function handlePageExpiry() {
+    confirm(
+        'This page has expired.\nWould you like to refresh the page?'
+    ) && window.location.reload()
+}
+
+function handleFailure(content) {
+    let html = content
+
+    showHtmlModal(html)
 }

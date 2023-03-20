@@ -4,12 +4,10 @@ import { find, first } from './store'
 import { on as hook } from './events'
 import { start } from './lifecycle'
 import Alpine from 'alpinejs'
-import { onInvalidResponse, hasInvalidResponseHandler, getInvalidResponseHandler } from './response'
+import { onErrorResponse } from './response'
 
 export let Livewire = {
-    onInvalidResponse,
-    hasInvalidResponseHandler,
-    getInvalidResponseHandler,
+    onErrorResponse,
     directive,
     emitTo,
     start,
