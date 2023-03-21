@@ -9,7 +9,7 @@ export function onErrorResponse(handler) {
 export async function handleResponse(response, success, fail) {
     let content = await response.text()
 
-    if (response.ok && ! response.redirected) {
+    if (response.ok) {
         if (contentIsFromDump(content)) {
             content = removeLivewireContentFromDump(content)
         } else {
