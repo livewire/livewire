@@ -4,7 +4,7 @@ import { showHtmlModal } from './modal'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
 import { wireProperty } from './wire'
-import { hasInvalidResponseHandler, handleResponse } from './response'
+import { handleResponse } from './response'
 
 /**
  * The Alpine build will need to use it's own reactivity hooks,
@@ -171,8 +171,6 @@ async function sendMethodCall() {
             'X-Synthetic': '',
         },
     })
-
-    console.log(response)
 
     let success = async (responseContent) => {
         let response = JSON.parse(responseContent)

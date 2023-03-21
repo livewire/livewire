@@ -2,10 +2,6 @@ import { showHtmlModal } from "./modal"
 
 let errorResponseHandler
 
-export function hasInvalidResponseHandler() {
-    return !! errorResponseHandler
-}
-
 export function onErrorResponse(handler) {
     errorResponseHandler = handler
 }
