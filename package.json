@@ -12,9 +12,8 @@
         "esbuild": "^0.14.49"
     },
     "dependencies": {
-        "@alpinejs/history": "file:../alpine/packages/history",
-        "@alpinejs/intersect": "^3.12.0",
         "@alpinejs/morph": "^3.10.5",
+        "@alpinejs/history": "^3.10.5",
         "@vue/reactivity": "^3.2.45",
         "alpinejs": "^3.10.5"
     }
