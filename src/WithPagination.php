@@ -15,7 +15,7 @@ trait WithPagination
     public function queryStringWithPagination()
     {
         return collect($this->paginators)->mapWithKeys(function ($page, $pageName) {
-            return ['paginators.'.$pageName => ['use' => 'push', 'as' => $pageName]];
+            return ['paginators.'.$pageName => ['use' => 'push', 'as' => $pageName, 'alwaysShow' => false]];
         })->toArray();
     }
 
@@ -24,7 +24,7 @@ trait WithPagination
         if (class_exists(CursorPaginator::class)) {
             CursorPaginator::currentCursorResolver(function ($pageName){
                 if (! isset($this->paginators[$pageName])) {
-                    $this->paginators[$pageName] = request()->query($pageName, '');
+                    $this->paginators[$pageName] = request()->query($pageName, 1);
                 }
 
                 return Cursor::fromEncoded($this->paginators[$pageName]);

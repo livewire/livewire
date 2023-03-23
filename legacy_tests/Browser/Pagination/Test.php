@@ -6,17 +6,11 @@ use Illuminate\Pagination\CursorPaginator;
 use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
-class Test extends TestCase
+class Test extends \Tests\BrowserTestCase
 {
-    public function setUp(): void
-    {
-        $this->markTestSkipped(); // @todo: Josh Hanley
-    }
-
     public function test_tailwind()
     {
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, Tailwind::class)
+        Livewire::visit(Tailwind::class)
                 /**
                  * Test that going to page 2, then back to page 1 removes "page" from the query string.
                  */
@@ -69,13 +63,11 @@ class Test extends TestCase
                 ->assertDontSee('Post #7')
                 ->assertSee('Post #4')
             ;
-        });
     }
 
     public function test_bootstrap()
     {
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, Bootstrap::class)
+        Livewire::visit(Bootstrap::class)
                 /**
                  * Test that going to page 2, then back to page 1 removes "page" from the query string.
                  */
@@ -107,7 +99,6 @@ class Test extends TestCase
                 ->assertSee('Post #3')
                 ->assertQueryStringMissing('page')
             ;
-        });
     }
 
     public function test_cursor_tailwind()
@@ -115,8 +106,8 @@ class Test extends TestCase
         if (! class_exists(CursorPaginator::class)) {
             $this->markTestSkipped('Need Laravel >= 8');
         }
-        $this->browse(function ($browser){
-            $this->visitLivewireComponent($browser,ComponentWithCursorPaginationTailwind::class)
+
+        Livewire::visit(ComponentWithCursorPaginationTailwind::class)
                 /**
                  * Test it can go to second page and return to first one
                  */
@@ -160,8 +151,8 @@ class Test extends TestCase
                 ->back()
                 ->assertDontSee('Post #7')
                 ->assertSee('Post #4');
-        });
     }
+
     public function test_cursor_bootstrap()
     {
         $this->markTestSkipped(); // @todo: Josh Hanley. For some weird reason cursor pagination isn't working correctly...
@@ -169,8 +160,8 @@ class Test extends TestCase
         if (! class_exists(CursorPaginator::class)) {
             $this->markTestSkipped('Need Laravel >= 8');
         }
-        $this->browse(function ($browser){
-            $this->visitLivewireComponent($browser,ComponentWithCursorPaginationBootstrap::class)
+        
+        Livewire::visit(ComponentWithCursorPaginationBootstrap::class)
                 /**
                  * Test it can go to second page and return to first one
                  */
@@ -214,13 +205,11 @@ class Test extends TestCase
                 ->back()
                 ->assertDontSee('Post #7')
                 ->assertSee('Post #4');
-        });
     }
     /** @test */
     public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page()
     {
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, ComponentWithTwoLinksForOnePaginator::class)
+        Livewire::visit(ComponentWithTwoLinksForOnePaginator::class)
                 /**
                  * Ensure everything is good to start with
                  */
@@ -243,14 +232,12 @@ class Test extends TestCase
                 ->assertNotPresent('[dusk="second-links"] [wire\\:click="gotoPage(6, \'page\')"]')
                 ->assertNotPresent('[dusk="first-links"] [wire\\:click="gotoPage(6, \'page\')"]')
                 ;
-        });
     }
 
     /** @test */
     public function it_calls_pagination_hook_method_when_pagination_changes()
     {
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, ComponentWithPaginationHook::class)
+        Livewire::visit(ComponentWithPaginationHook::class)
                 /**
                  * Test that going to page 2, then back to page 1 removes "page" from the query string.
                  */
@@ -280,14 +267,12 @@ class Test extends TestCase
                 ->assertSee('Post #3')
                 ->assertQueryStringMissing('page')
             ;
-        });
     }
 
     /** @test */
     public function it_can_have_two_pagination_instances_on_a_page_tailwind()
     {
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, ComponentWithTwoPaginatorsTailwind::class)
+        Livewire::visit(ComponentWithTwoPaginatorsTailwind::class)
                 ->assertSee('Post #1')
                 ->assertSee('Post #2')
                 ->assertSee('Post #3')
@@ -351,14 +336,12 @@ class Test extends TestCase
                 ->assertSee('Item #3')
                 ->assertQueryStringMissing('itemPage')
             ;
-        });
     }
 
     /** @test */
     public function it_can_have_two_pagination_instances_on_a_page_bootstrap()
     {
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, ComponentWithTwoPaginatorsBootstrap::class)
+        Livewire::visit(ComponentWithTwoPaginatorsBootstrap::class)
                 ->assertSee('Post #1')
                 ->assertSee('Post #2')
                 ->assertSee('Post #3')
@@ -422,14 +405,12 @@ class Test extends TestCase
                 ->assertSee('Item #3')
                 ->assertQueryStringMissing('itemPage')
             ;
-        });
     }
 
     /** @test */
     public function it_calls_pagination_hook_methods_when_pagination_changes_with_multiple_paginators()
     {
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, ComponentWithTwoPaginatorsTailwind::class)
+        Livewire::visit(ComponentWithTwoPaginatorsTailwind::class)
                 ->assertSeeNothingIn('@page-pagination-hook')
                 ->assertSeeNothingIn('@item-page-pagination-hook')
                 ->assertSee('Post #1')
@@ -463,16 +444,13 @@ class Test extends TestCase
                 ->assertSee('Post #1')
                 ->assertSee('Item #1')
             ;
-        });
     }
 
     /** @test */
     public function pagination_trait_resolves_query_string_alias_for_page_from_component()
     {
-        $this->markTestSkipped(); // @todo: Josh Hanley
-
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, PaginationComponentWithQueryStringAliasForPage::class, '?p=2')
+        Livewire::withQueryParams(['p' => '2'])
+            ->visit(PaginationComponentWithQueryStringAliasForPage::class)
                 /**
                  * Test a deeplink to page 2 with "p" from the query string shows the second page.
                  */
@@ -490,6 +468,5 @@ class Test extends TestCase
                 ->assertSee('Post #3')
                 ->assertQueryStringHas('p', '1')
             ;
-        });
     }
 }

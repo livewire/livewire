@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportUnitTesting;
 
 use function Livewire\invade;
 use function Livewire\on;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
@@ -76,7 +77,7 @@ class DuskTestable
 
         $browser = $testCase->newBrowser($testCase->createWebDriver());
 
-        return $browser->visit('/livewire-dusk/'.$id);
+        return $browser->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
