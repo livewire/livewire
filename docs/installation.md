@@ -3,6 +3,10 @@ Title: Installation
 Order: 2
 ---
 
+```toc
+min_depth: 1
+```
+
 <a name="installation"></a>
 # Installation
 

@@ -1,59 +1,359 @@
 ---
 Title: Properties
-Order: 3
+Order: 4
 ---
 
-# Introduction
+```toc
+min_depth: 1
+max_depth: 6
+```
 
-In Livewire, properties are used to store data that needs to be persisted between requests. They are defined as public properties on Livewire components and can be accessed and modified both on the server and the client side.
+In Livewire, properties are used to store and manage data in your components. They are defined as public properties on component classes and can be accessed and modified both on the server and client side.
 
-To define a property on a Livewire component, you simply declare a public property on the component class. For example:
+# Initializing properties
+
+You can set initial values for your properties within the `mount` method because it gets called when a Livewire component is created.
+
+Consider the following example:
 
 ```php
-class MyComponent extends Component
+class TodoList extends Component
 {
-    public $name = 'John Doe';
+    public $todos = [];
+
+	public $todo = '';
+
+    public function mount()
+    {
+        $this->todos = auth()->user()->existingTodos();
+    }
 }
 ```
 
-In this example, we've defined a public property called `$name` and given it an initial value of `'John Doe'`. This property can be accessed and modified from within the component's methods, as well as from the component's Blade view.
+In this example, we've defined an empty `todos` array and initialized it with existing todos from the authenticated user. This way, when the component renders for the first time, all the existing todos in the database display to the user.
 
-In the component's Blade view, you can use the `wire:model` directive to bind the value of a property to a form input or other HTML element. For example:
+# Bulk assignment
+
+Sometimes initializing many properties in the `mount()` method can feel verbose. To help with this, Livewire provides a convenient method for assigning multiple properties at once called `fill()`. By passing an associative array of property names and their respective values you can set several properties simultaneously and cut down on repetitive lines of code in `mount`.
+
+For example:
+
+```php
+class UpdatePost extends Component
+{
+	public $post;
+
+	public $title;
+
+	public $description;
+	
+	public function mount(Post $post)
+	{
+		$this->post = $post;
+
+		$this->fill(
+			$post->only('title', 'description'),
+		);
+	}
+
+	// ...
+}
+```
+
+because `$post->only(...)` returns an associative array of model attributes and values based on the names you pass into it,  the `$title` and `$description` properties will be initially set to the `title` and `description` of the `$post` model from the database without having to set each one individually.
+
+# Data binding
+
+Livewire supports two-way data binding through an HTML attribute called `wire:model`. This allows you to easily synchronize data between component properties and HTML inputs, keeping your user interface and component state in sync. 
+
+Here's a basic example of using `wire:model` to bind the `todo` property in an `TodoList` component to a basic input element. 
+
+```php
+class TodoList extends Component
+{
+	public $todos = [];
+
+	public $todo = '';
+
+	public function add()
+	{
+		$this->todos[] = $this->todo;
+
+		$this->todo = '';
+	}
+
+	// ...
+}
+```
 
 ```html
 <div>
-    <label for="name">Name:</label>
-    <input type="text" id="name" wire:model="name">
-    <p>Hello, {{ $name }}!</p>
+	<input type="text" wire:model="todo" placeholder="Todo...">
+
+	<button wire:click="add">Add Todo</button>
+
+	<ul>
+		@foreach($todos as $todo)
+			<li>{{ $todo }}</li>
+		@endoreach
+	</ul>
 </div>
 ```
 
-In this example, we've used the `wire:model` directive to bind the value of the `name` property to an input field with an `id` of `name`. Whenever the user types into this input field, Livewire will automatically update the value of the `name` property on the server and re-render the component's HTML, including the `{{ $name }}` placeholder.
+Now, in the above example, the value of the text input will syncronize with the `$title` property in the browser, and will be synchronized with the server, when the "Add Todo" button is clicked.
 
-You can also access and modify Livewire properties from JavaScript by using the `$wire` global variable. For example, to update the `name` property from JavaScript, you could do:
+This is just scratching the surface of the capabilities and usages of `wire:model`.
+For deeper information on `wire:model` and data binding, please refer to the [Livewire Data Binding documentation](https://laravel-livewire.com/docs/data-binding).
 
-```js
-$wire.set('name', 'Jane Doe');
+# Resetting properties
+
+Sometimes, you may need to reset your properties back to their initial state after an action is performed by the user, for example. In these cases, Livewire provides a `reset()` method that accepts one or more property names and resets their values to their initial state.
+
+> Note: `->reset()` will reset a value to it's original state BEFORE the `mount` method was called. If you initialized the value in `mount()` to something different, it won't be reset to that value, and you will have to manually reset the value instead.
+
+Below is an example where we can avoid code duplication using `$this->reset()` to reset the `todo` field after the "Add Todo" button is clicked:
+
+```php
+class ManageTodos extends Controller
+{
+	public $todos = [];
+
+	public $todo = '';
+
+	public function addTodo()
+	{
+		$this->todos[] = $this->todo;
+	
+		$this->reset('todo');
+	}
+
+	// ...
+}
 ```
 
-This would update the `name` property to `'Jane Doe'` on the server and re-render the component's HTML.
+In the above example, after a user clicks "Add Todo", the input field holding the todo that has just been added will clear, allowing them to write a new one.
 
-Properties are how components track state in Livewire. They are often used for storing input field data in a form, but can be used for many things.
+# Supported property types
 
+Livewire supports a limited set of property types because of its unique way of managing component data, which involves hydration and dehydration.
+
+In simple terms, dehydration is the process where Livewire takes your PHP property values and turns them into a JSON format that can be easily passed between the front-end and back-end.
+
+Conversely, hydration is when Livewire takes the JSON-formatted data and turns it back into PHP property values. This two-way conversion process has certain limitations, which restricts the types of properties Livewire can work with.
+
+## Primitives types
+
+Livewire supports primitive types such as strings, integers, etc. These types can be easily converted to and from JSON, making them ideal for use as properties in Livewire components.
+
+Livewire supports the following primitive property types:
+
+* Array
+* String
+* Integer
+* Float
+* Boolean
+* Null
+
+```php
+class TodoList extends Component
+{
+    public $todos = []; // Array
+
+	public $todo = ''; // String
+
+	public $maxTodos = 10; // Integer
+
+    public $prioritize = false; // Boolean
+
+    public $searchFilter; // null
+}
 ```
-[Maybe use this as an introduction?]
-Properties are the stateful variables in Livewire components, allowing you to store data and manage state throughout the lifecycle of a component. They can be easily bound to input elements or displayed on the page, and they automatically trigger component re-rendering when their values change.
+
+## Common PHP types
+
+In addition to primitive types, Livewire also supports some PHP object types commonly used in Laravel applications. However, it's important to note that these types will be dehydrated into JSON friendly primitive types and re-hydrated on each request. This means that the property may not preserve run-time values such as closures. Also information about the object such as class name may be exposed to JavaScript.
+
+Support types:
+| Type | Full Class Name |
+|------|-----------------|
+| Collection | `Illuminate\Support\Collection` |
+| Eloquent Collection | `Illuminate\Database\Eloquent\Collection` |
+| Model | `Illuminate\Database\Model` |
+| DateTime | `DateTime` |
+| Carbon | `Carbon\Carbon` |
+| Stringable | `Illuminate\Support\Stringable` |
+
+Here's a quick example of setting properties as these various types:
+
+```php
+public function mount()
+{
+	$this->todos = collect([]); // Collection
+
+	$this->todos = Todos::all(); // Eloquent Collection
+
+	$this->todo = Todos::first(); // Model
+
+	$this->todo = str(''); // Stringable
+
+	$this->date = new DateTime('now'); // DateTime
+
+	$this->date = new Carbon('now'); // Carbon
+
+}
+```
+
+As you see above, you can set component properties to objects of these types like any normal PHP class. From inside the component class you shouldn't know the difference, but behind the scenes, when Livewire dehydrates this property, it will convert them into a JSON string. Similarly, when hydrating the property, Livewire will convert the string back into an object of that type for use on the next request.
+
+## Supporting Custom Types
+
+Livewire allows you to support custom types in your application through two powerful mechanisms: Wireables and Synthesizers. For most applications, Wireables deliver simplicity and ease of use, which we'll explore in this guide. If you're an advanced user or package author wanting more flexibility, Synthesizers are the way to go: [Read more about Synthesizers here.]
+
+### Wireables
+
+Wireables are any class in your application that implements the `Wireable` interface.
+
+For example let's say you have a `Customer` object in your application that represents basic data about a customer:
+
+```php
+class Customer
+{
+    protected $name;
+    protected $age;
+
+    public function __construct($name, $age)
+    {
+        $this->name = $name;
+        $this->age = $age;
+    }
+}
+```
+
+Now if you set it as a property inside a Livewire component, an error will be thrown telling your that property type isn't supported:
+
+```php
+class ShowCustomer extends Component
+{
+    public Customer $customer;
+
+    public function mount()
+    {
+        $this->customer = new Customer('Caleb', 29);
+    }
+}
+```
+
+However, we can add support for `Customer` by implementing the `Wireable` interface and adding a `toLivewire()` and `fromLivewire()` method, which tells Livewire how to turn this property into JSON friendly data, and back again:
+
+```php
+use Livewire\Wireable;
+
+class Customer implements Wireable
+{
+    protected $name;
+    protected $age;
+
+    public function __construct($name, $age)
+    {
+        $this->name = $name;
+        $this->age = $age;
+    }
+
+    public function toLivewire()
+    {
+        return [
+            'name' => $this->name,
+            'age' => $this->age,
+        ]
+    }
+
+    public static function fromLivewire($data)
+    {
+		$name = $data['name'];
+		$age = $data['age'];
+
+        return new static($name, $age); 
+    }
+}
+```
+
+Now you can freely set `Customer` objects on your Livewire components and Livewire will know how to convert these objects to JSON for the browser and back again.
+
+As mentioned earlier, if you want to support types more globally and more powerfully, Livewire exposes it's internal mechanism called Synthesizers for handling different property types so that you can add support for your own. [Read more about Synthesizers here.]
+
+# Accessing from JS using `$wire`
+
+Because Livewire properties are also available in the Browser via JavaScript, you can access and manipulate their JavaScript representations from AlpineJS.
+
+AlpineJS is a lightweight JavaScript library that comes bundled with Livewire. It provides a way to build lightweight interactions into your Livewire components without needing to make full server roundtrips.
+
+AlpineJS is useful in lots of contexts, but it was created to specifically pair well with Livewire. In fact, much of Livewire's front-end is a layer on top of Alpine. This means every Livewire component is actually also an Alpine component and you can use Alpine within your component without needing to declare `x-data` on the root element.
+
+The rest of this page assumes a basic familiarity with Alpine. If you're unfamiliar, [take a look at the AlpineJS documentation to get up to speed.]
+
+## Accessing properties
+
+Livewire exposes a magic property inside Alpine called `$wire`, which you can access from any Alpine expression inside your Livewire component.
+
+The `$wire` object can be treated like a JavaScript version of your component. It has all the same properties and methods as the PHP version of your component, but also contains a few dedicated methods to perform specific functions.
+
+Here's an example of using `$wire` to show a live character count of the `todo` input field:
+
+```html
+<div>
+	<input type="text" wire:model="todo">
+
+	Todo character length: <h2 x-text="$wire.todo.length"></h2>
+</div>
+```
+
+As the user types in the field, the character length of the current todo being written will be shown and live-updated on the page. All without sending a network request to the server.
+
+If you prefer, you can use the more explicit `.get()` method to accomplish the same thing:
+
+```html
+<div>
+	<input type="text" wire:model="todo">
+
+	Todo character length: <h2 x-text="$wire.get('todo').length"></h2>
+</div>
+```
+
+## Manipulating properties
+
+Similarly, you can manipulate your Livewire component properties in JavaScript using `$wire`.
+
+Here's an example of adding a "Clear" button to the `TodoList` component to allow the user to reset the input field to empty using only JavaScript:
+
+```html
+<div>
+	<input type="text" wire:model="todo">
+
+	<button x-on:click="$wire.todo = ''">Clear</button>
+</div>
+```
+
+Now after the user clicks "Clear", the input will be reset to empty without sending a network request.
+
+On the next request, the server-side value of `$todo` will be updated and it will completely syncronized.
+
+If you prefer, you can also use the more explicit `.set()` method for setting properties client side. However, you should note that using `.set()` immediately triggers a network request and synchronizes the state with the server. If that is desired, then this is a great API for it, if not, you should instead stick with setting the property directly.
+
+Here's an example of the same example as above but with `.set()`:
+
+```html
+<button x-on:click="$wire.todo.set('todo', '')">Clear</button>
 ```
 
 # Security concerns
 
-While Livewire properties are a powerful feature for building dynamic, reactive interfaces, there are a few security considerations that you should keep in mind when using them.
+While Livewire properties are a powerful feature, there are a few security considerations that you should be aware of before using them.
 
-### Properties are mutable, don't trust their values
+In short, always treat public properties as user input, as if they were request input coming from a traditional endpoint. Because of this, it's important to validate and authorize properties before persisting to a database just like you would do when working with request input in a controller.
 
-One important thing to keep in mind is that Livewire properties are mutable, which means that their values can be changed by the user or by the server at any time. As a result, you should always validate and authorize the values of Livewire properties before using them in your application logic.
+## Don't trust property values
 
-For example, consider the following component:
+To demonstrate how neglecting to authorize and validate properties can introduce security holes in your application, the following `UpdatePost` component is vulnerable to attack:
 
 ```php
 class UpdatePost extends Component
@@ -69,13 +369,14 @@ class UpdatePost extends Component
         $this->content = $post->content;
     }
 
-    public function updatePost()
+    public function update()
     {
         $post = Post::findOrFail($this->id);
 
-		auth()->user()->can('update:post', $post);
-
-        $post->update(...);
+        $post->update(
+			'title' => $this->title,
+			'content' => $this->content,
+        );
 
         session()->flash('message', 'Post updated successfully!');
     }
@@ -87,391 +388,215 @@ class UpdatePost extends Component
 }
 ```
 
-The `$id` property in the `UpdatePost` component is used to store the ID of the post that we want to update. However, because Livewire properties can be modified on the client side, we need to be careful to validate and authorize the `$id` value before using it in our application logic.
+```html
+<form wire:submit="update">
+	<input type="text" wire:model="title">
+	<input type="text" wire:model="content">
 
-If we don't take appropriate steps to secure the `$id` property, a malicious user could potentially modify the value of `$id` on the client side and submit the form to update a different post than the one they are authorized to modify.
+	<button type="submit">Update</button>
+</form>
+```
 
-To prevent this kind of attack, we can use one of two strategies:
+At first glance, this component may look completely fine to you. Now, let me walk you through how an attacker could use it to do unauthrozed things in your system.
+
+Because we are storing the `id` of the post as a public property on the component, it can be manipulated on the client just the same as the `title` and `content` properties.
+
+It doesn't matter that we didn't write an input with `wire:model="id"`. A maliscous user can easily change the view to the following using their browser DevTools:
+
+```html
+<form wire:submit="update">
+	<input type="text" wire:model="id">
+	<input type="text" wire:model="title">
+	<input type="text" wire:model="content">
+
+	<button type="submit">Update</button>
+</form>
+```
+
+Now they can update the `id` input to the ID of a post model they don't own, and when they submit the form and `update()` is called, `Post::findOrFail()` will return and update a post that they are not the owner of.
+
+To prevent this kind of attack, we can use one or both of these strategies:
 
 A) Authorize the input
 B) Lock the property from updates
 
 ### A) Authorizing the input
 
-Because `$id` can be manipulated client-side with something like `wire:model`, we can authorize that the post is one that the user owns. This is a good idea in general.
+Because `$id` can be manipulated client-side with something like `wire:model`, just like in a controller, we can use [Laravel authorization] to make sure the current user can update the post:
+
 ```php
-public function updatePost()
+public function update()
 {
 	$post = Post::findOrFail($this->id);
 
-	auth()->user()->can('update:post', $post);
+	auth()->user()->can('update', $post);
 
 	$post->update(...);
 }
 ```
 
+Now, if a maliscous user mutates the `$id` property, the added authorization will catch it and throw an error.
+
 ### B) Locking the property
 
-Livewire provides a "locked" property feature that allows you to prevent properties from being modified on the client side. To use locked properties, you simply need to define a public `protected` array property called `$locked` on your component and list the names of any properties that should be locked:
+Livewire provides a "locked" property feature that allows you to prevent properties from being modified on the client side. You can "lock" a property from client-side manipulation using the `#[Locked]` attribute:
 
 ```php
-class MyComponent extends Component
+use Livewire\Use\Locked;
+
+class UpdatePost extends Component
 {
-    protected $locked = ['name'];
+	#[Locked]
+    public $id;
 
-    public $name = 'John Doe';
+	// ...
 }
-
 ```
 
-In this example, we've defined a public property called `$name` and marked it as locked using the `$locked` array. This means that the value of `$name` cannot be modified on the client side using Livewire's magic, and can only be modified on the server side.
+Now, if a user tries to modify `$id` on the front-end using something like `wire:model` an error will be thrown.
 
-By taking appropriate steps to secure the `$id` property, we can ensure that our `UpdatePost` component is not vulnerable to attacks that could compromise the security of our application.
+By using `#[Locked]` you are safe to assume this property has not been manipulated anywhere outside your component's class.
 
-### Properties are "dehydrated" and expose info to the browser
+As an added note, if instead of storing the `$id` as string property, you stored the entire `Post` model to a property called `$post`, Livewire will automatically lock the property and ensure the ID isn't changed so that you are safe from these kinds of attacks:
 
-Another important thing to keep in mind is that Livewire properties are "dehydrated" before they are sent to the browser, which means that their values are converted to a format that can be sent over the wire. This format can expose information about your application to the browser, including the names and class names of your Livewire components and properties.
+```php
+class UpdatePost extends Component
+{
+    public Post $post;
+    public $title;
+    public $content;
 
-For example, if you have a Livewire component that defines a public property called `$user`, the dehydrated value of this property might look something like this:
+    public function mount(Post $post)
+    {
+        $this->post = $post;
+        $this->title = $post->title;
+        $this->content = $post->content;
+    }
+
+    public function update()
+    {
+        $this->post->update(
+			'title' => $this->title,
+			'content' => $this->content,
+        );
+
+        session()->flash('message', 'Post updated successfully!');
+    }
+
+    public function render()
+    {
+        return view('livewire.update-post');
+    }
+}
+```
+
+## Properties expose system information to the browser
+
+Another important thing to keep in mind is that Livewire properties are serialized or "dehydrated" before they are sent to the browser, which means that their values are converted to a format that can be sent over the wire and understood by JavaScript. This format can expose information about your application to the browser, including the names and class names of your properties.
+
+For example, if you have a Livewire component that defines a public property called `$post`, that contains an instance of a `Post` model from your database, the dehydrated value of this property sent over the wire might look something like this:
 
 ```json
 {
-    "type": "model",
-    "value": {
-        "class": "App\\Http\\Livewire\\UserComponent",
-        "id": "H9ag4y5Q5e5x5z8w",
-        "data": {
-            "user": {
-                "id": 1,
-                "name": "John Doe",
-                "email": "johndoe@example.com"
-            }
-        }
-    }
+	"data": {
+		"post": {
+			"type": "model",
+			"class": "App\Models\Post",
+			"key": 1,
+			"relationships": [].
+		}
+	}
 }
 ```
 
-As you can see, the dehydrated value of the `$user` property includes the class name of the component (`App\Http\Livewire\UserComponent`) as well as the name and value of the property (`user`, `{id: 1, name: "John Doe", email: "johndoe@example.com"}`).
+As you can see, the dehydrated value of the `$post` property includes the class name of the model (`App\Models\Post\`) as well as the ID and any relationships that have been eager loaded.
 
-To minimize the risk of exposing sensitive information to the browser, Livewire provides a few options for customizing the dehydrated values of properties. For example, you can use the `toBase` method on model instances to exclude certain attributes from the dehydrated value:
-
-```php
-public function mount(User $user)
-{
-    $this->user = $user->makeHidden(['password']);
-}
-```
-
-In this example, we've used the `makeHidden` method on the `$user` model to exclude the `password` attribute from the dehydrated value. This means that even if the dehydrated value of the `$user` property is exposed to the browser, it will not include the user's password.
-
-Similarly, if you have a Livewire component that uses a custom PHP class or object as a property value, you can define a `serialize` method on the class to customize the dehydrated value:
+If you don't want to expose the classname of the model, you can use Laravel's "morphMap" functionality from a service provider to assign an alias to a model class name:
 
 ```php
-class CustomObject
-{
-    public $publicData;
-    protected $secretData;
+<?php
 
-    public function __construct($publicData, $secretData)
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Database\Eloquent\Relations\Relation;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot()
     {
-        $this->publicData = $publicData;
-        $this->secretData = $secretData;
-    }
-
-    public function serialize()
-    {
-        return [
-            'publicData' => $this->publicData,
-        ];
-    }
-}
-
-class MyComponent extends Component
-{
-    public $customObject;
-
-    public function mount()
-    {
-        $this->customObject = new CustomObject('public', 'secret');
+        Relation::morphMap([
+            'post' => 'App\Models\Post',
+        ]);
     }
 }
 ```
 
-In this example, we've defined a custom `CustomObject` class with both public and private data, and a `serialize` method that returns only the public data when the object is dehydrated. We've also defined a `$customObject` property on the `MyComponent` component and set it to an instance of the `CustomObject` class in the `mount` method.
+Now, when the Eloquent model is "dehydrated" (serialized), the original classname won't be exposed, only the above "post" alias.
 
-When the `$customObject` property is dehydrated and sent to the browser, it will only include the public data of the object (`{publicData: "public"}`), and not the secret data.
+# Getter properties
 
-In summary, while Livewire properties are a powerful tool for building dynamic and reactive interfaces, it's important to be aware of their security implications and take appropriate steps to validate, authorize, and customize their values as needed. By following best practices for secure programming, you can minimize the risk of exposing sensitive information to the browser and keep your application secure.
+In addition to regular properties, Livewire components also offer Getters. Getters are methods on your component marked with the `#[Getter]` attribute. They can be accessed as a dynamic property that isn't stored as part of the component's state, but is instead evaluated on-the-fly.
 
-# Supported property types
+Getters are useful for Eloquent queries with constraints that won't be persisted between requests.
 
-Livewire supports various property types, including primitive types and more complex PHP-centric types.
-
-## Primitive Types
-
-Primitive types like strings, integers, floats, and booleans are supported out of the box. You can use them as properties in your Livewire components:
+For example, if we wanted to get all the todos for a user, but only select the "title" field from the database, that select conststraint won't be re-applied between requests if we set the result to a property called `$todos`. Instead, we can return the query results from a getter and ensure the constraint is applied on each subsequent request:
 
 ```php
-use Livewire\Component;
-
-class MyComponent extends Component
+class ShowTodos extends Component
 {
-    public string $name;
-    public int $age;
-    public float $score;
-    public bool $is_active;
-
-    // ...
-}
-
-```
-
-## Complex PHP-centric Types
-
-Livewire intelligently handles more complex PHP-centric types, including:
-
--   Collections
--   DateTime objects
--   Stringable
--   StdClass
-
-These types are automatically serialized and deserialized when passed between Livewire components and the front-end. Here are examples of using complex PHP-centric types as properties:
-
-```php
-use Illuminate\Support\Collection;
-use Illuminate\Support\Stringable;
-use DateTime;
-use Livewire\Component;
-
-class MyComponent extends Component
-{
-    public Collection $tasks;
-    public DateTime $dueDate;
-    public Stringable $description;
-    public stdClass $metadata;
-
-    public function mount()
-    {
-        $this->tasks = new Collection(['Task 1', 'Task 2']);
-        $this->dueDate = new DateTime('tomorrow');
-        $this->description = new Stringable('Sample description');
-        $this->metadata = new stdClass;
-        $this->metadata->priority = 'high';
-    }
-
-    // ...
-}
-
-```
-
-## Custom Types with Wireables
-
-To add support for custom types, you can implement the `Wireable` interface in your class. This interface requires you to define two methods, `toLivewire` and `fromLivewire`, which are responsible for serializing and deserializing your custom object.
-
-# Initializing properties
-
-Livewire properties can be initialized in a couple of different ways. The two most common ways are by passing them into the component as attributes, or by setting them in the `mount` method.
-
-## Initializing properties via attributes
-
-One way to initialize Livewire properties is by passing them into the component as attributes. For example, let's say we have a `HelloWorld` component with a public `$name` property that we want to initialize with a value passed in from the parent component:
-
-```php
-class HelloWorld extends Component
-{
-    public $name;
+	#[Getter]
+	public function todos()
+	{
+		return Auth::user()
+			->todos()
+			->select('content')
+			->get();
+	}
 
     public function render()
     {
-        return view('livewire.hello-world');
+        return view('livewire.show-todos');
     }
 }
 ```
-
-In the parent component's Blade view, we can pass in the value of `$name` as an attribute:
-
-```php
-<livewire:hello-world name="John"></livewire:hello-world>
-```
-
-In this example, we're passing in the value `"John"` as the value of the `name` attribute on the `HelloWorld` component. When the component is mounted, Livewire will automatically set the value of `$name` to the value of the attribute.
-
-### Initializing properties via the `mount` method
-
-Another way to initialize Livewire properties is by setting them in the `mount` method. For example, let's say we have a `UserDetails` component with a public `$user` property that we want to initialize with a `User` model:
-
-```php
-class UserDetails extends Component
-{
-    public $user;
-
-    public function mount(User $user)
-    {
-        $this->user = $user;
-    }
-
-    public function render()
-    {
-        return view('livewire.user-details');
-    }
-}
-```
-
-In this example, we've defined a `mount` method that accepts a `User` model as a parameter and sets the value of `$user` to the passed-in model. This allows us to pass in a `User` model when we instantiate the component:
-
-```php
-$user = User::find(1);
-return view('user-details', ['user' => $user]);
-```
-
-In this example, we're passing in a `User` model with an ID of `1` to the `UserDetails` component. When the component is mounted, Livewire will automatically call the `mount` method and set the value of `$user` to the passed-in model.
-
-Initializing properties via attributes or the `mount` method can be a powerful way to provide data to Livewire components and set up their initial state. By leveraging these initialization methods, you can create more flexible and dynamic components that can be easily customized and reused across your application.
-
-## Bulk assignment
-
-```php
-public $foo;
-
-public $baz;
-
-public function mount()
-{
-	$this->fill(['foo' => 'bar', 'baz' => 'bob']);
-}
-```
-
-## Resetting properties
-
-Alternatively, you can reset properties at any time:
-
-```php
-public function savePost()
-{
-	$this->reset(['foo', 'baz']);
-}
-```
-
-And the values will be reset to their initial values.
-
-
-## Accessing using $wire
-
-There are other ways to manipulate properties using `$wire` (the magic object available to Alpine code in your Livewire components)
 
 ```html
-<span x-text="$wire.foo">
-<span x-text="$wire.get('foo')">
-<button x-on:click="$wire.set('foo', 'bar')">
-<button x-on:click="$wire.foo = bar">
+<ul>
+	@foreach ($this->todos as $todo)
+		<li>{{ $todo }}</li>
+	@endforeach
+</ul>
 ```
 
-# Computed properties
+> Note, if you want to access getters from your component's Blade view, you have to access them on the `$this` object like so: `$this->todos`.
 
-In addition to regular properties, Livewire components also support computed properties. Computed properties are dynamic properties that are not stored as part of the component's state, but are instead calculated on-the-fly based on other data in the component.
-
-One way to define a computed property in a Livewire component is by defining a method with a name that starts with `get`, followed by the name of the property. For example, let's say we have a `PostDetails` component that needs to display details about a post, and we want to retrieve the post data from the database. We can define a computed property called `$post` that retrieves the post data from the database:
+You can also access `$todos` from inside your class for example if you had a "markAllAsComplete" action:
 
 ```php
-class PostDetails extends Component
+class ShowTodos extends Component
 {
-    public $postId;
+	#[Getter]
+	public function todos()
+	{
+		return Auth::user()
+			->todos()
+			->select('content')
+			->get();
+	}
 
-    public function getPostProperty()
-    {
-        return Post::findOrFail($this->postId);
-    }
+	public function markAllComplete()
+	{
+		$this->todos->each->complete();
+	}
 
     public function render()
     {
-        return view('livewire.post-details');
+        return view('livewire.show-todos');
     }
 }
 ```
 
-In this example, we've defined a `getPostProperty` method that retrieves a `Post` model from the database based on the value of the `$postId` property. Because the method name starts with `get` followed by `Post`, Livewire will automatically treat it as a computed property.
+You might be wondering, why not just call `$this->todos()` as a method directly where you need to? Why use `#[Getter]` in the first place? 
 
-We can access the value of the computed `$post` property throughout the component using the `$this->post` syntax. For example, we might use the computed `$post` property to display the post title and content in the component's Blade view:
-
-```php
-<div>
-    <h1>{{ $this->post->title }}</h1>
-    <div>{{ $this->post->content }}</div>
-</div>
-```
-
-In this example, we're using the `$this->post` syntax to access the value of the computed `$post` property and display the post title and content.
-
-We can also use the computed `$post` property in other methods in the component. For example, we might define a method called `deletePost` that deletes the current post:
-
-```php
-class PostDetails extends Component
-{
-    public $postId;
-
-    public function getPostProperty()
-    {
-        return Post::findOrFail($this->postId);
-    }
-
-    public function deletePost()
-    {
-        $this->post->delete();
-        session()->flash('message', 'Post deleted successfully!');
-        return redirect()->route('posts.index');
-    }
-
-    public function render()
-    {
-        return view('livewire.post-details');
-    }
-}
-```
-
-In this example, we're using the computed `$post` property in the `deletePost` method to delete the current post and then redirect the user to the post index page.
-
-Computed properties can be a powerful way to create dynamic, reactive components in Livewire. By defining computed properties that automatically update based on other data in the component, you can create more flexible and dynamic components that can respond to user actions and update their state in real time.
-
-## Supporting custom PHP types as properties
-
-### Synthesizers
-
-```php
-public function boot()
-{
-	Livewire::synth(SomeSynth::class);
-}
-```
-
-```php
-class SomeSynth extends \Livewire\Synth
-{
-	public static $key = 'smthing';
-
-	public function match ($subject)
-	{
-		return $subject instanceof Something;
-	}
-
-	public function dehydrate($thing)
-	{
-		return [
-			$thing->toArray(),
-			[],
-		];
-	}
-
-	public function hydrate($raw, $meta)
-	{
-		return collect($raw);
-	}
-}
-```
-
-For more info on these go here: #[]
-
-Further reading:
-* Data Binding
-* Validating Properties
-* Property lifecycle hooks
-* Custom types with Synthesizers
+The reason is: getters have a performance advantage: they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once so that you don't run an expensive query multiple times in the same request.

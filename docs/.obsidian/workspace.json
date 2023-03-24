@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "properties.md",
+                "file": "actions.md",
                 "mode": "source",
                 "source": false
               }
@@ -85,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "properties.md",
+                "file": "actions.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "properties.md",
+                "file": "actions.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "properties.md"
+                "file": "actions.md"
               }
             }
           }
@@ -148,19 +148,19 @@
   },
   "active": "a098ffe46ee55456",
   "lastOpenFiles": [
-    "components.md",
-    "quickstart.md",
+    "properties.md",
     "actions.md",
+    "components.md",
+    "installation.md",
+    "quickstart.md",
     "__outline.md",
+    "data-binding.md",
+    "events.md",
+    "hooks.md",
     "rules/__rules.md",
     "rules/Casing rules.md",
     "nesting.md",
     "testing.md",
-    "hooks.md",
-    "events.md",
-    "data-binding.md",
-    "installation.md",
-    "properties.md",
     "rules/Referencing file names in a sentance.md",
     "rules",
     "Places next year.md",
