@@ -31,6 +31,17 @@ class SupportPagination extends ComponentHook
 
         $this->setPageResolvers();
 
+        /**
+         * Store the default pagination views so they can be restored at the end of a Octane request.
+         */
+        $oldDefaultView = Paginator::$defaultView;
+        $oldDefaultSimpleView = Paginator::$defaultSimpleView;
+
+        on('flush-state', function() use ($oldDefaultView, $oldDefaultSimpleView) {
+            Paginator::defaultView($oldDefaultView);
+            Paginator::defaultSimpleView($oldDefaultSimpleView);
+        });
+
         Paginator::defaultView($this->paginationView());
         Paginator::defaultSimpleView($this->paginationSimpleView());
     }
