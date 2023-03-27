@@ -6,8 +6,6 @@ trait WithPagination
 {
     public $paginators = [];
 
-    protected $numberOfPaginatorsRendered = [];
-
     public function queryStringWithPagination()
     {
         return collect($this->paginators)->mapWithKeys(function ($page, $pageName) {
