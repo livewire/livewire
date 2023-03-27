@@ -204,10 +204,39 @@ class Test extends \Tests\BrowserTestCase
                 ->assertDontSee('Post #7')
                 ->assertSee('Post #4');
     }
+
     /** @test */
-    public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page()
+    public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page_tailwind()
     {
         Livewire::visit(ComponentWithTwoLinksForOnePaginator::class)
+                /**
+                 * Ensure everything is good to start with
+                 */
+                ->assertSee('Post #1')
+                ->assertSee('Post #2')
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+                // Assert page 6 can be seen in both sets of links
+                ->assertPresent('[dusk="first-links"] [wire\\:click="gotoPage(6, \'page\')"]')
+                ->assertPresent('[dusk="second-links"] [wire\\:click="gotoPage(6, \'page\')"]')
+
+                // Click either of the page 10 links, it doesn't matter which
+                ->waitForLivewire()->click('[wire\\:click="gotoPage(10, \'page\')"]')
+
+                /**
+                 * Typically it is the first set of links that break due to morphdom
+                 * So we will test the second set of links first, to make sure everything is ok
+                 * Then we will check the first set of links
+                 */
+                ->assertNotPresent('[dusk="second-links"] [wire\\:click="gotoPage(6, \'page\')"]')
+                ->assertNotPresent('[dusk="first-links"] [wire\\:click="gotoPage(6, \'page\')"]')
+                ;
+    }
+    
+    /** @test */
+    public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page_bootstrap()
+    {
+        Livewire::visit(ComponentWithTwoLinksForOnePaginatorBootstrap::class)
                 /**
                  * Ensure everything is good to start with
                  */
