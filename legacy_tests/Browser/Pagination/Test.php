@@ -148,19 +148,17 @@ class Test extends \Tests\BrowserTestCase
                 ->assertSee('Post #7')
 
                 ->refresh()
-                ->back()
+                ->waitForLivewire()->back()
                 ->assertDontSee('Post #7')
                 ->assertSee('Post #4');
     }
 
     public function test_cursor_bootstrap()
     {
-        $this->markTestSkipped(); // @todo: Josh Hanley. For some weird reason cursor pagination isn't working correctly...
-
         if (! class_exists(CursorPaginator::class)) {
             $this->markTestSkipped('Need Laravel >= 8');
         }
-        
+
         Livewire::visit(ComponentWithCursorPaginationBootstrap::class)
                 /**
                  * Test it can go to second page and return to first one
@@ -202,7 +200,7 @@ class Test extends \Tests\BrowserTestCase
                 ->assertSee('Post #7')
 
                 ->refresh()
-                ->back()
+                ->waitForLivewire()->back()
                 ->assertDontSee('Post #7')
                 ->assertSee('Post #4');
     }

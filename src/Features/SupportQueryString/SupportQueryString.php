@@ -38,7 +38,7 @@ class SupportQueryString extends ComponentHook
         if (method_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString();
         elseif (property_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString;
 
-        return collect(class_uses_recursive($class = $this->component::class))
+        return collect(class_uses_recursive($class = $component::class))
             ->map(function ($trait) use ($class, $component) {
                 $member = 'queryString' . class_basename($trait);
 

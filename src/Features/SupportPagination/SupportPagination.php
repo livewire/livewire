@@ -2,8 +2,14 @@
 
 namespace Livewire\Features\SupportPagination;
 
+use Illuminate\Pagination\Cursor;
+use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Pagination\Paginator;
 use Livewire\ComponentHook;
 use Livewire\Features\SupportQueryString\SupportQueryString;
+use Livewire\WithPagination;
+
+use function Livewire\invade;
 
 class SupportPagination extends ComponentHook
 {
@@ -17,6 +23,57 @@ class SupportPagination extends ComponentHook
             $this->publishes($paths, 'livewire');
             $this->publishes($paths, 'livewire:pagination');
         });
+    }
+
+    function boot()
+    {
+        if (! in_array(WithPagination::class, class_uses_recursive($this->component))) return;
+
+        if (class_exists(CursorPaginator::class)) {
+            CursorPaginator::currentCursorResolver(function ($pageName) {
+                $paginators = invade($this->component)->paginators;
+                
+                if (! isset($paginators[$pageName])) {
+                    $paginators[$pageName] = $this->resolvePage($pageName, '');
+
+                    invade($this->component)->paginators = $paginators;
+                }
+
+                return Cursor::fromEncoded($paginators[$pageName]);
+            });
+        }
+
+        Paginator::currentPageResolver(function ($pageName) {
+            $paginators = invade($this->component)->paginators;
+
+            if (! isset($paginators[$pageName])) {
+                $paginators[$pageName] = $this->resolvePage($pageName, 1);
+
+                invade($this->component)->paginators = $paginators;
+            }
+
+            return (int) $paginators[$pageName];
+        });
+
+        Paginator::defaultView($this->paginationView());
+        Paginator::defaultSimpleView($this->paginationSimpleView());
+    }
+
+    public function resolvePage($pageName, $default)
+    {
+        $as = data_get($this->getQueryString($this->component), 'paginators.' . $pageName . '.as', $pageName);
+
+        return request()->query($as, $default);
+    }
+
+    public function paginationView()
+    {
+        return 'livewire::' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : 'tailwind');
+    }
+
+    public function paginationSimpleView()
+    {
+        return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : 'tailwind');
     }
 
     function dehydrate($context)
@@ -38,8 +95,9 @@ class SupportPagination extends ComponentHook
 
     function getQueryString()
     {
-        $supportQueryString = app(SupportQueryString::class);
+        $supportQueryString = new SupportQueryString;
         $supportQueryString->setComponent($this->component);
+
         return $supportQueryString->getQueryString();
     }
 }
