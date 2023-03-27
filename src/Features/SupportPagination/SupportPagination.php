@@ -54,19 +54,17 @@ class SupportPagination extends ComponentHook
 
     public function setPageResolvers()
     {
-        if (class_exists(CursorPaginator::class)) {
-            CursorPaginator::currentCursorResolver(function ($pageName) {
-                $paginators = invade($this->component)->paginators;
-                
-                if (! isset($paginators[$pageName])) {
-                    $paginators[$pageName] = $this->resolvePage($pageName, '');
+        CursorPaginator::currentCursorResolver(function ($pageName) {
+            $paginators = invade($this->component)->paginators;
+            
+            if (! isset($paginators[$pageName])) {
+                $paginators[$pageName] = $this->resolvePage($pageName, '');
 
-                    invade($this->component)->paginators = $paginators;
-                }
+                invade($this->component)->paginators = $paginators;
+            }
 
-                return Cursor::fromEncoded($paginators[$pageName]);
-            });
-        }
+            return Cursor::fromEncoded($paginators[$pageName]);
+        });
 
         Paginator::currentPageResolver(function ($pageName) {
             $paginators = invade($this->component)->paginators;

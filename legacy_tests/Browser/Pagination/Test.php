@@ -103,10 +103,6 @@ class Test extends \Tests\BrowserTestCase
 
     public function test_cursor_tailwind()
     {
-        if (! class_exists(CursorPaginator::class)) {
-            $this->markTestSkipped('Need Laravel >= 8');
-        }
-
         Livewire::visit(ComponentWithCursorPaginationTailwind::class)
                 /**
                  * Test it can go to second page and return to first one
@@ -155,10 +151,6 @@ class Test extends \Tests\BrowserTestCase
 
     public function test_cursor_bootstrap()
     {
-        if (! class_exists(CursorPaginator::class)) {
-            $this->markTestSkipped('Need Laravel >= 8');
-        }
-
         Livewire::visit(ComponentWithCursorPaginationBootstrap::class)
                 /**
                  * Test it can go to second page and return to first one
