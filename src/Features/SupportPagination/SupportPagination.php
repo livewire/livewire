@@ -10,6 +10,7 @@ use Livewire\Features\SupportQueryString\SupportQueryString;
 use Livewire\WithPagination;
 
 use function Livewire\invade;
+use function Livewire\on;
 
 class SupportPagination extends ComponentHook
 {
