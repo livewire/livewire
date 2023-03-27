@@ -7,6 +7,7 @@ use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\Paginator;
 use Livewire\ComponentHook;
 use Livewire\Features\SupportQueryString\SupportQueryString;
+use Livewire\Features\SupportQueryString\Url;
 use Livewire\WithPagination;
 
 use function Livewire\invade;
@@ -47,23 +48,6 @@ class SupportPagination extends ComponentHook
         Paginator::defaultSimpleView($this->paginationSimpleView());
     }
 
-    function dehydrate($context)
-    {
-        if (! property_exists($this->component, 'paginators')) return;
-        if (! method_exists($this->component, 'queryStringWithPagination')) return;
-
-        $paginators = $this->component->paginators;
-        $componentQueryString = $this->getQueryString();
-
-        if (is_null($paginators) && empty($componentQueryString)) return;
-
-        foreach ($paginators as $pageName => $page) {
-            if (! $queryString = $componentQueryString['paginators.'.$pageName]) return;
-
-            $context->pushEffect('url', $queryString, 'paginators.'.$pageName);
-        }
-    }
-
     protected function setPageResolvers()
     {
         CursorPaginator::currentCursorResolver(function ($pageName) {
@@ -73,6 +57,12 @@ class SupportPagination extends ComponentHook
                 $paginators[$pageName] = $this->resolvePage($pageName, '');
 
                 invade($this->component)->paginators = $paginators;
+
+                /**
+                 * As the page name key didn't exist when query string was initialised earlier,
+                 * we need to initalise it now so the page name gets added to the querystring.
+                 */
+                $this->initialiseQueryStringForPageName($pageName);
             }
 
             return Cursor::fromEncoded($paginators[$pageName]);
@@ -85,6 +75,12 @@ class SupportPagination extends ComponentHook
                 $paginators[$pageName] = $this->resolvePage($pageName, 1);
 
                 invade($this->component)->paginators = $paginators;
+
+                /**
+                 * As the page name key didn't exist when query string was initialised earlier,
+                 * we need to initalise it now so the page name gets added to the querystring.
+                 */
+                $this->initialiseQueryStringForPageName($pageName);
             }
 
             return (int) $paginators[$pageName];
@@ -93,9 +89,23 @@ class SupportPagination extends ComponentHook
 
     protected function resolvePage($pageName, $default)
     {
-        $as = data_get($this->getQueryString($this->component), 'paginators.' . $pageName . '.as', $pageName);
+        $as = data_get($this->getQueryString(), 'paginators.' . $pageName . '.as', $pageName);
 
         return request()->query($as, $default);
+    }
+
+    protected function initialiseQueryStringForPageName($pageName)
+    {
+        $pageQueryString = collect($this->getQueryString())->get('paginators.' . $pageName);
+
+        if (is_null($pageQueryString)) return;
+
+        $key = 'paginators.' . $pageName;
+        $alias = $pageQueryString['as'] ?? $pageName;
+        $use = $pageQueryString['use'] ?? 'push';
+        $alwaysShow = $pageQueryString['alwaysShow'] ?? false;
+
+        $this->setPropertyHook($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
     }
 
     protected function paginationView()
