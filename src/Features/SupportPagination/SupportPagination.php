@@ -52,7 +52,7 @@ class SupportPagination extends ComponentHook
         }
     }
 
-    public function setPageResolvers()
+    protected function setPageResolvers()
     {
         CursorPaginator::currentCursorResolver(function ($pageName) {
             $paginators = invade($this->component)->paginators;
@@ -79,24 +79,24 @@ class SupportPagination extends ComponentHook
         });
     }
 
-    public function resolvePage($pageName, $default)
+    protected function resolvePage($pageName, $default)
     {
         $as = data_get($this->getQueryString($this->component), 'paginators.' . $pageName . '.as', $pageName);
 
         return request()->query($as, $default);
     }
 
-    public function paginationView()
+    protected function paginationView()
     {
         return 'livewire::' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : 'tailwind');
     }
 
-    public function paginationSimpleView()
+    protected function paginationSimpleView()
     {
         return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : 'tailwind');
     }
 
-    function getQueryString()
+    protected function getQueryString()
     {
         $supportQueryString = new SupportQueryString;
         $supportQueryString->setComponent($this->component);
