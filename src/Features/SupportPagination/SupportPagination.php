@@ -130,9 +130,8 @@ class SupportPagination extends ComponentHook
 
     protected function getQueryString()
     {
-        $supportQueryString = new SupportQueryString;
-        $supportQueryString->setComponent($this->component);
+        $supportQueryStringHook = ComponentHookRegistry::getHook($this->component, SupportQueryString::class);
 
-        return $supportQueryString->getQueryString();
+        return $supportQueryStringHook->getQueryString();
     }
 }
