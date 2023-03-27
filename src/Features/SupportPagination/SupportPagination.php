@@ -29,6 +29,31 @@ class SupportPagination extends ComponentHook
     {
         if (! in_array(WithPagination::class, class_uses_recursive($this->component))) return;
 
+        $this->setPageResolvers();
+
+        Paginator::defaultView($this->paginationView());
+        Paginator::defaultSimpleView($this->paginationSimpleView());
+    }
+
+    function dehydrate($context)
+    {
+        if (! property_exists($this->component, 'paginators')) return;
+        if (! method_exists($this->component, 'queryStringWithPagination')) return;
+
+        $paginators = $this->component->paginators;
+        $componentQueryString = $this->getQueryString();
+
+        if (is_null($paginators) && empty($componentQueryString)) return;
+
+        foreach ($paginators as $pageName => $page) {
+            if (! $queryString = $componentQueryString['paginators.'.$pageName]) return;
+
+            $context->pushEffect('url', $queryString, 'paginators.'.$pageName);
+        }
+    }
+
+    public function setPageResolvers()
+    {
         if (class_exists(CursorPaginator::class)) {
             CursorPaginator::currentCursorResolver(function ($pageName) {
                 $paginators = invade($this->component)->paginators;
@@ -54,9 +79,6 @@ class SupportPagination extends ComponentHook
 
             return (int) $paginators[$pageName];
         });
-
-        Paginator::defaultView($this->paginationView());
-        Paginator::defaultSimpleView($this->paginationSimpleView());
     }
 
     public function resolvePage($pageName, $default)
@@ -74,23 +96,6 @@ class SupportPagination extends ComponentHook
     public function paginationSimpleView()
     {
         return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : 'tailwind');
-    }
-
-    function dehydrate($context)
-    {
-        if (! property_exists($this->component, 'paginators')) return;
-        if (! method_exists($this->component, 'queryStringWithPagination')) return;
-
-        $paginators = $this->component->paginators;
-        $componentQueryString = $this->getQueryString();
-
-        if (is_null($paginators) && empty($componentQueryString)) return;
-
-        foreach ($paginators as $pageName => $page) {
-            if (! $queryString = $componentQueryString['paginators.'.$pageName]) return;
-
-            $context->pushEffect('url', $queryString, 'paginators.'.$pageName);
-        }
     }
 
     function getQueryString()
