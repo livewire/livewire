@@ -4,7 +4,6 @@ namespace LegacyTests\Browser\QueryString;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component;
-use Livewire\WithPagination;
 use LegacyTests\Browser\Pagination\Post;
 
 class ComponentWithTraits extends Component

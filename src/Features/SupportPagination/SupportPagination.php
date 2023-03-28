@@ -9,10 +9,10 @@ use Livewire\ComponentHook;
 use Livewire\ComponentHookRegistry;
 use Livewire\Features\SupportQueryString\SupportQueryString;
 use Livewire\Features\SupportQueryString\Url;
-use Livewire\WithPagination;
 
 use function Livewire\invade;
 use function Livewire\on;
+use function Livewire\wrap;
 
 class SupportPagination extends ComponentHook
 {
@@ -30,8 +30,6 @@ class SupportPagination extends ComponentHook
 
     function boot()
     {
-        if (! in_array(WithPagination::class, class_uses_recursive($this->component))) return;
-
         $this->setPageResolvers();
 
         /**
@@ -47,6 +45,23 @@ class SupportPagination extends ComponentHook
 
         Paginator::defaultView($this->paginationView());
         Paginator::defaultSimpleView($this->paginationSimpleView());
+    }
+
+    function call($method, $params, $returnEarly)
+    {
+        $methods = [
+        'previousPage',
+            'nextPage',
+            'gotoPage',
+            'resetPage',
+            'setPage',
+        ];
+
+        if (! in_array($method, $methods)) return;
+
+        $returnEarly(
+            wrap($this->component)->$method(...$params)
+        );
     }
 
     protected function setPageResolvers()

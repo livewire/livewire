@@ -1,12 +1,12 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Features\SupportPagination;
 
-trait WithPagination
+trait HandlesPagination
 {
     public $paginators = [];
 
-    public function queryStringWithPagination()
+    public function queryStringHandlesPagination()
     {
         return collect($this->paginators)->mapWithKeys(function ($page, $pageName) {
             return ['paginators.'.$pageName => ['use' => 'push', 'as' => $pageName, 'alwaysShow' => false]];

@@ -10,6 +10,7 @@ use Livewire\Features\SupportQueryString\HandlesQueryString;
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;
 use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
+use Livewire\Features\SupportPagination\HandlesPagination;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Drawer\Utils;
 use Livewire\Drawer\Utils as SyntheticUtils;
@@ -29,6 +30,7 @@ abstract class Component
     use InteractsWithProperties;
     use HandlesEvents;
     use HandlesRedirects;
+    use HandlesPagination;
     use HandlesValidation;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;

@@ -4,7 +4,6 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\WithPagination;
 
 class ComponentPaginationTest extends \Tests\TestCase
 {
@@ -52,8 +51,6 @@ class ComponentPaginationTest extends \Tests\TestCase
 
 class ComponentWithPaginationStub extends Component
 {
-    use WithPagination;
-
     public function render()
     {
         return view('show-name', ['name' => 'example']);
