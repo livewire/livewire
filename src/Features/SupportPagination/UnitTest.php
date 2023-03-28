@@ -5,7 +5,7 @@ namespace Livewire\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ComponentPaginationTest extends \Tests\TestCase
+class UnitTest extends \Tests\TestCase
 {
     /** @test */
     public function can_navigate_to_previous_page()
@@ -53,6 +53,6 @@ class ComponentWithPaginationStub extends Component
 {
     public function render()
     {
-        return view('show-name', ['name' => 'example']);
+        return '<div></div>';
     }
 }
