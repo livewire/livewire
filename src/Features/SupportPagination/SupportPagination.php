@@ -50,7 +50,7 @@ class SupportPagination extends ComponentHook
     function call($method, $params, $returnEarly)
     {
         $methods = [
-        'previousPage',
+            'previousPage',
             'nextPage',
             'gotoPage',
             'resetPage',
@@ -67,14 +67,14 @@ class SupportPagination extends ComponentHook
     protected function setPageResolvers()
     {
         CursorPaginator::currentCursorResolver(function ($pageName) {
-            $paginators = invade($this->component)->paginators;
+            $paginators = $this->component->paginators;
             
             if (! isset($paginators[$pageName])) {
                 $queryStringDetails = $this->getQueryStringDetails($pageName);
 
                 $paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], '');
 
-                invade($this->component)->paginators = $paginators;
+                $this->component->paginators = $paginators;
 
                 /**
                  * As the page name key didn't exist when query string was initialised earlier,
@@ -87,14 +87,14 @@ class SupportPagination extends ComponentHook
         });
 
         Paginator::currentPageResolver(function ($pageName) {
-            $paginators = invade($this->component)->paginators;
+            $paginators = $this->component->paginators;
 
             if (! isset($paginators[$pageName])) {
                 $queryStringDetails = $this->getQueryStringDetails($pageName);
 
                 $paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], 1);
 
-                invade($this->component)->paginators = $paginators;
+                $this->component->paginators = $paginators;
 
                 /**
                  * As the page name key didn't exist when query string was initialised earlier,
