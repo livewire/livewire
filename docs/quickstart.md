@@ -3,27 +3,33 @@ Title: Quickstart
 Order: 1
 ---
 
+```toc
+min_depth: 1
+```
+
 <a name="quickstart"></a>
-# Quickstart Guide
+# Quickstart guide
 
-Livewire provides a powerful way to create dynamic, interactive user interfaces using only PHP and Blade templates. In this quickstart guide, you'll learn how to create a Livewire component and leverage its real-time communication with your server to build dynamic, responsive web applications with ease.
+Livewire provides a powerful way to create dynamic, interactive user interfaces using only PHP and Blade templates.
 
-## Prerequisites
+The best way to learn is by doing, so in this guide, we're going to create a simple "counter" Livewire component and render it in the browser. Most applications have no use for a "counter" component, but it's a great way to experience Livewire for the first time as it takes advantage of Livewire's "live"ness while not being more complicated than it needs to be.
 
-Before you start, make sure you have the following installed:
+# Prerequisites
+
+Before we start, make sure you have the following installed:
 
 - Laravel version 8 or later
 - PHP version 8.1 or later
 
-## Step 1: Install Livewire
+# Step 1: Install Livewire
 
-Install Livewire using Composer:
+Install Livewire into your Laravel application using Composer:
 
 ```shell
 composer require livewire/livewire
 ```
 
-## Step 2: Create a Livewire Component
+# Step 2: Create a Livewire component
 
 Create a new Livewire component using the `make:livewire` Artisan command:
 
@@ -31,11 +37,11 @@ Create a new Livewire component using the `make:livewire` Artisan command:
 php artisan make:livewire Counter
 ```
 
-This will create a new Livewire component called `Counter` in the `app/Http/Livewire` directory along with its corresponding Blade view file in the `resources/views/livewire` directory.
+This will create a new Livewire component called `Counter` in the `app/Http/Livewire` directory along with its corresponding Blade view file: `resources/views/livewire/counter.blade.php`.
 
-## Step 3: Edit the Livewire Component
+# Step 3: Edit the Livewire component
 
-Open the `app/Http/Livewire/Counter.php` file and replace its content with the following code:
+Open `app/Http/Livewire/Counter.php` and replace its content with the following code:
 
 ```php
 <?php
@@ -65,9 +71,9 @@ class Counter extends Component
 }
 ```
 
-In this code, we have defined a Livewire component called `Counter` with a public property `$count` initialized to `0`. We have also defined two methods called `increment` and `decrement` which increment and decrement the `$count` property respectively. Finally, we have defined a `render` method that returns a view called `livewire.counter`.
+As you can see, we now have a public property called `$count` that Livewire will use to track the counter state. We also have two methods or "actions" that manipulate the count, and finally we have a `render()` method where return a Blade view for our component to render.
 
-## Step 4: Edit the Blade View
+# Step 4: Edit the Blade view
 
 Open the `resources/views/livewire/counter.blade.php` file and replace its content with the following code:
 
@@ -81,7 +87,7 @@ Open the `resources/views/livewire/counter.blade.php` file and replace its conte
 
 This code will display the `$count` property and two buttons that increment and decrement the `$count` property respectively.
 
-## Step 5: Add the Livewire Component to a Route
+# Step 5: Add the Livewire component to a route
 
 Open the `routes/web.php` file and add the following code:
 
@@ -91,11 +97,11 @@ use App\Http\Livewire\Counter;
 Route::get('/counter', Counter::class);
 ```
 
-This code will create a new route that points to our `Counter` Livewire component.
+Above, we've registered a new route that points to the `Counter` Livewire component.
 
-## Step 6: Create a Blade Layout for Livewire
+# Step 6: Create a Blade layout for Livewire
 
-To render your Livewire component in the browser, you need to create a base layout for it. Livewire will look for a layout file called `resources/views/components/layout.blade.php`.
+Before can visit `/counter` in the browser, we need an HTML layout for our component to render inside of. By default, Livewire will automatically look for a layout file called `resources/views/components/layout.blade.php`.
 
 Create this file by running the following command:
 
@@ -103,12 +109,12 @@ Create this file by running the following command:
 php artisan livewire:layout
 ```
 
-This command generates a basic layout file with the following HTML structure:
+This command generates a basic layout file with the following structure:
 
 ```html
 <html>
 	<head>
-		<title>{{ $title ?? 'Livewire Quickstart' }}</title>
+		<title>{{ $title ?? 'Page Title' }}</title>
 	</head>
 
 	<body>
@@ -121,15 +127,19 @@ This command generates a basic layout file with the following HTML structure:
 </html>
 ```
 
-This layout file includes an HTML structure with a `<head>` tag for the page title and a `<body>` tag for the component's content. The `$title` variable is used to set the page title and can be overridden in individual components.
+Our component will be rendered in place of the `$slot` variable, and Livewire will automatically inject any JavaScript assets it needs when we load the page.
 
-## Step 7: Test it out!
+Now that we're all set up, our component is ready to test out!
+
+# Step 7: Test it out
 
 Visit `/counter` in your browser and you should see a number displayed on the screen with two buttons to increment and decrement the number.
 
-Click on the buttons to increment and decrement the number. You will notice that the number on the screen updates in real-time without the page reloading. This is the magic of Livewire.
+Click on the buttons to increment and decrement the number. You will notice that the count updates in real-time without the page reloading. This is the magic of Livewire.
 
-We just scratched the surface of what Livewire is capable of. You can either keep reading along with the documentation, or follow one of our in-depth tutorials that walk you through building real-life applications:
+We just scratched the surface of what Livewire is capable of. You can either keep reading along with the documentation, or follow one of our in-depth tutorials that walk you through building real-life applications.
+
+Cheers!
 
 * More Docs
 * Real-life tutorials

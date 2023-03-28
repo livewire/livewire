@@ -1,7 +1,26 @@
 ---
-Title: Properties
+Title: Data Binding
 Order: 4
 ---
+
+* Introduction (introduction to binding with `wire:model`)
+* Live binding with `wire:model.live`
+* Deferred binding with `wire:model.defer`
+* Lazy binding with `wire:model.lazy`
+* Debouncing input `wire:model.debounce`
+* Throttling input with `wire:model.throttle`
+* Binding to nested values
+* `wire:model` binding to nested Livewire component values
+* Binding to eloquent model properties (this is no longer supported in v3 because it was prone to missunderstandings and performance and security implications, but you can enable this old behavior with a livewire.php config item)
+* Using the "updating" and "updated" lifecycle hooks
+* Security concerns
+	* Every property is `wire:model`able, even if there is no `wire:model` for it
+
+```toc
+allow_inconsistent_headings: true
+min_depth: 1
+max_depth: 6
+```
 
 Data binding is a fundamental concept in Livewire that allows you to create a two-way connection between component properties and form input elements. In this documentation page, we'll discuss various data binding techniques, including `wire:model`, updated hooks, `$wire.set()`, and more.
 

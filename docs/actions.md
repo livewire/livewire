@@ -1,7 +1,14 @@
 ---
-Title: Properties
+Title: Actions
 Order: 5
 ---
+
+```toc
+min_depth: 1
+max_depth: 6
+```
+
+
 
 Actions in Livewire are methods that can be called from your components' Blade templates to perform tasks, such as updating component properties, validating input, or interacting with databases. This documentation page will cover everything you need to know about working with actions in Livewire, including action parameters, lifecycle hooks, and more.
 

@@ -1,4 +1,5 @@
 
+Should I ditch the terms "hydrate" and "dehydrate"? Hydrate is normally used for hydrating front-end behavior from a frozen state. Well, we're just applying it to the backend. Serialize and unserialize are alternatives as are "sleep" and "wakeup".
 
 * more examples
 * best practices
@@ -46,19 +47,36 @@ Fundamentals:
 		* Route parameters
 		* Route model binding
 * Properties
+	* Introduction
+	* Initializing properties in the mount method
+	* Bulk assigning properties ($this->fill())
+	* Resetting properties ($this->reset())
+	* Data binding (Basic introduction with link to other documentation page)
+	* Supported property types
+		* (Brief expalantion of hydration/dehydration and why every possible type isn't supported)
+		* Primitives types (strings, int, boolean, etc...)
+		* Common PHP types (Collection, DateTime, etc...)
+		* Supporting custom types (explain how users can add support for types specific to their application)
+			* Using Wireables
+			* Using Synthesizers
+	* Using $wire 
+	    * Accessing properties with $wire in Alpine inside your component
+	    * Manipulating properties
+	    * Using $wire.get and $wire.set
 	* Security concerns
-	* Initializing properties
-	* Bulk assigning properties (->fill)
-	* Resetting properties (->reset)
-	* Data binding (intro + link to page)
-	* Wireable properties
-	* Computed properties
+		* Don't trust properties
+			* Authorizing properties
+			* Using "locked" properties
+		* Be aware that Livewire exposes property metadata like eloquent model class names
+	* "Computed" properties (using ->getPostProperty() syntax)
+
 * Actions
 	* Security concerns
 	* Parameters
 	* Event modifiers
 		* Keydown modifiers
 	* Magic actions
+	 * Wireable actions
  * Data Binding
 	* Live binding
 	* Lazy binding
@@ -148,6 +166,44 @@ V3:
 * How much money should I spend on them?
 * When should I have them delivered?
 * Do I need to call dad and make sure she will like them?
+
+
+
+Code examples:
+* CreatePost
+	* con: $title isn't filled initially
+* 
+
+Why is writing documentation so hard?
+
+### Words are hard
+
+Yeah, but it's more than that. Agreed that words are hard, but I seem to be able to write a blog post no problem.
+
+It's boring speak catered to the lowest common denominator of reader
+
+Yeah like I feel like I don't have a voice at all. Like the jokes and meanderings and bold statements I usually like to write with don't belong here. Clarity at all costs belongs here.
+
+### Organizing content is hard
+There's the "chicken" and "egg" problem: some content depends on another piece but that piece relies back on the original piece. Which one comes first?
+
+There's the granularity problem: how much do we want to break this up?
+
+There's the ordering problem: "do I go simple to complex? or most real-world to least real-world?"
+
+The repitition problem: do you repeat yourself in multiple pages? or isolate one feature to a single file? This one is answered: repeat yourself.
+
+### Code examples are hard
+How much non-crucial context to include? (include < ?php include class? namespace? use? render?)
+
+How to make it real-world but cater to exactly the right mechanisms? "hello world" and "counter" components are helpful but not real-life. But real-life isn't often simple enough.
+
+Do you stick with the same domain? "CreatePost" the whole time? Is it too jarring to hop around a ton, or is it too predictable, constrained and monotonous to stick with one example the entire time?
+
+### There's a ton of it
+There's just so much of it, it feels overwhelming
+
+
 
 
 
