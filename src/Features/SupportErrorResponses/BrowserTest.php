@@ -79,6 +79,7 @@ class Component extends BaseComponent
     <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
 
     @if($useCustomPageExpiredHook)
+    {{-- // @todo: Remove this if we decide to remove the old hook --}}
     <script>
         document.addEventListener('livewire:load', () => {
             Livewire.onPageExpired(() => confirm('Page Expired'))
@@ -90,7 +91,7 @@ class Component extends BaseComponent
     <script>
         // @todo: Change this to a Livewire init hook once implemented
         document.addEventListener('alpine:init', () => {
-            Livewire.onErrorResponse((response, content, skipDefault) => {
+            Livewire.hook('response.error', (response, content, skipDefault) => {
                 if (response.status === 419) {
                     confirm('Page Expired - Error Response')
 

@@ -4,7 +4,6 @@ import { showHtmlModal } from './modal'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
 import { wireProperty } from './wire'
-import { handleResponse } from './response'
 
 /**
  * The Alpine build will need to use it's own reactivity hooks,
@@ -172,7 +171,7 @@ async function sendMethodCall() {
         },
     })
 
-    let success = async (responseContent) => {
+    let succeed = async (responseContent) => {
         let response = JSON.parse(responseContent)
 
         for (let i = 0; i < response.length; i++) {
@@ -190,7 +189,7 @@ async function sendMethodCall() {
         let failed = true
     }
 
-    await handleResponse(response, success, fail)
+    await handleResponse(response, succeed, fail)
 }
 
 /**
@@ -215,4 +214,70 @@ export function processEffects(target) {
     let effects = target.effects
 
     trigger('effects', target, effects)
+}
+
+export async function handleResponse(response, succeed, fail) {
+    let content = await response.text()
+
+    if (response.ok) {
+        /**
+         * Sometimes a redirect happens on the backend outside of Livewire's control,
+         * for example to a login page from a middleware, so we will just redirect
+         * to that page.
+         */
+        if (response.redirected) {
+            window.location.href = response.url
+        }
+
+        /**
+         * Sometimes a response will be prepended with html to render a dump, so we
+         * will seperate the dump html from Livewire's JSON response content and
+         * render the dump in a modal and allow Livewire to continue with the
+         * request.
+         */
+        if (contentIsFromDump(content)) {
+            [dump, content] = splitDumpFromContent(content)
+
+            showHtmlModal(dump)
+        }
+
+        return await succeed(content)
+    }
+
+    let skipDefault = false
+
+    trigger('response.error', response, content, () => skipDefault = true)
+
+    if (skipDefault) return await fail()
+
+    if (response.status === 419) {
+        handlePageExpiry()
+
+        return await fail()
+    }
+
+    handleFailure(content)
+    
+    await fail()
+}
+
+function contentIsFromDump(content) {
+    return !! content.match(/<script>Sfdump\(".+"\)<\/script>/)
+}
+
+function splitDumpFromContent(content) {
+    let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s)
+    return [dump, content.replace(dump, '')]
+}
+
+function handlePageExpiry() {
+    confirm(
+        'This page has expired.\nWould you like to refresh the page?'
+    ) && window.location.reload()
+}
+
+function handleFailure(content) {
+    let html = content
+
+    showHtmlModal(html)
 }
