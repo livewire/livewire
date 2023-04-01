@@ -168,12 +168,6 @@ V3:
 * Do I need to call dad and make sure she will like them?
 
 
-
-Code examples:
-* CreatePost
-	* con: $title isn't filled initially
-* 
-
 Why is writing documentation so hard?
 
 ### Words are hard

@@ -1,141 +1,281 @@
 ---
 Title: Data Binding
-Order: 4
+Order: 6
 ---
 
-* Introduction (introduction to binding with `wire:model`)
-* Live binding with `wire:model.live`
-* Deferred binding with `wire:model.defer`
-* Lazy binding with `wire:model.lazy`
-* Debouncing input `wire:model.debounce`
-* Throttling input with `wire:model.throttle`
-* Binding to nested values
-* `wire:model` binding to nested Livewire component values
-* Binding to eloquent model properties (this is no longer supported in v3 because it was prone to missunderstandings and performance and security implications, but you can enable this old behavior with a livewire.php config item)
-* Using the "updating" and "updated" lifecycle hooks
-* Security concerns
-	* Every property is `wire:model`able, even if there is no `wire:model` for it
-
 ```toc
-allow_inconsistent_headings: true
 min_depth: 1
 max_depth: 6
 ```
 
-Data binding is a fundamental concept in Livewire that allows you to create a two-way connection between component properties and form input elements. In this documentation page, we'll discuss various data binding techniques, including `wire:model`, updated hooks, `$wire.set()`, and more.
+# Introduction
 
-# Basic Data Binding
-
-To bind a property to an input element, use the `wire:model` directive. This creates a two-way binding that automatically updates the property value when the input changes.
+Livewire allows you to easily bind your component's properties to form inputs using the `wire:model` directive. This enables seamless communication between your frontend and backend, ensuring your component's state stays in sync with the user input. Let's see a basic example of data binding using the `wire:model` directive in a `CreatePost` component:
 
 ```php
-<!-- example-component.blade.php -->
+class CreatePost extends Component
+{
+    public $title;
+
+    public function save()
+    {
+        // Save the post...
+    }
+
+    public function render()
+    {
+        return view('livewire.create-post');
+    }
+}
+```
+
+```html
+<!-- create-post.blade.php -->
+<form wire:submit.prevent="save">
+    <input type="text" wire:model="title">
+    <button type="submit">Save</button>
+</form>
+```
+
+# Live updating
+
+Livewire's `wire:model` directive offers a powerful way to bind form input data to your component's properties. However, by default, `wire:model` defers updating the component's properties until an action, such as submitting a form or clicking a button, is triggered. This approach reduces the number of server requests made while the user interacts with the form, but it may not be suitable for all scenarios.
+
+In some cases, you may want your component's properties to be updated in real-time as the user types or interacts with the form input. Livewire provides the `wire:model.live` directive for such scenarios, which allows for immediate updating of the component's properties on the server-side as the user interacts with the input.
+
+Consider a `SearchPosts` component, where you want to display search results instantly as the user types in a query. By using the `wire:model.live` directive, you can achieve live updating of the search results without waiting for the user to trigger an action:
+
+```php
+class SearchPosts extends Component
+{
+    public $query;
+
+    public function render()
+    {
+        $posts = Post::where('title', 'like', '%' . $this->query . '%')->get();
+
+        return view('livewire.search-posts', [
+            'posts' => $posts,
+        ]);
+    }
+}
+```
+
+```html
 <div>
-    <label for="name">Name:</label>
-    <input type="text" id="name" wire:model="name">
-    <p>Your name is: {{ $name }}</p>
+    <input type="text" wire:model.live="query" placeholder="Search posts...">
+
+    <ul>
+        @foreach($posts as $post)
+            <li>{{ $post->title }}</li>
+        @endforeach
+    </ul>
 </div>
 ```
 
-### Debounce and Lazy Data Binding
+By using `wire:model.live`, the `query` property is updated on the server in real-time, ensuring the search results are displayed instantly as the user types their search query.
 
-By default, Livewire updates the property value and re-renders the component with every input change. However, you can control the update frequency using `wire:model.debounce` or `wire:model.lazy`.
+# Lazy updating
 
-**Debounce**: Specify a debounce duration to delay updates and limit the number of updates per second. This is useful for reducing server requests when working with rapidly changing input values, like typing in a search field.
+While `wire:model` is a powerful way to bind form input data to your component's properties, it might not always be ideal for every situation. By default, `wire:model` updates the component's properties when an action is triggered, such as submitting a form or clicking a button. However, there are scenarios where you might want to update the server only when an input's "change" event happens, such as when a user tabs away from an input or deselects a dropdown option.
 
-```php
-<input type="text" wire:model.debounce.300ms="search">
-```
+In these cases, you can use the `wire:model.lazy` directive, which ensures that data updates are sent to the server only when the input's "change" event occurs. This is particularly useful for real-time form validation scenarios, where you want to validate input data as the user interacts with the form but not send updates on every keystroke.
 
-**Lazy**: Update the property value only when the input element loses focus (e.g., when the user tabs away or clicks outside the input). This is useful for reducing the number of updates during data entry.
+Here's a simple example using a `CreatePost` component with a title input field:
 
 ```php
-<input type="text" wire:model.lazy="email">
+<!-- create-post.blade.php -->
+<input type="text" wire:model.lazy="title">
 ```
 
-### Updated Hooks
+# Debouncing input
 
-Livewire provides updated hooks that allow you to execute actions when a property value changes. To define an updated hook, create a method in your component with the format `updated{PropertyName}`.
+Debouncing an input means delaying the processing of the input's change event until a certain period of time has passed without any additional user input. You can debounce an input using the `wire:model.debounce` directive. This is mostly useful with `wire:model.live` to avoid sending too many network requests:
+
+```php
+<!-- search-posts.blade.php -->
+<input type="text" wire:model.live.debounce.300ms="query">
+<!-- Display search results... -->
+```
+
+# Throttling input
+
+Similar to debouncing, you can also throttle an input to limit the number of times the input's change event is processed within a certain period of time. Use the `wire:model.throttle` directive for throttling:
+
+```php
+<!-- search-posts.blade.php -->
+<input type="text" wire:model.live.throttle.300ms="query">
+<!-- Display search results... -->
+```
+
+# Binding to arrays
+
+Livewire makes it easy to bind inputs to nested values in an array using dot notation. This feature is particularly useful when you need to manage a list of items, like a todo list or a questionnaire, where each item has its own set of properties.
+
+Let's say you have a `TodoList` component that allows users to manage a list of tasks, where each task has a title and a completion status. In this example, we'll represent the tasks as an array of associative arrays, with each task having a `title` and a `completed` property.
+
+Here's the `TodoList` component:
 
 ```php
 use Livewire\Component;
 
-class ExampleComponent extends Component
+class TodoList extends Component
 {
-    public $name;
+    public $tasks = [];
 
-    public function updatedName($newValue)
+    public function addTask()
     {
-        // Perform an action after the name property is updated
+        $this->tasks[] = ['title' => '', 'completed' => false];
     }
 
-    // ...
+    public function save()
+    {
+        // Save tasks to the database or perform other actions...
+    }
+
+    public function render()
+    {
+        return view('livewire.todo-list');
+    }
+}
+
+```
+
+In the `todo-list` Blade template, you can bind each task's `title` and `completed` properties to the corresponding input fields using dot notation:
+
+```html
+<div>
+    @foreach ($tasks as $index => $task)
+        <div>
+            <input type="text" wire:model="tasks.{{ $index }}.title" placeholder="Task title">
+            <input type="checkbox" wire:model="tasks.{{ $index }}.completed">
+        </div>
+    @endforeach
+
+    <button wire:click="addTask">Add Task</button>
+    <button wire:click="save">Save</button>
+</div>
+```
+
+By using dot notation, such as `tasks.{{ $index }}.title`, Livewire can bind the input fields to the nested values in the `$tasks` array. As the user updates the task title or toggles the completion status, the corresponding values in the `$tasks` array are updated accordingly.
+
+When you're ready to save the tasks or perform other actions, you can use the `save` method in your component, which has access to the updated `$tasks` array. This approach allows you to easily manage lists of items with nested properties in your Livewire components.
+
+# Binding to child components
+
+Livewire allows you to two-way bind data between a parent and a child component using the `#[Modelable]` attribute. By adding this attribute to a child component's property, you can use `wire:model` from the parent's Blade template to bind data to the child component.
+
+Consider a `CreatePost` component with a nested child component responsible for handling a specific field in the create post form:
+
+```php
+use Livewire\Component;
+
+class CreatePost extends Component
+{
+    public $title;
+
+    public function render()
+    {
+        return view('livewire.create-post');
+    }
+}
+
+// Child component
+use Livewire\Component;
+
+class ChildComponent extends Component
+{
+    #[Modelable]
+    public $fieldValue;
+
+    public function render()
+    {
+        return view('livewire.child-component');
+    }
 }
 ```
 
-### Nested Properties
-
-You can bind to nested properties within objects or arrays using the dot notation.
-
-```php
-<!-- Bind to a nested object property -->
-<input type="text" wire:model="user.name">
-
-<!-- Bind to a nested array property -->
-<input type="text" wire:model="users.0.name">
-```
-
-### Binding Arrays
-
-Livewire supports binding to array properties. For example, you can bind a series of checkboxes to an array property:
-
-### Binding to Boolean Properties
-
-You can bind to boolean properties using checkboxes or radio buttons. When the input is checked, the property value will be `true`, and when unchecked, it will be `false`.
-
-```php
-<!-- example-component.blade.php -->
-<div>
-    <label><input type="checkbox" wire:model="is_active"> Is Active</label>
-
-</div>
-```
-
-### Using `$wire.set()`
-
-In addition to `wire:model`, you can use the `$wire.set()` method to update a component property from JavaScript. This is useful when you want to set a property value in response to a JavaScript event or interaction.
-
-First, ensure that you have the `@livewireScripts` directive in your layout:
+In the `create-post` Blade template, you can bind data to the child component like this:
 
 ```html
-<!-- layouts/app.blade.php -->
-<!DOCTYPE html>
-<html>
-<head>
-    <!-- ... -->
-</head>
-<body>
-    <!-- ... -->
-    @livewireScripts
-</body>
-</html>
+<div>
+    <input type="text" wire:model="title">
 
+    <livewire:select-author wire:model="author" />
+</div>
 ```
 
-Then, you can use `$wire.set()` in your JavaScript code to update a property value. For example, to update the `name` property when a button is clicked:
+# Intercepting data updates
+
+Livewire provides "updating" and "updated" lifecycle hooks that you can use to validate or perform additional actions before a property is set on the component. For example, you can validate the `title` field of a `CreatePost` component within these hooks:
 
 ```php
-<!-- example-component.blade.php -->
-<div>
-    <button onclick="setName()">Set Name</button>
-    <p>Your name is: {{ $name }}</p>
-</div>
+use Livewire\Component;
 
-<script>
-    function setName() {
-        window.livewire.find('component-id').set('name', 'New Name');
+class CreatePost extends Component
+{
+    public $title;
+
+    public function updatingTitle($value)
+    {
+        // Validate the title value before updating
+        // ...
     }
-</script>
+
+    public function updatedTitle($value)
+    {
+        // Perform additional actions after the title has been updated
+        // ...
+    }
+
+    public function render()
+    {
+        return view('livewire.create-post');
+    }
+}
 ```
 
-Replace `'component-id'` with the actual component ID, which can be accessed using `$this->id` in your Livewire component.
+# Security concerns
+
+It's important to remember that all properties in a Livewire component can be updated from the client-side, even if they don't have a `wire:model` in the template. Therefore, you should treat Livewire properties as untrusted user-input and always validate and authorize data accordingly.
+
+Consider a component that is vulnerable to unauthorized data updates:
+
+```php
+use Livewire\Component;
+
+class VulnerableComponent extends Component
+{
+    public $secret;
+
+    public function render()
+    {
+        return view('livewire.vulnerable-component');
+    }
+}
+```
+
+To fix the vulnerability, you can add validation and authorization checks to ensure that the `secret` property can only be updated by authorized users:
+
+```php
+use Livewire\Component;
+
+class SecureComponent extends Component
+{
+    public $secret;
+
+    public function updatingSecret($value)
+    {
+        // Add authorization and validation checks
+        // ...
+    }
+
+    public function render()
+    {
+        return view('livewire.secure-component');
+    }
+}
+```
+
+By implementing these security measures, you can ensure that your Livewire components handle user-input securely and prevent unauthorized access to sensitive data.
+
