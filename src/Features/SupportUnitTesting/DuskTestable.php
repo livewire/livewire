@@ -24,7 +24,7 @@ class DuskTestable
         on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
             static::$isTestProcess = true;
-            
+
             $tweakApplication = $testCase::tweakApplicationHook();
 
             invade($testCase)->tweakApplication(function () use ($tweakApplication) {

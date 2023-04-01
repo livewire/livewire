@@ -13,7 +13,19 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "actions.md",
+                "file": "events.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "100787b636225541",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "__examples.md",
                 "mode": "source",
                 "source": false
               }
@@ -85,7 +97,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "actions.md",
+                "file": "events.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "actions.md",
+                "file": "events.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,11 +137,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "actions.md"
+                "file": "events.md"
               }
             }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "horizontal",
@@ -148,18 +161,21 @@
   },
   "active": "a098ffe46ee55456",
   "lastOpenFiles": [
-    "properties.md",
+    "Overhauling the event system?.md",
+    "events.md",
+    "hooks.md",
     "actions.md",
+    "properties.md",
+    "Pasted image 20230327160817.png",
+    "data-binding.md",
+    "nesting.md",
+    "__outline.md",
+    "__examples.md",
     "components.md",
     "installation.md",
     "quickstart.md",
-    "__outline.md",
-    "data-binding.md",
-    "events.md",
-    "hooks.md",
     "rules/__rules.md",
     "rules/Casing rules.md",
-    "nesting.md",
     "testing.md",
     "rules/Referencing file names in a sentance.md",
     "rules",

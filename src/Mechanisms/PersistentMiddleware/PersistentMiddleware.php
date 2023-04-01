@@ -4,7 +4,7 @@ namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use function Livewire\on;
 use Illuminate\Http\Response;
-use Illuminate\Routing\Pipeline;
+use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Str;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 

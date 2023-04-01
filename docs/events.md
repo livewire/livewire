@@ -1,47 +1,101 @@
-Livewire provides a powerful event system that allows components to communicate with each other, even if they are not directly related. Events can be used to send data, trigger actions, or notify other components of changes in the application state. In this guide, we will cover the basics of using events in Livewire and explain how to emit and listen for events in your components.
+---
+Title: Events
+Order: 6
+---
 
-## Emitting Events
+```toc
+min_depth: 1
+max_depth: 6
+```
 
-To emit an event from a Livewire component, use the `emit()` method. You can provide an event name and any data you want to send along with the event:
+# Introduction
+
+Livewire offers a powerful event system that you can use to communicate between different components on the page. Because it uses browser events under the hood, you can also use it to communicate with Alpine components or even plain, vanilla JavaScript itself.
+
+To trigger an event, you can use the `dispatch()` method from anywhere inside your component and listen for that event from any other component on the page.
+
+# Dispatching events
+
+To dispatch an event from a Livewire component, you can call the `dispatch()` method, passing it the event name and any additional data you want to send along with the event.
+
+Here's an example of dispatching a "post-created" event from a `CreatePost` component:
 
 ```php
 use Livewire\Component;
 
-class ExampleComponent extends Component
+class CreatePost extends Component
 {
     public function sendData()
     {
-        $data = 'Some data to send';
-        $this->emit('dataSent', $data);
+		$this->dispatch('post-created');
     }
-
-    // ...
 }
 ```
 
-In this example, when the `sendData()` method is called, the `dataSent` event will be emitted, and any component listening for this event will receive the data.
+In this example, when the `dispatch()` method is called, the `post-created` event will be dispatched, and every other component listening on the page will be notified.
 
-## Listening for Events
+You can also pass additional data along with the event like so:
 
-To listen for an event in a Livewire component, define a `listeners` property as an array. The array should have the event name as the key and the method to be called when the event is received as the value:
+```php
+$this->dispatch('post-created', $post->title);
+```
+
+
+# Listening for events
+
+To listen for an event in a Livewire component, add the `#[On]` attribute with the event name above the method you want to be called with the event is dispatched.
 
 ```php
 use Livewire\Component;
 
 class AnotherComponent extends Component
 {
-    protected $listeners = ['dataSent' => 'handleData'];
-
-    public function handleData($receivedData)
+	#[On('post-created')]
+    public function doSomething($title)
     {
-        // Process the data received from the event
+		//
     }
-
-    // ...
 }
 ```
 
-In this example, when the `dataSent` event is emitted, the `handleData()` method in the `AnotherComponent` will be executed, receiving the data sent with the event.
+Now when the `post-created` event is dispatched from another component on the page, this component will pick it up and a network request will be triggered and the `something` action will be run.
+
+Notice, any additional data sent along with the event will be passed through as the first parameter to the `doSomething` method.
+
+# Events in Alpine
+
+Because Livewire events are actually plain browser events under the hood, you can use Alpine to listen for them, or even dispatch them itself.
+
+## Listening for Livewire events in Alpine
+
+To listen for a `post-created` event from Alpine, you would do something like the following:
+
+```html
+<div x-on:post-created=".."></div>
+```
+
+You can access data passed to Alpine using `$event.detail`:
+
+```html
+<div x-on:post-created="$event.detail"></div>
+```
+
+## Dispatching Livewire events from Alpine
+
+Livewire's events system dovtails with Alpine's. So if you're familiar with dispatching custom events from Alpine, this should be completely familiar to you:
+
+```html
+<button @click="$dispatch('post-created')">...</button>
+```
+
+```html
+<button @click="$dispatch('post-created', 'something')">...</button>
+```
+
+## Listening only for child events
+
+Sometimes you may want to constrain a listener to only events dispatched by a child of the Livewire component. In these cases you can use:
+
 
 ## Event Modifiers
 
