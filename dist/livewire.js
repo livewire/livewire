@@ -2371,8 +2371,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs2 = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr22 = /* @__PURE__ */ makeMap2(specialBooleanAttrs2 + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ2 = false ? Object.freeze({}) : {};
-  var EMPTY_ARR2 = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ2 = true ? Object.freeze({}) : {};
+  var EMPTY_ARR2 = true ? Object.freeze([]) : [];
   var extend2 = Object.assign;
   var hasOwnProperty2 = Object.prototype.hasOwnProperty;
   var hasOwn2 = (val, key) => hasOwnProperty2.call(val, key);
@@ -2406,8 +2406,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap2 = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect2;
-  var ITERATE_KEY2 = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY2 = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY2 = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY2 = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2497,7 +2497,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect2)) {
       dep.add(activeEffect2);
       activeEffect2.deps.push(dep);
-      if (false) {
+      if (activeEffect2.options.onTrack) {
         activeEffect2.options.onTrack({
           effect: activeEffect2,
           target,
@@ -2561,7 +2561,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect3) => {
-      if (false) {
+      if (effect3.options.onTrigger) {
         effect3.options.onTrigger({
           effect: effect3,
           target,
@@ -2699,13 +2699,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers2 = {
     get: readonlyGet2,
     set(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2774,7 +2774,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3.call(target, key);
@@ -2793,7 +2793,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw2(key);
       hadKey = has22.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2806,7 +2806,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear3() {
     const target = toRaw2(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger3(target, "clear", void 0, void 0, oldTarget);
@@ -2851,7 +2851,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod2(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize2(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
       }
@@ -2950,6 +2950,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var shallowReadonlyCollectionHandlers = {
     get: createInstrumentationGetter2(true, true)
   };
+  function checkIdentityKeys(target, has22, key) {
+    const rawKey = toRaw2(key);
+    if (rawKey !== key && has22.call(target, rawKey)) {
+      const type = toRawType2(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap2 = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap2 = /* @__PURE__ */ new WeakMap();
   var readonlyMap2 = /* @__PURE__ */ new WeakMap();
@@ -2982,7 +2989,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject2(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject3(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3862,20 +3869,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }, 5);
   }
   async function sendMethodCall() {
-    requestTargetQueue.forEach((request2, symbol) => {
+    requestTargetQueue.forEach((request, symbol) => {
       let target = store2.get(symbol);
       trigger2("request.prepare", target);
     });
     let payload = [];
     let successReceivers = [];
     let failureReceivers = [];
-    requestTargetQueue.forEach((request2, symbol) => {
+    requestTargetQueue.forEach((request, symbol) => {
       let target = store2.get(symbol);
       let propertiesDiff = diff(target.canonical, target.ephemeral);
       let targetPaylaod = {
         snapshot: target.encodedSnapshot,
         updates: propertiesDiff,
-        calls: request2.calls.map((i) => ({
+        calls: request.calls.map((i) => ({
           path: i.path,
           method: i.method,
           params: i.params
@@ -3892,38 +3899,41 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         processEffects(target);
         if (effects["returns"]) {
           let returns = effects["returns"];
-          let returnHandlerStack = request2.calls.map(({ handleReturn }) => handleReturn);
+          let returnHandlerStack = request.calls.map(({ handleReturn }) => handleReturn);
           returnHandlerStack.forEach((handleReturn, index) => {
             handleReturn(returns[index]);
           });
         }
         finishTarget();
-        request2.handleResponse();
+        request.handleResponse();
       });
     });
     requestTargetQueue.clear();
-    let request = await fetch(uri, {
+    let response = await fetch(uri, {
       method: "POST",
       body: JSON.stringify({
         _token: getCsrfToken(),
         components: payload
       }),
-      headers: { "Content-type": "application/json", "X-Synthetic": "" }
+      headers: {
+        "Content-type": "application/json",
+        "X-Synthetic": ""
+      }
     });
-    if (request.ok) {
-      let response = await request.json();
-      for (let i = 0; i < response.length; i++) {
-        let { snapshot, effects } = response[i];
+    let succeed = async (responseContent) => {
+      let response2 = JSON.parse(responseContent);
+      for (let i = 0; i < response2.length; i++) {
+        let { snapshot, effects } = response2[i];
         successReceivers[i](snapshot, effects);
       }
-    } else {
-      let html = await request.text();
-      showHtmlModal(html);
+    };
+    let fail = async () => {
       for (let i = 0; i < failureReceivers.length; i++) {
         failureReceivers[i]();
       }
       let failed = true;
-    }
+    };
+    await handleResponse(response, succeed, fail);
   }
   function getCsrfToken() {
     if (document.querySelector("[data-csrf]")) {
@@ -3934,6 +3944,43 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function processEffects(target) {
     let effects = target.effects;
     trigger2("effects", target, effects);
+  }
+  async function handleResponse(response, succeed, fail) {
+    let content = await response.text();
+    if (response.ok) {
+      if (response.redirected) {
+        window.location.href = response.url;
+      }
+      if (contentIsFromDump(content)) {
+        [dump, content] = splitDumpFromContent(content);
+        showHtmlModal(dump);
+      }
+      return await succeed(content);
+    }
+    let skipDefault = false;
+    trigger2("response.error", response, content, () => skipDefault = true);
+    if (skipDefault)
+      return await fail();
+    if (response.status === 419) {
+      handlePageExpiry();
+      return await fail();
+    }
+    handleFailure(content);
+    await fail();
+  }
+  function contentIsFromDump(content) {
+    return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
+  }
+  function splitDumpFromContent(content) {
+    let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+    return [dump2, content.replace(dump2, "")];
+  }
+  function handlePageExpiry() {
+    confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+  }
+  function handleFailure(content) {
+    let html = content;
+    showHtmlModal(html);
   }
 
   // js/component.js
