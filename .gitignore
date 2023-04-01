@@ -19,3 +19,6 @@ main.zip
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Obsidian files for documentation editin
+docs/.obsidian/workspace.json
