@@ -28,20 +28,29 @@ class SupportPagination extends ComponentHook
         });
     }
 
+    protected $restoreOverriddenPaginationViews;
+
     function boot()
     {
         $this->setPageResolvers();
 
-        /**
-         * Store the default pagination views so they can be restored at the end of a Octane request.
-         */
+        $this->overrideDefaultPaginationViews();
+    }
+
+    function destroy()
+    {
+        ($this->restoreOverriddenPaginationViews)();
+    }
+
+    function overrideDefaultPaginationViews()
+    {
         $oldDefaultView = Paginator::$defaultView;
         $oldDefaultSimpleView = Paginator::$defaultSimpleView;
 
-        on('flush-state', function() use ($oldDefaultView, $oldDefaultSimpleView) {
+        $this->restoreOverriddenPaginationViews = function () use ($oldDefaultView, $oldDefaultSimpleView) {
             Paginator::defaultView($oldDefaultView);
             Paginator::defaultSimpleView($oldDefaultSimpleView);
-        });
+        };
 
         Paginator::defaultView($this->paginationView());
         Paginator::defaultSimpleView($this->paginationSimpleView());
@@ -67,44 +76,29 @@ class SupportPagination extends ComponentHook
     protected function setPageResolvers()
     {
         CursorPaginator::currentCursorResolver(function ($pageName) {
-            $paginators = $this->component->paginators;
-            
-            if (! isset($paginators[$pageName])) {
-                $queryStringDetails = $this->getQueryStringDetails($pageName);
+            $this->ensurePaginatorIsInitialized($pageName, defaultPage: '');
 
-                $paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], '');
-
-                $this->component->paginators = $paginators;
-
-                /**
-                 * As the page name key didn't exist when query string was initialised earlier,
-                 * we need to initalise it now so the page name gets added to the querystring.
-                 */
-                $this->addUrlHook($pageName, $queryStringDetails);
-            }
-
-            return Cursor::fromEncoded($paginators[$pageName]);
+            return Cursor::fromEncoded($this->component->paginators[$pageName]);
         });
 
         Paginator::currentPageResolver(function ($pageName) {
-            $paginators = $this->component->paginators;
+            $this->ensurePaginatorIsInitialized($pageName);
 
-            if (! isset($paginators[$pageName])) {
-                $queryStringDetails = $this->getQueryStringDetails($pageName);
-
-                $paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], 1);
-
-                $this->component->paginators = $paginators;
-
-                /**
-                 * As the page name key didn't exist when query string was initialised earlier,
-                 * we need to initalise it now so the page name gets added to the querystring.
-                 */
-                $this->addUrlHook($pageName, $queryStringDetails);
-            }
-
-            return (int) $paginators[$pageName];
+            return (int) $this->component->paginators[$pageName];
         });
+    }
+
+    protected function ensurePaginatorIsInitialized($pageName, $defaultPage = 1)
+    {
+        if (isset($this->component->paginators[$pageName])) return;
+
+        $queryStringDetails = $this->getQueryStringDetails($pageName);
+
+        $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
+
+        // As the page name key didn't exist when query string was initialised earlier,
+        // we need to initalise it now so the page name gets added to the querystring.
+        $this->addUrlHook($pageName, $queryStringDetails);
     }
 
     protected function getQueryStringDetails($pageName)
