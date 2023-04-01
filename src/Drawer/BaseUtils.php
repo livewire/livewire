@@ -24,8 +24,8 @@ class BaseUtils
         return static::getPublicProperties($target, function ($property) use ($target) {
             // Filter out any properties from the first-party Component class...
             return $property->getDeclaringClass()->getName() !== \Livewire\Component::class
-            // @todo: Find a better way to include this property in snapshot
-            || $property->getName() === 'paginators';
+                // Unless the property is explicitly marked for public consumption...
+                || $target->propertyIsExposed($property->getName());
         });
     }
 

@@ -7,6 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 
 trait InteractsWithProperties
 {
+    protected $exposedProperties = [];
+
+    public function exposeInternalPropertyInSnapshotData($propertyName)
+    {
+        $this->exposedProperties[] = $propertyName;
+    }
+
+    public function propertyIsExposed($property)
+    {
+        return in_array($property, $this->exposedProperties);
+    }
+
     public function hasProperty($prop)
     {
         return property_exists($this, Utils::beforeFirstDot($prop));

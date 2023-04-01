@@ -92,6 +92,10 @@ class SupportPagination extends ComponentHook
     {
         if (isset($this->component->paginators[$pageName])) return;
 
+        if (! $this->component->propertyIsExposed('paginators')) {
+            $this->component->exposeInternalPropertyInSnapshotData('paginators');
+        }
+
         $queryStringDetails = $this->getQueryStringDetails($pageName);
 
         $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
