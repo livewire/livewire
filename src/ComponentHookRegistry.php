@@ -21,6 +21,17 @@ class ComponentHookRegistry
         static::$componentHooks[] = $hook;
     }
 
+    static function getHook($component, $hook)
+    {
+        if (! isset(static::$components[$component])) return;
+
+        $componentHooks = static::$components[$component];
+
+        foreach ($componentHooks as $componentHook) {
+            if ($componentHook instanceof $hook) return $componentHook;
+        }
+    }
+
     static function boot()
     {
         static::$components = new WeakMap;

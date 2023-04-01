@@ -12,6 +12,8 @@ use Livewire\ComponentHook;
 
 class SupportQueryString extends ComponentHook
 {
+    public $queryString;
+
     /**
      * Note: this is support for the legacy syntax...
      */
@@ -31,6 +33,8 @@ class SupportQueryString extends ComponentHook
 
     public function getQueryString()
     {
+        if (isset($this->queryString)) return $this->queryString;
+
         $component = $this->component;
 
         $componentQueryString = [];
@@ -38,7 +42,7 @@ class SupportQueryString extends ComponentHook
         if (method_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString();
         elseif (property_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString;
 
-        return collect(class_uses_recursive($class = $this->component::class))
+        return $this->queryString = collect(class_uses_recursive($class = $component::class))
             ->map(function ($trait) use ($class, $component) {
                 $member = 'queryString' . class_basename($trait);
 

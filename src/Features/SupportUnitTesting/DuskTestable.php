@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportUnitTesting;
 
 use function Livewire\invade;
 use function Livewire\on;
-
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
@@ -25,7 +24,7 @@ class DuskTestable
         on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
             static::$isTestProcess = true;
-            
+
             $tweakApplication = $testCase::tweakApplicationHook();
 
             invade($testCase)->tweakApplication(function () use ($tweakApplication) {

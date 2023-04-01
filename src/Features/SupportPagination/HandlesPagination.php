@@ -1,56 +1,16 @@
 <?php
 
-namespace Livewire;
+namespace Livewire\Features\SupportPagination;
 
-use Illuminate\Pagination\Cursor;
-use Illuminate\Pagination\CursorPaginator;
-use Illuminate\Pagination\Paginator;
-
-trait WithPagination
+trait HandlesPagination
 {
     public $paginators = [];
 
-    protected $numberOfPaginatorsRendered = [];
-
-    public function queryStringWithPagination()
+    public function queryStringHandlesPagination()
     {
         return collect($this->paginators)->mapWithKeys(function ($page, $pageName) {
-            return ['paginators.'.$pageName => ['use' => 'push', 'as' => $pageName]];
+            return ['paginators.'.$pageName => ['use' => 'push', 'as' => $pageName, 'alwaysShow' => false]];
         })->toArray();
-    }
-
-    public function initializeWithPagination()
-    {
-        if (class_exists(CursorPaginator::class)) {
-            CursorPaginator::currentCursorResolver(function ($pageName){
-                if (! isset($this->paginators[$pageName])) {
-                    $this->paginators[$pageName] = request()->query($pageName, '');
-                }
-
-                return Cursor::fromEncoded($this->paginators[$pageName]);
-            });
-        }
-
-        Paginator::currentPageResolver(function ($pageName) {
-            if (! isset($this->paginators[$pageName])) {
-                $this->paginators[$pageName] = request()->query($pageName, 1);
-            }
-
-            return (int) $this->paginators[$pageName];
-        });
-
-        Paginator::defaultView($this->paginationView());
-        Paginator::defaultSimpleView($this->paginationSimpleView());
-    }
-
-    public function paginationView()
-    {
-        return 'livewire::' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
-    }
-
-    public function paginationSimpleView()
-    {
-        return 'livewire::simple-' . (property_exists($this, 'paginationTheme') ? $this->paginationTheme : 'tailwind');
     }
 
     public function previousPage($pageName = 'page')
