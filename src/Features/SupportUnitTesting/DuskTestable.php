@@ -13,6 +13,7 @@ class DuskTestable
     public static $currentTestCase;
     public static $shortCircuitCreateCall = false;
     public static $isTestProcess = false;
+    public static $browser;
 
     static function provide() {
         Route::get('livewire-dusk/{component}', function ($component) {
@@ -38,6 +39,8 @@ class DuskTestable
 
         on('browser.testCase.tearDown', function () {
             static::wipeRuntimeComponentRegistration();
+
+            static::$browser->quit();
 
             static::$currentTestCase = null;
         });
@@ -75,9 +78,9 @@ class DuskTestable
 
         $testCase = invade(static::$currentTestCase);
 
-        $browser = $testCase->newBrowser($testCase->createWebDriver());
+        static::$browser = $testCase->newBrowser($testCase->createWebDriver());
 
-        return $browser->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
+        return static::$browser->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)

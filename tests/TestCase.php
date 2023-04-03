@@ -23,11 +23,6 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
         parent::setUp();
     }
 
-    public function tearDown(): void
-    {
-        parent::tearDown();
-    }
-
     public function makeACleanSlate()
     {
         Artisan::call('view:clear');

@@ -9,7 +9,7 @@ class BrowserTestCase extends TestCase
     public static function tweakApplicationHook() {
         return function () {};
     }
-    
+
     public function setUp(): void
     {
         parent::setUp();
@@ -19,8 +19,8 @@ class BrowserTestCase extends TestCase
 
     public function tearDown(): void
     {
-        parent::tearDown();
-
         trigger('browser.testCase.tearDown', $this);
+
+        parent::tearDown();
     }
 }
