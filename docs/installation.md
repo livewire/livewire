@@ -1,16 +1,4 @@
----
-Title: Installation
-Order: 2
----
-
-```toc
-min_depth: 1
-```
-
-<a name="installation"></a>
-# Installation
-
-Livewire is a Laravel package, so you will need to have a Laravel application up and running before you can install and use Livewire. If you need help setting up a new Laravel application, please see the [official Laravel documentation](https://laravel.com/docs).
+Livewire is a Laravel package, so you will need to have a Laravel application up and running before you can install and use Livewire. If you need help setting up a new Laravel application, please see the [official Laravel documentation](https://laravel.com/docs/installation).
 
 To install Livewire, open your terminal and navigate to your Laravel application directory, then run the following command:
 
@@ -18,12 +6,9 @@ To install Livewire, open your terminal and navigate to your Laravel application
 composer require livewire/livewire
 ```
 
-That's it. Really. If you want more customization options, keeps reading. Otherwise, you can jump right into using Livewire:
+That's it. Really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
-> Creating your first Livewire component
-
-<a name="publishing-config"></a>
-# Publishing the configuration file
+## Publishing the configuration file
 
 Livewire is "zero-config", meaning you can use it by following conventions without any need for special configuration. However, you may still want to customize it further. In those cases, you can publish and customize Livewire's config file by running the following `artisan` command:
 
@@ -33,10 +18,9 @@ php artisan livewire:publish --config
 
 This will create a new `livewire.php` file in your Laravel app under: `config/livewire.php`
 
-<a name="customizing auto-inject"></a>
-# Manually including Livewire's front-end assets
+## Manually including Livewire's front-end assets
 
-By default, Livewire injects the JavaScript and CSS assets it needs onto each page that includes a Livewire component.
+By default, Livewire injects the JavaScript and CSS assets it needs into each page that includes a Livewire component.
 
 If you want more control over this behavior, you can manually include them on a page using the following Blade directives:
 
@@ -61,8 +45,7 @@ If for some reason you want to force Livewire to disable its auto-injecting asse
 'auto_inject_assets': false,
 ```
 
-<a name="custom-update-endpoint"></a>
-# Configuring Livewire's update endpoint
+## Configuring Livewire's update endpoint
 
 Every update in a Livewire component sends a network request to the server using the following endpoint: `your-app.com/livewire/update`
 
@@ -76,8 +59,7 @@ Livewire::setUpdateRoute(function ($handle) {
 });
 ```
 
-<a name="custom-asset-url"></a>
-# Customizing the asset URL
+## Customizing the asset URL
 
 By default, Livewire will serve its JavaScript assets from the following URL: `your-app.com/livewire/livewire.js` and reference them in a script tag like so:
 
@@ -98,8 +80,7 @@ Now, Livewire will use a `<script src` like the following:
 <script src="/acme/livewire.js" ...
 ```
 
-<a name="hosting-assets"></a>
-# Publishing and hosting front-end assets
+## Publishing and hosting front-end assets
 
 If the above options for controlling the JavaScript endpoint aren't enough, you can also publish Livewire's JavaScript assets to your own project and host them yourself using the following command:
 

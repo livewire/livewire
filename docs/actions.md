@@ -1,15 +1,3 @@
----
-Title: Actions
-Order: 5
----
-
-```toc
-min_depth: 1
-max_depth: 6
-```
-
-# Introduction
-
 Livewire actions are methods on your components that can be called from the frontend using event listeners like `wire:click`. They allow you to respond to user interactions and perform operations like updating your component's state. In many ways, you can think of them as the Livewire alternative to a controller method.
 
 Actions provide the developer experience of being able to call a PHP method directly from the browser, which allows you to focus more on the logic of your application and not get bogged down with boilerplate code.
@@ -61,7 +49,7 @@ In the above example, when a user submits the form by clicking "Save", `wire:sub
 
 In essance, Actions are a way to easily map user interactions to server-side functionality without the hastle of submiting and handling AJAX requests manually.
 
-# Event Listeners
+## Event Listeners
 
 Livewire supports a variety of event listeners that allow you to respond to various types of user interaction. Below is a table of common events to listen for:
 
@@ -244,7 +232,7 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 
 `wire:loading` is a powerful feature capable of much more. [Check out the full documentation on it for more info.]
 
-# Passing Parameters
+## Passing Parameters
 
 Livewire allows you to pass parameters from your Blade template to the actions in your component. This enables you to pass additional data or state from the front-end when an action is called.
 
@@ -372,7 +360,7 @@ class ShowPosts extends Component
 
 In this example, the `delete` method receives an instance of `PostRepository` resolved from Laravel's IoC container before receiving the passed in `$postId` parameter after.
 
-# Calling actions from Alpine
+## Calling actions from Alpine
 
 Livewire integrates seemlessly with AlpineJS. In fact, under the hood, every Livewire component is also an AlpineJS component. This means you can take full advantage of AlpineJS within your components to add interactivity that is better suited to the client-side.
 
@@ -411,7 +399,7 @@ You could now call it and receive the actual returned value using `$wire`:
 
 Now, if the `getPostCount` method returns "10", the `<span>` tag will also contain "10".
 
-## JavaScript Functions
+### JavaScript Functions
 
 Sometimes there are actions in your component that don't need to communicate with the server at all and can actually be better written in JavaScript.
 
@@ -462,11 +450,11 @@ class SearchPosts extends Component
 
 In the above example, when the "Reset Search" button is called, the query text input will be cleared without sending a single request to the server.
 
-# Magic actions
+## Magic actions
 
 Livewire provides a set of "magic" actions that allow you to perform common tasks in your components without needing to define custom methods. These magic actions can be used directly in your Blade templates inside event listeners.
 
-## `$set`
+### `$set`
 
 The `$set` magic action allows you to update a property in your Livewire component directly from the Blade template. To use `$set`, specify the property you want to update and the new value as arguments.
 
@@ -476,7 +464,7 @@ The `$set` magic action allows you to update a property in your Livewire compone
 
 In this example, when the button is clicked, a network request is sent, setting the `$query` property in the component to `''`.
 
-## `$refresh`
+### `$refresh`
 
 The `$refresh` action triggers a re-render of your Livewire component. This can be useful when you want to update the component's view without changing any property values.
 
@@ -486,7 +474,7 @@ The `$refresh` action triggers a re-render of your Livewire component. This can 
 
 When the button is clicked, the component will re-render, allowing you to see the latest changes in the view.
 
-## `$toggle`
+### `$toggle`
 
 The `$toggle` magic is used to toggle the value of a boolean property in your Livewire component.
 
@@ -498,7 +486,7 @@ The `$toggle` magic is used to toggle the value of a boolean property in your Li
 
 In this example, when the button is clicked, the `sortAsc` property in the component will toggle between `true` and `false`.
 
-## `$emit`
+### `$emit`
 
 The `$emit` magic allows you to emit a Livewire event purely from the browser. Here's an example of a button that, when clicked, will emit the `post-deleted` event:
 
@@ -506,7 +494,7 @@ The `$emit` magic allows you to emit a Livewire event purely from the browser. H
 <button type="submit" wire:click="$emit('post-deleted')">Delete Post</button>
 ```
 
-## `$event`
+### `$event`
 
 The `$event` magic variable is available for use within event listeners like `wire:click`. It gives you access to the actual JavaScript event that was triggered, allowing you to reference the triggering element and other relevant information.
 
@@ -516,7 +504,7 @@ The `$event` magic variable is available for use within event listeners like `wi
 
 When the enter key is pressed while a user is typing in the input above, the contents of the input will be passed as a parameter to the `search()` action.
 
-## Using magic actions from Alpine
+### Using magic actions from Alpine
 
 You can also call magic actions from AlpineJS using the `$wire` object. For example, here's how you would call the `$refresh` magic action:
 
@@ -524,7 +512,7 @@ You can also call magic actions from AlpineJS using the `$wire` object. For exam
 <button x-on:click="$wire.$refresh()">Refresh</button>
 ```
 
-# Skipping re-renders
+## Skipping re-renders
 
 Sometimes there might be an action in your component that has no side effects that would change the rendered Blade template when it's called. If this is the case, you can skip the `render` portion of Livewire's lifecycle by adding the `#[SkipRender]` attribute above that action method.
 
@@ -606,7 +594,7 @@ class ShowPost extends Component
 }
 ```
 
-# Security Concerns
+## Security Concerns
 
 Keep in mind that any public method in your Livewire component can be called from the client-side. Even without something like `wire:click` directive associated with it, users can still trigger it from the browser's DevTools.
 
@@ -614,7 +602,7 @@ Below are three examples of easy to miss vulnerabilities in Livewire components.
 
 If you are having difficulty spotting the vulnerabilities and that makes you concerned about your ability to keep your own apps secure, remember all these vulnerabilities apply to standard web applications that use requests and controllers. If you use a component method as a proxy for a controller method, and its parameters as a proxy for request input, you should be able to apply your existing knowledge of application security to your Livewire code.
 
-## Always authorize action parameters
+### Always authorize action parameters
 
 Just like controller request input, it's imperitive to authorize action parameters as users can pass any parameters they want.
 
@@ -695,7 +683,7 @@ class ShowPosts extends Component
 }
 ```
 
-## Always authorize server-side
+### Always authorize server-side
 
 Just like with standard Laravel controllers, Livewire actions can be called from any user, even if there isn't an affordance in the UI to do so.
 
@@ -778,7 +766,7 @@ class BrowsePosts extends Component
 
 Now only administrators can ever delete a post from this component because only server-side authorization and validation can be trusted.
 
-## Keep dangerous methods protected or private
+### Keep dangerous methods protected or private
 
 Every public method inside your Livewire component is callable from the client. Even ones you haven't referenced inside a `wire:click` handler. To prevent a user from calling a method that isn't intended to be callable client-side, you should mark them as `protected` or `private`. By doing so, you restrict the visibility of that sensitive method to the component's class and its subclasses, ensuring they cannot be called from the client-side.
 
@@ -871,7 +859,7 @@ class BrowsePosts extends Component
 }
 ```
 
-# Applying middleware
+## Applying middleware
 
 By default, Livewire re-applies authentication and authorization middleware on subsequent requests that were applied on the initial page load request.
 

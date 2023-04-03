@@ -1,10 +1,3 @@
----
-Title: Nesting Components
-Order: 6
----
-
-# Nesting Components
-
 Livewire allows you to nest components, creating a parent-child relationship between them. Nesting components can be helpful in breaking down complex UIs into smaller, more manageable pieces. In this guide, we will walk you through the process of nesting components and discuss how to pass data between parent and child components.
 
 ## Creating Nested Components

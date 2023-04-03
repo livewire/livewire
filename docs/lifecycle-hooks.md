@@ -1,4 +1,4 @@
-Livewire provides a set of lifecycle hooks that allow you to execute code at specific points during a component's lifecycle. These hooks enable you to perform actions before or after specific events, such as rendering or updating properties. In this guide, we will cover the available lifecycle hooks and how to use them in your Livewire components.
+Livewire provides a set of lifecycle hooks that allow you to execute code at specific points during a component's lifecycle. These hooks enable you to perform actions before or after specific events, such as updating properties or rendering the component.
 
 ## Mount
 
@@ -22,7 +22,7 @@ class ExampleComponent extends Component
 
 In this example, the `mount()` method sets the initial value of the `$property` when the component is first initialized.
 
-## Updating Lifecycle Hooks
+## Property update hooks
 
 Livewire provides several hooks that you can use to execute code when a component's properties are updated. These hooks include:
 
@@ -85,16 +85,16 @@ class ExampleComponent extends Component
 
 In this example, the `updatingProperty` and `updatedProperty` methods are called before and after the `$property` is updated, allowing you to perform actions specific to that property.
 
-## Render
+## Rendering
 
-The `render()` method is called every time a Livewire component is rendered. It's where you should define the view to be displayed by your component:
+The `rendering()` method is called every time a Livewire component is rendered. It's where you should define the view to be displayed by your component:
 
 ```php
 use Livewire\Component;
 
 class ExampleComponent extends Component
 {
-    public function render()
+    public function rendering()
     {
         return view('livewire.example-component');
     }

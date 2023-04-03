@@ -153,6 +153,7 @@ Extending
 - Custom wireables
 Package development
 Deployment
+Publishing stubs
 Laravel Echo
 Reference
 

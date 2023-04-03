@@ -1,4 +1,6 @@
 {
   "vimMode": true,
-  "newFileLocation": "current"
+  "newFileLocation": "current",
+  "useTab": false,
+  "tabSize": 4
 }
