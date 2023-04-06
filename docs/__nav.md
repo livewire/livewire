@@ -1,20 +1,24 @@
 ---
 Getting Started:
-    Quickstart:         { uri: /docs/quickstart,      file: /quickstart.md }
-    Installation:       { uri: /docs/installation,    file: /installation.md }
-    Components:         { uri: /docs/components,      file: /components.md }
-    Properties:         { uri: /docs/properties,      file: /properties.md }
-    Actions:            { uri: /docs/actions,         file: /actions.md }
-    Forms:              { uri: /docs/forms,           file: /forms.md }
-    Events:             { uri: /docs/events,          file: /events.md }
-    Lifecycle Hooks:    { uri: /docs/lifecycle-hooks, file: /lifecycle-hooks.md }
-    Nesting Components: { uri: /docs/nesting,         file: /nesting.md }
+    Quickstart: { uri: /docs/quickstart, file: /quickstart.md }
+    Installation: { uri: /docs/installation, file: /installation.md }
+    Components: { uri: /docs/components, file: /components.md }
+    Properties: { uri: /docs/properties, file: /properties.md }
+    Actions: { uri: /docs/actions, file: /actions.md }
+    Forms: { uri: /docs/forms, file: /forms.md }
+    Events: { uri: /docs/events, file: /events.md }
+    Lifecycle Hooks: { uri: /docs/lifecycle-hooks, file: /lifecycle-hooks.md }
+    Nesting Components: { uri: /docs/nesting, file: /nesting.md }
     Testing: { uri: /docs/ }
 Concepts:
     How Livewire Works: { uri: /docs/ }
     Component Hydration: { uri: /docs/ }
     Anatomy Of A Request: { uri: /docs/ }
     DOM diff-patch: { uri: /docs/ }
+UI Components:
+    Dopdown: { uri: /docs/dropdown, file: /dropdown.md }
+    Modal: { uri: /docs/modal, file: /modal.md }
+    Tabs: { uri: /docs/tabs, file: /tabs.md }
 Features:
     SPA Mode: { uri: /docs/foo }
     Lazy Loading: { uri: /docs/foo }
@@ -23,7 +27,7 @@ Features:
     Loading states: { uri: /docs/foo }
     Pagination: { uri: /docs/foo }
     Flash messages: { uri: /docs/foo }
-    Query string: { uri: /docs/foo }
+    Url: { uri: /docs/url, file: /url.md }
     Redirecting: { uri: /docs/foo }
     Polling: { uri: /docs/foo }
     Authorization: { uri: /docs/foo }

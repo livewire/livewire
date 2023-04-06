@@ -1,8 +1,3 @@
----
-Title: Properties
-Order: 4
----
-
 In Livewire, properties are used to store and manage data in your components. They are defined as public properties on component classes and can be accessed and modified both on the server and client side.
 
 ## Initializing properties
@@ -12,6 +7,12 @@ You can set initial values for your properties within the `mount` method because
 Consider the following example:
 
 ```php
+<?php
+
+namespace App\Http\Livewire;
+
+use \Livewire\Component;
+
 class TodoList extends Component
 {
     public $todos = [];
@@ -22,6 +23,8 @@ class TodoList extends Component
     {
         $this->todos = auth()->user()->existingTodos();
     }
+
+    // ...
 }
 ```
 
@@ -34,6 +37,12 @@ Sometimes initializing many properties in the `mount()` method can feel verbose.
 For example:
 
 ```php
+<?php
+
+namespace App\Http\Livewire;
+
+use \Livewire\Component;
+
 class UpdatePost extends Component
 {
 	public $post;
@@ -64,6 +73,12 @@ Livewire supports two-way data binding through an HTML attribute called `wire:mo
 Here's a basic example of using `wire:model` to bind the `todo` property in an `TodoList` component to a basic input element. 
 
 ```php
+<?php
+
+namespace App\Http\Livewire;
+
+use \Livewire\Component;
+
 class TodoList extends Component
 {
 	public $todos = [];
@@ -109,6 +124,12 @@ Sometimes, you may need to reset your properties back to their initial state aft
 Below is an example where we can avoid code duplication using `$this->reset()` to reset the `todo` field after the "Add Todo" button is clicked:
 
 ```php
+<?php
+
+namespace App\Http\Livewire;
+
+use \Livewire\Component;
+
 class ManageTodos extends Controller
 {
 	public $todos = [];
@@ -351,6 +372,12 @@ In short, always treat public properties as user input, as if they were request 
 To demonstrate how neglecting to authorize and validate properties can introduce security holes in your application, the following `UpdatePost` component is vulnerable to attack:
 
 ```php
+<?php
+
+namespace App\Http\Livewire;
+
+use \Livewire\Component;
+
 class UpdatePost extends Component
 {
     public $id;
@@ -455,6 +482,12 @@ By using `#[Locked]` you are safe to assume this property has not been manipulat
 As an added note, if instead of storing the `$id` as string property, you stored the entire `Post` model to a property called `$post`, Livewire will automatically lock the property and ensure the ID isn't changed so that you are safe from these kinds of attacks:
 
 ```php
+<?php
+
+namespace App\Http\Livewire;
+
+use \Livewire\Component;
+
 class UpdatePost extends Component
 {
     public Post $post;
@@ -538,6 +571,12 @@ Getters are useful for Eloquent queries with constraints that won't be persisted
 For example, if we wanted to get all the todos for a user, but only select the "title" field from the database, that select conststraint won't be re-applied between requests if we set the result to a property called `$todos`. Instead, we can return the query results from a getter and ensure the constraint is applied on each subsequent request:
 
 ```php
+<?php
+
+namespace App\Http\Livewire;
+
+use \Livewire\Component;
+
 class ShowTodos extends Component
 {
 	#[Getter]
@@ -569,6 +608,12 @@ class ShowTodos extends Component
 You can also access `$todos` from inside your class for example if you had a "markAllAsComplete" action:
 
 ```php
+<?php
+
+namespace App\Http\Livewire;
+
+use \Livewire\Component;
+
 class ShowTodos extends Component
 {
 	#[Getter]

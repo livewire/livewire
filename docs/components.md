@@ -52,6 +52,10 @@ The second will be the component's Blade view: `resources/views/livewire/create-
 If your component is fairly small, you may instead want to create an "inline" component. Inline components are single-file Livewire components who's view template is contained directly in the `render` method, rather than a separate file:
 
 ```php
+<?php
+
+namespace App\Http\Livewire;
+
 use \Livewire\Component;
 
 class CreatePost extends Component
@@ -84,6 +88,8 @@ Livewire components have properties that store data and can be easily accessed w
 To add a property to a Livewire component, declare a public property in your component class. For example, let's create a property called `title` in the `CreatePost` component:
 
 ```php
+<?php
+
 namespace App\Http\Livewire;
 
 use Livewire\Component;
@@ -126,6 +132,8 @@ In addition to accessing properties from the view, you can also explicitly pass 
 To pass data to the view in the `render()` method, you can use the `with()` method on the view instance. For example, let's say you want to pass the post author's name, in this case the currently logged user, to the view: 
 
 ```php
+<?php
+
 namespace App\Http\Livewire;
 
 use Livewire\Component;
@@ -172,6 +180,8 @@ Now, any changes made to the text input will be automatically synchronized with 
 Actions are methods within your Livewire component that handle user interactions or perform specific tasks. In this section, we'll demonstrate how to call a `save` action in the `CreatePost` component.
 
 ```php
+<?php
+
 namespace App\Http\Livewire;
 
 use Livewire\Component;
@@ -251,6 +261,8 @@ If you need to pass dynamic values instead, you can use the following syntax:
 This data is passed as parameters through the `mount()` method. You might access the `title` value and assign it to a property like so:
 
 ```php
+<?php
+
 namespace App\Http\Livewire;
 
 use Livewire\Component;
@@ -324,6 +336,8 @@ With the above configuration, Livewire will render full-page compoents inside th
 To use a different layout for a specific component, you can use Livewire's `#[Layout]` attribute above the `render()` method and pass it the relative view path of your custom layout:
 
 ```php
+<?php
+
 namespace App\Http\Livewire;
 
 use Livewire\Component;
@@ -373,8 +387,8 @@ To set a custom page title for a full-page component, first, update your layout 
 Now, above your Livewire component's `render()` method, add the `#[Title]` attribute and pass it your page title.
 
 ```php
+<?php
 
-```php
 namespace App\Http\Livewire;
 
 use Livewire\Component;
@@ -422,6 +436,8 @@ Here, we've defined a route that includes an `id` parameter, which represents a 
 Next, update your Livewire component to accept the route parameter in the `mount()` method:
 
 ```php
+<?php
+
 namespace App\Http\Livewire;
 
 use App\Models\Post;
@@ -462,6 +478,8 @@ Route::get('/post/{post}', ShowPost::class);
 You can now accept the route model parameter through the `mount()` method of your component:
 
 ```php
+<?php
+
 namespace App\Http\Livewire;
 
 use App\Models\Post;
