@@ -40,11 +40,11 @@ class ComponentHookRegistry
             on('mount', function ($component, $params, $parent) use ($hook) {
                 $hook = static::initializeHook($hook, $component);
                 $hook->callBoot();
-                $hook->callMount($params, $parent, $parent);
+                $hook->callMount($params, $parent);
             });
 
-            on('hydrate', function ($target, $memo) use ($hook) {
-                $hook = static::initializeHook($hook, $target);
+            on('hydrate', function ($component, $memo) use ($hook) {
+                $hook = static::initializeHook($hook, $component);
                 $hook->callBoot();
                 $hook->callHydrate($memo);
             });

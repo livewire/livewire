@@ -16,7 +16,7 @@ class SupportAutoInjectedAssets extends ComponentHook
     {
         app('events')->listen(RequestHandled::class, function ($handled) {
             if (! str($handled->response->headers->get('content-type'))->contains('text/html')) return;
-            if ($handled->response->status() !== 200) return;
+            if (! method_exists($handled->response, 'status') || $handled->response->status() !== 200) return;
             if (! static::$hasRenderedAComponentThisRequest) return;
             if (app(FrontendAssets::class)->hasRenderedScripts) return;
 

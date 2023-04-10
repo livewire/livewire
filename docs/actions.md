@@ -454,6 +454,16 @@ In the above example, when the "Reset Search" button is called, the query text i
 
 Livewire provides a set of "magic" actions that allow you to perform common tasks in your components without needing to define custom methods. These magic actions can be used directly in your Blade templates inside event listeners.
 
+### `$parent`
+
+The `$parent` magic variable allows you to access parent component properties and call parent component actions from a child component.
+
+```html
+<button wire:click="$parent.removePost({{ $post->id }})">Remove</button>
+```
+
+In the above example, if a parent component has a `removePost` action, a child can call it directly from its Blade template using `$parent.removePost`.
+
 ### `$set`
 
 The `$set` magic action allows you to update a property in your Livewire component directly from the Blade template. To use `$set`, specify the property you want to update and the new value as arguments.

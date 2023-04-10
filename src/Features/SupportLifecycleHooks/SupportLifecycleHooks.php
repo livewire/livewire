@@ -99,12 +99,12 @@ class SupportLifecycleHooks extends ComponentHook
         );
     }
 
-    public function render($view)
+    public function render($view, $data)
     {
-        $this->callTraitHook('rendering');
+        $this->callTraitHook('rendering', ['view' => $view, 'data' => $data]);
 
-        return function () use ($view) {
-            $this->callTraitHook('rendered', ['view' => $view]);
+        return function ($html) use ($view) {
+            $this->callTraitHook('rendered', ['view' => $view, 'html' => $html]);
         };
     }
 

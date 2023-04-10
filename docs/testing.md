@@ -1,132 +1,424 @@
-Testing is a critical aspect of developing robust and maintainable applications. Livewire components can be tested similarly to other parts of your Laravel application, using the convenient tools provided by the Laravel testing framework. In this guide, we will cover how to write tests for your Livewire components, including testing actions, properties, events, and more.
 
-## Getting Started
+## Creating your first test
 
-To get started with testing Livewire components, you'll need to set up a test class that extends the `Livewire\LivewireComponentTestCase` class. This class provides a base for testing Livewire components and includes various helper methods to make testing easier.
-
-Create a new test file for your Livewire component in the `tests/Feature` directory. For example, if you have a `Counter` component, you can create a `CounterTest` class in the `tests/Feature/CounterTest.php` file:
-
-```php
-use Livewire\Livewire;
-use App\Http\Livewire\Counter;
-
-class CounterTest extends Livewire\LivewireComponentTestCase
-{
-    // Your tests will go here
-}
+```shell
+artisan make:livewire create-post --test
 ```
 
-Now that you have your test class set up, you can start writing tests for your Livewire component.
-
-## Testing Component Rendering
-
-To test that your Livewire component renders correctly, you can use the `testLivewire()` method provided by the `Livewire\LivewireComponentTestCase` class. This method allows you to create a new instance of your component and assert that it contains specific content:
-
 ```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
 use Livewire\Livewire;
-use App\Http\Livewire\Counter;
+use Tests\TestCase;
 
-class CounterTest extends Livewire\LivewireComponentTestCase
+class CreatePostTest extends TestCase
 {
-    public function testComponentRenders()
+    /** @test */
+    public function the_component_renders()
     {
-        $component = Livewire::test(Counter::class);
-
-        $component->assertSee('Hello, Livewire!');
+        Livewire::test(CreatePost::class)
+            ->assertStatus(200);
     }
 }
 ```
 
-In this example, we're testing that the `Counter` component renders the text "Hello, Livewire!".
-
-## Testing Actions
-
-You can test the actions of your Livewire components using the `call()` method. This method allows you to call a specific action on your component and assert the resulting state of your component:
+## Testing existance of a component
 
 ```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
 use Livewire\Livewire;
-use App\Http\Livewire\Counter;
+use Tests\TestCase;
 
-class CounterTest extends Livewire\LivewireComponentTestCase
+class CreatePostTest extends TestCase
 {
-    public function testIncrementAction()
+    /** @test */
+    public function create_post_page_contains_component()
     {
-        $component = Livewire::test(Counter::class);
-
-        $component->call('increment');
-
-        $component->assertSet('count', 1);
+        $this->get('/post/create')
+            ->assertSeeLivewire(CreatePost::class);
     }
 }
 ```
 
-In this example, we're testing that the `increment` action of the `Counter` component updates the `count` property to 1.
 
-## Testing Properties
-
-To test the properties of your Livewire components, you can use the `set()` and `assertSet()` methods. These methods allow you to set a property value and assert that the property has the expected value:
+## Asserting properties
 
 ```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
 use Livewire\Livewire;
-use App\Http\Livewire\Counter;
+use Tests\TestCase;
 
-class CounterTest extends Livewire\LivewireComponentTestCase
+class CreatePostTest extends TestCase
 {
-    public function testSetCountProperty()
+    /** @test */
+    public function initial_properties_are_set()
     {
-        $component = Livewire::test(Counter::class);
-
-        $component->set('count', 5);
-
-        $component->assertSet('count', 5);
+        Livewire::test(CreatePost::class)
+            ->assertSet('title', '')
+            ->assertSet('content', '');
     }
 }
 ```
 
-In this example, we're testing that the `count` property of the `Counter` component can be set and has the expected value.
 
-## Testing Events
-
-You can test the events emitted by your Livewire components using the `assertEmitted()` method. This method allows you to assert that a specific event was emitted during the component's lifecycle:
+### Setting URL parameters
 
 ```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\SearchPosts;
 use Livewire\Livewire;
-use App\Http\Livewire\Counter;
+use Tests\TestCase;
 
-class CounterTest extends Livewire\LivewireComponentTestCase { public function testEventEmitted() { $component = Livewire::test(Counter::class);
-    $component->call('increment');
-
-    $component->assertEmitted('counterIncremented');
-}
-
-```
-
-
-In this example, we're testing that the `counterIncremented` event is emitted when the `increment` action is called on the `Counter` component.
-
-## Testing Validation
-
-To test validation rules in your Livewire components, you can use the `assertHasErrors()` and `assertHasNoErrors()` methods. These methods allow you to assert that specific properties have validation errors or that the component has no validation errors:
-
-```php
-use Livewire\Livewire;
-use App\Http\Livewire\ExampleForm;
-
-class ExampleFormTest extends Livewire\LivewireComponentTestCase
+class SearchPostsTest extends TestCase
 {
-    public function testFormValidation()
+    /** @test */
+    public function can_search_posts_via_url_query_string()
     {
-        $component = Livewire::test(ExampleForm::class);
-
-        $component->set('email', 'not-an-email');
-
-        $component->call('submit');
-
-        $component->assertHasErrors(['email'])
-                  ->assertHasNoErrors(['name']);
+        Livewire::withUrlParams(['search' => 'A dog went walking'])
+            ->test(SearchPosts::class);
     }
 }
 ```
 
-In this example, we're testing that the `email` property of the `ExampleForm` component has validation errors and that the `name` property does not.
+```php
+<?php
+
+namespace App\Http\Livewire;
+
+use Livewire\Component;
+use Livewire\With\Url;
+use App\Models\Post;
+
+class SearchPosts extends Component
+{
+    #[Url]
+    public $search = '';
+
+    public function render()
+    {
+        return view('livewire.search-posts', [
+            'posts' => Post::search($this->search)->get(),
+        ]);
+    }
+}
+```
+
+### Passing in properties
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\UpdatePost;
+use Livewire\Livewire;
+use App\Models\Post;
+use Tests\TestCase;
+
+class UpdatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        $post = Post::factory()->make();
+
+        Livewire::test(UpdatePost::class, ['post' => $post])
+            ->assertSet('title', '')
+            ->assertSet('content', '');
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Http\Livewire;
+
+use Livewire\Component;
+
+class UpdatePost extends Component
+{
+	public Post $post;
+
+	public function mount(Post $post)
+	{
+		$this->post = $post;
+	}
+
+	// ...
+}
+```
+
+## Asserting seeing
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        $post = Post::factory()->make(['title' => 'Test post']);
+
+        Livewire::test(ShowPost::class, ['post' => $post])
+            ->assertSee('Test post');
+    }
+}
+```
+
+## Setting properties
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        Livewire::test(CreatePost::class)
+            ->set('title', 'Foo')
+            ->set('content', 'Bar');
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Http\Livewire;
+
+use Livewire\Component;
+
+class CreatePost extends Component
+{
+	public $title = '';
+
+    public $content = '';
+
+    public function save()
+    {
+        Post::create([
+            'title' => $this->title,
+            'content' => $this->content,
+        ]);
+
+        return $this->redirect(ShowPosts::class);
+    }
+
+    public function render()
+    {
+        return view(livewire.create-post);
+    }
+}
+```
+
+## Calling actions
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        Livewire::test(CreatePost::class)
+            ->set('title', 'Foo')
+            ->set('content', 'Bar')
+            ->call('save');
+    }
+}
+```
+
+## Testing validation
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        Livewire::test(CreatePost::class)
+            ->set('title', 'Foo')
+            ->set('content', 'Bar')
+            ->call('save')
+            ->assertHasErrors('title');
+    }
+}
+```
+
+## Testing authorization
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        Livewire::test(CreatePost::class)
+            ->set('title', 'Foo')
+            ->set('content', 'Bar')
+            ->call('save')
+            ->assertUnauthorized();
+->assertStatus(403); // or...
+    }
+}
+```
+
+## Asserting redirect
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        Livewire::test(CreatePost::class)
+            ->set('title', 'Foo')
+            ->set('content', 'Bar')
+            ->call('save')
+            ->assertRedirect('/create-post');
+            ->assertRedirect(CreatePost::class); // or...
+    }
+}
+```
+
+## Dispatching events
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        Livewire::test(CreatePost::class)
+            ->set('title', 'Foo')
+            ->set('content', 'Bar')
+            ->call('save')
+            ->assertDispatched('post-created');
+    }
+}
+```
+
+## Listening for events
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        Livewire::test(CreatePostNotification::class)
+            ->dispatch('post-created')
+            ->assertSee('something');
+    }
+}
+```
+
+## Asserting data from the view
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Http\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function create_post_page_contains_component()
+    {
+        $post = Post::create(['title' => 'foo']);
+
+        Livewire::test(ShowPosts::class)
+            ->assertViewHas('posts', function ($posts) {
+                $this->assertEquals(Post::count(), $posts->count());
+            });
+    }
+}
+```
+
+
+## All available testing utilties
+
+// table of methods
+
+// table of assertions
 

@@ -149,6 +149,15 @@ class ManageTodos extends Controller
 
 In the above example, after a user clicks "Add Todo", the input field holding the todo that has just been added will clear, allowing them to write a new one.
 
+As an added convenience, the `reset()` method returns the property value before reset so you can use it directly inline:
+
+```php
+public function addTodo()
+{
+    $this->todos[] = $this->reset('todo');
+}
+```
+
 ## Supported property types
 
 Livewire supports a limited set of property types because of its unique way of managing component data, which involves hydration and dehydration.

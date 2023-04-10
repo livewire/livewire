@@ -12,6 +12,7 @@ Getting Started:
     Testing: { uri: /docs/ }
 Concepts:
     How Livewire Works: { uri: /docs/ }
+    Understanding Nested Components: { uri: /docs/ }
     Component Hydration: { uri: /docs/ }
     Anatomy Of A Request: { uri: /docs/ }
     DOM diff-patch: { uri: /docs/ }
@@ -21,7 +22,7 @@ UI Components:
     Tabs: { uri: /docs/tabs, file: /tabs.md }
 Features:
     SPA Mode: { uri: /docs/foo }
-    Lazy Loading: { uri: /docs/foo }
+    Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
     Validation: { uri: /docs/foo }
     File Uploads: { uri: /docs/foo }
     Loading states: { uri: /docs/foo }

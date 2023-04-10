@@ -123,6 +123,9 @@ class AnotherComponent extends Component
 
 Now, the `doSomething` action will only be triggered when a child component dispatches `post-created`.
 
+> [!tip] You might not need events
+> If you are using events to call behavior on a parent from a child directly, you can instead call the action directly from the child using `$parent` in your Blade template. [Read more about this technique here.](todo)
+
 ## Dispatching directly to another component
 
 If you want to use events for communicating directly between two components on the page you can use the `dispatch()->to()` modifier.

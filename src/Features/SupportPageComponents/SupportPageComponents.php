@@ -152,28 +152,38 @@ class SupportPageComponents extends ComponentHook
 
     static function renderContentsIntoLayout($content, $layoutConfig)
     {
-        if ($layoutConfig['type'] === 'component') {
-            return Blade::render(<<<'HTML'
-                @component($layout['view'], $layout['params'])
-                    @slot($layout['slotOrSection'])
-                        {!! $content !!}
-                    @endslot
-                @endcomponent
-            HTML, [
-                'content' => $content,
-                'layout' => $layoutConfig,
-            ]);
-        } else {
-            return Blade::render(<<<'HTML'
-                @extends($layout['view'], $layout['params'])
+        try {
+            if ($layoutConfig['type'] === 'component') {
+                return Blade::render(<<<'HTML'
+                    @component($layout['view'], $layout['params'])
+                        @slot($layout['slotOrSection'])
+                            {!! $content !!}
+                        @endslot
+                    @endcomponent
+                HTML, [
+                    'content' => $content,
+                    'layout' => $layoutConfig,
+                ]);
+            } else {
+                return Blade::render(<<<'HTML'
+                    @extends($layout['view'], $layout['params'])
 
-                @section($layout['slotOrSection'])
-                    {!! $content !!}
-                @endsection
-            HTML, [
-                'content' => $content,
-                'layout' => $layoutConfig,
-            ]);
+                    @section($layout['slotOrSection'])
+                        {!! $content !!}
+                    @endsection
+                HTML, [
+                    'content' => $content,
+                    'layout' => $layoutConfig,
+                ]);
+            }
+        } catch (\Illuminate\View\ViewException $e) {
+            $layout = $layoutConfig['view'];
+
+            if (str($e->getMessage())->startsWith('View ['.$layout.'] not found.')) {
+                throw new MissingLayoutException($layout);
+            } else {
+                throw $e;
+            }
         }
     }
 }
