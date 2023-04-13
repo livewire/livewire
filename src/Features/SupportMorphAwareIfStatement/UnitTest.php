@@ -66,6 +66,27 @@ class UnitTest extends \Tests\TestCase
         $this->assertOccurrences(2, '__ENDBLOCK__', $output);
     }
 
+    /** @test */
+    public function it_still_adds_conditional_markers_if_there_is_a_blade_expression_before_it_that_contains_a_less_than_symbol()
+    {
+        $output = $this->compile(<<<'HTML'
+        <div>
+            {{ 1 < 5 ? "true" : "false" }}
+            
+            @foreach(range(1,4) as $key => $value)
+                {{ $key }}="{{ $value }}"
+            @endforeach
+
+            @foreach(range(1,4) as $key => $value)
+                {{ $key }}="{{ $value }}"
+            @endforeach
+        </div>
+        HTML);
+
+        $this->assertOccurrences(2, '__BLOCK__', $output);
+        $this->assertOccurrences(2, '__ENDBLOCK__', $output);
+    }
+
     protected function compile($string)
     {
         $precompile = function ($pattern, $handler) {
