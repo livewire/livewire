@@ -125,7 +125,7 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->storage->delete($this->path);
     }
 
-    public function storeAs($path, $name, $options = [])
+    public function storeAs($path, $name = null, $options = [])
     {
         $options = $this->parseOptions($options);
 

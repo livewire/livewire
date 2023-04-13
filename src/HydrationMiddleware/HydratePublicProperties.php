@@ -21,6 +21,7 @@ use Carbon\Carbon;
 use DateTime;
 use DateTimeInterface;
 use stdClass;
+use Normalizer;
 
 class HydratePublicProperties implements HydrationMiddleware
 {
@@ -94,13 +95,16 @@ class HydratePublicProperties implements HydrationMiddleware
         array_walk($publicData, function ($value, $key) use ($instance, $response) {
             if (
                 // The value is a supported type, set it in the data, if not, throw an exception for the user.
-                is_bool($value) || is_null($value) || is_array($value) || is_numeric($value)
+                is_bool($value) || is_null($value) || is_numeric($value)
             ) {
                 data_set($response, 'memo.data.'.$key, $value);
+            } else if(is_array($value)) {
+                // The data here needs to be normalised, so that Safari handles special charaters properly without throwing a checksum exception.
+                data_set($response, 'memo.data.'.$key, static::normalizeArray($value));
             } else if(is_string($value)) {
-                data_set($response, 'memo.data.'.$key, \Normalizer::normalize($value));
-            }
-              else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
+                // The data here needs to be normalised, so that Safari handles special charaters properly without throwing a checksum exception.
+                data_set($response, 'memo.data.'.$key, Normalizer::normalize($value));
+            } else if ($value instanceof Wireable && version_compare(PHP_VERSION, '7.4', '>=')) {
                 $response->memo['dataMeta']['wireables'][] = $key;
 
                 data_set($response, 'memo.data.'.$key, $value->toLivewire());
@@ -111,7 +115,8 @@ class HydratePublicProperties implements HydrationMiddleware
             } else if ($value instanceof Collection) {
                 $response->memo['dataMeta']['collections'][] = $key;
 
-                data_set($response, 'memo.data.'.$key, $value->toArray());
+                // The data here needs to be normalised, so that Safari handles special charaters properly without throwing a checksum exception.
+                data_set($response, 'memo.data.'.$key, static::normalizeCollection($value)->toArray());
             } else if ($value instanceof DateTimeInterface) {
                 if ($value instanceof IlluminateCarbon) {
                     $response->memo['dataMeta']['dates'][$key] = 'illuminate';
@@ -316,5 +321,43 @@ class HydratePublicProperties implements HydrationMiddleware
         }
 
         return $filteredData;
+    }
+
+    protected static function normalizeArray($value)
+    {
+        return array_map(function ($item) {
+            if (is_string($item)) {
+                return Normalizer::normalize($item);
+            }
+
+            if (is_array($item)) {
+                return static::normalizeArray($item);
+            }
+
+            if ($item instanceof Collection) {
+                return static::normalizeCollection($item);
+            }
+
+            return $item;
+        }, $value);
+    }
+
+    protected static function normalizeCollection($value)
+    {
+        return $value->map(function ($item) {
+            if (is_string($item)) {
+                return Normalizer::normalize($item);
+            }
+
+            if (is_array($item)) {
+                return static::normalizeArray($item);
+            }
+
+            if ($item instanceof Collection) {
+                return static::normalizeCollection($item);
+            }
+
+            return $item;
+        });
     }
 }

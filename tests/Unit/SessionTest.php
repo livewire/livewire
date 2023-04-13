@@ -42,7 +42,7 @@ class SessionTest extends TestCase
         $this->assertTrue($request->hasSession());
         $this->assertInstanceOf(Store::class, $request->session());
 
-        Str::startsWith($this->app->version(), '9.')
+        version_compare($this->app->version(), '9', '>=')
             ? $this->assertInstanceOf(SessionInterface::class, $request->getSession())
             : $this->assertInstanceOf(Store::class, $request->getSession());
     }

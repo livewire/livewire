@@ -11,6 +11,7 @@ class Component extends BaseComponent
     public $bar = '';
     public $baz = '';
     public $bob = '';
+    public $ted = '';
 
     public function render()
     {

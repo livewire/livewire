@@ -11,7 +11,7 @@ class S3CleanupCommand extends Command
 {
     protected $signature = 'livewire:configure-s3-upload-cleanup';
 
-    protected $description = 'Configure temporary file upload s3 directory to automatically cleanup files older than 24hrs.';
+    protected $description = 'Configure temporary file upload s3 directory to automatically cleanup files older than 24hrs';
 
     public function handle()
     {

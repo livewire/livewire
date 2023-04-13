@@ -53,6 +53,26 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@dummy')
                 ->pause(25)
                 ->assertMissing('@bob.target')
+
+                /**
+                 * multiple wire:dirty directives on a single element
+                 */
+                ->assertSourceMissing(' class="ted-dirty"')
+                ->assertSourceHas(' class="ted-clean"')
+                ->assertSourceMissing(' data-ted-dirty')
+                ->assertSourceHas(' data-ted-clean')
+                ->type('@ted.input', 'baz')
+                ->assertSourceHas(' class="ted-dirty"')
+                ->assertSourceMissing(' class="ted-clean"')
+                ->assertSourceHas(' data-ted-dirty')
+                ->assertSourceMissing(' data-ted-clean')
+                ->pause(150)
+                ->waitForLivewire()->click('@dummy')
+                ->pause(25)
+                ->assertSourceMissing(' class="ted-dirty"')
+                ->assertSourceHas(' class="ted-clean"')
+                ->assertSourceMissing(' data-ted-dirty')
+                ->assertSourceHas(' data-ted-clean')
             ;
         });
     }
