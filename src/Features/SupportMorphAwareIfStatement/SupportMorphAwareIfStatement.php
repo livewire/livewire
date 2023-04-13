@@ -20,10 +20,11 @@ class SupportMorphAwareIfStatement extends ComponentHook
         $foreach = '\B@(@?foreach(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?';
         $endforeach = '@endforeach';
 
-        $hasClosingTagBefore = '>[^<]*';
+        $hasOpeningTagBefore = '<[^>]*';
         $hasOpeningTagAfter = '[^>]*<';
+        $openingTagIsInBladeExpression = '{(?>{|!!)[^}]*<[^}]*(?>}|!!)}';
 
-        $precompile('/'.$hasClosingTagBefore.$if.'/x', function ($matches) {
+        $precompile('/(?:'.$hasOpeningTagBefore.$if.')(*SKIP)(*F)|'.$if.'/x', function ($matches) {
             [$beforeIf, $afterIf] = explode('@if', $matches[0]);
 
             return $beforeIf.'<!-- __BLOCK__ -->@if'.$afterIf;
@@ -35,7 +36,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
             return $before.'@endif <!-- __ENDBLOCK__ -->'.$after;
         });
 
-        $precompile('/'.$hasClosingTagBefore.$foreach.'/x', function ($matches) {
+        $precompile('/(?:'.$hasOpeningTagBefore.$foreach.')(*SKIP)(*F)|'.$foreach.'/x', function ($matches) {
             [$beforeIf, $afterIf] = explode('@foreach', $matches[0]);
 
             return $beforeIf.'<!-- __BLOCK__ -->@foreach'.$afterIf;
