@@ -12,6 +12,7 @@ class LivewireManager
     protected $listeners = [];
     protected $componentAliases = [];
     protected $queryParamsForTesting = [];
+    protected $missingComponentResolvers = [];
 
     protected $shouldDisableBackButtonCache = false;
 
@@ -27,7 +28,7 @@ class LivewireManager
     ];
 
     public static $isLivewireRequestTestingOverride = false;
-    
+
     public static $currentCompilingViewPath;
     public static $currentCompilingChildCounter;
 
@@ -36,6 +37,10 @@ class LivewireManager
         if (is_null($viewClass)) {
             $viewClass = $alias;
             $alias = $viewClass::getName();
+        }
+
+        if (is_object($viewClass)) {
+            $viewClass = get_class($viewClass);
         }
 
         $this->componentAliases[$alias] = $viewClass;
@@ -53,6 +58,11 @@ class LivewireManager
         return $this->componentAliases;
     }
 
+    public function resolveMissingComponent($resolver)
+    {
+        $this->missingComponentResolvers[] = $resolver;
+    }
+
     public function getClass($alias)
     {
         $finder = app(LivewireComponentsFinder::class);
@@ -65,6 +75,19 @@ class LivewireManager
             // If not, we'll look in the auto-discovery manifest.
             $this->componentAliases[$alias] ?? $finder->find($alias)
         );
+
+        if (! $class) {
+            // If we haven't found the component through the normal channels
+            // we'll look through user-land missing-component JIT hooks...
+            foreach ($this->missingComponentResolvers as $resolve) {
+                if ($resolved = $resolve($alias)) {
+                    $this->component($alias, $resolved);
+
+                    $class = $this->componentAliases[$alias];
+                    break;
+                }
+            }
+        }
 
         $class = $class ?: (
             // If none of the above worked, our last-ditch effort will be
@@ -342,7 +365,7 @@ HTML;
 
         if (! $route) return false;
 
-        return $route->named('livewire.message');
+        return $route->named('livewire.message') || $route->named('livewire.message-localized');
     }
 
     public function isProbablyLivewireRequest()
@@ -462,7 +485,7 @@ HTML;
         static::$isLivewireRequestTestingOverride = false;
         static::$currentCompilingChildCounter = null;
         static::$currentCompilingViewPath = null;
-        
+
         $this->shouldDisableBackButtonCache = false;
 
         $this->dispatch('flush-state');

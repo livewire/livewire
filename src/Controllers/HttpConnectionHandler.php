@@ -2,6 +2,7 @@
 
 namespace Livewire\Controllers;
 
+use Illuminate\Http\Response;
 use Livewire\Livewire;
 use Illuminate\Support\Str;
 use Illuminate\Pipeline\Pipeline;
@@ -75,7 +76,7 @@ class HttpConnectionHandler extends ConnectionHandler
             ->send($request)
             ->through($filteredMiddleware)
             ->then(function() {
-                return response()->noContent();
+                return new Response();
             });
     }
 
