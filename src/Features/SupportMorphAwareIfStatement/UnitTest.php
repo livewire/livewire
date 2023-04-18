@@ -3,9 +3,6 @@
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Livewire\Livewire;
-use Livewire\Component;
-use Laravel\Dusk\Browser;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Blade;
 
 class UnitTest extends \Tests\TestCase
