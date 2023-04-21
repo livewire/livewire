@@ -3,13 +3,24 @@ import store from '@/Store'
 
 export default function () {
     window.addEventListener('livewire:load', () => {
-        if (! window.Alpine) return
+        const supportAlpine = () => {
+            refreshAlpineAfterEveryLivewireRequest()
 
-        refreshAlpineAfterEveryLivewireRequest()
+            addDollarSignWire()
 
-        addDollarSignWire()
+            supportEntangle()
+        }
 
-        supportEntangle()
+        if (window.Alpine) {
+            supportAlpine()
+        } else {
+            const originalDefer = window.deferLoadingAlpine
+            window.deferLoadingAlpine = startAlpine => {
+                supportAlpine()
+                originalDefer ? originalDefer(startAlpine) : startAlpine();
+            }
+            window.addEventListener('alpine:init', supportAlpine)
+        }
     })
 }
 
