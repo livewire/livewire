@@ -2,6 +2,7 @@
 
 namespace Livewire\Testing;
 
+use Exception;
 use Mockery;
 use Livewire\Livewire;
 use Illuminate\Routing\Route;
@@ -83,13 +84,18 @@ class TestableLivewire
 
         $this->lastResponse = $this->pretendWereMountingAComponentOnAPage($name, $params, $queryParams);
 
-        if (! $this->lastResponse->exception) {
-            $this->updateComponent([
-                'fingerprint' => $this->rawMountedResponse->fingerprint,
-                'serverMemo' => $this->rawMountedResponse->memo,
-                'effects' => $this->rawMountedResponse->effects,
-            ], $isInitial = true);
+        if($this->lastResponse->exception){
+            /** @var Exception $exception */
+            $exception = $this->lastResponse->exception;
+
+            throw new Exception(sprintf("A %d %s was thrown while mounting %s", $exception->getStatusCode(), $exception::class, $componentClass));
         }
+
+        $this->updateComponent([
+            'fingerprint' => $this->rawMountedResponse->fingerprint,
+            'serverMemo' => $this->rawMountedResponse->memo,
+            'effects' => $this->rawMountedResponse->effects,
+        ], $isInitial = true);
 
         Livewire::flushState();
     }
