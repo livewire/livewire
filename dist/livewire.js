@@ -10,8 +10,9 @@
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = false ? Object.freeze({}) : {};
-  var EMPTY_ARR = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ = true ? Object.freeze({}) : {};
+  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var extend = Object.assign;
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray = Array.isArray;
@@ -47,6 +48,9 @@
   };
 
   // node_modules/@vue/reactivity/dist/reactivity.esm-bundler.js
+  function warn(msg, ...args) {
+    console.warn(`[Vue warn] ${msg}`, ...args);
+  }
   var createDep = (effects) => {
     const dep = new Set(effects);
     dep.w = 0;
@@ -60,8 +64,8 @@
   var trackOpBit = 1;
   var maxMarkerBits = 30;
   var activeEffect;
-  var ITERATE_KEY = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
   var shouldTrack = true;
   var trackStack = [];
   function pauseTracking2() {
@@ -82,7 +86,7 @@
       if (!dep) {
         depsMap.set(key, dep = createDep());
       }
-      const eventInfo = false ? { effect: activeEffect, target, type, key } : void 0;
+      const eventInfo = true ? { effect: activeEffect, target, type, key } : void 0;
       trackEffects(dep, eventInfo);
     }
   }
@@ -99,7 +103,7 @@
     if (shouldTrack3) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (false) {
+      if (activeEffect.onTrack) {
         activeEffect.onTrack(Object.assign({ effect: activeEffect }, debuggerEventExtraInfo));
       }
     }
@@ -149,10 +153,10 @@
           break;
       }
     }
-    const eventInfo = false ? { target, type, key, newValue, oldValue, oldTarget } : void 0;
+    const eventInfo = true ? { target, type, key, newValue, oldValue, oldTarget } : void 0;
     if (deps.length === 1) {
       if (deps[0]) {
-        if (false) {
+        if (true) {
           triggerEffects(deps[0], eventInfo);
         } else {
           triggerEffects(deps[0]);
@@ -165,7 +169,7 @@
           effects.push(...dep);
         }
       }
-      if (false) {
+      if (true) {
         triggerEffects(createDep(effects), eventInfo);
       } else {
         triggerEffects(createDep(effects));
@@ -187,7 +191,7 @@
   }
   function triggerEffect(effect3, debuggerEventExtraInfo) {
     if (effect3 !== activeEffect || effect3.allowRecurse) {
-      if (false) {
+      if (effect3.onTrigger) {
         effect3.onTrigger(extend({ effect: effect3 }, debuggerEventExtraInfo));
       }
       if (effect3.scheduler) {
@@ -321,13 +325,13 @@
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (false) {
+      if (true) {
         warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -391,7 +395,7 @@
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has3.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has3, key);
     }
     const oldValue = get3.call(target, key);
@@ -410,7 +414,7 @@
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has3.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has3, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -423,7 +427,7 @@
   function clear2() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger(target, "clear", void 0, void 0, oldTarget);
@@ -468,7 +472,7 @@
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -570,6 +574,13 @@
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
+  function checkIdentityKeys(target, has3, key) {
+    const rawKey = toRaw(key);
+    if (rawKey !== key && has3.call(target, rawKey)) {
+      const type = toRawType(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -602,7 +613,7 @@
   }
   function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -1534,12 +1545,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       node = node.nextElementSibling;
     }
   }
-  function warn(message2, ...args) {
+  function warn2(message2, ...args) {
     console.warn(`Alpine Warning: ${message2}`, ...args);
   }
   function start() {
     if (!document.body)
-      warn("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
+      warn2("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
     dispatch2(document, "alpine:init");
     dispatch2(document, "alpine:initializing");
     startObservingMutations();
@@ -2775,7 +2786,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       key = toRaw2(key);
       hadKey = has22.call(target, key);
     } else if (true) {
-      checkIdentityKeys(target, has22, key);
+      checkIdentityKeys2(target, has22, key);
     }
     const oldValue = get3.call(target, key);
     target.set(key, value);
@@ -2794,7 +2805,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       key = toRaw2(key);
       hadKey = has22.call(target, key);
     } else if (true) {
-      checkIdentityKeys(target, has22, key);
+      checkIdentityKeys2(target, has22, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
     const result = target.delete(key);
@@ -2950,7 +2961,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var shallowReadonlyCollectionHandlers = {
     get: createInstrumentationGetter2(true, true)
   };
-  function checkIdentityKeys(target, has22, key) {
+  function checkIdentityKeys2(target, has22, key) {
     const rawKey = toRaw2(key);
     if (rawKey !== key && has22.call(target, rawKey)) {
       const type = toRawType2(target);
@@ -3081,7 +3092,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
   function warnMissingPluginMagic(name, magicName, slug) {
-    magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    magic(magicName, (el) => warn2(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   directive("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup22 }) => {
     let func = evaluateLater2(expression);
@@ -3122,14 +3133,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var teleportContainerDuringClone = document.createElement("div");
   directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup22 }) => {
     if (el.tagName.toLowerCase() !== "template")
-      warn("x-teleport can only be used on a <template> tag", el);
+      warn2("x-teleport can only be used on a <template> tag", el);
     let target = skipDuringClone(() => {
       return document.querySelector(expression);
     }, () => {
       return teleportContainerDuringClone;
     })();
     if (!target)
-      warn(`Cannot find x-teleport element for selector: "${expression}"`);
+      warn2(`Cannot find x-teleport element for selector: "${expression}"`);
     let clone2 = el.content.cloneNode(true).firstElementChild;
     el._x_teleport = clone2;
     clone2._x_teleportBack = el;
@@ -3651,7 +3662,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           initTree(clone2);
         });
         if (typeof key === "object") {
-          warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
+          warn2("x-for key cannot be an object, it must be a string or an integer", templateEl);
         }
         lookup[key] = clone2;
       }
@@ -3776,7 +3787,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginDirective("Focus", "trap", "focus");
   warnMissingPluginDirective("Mask", "mask", "mask");
   function warnMissingPluginDirective(name, directiveName2, slug) {
-    directive(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    directive(directiveName2, (el) => warn2(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   alpine_default.setEvaluator(normalEvaluator);
   alpine_default.setReactivityEngine({ reactive: reactive22, effect: effect22, release: stop, raw: toRaw2 });
@@ -5067,20 +5078,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         queueMicrotask(() => {
           module_default.entangle({
             get() {
-              console.log("livewire get", livewireComponent.get(name));
               return livewireComponent.get(name);
             },
             set(value) {
-              console.log("livewire set", value, isLive);
               livewireComponent.set(name, value, isLive);
             }
           }, {
             get() {
-              console.log("alpine get", getter());
               return getter();
             },
             set(value) {
-              console.log("alpine set", value);
               setter(value);
             }
           });
