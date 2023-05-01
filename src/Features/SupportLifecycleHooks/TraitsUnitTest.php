@@ -69,6 +69,49 @@ class TraitsUnitTest extends \Tests\TestCase
             ComponentForTestMethodsStub::$hooksFromTrait
         );
     }
+
+    /** @test */
+    public function trait_hooks_are_run_at_the_same_time_as_component_hoks()
+    {
+        Livewire::test(ComponentWithTraitStubAndComponentLifecycleHooks::class)
+            ->assertSet(
+                'hooks',
+                [
+                    'bootcomponent',
+                    'boottrait',
+                    'initializedtrait',
+                    'mountcomponent',
+                    'mounttrait',
+                    'bootedcomponent',
+                    'bootedtrait',
+                    'renderingtrait',
+                    'rendercomponent',
+                    'renderedtrait:show-name',
+                    'dehydratecomponent',
+                    'dehydratetrait',
+                ]
+            )
+            ->set('foo', 'bar')
+            ->assertSet(
+                'hooks',
+                [
+                    'bootcomponent',
+                    'boottrait',
+                    'initializedtrait',
+                    'hydratecomponent',
+                    'hydratetrait',
+                    'updatingcomponent:foobar',
+                    'updatingtrait:foobar',
+                    'updatedcomponent:foobar',
+                    'updatedtrait:foobar',
+                    'renderingtrait',
+                    'rendercomponent',
+                    'renderedtrait:show-name',
+                    'dehydratecomponent',
+                    'dehydratetrait',
+                ]
+            );
+    }
 }
 
 trait TraitForComponent
@@ -246,3 +289,126 @@ class ComponentForTestMethodsStub extends Component
     }
 }
 
+trait TraitForComponentWithComponentHooks
+{
+    public function bootTraitForComponentWithComponentHooks()
+    {
+        $this->hooks[] = 'boottrait';
+    }
+
+    public function mountTraitForComponentWithComponentHooks()
+    {
+        $this->hooks[] = 'mounttrait';
+    }
+
+    public function bootedTraitForComponentWithComponentHooks()
+    {
+        $this->hooks[] = 'bootedtrait';
+    }
+
+    public function hydrateTraitForComponentWithComponentHooks()
+    {
+        $this->hooks[] = 'hydratetrait';
+    }
+
+    public function dehydrateTraitForComponentWithComponentHooks()
+    {
+        $this->hooks[] = 'dehydratetrait';
+    }
+
+    public function updatingTraitForComponentWithComponentHooks($name, $value)
+    {
+        $this->hooks[] = 'updatingtrait:'.$name.$value;
+    }
+
+    public function updatedTraitForComponentWithComponentHooks($name, $value)
+    {
+        $this->hooks[] = 'updatedtrait:'.$name.$value;
+    }
+
+    public function renderingTraitForComponentWithComponentHooks()
+    {
+        $this->hooks[] = 'renderingtrait';
+    }
+
+    public function renderedTraitForComponentWithComponentHooks($view)
+    {
+        $this->hooks[] = 'renderedtrait:'.$view->getName();
+    }
+
+    public function initializeTraitForComponentWithComponentHooks()
+    {$this->hooks[] = 'initializedtrait';
+    }
+}
+
+class ComponentWithTraitStubAndComponentLifecycleHooks extends Component
+{
+    use TraitForComponentWithComponentHooks;
+
+    public $hooks = [];
+
+    public $foo = 'bar';
+
+    public function boot()
+    {
+        // Reset from previous requests.
+        $this->hooks = [];
+
+        $this->hooks[] = 'bootcomponent';
+    }
+
+    public function mount()
+    {
+        $this->hooks[] = 'mountcomponent';
+    }
+
+    public function booted()
+    {
+        $this->hooks[] = 'bootedcomponent';
+    }
+
+    public function hydrate()
+    {
+        $this->hooks[] = 'hydratecomponent';
+    }
+
+    public function dehydrate()
+    {
+        $this->hooks[] = 'dehydratecomponent';
+    }
+
+    public function updating($name, $value)
+    {
+        $this->hooks[] = 'updatingcomponent:'.$name.$value;
+    }
+
+    public function updated($name, $value)
+    {
+        $this->hooks[] = 'updatedcomponent:'.$name.$value;
+    }
+
+    public function rendering()
+    {
+        $this->hooks[] = 'renderingcomponent';
+    }
+
+    public function rendered($view)
+    {
+        $this->hooks[] = 'renderedcomponent:'.$view->getName();
+    }
+
+    public function initialize()
+    {
+        // Reset from previous requests.
+        $this->hooks = [];
+
+        $this->hooks[] = 'initializedcomponent';
+    }
+
+    public function render()
+    {
+        $this->hooks[] = 'rendercomponent';
+
+        return view('show-name', ['name' => $this->foo]);
+    }
+}
