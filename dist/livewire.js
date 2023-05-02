@@ -5451,7 +5451,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire:init.js
   directive2("init", (el, directive3) => {
-    let fullMethod = directive3.expression ? directive3.method : "$refresh";
+    let fullMethod = directive3.expression ?? "$refresh";
     module_default.evaluate(el, `$wire.${fullMethod}`);
   });
 
