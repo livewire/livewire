@@ -17,7 +17,9 @@ class SupportUnitTesting extends ComponentHook
     {
         if (! app()->environment('testing')) return;
 
-        \Livewire\Features\SupportUnitTesting\DuskTestable::provide();
+        if (class_exists('Laravel\Dusk\Browser')) {
+            \Livewire\Features\SupportUnitTesting\DuskTestable::provide();
+        }
 
         static::registerTestingMacros();
     }

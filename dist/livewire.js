@@ -5067,20 +5067,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         queueMicrotask(() => {
           module_default.entangle({
             get() {
-              console.log("livewire get", livewireComponent.get(name));
               return livewireComponent.get(name);
             },
             set(value) {
-              console.log("livewire set", value, isLive);
               livewireComponent.set(name, value, isLive);
             }
           }, {
             get() {
-              console.log("alpine get", getter());
               return getter();
             },
             set(value) {
-              console.log("alpine set", value);
               setter(value);
             }
           });
@@ -5226,7 +5222,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el.removeAttribute(directive3.expression);
       }
     } else {
+      let cache = window.getComputedStyle(el, null).getPropertyValue("display");
       let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
+      display = directive3.modifiers.includes("remove") ? cache : display;
       el.style.display = isTruthy ? display : "none";
     }
   }
@@ -5444,7 +5442,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire:init.js
   directive2("init", (el, directive3) => {
-    let fullMethod = directive3.expression ? directive3.method : "$refresh";
+    let fullMethod = directive3.expression ?? "$refresh";
     module_default.evaluate(el, `$wire.${fullMethod}`);
   });
 

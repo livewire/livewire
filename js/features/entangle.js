@@ -26,21 +26,17 @@ function generateEntangleFunction(component) {
                 Alpine.entangle({
                     // Outer scope...
                     get() {
-                        console.log('livewire get', livewireComponent.get(name))
                         return livewireComponent.get(name)
                     },
                     set(value) {
-                        console.log('livewire set', value, isLive)
                         livewireComponent.set(name, value, isLive)
                     }
                 }, {
                     // Inner scope...
                     get() {
-                        console.log('alpine get', getter())
                         return getter()
                     },
                     set(value) {
-                        console.log('alpine set', value)
                         setter(value)
                     }
                 })
