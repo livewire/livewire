@@ -18,6 +18,7 @@ use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Str;
 use BadMethodCallException;
+use Livewire\Features\SupportStreaming\HandlesStreaming;
 
 /**
  * @todo - add Facade-esque method signatures to this file (from triggered __get and __call)
@@ -30,6 +31,7 @@ abstract class Component
     use InteractsWithProperties;
     use HandlesEvents;
     use HandlesRedirects;
+    use HandlesStreaming;
     use HandlesPagination;
     use HandlesValidation;
     use HandlesPageComponents;

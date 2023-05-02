@@ -3909,7 +3909,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     requestTargetQueue.clear();
-    let response = await fetch(uri, {
+    let options = {
       method: "POST",
       body: JSON.stringify({
         _token: getCsrfToken(),
@@ -3919,7 +3919,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "Content-type": "application/json",
         "X-Synthetic": ""
       }
-    });
+    };
+    let finishFetch = trigger2("fetch", uri, options);
+    let response = await fetch(uri, options);
+    response = finishFetch(response);
     let succeed = async (responseContent) => {
       let response2 = JSON.parse(responseContent);
       for (let i = 0; i < response2.length; i++) {
@@ -4828,6 +4831,56 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       component.el.dispatchEvent(e);
     });
   });
+
+  // js/features/streaming.js
+  directive2("stream", (el, { expression, modifiers }, { component, cleanup: cleanup3 }) => {
+    let off = on("stream", ({ name, content, append }) => {
+      if (name !== expression)
+        return;
+      if (modifiers.includes("append") || append) {
+        el.innerHTML = el.innerHTML + content;
+      } else {
+        el.innerHTML = content;
+      }
+    });
+    cleanup3(off);
+  });
+  on("fetch", () => {
+    return (response) => {
+      if (!response.headers.has("X-Livewire-Stream"))
+        return response;
+      return {
+        ok: true,
+        redirected: false,
+        status: 200,
+        async text() {
+          let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+            trigger2("stream", streamed);
+          });
+          if (contentIsFromDump(finalResponse)) {
+            this.ok = false;
+          }
+          return finalResponse;
+        }
+      };
+    };
+  });
+  async function interceptStreamAndReturnFinalResponse(response, callback) {
+    let reader = response.body.getReader();
+    let finalResponse = "";
+    while (true) {
+      let { done, value: chunk } = await reader.read();
+      let decoder = new TextDecoder();
+      let output = decoder.decode(chunk);
+      if (output && output.startsWith('{"stream":true')) {
+        callback(JSON.parse(output).body);
+      } else {
+        finalResponse = finalResponse + output;
+      }
+      if (done)
+        return finalResponse;
+    }
+  }
 
   // js/features/wireModelChild.js
   on("request.prepare", (component) => {

@@ -159,7 +159,7 @@ async function sendMethodCall() {
 
     requestTargetQueue.clear()
 
-    let response = await fetch(uri, {
+    let options = {
         method: 'POST',
         body: JSON.stringify({
             _token: getCsrfToken(),
@@ -169,7 +169,13 @@ async function sendMethodCall() {
             'Content-type': 'application/json',
             'X-Synthetic': '',
         },
-    })
+    }
+
+    let finishFetch = trigger('fetch', uri, options)
+
+    let response = await fetch(uri, options)
+
+    response = finishFetch(response)
 
     let succeed = async (responseContent) => {
         let response = JSON.parse(responseContent)
@@ -196,7 +202,7 @@ async function sendMethodCall() {
  * Post requests in Laravel require a csrf token to be passed
  * along with the payload. Here, we'll try and locate one.
  */
-function getCsrfToken() {
+export function getCsrfToken() {
     if (document.querySelector('[data-csrf]')) {
         return document.querySelector('[data-csrf]').getAttribute('data-csrf')
     }
@@ -257,11 +263,11 @@ export async function handleResponse(response, succeed, fail) {
     }
 
     handleFailure(content)
-    
+
     await fail()
 }
 
-function contentIsFromDump(content) {
+export function contentIsFromDump(content) {
     return !! content.match(/<script>Sfdump\(".+"\)<\/script>/)
 }
 

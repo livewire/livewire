@@ -9,7 +9,7 @@ Getting Started:
     Events: { uri: /docs/events, file: /events.md }
     Lifecycle Hooks: { uri: /docs/lifecycle-hooks, file: /lifecycle-hooks.md }
     Nesting Components: { uri: /docs/nesting, file: /nesting.md }
-    Testing: { uri: /docs/ }
+    Testing: { uri: /docs/testing, file: /testing.md }
 Concepts:
     How Livewire Works: { uri: /docs/ }
     Understanding Nested Components: { uri: /docs/ }
@@ -21,21 +21,19 @@ UI Components:
     Modal: { uri: /docs/modal, file: /modal.md }
     Tabs: { uri: /docs/tabs, file: /tabs.md }
 Features:
-    SPA Mode: { uri: /docs/foo }
+    Navigation: { uri: /docs/navigation, file: /navigation.md }
     Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
-    Validation: { uri: /docs/foo }
-    File Uploads: { uri: /docs/foo }
-    Loading states: { uri: /docs/foo }
-    Pagination: { uri: /docs/foo }
-    Flash messages: { uri: /docs/foo }
+    Validation: { uri: /docs/validation, file: /validation.md }
+    File Uploads: { uri: /docs/uploads, file: /uploads.md }
+    Loading states: { uri: /docs/loading, file: /loading.md }
+    Pagination: { uri: /docs/pagination, file: /pagination.md }
     Url: { uri: /docs/url, file: /url.md }
-    Redirecting: { uri: /docs/foo }
-    Polling: { uri: /docs/foo }
-    Authorization: { uri: /docs/foo }
-    Dirty states: { uri: /docs/foo }
-    File Downloads: { uri: /docs/foo }
-    Offline states: { uri: /docs/foo }
-    Computed properties: { uri: /docs/foo }
+    Redirecting: { uri: /docs/redirecting, file: /redirecting.md }
+    Polling: { uri: /docs/polling, file: /polling.md }
+    Dirty states: { uri: /docs/dirty, file: /dirty.md }
+    File Downloads: { uri: /docs/downloads, file: /downloads.md }
+    Offline states: { uri: /docs/offline, file: /offline.md }
+    Getters: { uri: /docs/getters, file: /getters.md }
 Extending:
     Synthesizers: { uri: /docs/foo }
     Wireables: { uri: /docs/foo }
