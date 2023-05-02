@@ -64,7 +64,7 @@ class TestCase extends BaseTestCase
 
     protected function resolveApplicationHttpKernel($app)
     {
-        $app->singleton('Illuminate\Contracts\Http\Kernel', 'Tests\HttpKernel');
+        $app->singleton('Illuminate\Contracts\Http\Kernel', 'LegacyTests\HttpKernel');
     }
 
     protected function livewireClassesPath($path = '')
