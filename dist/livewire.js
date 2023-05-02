@@ -141,9 +141,8 @@
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = true ? Object.freeze({}) : {};
-  var EMPTY_ARR = true ? Object.freeze([]) : [];
-  var extend = Object.assign;
+  var EMPTY_OBJ = false ? Object.freeze({}) : {};
+  var EMPTY_ARR = false ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -179,9 +178,6 @@
   };
 
   // node_modules/@vue/reactivity/dist/reactivity.esm-bundler.js
-  function warn(msg, ...args) {
-    console.warn(`[Vue warn] ${msg}`, ...args);
-  }
   var createDep = (effects) => {
     const dep = new Set(effects);
     dep.w = 0;
@@ -195,8 +191,8 @@
   var trackOpBit = 1;
   var maxMarkerBits = 30;
   var activeEffect;
-  var ITERATE_KEY = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
   var shouldTrack = true;
   var trackStack = [];
   function pauseTracking2() {
@@ -217,7 +213,7 @@
       if (!dep) {
         depsMap.set(key, dep = createDep());
       }
-      const eventInfo = true ? { effect: activeEffect, target, type, key } : void 0;
+      const eventInfo = false ? { effect: activeEffect, target, type, key } : void 0;
       trackEffects(dep, eventInfo);
     }
   }
@@ -234,7 +230,7 @@
     if (shouldTrack3) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (activeEffect.onTrack) {
+      if (false) {
         activeEffect.onTrack(Object.assign({ effect: activeEffect }, debuggerEventExtraInfo));
       }
     }
@@ -284,10 +280,10 @@
           break;
       }
     }
-    const eventInfo = true ? { target, type, key, newValue, oldValue, oldTarget } : void 0;
+    const eventInfo = false ? { target, type, key, newValue, oldValue, oldTarget } : void 0;
     if (deps.length === 1) {
       if (deps[0]) {
-        if (true) {
+        if (false) {
           triggerEffects(deps[0], eventInfo);
         } else {
           triggerEffects(deps[0]);
@@ -300,7 +296,7 @@
           effects.push(...dep);
         }
       }
-      if (true) {
+      if (false) {
         triggerEffects(createDep(effects), eventInfo);
       } else {
         triggerEffects(createDep(effects));
@@ -322,7 +318,7 @@
   }
   function triggerEffect(effect3, debuggerEventExtraInfo) {
     if (effect3 !== activeEffect || effect3.allowRecurse) {
-      if (effect3.onTrigger) {
+      if (false) {
         effect3.onTrigger(extend({ effect: effect3 }, debuggerEventExtraInfo));
       }
       if (effect3.scheduler) {
@@ -456,13 +452,13 @@
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (true) {
+      if (false) {
         warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -526,7 +522,7 @@
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has3.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has3, key);
     }
     const oldValue = get3.call(target, key);
@@ -545,7 +541,7 @@
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has3.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has3, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -558,7 +554,7 @@
   function clear2() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger(target, "clear", void 0, void 0, oldTarget);
@@ -603,7 +599,7 @@
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -705,13 +701,6 @@
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
-  function checkIdentityKeys(target, has3, key) {
-    const rawKey = toRaw(key);
-    if (rawKey !== key && has3.call(target, rawKey)) {
-      const type = toRawType(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -744,7 +733,7 @@
   }
   function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -828,7 +817,7 @@
 
   // js/events.js
   var listeners = [];
-  function on2(name, callback) {
+  function on(name, callback) {
     if (!listeners[name])
       listeners[name] = [];
     listeners[name].push(callback);
@@ -1545,12 +1534,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       node = node.nextElementSibling;
     }
   }
-  function warn2(message2, ...args) {
+  function warn(message2, ...args) {
     console.warn(`Alpine Warning: ${message2}`, ...args);
   }
   function start() {
     if (!document.body)
-      warn2("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
+      warn("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
     dispatch2(document, "alpine:init");
     dispatch2(document, "alpine:initializing");
     startObservingMutations();
@@ -2332,6 +2321,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     startObservingMutations,
     stopObservingMutations,
     setReactivityEngine,
+    onAttributeRemoved,
     closestDataStack,
     skipDuringClone,
     onlyDuringClone,
@@ -2786,7 +2776,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       key = toRaw2(key);
       hadKey = has22.call(target, key);
     } else if (true) {
-      checkIdentityKeys2(target, has22, key);
+      checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3.call(target, key);
     target.set(key, value);
@@ -2805,7 +2795,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       key = toRaw2(key);
       hadKey = has22.call(target, key);
     } else if (true) {
-      checkIdentityKeys2(target, has22, key);
+      checkIdentityKeys(target, has22, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
     const result = target.delete(key);
@@ -2961,7 +2951,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var shallowReadonlyCollectionHandlers = {
     get: createInstrumentationGetter2(true, true)
   };
-  function checkIdentityKeys2(target, has22, key) {
+  function checkIdentityKeys(target, has22, key) {
     const rawKey = toRaw2(key);
     if (rawKey !== key && has22.call(target, rawKey)) {
       const type = toRawType2(target);
@@ -3092,7 +3082,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
   function warnMissingPluginMagic(name, magicName, slug) {
-    magic(magicName, (el) => warn2(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   directive("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup22 }) => {
     let func = evaluateLater2(expression);
@@ -3133,14 +3123,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var teleportContainerDuringClone = document.createElement("div");
   directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup22 }) => {
     if (el.tagName.toLowerCase() !== "template")
-      warn2("x-teleport can only be used on a <template> tag", el);
+      warn("x-teleport can only be used on a <template> tag", el);
     let target = skipDuringClone(() => {
       return document.querySelector(expression);
     }, () => {
       return teleportContainerDuringClone;
     })();
     if (!target)
-      warn2(`Cannot find x-teleport element for selector: "${expression}"`);
+      warn(`Cannot find x-teleport element for selector: "${expression}"`);
     let clone2 = el.content.cloneNode(true).firstElementChild;
     el._x_teleport = clone2;
     clone2._x_teleportBack = el;
@@ -3176,7 +3166,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   };
   directive("ignore", handler);
   directive("effect", (el, { expression }, { effect: effect3 }) => effect3(evaluateLater(el, expression)));
-  function on3(el, event, modifiers, callback) {
+  function on2(el, event, modifiers, callback) {
     let listenerTarget = el;
     let handler3 = (e) => callback(e);
     let options = {};
@@ -3364,7 +3354,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
-    let removeListener = on3(el, event, modifiers, (e) => {
+    let removeListener = on2(el, event, modifiers, (e) => {
       setValue(getInputValue(el, modifiers, e, getValue()));
     });
     if (!el._x_removeModelListeners)
@@ -3372,7 +3362,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el._x_removeModelListeners["default"] = removeListener;
     cleanup22(() => el._x_removeModelListeners["default"]());
     if (el.form) {
-      let removeResetListener = on3(el.form, "reset", [], (e) => {
+      let removeResetListener = on2(el.form, "reset", [], (e) => {
         nextTick(() => el._x_model && el._x_model.set(el.value));
       });
       cleanup22(() => removeResetListener());
@@ -3662,7 +3652,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           initTree(clone2);
         });
         if (typeof key === "object") {
-          warn2("x-for key cannot be an object, it must be a string or an integer", templateEl);
+          warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
         }
         lookup[key] = clone2;
       }
@@ -3776,7 +3766,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_forwardEvents.includes(value))
         el._x_forwardEvents.push(value);
     }
-    let removeListener = on3(el, value, modifiers, (e) => {
+    let removeListener = on2(el, value, modifiers, (e) => {
       evaluate2(() => {
       }, { scope: { $event: e }, params: [e] });
     });
@@ -3787,7 +3777,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginDirective("Focus", "trap", "focus");
   warnMissingPluginDirective("Mask", "mask", "mask");
   function warnMissingPluginDirective(name, directiveName2, slug) {
-    directive(directiveName2, (el) => warn2(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    directive(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   alpine_default.setEvaluator(normalEvaluator);
   alpine_default.setReactivityEngine({ reactive: reactive22, effect: effect22, release: stop, raw: toRaw2 });
@@ -4089,6 +4079,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     parentMemo = parent;
     return parent.$wire;
   });
+  wireProperty("$on", (component) => (...params) => listen(component, ...params));
   wireProperty("$emit", (component) => (...params) => emit(...params));
   wireProperty("$emitUp", (component) => (...params) => emitUp(component.el, ...params));
   wireProperty("$emitSelf", (component) => (...params) => emitSelf(component.id, ...params));
@@ -4172,7 +4163,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportDispatch.js
-  on4("effects", (component, effects) => {
+  on("effects", (component, effects) => {
     let dispatches = effects.dispatches;
     if (!dispatches)
       return;
@@ -4186,7 +4177,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   var globalListeners = new Bag();
-  on2("effects", (component, effects, path) => {
+  on("effects", (component, effects, path) => {
     let listeners2 = effects.listeners;
     if (!listeners2)
       return;
@@ -4217,7 +4208,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       dispatch(component.el, "__lwevent:" + name, { params }, false);
     });
   }
-  function on4(name, callback) {
+  function listen(component, name, callback) {
+    component.el.addEventListener("__lwevent:" + name, (e) => {
+      let param = e.detail;
+      callback(e.detail);
+    });
+  }
+  function on3(name, callback) {
     globalListeners.add(name, callback);
   }
 
@@ -4232,7 +4229,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       elDirectives.directives.filter(({ value }) => value === name).forEach((directive3) => {
         callback(el, directive3, {
           component,
-          cleanup: () => {
+          cleanup: (callback2) => {
+            module_default.onAttributeRemoved(el, "wire:".directive, callback2);
           }
         });
       });
@@ -4876,7 +4874,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportWireModelingNestedComponents.js
-  on2("request.prepare", (component) => {
+  on("request.prepare", (component) => {
     let meta = component.snapshot.memo;
     let childIds = Object.values(meta.children).map((i) => i[1]);
     childIds.forEach((id) => {
@@ -4890,7 +4888,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportDisablingFormsDuringRequest.js
   var cleanupStackByComponentId = {};
-  on2("element.init", (el, component) => {
+  on("element.init", (el, component) => {
     let directives3 = getDirectives(el);
     if (directives3.missing("submit"))
       return;
@@ -4913,7 +4911,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
-  on2("request", (component) => {
+  on("request", (component) => {
     return () => {
       cleanup2(component);
     };
@@ -4927,7 +4925,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportFileDownloads.js
-  on2("request", (component) => {
+  on("request", (component) => {
     return () => {
       let download = component.effects.download;
       if (!download)
@@ -4963,7 +4961,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportReactiveProps.js
-  on2("request.prepare", (component) => {
+  on("request.prepare", (component) => {
     let meta = component.snapshot.memo;
     let childIds = Object.values(meta.children).map((i) => i[1]);
     childIds.forEach((id) => {
@@ -4976,13 +4974,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportFileUploads.js
-  on2("element.init", (el, component) => {
-    if (!(el.tagName.toLowerCase() === "input" && el.type.toLowerCase() === "file" && el.hasAttribute("wire:model")))
-      return;
-    let name = el.getAttribute("wire:model");
-    listenForFileSelection(el, name, component);
-  });
-  function listenForFileSelection(el, name, component) {
+  var uploadManagers = /* @__PURE__ */ new WeakMap();
+  function getUploadManager(component) {
+    if (!uploadManagers.has(component))
+      uploadManagers.set(component, new UploadManager(component));
+    return uploadManagers.get(component);
+  }
+  function handleFileUpload(el, property, component, cleanup3) {
     let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true }));
     let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true }));
     let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true }));
@@ -4998,9 +4996,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       start3();
       if (e.target.multiple) {
-        component.uploadMultiple(name, e.target.files, finish, error2, progress);
+        uploadMultiple(component, property, e.target.files, finish, error2, progress);
       } else {
-        component.upload(name, e.target.files[0], finish, error2, progress);
+        upload(component, property, e.target.files[0], finish, error2, progress);
       }
     };
     el.addEventListener("change", eventHandler);
@@ -5008,10 +5006,185 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el.value = null;
     };
     el.addEventListener("click", clearFileInputValue);
+    cleanup3(() => {
+      el.removeEventListener("change", eventHandler);
+      el.removeEventListener("click", clearFileInputValue);
+    });
+  }
+  function upload(component, name, file, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }) {
+    getUploadManager(component).upload(name, file, finishCallback, errorCallback, progressCallback);
+  }
+  function uploadMultiple(component, name, files, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }) {
+    getUploadManager(component).uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
+  }
+  var UploadManager = class {
+    constructor(component) {
+      this.component = component;
+      this.uploadBag = new MessageBag();
+      this.removeBag = new MessageBag();
+    }
+    registerListeners() {
+      this.component.$wire.$on("upload:generatedSignedUrl", ([name, url]) => {
+        setUploadLoading(this.component, name);
+        this.handleSignedUrl(name, url);
+      });
+      this.component.$wire.$on("upload:generatedSignedUrlForS3", ([name, payload]) => {
+        setUploadLoading(this.component, name);
+        this.handleS3PreSignedUrl(name, payload);
+      });
+      this.component.$wire.$on("upload:finished", ([name, tmpFilenames]) => this.markUploadFinished(name, tmpFilenames));
+      this.component.$wire.$on("upload:errored", ([name]) => this.markUploadErrored(name));
+      this.component.$wire.$on("upload:removed", ([name, tmpFilename]) => this.removeBag.shift(name).finishCallback(tmpFilename));
+    }
+    upload(name, file, finishCallback, errorCallback, progressCallback) {
+      this.setUpload(name, {
+        files: [file],
+        multiple: false,
+        finishCallback,
+        errorCallback,
+        progressCallback
+      });
+    }
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+      this.setUpload(name, {
+        files: Array.from(files),
+        multiple: true,
+        finishCallback,
+        errorCallback,
+        progressCallback
+      });
+    }
+    removeUpload(name, tmpFilename, finishCallback) {
+      this.removeBag.push(name, {
+        tmpFilename,
+        finishCallback
+      });
+      this.component.$wire.call("removeUpload", name, tmpFilename);
+    }
+    setUpload(name, uploadObject) {
+      this.uploadBag.add(name, uploadObject);
+      if (this.uploadBag.get(name).length === 1) {
+        this.startUpload(name, uploadObject);
+      }
+    }
+    handleSignedUrl(name, url) {
+      let formData = new FormData();
+      Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
+      let headers = {
+        "Accept": "application/json"
+      };
+      let csrfToken = getCsrfToken();
+      if (csrfToken)
+        headers["X-CSRF-TOKEN"] = csrfToken;
+      this.makeRequest(name, formData, "post", url, headers, (response) => {
+        return response.paths;
+      });
+    }
+    handleS3PreSignedUrl(name, payload) {
+      let formData = this.uploadBag.first(name).files[0];
+      let headers = payload.headers;
+      if ("Host" in headers)
+        delete headers.Host;
+      let url = payload.url;
+      this.makeRequest(name, formData, "put", url, headers, (response) => {
+        return [payload.path];
+      });
+    }
+    makeRequest(name, formData, method, url, headers, retrievePaths) {
+      let request = new XMLHttpRequest();
+      request.open(method, url);
+      Object.entries(headers).forEach(([key, value]) => {
+        request.setRequestHeader(key, value);
+      });
+      request.upload.addEventListener("progress", (e) => {
+        e.detail = {};
+        e.detail.progress = Math.round(e.loaded * 100 / e.total);
+        this.uploadBag.first(name).progressCallback(e);
+      });
+      request.addEventListener("load", () => {
+        if ((request.status + "")[0] === "2") {
+          let paths = retrievePaths(request.response && JSON.parse(request.response));
+          this.component.$wire.call("finishUpload", name, paths, this.uploadBag.first(name).multiple);
+          return;
+        }
+        let errors = null;
+        if (request.status === 422) {
+          errors = request.response;
+        }
+        this.component.$wire.call("uploadErrored", name, errors, this.uploadBag.first(name).multiple);
+      });
+      request.send(formData);
+    }
+    startUpload(name, uploadObject) {
+      let fileInfos = uploadObject.files.map((file) => {
+        return { name: file.name, size: file.size, type: file.type };
+      });
+      this.component.$wire.call("startUpload", name, fileInfos, uploadObject.multiple);
+      setUploadLoading(this.component, name);
+    }
+    markUploadFinished(name, tmpFilenames) {
+      unsetUploadLoading(this.component);
+      let uploadObject = this.uploadBag.shift(name);
+      uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
+    }
+    markUploadErrored(name) {
+      unsetUploadLoading(this.component);
+      this.uploadBag.shift(name).errorCallback();
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
+    }
+  };
+  var MessageBag = class {
+    constructor() {
+      this.bag = {};
+    }
+    add(name, thing) {
+      if (!this.bag[name]) {
+        this.bag[name] = [];
+      }
+      this.bag[name].push(thing);
+    }
+    push(name, thing) {
+      this.add(name, thing);
+    }
+    first(name) {
+      if (!this.bag[name])
+        return null;
+      return this.bag[name][0];
+    }
+    last(name) {
+      return this.bag[name].slice(-1)[0];
+    }
+    get(name) {
+      return this.bag[name];
+    }
+    shift(name) {
+      return this.bag[name].shift();
+    }
+    call(name, ...params) {
+      (this.listeners[name] || []).forEach((callback) => {
+        callback(...params);
+      });
+    }
+    has(name) {
+      return Object.keys(this.listeners).includes(name);
+    }
+  };
+  function setUploadLoading() {
+  }
+  function unsetUploadLoading() {
   }
 
   // js/features/supportQueryString.js
-  on2("component.init", (component) => {
+  on("component.init", (component) => {
     let effects = component.effects;
     let queryString = effects["url"];
     if (!queryString)
@@ -5025,7 +5198,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           replace2(dataGet(component.reactive, name));
         });
       } else if (use === "push") {
-        on2("request", (component2, payload) => {
+        on("request", (component2, payload) => {
           return () => {
             let updates = payload.updates;
             let dirty = component2.effects.dirty || [];
@@ -5053,58 +5226,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
-  // js/features/supportStreaming.js
-  directive2("stream", (el, { expression, modifiers }, { component, cleanup: cleanup3 }) => {
-    let off = on2("stream", ({ name, content, append }) => {
-      if (name !== expression)
-        return;
-      if (modifiers.includes("append") || append) {
-        el.innerHTML = el.innerHTML + content;
-      } else {
-        el.innerHTML = content;
-      }
-    });
-    cleanup3(off);
-  });
-  on2("fetch", () => {
-    return (response) => {
-      if (!response.headers.has("X-Livewire-Stream"))
-        return response;
-      return {
-        ok: true,
-        redirected: false,
-        status: 200,
-        async text() {
-          let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger2("stream", streamed);
-          });
-          if (contentIsFromDump(finalResponse)) {
-            this.ok = false;
-          }
-          return finalResponse;
-        }
-      };
-    };
-  });
-  async function interceptStreamAndReturnFinalResponse(response, callback) {
-    let reader = response.body.getReader();
-    let finalResponse = "";
-    while (true) {
-      let { done, value: chunk } = await reader.read();
-      let decoder = new TextDecoder();
-      let output = decoder.decode(chunk);
-      if (output && output.startsWith('{"stream":true')) {
-        callback(JSON.parse(output).body);
-      } else {
-        finalResponse = finalResponse + output;
-      }
-      if (done)
-        return finalResponse;
-    }
-  }
-
   // js/features/supportRedirects.js
-  on2("effects", (component, effects) => {
+  on("effects", (component, effects) => {
     if (!effects["redirect"])
       return;
     let url = effects["redirect"];
@@ -5187,7 +5310,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportMorphDom.js
-  on2("effects", (component, effects) => {
+  on("effects", (component, effects) => {
     let html = effects.html;
     if (!html)
       return;
@@ -5197,7 +5320,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire:transition.js
-  on2("morph.added", (el) => el.__addedByMorph = true);
+  on("morph.added", (el) => el.__addedByMorph = true);
   directive2("transition", (el, directive3, { component, cleanup: cleanup3 }) => {
     let visibility = module_default.reactive({ state: false });
     module_default.bind(el, {
@@ -5208,13 +5331,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     el.__addedByMorph && setTimeout(() => visibility.state = true);
     let cleanups = [];
-    cleanups.push(on2("morph.removing", (el2, skip) => {
+    cleanups.push(on("morph.removing", (el2, skip) => {
       skip();
       el2.addEventListener("transitionend", () => {
         el2.remove();
       });
       visibility.state = false;
-      cleanups.push(on2("morph", (from, to, morphComponent) => {
+      cleanups.push(on("morph", (from, to, morphComponent) => {
         if (morphComponent !== component)
           return;
         el2.remove();
@@ -5255,7 +5378,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire:wildcard.js
-  on2("element.init", (el, component) => {
+  on("element.init", (el, component) => {
     getDirectives(el).all().forEach((directive3) => {
       if (["model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive3.type))
         return;
@@ -5360,7 +5483,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     ];
   }
   function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
-    on2("request", (iComponent, payload) => {
+    on("request", (iComponent, payload) => {
       if (iComponent !== component)
         return;
       if (targets.length > 0 && !containsTargets(payload, targets))
@@ -5410,6 +5533,56 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return btoa(encodeURIComponent(subject));
   }
 
+  // js/directives/wire:stream.js
+  directive2("stream", (el, { expression, modifiers }, { component, cleanup: cleanup3 }) => {
+    let off = on("stream", ({ name, content, append }) => {
+      if (name !== expression)
+        return;
+      if (modifiers.includes("append") || append) {
+        el.innerHTML = el.innerHTML + content;
+      } else {
+        el.innerHTML = content;
+      }
+    });
+    cleanup3(off);
+  });
+  on("fetch", () => {
+    return (response) => {
+      if (!response.headers.has("X-Livewire-Stream"))
+        return response;
+      return {
+        ok: true,
+        redirected: false,
+        status: 200,
+        async text() {
+          let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+            trigger2("stream", streamed);
+          });
+          if (contentIsFromDump(finalResponse)) {
+            this.ok = false;
+          }
+          return finalResponse;
+        }
+      };
+    };
+  });
+  async function interceptStreamAndReturnFinalResponse(response, callback) {
+    let reader = response.body.getReader();
+    let finalResponse = "";
+    while (true) {
+      let { done, value: chunk } = await reader.read();
+      let decoder = new TextDecoder();
+      let output = decoder.decode(chunk);
+      if (output && output.startsWith('{"stream":true')) {
+        callback(JSON.parse(output).body);
+      } else {
+        finalResponse = finalResponse + output;
+      }
+      if (done)
+        return finalResponse;
+    }
+  }
+
   // js/directives/wire:ignore.js
   directive2("ignore", (el, { modifiers }) => {
     if (modifiers.includes("self")) {
@@ -5421,7 +5594,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire:dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
-  on2("request", (component) => {
+  on("request", (component) => {
     return () => {
       setTimeout(() => {
         refreshDirtyStatesByComponent.each(component, (i) => i(false));
@@ -5468,11 +5641,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire:model.js
-  directive2("model", (el, { expression, modifiers }, { component }) => {
+  directive2("model", (el, { expression, modifiers }, { component, cleanup: cleanup3 }) => {
     if (!expression) {
       return console.warn("Livewire: [wire:model] is missing a value.", el);
     }
-    forceUpdateOnDirty(component, el, expression);
+    if (el.type.toLowerCase() === "file") {
+      return handleFileUpload(el, expression, component, cleanup3);
+    }
+    forceUpdateOnDirty(component, el, expression, cleanup3);
     let isLive = modifiers.includes("live");
     let isLazy = modifiers.includes("lazy");
     let isDebounced = modifiers.includes("debounce");
@@ -5507,8 +5683,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isTextInput(el) {
     return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
   }
-  function forceUpdateOnDirty(component, el, expression) {
-    on("request", (iComponent) => {
+  function forceUpdateOnDirty(component, el, expression, cleanup3) {
+    let off = on("request", (iComponent) => {
       if (iComponent !== component)
         return;
       return () => {
@@ -5520,6 +5696,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
     });
+    cleanup3(off);
   }
   function isDirty(subject, dirty) {
     if (dirty.includes(subject))
@@ -5645,9 +5822,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     start: start2,
     first,
     find,
-    hook: on2,
+    hook: on,
     emit,
-    on: on4
+    on: on3
   };
   if (window.Livewire)
     console.warn("Detected multiple instances of Livewire running");

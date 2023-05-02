@@ -1,4 +1,4 @@
-import { emit, emitSelf, emitTo, emitUp } from '@/features/supportDispatch'
+import { emit, emitSelf, emitTo, emitUp, listen } from '@/features/supportDispatch'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
 import { callMethod, requestCommit } from '@/request'
@@ -127,6 +127,8 @@ wireProperty('$parent', component => {
 
     return parent.$wire
 })
+
+wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$emit', (component) => (...params) => emit(...params))
 wireProperty('$emitUp', (component) => (...params) => emitUp(component.el, ...params))

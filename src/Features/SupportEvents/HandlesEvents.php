@@ -36,6 +36,14 @@ trait HandlesEvents
         $this->emit($event, ...$params)->component($name);
     }
 
+    public function dispatch($event, $data = null)
+    {
+        store($this)->push('dispatched', [
+            'event' => $event,
+            'data' => $data,
+        ]);
+    }
+
     public function dispatchBrowserEvent($event, $data = null)
     {
         store($this)->push('dispatched', [

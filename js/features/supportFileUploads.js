@@ -1,19 +1,15 @@
-import { on } from '@/events'
 import { getCsrfToken } from '@/request';
+import { on } from '@/events'
 
-on('element.init', (el, component) => {
-    if (
-        ! (el.tagName.toLowerCase() === 'input'
-        && el.type.toLowerCase() === 'file'
-        && el.hasAttribute('wire:model'))
-    ) return;
+let uploadManagers = new WeakMap
 
-    let name = el.getAttribute('wire:model')
+function getUploadManager(component) {
+    if (! uploadManagers.has(component)) uploadManagers.set(component, new UploadManager(component))
 
-    listenForFileSelection(el, name, component)
-})
+    return uploadManagers.get(component)
+}
 
-function listenForFileSelection(el, name, component) {
+export function handleFileUpload(el, property, component, cleanup) {
     let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true }))
     let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true }))
     let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
@@ -33,9 +29,9 @@ function listenForFileSelection(el, name, component) {
         start()
 
         if (e.target.multiple) {
-            component.uploadMultiple(name, e.target.files, finish, error, progress)
+            uploadMultiple(component, property, e.target.files, finish, error, progress)
         } else {
-            component.upload(name, e.target.files[0], finish, error, progress)
+            upload(component, property, e.target.files[0], finish, error, progress)
         }
     }
 
@@ -47,21 +43,21 @@ function listenForFileSelection(el, name, component) {
     let clearFileInputValue = () => { el.value = null }
     el.addEventListener('click', clearFileInputValue)
 
-    // todo: cleanup
-    // component.addListenerForTeardown(() => {
-    //     el.removeEventListener('change', eventHandler)
-    //     el.removeEventListener('click', clearFileInputValue)
-    // })
+    cleanup(() => {
+        el.removeEventListener('change', eventHandler)
+        el.removeEventListener('click', clearFileInputValue)
+    })
 }
 
 function upload(
+    component,
     name,
     file,
     finishCallback = () => { },
     errorCallback = () => { },
     progressCallback = () => { }
 ) {
-    this.uploadManager.upload(
+    getUploadManager(component).upload(
         name,
         file,
         finishCallback,
@@ -71,13 +67,14 @@ function upload(
 }
 
 function uploadMultiple(
+    component,
     name,
     files,
     finishCallback = () => { },
     errorCallback = () => { },
     progressCallback = () => { }
 ) {
-    this.uploadManager.uploadMultiple(
+    getUploadManager(component).uploadMultiple(
         name,
         files,
         finishCallback,
@@ -87,12 +84,13 @@ function uploadMultiple(
 }
 
 function removeUpload(
+    component,
     name,
     tmpFilename,
     finishCallback = () => { },
     errorCallback = () => { }
 ) {
-    this.uploadManager.removeUpload(
+    getUploadManager(component).removeUpload(
         name,
         tmpFilename,
         finishCallback,
@@ -108,7 +106,7 @@ class UploadManager {
     }
 
     registerListeners() {
-        this.component.on('upload:generatedSignedUrl', (name, url) => {
+        this.component.$wire.$on('upload:generatedSignedUrl', ([name, url]) => {
             // We have to add reduntant "setLoading" calls because the dom-patch
             // from the first response will clear the setUploadLoading call
             // from the first upload call.
@@ -117,15 +115,15 @@ class UploadManager {
             this.handleSignedUrl(name, url)
         })
 
-        this.component.on('upload:generatedSignedUrlForS3', (name, payload) => {
+        this.component.$wire.$on('upload:generatedSignedUrlForS3', ([name, payload]) => {
             setUploadLoading(this.component, name)
 
             this.handleS3PreSignedUrl(name, payload)
         })
 
-        this.component.on('upload:finished', (name, tmpFilenames) => this.markUploadFinished(name, tmpFilenames))
-        this.component.on('upload:errored', (name) => this.markUploadErrored(name))
-        this.component.on('upload:removed', (name, tmpFilename) => this.removeBag.shift(name).finishCallback(tmpFilename))
+        this.component.$wire.$on('upload:finished', ([name, tmpFilenames]) => this.markUploadFinished(name, tmpFilenames))
+        this.component.$wire.$on('upload:errored', ([name]) => this.markUploadErrored(name))
+        this.component.$wire.$on('upload:removed', ([name, tmpFilename]) => this.removeBag.shift(name).finishCallback(tmpFilename))
     }
 
     upload(name, file, finishCallback, errorCallback, progressCallback) {
@@ -153,7 +151,7 @@ class UploadManager {
             tmpFilename, finishCallback
         })
 
-        this.component.call('removeUpload', name, tmpFilename);
+        this.component.$wire.call('removeUpload', name, tmpFilename);
     }
 
     setUpload(name, uploadObject) {
@@ -212,7 +210,7 @@ class UploadManager {
             if ((request.status+'')[0] === '2') {
                 let paths = retrievePaths(request.response && JSON.parse(request.response))
 
-                this.component.call('finishUpload', name, paths, this.uploadBag.first(name).multiple)
+                this.component.$wire.call('finishUpload', name, paths, this.uploadBag.first(name).multiple)
 
                 return
             }
@@ -223,7 +221,7 @@ class UploadManager {
                 errors = request.response
             }
 
-            this.component.call('uploadErrored', name, errors, this.uploadBag.first(name).multiple)
+            this.component.$wire.call('uploadErrored', name, errors, this.uploadBag.first(name).multiple)
         })
 
         request.send(formData)
@@ -234,7 +232,7 @@ class UploadManager {
             return { name: file.name, size: file.size, type: file.type }
         })
 
-        this.component.call('startUpload', name, fileInfos, uploadObject.multiple);
+        this.component.$wire.call('startUpload', name, fileInfos, uploadObject.multiple);
 
         setUploadLoading(this.component, name)
     }
@@ -255,4 +253,59 @@ class UploadManager {
 
         if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
     }
+}
+
+
+export default class MessageBag {
+    constructor() {
+        this.bag = {}
+    }
+
+    add(name, thing) {
+        if (! this.bag[name]) {
+            this.bag[name] = []
+        }
+
+        this.bag[name].push(thing)
+    }
+
+    push(name, thing) {
+        this.add(name, thing)
+    }
+
+    first(name) {
+        if (! this.bag[name]) return null
+
+        return this.bag[name][0]
+    }
+
+    last(name) {
+        return this.bag[name].slice(-1)[0]
+    }
+
+    get(name) {
+        return this.bag[name]
+    }
+
+    shift(name) {
+        return this.bag[name].shift()
+    }
+
+    call(name, ...params) {
+        (this.listeners[name] || []).forEach(callback => {
+            callback(...params)
+        })
+    }
+
+    has(name) {
+        return Object.keys(this.listeners).includes(name)
+    }
+}
+
+function setUploadLoading() {
+    // @todo
+}
+
+function unsetUploadLoading() {
+    // @todo
 }

@@ -3,8 +3,7 @@ import { on as hook } from '@/events'
 import { Bag, dispatch } from '@/utils'
 import Alpine from 'alpinejs'
 
-// support dispatchBrowserEvents
-on('effects', (component, effects) => {
+hook('effects', (component, effects) => {
     let dispatches = effects.dispatches
     if (! dispatches) return
 
@@ -45,6 +44,7 @@ export function emit(name, ...params) {
 }
 
 export function emitUp(el, name, ...params) {
+    // todo: __lweevent? ew.
     dispatch(el, '__lwevent:'+name, { params })
 }
 
@@ -59,6 +59,15 @@ export function emitTo(componentName, name, ...params) {
 
     components.forEach(component => {
         dispatch(component.el, '__lwevent:'+name, { params }, false)
+    })
+}
+
+export function listen(component, name, callback) {
+    component.el.addEventListener('__lwevent:'+name, e => {
+        // @todo: Should we accept multiple parameters in sequence?
+        let param = e.detail
+
+        callback(e.detail)
     })
 }
 

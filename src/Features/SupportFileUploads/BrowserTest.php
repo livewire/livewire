@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportFileUploads;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -11,6 +12,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function can_upload_a_file()
     {
         Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
             public $photo;
 
             function save()

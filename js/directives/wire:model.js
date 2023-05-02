@@ -1,14 +1,21 @@
 import { debounceByComponent } from '@/debounce'
 import { directive } from '@/directives'
+import { on } from '@/events'
+import { handleFileUpload } from '@/features/supportFileUploads'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 
-directive('model', (el, { expression, modifiers }, { component }) => {
+directive('model', (el, { expression, modifiers }, { component, cleanup }) => {
     if (! expression) {
         return console.warn('Livewire: [wire:model] is missing a value.', el)
     }
 
-    forceUpdateOnDirty(component, el, expression)
+    // Handle file uploads differently...
+    if (el.type.toLowerCase() === 'file') {
+        return handleFileUpload(el, expression, component, cleanup)
+    }
+
+    forceUpdateOnDirty(component, el, expression, cleanup)
 
     let isLive = modifiers.includes('live')
     let isLazy = modifiers.includes('lazy')
@@ -62,8 +69,8 @@ function isTextInput(el) {
     )
 }
 
-function forceUpdateOnDirty(component, el, expression) {
-    on('request', (iComponent) => {
+function forceUpdateOnDirty(component, el, expression, cleanup) {
+    let off = on('request', (iComponent) => {
         if (iComponent !== component) return
 
         return () => {
@@ -78,6 +85,8 @@ function forceUpdateOnDirty(component, el, expression) {
             }
         }
     })
+
+    cleanup(off)
 }
 
 function isDirty(subject, dirty) {

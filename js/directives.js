@@ -1,3 +1,5 @@
+import Alpine from 'alpinejs'
+
 let directives = {}
 
 export function directive(name, callback) {
@@ -13,7 +15,9 @@ export function initDirectives(el, component) {
             .forEach(directive => {
                 callback(el, directive, {
                     component,
-                    cleanup: () => { /** @todo */ }
+                    cleanup: (callback) => {
+                        Alpine.onAttributeRemoved(el, 'wire:'.directive, callback)
+                    }
                 })
             })
     })
