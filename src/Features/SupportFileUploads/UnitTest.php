@@ -61,7 +61,7 @@ class UnitTest extends \Tests\TestCase
         $tmpFilename = $component->viewData('photo')->getFilename();
 
         $component->call('removeUpload', 'photo', $tmpFilename)
-            ->assertEmitted('upload:removed', 'photo', $tmpFilename)
+            ->assertDispatched('upload:removed', ['photo', $tmpFilename])
             ->assertSet('photo', null);
     }
 
@@ -75,7 +75,7 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file);
 
         $component->call('removeUpload', 'photo', 'mismatched-filename.png')
-            ->assertNotEmitted('upload:removed', 'photo', 'mismatched-filename.png')
+            ->assertNotDispatched('upload:removed', ['photo', 'mismatched-filename.png'])
             ->assertNotSet('photo', null);
 
     }
@@ -92,7 +92,7 @@ class UnitTest extends \Tests\TestCase
         $tmpFiles = $component->viewData('photos');
 
         $component->call('removeUpload', 'photos', $tmpFiles[1]->getFilename())
-            ->assertEmitted('upload:removed', 'photos', $tmpFiles[1]->getFilename());
+            ->assertDispatched('upload:removed', ['photos', $tmpFiles[1]->getFilename()]);
 
         $tmpFiles = $component->call('$refresh')->viewData('photos');
 

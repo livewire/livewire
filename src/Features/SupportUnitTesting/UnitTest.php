@@ -366,101 +366,63 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
-    public function assert_emitted()
+    public function assert_dispatched()
     {
-        Livewire::test(EmitsEventsComponentStub::class)
-            ->call('emitFoo')
-            ->assertEmitted('foo')
-            ->call('emitFooWithParam', 'bar')
-            ->assertEmitted('foo', 'bar')
-            ->call('emitFooWithParam', 'info')
-            ->assertEmitted('foo', 'info')
-            ->call('emitFooWithParam', 'last')
-            ->assertEmitted('foo', 'last')
-            ->call('emitFooWithParam', 'retry')
-            ->assertEmitted('foo', 'retry')
-            ->call('emitFooWithParam', 'baz')
-            ->assertEmitted('foo', function ($event, $params) {
+        Livewire::test(DispatchesEventsComponentStub::class)
+            ->call('dispatchFoo')
+            ->assertDispatched('foo')
+            ->call('dispatchFooWithParam', 'bar')
+            ->assertDispatched('foo', 'bar')
+            ->call('dispatchFooWithParam', 'info')
+            ->assertDispatched('foo', 'info')
+            ->call('dispatchFooWithParam', 'last')
+            ->assertDispatched('foo', 'last')
+            ->call('dispatchFooWithParam', 'retry')
+            ->assertDispatched('foo', 'retry')
+            ->call('dispatchFooWithParam', 'baz')
+            ->assertDispatched('foo', function ($event, $params) {
                 return $event === 'foo' && $params === ['baz'];
             });
     }
 
     /** @test */
-    public function assert_emitted_to()
+    public function assert_dispatched_to()
     {
         Livewire::component('some-component', SomeComponentStub::class);
 
-        Livewire::test(EmitsEventsComponentStub::class)
-            ->call('emitFooToSomeComponent')
-            ->assertEmittedTo('some-component', 'foo')
-            ->call('emitFooToAComponentAsAModel')
-            ->assertEmittedTo(ComponentWhichReceivesEvent::class, 'foo')
-            ->call('emitFooToSomeComponentWithParam', 'bar')
-            ->assertEmittedTo('some-component', 'foo', 'bar')
-            ->call('emitFooToSomeComponentWithParam', 'bar')
-            ->assertEmittedTo('some-component','foo', function ($event, $params) {
+        Livewire::test(DispatchesEventsComponentStub::class)
+            ->call('dispatchFooToSomeComponent')
+            ->assertDispatchedTo('some-component', 'foo')
+            ->call('dispatchFooToAComponentAsAModel')
+            ->assertDispatchedTo(ComponentWhichReceivesEvent::class, 'foo')
+            ->call('dispatchFooToSomeComponentWithParam', 'bar')
+            ->assertDispatchedTo('some-component', 'foo', 'bar')
+            ->call('dispatchFooToSomeComponentWithParam', 'bar')
+            ->assertDispatchedTo('some-component','foo', function ($event, $params) {
                 return $event === 'foo' && $params === ['bar'];
             })
         ;
     }
 
     /** @test */
-    public function assert_emitted_up()
+    public function assert_not_dispatched()
     {
-        Livewire::test(EmitsEventsComponentStub::class)
-            ->call('emitFooUp')
-            ->assertEmittedUp('foo')
-            ->call('emitFooUpWithParam', 'bar')
-            ->assertEmittedUp('foo', 'bar')
-            ->call('emitFooUpWithParam', 'bar')
-            ->assertEmittedUp('foo', function ($event, $params) {
-                return $event === 'foo' && $params === ['bar'];
-            })
-        ;
-    }
-
-    /** @test */
-    public function assert_not_emitted()
-    {
-        Livewire::test(EmitsEventsComponentStub::class)
-            ->assertNotEmitted('foo')
-            ->call('emitFoo')
-            ->assertNotEmitted('bar')
-            ->call('emitFooWithParam', 'not-bar')
-            ->assertNotEmitted('foo', 'bar')
-            ->call('emitFooWithParam', 'foo')
-            ->assertNotEmitted('bar', 'foo')
-            ->call('emitFooWithParam', 'baz')
-            ->assertNotEmitted('bar', function ($event, $params) {
+        Livewire::test(DispatchesEventsComponentStub::class)
+            ->assertNotDispatched('foo')
+            ->call('dispatchFoo')
+            ->assertNotDispatched('bar')
+            ->call('dispatchFooWithParam', 'not-bar')
+            ->assertNotDispatched('foo', 'bar')
+            ->call('dispatchFooWithParam', 'foo')
+            ->assertNotDispatched('bar', 'foo')
+            ->call('dispatchFooWithParam', 'baz')
+            ->assertNotDispatched('bar', function ($event, $params) {
                 return $event !== 'bar' && $params === ['baz'];
             })
-            ->call('emitFooWithParam', 'baz')
-            ->assertNotEmitted('foo', function ($event, $params) {
+            ->call('dispatchFooWithParam', 'baz')
+            ->assertNotDispatched('foo', function ($event, $params) {
                 return $event !== 'foo' && $params !== ['bar'];
             });
-    }
-
-    /** @test */
-    public function assert_dispatched_browser_event()
-    {
-        Livewire::test(DispatchesBrowserEventsComponentStub::class)
-            ->call('dispatchFoo')
-            ->assertDispatchedBrowserEvent('foo')
-            ->call('dispatchFooWithData', ['bar' => 'baz'])
-            ->assertDispatchedBrowserEvent('foo', ['bar' => 'baz'])
-            ->call('dispatchFooWithData', ['bar' => 'baz'])
-            ->assertDispatchedBrowserEvent('foo', function ($event, $data) {
-                return $event === 'foo' && $data === ['bar' => 'baz'];
-            });
-    }
-
-    /** @test */
-    public function assert_dispatched_browser_event_fails()
-    {
-        $this->expectException(AssertionFailedError::class);
-
-        Livewire::test(DispatchesBrowserEventsComponentStub::class)
-            ->assertDispatchedBrowserEvent('foo');
     }
 
     /** @test */
@@ -562,59 +524,31 @@ class HasMountArgumentsButDoesntPassThemToBladeView extends Component
     }
 }
 
-class EmitsEventsComponentStub extends Component
-{
-    public function emitFoo()
-    {
-        $this->emit('foo');
-    }
-
-    public function emitFooWithParam($param)
-    {
-        $this->emit('foo', $param);
-    }
-
-    public function emitFooToSomeComponent()
-    {
-        $this->emitTo('some-component','foo');
-    }
-
-    public function emitFooToSomeComponentWithParam($param)
-    {
-        $this->emitTo('some-component','foo', $param);
-    }
-
-    public function emitFooToAComponentAsAModel()
-    {
-        $this->emitTo(ComponentWhichReceivesEvent::class,'foo');
-    }
-
-    public function emitFooUp()
-    {
-        $this->emitUp('foo');
-    }
-
-    public function emitFooUpWithParam($param)
-    {
-        $this->emitUp('foo', $param);
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
-}
-
-class DispatchesBrowserEventsComponentStub extends Component
+class DispatchesEventsComponentStub extends Component
 {
     public function dispatchFoo()
     {
-        $this->dispatchBrowserEvent('foo');
+        $this->dispatch('foo');
     }
 
-    public function dispatchFooWithData($data)
+    public function dispatchFooWithParam($param)
     {
-        $this->dispatchBrowserEvent('foo', $data);
+        $this->dispatch('foo', $param);
+    }
+
+    public function dispatchFooToSomeComponent()
+    {
+        $this->dispatch('foo')->to('some-component');
+    }
+
+    public function dispatchFooToSomeComponentWithParam($param)
+    {
+        $this->dispatch('foo', $param)->to('some-component');
+    }
+
+    public function dispatchFooToAComponentAsAModel()
+    {
+        $this->dispatch('foo')->to(ComponentWhichReceivesEvent::class);
     }
 
     public function render()

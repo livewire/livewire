@@ -24,6 +24,8 @@
 - Change `$this->emit()` and `$emit` to `$this->dispatch()` and `$dispatch()`
     - Same with `emitTo()`
 - Change `dispatchBrowserEvent()` to `dispatch()`
+- Remove the concept of "up"
+- "assertEmitted" -> "assertedDispatched"
 
 ## New component layout file default
 - Previous: `resources/views/layouts/app.blade.php` | New: `resources/views/components/layouts/app.blade.php`

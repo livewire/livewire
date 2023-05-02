@@ -6,6 +6,6 @@ import './supportReactiveProps';
 import './supportFileUploads';
 import './supportQueryString';
 import './supportRedirects';
-import './supportDispatch';
 import './supportMorphDom';
 import './supportEntangle';
+import './supportEvents';

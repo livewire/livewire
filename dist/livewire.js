@@ -4080,14 +4080,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return parent.$wire;
   });
   wireProperty("$on", (component) => (...params) => listen(component, ...params));
-  wireProperty("$emit", (component) => (...params) => emit(...params));
-  wireProperty("$emitUp", (component) => (...params) => emitUp(component.el, ...params));
-  wireProperty("$emitSelf", (component) => (...params) => emitSelf(component.id, ...params));
-  wireProperty("$emitTo", (component) => (...params) => emitTo(...params));
-  wireProperty("emit", (component) => (...params) => emit(...params));
-  wireProperty("emitUp", (component) => (...params) => emitUp(component.el, ...params));
-  wireProperty("emitSelf", (component) => (...params) => emitSelf(component.id, ...params));
-  wireProperty("emitTo", (component) => (...params) => emitTo(...params));
+  wireProperty("$dispatch", (component) => (...params) => dispatch3(...params));
+  wireProperty("$dispatchUp", (component) => (...params) => dispatchUp(component.el, ...params));
+  wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component.id, ...params));
+  wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(...params));
+  wireProperty("dispatch", (component) => (...params) => dispatch3(...params));
+  wireProperty("dispatchUp", (component) => (...params) => dispatchUp(component.el, ...params));
+  wireProperty("dispatchSelf", (component) => (...params) => dispatchSelf(component.id, ...params));
+  wireProperty("dispatchTo", (component) => (...params) => dispatchTo(...params));
 
   // js/component.js
   var Component = class {
@@ -4162,7 +4162,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return Object.values(components)[0].$wire;
   }
 
-  // js/features/supportDispatch.js
+  // js/features/supportEvents.js
   on("effects", (component, effects) => {
     let dispatches = effects.dispatches;
     if (!dispatches)
@@ -4183,26 +4183,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     listeners2.forEach((name) => {
       globalListeners.add(name, (...params) => {
-        component.$wire.call("__emit", name, ...params);
+        component.$wire.call("__dispatch", name, ...params);
       });
       queueMicrotask(() => {
         component.el.addEventListener("__lwevent:" + name, (e) => {
-          component.$wire.call("__emit", name, ...e.detail.params);
+          component.$wire.call("__dispatch", name, ...e.detail.params);
         });
       });
     });
   });
-  function emit(name, ...params) {
+  function dispatch3(name, ...params) {
     globalListeners.each(name, (i) => i(...params));
   }
-  function emitUp(el, name, ...params) {
+  function dispatchUp(el, name, ...params) {
     dispatch(el, "__lwevent:" + name, { params });
   }
-  function emitSelf(id, name, ...params) {
+  function dispatchSelf(id, name, ...params) {
     let component = findComponent(id);
     dispatch(component.el, "__lwevent:" + name, { params }, false);
   }
-  function emitTo(componentName, name, ...params) {
+  function dispatchTo(componentName, name, ...params) {
     let components2 = componentsByName(componentName);
     components2.forEach((component) => {
       dispatch(component.el, "__lwevent:" + name, { params }, false);
@@ -5818,12 +5818,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/index.js
   var Livewire = {
     directive: directive2,
-    emitTo,
+    dispatchTo,
     start: start2,
     first,
     find,
     hook: on,
-    emit,
+    dispatch: dispatch3,
     on: on3
   };
   if (window.Livewire)

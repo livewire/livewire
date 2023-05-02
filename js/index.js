@@ -1,4 +1,4 @@
-import { emit, emitTo, on } from './features/supportDispatch'
+import { dispatch, dispatchTo, on } from './features/supportEvents'
 import { directive } from './directives'
 import { find, first } from './store'
 import { on as hook } from './events'
@@ -7,12 +7,12 @@ import Alpine from 'alpinejs'
 
 export let Livewire = {
     directive,
-    emitTo,
+    dispatchTo,
     start,
     first,
     find,
     hook,
-    emit,
+    dispatch,
     on,
 }
 

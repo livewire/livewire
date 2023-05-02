@@ -1,6 +1,6 @@
 import { componentsByName, findComponent } from '../store'
 import { on as hook } from '@/events'
-import { Bag, dispatch } from '@/utils'
+import { Bag, dispatch as dispatchEvent } from '@/utils'
 import Alpine from 'alpinejs'
 
 hook('effects', (component, effects) => {
@@ -28,37 +28,37 @@ hook('effects', (component, effects, path) => {
 
     listeners.forEach(name => {
         globalListeners.add(name, (...params) => {
-            component.$wire.call('__emit', name, ...params)
+            component.$wire.call('__dispatch', name, ...params)
         })
 
         queueMicrotask(() => {
             component.el.addEventListener('__lwevent:'+name, (e) => {
-                component.$wire.call('__emit', name, ...e.detail.params)
+                component.$wire.call('__dispatch', name, ...e.detail.params)
             })
         })
     })
 })
 
-export function emit(name, ...params) {
+export function dispatch(name, ...params) {
     globalListeners.each(name, i => i(...params))
 }
 
-export function emitUp(el, name, ...params) {
+export function dispatchUp(el, name, ...params) {
     // todo: __lweevent? ew.
-    dispatch(el, '__lwevent:'+name, { params })
+    dispatchEvent(el, '__lwevent:'+name, { params })
 }
 
-export function emitSelf(id, name, ...params) {
+export function dispatchSelf(id, name, ...params) {
     let component = findComponent(id)
 
-    dispatch(component.el, '__lwevent:'+name, { params }, false)
+    dispatchEvent(component.el, '__lwevent:'+name, { params }, false)
 }
 
-export function emitTo(componentName, name, ...params) {
+export function dispatchTo(componentName, name, ...params) {
     let components = componentsByName(componentName)
 
     components.forEach(component => {
-        dispatch(component.el, '__lwevent:'+name, { params }, false)
+        dispatchEvent(component.el, '__lwevent:'+name, { params }, false)
     })
 }
 

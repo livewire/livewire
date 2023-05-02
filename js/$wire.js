@@ -1,4 +1,4 @@
-import { emit, emitSelf, emitTo, emitUp, listen } from '@/features/supportDispatch'
+import { dispatch, dispatchSelf, dispatchTo, dispatchUp, listen } from '@/features/supportEvents'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
 import { callMethod, requestCommit } from '@/request'
@@ -130,12 +130,12 @@ wireProperty('$parent', component => {
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
-wireProperty('$emit', (component) => (...params) => emit(...params))
-wireProperty('$emitUp', (component) => (...params) => emitUp(component.el, ...params))
-wireProperty('$emitSelf', (component) => (...params) => emitSelf(component.id, ...params))
-wireProperty('$emitTo', (component) => (...params) => emitTo(...params))
+wireProperty('$dispatch', (component) => (...params) => dispatch(...params))
+wireProperty('$dispatchUp', (component) => (...params) => dispatchUp(component.el, ...params))
+wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component.id, ...params))
+wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(...params))
 
-wireProperty('emit', (component) => (...params) => emit(...params))
-wireProperty('emitUp', (component) => (...params) => emitUp(component.el, ...params))
-wireProperty('emitSelf', (component) => (...params) => emitSelf(component.id, ...params))
-wireProperty('emitTo', (component) => (...params) => emitTo(...params))
+wireProperty('dispatch', (component) => (...params) => dispatch(...params))
+wireProperty('dispatchUp', (component) => (...params) => dispatchUp(component.el, ...params))
+wireProperty('dispatchSelf', (component) => (...params) => dispatchSelf(component.id, ...params))
+wireProperty('dispatchTo', (component) => (...params) => dispatchTo(...params))

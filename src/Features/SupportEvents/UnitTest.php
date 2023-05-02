@@ -22,7 +22,7 @@ class UnitTest extends \Tests\TestCase
             public function render() { return '<div></div>'; }
         });
 
-        $component->emit('bar', 'baz');
+        $component->dispatch('bar', 'baz');
 
         $this->assertEquals($component->get('foo'), 'baz');
     }
@@ -32,7 +32,7 @@ class UnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(ReceivesEvents::class);
 
-        $component->emit('bar', 'baz');
+        $component->dispatch('bar', 'baz');
 
         $this->assertEquals($component->get('foo'), 'baz');
     }
@@ -42,7 +42,7 @@ class UnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(ReceivesEventsWithSingleValueListener::class);
 
-        $component->emit('bar', 'baz');
+        $component->dispatch('bar', 'baz');
 
         $this->assertEquals($component->get('foo'), 'baz');
     }
@@ -52,7 +52,7 @@ class UnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(ReceivesEvents::class);
 
-        $component->emit('bar', 'baz', 'blab');
+        $component->dispatch('bar', 'baz', 'blab');
 
         $this->assertEquals($component->get('foo'), 'bazblab');
     }
@@ -66,71 +66,41 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function server_emitted_events_are_provided_to_frontend()
+    public function server_dispatched_events_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
 
-        $component->call('emitGoo');
+        $component->call('dispatchGoo');
 
-        $this->assertTrue(in_array(['event' => 'goo', 'params' => ['car']], $component->effects['emits']));
+        $this->assertTrue(in_array(['event' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
     }
 
     /** @test */
-    public function server_emitted_up_events_are_provided_to_frontend()
+    public function server_dispatched_self_events_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
 
-        $component->call('emitUpGoo');
+        $component->call('dispatchSelfGoo');
 
-        $this->assertTrue(in_array(['ancestorsOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->effects['emits']));
-    }
-
-    /** @test */
-    public function server_emitted_self_events_are_provided_to_frontend()
-    {
-        $component = Livewire::test(ReceivesEvents::class);
-
-        $component->call('emitSelfGoo');
-
-        $this->assertTrue(in_array(['selfOnly' => true, 'event' => 'goo', 'params' => ['car']], $component->effects['emits']));
-    }
-
-    /** @test */
-    public function server_emitted_to_events_are_provided_to_frontend()
-    {
-        Livewire::component('goo', DispatchesBrowserEvents::class);
-
-        $component = Livewire::test(ReceivesEvents::class);
-
-        $component->call('emitToGooGone');
-
-        $this->assertTrue(in_array(['to' => 'goo', 'event' => 'gone', 'params' => ['car']], $component->effects['emits']));
-    }
-
-    /** @test */
-    public function server_dispatched_browser_events_are_provided_to_frontend()
-    {
-        Livewire::test(DispatchesBrowserEvents::class)
-                ->call('dispatchFoo')
-                ->assertDispatchedBrowserEvent('foo', ['bar' => 'baz']);
+        $this->assertTrue(in_array(['self' => true, 'event' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
     }
 
     /** @test */
     public function component_can_set_dynamic_listeners()
     {
         Livewire::test(ReceivesEventsWithDynamicListeners::class, ['listener' => 'bob'])
-                ->emit('bob', 'lob')
+                ->dispatch('bob', 'lob')
                 ->assertSet('foo', 'lob');
     }
 
     /** @test */
-    public function component_receives_events_emitted_using_classname()
+    public function component_receives_events_dispatched_using_classname()
     {
         $component = Livewire::test(ReceivesEvents::class);
 
-        $component->call('emitToComponentUsingClassname');
+        $component->call('dispatchToComponentUsingClassname');
 
-        $this->assertTrue(in_array(['to' => 'livewire.features.support-events.it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->effects['emits']));
+        $this->assertTrue(in_array(['to' => 'livewire.features.support-events.it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->effects['dispatches']));
     }
 }
 
@@ -145,29 +115,24 @@ class ReceivesEvents extends Component
         $this->foo = $value.$otherValue;
     }
 
-    public function emitGoo()
+    public function dispatchGoo()
     {
-        $this->emit('goo', 'car');
+        $this->dispatch('goo', 'car');
     }
 
-    public function emitUpGoo()
+    public function dispatchSelfGoo()
     {
-        $this->emitUp('goo', 'car');
+        $this->dispatch('goo', 'car')->self();
     }
 
-    public function emitSelfGoo()
+    public function dispatchToGooGone()
     {
-        $this->emitSelf('goo', 'car');
+        $this->dispatch('gone', 'car')->to('goo');
     }
 
-    public function emitToGooGone()
+    public function dispatchToComponentUsingClassname()
     {
-        $this->emitTo('goo', 'gone', 'car');
-    }
-
-    public function emitToComponentUsingClassname()
-    {
-        $this->emitTo(ItCanReceiveEventUsingClassname::class, 'foo', 'test');
+        $this->dispatch('foo', 'test')->to(ItCanReceiveEventUsingClassname::class);
     }
 
     public function render()
@@ -211,19 +176,6 @@ class ReceivesEventsWithDynamicListeners extends Component
     public function handle($value)
     {
         $this->foo = $value;
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
-}
-
-class DispatchesBrowserEvents extends Component
-{
-    public function dispatchFoo()
-    {
-        $this->dispatchBrowserEvent('foo', ['bar' => 'baz']);
     }
 
     public function render()

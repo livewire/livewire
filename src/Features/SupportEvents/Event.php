@@ -9,7 +9,6 @@ class Event
 {
     protected $name;
     protected $params;
-    protected $up;
     protected $self;
     protected $component;
 
@@ -17,13 +16,6 @@ class Event
     {
         $this->name = $name;
         $this->params = $params;
-    }
-
-    public function up()
-    {
-        $this->up = true;
-
-        return $this;
     }
 
     public function self()
@@ -40,9 +32,9 @@ class Event
         return $this;
     }
 
-    public function to()
+    public function to($name)
     {
-        return $this;
+        return $this->component($name);
     }
 
     public function serialize()
@@ -52,8 +44,7 @@ class Event
             'params' => $this->params,
         ];
 
-        if ($this->up) $output['ancestorsOnly'] = true;
-        if ($this->self) $output['selfOnly'] = true;
+        if ($this->self) $output['self'] = true;
         if ($this->component) $output['to'] = app(ComponentRegistry::class)->getName($this->component);
 
         return $output;

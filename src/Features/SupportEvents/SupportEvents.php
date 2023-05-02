@@ -15,7 +15,7 @@ class SupportEvents extends ComponentHook
 {
     function call($method, $params, $returnEarly)
     {
-        if ($method === '__emit') {
+        if ($method === '__dispatch') {
             $name = array_shift($params);
 
             $names = static::getListenerEventNames($this->component);
@@ -35,11 +35,9 @@ class SupportEvents extends ComponentHook
     function dehydrate($context)
     {
         $listeners = static::getListenerEventNames($this->component);
-        $emits = $this->getServerEmittedEvents($this->component);
         $dispatches = $this->getServerDispatchedEvents($this->component);
 
         $listeners && $context->addEffect('listeners', $listeners);
-        $emits && $context->addEffect('emits', $emits);
         $dispatches && $context->addEffect('dispatches', $dispatches);
     }
 
@@ -75,15 +73,10 @@ class SupportEvents extends ComponentHook
         return array_merge($fromClass, $fromAttributes);
     }
 
-    function getServerEmittedEvents($component)
-    {
-        return collect(store($component)->get('emitted', []))
-            ->map(fn ($event) => $event->serialize())
-            ->toArray();
-    }
-
     function getServerDispatchedEvents($component)
     {
-        return store($component)->get('dispatched', []);
+        return collect(store($component)->get('dispatched', []))
+            ->map(fn ($event) => $event->serialize())
+            ->toArray();
     }
 }
