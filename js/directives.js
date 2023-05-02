@@ -1,5 +1,3 @@
-import { on } from '@/events'
-
 let directives = {}
 
 export function directive(name, callback) {

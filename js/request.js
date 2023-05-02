@@ -3,12 +3,6 @@ import { dataGet, dataSet, each, deeplyEqual, isObjecty, deepClone, diff, isObje
 import { showHtmlModal } from './modal'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
-import { wireProperty } from './wire'
-
-/**
- * The Alpine build will need to use it's own reactivity hooks,
- * so we'll declare these as variables rather than direct imports.
- */
 
 /**
  * We'll store all our "synthetic" instances in a single lookup so that

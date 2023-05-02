@@ -1,13 +1,8 @@
 import { findComponent } from "../store";
 import { on } from '@/events'
 import Alpine from 'alpinejs'
-import { wireProperty } from "@/wire";
 
-wireProperty('entangle', (component) => (name, live = false) => {
-    return generateEntangleFunction(component)(name, live)
-})
-
-function generateEntangleFunction(component) {
+export function generateEntangleFunction(component) {
     return (name, live) => {
         let isLive = live
         let livewireProperty = name

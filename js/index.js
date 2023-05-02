@@ -1,4 +1,4 @@
-import { emit, emitTo, on } from './features/events'
+import { emit, emitTo, on } from './features/supportDispatch'
 import { directive } from './directives'
 import { find, first } from './store'
 import { on as hook } from './events'

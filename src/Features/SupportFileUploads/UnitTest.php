@@ -2,14 +2,15 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
-use League\Flysystem\PathTraversalDetected;
-use Livewire\Component;
-use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
+use Livewire\WithFileUploads;
 use Livewire\Livewire;
+use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
+use Livewire\Component;
+use League\Flysystem\PathTraversalDetected;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
 
 class UnitTest extends \Tests\TestCase
 {

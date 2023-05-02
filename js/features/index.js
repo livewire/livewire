@@ -1,20 +1,12 @@
 
-import './disableFormsDuringRequest';
-import './forceUpdateDirtyInputs';
-import './dispatchBrowserEvents';
-import './streaming';
-import './wireModelChild';
-import './fileDownloads';
-import './magicMethods';
-// import './hotReloading';
-import './queryString';
-import './morphDom';
-import './entangle';
-import './redirect';
-import './$parent';
-import './methods';
-import './events';
-import './props';
-import './$wire';
-
-
+import './supportWireModelingNestedComponents';
+import './supportDisablingFormsDuringRequest';
+import './supportFileDownloads';
+import './supportReactiveProps';
+import './supportFileUploads';
+import './supportQueryString';
+import './supportStreaming';
+import './supportRedirects';
+import './supportDispatch';
+import './supportMorphDom';
+import './supportEntangle';

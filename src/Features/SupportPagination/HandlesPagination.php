@@ -13,6 +13,11 @@ trait HandlesPagination
         })->toArray();
     }
 
+    public function getPage($pageName = 'page')
+    {
+        return $this->paginators[$pageName] ?? 1;
+    }
+
     public function previousPage($pageName = 'page')
     {
         $this->setPage(max(($this->paginators[$pageName] ?? 1) - 1, 1), $pageName);

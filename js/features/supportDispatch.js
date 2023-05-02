@@ -2,7 +2,23 @@ import { componentsByName, findComponent } from '../store'
 import { on as hook } from '@/events'
 import { Bag, dispatch } from '@/utils'
 import Alpine from 'alpinejs'
-import { wireProperty } from '@/wire'
+
+// support dispatchBrowserEvents
+on('effects', (component, effects) => {
+    let dispatches = effects.dispatches
+    if (! dispatches) return
+
+    dispatches.forEach(({ event, data }) => {
+        data = data || {}
+
+        let e = new CustomEvent(event, {
+            bubbles: true,
+            detail: data,
+        })
+
+        component.el.dispatchEvent(e)
+    })
+})
 
 let globalListeners = new Bag
 
@@ -23,16 +39,6 @@ hook('effects', (component, effects, path) => {
         })
     })
 })
-
-wireProperty('$emit', (component) => (...params) => emit(...params))
-wireProperty('$emitUp', (component) => (...params) => emitUp(component.el, ...params))
-wireProperty('$emitSelf', (component) => (...params) => emitSelf(component.id, ...params))
-wireProperty('$emitTo', (component) => (...params) => emitTo(...params))
-
-wireProperty('emit', (component) => (...params) => emit(...params))
-wireProperty('emitUp', (component) => (...params) => emitUp(component.el, ...params))
-wireProperty('emitSelf', (component) => (...params) => emitSelf(component.id, ...params))
-wireProperty('emitTo', (component) => (...params) => emitTo(...params))
 
 export function emit(name, ...params) {
     globalListeners.each(name, i => i(...params))
