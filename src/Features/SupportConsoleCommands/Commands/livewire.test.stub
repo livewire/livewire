@@ -11,10 +11,9 @@ use Tests\TestCase;
 class [testclass] extends TestCase
 {
     /** @test */
-    public function the_component_can_render()
+    public function renders_successfully()
     {
-        $component = Livewire::test([class]::class);
-
-        $component->assertStatus(200);
+        Livewire::test([class]::class)
+            ->assertStatus(200);
     }
 }

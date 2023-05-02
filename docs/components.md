@@ -77,6 +77,25 @@ You can create inline components by adding the `--inline` flag to the `make:live
 php artisan make:livewire CreatePost --inline
 ```
 
+### Omitting the render method
+
+To reduce boilerplate in your components, you can omit the `render()` method entirely, and Livewire will use it's own underlying `render()` method which returns a view with the conventional corresponding name to your component:
+
+```php
+<?php
+
+namespace App\Http\Livewire;
+
+use Livewire\Component;
+
+class CreatePost extends Component
+{
+    //
+}
+```
+
+If the above component is rendered on a page with no `render()` method, Livewire will render it using the `livewire.create-post` view automatically.
+
 ### Customizing component stubs
 
 @todo
