@@ -62,7 +62,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         foreach([
             \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
             \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
-            // \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
+            \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
             \Livewire\Features\SupportNestingComponents\SupportNestingComponents::class,
