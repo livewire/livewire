@@ -6,6 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Facades\Livewire\GenerateSignedUploadUrl;
 use Illuminate\Validation\ValidationException;
 use Livewire\Exceptions\S3DoesntSupportMultipleFileUploads;
+use Livewire\Jobs\CleanupUploadedFilesJob;
 
 trait WithFileUploads
 {
@@ -98,19 +99,11 @@ trait WithFileUploads
 
     protected function cleanupOldUploads()
     {
-        if (FileUploadConfiguration::isUsingS3()) return;
-
-        $storage = FileUploadConfiguration::storage();
-
-        foreach ($storage->allFiles(FileUploadConfiguration::path()) as $filePathname) {
-            // On busy websites, this cleanup code can run in multiple threads causing part of the output
-            // of allFiles() to have already been deleted by another thread.
-            if (! $storage->exists($filePathname)) continue;
-
-            $yesterdaysStamp = now()->subDay()->timestamp;
-            if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
-                $storage->delete($filePathname);
-            }
+        if (FileUploadConfiguration::isUsingS3() || FileUploadConfiguration::isUsingGCS()) {
+            return;
         }
+
+        CleanupUploadedFilesJob::dispatch()
+            ->delay(600);
     }
 }

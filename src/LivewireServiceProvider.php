@@ -32,8 +32,8 @@ use Livewire\Commands\{
     ComponentParser,
     DiscoverCommand,
     S3CleanupCommand,
-    MakeLivewireCommand,
-};
+    CleanupCommand,
+    MakeLivewireCommand};
 use Livewire\Macros\ViewMacros;
 use Livewire\HydrationMiddleware\{
     RenderView,
@@ -179,6 +179,7 @@ class LivewireServiceProvider extends ServiceProvider
             StubsCommand::class,        // livewire:stubs
             DiscoverCommand::class,     // livewire:discover
             S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
+            CleanupCommand::class,      // livewire:upload-cleanup
             PublishCommand::class,      // livewire:publish
         ]);
     }
