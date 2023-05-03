@@ -4,12 +4,20 @@ import { on } from '@/events'
 let uploadManagers = new WeakMap
 
 function getUploadManager(component) {
-    if (! uploadManagers.has(component)) uploadManagers.set(component, new UploadManager(component))
+    if (! uploadManagers.has(component)) {
+        let manager = new UploadManager(component)
+
+        uploadManagers.set(component, manager)
+
+        manager.registerListeners()
+    }
 
     return uploadManagers.get(component)
 }
 
 export function handleFileUpload(el, property, component, cleanup) {
+    let manager = getUploadManager(component)
+
     let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true }))
     let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true }))
     let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
@@ -29,9 +37,9 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            uploadMultiple(component, property, e.target.files, finish, error, progress)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress)
         } else {
-            upload(component, property, e.target.files[0], finish, error, progress)
+            manager.upload(property, e.target.files[0], finish, error, progress)
         }
     }
 
@@ -49,55 +57,6 @@ export function handleFileUpload(el, property, component, cleanup) {
     })
 }
 
-function upload(
-    component,
-    name,
-    file,
-    finishCallback = () => { },
-    errorCallback = () => { },
-    progressCallback = () => { }
-) {
-    getUploadManager(component).upload(
-        name,
-        file,
-        finishCallback,
-        errorCallback,
-        progressCallback
-    )
-}
-
-function uploadMultiple(
-    component,
-    name,
-    files,
-    finishCallback = () => { },
-    errorCallback = () => { },
-    progressCallback = () => { }
-) {
-    getUploadManager(component).uploadMultiple(
-        name,
-        files,
-        finishCallback,
-        errorCallback,
-        progressCallback
-    )
-}
-
-function removeUpload(
-    component,
-    name,
-    tmpFilename,
-    finishCallback = () => { },
-    errorCallback = () => { }
-) {
-    getUploadManager(component).removeUpload(
-        name,
-        tmpFilename,
-        finishCallback,
-        errorCallback
-    )
-}
-
 class UploadManager {
     constructor(component) {
         this.component = component
@@ -106,7 +65,7 @@ class UploadManager {
     }
 
     registerListeners() {
-        this.component.$wire.$on('upload:generatedSignedUrl', ([name, url]) => {
+        this.component.$wire.$on('upload:generatedSignedUrl', ([ [name, url] ]) => {
             // We have to add reduntant "setLoading" calls because the dom-patch
             // from the first response will clear the setUploadLoading call
             // from the first upload call.
@@ -115,7 +74,7 @@ class UploadManager {
             this.handleSignedUrl(name, url)
         })
 
-        this.component.$wire.$on('upload:generatedSignedUrlForS3', ([name, payload]) => {
+        this.component.$wire.$on('upload:generatedSignedUrlForS3', ([ [name, payload] ]) => {
             setUploadLoading(this.component, name)
 
             this.handleS3PreSignedUrl(name, payload)

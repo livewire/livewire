@@ -28,6 +28,47 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function listens_for_event_with_named_params()
+    {
+        $component = Livewire::test(new class extends Component {
+            public $foo = 'bar';
+
+            #[Listener('bar')]
+            public function onBar($name, $game)
+            {
+                $this->foo = $name . $game;
+            }
+
+            public function render() { return '<div></div>'; }
+        });
+
+        $component->dispatch('bar', game: 'shmaz', name: 'baz');
+
+        $this->assertEquals($component->get('foo'), 'bazshmaz');
+    }
+
+    /** @test */
+    public function dispatches_event_with_named_params()
+    {
+        Livewire::test(new class extends Component {
+            public function dispatchFoo()
+            {
+                $this->dispatch('foo', name: 'bar', game: 'baz');
+            }
+
+            public function render() { return '<div></div>'; }
+        })
+            ->call('dispatchFoo')
+            ->assertDispatched('foo')
+            ->assertDispatched('foo', name: 'bar')
+            ->assertDispatched('foo', name: 'bar', game: 'baz')
+            ->assertDispatched('foo', game: 'baz', name: 'bar')
+            ->assertNotDispatched('foo', games: 'baz')
+            ->assertNotDispatched('foo', name: 'baz')
+        ;
+    }
+
+    /** @test */
     public function receive_event()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -72,7 +113,7 @@ class UnitTest extends \Tests\TestCase
 
         $component->call('dispatchGoo');
 
-        $this->assertTrue(in_array(['event' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
+        $this->assertTrue(in_array(['name' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
     }
 
     /** @test */
@@ -82,7 +123,7 @@ class UnitTest extends \Tests\TestCase
 
         $component->call('dispatchSelfGoo');
 
-        $this->assertTrue(in_array(['self' => true, 'event' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
+        $this->assertTrue(in_array(['self' => true, 'name' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
     }
 
     /** @test */
@@ -100,7 +141,7 @@ class UnitTest extends \Tests\TestCase
 
         $component->call('dispatchToComponentUsingClassname');
 
-        $this->assertTrue(in_array(['to' => 'livewire.features.support-events.it-can-receive-event-using-classname', 'event' => 'foo', 'params' => ['test']], $component->effects['dispatches']));
+        $this->assertTrue(in_array(['to' => 'livewire.features.support-events.it-can-receive-event-using-classname', 'name' => 'foo', 'params' => ['test']], $component->effects['dispatches']));
     }
 }
 

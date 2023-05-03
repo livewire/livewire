@@ -11,6 +11,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function can_upload_a_file()
     {
+        // Get this passing tomorrow...
+
         Livewire::visit(new class extends Component {
             use WithFileUploads;
 

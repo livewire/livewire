@@ -16,7 +16,7 @@ class SupportEvents extends ComponentHook
     function call($method, $params, $returnEarly)
     {
         if ($method === '__dispatch') {
-            $name = array_shift($params);
+            [$name, $params] = $params;
 
             $names = static::getListenerEventNames($this->component);
 
@@ -34,10 +34,14 @@ class SupportEvents extends ComponentHook
 
     function dehydrate($context)
     {
-        $listeners = static::getListenerEventNames($this->component);
+        if ($context->mounting) {
+            $listeners = static::getListenerEventNames($this->component);
+
+            $listeners && $context->addEffect('listeners', $listeners);
+        }
+
         $dispatches = $this->getServerDispatchedEvents($this->component);
 
-        $listeners && $context->addEffect('listeners', $listeners);
         $dispatches && $context->addEffect('dispatches', $dispatches);
     }
 

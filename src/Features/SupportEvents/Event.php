@@ -40,7 +40,7 @@ class Event
     public function serialize()
     {
         $output = [
-            'event' => $this->name,
+            'name' => $this->name,
             'params' => $this->params,
         ];
 

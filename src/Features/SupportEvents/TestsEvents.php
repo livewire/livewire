@@ -9,7 +9,7 @@ trait TestsEvents
 {
     public function dispatch($event, ...$parameters)
     {
-        return parent::call('__dispatch', $event, ...$parameters);
+        return parent::call('__dispatch', $event, $parameters);
     }
 
     public function fireEvent($event, ...$parameters)
@@ -50,17 +50,22 @@ trait TestsEvents
         $assertionSuffix = '.';
 
         if (empty($params)) {
-            $test = collect(data_get($this->effects, 'dispatches'))->contains('event', '=', $value);
-        } elseif (! is_string($params[0]) && is_callable($params[0])) {
+            $test = collect(data_get($this->effects, 'dispatches'))->contains('name', '=', $value);
+        } elseif (isset($params[0]) && ! is_string($params[0]) && is_callable($params[0])) {
             $event = collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($value) {
-                return $item['event'] === $value;
+                return $item['name'] === $value;
             });
 
-            $test = $event && $params[0]($event['event'], $event['params']);
+            $test = $event && $params[0]($event['name'], $event['params']);
         } else {
             $test = (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($value, $params) {
-                return $item['event'] === $value
-                    && $item['params'] === $params;
+                $commonParams = array_intersect_key($item['params'], $params);
+
+                ksort($commonParams);
+                ksort($params);
+
+                return $item['name'] === $value
+                    && $commonParams === $params;
             });
 
             $encodedParams = json_encode($params);
@@ -78,7 +83,7 @@ trait TestsEvents
         $name = app(ComponentRegistry::class)->getName($target);
 
         return (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($name, $value) {
-            return $item['event'] === $value
+            return $item['name'] === $value
                 && $item['to'] === $name;
         });
 

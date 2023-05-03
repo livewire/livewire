@@ -1,21 +1,5 @@
 (() => {
   // js/utils.js
-  var Bag = class {
-    constructor() {
-      this.arrays = {};
-    }
-    add(key, value) {
-      if (!this.arrays[key])
-        this.arrays[key] = [];
-      this.arrays[key].push(value);
-    }
-    get(key) {
-      return this.arrays[key] || [];
-    }
-    each(key, callback) {
-      return this.get(key).forEach(callback);
-    }
-  };
   var WeakBag = class {
     constructor() {
       this.arrays = /* @__PURE__ */ new WeakMap();
@@ -4164,52 +4148,55 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportEvents.js
   on("effects", (component, effects) => {
-    let dispatches = effects.dispatches;
-    if (!dispatches)
-      return;
-    dispatches.forEach(({ event, data: data2 }) => {
-      data2 = data2 || {};
-      let e = new CustomEvent(event, {
-        bubbles: true,
-        detail: data2
-      });
-      component.el.dispatchEvent(e);
-    });
+    registerListeners(component, effects.listeners || []);
+    dispatchEvents(component, effects.dispatches || []);
   });
-  var globalListeners = new Bag();
-  on("effects", (component, effects, path) => {
-    let listeners2 = effects.listeners;
-    if (!listeners2)
-      return;
+  function registerListeners(component, listeners2) {
     listeners2.forEach((name) => {
-      globalListeners.add(name, (...params) => {
-        component.$wire.call("__dispatch", name, ...params);
+      window.addEventListener(name, (e) => {
+        if (e.__livewire && e.__livewire.self === true)
+          return;
+        component.$wire.call("__dispatch", name, e.detail);
       });
-      queueMicrotask(() => {
-        component.el.addEventListener("__lwevent:" + name, (e) => {
-          component.$wire.call("__dispatch", name, ...e.detail.params);
-        });
+      component.el.addEventListener(name, (e) => {
+        if (e.__livewire && (e.__livewire.self === false && e.__livewire.to === void 0))
+          return;
+        component.$wire.call("__dispatch", name, e.detail);
       });
     });
-  });
+  }
+  function dispatchEvents(component, dispatches) {
+    dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
+      let bubbles = !self2 && !to;
+      let e = new CustomEvent(name, { bubbles, detail: params });
+      e.__livewire = { name, params, self: self2, to };
+      if (to) {
+        componentsByName(to).forEach((component2) => {
+          component2.el.dispatchEvent(e);
+        });
+      } else {
+        component.el.dispatchEvent(e);
+      }
+    });
+  }
   function dispatch3(name, ...params) {
     globalListeners.each(name, (i) => i(...params));
   }
   function dispatchUp(el, name, ...params) {
-    dispatch(el, "__lwevent:" + name, { params });
+    dispatch(el, name, { params });
   }
   function dispatchSelf(id, name, ...params) {
     let component = findComponent(id);
-    dispatch(component.el, "__lwevent:" + name, { params }, false);
+    dispatch(component.el, name, { params }, false);
   }
   function dispatchTo(componentName, name, ...params) {
     let components2 = componentsByName(componentName);
     components2.forEach((component) => {
-      dispatch(component.el, "__lwevent:" + name, { params }, false);
+      dispatch(component.el, name, { params }, false);
     });
   }
   function listen(component, name, callback) {
-    component.el.addEventListener("__lwevent:" + name, (e) => {
+    component.el.addEventListener(name, (e) => {
       let param = e.detail;
       callback(e.detail);
     });
@@ -4976,11 +4963,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportFileUploads.js
   var uploadManagers = /* @__PURE__ */ new WeakMap();
   function getUploadManager(component) {
-    if (!uploadManagers.has(component))
-      uploadManagers.set(component, new UploadManager(component));
+    if (!uploadManagers.has(component)) {
+      let manager = new UploadManager(component);
+      uploadManagers.set(component, manager);
+      manager.registerListeners();
+    }
     return uploadManagers.get(component);
   }
   function handleFileUpload(el, property, component, cleanup3) {
+    let manager = getUploadManager(component);
     let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true }));
     let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true }));
     let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true }));
@@ -4996,9 +4987,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       start3();
       if (e.target.multiple) {
-        uploadMultiple(component, property, e.target.files, finish, error2, progress);
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress);
       } else {
-        upload(component, property, e.target.files[0], finish, error2, progress);
+        manager.upload(property, e.target.files[0], finish, error2, progress);
       }
     };
     el.addEventListener("change", eventHandler);
@@ -5011,18 +5002,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el.removeEventListener("click", clearFileInputValue);
     });
   }
-  function upload(component, name, file, finishCallback = () => {
-  }, errorCallback = () => {
-  }, progressCallback = () => {
-  }) {
-    getUploadManager(component).upload(name, file, finishCallback, errorCallback, progressCallback);
-  }
-  function uploadMultiple(component, name, files, finishCallback = () => {
-  }, errorCallback = () => {
-  }, progressCallback = () => {
-  }) {
-    getUploadManager(component).uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
-  }
   var UploadManager = class {
     constructor(component) {
       this.component = component;
@@ -5030,11 +5009,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.removeBag = new MessageBag();
     }
     registerListeners() {
-      this.component.$wire.$on("upload:generatedSignedUrl", ([name, url]) => {
+      this.component.$wire.$on("upload:generatedSignedUrl", ([[name, url]]) => {
         setUploadLoading(this.component, name);
         this.handleSignedUrl(name, url);
       });
-      this.component.$wire.$on("upload:generatedSignedUrlForS3", ([name, payload]) => {
+      this.component.$wire.$on("upload:generatedSignedUrlForS3", ([[name, payload]]) => {
         setUploadLoading(this.component, name);
         this.handleS3PreSignedUrl(name, payload);
       });

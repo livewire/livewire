@@ -1,71 +1,69 @@
-import { componentsByName, findComponent } from '../store'
+import { componentsByName, findComponent } from '@/store'
 import { on as hook } from '@/events'
-import { Bag, dispatch as dispatchEvent } from '@/utils'
 import Alpine from 'alpinejs'
 
 hook('effects', (component, effects) => {
-    let dispatches = effects.dispatches
-    if (! dispatches) return
+    registerListeners(component, effects.listeners || [])
 
-    dispatches.forEach(({ event, data }) => {
-        data = data || {}
-
-        let e = new CustomEvent(event, {
-            bubbles: true,
-            detail: data,
-        })
-
-        component.el.dispatchEvent(e)
-    })
+    dispatchEvents(component, effects.dispatches || [])
 })
 
-let globalListeners = new Bag
-
-hook('effects', (component, effects, path) => {
-    let listeners = effects.listeners
-
-    if (! listeners) return
-
+function registerListeners(component, listeners) {
     listeners.forEach(name => {
-        globalListeners.add(name, (...params) => {
-            component.$wire.call('__dispatch', name, ...params)
+        // Register a global listener...
+        window.addEventListener(name, (e) => {
+           if (e.__livewire && e.__livewire.self === true) return
+
+            component.$wire.call('__dispatch', name, e.detail)
         })
 
-        queueMicrotask(() => {
-            component.el.addEventListener('__lwevent:'+name, (e) => {
-                component.$wire.call('__dispatch', name, ...e.detail.params)
-            })
+        // Register a listener for when "to" or "self"
+        component.el.addEventListener(name, (e) => {
+            if (e.__livewire && (e.__livewire.self === false && e.__livewire.to === undefined)) return
+
+            component.$wire.call('__dispatch', name, e.detail)
         })
     })
-})
-
-export function dispatch(name, ...params) {
-    globalListeners.each(name, i => i(...params))
 }
 
-export function dispatchUp(el, name, ...params) {
-    // todo: __lweevent? ew.
-    dispatchEvent(el, '__lwevent:'+name, { params })
+function dispatchEvents(component, dispatches) {
+    dispatches.forEach(({ name, params = {}, self = false, to }) => {
+        if (self) dispatchSelf(component.id, name, params)
+        else if (to) dispatchTo(to, name, params)
+        else dispatch(name, params)
+    })
 }
 
-export function dispatchSelf(id, name, ...params) {
+function dispatchEvent(el, name, params, bubbles = true) {
+    let e = new CustomEvent(name, { bubbles, detail: params })
+
+    e.__livewire = { name, params, self, to }
+
+    el.dispatchEvent(e)
+}
+
+export function dispatch(name, params) {
+    dispatchEvent(window, name, params)
+}
+
+export function dispatchSelf(id, name, params) {
     let component = findComponent(id)
 
-    dispatchEvent(component.el, '__lwevent:'+name, { params }, false)
+    dispatchEvent(component.el, name, params, false)
 }
 
-export function dispatchTo(componentName, name, ...params) {
+export function dispatchTo(componentName, name, params) {
     let components = componentsByName(componentName)
 
     components.forEach(component => {
-        dispatchEvent(component.el, '__lwevent:'+name, { params }, false)
+        dispatchEvent(component.el, name, params, false)
     })
 }
 
 export function listen(component, name, callback) {
-    component.el.addEventListener('__lwevent:'+name, e => {
+    component.el.addEventListener(name, e => {
         // @todo: Should we accept multiple parameters in sequence?
-        let param = e.detail
+
 
         callback(e.detail)
     })
