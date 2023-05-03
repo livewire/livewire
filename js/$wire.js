@@ -1,4 +1,4 @@
-import { dispatch, dispatchSelf, dispatchTo, dispatchUp, listen } from '@/features/supportEvents'
+import { dispatch, dispatchSelf, dispatchTo, listen } from '@/features/supportEvents'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
 import { callMethod, requestCommit } from '@/request'
@@ -131,11 +131,9 @@ wireProperty('$parent', component => {
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$dispatch', (component) => (...params) => dispatch(...params))
-wireProperty('$dispatchUp', (component) => (...params) => dispatchUp(component.el, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component.id, ...params))
 wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(...params))
 
 wireProperty('dispatch', (component) => (...params) => dispatch(...params))
-wireProperty('dispatchUp', (component) => (...params) => dispatchUp(component.el, ...params))
 wireProperty('dispatchSelf', (component) => (...params) => dispatchSelf(component.id, ...params))
 wireProperty('dispatchTo', (component) => (...params) => dispatchTo(...params))

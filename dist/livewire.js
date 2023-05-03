@@ -29,14 +29,6 @@
       this.setAttributeNode(attr);
     };
   }
-  function dispatch(el, name, detail = {}, bubbles = true) {
-    el.dispatchEvent(new CustomEvent(name, {
-      detail,
-      bubbles,
-      composed: true,
-      cancelable: true
-    }));
-  }
   function isObjecty(subject) {
     return typeof subject === "object" && subject !== null;
   }
@@ -1495,7 +1487,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let typeB = directiveOrder.indexOf(b.type) === -1 ? DEFAULT : b.type;
     return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
   }
-  function dispatch2(el, name, detail = {}) {
+  function dispatch(el, name, detail = {}) {
     el.dispatchEvent(new CustomEvent(name, {
       detail,
       bubbles: true,
@@ -1524,8 +1516,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function start() {
     if (!document.body)
       warn("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
-    dispatch2(document, "alpine:init");
-    dispatch2(document, "alpine:initializing");
+    dispatch(document, "alpine:init");
+    dispatch(document, "alpine:initializing");
     startObservingMutations();
     onElAdded((el) => initTree(el, walk));
     onElRemoved((el) => destroyTree(el));
@@ -1536,7 +1528,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Array.from(document.querySelectorAll(allSelectors())).filter(outNestedComponents).forEach((el) => {
       initTree(el);
     });
-    dispatch2(document, "alpine:initialized");
+    dispatch(document, "alpine:initialized");
   }
   var rootSelectorCallbacks = [];
   var initSelectorCallbacks = [];
@@ -3001,7 +2993,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return Boolean(r && r.__v_isRef === true);
   }
   magic("nextTick", () => nextTick);
-  magic("dispatch", (el) => dispatch2.bind(dispatch2, el));
+  magic("dispatch", (el) => dispatch.bind(dispatch, el));
   magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
     let evaluate2 = evaluateLater2(key);
     let firstTime = true;
@@ -4064,12 +4056,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return parent.$wire;
   });
   wireProperty("$on", (component) => (...params) => listen(component, ...params));
-  wireProperty("$dispatch", (component) => (...params) => dispatch3(...params));
-  wireProperty("$dispatchUp", (component) => (...params) => dispatchUp(component.el, ...params));
+  wireProperty("$dispatch", (component) => (...params) => dispatch2(...params));
   wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component.id, ...params));
   wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(...params));
-  wireProperty("dispatch", (component) => (...params) => dispatch3(...params));
-  wireProperty("dispatchUp", (component) => (...params) => dispatchUp(component.el, ...params));
+  wireProperty("dispatch", (component) => (...params) => dispatch2(...params));
   wireProperty("dispatchSelf", (component) => (...params) => dispatchSelf(component.id, ...params));
   wireProperty("dispatchTo", (component) => (...params) => dispatchTo(...params));
 
@@ -4166,38 +4156,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
-      let bubbles = !self2 && !to;
-      let e = new CustomEvent(name, { bubbles, detail: params });
-      e.__livewire = { name, params, self: self2, to };
-      if (to) {
-        componentsByName(to).forEach((component2) => {
-          component2.el.dispatchEvent(e);
-        });
-      } else {
-        component.el.dispatchEvent(e);
-      }
+    dispatches.forEach(({ name, params = {}, self: self2 = false, to: to2 }) => {
+      if (self2)
+        dispatchSelf(component.id, name, params);
+      else if (to2)
+        dispatchTo(to2, name, params);
+      else
+        dispatch2(name, params);
     });
   }
-  function dispatch3(name, ...params) {
-    globalListeners.each(name, (i) => i(...params));
+  function dispatchEvent(el, name, params, bubbles = true) {
+    let e = new CustomEvent(name, { bubbles, detail: params });
+    e.__livewire = { name, params, self, to };
+    el.dispatchEvent(e);
   }
-  function dispatchUp(el, name, ...params) {
-    dispatch(el, name, { params });
+  function dispatch2(name, params) {
+    dispatchEvent(window, name, params);
   }
-  function dispatchSelf(id, name, ...params) {
+  function dispatchSelf(id, name, params) {
     let component = findComponent(id);
-    dispatch(component.el, name, { params }, false);
+    dispatchEvent(component.el, name, params, false);
   }
-  function dispatchTo(componentName, name, ...params) {
+  function dispatchTo(componentName, name, params) {
     let components2 = componentsByName(componentName);
     components2.forEach((component) => {
-      dispatch(component.el, name, { params }, false);
+      dispatchEvent(component.el, name, params, false);
     });
   }
   function listen(component, name, callback) {
     component.el.addEventListener(name, (e) => {
-      let param = e.detail;
       callback(e.detail);
     });
   }
@@ -4599,60 +4586,60 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       key = options2.key || defaultGetKey;
       lookahead = options2.lookahead || false;
     }
-    function patch(from2, to) {
-      if (differentElementNamesTypesOrKeys(from2, to)) {
-        return patchElement(from2, to);
+    function patch(from2, to2) {
+      if (differentElementNamesTypesOrKeys(from2, to2)) {
+        return patchElement(from2, to2);
       }
       let updateChildrenOnly = false;
-      if (shouldSkip(updating, from2, to, () => updateChildrenOnly = true))
+      if (shouldSkip(updating, from2, to2, () => updateChildrenOnly = true))
         return;
-      window.Alpine && initializeAlpineOnTo(from2, to, () => updateChildrenOnly = true);
-      if (textOrComment(to)) {
-        patchNodeValue(from2, to);
-        updated(from2, to);
+      window.Alpine && initializeAlpineOnTo(from2, to2, () => updateChildrenOnly = true);
+      if (textOrComment(to2)) {
+        patchNodeValue(from2, to2);
+        updated(from2, to2);
         return;
       }
       if (!updateChildrenOnly) {
-        patchAttributes(from2, to);
+        patchAttributes(from2, to2);
       }
-      updated(from2, to);
-      patchChildren(Array.from(from2.childNodes), Array.from(to.childNodes), (toAppend) => {
+      updated(from2, to2);
+      patchChildren(Array.from(from2.childNodes), Array.from(to2.childNodes), (toAppend) => {
         from2.appendChild(toAppend);
       });
     }
-    function differentElementNamesTypesOrKeys(from2, to) {
-      return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
+    function differentElementNamesTypesOrKeys(from2, to2) {
+      return from2.nodeType != to2.nodeType || from2.nodeName != to2.nodeName || getKey(from2) != getKey(to2);
     }
-    function patchElement(from2, to) {
+    function patchElement(from2, to2) {
       if (shouldSkip(removing, from2))
         return;
-      let toCloned = to.cloneNode(true);
+      let toCloned = to2.cloneNode(true);
       if (shouldSkip(adding, toCloned))
         return;
       dom.replace([from2], from2, toCloned);
       removed(from2);
       added(toCloned);
     }
-    function patchNodeValue(from2, to) {
-      let value = to.nodeValue;
+    function patchNodeValue(from2, to2) {
+      let value = to2.nodeValue;
       if (from2.nodeValue !== value) {
         from2.nodeValue = value;
       }
     }
-    function patchAttributes(from2, to) {
+    function patchAttributes(from2, to2) {
       if (from2._x_transitioning)
         return;
-      if (from2._x_isShown && !to._x_isShown) {
+      if (from2._x_isShown && !to2._x_isShown) {
         return;
       }
-      if (!from2._x_isShown && to._x_isShown) {
+      if (!from2._x_isShown && to2._x_isShown) {
         return;
       }
       let domAttributes = Array.from(from2.attributes);
-      let toAttributes = Array.from(to.attributes);
+      let toAttributes = Array.from(to2.attributes);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
-        if (!to.hasAttribute(name)) {
+        if (!to2.hasAttribute(name)) {
           from2.removeAttribute(name);
         }
       }
@@ -4828,11 +4815,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     hook(...args, () => skip = true);
     return skip;
   }
-  function initializeAlpineOnTo(from, to, childrenOnly) {
+  function initializeAlpineOnTo(from, to2, childrenOnly) {
     if (from.nodeType !== 1)
       return;
     if (from._x_dataStack) {
-      window.Alpine.clone(from, to);
+      window.Alpine.clone(from, to2);
     }
   }
   function src_default3(Alpine3) {
@@ -5223,10 +5210,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } catch (e) {
     }
     parentComponent && (wrapper.__livewire = parentComponent);
-    let to = wrapper.firstElementChild;
-    to.__livewire = component;
-    trigger("morph", el, to, component);
-    Alpine.morph(el, to, {
+    let to2 = wrapper.firstElementChild;
+    to2.__livewire = component;
+    trigger("morph", el, to2, component);
+    Alpine.morph(el, to2, {
       updating: (el2, toEl, childrenOnly, skip) => {
         if (isntElement(el2))
           return;
@@ -5316,7 +5303,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el2.remove();
       });
       visibility.state = false;
-      cleanups.push(on("morph", (from, to, morphComponent) => {
+      cleanups.push(on("morph", (from, to2, morphComponent) => {
         if (morphComponent !== component)
           return;
         el2.remove();
@@ -5802,7 +5789,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     first,
     find,
     hook: on,
-    dispatch: dispatch3,
+    dispatch: dispatch2,
     on: on3
   };
   if (window.Livewire)
