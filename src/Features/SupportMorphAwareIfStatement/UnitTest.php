@@ -3,18 +3,10 @@
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Livewire\Livewire;
-use Livewire\Component;
-use Laravel\Dusk\Browser;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Blade;
 
 class UnitTest extends \Tests\TestCase
 {
-    public function setUp(): void
-    {
-        $this->markTestSkipped(); // @todo: Josh Hanley
-    }
-
     /** @test */
     public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
@@ -34,10 +26,10 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function more_tests()
+    public function it_only_adds_condtional_markers_to_any_if_that_is_not_inside_a_html_tag()
     {
         $output = $this->compile(<<<HTML
-        <div>
+        <div @if (true) other @endif>
             @if (true)
                 foo
             @endif
@@ -45,6 +37,46 @@ class UnitTest extends \Tests\TestCase
             @if (true)
                 bar
             @endif
+        </div>
+        HTML);
+
+        $this->assertOccurrences(2, '__BLOCK__', $output);
+        $this->assertOccurrences(2, '__ENDBLOCK__', $output);
+    }
+
+    /** @test */
+    public function it_only_adds_condtional_markers_to_any_for_each_that_is_not_inside_a_html_tag()
+    {
+        $output = $this->compile(<<<'HTML'
+        <div @foreach(range(1,4) as $key => $value) {{ $key }}="{{ $value }}" @endforeach>
+            @foreach(range(1,4) as $key => $value)
+                {{ $key }}="{{ $value }}"
+            @endforeach
+
+            @foreach(range(1,4) as $key => $value)
+                {{ $key }}="{{ $value }}"
+            @endforeach
+        </div>
+        HTML);
+
+        $this->assertOccurrences(2, '__BLOCK__', $output);
+        $this->assertOccurrences(2, '__ENDBLOCK__', $output);
+    }
+
+    /** @test */
+    public function it_still_adds_conditional_markers_if_there_is_a_blade_expression_before_it_that_contains_a_less_than_symbol()
+    {
+        $output = $this->compile(<<<'HTML'
+        <div>
+            {{ 1 < 5 ? "true" : "false" }}
+            
+            @foreach(range(1,4) as $key => $value)
+                {{ $key }}="{{ $value }}"
+            @endforeach
+
+            @foreach(range(1,4) as $key => $value)
+                {{ $key }}="{{ $value }}"
+            @endforeach
         </div>
         HTML);
 
