@@ -2,14 +2,15 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
-use League\Flysystem\PathTraversalDetected;
-use Livewire\Component;
-use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
+use Livewire\WithFileUploads;
 use Livewire\Livewire;
+use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
+use Livewire\Component;
+use League\Flysystem\PathTraversalDetected;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -60,7 +61,7 @@ class UnitTest extends \Tests\TestCase
         $tmpFilename = $component->viewData('photo')->getFilename();
 
         $component->call('removeUpload', 'photo', $tmpFilename)
-            ->assertEmitted('upload:removed', 'photo', $tmpFilename)
+            ->assertDispatched('upload:removed', ['photo', $tmpFilename])
             ->assertSet('photo', null);
     }
 
@@ -74,7 +75,7 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file);
 
         $component->call('removeUpload', 'photo', 'mismatched-filename.png')
-            ->assertNotEmitted('upload:removed', 'photo', 'mismatched-filename.png')
+            ->assertNotDispatched('upload:removed', ['photo', 'mismatched-filename.png'])
             ->assertNotSet('photo', null);
 
     }
@@ -91,7 +92,7 @@ class UnitTest extends \Tests\TestCase
         $tmpFiles = $component->viewData('photos');
 
         $component->call('removeUpload', 'photos', $tmpFiles[1]->getFilename())
-            ->assertEmitted('upload:removed', 'photos', $tmpFiles[1]->getFilename());
+            ->assertDispatched('upload:removed', ['photos', $tmpFiles[1]->getFilename()]);
 
         $tmpFiles = $component->call('$refresh')->viewData('photos');
 

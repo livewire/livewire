@@ -207,7 +207,7 @@ class Test extends TestCase
 
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, Component::class)
-                ->waitForLivewire()->click('@emit-download')
+                ->waitForLivewire()->click('@dispatch-download')
                 ->waitUsing(5, 75, function () {
                     return Storage::disk('dusk-downloads')->exists('download-target.txt');
                 });

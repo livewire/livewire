@@ -17,8 +17,15 @@ export function toggleBooleanStateDirective(el, directive, isTruthy) {
             el.removeAttribute(directive.expression)
         }
     } else {
+        let cache = window
+            .getComputedStyle(el, null)
+            .getPropertyValue('display')
+            
         let display = (['inline', 'block', 'table', 'flex', 'grid', 'inline-flex']
             .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
+
+        // If element is to be removed, set display to it's current value
+        display = directive.modifiers.includes('remove') ? cache : display
 
         el.style.display = isTruthy ? display : 'none'
     }

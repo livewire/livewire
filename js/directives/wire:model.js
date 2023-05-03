@@ -1,15 +1,21 @@
 import { debounceByComponent } from '@/debounce'
 import { directive } from '@/directives'
-import { forceUpdateOnDirty } from '@/features/forceUpdateDirtyInputs'
+import { on } from '@/events'
+import { handleFileUpload } from '@/features/supportFileUploads'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 
-directive('model', (el, { expression, modifiers }, { component }) => {
+directive('model', (el, { expression, modifiers }, { component, cleanup }) => {
     if (! expression) {
         return console.warn('Livewire: [wire:model] is missing a value.', el)
     }
 
-    forceUpdateOnDirty(component, el, expression)
+    // Handle file uploads differently...
+    if (el.type.toLowerCase() === 'file') {
+        return handleFileUpload(el, expression, component, cleanup)
+    }
+
+    forceUpdateOnDirty(component, el, expression, cleanup)
 
     let isLive = modifiers.includes('live')
     let isLazy = modifiers.includes('lazy')
@@ -61,4 +67,32 @@ function isTextInput(el) {
         ['INPUT', 'TEXTAREA'].includes(el.tagName.toUpperCase()) &&
         !['checkbox', 'radio'].includes(el.type)
     )
+}
+
+function forceUpdateOnDirty(component, el, expression, cleanup) {
+    let off = on('request', (iComponent) => {
+        if (iComponent !== component) return
+
+        return () => {
+            let dirty = component.effects.dirty
+
+            if (! dirty) return
+
+            if (isDirty(expression, dirty)) {
+                el._x_forceModelUpdate(
+                    component.$wire.get(expression, false)
+                )
+            }
+        }
+    })
+
+    cleanup(off)
+}
+
+function isDirty(subject, dirty) {
+    // Check for exact match: wire:model="bob" in ['bob']
+    if (dirty.includes(subject)) return true
+
+    // Check case of parent: wire:model="bob.1" in ['bob']
+    return dirty.some(i => subject.startsWith(i))
 }

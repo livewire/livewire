@@ -2,74 +2,63 @@
 
 namespace Livewire\Features\SupportEvents;
 
-use PHPUnit\Framework\Assert as PHPUnit;
-use Livewire\Component;
 use Livewire\Mechanisms\ComponentRegistry;
+use PHPUnit\Framework\Assert as PHPUnit;
 
 trait TestsEvents
 {
-    public function emit($event, ...$parameters)
+    public function dispatch($event, ...$parameters)
     {
-        return parent::call('__emit', $event, ...$parameters);
+        return parent::call('__dispatch', $event, ...$parameters);
     }
 
     public function fireEvent($event, ...$parameters)
     {
-        return $this->emit($event, ...$parameters);
+        return $this->dispatch($event, ...$parameters);
     }
 
-    public function assertEmitted($value, ...$params)
+    public function assertDispatched($value, ...$params)
     {
-        $result = $this->testEmitted($value, $params);
+        $result = $this->testDispatched($value, $params);
 
         PHPUnit::assertTrue($result['test'], "Failed asserting that an event [{$value}] was fired{$result['assertionSuffix']}");
 
         return $this;
     }
 
-    public function assertNotEmitted($value, ...$params)
+    public function assertNotDispatched($value, ...$params)
     {
-        $result = $this->testEmitted($value, $params);
+        $result = $this->testDispatched($value, $params);
 
         PHPUnit::assertFalse($result['test'], "Failed asserting that an event [{$value}] was not fired{$result['assertionSuffix']}");
 
         return $this;
     }
 
-    public function assertEmittedTo($target, $value, ...$params)
+    public function assertDispatchedTo($target, $value, ...$params)
     {
-        $this->assertEmitted($value, ...$params);
-        $result = $this->testEmittedTo($target, $value);
+        $this->assertDispatched($value, ...$params);
+        $result = $this->testDispatchedTo($target, $value);
 
         PHPUnit::assertTrue($result, "Failed asserting that an event [{$value}] was fired to {$target}.");
 
         return $this;
     }
 
-    public function assertEmittedUp($value, ...$params)
-    {
-        $this->assertEmitted($value, ...$params);
-        $result = $this->testEmittedUp($value);
-
-        PHPUnit::assertTrue($result, "Failed asserting that an event [{$value}] was fired up.");
-
-        return $this;
-    }
-
-    protected function testEmitted($value, $params)
+    protected function testDispatched($value, $params)
     {
         $assertionSuffix = '.';
 
         if (empty($params)) {
-            $test = collect(data_get($this->effects, 'emits'))->contains('event', '=', $value);
+            $test = collect(data_get($this->effects, 'dispatches'))->contains('event', '=', $value);
         } elseif (! is_string($params[0]) && is_callable($params[0])) {
-            $event = collect(data_get($this->effects, 'emits'))->first(function ($item) use ($value) {
+            $event = collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($value) {
                 return $item['event'] === $value;
             });
 
             $test = $event && $params[0]($event['event'], $event['params']);
         } else {
-            $test = (bool) collect(data_get($this->effects, 'emits'))->first(function ($item) use ($value, $params) {
+            $test = (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($value, $params) {
                 return $item['event'] === $value
                     && $item['params'] === $params;
             });
@@ -84,61 +73,14 @@ trait TestsEvents
         ];
     }
 
-    protected function testEmittedTo($target, $value)
+    protected function testDispatchedTo($target, $value)
     {
         $name = app(ComponentRegistry::class)->getName($target);
 
-        return (bool) collect(data_get($this->effects, 'emits'))->first(function ($item) use ($name, $value) {
+        return (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($name, $value) {
             return $item['event'] === $value
                 && $item['to'] === $name;
         });
 
-    }
-
-    protected function testEmittedUp($value)
-    {
-        return (bool) collect(data_get($this->effects, 'emits'))->first(function ($item) use ($value) {
-            return $item['event'] === $value
-                && $item['ancestorsOnly'] === true;
-        });
-    }
-
-    public function assertDispatchedBrowserEvent($name, $data = null)
-    {
-        $assertionSuffix = '.';
-
-        if (is_null($data)) {
-            $test = collect(data_get($this->effects, 'dispatches'))->contains('event', '=', $name);
-        } elseif (is_callable($data)) {
-            $event = collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($name) {
-                return $item['event'] === $name;
-            });
-
-            $test = $event && $data($event['event'], $event['data']);
-        } else {
-            $test = (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($name, $data) {
-                return $item['event'] === $name
-                    && $item['data'] === $data;
-            });
-            $encodedData = json_encode($data);
-            $assertionSuffix = " with parameters: {$encodedData}";
-        }
-
-        PHPUnit::assertTrue($test, "Failed asserting that an event [{$name}] was fired{$assertionSuffix}");
-
-        return $this;
-    }
-
-    public function assertNotDispatchedBrowserEvent($name)
-    {
-        if (! array_key_exists('dispatches', $this->effects)){
-            $test = false;
-        } else {
-            $test = collect($this->effects['dispatches'])->contains('event', '=', $name);
-        }
-
-        PHPUnit::assertFalse($test, "Failed asserting that an event [{$name}] was not fired");
-
-        return $this;
     }
 }

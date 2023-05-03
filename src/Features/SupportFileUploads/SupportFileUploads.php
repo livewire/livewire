@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportFileUploads;
 use function Livewire\on;
 
 use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
+use Livewire\Features\SupportFileUploads\MissingFileUploadsTraitException;
+use Livewire\ComponentHook;
 use Livewire\Component;
 use Illuminate\Support\Facades\Route;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
-use Livewire\ComponentHook;
 
 class SupportFileUploads extends ComponentHook
 {
@@ -26,18 +27,13 @@ class SupportFileUploads extends ComponentHook
             FileUploadSynth::class,
         ]);
 
-        // @todo: make this work without this hook...
-        // on('call.root', function ($target, $calls) {
-        //     if (! $target instanceof Component) return;
-
-        //     foreach ($calls as $call) {
-        //         if ($call['method'] === $method = 'startUpload') {
-        //             if (! method_exists($target, $method)) {
-        //                 throw new MissingFileUploadsTraitException($target);
-        //             }
-        //         }
-        //     }
-        // });
+        on('call', function ($component, $method, $params, $addEffect, $earlyReturn) {
+            if ($method === 'startUpload') {
+                if (! method_exists($component, $method)) {
+                    throw new MissingFileUploadsTraitException($component);
+                }
+            }
+        });
 
         Route::post('/livewire/upload-file', [FileUploadController::class, 'handle'])
             ->name('livewire.upload-file')

@@ -12,35 +12,12 @@ trait HandlesEvents
         return $this->listeners;
     }
 
-    public function emit($event, ...$params)
+    public function dispatch($event, ...$params)
     {
         $event = new Event($event, $params);
 
-        store($this)->push('emitted', $event);
+        store($this)->push('dispatched', $event);
 
         return $event;
-    }
-
-    public function emitUp($event, ...$params)
-    {
-        $this->emit($event, ...$params)->up();
-    }
-
-    public function emitSelf($event, ...$params)
-    {
-        $this->emit($event, ...$params)->self();
-    }
-
-    public function emitTo($name, $event, ...$params)
-    {
-        $this->emit($event, ...$params)->component($name);
-    }
-
-    public function dispatchBrowserEvent($event, $data = null)
-    {
-        store($this)->push('dispatched', [
-            'event' => $event,
-            'data' => $data,
-        ]);
     }
 }

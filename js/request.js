@@ -3,12 +3,6 @@ import { dataGet, dataSet, each, deeplyEqual, isObjecty, deepClone, diff, isObje
 import { showHtmlModal } from './modal'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
-import { wireProperty } from './wire'
-
-/**
- * The Alpine build will need to use it's own reactivity hooks,
- * so we'll declare these as variables rather than direct imports.
- */
 
 /**
  * We'll store all our "synthetic" instances in a single lookup so that
@@ -159,7 +153,7 @@ async function sendMethodCall() {
 
     requestTargetQueue.clear()
 
-    let response = await fetch(uri, {
+    let options = {
         method: 'POST',
         body: JSON.stringify({
             _token: getCsrfToken(),
@@ -169,7 +163,13 @@ async function sendMethodCall() {
             'Content-type': 'application/json',
             'X-Synthetic': '',
         },
-    })
+    }
+
+    let finishFetch = trigger('fetch', uri, options)
+
+    let response = await fetch(uri, options)
+
+    response = finishFetch(response)
 
     let succeed = async (responseContent) => {
         let response = JSON.parse(responseContent)
@@ -196,7 +196,7 @@ async function sendMethodCall() {
  * Post requests in Laravel require a csrf token to be passed
  * along with the payload. Here, we'll try and locate one.
  */
-function getCsrfToken() {
+export function getCsrfToken() {
     if (document.querySelector('[data-csrf]')) {
         return document.querySelector('[data-csrf]').getAttribute('data-csrf')
     }
@@ -257,11 +257,11 @@ export async function handleResponse(response, succeed, fail) {
     }
 
     handleFailure(content)
-    
+
     await fail()
 }
 
-function contentIsFromDump(content) {
+export function contentIsFromDump(content) {
     return !! content.match(/<script>Sfdump\(".+"\)<\/script>/)
 }
 

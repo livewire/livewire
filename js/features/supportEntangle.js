@@ -1,13 +1,8 @@
 import { findComponent } from "../store";
 import { on } from '@/events'
 import Alpine from 'alpinejs'
-import { wireProperty } from "@/wire";
 
-wireProperty('entangle', (component) => (name, live = false) => {
-    return generateEntangleFunction(component)(name, live)
-})
-
-function generateEntangleFunction(component) {
+export function generateEntangleFunction(component) {
     return (name, live) => {
         let isLive = live
         let livewireProperty = name
@@ -26,21 +21,17 @@ function generateEntangleFunction(component) {
                 Alpine.entangle({
                     // Outer scope...
                     get() {
-                        console.log('livewire get', livewireComponent.get(name))
                         return livewireComponent.get(name)
                     },
                     set(value) {
-                        console.log('livewire set', value, isLive)
                         livewireComponent.set(name, value, isLive)
                     }
                 }, {
                     // Inner scope...
                     get() {
-                        console.log('alpine get', getter())
                         return getter()
                     },
                     set(value) {
-                        console.log('alpine set', value)
                         setter(value)
                     }
                 })

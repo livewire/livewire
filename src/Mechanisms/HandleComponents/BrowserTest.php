@@ -60,7 +60,6 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->tinker()
         ->assertSee('Initial request')
         ->waitForLivewire()->click('@refresh')
         ->assertSee('Subsequent request')

@@ -1,4 +1,135 @@
 (() => {
+  // js/utils.js
+  var Bag = class {
+    constructor() {
+      this.arrays = {};
+    }
+    add(key, value) {
+      if (!this.arrays[key])
+        this.arrays[key] = [];
+      this.arrays[key].push(value);
+    }
+    get(key) {
+      return this.arrays[key] || [];
+    }
+    each(key, callback) {
+      return this.get(key).forEach(callback);
+    }
+  };
+  var WeakBag = class {
+    constructor() {
+      this.arrays = /* @__PURE__ */ new WeakMap();
+    }
+    add(key, value) {
+      if (!this.arrays.has(key))
+        this.arrays.set(key, []);
+      this.arrays.get(key).push(value);
+    }
+    get(key) {
+      return this.arrays.has(key) ? this.arrays.get(key) : [];
+    }
+    each(key, callback) {
+      return this.get(key).forEach(callback);
+    }
+  };
+  function monkeyPatchDomSetAttributeToAllowAtSymbols() {
+    let original = Element.prototype.setAttribute;
+    let hostDiv = document.createElement("div");
+    Element.prototype.setAttribute = function newSetAttribute(name, value) {
+      if (!name.includes("@")) {
+        return original.call(this, name, value);
+      }
+      hostDiv.innerHTML = `<span ${name}="${value}"></span>`;
+      let attr = hostDiv.firstElementChild.getAttributeNode(name);
+      hostDiv.firstElementChild.removeAttributeNode(attr);
+      this.setAttributeNode(attr);
+    };
+  }
+  function dispatch(el, name, detail = {}, bubbles = true) {
+    el.dispatchEvent(new CustomEvent(name, {
+      detail,
+      bubbles,
+      composed: true,
+      cancelable: true
+    }));
+  }
+  function isObjecty(subject) {
+    return typeof subject === "object" && subject !== null;
+  }
+  function isObject(subject) {
+    return isObjecty(subject) && !isArray(subject);
+  }
+  function isArray(subject) {
+    return Array.isArray(subject);
+  }
+  function isFunction(subject) {
+    return typeof subject === "function";
+  }
+  function isPrimitive(subject) {
+    return typeof subject !== "object" || subject === null;
+  }
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+  function deeplyEqual(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+  function dataGet(object, key) {
+    if (key === "")
+      return object;
+    return key.split(".").reduce((carry, i) => {
+      if (carry === void 0)
+        return void 0;
+      return carry[i];
+    }, object);
+  }
+  function dataSet(object, key, value) {
+    let segments = key.split(".");
+    if (segments.length === 1) {
+      return object[key] = value;
+    }
+    let firstSegment = segments.shift();
+    let restOfSegments = segments.join(".");
+    if (object[firstSegment] === void 0) {
+      object[firstSegment] = {};
+    }
+    dataSet(object[firstSegment], restOfSegments, value);
+  }
+  function diff(left, right, diffs = {}, path = "") {
+    if (left === right)
+      return diffs;
+    if (typeof left !== typeof right || isObject(left) && isArray(right) || isArray(left) && isObject(right)) {
+      diffs[path] = right;
+      return diffs;
+    }
+    if (isPrimitive(left) || isPrimitive(right)) {
+      diffs[path] = right;
+      return diffs;
+    }
+    let leftKeys = Object.keys(left);
+    Object.entries(right).forEach(([key, value]) => {
+      diffs = { ...diffs, ...diff(left[key], right[key], diffs, path === "" ? key : `${path}.${key}`) };
+      leftKeys = leftKeys.filter((i) => i !== key);
+    });
+    leftKeys.forEach((key) => {
+      diffs[`${path}.${key}`] = "__rm__";
+    });
+    return diffs;
+  }
+  function extractData(payload) {
+    let value = isSynthetic(payload) ? payload[0] : payload;
+    let meta = isSynthetic(payload) ? payload[1] : void 0;
+    if (isObjecty(value)) {
+      Object.entries(value).forEach(([key, iValue]) => {
+        value[key] = extractData(iValue);
+      });
+    }
+    return value;
+  }
+  function isSynthetic(subject) {
+    return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
+  }
+
   // node_modules/@vue/shared/dist/shared.esm-bundler.js
   function makeMap(str, expectsLowerCase) {
     const map = /* @__PURE__ */ Object.create(null);
@@ -14,11 +145,11 @@
   var EMPTY_ARR = false ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
-  var isArray = Array.isArray;
+  var isArray2 = Array.isArray;
   var isMap = (val) => toTypeString(val) === "[object Map]";
   var isString = (val) => typeof val === "string";
   var isSymbol = (val) => typeof val === "symbol";
-  var isObject = (val) => val !== null && typeof val === "object";
+  var isObject2 = (val) => val !== null && typeof val === "object";
   var objectToString = Object.prototype.toString;
   var toTypeString = (value) => objectToString.call(value);
   var toRawType = (value) => {
@@ -112,7 +243,7 @@
     let deps = [];
     if (type === "clear") {
       deps = [...depsMap.values()];
-    } else if (key === "length" && isArray(target)) {
+    } else if (key === "length" && isArray2(target)) {
       const newLength = toNumber(newValue);
       depsMap.forEach((dep, key2) => {
         if (key2 === "length" || key2 >= newLength) {
@@ -125,7 +256,7 @@
       }
       switch (type) {
         case "add":
-          if (!isArray(target)) {
+          if (!isArray2(target)) {
             deps.push(depsMap.get(ITERATE_KEY));
             if (isMap(target)) {
               deps.push(depsMap.get(MAP_KEY_ITERATE_KEY));
@@ -135,7 +266,7 @@
           }
           break;
         case "delete":
-          if (!isArray(target)) {
+          if (!isArray2(target)) {
             deps.push(depsMap.get(ITERATE_KEY));
             if (isMap(target)) {
               deps.push(depsMap.get(MAP_KEY_ITERATE_KEY));
@@ -173,7 +304,7 @@
     }
   }
   function triggerEffects(dep, debuggerEventExtraInfo) {
-    const effects = isArray(dep) ? dep : [...dep];
+    const effects = isArray2(dep) ? dep : [...dep];
     for (const effect3 of effects) {
       if (effect3.computed) {
         triggerEffect(effect3, debuggerEventExtraInfo);
@@ -239,7 +370,7 @@
       } else if (key === "__v_raw" && receiver === (isReadonly2 ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target)) {
         return target;
       }
-      const targetIsArray = isArray(target);
+      const targetIsArray = isArray2(target);
       if (!isReadonly2 && targetIsArray && hasOwn(arrayInstrumentations, key)) {
         return Reflect.get(arrayInstrumentations, key, receiver);
       }
@@ -256,7 +387,7 @@
       if (isRef(res)) {
         return targetIsArray && isIntegerKey(key) ? res : res.value;
       }
-      if (isObject(res)) {
+      if (isObject2(res)) {
         return isReadonly2 ? readonly(res) : reactive(res);
       }
       return res;
@@ -274,12 +405,12 @@
           oldValue = toRaw(oldValue);
           value = toRaw(value);
         }
-        if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
+        if (!isArray2(target) && isRef(oldValue) && !isRef(value)) {
           oldValue.value = value;
           return true;
         }
       }
-      const hadKey = isArray(target) && isIntegerKey(key) ? Number(key) < target.length : hasOwn(target, key);
+      const hadKey = isArray2(target) && isIntegerKey(key) ? Number(key) < target.length : hasOwn(target, key);
       const result = Reflect.set(target, key, value, receiver);
       if (target === toRaw(receiver)) {
         if (!hadKey) {
@@ -308,7 +439,7 @@
     return result;
   }
   function ownKeys(target) {
-    track(target, "iterate", isArray(target) ? "length" : ITERATE_KEY);
+    track(target, "iterate", isArray2(target) ? "length" : ITERATE_KEY);
     return Reflect.ownKeys(target);
   }
   var mutableHandlers = {
@@ -601,7 +732,7 @@
     return createReactiveObject(target, true, readonlyHandlers, readonlyCollectionHandlers, readonlyMap);
   }
   function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
-    if (!isObject(target)) {
+    if (!isObject2(target)) {
       if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
@@ -632,8 +763,8 @@
     const raw2 = observed && observed["__v_raw"];
     return raw2 ? toRaw(raw2) : observed;
   }
-  var toReactive = (value) => isObject(value) ? reactive(value) : value;
-  var toReadonly = (value) => isObject(value) ? readonly(value) : value;
+  var toReactive = (value) => isObject2(value) ? reactive(value) : value;
+  var toReadonly = (value) => isObject2(value) ? readonly(value) : value;
   function isRef(r) {
     return !!(r && r.__v_isRef === true);
   }
@@ -641,137 +772,6 @@
   _a = "__v_isReadonly";
   var _a$1;
   _a$1 = "__v_isReadonly";
-
-  // js/utils.js
-  var Bag = class {
-    constructor() {
-      this.arrays = {};
-    }
-    add(key, value) {
-      if (!this.arrays[key])
-        this.arrays[key] = [];
-      this.arrays[key].push(value);
-    }
-    get(key) {
-      return this.arrays[key] || [];
-    }
-    each(key, callback) {
-      return this.get(key).forEach(callback);
-    }
-  };
-  var WeakBag = class {
-    constructor() {
-      this.arrays = /* @__PURE__ */ new WeakMap();
-    }
-    add(key, value) {
-      if (!this.arrays.has(key))
-        this.arrays.set(key, []);
-      this.arrays.get(key).push(value);
-    }
-    get(key) {
-      return this.arrays.has(key) ? this.arrays.get(key) : [];
-    }
-    each(key, callback) {
-      return this.get(key).forEach(callback);
-    }
-  };
-  function monkeyPatchDomSetAttributeToAllowAtSymbols() {
-    let original = Element.prototype.setAttribute;
-    let hostDiv = document.createElement("div");
-    Element.prototype.setAttribute = function newSetAttribute(name, value) {
-      if (!name.includes("@")) {
-        return original.call(this, name, value);
-      }
-      hostDiv.innerHTML = `<span ${name}="${value}"></span>`;
-      let attr = hostDiv.firstElementChild.getAttributeNode(name);
-      hostDiv.firstElementChild.removeAttributeNode(attr);
-      this.setAttributeNode(attr);
-    };
-  }
-  function dispatch(el, name, detail = {}, bubbles = true) {
-    el.dispatchEvent(new CustomEvent(name, {
-      detail,
-      bubbles,
-      composed: true,
-      cancelable: true
-    }));
-  }
-  function isObjecty(subject) {
-    return typeof subject === "object" && subject !== null;
-  }
-  function isObject2(subject) {
-    return isObjecty(subject) && !isArray2(subject);
-  }
-  function isArray2(subject) {
-    return Array.isArray(subject);
-  }
-  function isFunction2(subject) {
-    return typeof subject === "function";
-  }
-  function isPrimitive(subject) {
-    return typeof subject !== "object" || subject === null;
-  }
-  function deepClone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-  function deeplyEqual(a, b) {
-    return JSON.stringify(a) === JSON.stringify(b);
-  }
-  function dataGet(object, key) {
-    if (key === "")
-      return object;
-    return key.split(".").reduce((carry, i) => {
-      if (carry === void 0)
-        return void 0;
-      return carry[i];
-    }, object);
-  }
-  function dataSet(object, key, value) {
-    let segments = key.split(".");
-    if (segments.length === 1) {
-      return object[key] = value;
-    }
-    let firstSegment = segments.shift();
-    let restOfSegments = segments.join(".");
-    if (object[firstSegment] === void 0) {
-      object[firstSegment] = {};
-    }
-    dataSet(object[firstSegment], restOfSegments, value);
-  }
-  function diff(left, right, diffs = {}, path = "") {
-    if (left === right)
-      return diffs;
-    if (typeof left !== typeof right || isObject2(left) && isArray2(right) || isArray2(left) && isObject2(right)) {
-      diffs[path] = right;
-      return diffs;
-    }
-    if (isPrimitive(left) || isPrimitive(right)) {
-      diffs[path] = right;
-      return diffs;
-    }
-    let leftKeys = Object.keys(left);
-    Object.entries(right).forEach(([key, value]) => {
-      diffs = { ...diffs, ...diff(left[key], right[key], diffs, path === "" ? key : `${path}.${key}`) };
-      leftKeys = leftKeys.filter((i) => i !== key);
-    });
-    leftKeys.forEach((key) => {
-      diffs[`${path}.${key}`] = "__rm__";
-    });
-    return diffs;
-  }
-  function extractData(payload) {
-    let value = isSynthetic(payload) ? payload[0] : payload;
-    let meta = isSynthetic(payload) ? payload[1] : void 0;
-    if (isObjecty(value)) {
-      Object.entries(value).forEach(([key, iValue]) => {
-        value[key] = extractData(iValue);
-      });
-    }
-    return value;
-  }
-  function isSynthetic(subject) {
-    return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
-  }
 
   // js/modal.js
   function showHtmlModal(html) {
@@ -830,7 +830,7 @@
     let finishers = [];
     for (let i = 0; i < callbacks.length; i++) {
       let finisher = callbacks[i](...params);
-      if (isFunction2(finisher))
+      if (isFunction(finisher))
         finishers.push(finisher);
     }
     return (result) => {
@@ -2321,6 +2321,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     startObservingMutations,
     stopObservingMutations,
     setReactivityEngine,
+    onAttributeRemoved,
     closestDataStack,
     skipDuringClone,
     onlyDuringClone,
@@ -3783,42 +3784,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var src_default = alpine_default;
   var module_default = src_default;
 
-  // js/wire.js
-  var properties = {};
-  var fallback;
-  function wireProperty(name, callback) {
-    properties[name] = callback;
-  }
-  function wireFallback(callback) {
-    fallback = callback;
-  }
-  function generateWireObject(component, state) {
-    return new Proxy({}, {
-      get(target, property) {
-        if (property === "__target")
-          return component;
-        if (property in properties) {
-          return getProperty(component, property);
-        } else if (property in state) {
-          return state[property];
-        } else if (!["then"].includes(property)) {
-          return getFallback(component)(property);
-        }
-      },
-      set(target, property, value) {
-        if (property in state) {
-          state[property] = value;
-        }
-      }
-    });
-  }
-  function getProperty(component, name) {
-    return properties[name](component);
-  }
-  function getFallback(component) {
-    return fallback(component);
-  }
-
   // js/request.js
   var store2 = /* @__PURE__ */ new Map();
   var uri = document.querySelector("[data-uri]").getAttribute("data-uri");
@@ -3909,7 +3874,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     requestTargetQueue.clear();
-    let response = await fetch(uri, {
+    let options = {
       method: "POST",
       body: JSON.stringify({
         _token: getCsrfToken(),
@@ -3919,7 +3884,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "Content-type": "application/json",
         "X-Synthetic": ""
       }
-    });
+    };
+    let finishFetch = trigger2("fetch", uri, options);
+    let response = await fetch(uri, options);
+    response = finishFetch(response);
     let succeed = async (responseContent) => {
       let response2 = JSON.parse(responseContent);
       for (let i = 0; i < response2.length; i++) {
@@ -3982,6 +3950,144 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let html = content;
     showHtmlModal(html);
   }
+
+  // js/features/supportEntangle.js
+  function generateEntangleFunction(component) {
+    return (name, live) => {
+      let isLive = live;
+      let livewireProperty = name;
+      let livewireComponent = component.$wire;
+      let livewirePropertyValue = livewireComponent.get(livewireProperty);
+      let interceptor2 = module_default.interceptor((initialValue, getter, setter, path, key) => {
+        if (typeof livewirePropertyValue === "undefined") {
+          console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`);
+          return;
+        }
+        queueMicrotask(() => {
+          module_default.entangle({
+            get() {
+              return livewireComponent.get(name);
+            },
+            set(value) {
+              livewireComponent.set(name, value, isLive);
+            }
+          }, {
+            get() {
+              return getter();
+            },
+            set(value) {
+              setter(value);
+            }
+          });
+        });
+        return livewireComponent.get(name);
+      }, (obj) => {
+        Object.defineProperty(obj, "live", {
+          get() {
+            isLive = true;
+            return obj;
+          }
+        });
+      });
+      return interceptor2(livewirePropertyValue);
+    };
+  }
+
+  // js/$wire.js
+  var properties = {};
+  var fallback;
+  function wireProperty(name, callback) {
+    properties[name] = callback;
+  }
+  function wireFallback(callback) {
+    fallback = callback;
+  }
+  function generateWireObject(component, state) {
+    return new Proxy({}, {
+      get(target, property) {
+        if (property === "__target")
+          return component;
+        if (property in properties) {
+          return getProperty(component, property);
+        } else if (property in state) {
+          return state[property];
+        } else if (!["then"].includes(property)) {
+          return getFallback(component)(property);
+        }
+      },
+      set(target, property, value) {
+        if (property in state) {
+          state[property] = value;
+        }
+      }
+    });
+  }
+  function getProperty(component, name) {
+    return properties[name](component);
+  }
+  function getFallback(component) {
+    return fallback(component);
+  }
+  module_default.magic("wire", (el) => closestComponent(el).$wire);
+  wireProperty("__target", (component) => component);
+  wireProperty("get", (component) => (property, reactive3 = true) => dataGet(reactive3 ? component.reactive : component.ephemeral, property));
+  wireProperty("set", (component) => async (property, value, live = true) => {
+    dataSet(component.reactive, property, value);
+    return live ? await requestCommit(component.symbol) : Promise.resolve();
+  });
+  wireProperty("call", (component) => async (method, ...params) => {
+    return await component.$wire[method](...params);
+  });
+  wireProperty("entangle", (component) => (name, live = false) => {
+    return generateEntangleFunction(component)(name, live);
+  });
+  wireProperty("$set", (component) => (...params) => {
+    return component.$wire.set(...params);
+  });
+  wireProperty("$toggle", (component) => (name) => {
+    return component.$wire.set(name, !component.$wire.get(name));
+  });
+  wireProperty("$watch", (component) => (path, callback) => {
+    let firstTime = true;
+    let old = void 0;
+    effect(() => {
+      let value = dataGet(component.reactive, path);
+      if (firstTime) {
+        firstTime = false;
+        return;
+      }
+      pauseTracking();
+      callback(value, old);
+      old = value;
+      enableTracking();
+    });
+  });
+  wireProperty("$watchEffect", (component) => (callback) => effect(callback));
+  wireProperty("$refresh", (component) => async () => await requestCommit(component.symbol));
+  wireProperty("$commit", (component) => async () => await requestCommit(component.symbol));
+  wireFallback((component) => (property) => async (...params) => {
+    if (params.length === 1 && params[0] instanceof Event) {
+      params = [];
+    }
+    return await callMethod(component.symbol, property, params);
+  });
+  var parentMemo;
+  wireProperty("$parent", (component) => {
+    if (parentMemo)
+      return parentMemo.$wire;
+    let parent = closestComponent(component.el.parentElement);
+    parentMemo = parent;
+    return parent.$wire;
+  });
+  wireProperty("$on", (component) => (...params) => listen(component, ...params));
+  wireProperty("$dispatch", (component) => (...params) => dispatch3(...params));
+  wireProperty("$dispatchUp", (component) => (...params) => dispatchUp(component.el, ...params));
+  wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component.id, ...params));
+  wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(...params));
+  wireProperty("dispatch", (component) => (...params) => dispatch3(...params));
+  wireProperty("dispatchUp", (component) => (...params) => dispatchUp(component.el, ...params));
+  wireProperty("dispatchSelf", (component) => (...params) => dispatchSelf(component.id, ...params));
+  wireProperty("dispatchTo", (component) => (...params) => dispatchTo(...params));
 
   // js/component.js
   var Component = class {
@@ -4056,7 +4162,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return Object.values(components)[0].$wire;
   }
 
-  // js/features/events.js
+  // js/features/supportEvents.js
+  on("effects", (component, effects) => {
+    let dispatches = effects.dispatches;
+    if (!dispatches)
+      return;
+    dispatches.forEach(({ event, data: data2 }) => {
+      data2 = data2 || {};
+      let e = new CustomEvent(event, {
+        bubbles: true,
+        detail: data2
+      });
+      component.el.dispatchEvent(e);
+    });
+  });
   var globalListeners = new Bag();
   on("effects", (component, effects, path) => {
     let listeners2 = effects.listeners;
@@ -4064,37 +4183,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     listeners2.forEach((name) => {
       globalListeners.add(name, (...params) => {
-        component.$wire.call("__emit", name, ...params);
+        component.$wire.call("__dispatch", name, ...params);
       });
       queueMicrotask(() => {
         component.el.addEventListener("__lwevent:" + name, (e) => {
-          component.$wire.call("__emit", name, ...e.detail.params);
+          component.$wire.call("__dispatch", name, ...e.detail.params);
         });
       });
     });
   });
-  wireProperty("$emit", (component) => (...params) => emit(...params));
-  wireProperty("$emitUp", (component) => (...params) => emitUp(component.el, ...params));
-  wireProperty("$emitSelf", (component) => (...params) => emitSelf(component.id, ...params));
-  wireProperty("$emitTo", (component) => (...params) => emitTo(...params));
-  wireProperty("emit", (component) => (...params) => emit(...params));
-  wireProperty("emitUp", (component) => (...params) => emitUp(component.el, ...params));
-  wireProperty("emitSelf", (component) => (...params) => emitSelf(component.id, ...params));
-  wireProperty("emitTo", (component) => (...params) => emitTo(...params));
-  function emit(name, ...params) {
+  function dispatch3(name, ...params) {
     globalListeners.each(name, (i) => i(...params));
   }
-  function emitUp(el, name, ...params) {
+  function dispatchUp(el, name, ...params) {
     dispatch(el, "__lwevent:" + name, { params });
   }
-  function emitSelf(id, name, ...params) {
+  function dispatchSelf(id, name, ...params) {
     let component = findComponent(id);
     dispatch(component.el, "__lwevent:" + name, { params }, false);
   }
-  function emitTo(componentName, name, ...params) {
+  function dispatchTo(componentName, name, ...params) {
     let components2 = componentsByName(componentName);
     components2.forEach((component) => {
       dispatch(component.el, "__lwevent:" + name, { params }, false);
+    });
+  }
+  function listen(component, name, callback) {
+    component.el.addEventListener("__lwevent:" + name, (e) => {
+      let param = e.detail;
+      callback(e.detail);
     });
   }
   function on3(name, callback) {
@@ -4112,7 +4229,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       elDirectives.directives.filter(({ value }) => value === name).forEach((directive3) => {
         callback(el, directive3, {
           component,
-          cleanup: () => {
+          cleanup: (callback2) => {
+            module_default.onAttributeRemoved(el, "wire:".directive, callback2);
           }
         });
       });
@@ -4755,7 +4873,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   }
 
-  // js/features/disableFormsDuringRequest.js
+  // js/features/supportWireModelingNestedComponents.js
+  on("request.prepare", (component) => {
+    let meta = component.snapshot.memo;
+    let childIds = Object.values(meta.children).map((i) => i[1]);
+    childIds.forEach((id) => {
+      let child = findComponent(id);
+      let childMeta = child.snapshot.memo;
+      let bindings = childMeta.bindings;
+      if (bindings)
+        child.$wire.$commit();
+    });
+  });
+
+  // js/features/supportDisablingFormsDuringRequest.js
   var cleanupStackByComponentId = {};
   on("element.init", (el, component) => {
     let directives3 = getDirectives(el);
@@ -4793,56 +4924,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
-  // js/features/forceUpdateDirtyInputs.js
-  function forceUpdateOnDirty(component, el, expression) {
-    on("request", (iComponent) => {
-      if (iComponent !== component)
-        return;
-      return () => {
-        let dirty = component.effects.dirty;
-        if (!dirty)
-          return;
-        if (isDirty(expression, dirty)) {
-          el._x_forceModelUpdate(component.$wire.get(expression, false));
-        }
-      };
-    });
-  }
-  function isDirty(subject, dirty) {
-    if (dirty.includes(subject))
-      return true;
-    return dirty.some((i) => subject.startsWith(i));
-  }
-
-  // js/features/dispatchBrowserEvents.js
-  on("effects", (component, effects) => {
-    let dispatches = effects.dispatches;
-    if (!dispatches)
-      return;
-    dispatches.forEach(({ event, data: data2 }) => {
-      data2 = data2 || {};
-      let e = new CustomEvent(event, {
-        bubbles: true,
-        detail: data2
-      });
-      component.el.dispatchEvent(e);
-    });
-  });
-
-  // js/features/wireModelChild.js
-  on("request.prepare", (component) => {
-    let meta = component.snapshot.memo;
-    let childIds = Object.values(meta.children).map((i) => i[1]);
-    childIds.forEach((id) => {
-      let child = findComponent(id);
-      let childMeta = child.snapshot.memo;
-      let bindings = childMeta.bindings;
-      if (bindings)
-        child.$wire.$commit();
-    });
-  });
-
-  // js/features/fileDownloads.js
+  // js/features/supportFileDownloads.js
   on("request", (component) => {
     return () => {
       let download = component.effects.download;
@@ -4878,50 +4960,230 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return new Blob(byteArrays, { type: contentType });
   }
 
-  // js/features/magicMethods.js
-  wireProperty("$set", (component) => (...params) => {
-    return component.$wire.set(...params);
-  });
-  wireProperty("$toggle", (component) => (name) => {
-    return component.$wire.set(name, !component.$wire.get(name));
-  });
-  wireProperty("__target", (component) => component);
-  wireProperty("$watch", (component) => (path, callback) => {
-    let firstTime = true;
-    let old = void 0;
-    effect(() => {
-      let value = dataGet(component.reactive, path);
-      if (firstTime) {
-        firstTime = false;
-        return;
-      }
-      pauseTracking();
-      callback(value, old);
-      old = value;
-      enableTracking();
+  // js/features/supportReactiveProps.js
+  on("request.prepare", (component) => {
+    let meta = component.snapshot.memo;
+    let childIds = Object.values(meta.children).map((i) => i[1]);
+    childIds.forEach((id) => {
+      let child = findComponent(id);
+      let childMeta = child.snapshot.memo;
+      let props = childMeta.props;
+      if (props)
+        child.$wire.$commit();
     });
   });
-  wireProperty("$watchEffect", (component) => (callback) => effect(callback));
-  wireProperty("$refresh", (component) => async () => await requestCommit(component.symbol));
-  wireProperty("get", (component) => (property, reactive3 = true) => dataGet(reactive3 ? component.reactive : component.ephemeral, property));
-  wireProperty("set", (component) => async (property, value, live = true) => {
-    dataSet(component.reactive, property, value);
-    return live ? await requestCommit(component.symbol) : Promise.resolve();
-  });
-  wireProperty("call", (component) => async (method, ...params) => {
-    return await component.$wire[method](...params);
-  });
-  wireFallback((component) => (property) => async (...params) => {
-    if (params.length === 1 && params[0] instanceof Event) {
-      params = [];
-    }
-    return await callMethod(component.symbol, property, params);
-  });
-  wireProperty("$commit", (component) => async (callback) => {
-    return await requestCommit(component.symbol);
-  });
 
-  // js/features/queryString.js
+  // js/features/supportFileUploads.js
+  var uploadManagers = /* @__PURE__ */ new WeakMap();
+  function getUploadManager(component) {
+    if (!uploadManagers.has(component))
+      uploadManagers.set(component, new UploadManager(component));
+    return uploadManagers.get(component);
+  }
+  function handleFileUpload(el, property, component, cleanup3) {
+    let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true }));
+    let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true }));
+    let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true }));
+    let progress = (progressEvent) => {
+      var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
+      el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
+        bubbles: true,
+        detail: { progress: percentCompleted }
+      }));
+    };
+    let eventHandler = (e) => {
+      if (e.target.files.length === 0)
+        return;
+      start3();
+      if (e.target.multiple) {
+        uploadMultiple(component, property, e.target.files, finish, error2, progress);
+      } else {
+        upload(component, property, e.target.files[0], finish, error2, progress);
+      }
+    };
+    el.addEventListener("change", eventHandler);
+    let clearFileInputValue = () => {
+      el.value = null;
+    };
+    el.addEventListener("click", clearFileInputValue);
+    cleanup3(() => {
+      el.removeEventListener("change", eventHandler);
+      el.removeEventListener("click", clearFileInputValue);
+    });
+  }
+  function upload(component, name, file, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }) {
+    getUploadManager(component).upload(name, file, finishCallback, errorCallback, progressCallback);
+  }
+  function uploadMultiple(component, name, files, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }) {
+    getUploadManager(component).uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
+  }
+  var UploadManager = class {
+    constructor(component) {
+      this.component = component;
+      this.uploadBag = new MessageBag();
+      this.removeBag = new MessageBag();
+    }
+    registerListeners() {
+      this.component.$wire.$on("upload:generatedSignedUrl", ([name, url]) => {
+        setUploadLoading(this.component, name);
+        this.handleSignedUrl(name, url);
+      });
+      this.component.$wire.$on("upload:generatedSignedUrlForS3", ([name, payload]) => {
+        setUploadLoading(this.component, name);
+        this.handleS3PreSignedUrl(name, payload);
+      });
+      this.component.$wire.$on("upload:finished", ([name, tmpFilenames]) => this.markUploadFinished(name, tmpFilenames));
+      this.component.$wire.$on("upload:errored", ([name]) => this.markUploadErrored(name));
+      this.component.$wire.$on("upload:removed", ([name, tmpFilename]) => this.removeBag.shift(name).finishCallback(tmpFilename));
+    }
+    upload(name, file, finishCallback, errorCallback, progressCallback) {
+      this.setUpload(name, {
+        files: [file],
+        multiple: false,
+        finishCallback,
+        errorCallback,
+        progressCallback
+      });
+    }
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+      this.setUpload(name, {
+        files: Array.from(files),
+        multiple: true,
+        finishCallback,
+        errorCallback,
+        progressCallback
+      });
+    }
+    removeUpload(name, tmpFilename, finishCallback) {
+      this.removeBag.push(name, {
+        tmpFilename,
+        finishCallback
+      });
+      this.component.$wire.call("removeUpload", name, tmpFilename);
+    }
+    setUpload(name, uploadObject) {
+      this.uploadBag.add(name, uploadObject);
+      if (this.uploadBag.get(name).length === 1) {
+        this.startUpload(name, uploadObject);
+      }
+    }
+    handleSignedUrl(name, url) {
+      let formData = new FormData();
+      Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
+      let headers = {
+        "Accept": "application/json"
+      };
+      let csrfToken = getCsrfToken();
+      if (csrfToken)
+        headers["X-CSRF-TOKEN"] = csrfToken;
+      this.makeRequest(name, formData, "post", url, headers, (response) => {
+        return response.paths;
+      });
+    }
+    handleS3PreSignedUrl(name, payload) {
+      let formData = this.uploadBag.first(name).files[0];
+      let headers = payload.headers;
+      if ("Host" in headers)
+        delete headers.Host;
+      let url = payload.url;
+      this.makeRequest(name, formData, "put", url, headers, (response) => {
+        return [payload.path];
+      });
+    }
+    makeRequest(name, formData, method, url, headers, retrievePaths) {
+      let request = new XMLHttpRequest();
+      request.open(method, url);
+      Object.entries(headers).forEach(([key, value]) => {
+        request.setRequestHeader(key, value);
+      });
+      request.upload.addEventListener("progress", (e) => {
+        e.detail = {};
+        e.detail.progress = Math.round(e.loaded * 100 / e.total);
+        this.uploadBag.first(name).progressCallback(e);
+      });
+      request.addEventListener("load", () => {
+        if ((request.status + "")[0] === "2") {
+          let paths = retrievePaths(request.response && JSON.parse(request.response));
+          this.component.$wire.call("finishUpload", name, paths, this.uploadBag.first(name).multiple);
+          return;
+        }
+        let errors = null;
+        if (request.status === 422) {
+          errors = request.response;
+        }
+        this.component.$wire.call("uploadErrored", name, errors, this.uploadBag.first(name).multiple);
+      });
+      request.send(formData);
+    }
+    startUpload(name, uploadObject) {
+      let fileInfos = uploadObject.files.map((file) => {
+        return { name: file.name, size: file.size, type: file.type };
+      });
+      this.component.$wire.call("startUpload", name, fileInfos, uploadObject.multiple);
+      setUploadLoading(this.component, name);
+    }
+    markUploadFinished(name, tmpFilenames) {
+      unsetUploadLoading(this.component);
+      let uploadObject = this.uploadBag.shift(name);
+      uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
+    }
+    markUploadErrored(name) {
+      unsetUploadLoading(this.component);
+      this.uploadBag.shift(name).errorCallback();
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
+    }
+  };
+  var MessageBag = class {
+    constructor() {
+      this.bag = {};
+    }
+    add(name, thing) {
+      if (!this.bag[name]) {
+        this.bag[name] = [];
+      }
+      this.bag[name].push(thing);
+    }
+    push(name, thing) {
+      this.add(name, thing);
+    }
+    first(name) {
+      if (!this.bag[name])
+        return null;
+      return this.bag[name][0];
+    }
+    last(name) {
+      return this.bag[name].slice(-1)[0];
+    }
+    get(name) {
+      return this.bag[name];
+    }
+    shift(name) {
+      return this.bag[name].shift();
+    }
+    call(name, ...params) {
+      (this.listeners[name] || []).forEach((callback) => {
+        callback(...params);
+      });
+    }
+    has(name) {
+      return Object.keys(this.listeners).includes(name);
+    }
+  };
+  function setUploadLoading() {
+  }
+  function unsetUploadLoading() {
+  }
+
+  // js/features/supportQueryString.js
   on("component.init", (component) => {
     let effects = component.effects;
     let queryString = effects["url"];
@@ -4963,6 +5225,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return { ...fullerDefaults, ...value };
     }
   }
+
+  // js/features/supportRedirects.js
+  on("effects", (component, effects) => {
+    if (!effects["redirect"])
+      return;
+    let url = effects["redirect"];
+    window.location.href = url;
+  });
 
   // js/morph.js
   function morph2(component, el, html) {
@@ -5039,7 +5309,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return el.hasAttribute("wire:id");
   }
 
-  // js/features/morphDom.js
+  // js/features/supportMorphDom.js
   on("effects", (component, effects) => {
     let html = effects.html;
     if (!html)
@@ -5048,89 +5318,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       morph2(component, component.el, html);
     });
   });
-
-  // js/features/entangle.js
-  wireProperty("entangle", (component) => (name, live = false) => {
-    return generateEntangleFunction(component)(name, live);
-  });
-  function generateEntangleFunction(component) {
-    return (name, live) => {
-      let isLive = live;
-      let livewireProperty = name;
-      let livewireComponent = component.$wire;
-      let livewirePropertyValue = livewireComponent.get(livewireProperty);
-      let interceptor2 = module_default.interceptor((initialValue, getter, setter, path, key) => {
-        if (typeof livewirePropertyValue === "undefined") {
-          console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`);
-          return;
-        }
-        queueMicrotask(() => {
-          module_default.entangle({
-            get() {
-              console.log("livewire get", livewireComponent.get(name));
-              return livewireComponent.get(name);
-            },
-            set(value) {
-              console.log("livewire set", value, isLive);
-              livewireComponent.set(name, value, isLive);
-            }
-          }, {
-            get() {
-              console.log("alpine get", getter());
-              return getter();
-            },
-            set(value) {
-              console.log("alpine set", value);
-              setter(value);
-            }
-          });
-        });
-        return livewireComponent.get(name);
-      }, (obj) => {
-        Object.defineProperty(obj, "live", {
-          get() {
-            isLive = true;
-            return obj;
-          }
-        });
-      });
-      return interceptor2(livewirePropertyValue);
-    };
-  }
-
-  // js/features/redirect.js
-  on("effects", (component, effects) => {
-    if (!effects["redirect"])
-      return;
-    let url = effects["redirect"];
-    window.location.href = url;
-  });
-
-  // js/features/$parent.js
-  var memo;
-  wireProperty("$parent", (component) => {
-    if (memo)
-      return memo.$wire;
-    let parent = closestComponent(component.el.parentElement);
-    memo = parent;
-    return parent.$wire;
-  });
-
-  // js/features/props.js
-  on("request.prepare", (component) => {
-    let meta = component.snapshot.memo;
-    let childIds = Object.values(meta.children).map((i) => i[1]);
-    childIds.forEach((id) => {
-      let child = findComponent(id);
-      let childMeta = child.snapshot.memo;
-      let props = childMeta.props;
-      if (props)
-        child.$wire.$commit();
-    });
-  });
-
-  // js/features/$wire.js
-  module_default.magic("wire", (el) => closestComponent(el).$wire);
 
   // js/directives/wire:transition.js
   on("morph.added", (el) => el.__addedByMorph = true);
@@ -5226,7 +5413,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el.removeAttribute(directive3.expression);
       }
     } else {
+      let cache = window.getComputedStyle(el, null).getPropertyValue("display");
       let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
+      display = directive3.modifiers.includes("remove") ? cache : display;
       el.style.display = isTruthy ? display : "none";
     }
   }
@@ -5344,6 +5533,56 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return btoa(encodeURIComponent(subject));
   }
 
+  // js/directives/wire:stream.js
+  directive2("stream", (el, { expression, modifiers }, { component, cleanup: cleanup3 }) => {
+    let off = on("stream", ({ name, content, append }) => {
+      if (name !== expression)
+        return;
+      if (modifiers.includes("append") || append) {
+        el.innerHTML = el.innerHTML + content;
+      } else {
+        el.innerHTML = content;
+      }
+    });
+    cleanup3(off);
+  });
+  on("fetch", () => {
+    return (response) => {
+      if (!response.headers.has("X-Livewire-Stream"))
+        return response;
+      return {
+        ok: true,
+        redirected: false,
+        status: 200,
+        async text() {
+          let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+            trigger2("stream", streamed);
+          });
+          if (contentIsFromDump(finalResponse)) {
+            this.ok = false;
+          }
+          return finalResponse;
+        }
+      };
+    };
+  });
+  async function interceptStreamAndReturnFinalResponse(response, callback) {
+    let reader = response.body.getReader();
+    let finalResponse = "";
+    while (true) {
+      let { done, value: chunk } = await reader.read();
+      let decoder = new TextDecoder();
+      let output = decoder.decode(chunk);
+      if (output && output.startsWith('{"stream":true')) {
+        callback(JSON.parse(output).body);
+      } else {
+        finalResponse = finalResponse + output;
+      }
+      if (done)
+        return finalResponse;
+    }
+  }
+
   // js/directives/wire:ignore.js
   directive2("ignore", (el, { modifiers }) => {
     if (modifiers.includes("self")) {
@@ -5402,11 +5641,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire:model.js
-  directive2("model", (el, { expression, modifiers }, { component }) => {
+  directive2("model", (el, { expression, modifiers }, { component, cleanup: cleanup3 }) => {
     if (!expression) {
       return console.warn("Livewire: [wire:model] is missing a value.", el);
     }
-    forceUpdateOnDirty(component, el, expression);
+    if (el.type.toLowerCase() === "file") {
+      return handleFileUpload(el, expression, component, cleanup3);
+    }
+    forceUpdateOnDirty(component, el, expression, cleanup3);
     let isLive = modifiers.includes("live");
     let isLazy = modifiers.includes("lazy");
     let isDebounced = modifiers.includes("debounce");
@@ -5441,10 +5683,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isTextInput(el) {
     return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
   }
+  function forceUpdateOnDirty(component, el, expression, cleanup3) {
+    let off = on("request", (iComponent) => {
+      if (iComponent !== component)
+        return;
+      return () => {
+        let dirty = component.effects.dirty;
+        if (!dirty)
+          return;
+        if (isDirty(expression, dirty)) {
+          el._x_forceModelUpdate(component.$wire.get(expression, false));
+        }
+      };
+    });
+    cleanup3(off);
+  }
+  function isDirty(subject, dirty) {
+    if (dirty.includes(subject))
+      return true;
+    return dirty.some((i) => subject.startsWith(i));
+  }
 
   // js/directives/wire:init.js
   directive2("init", (el, directive3) => {
-    let fullMethod = directive3.expression ? directive3.method : "$refresh";
+    let fullMethod = directive3.expression ?? "$refresh";
     module_default.evaluate(el, `$wire.${fullMethod}`);
   });
 
@@ -5556,12 +5818,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/index.js
   var Livewire = {
     directive: directive2,
-    emitTo,
+    dispatchTo,
     start: start2,
     first,
     find,
     hook: on,
-    emit,
+    dispatch: dispatch3,
     on: on3
   };
   if (window.Livewire)

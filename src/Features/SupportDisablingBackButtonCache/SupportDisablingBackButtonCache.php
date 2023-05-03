@@ -11,16 +11,19 @@ class SupportDisablingBackButtonCache extends ComponentHook
 {
     public static $disableBackButtonCache = false;
 
-    static function provide()
+    public static function provide()
     {
-        app('events')->listen(RequestHandled::class, function ($handled) {
-            if (static::$disableBackButtonCache) {
-                $handled->response->headers->add([
-                    "Pragma" => "no-cache",
-                    "Expires" => "Fri, 01 Jan 1990 00:00:00 GMT",
-                    "Cache-Control" => "no-cache, must-revalidate, no-store, max-age=0, private",
-                ]);
-            }
-        });
+        $kernel = app()->make(\Illuminate\Contracts\Http\Kernel::class);
+
+        if ($kernel->hasMiddleware(DisableBackButtonCacheMiddleware::class)) {
+            return;
+        }
+
+        $kernel->pushMiddleware(DisableBackButtonCacheMiddleware::class);
+    }
+
+    public function boot()
+    {
+        static::$disableBackButtonCache = true;
     }
 }

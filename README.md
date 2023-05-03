@@ -36,6 +36,7 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 
 #### V2 Parity
 - [x] Eloquent model support
+- [ ] File uploads (javascript)
 - [ ] Persistant middleware (Josh)
 - [ ] Session expiration (Josh)
 - [ ] Detect multiple root elements

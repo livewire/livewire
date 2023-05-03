@@ -39,7 +39,7 @@ class NoRedirectComponent extends Component
 
     public function performNoRedirect()
     {
-        $this->emit('noRedirect');
+        $this->dispatch('noRedirect');
     }
 
     public function render()

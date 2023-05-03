@@ -1,11 +1,11 @@
-import { store, processEffects } from './request'
-import { trigger } from './events'
 import { deepClone, deeplyEqual, extractData} from './utils'
-import { generateWireObject } from './wire'
+import { store, processEffects } from './request'
+import { generateWireObject } from './$wire'
 
 export class Component {
     constructor(el) {
         if (el.__livewire) throw 'Component already initialized';
+
         el.__livewire = this
 
         this.symbol = Symbol()
@@ -15,6 +15,7 @@ export class Component {
         this.el = el
 
         this.id = el.getAttribute('wire:id')
+
         this.__livewireId = this.id // @legacy
 
         this.encodedSnapshot = el.getAttribute('wire:snapshot')

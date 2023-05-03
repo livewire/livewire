@@ -369,7 +369,7 @@ class HandleComponents
             $methods =  array_values(array_diff($methods, ['render']));
 
             // @todo: put this in a better place:
-            $methods[] = '__emit';
+            $methods[] = '__dispatch';
 
             if (! in_array($method, $methods)) {
                 throw new MethodNotFoundException($method);

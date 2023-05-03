@@ -202,3 +202,10 @@ There's just so much of it, it feels overwhelming
 
 
 
+
+Humor:
+* bathtubs
+* silly bands
+* penguins of madagascar
+* Ed Bassmaster
+* Spongebob
