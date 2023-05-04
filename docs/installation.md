@@ -39,10 +39,10 @@ If you want more control over this behavior, you can manually include them on a 
 
 By including these assets manually on a page, Livewire knows to not inject the assets automatically.
 
-If for some reason you want to force Livewire to disable its auto-injecting assets behavior, you can do so by updating the `auto_inject_assets` configuration in `config/livewire.php`: (See: [Publishing config](#publishing-config) if haven't published this config file yet)
+If for some reason you want to force Livewire to disable its auto-injecting assets behavior, you can do so by updating the `inject_assets` configuration in `config/livewire.php`: (See: [Publishing config](#publishing-config) if haven't published this config file yet)
 
 ```json
-'auto_inject_assets': false,
+'inject_assets': false,
 ```
 
 ## Configuring Livewire's update endpoint

@@ -170,4 +170,5 @@ return [
 
     'eloquent_model_binding' => false,
 
+    'inject_assets' => true,
 ];

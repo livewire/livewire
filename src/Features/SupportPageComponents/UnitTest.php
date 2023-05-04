@@ -345,6 +345,30 @@ class UnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo')
             ->assertSee('component-alias');
     }
+
+    /** @test */
+    public function can_configure_layout_using_layout_attribute()
+    {
+        Route::get('/configurable-layout', ComponentForRenderLayoutAttribute::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/configurable-layout')
+            ->assertSee('bob')
+            ->assertSee('baz');
+    }
+
+    /** @test */
+    public function can_configure_layout_using_layout_attribute_on_class_instead_of_render_method()
+    {
+        Route::get('/configurable-layout', ComponentForClassLayoutAttribute::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/configurable-layout')
+            ->assertSee('bob')
+            ->assertSee('baz');
+    }
 }
 
 class ComponentForConfigurableLayoutTest extends Component
@@ -537,6 +561,28 @@ class ComponentForRouteRegistration extends Component
         return view('show-name')->layout('layouts.app-with-bar', [
             'bar' => 'baz',
         ]);
+    }
+}
+
+class ComponentForRenderLayoutAttribute extends Component
+{
+    public $name = 'bob';
+
+    #[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+    public function render()
+    {
+        return view('show-name');
+    }
+}
+
+#[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+class ComponentForClassLayoutAttribute extends Component
+{
+    public $name = 'bob';
+
+    public function render()
+    {
+        return view('show-name');
     }
 }
 

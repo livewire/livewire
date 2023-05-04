@@ -2,17 +2,18 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
-use Illuminate\View\View;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\View\AnonymousComponent;
-use Livewire\Drawer\ImplicitRouteBinding;
-use Livewire\Mechanisms\DataStore;
-use Illuminate\Support\Facades\View as ViewFacade;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Livewire\ComponentHook;
-
-use function Livewire\off;
 use function Livewire\on;
+use function Livewire\off;
+use Livewire\Mechanisms\DataStore;
+use Livewire\Drawer\ImplicitRouteBinding;
+use Livewire\ComponentHook;
+use Livewire\AttributeCollection;
+use Illuminate\View\View;
+use Illuminate\View\AnonymousComponent;
+
+use Illuminate\Support\Facades\View as ViewFacade;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class SupportPageComponents extends ComponentHook
 {
@@ -69,6 +70,12 @@ class SupportPageComponents extends ComponentHook
         $layoutConfig = null;
 
         $handler = function ($target, $view, $data) use (&$layoutConfig) {
+            $attribute = AttributeCollection::fromObject($target)->find(Layout::class);
+
+            if ($attribute) {
+                $view->layout($attribute->name, $attribute->params);
+            }
+
             // Here, ->layoutConfig is set from the layout view macros...
             if (! $view->layoutConfig) return;
 
