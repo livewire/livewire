@@ -4144,30 +4144,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function registerListeners(component, listeners2) {
     listeners2.forEach((name) => {
       window.addEventListener(name, (e) => {
-        if (e.__livewire && e.__livewire.self === true)
-          return;
         component.$wire.call("__dispatch", name, e.detail);
       });
       component.el.addEventListener(name, (e) => {
-        if (e.__livewire && (e.__livewire.self === false && e.__livewire.to === void 0))
+        if (e.__livewire && e.bubbles)
           return;
         component.$wire.call("__dispatch", name, e.detail);
       });
     });
   }
   function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self: self2 = false, to: to2 }) => {
+    dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
       if (self2)
         dispatchSelf(component.id, name, params);
-      else if (to2)
-        dispatchTo(to2, name, params);
+      else if (to)
+        dispatchTo(to, name, params);
       else
         dispatch2(name, params);
     });
   }
   function dispatchEvent(el, name, params, bubbles = true) {
     let e = new CustomEvent(name, { bubbles, detail: params });
-    e.__livewire = { name, params, self, to };
+    e.__livewire = { name, params };
     el.dispatchEvent(e);
   }
   function dispatch2(name, params) {
@@ -4586,60 +4584,60 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       key = options2.key || defaultGetKey;
       lookahead = options2.lookahead || false;
     }
-    function patch(from2, to2) {
-      if (differentElementNamesTypesOrKeys(from2, to2)) {
-        return patchElement(from2, to2);
+    function patch(from2, to) {
+      if (differentElementNamesTypesOrKeys(from2, to)) {
+        return patchElement(from2, to);
       }
       let updateChildrenOnly = false;
-      if (shouldSkip(updating, from2, to2, () => updateChildrenOnly = true))
+      if (shouldSkip(updating, from2, to, () => updateChildrenOnly = true))
         return;
-      window.Alpine && initializeAlpineOnTo(from2, to2, () => updateChildrenOnly = true);
-      if (textOrComment(to2)) {
-        patchNodeValue(from2, to2);
-        updated(from2, to2);
+      window.Alpine && initializeAlpineOnTo(from2, to, () => updateChildrenOnly = true);
+      if (textOrComment(to)) {
+        patchNodeValue(from2, to);
+        updated(from2, to);
         return;
       }
       if (!updateChildrenOnly) {
-        patchAttributes(from2, to2);
+        patchAttributes(from2, to);
       }
-      updated(from2, to2);
-      patchChildren(Array.from(from2.childNodes), Array.from(to2.childNodes), (toAppend) => {
+      updated(from2, to);
+      patchChildren(Array.from(from2.childNodes), Array.from(to.childNodes), (toAppend) => {
         from2.appendChild(toAppend);
       });
     }
-    function differentElementNamesTypesOrKeys(from2, to2) {
-      return from2.nodeType != to2.nodeType || from2.nodeName != to2.nodeName || getKey(from2) != getKey(to2);
+    function differentElementNamesTypesOrKeys(from2, to) {
+      return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
     }
-    function patchElement(from2, to2) {
+    function patchElement(from2, to) {
       if (shouldSkip(removing, from2))
         return;
-      let toCloned = to2.cloneNode(true);
+      let toCloned = to.cloneNode(true);
       if (shouldSkip(adding, toCloned))
         return;
       dom.replace([from2], from2, toCloned);
       removed(from2);
       added(toCloned);
     }
-    function patchNodeValue(from2, to2) {
-      let value = to2.nodeValue;
+    function patchNodeValue(from2, to) {
+      let value = to.nodeValue;
       if (from2.nodeValue !== value) {
         from2.nodeValue = value;
       }
     }
-    function patchAttributes(from2, to2) {
+    function patchAttributes(from2, to) {
       if (from2._x_transitioning)
         return;
-      if (from2._x_isShown && !to2._x_isShown) {
+      if (from2._x_isShown && !to._x_isShown) {
         return;
       }
-      if (!from2._x_isShown && to2._x_isShown) {
+      if (!from2._x_isShown && to._x_isShown) {
         return;
       }
       let domAttributes = Array.from(from2.attributes);
-      let toAttributes = Array.from(to2.attributes);
+      let toAttributes = Array.from(to.attributes);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
-        if (!to2.hasAttribute(name)) {
+        if (!to.hasAttribute(name)) {
           from2.removeAttribute(name);
         }
       }
@@ -4815,11 +4813,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     hook(...args, () => skip = true);
     return skip;
   }
-  function initializeAlpineOnTo(from, to2, childrenOnly) {
+  function initializeAlpineOnTo(from, to, childrenOnly) {
     if (from.nodeType !== 1)
       return;
     if (from._x_dataStack) {
-      window.Alpine.clone(from, to2);
+      window.Alpine.clone(from, to);
     }
   }
   function src_default3(Alpine3) {
@@ -4959,9 +4957,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function handleFileUpload(el, property, component, cleanup3) {
     let manager = getUploadManager(component);
-    let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true }));
-    let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true }));
-    let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true }));
+    let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
+    let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
+    let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
     let progress = (progressEvent) => {
       var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
       el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
@@ -4996,17 +4994,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.removeBag = new MessageBag();
     }
     registerListeners() {
-      this.component.$wire.$on("upload:generatedSignedUrl", ([[name, url]]) => {
+      this.component.$wire.$on("upload:generatedSignedUrl", ({ name, url }) => {
         setUploadLoading(this.component, name);
         this.handleSignedUrl(name, url);
       });
-      this.component.$wire.$on("upload:generatedSignedUrlForS3", ([[name, payload]]) => {
+      this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
         setUploadLoading(this.component, name);
         this.handleS3PreSignedUrl(name, payload);
       });
-      this.component.$wire.$on("upload:finished", ([name, tmpFilenames]) => this.markUploadFinished(name, tmpFilenames));
-      this.component.$wire.$on("upload:errored", ([name]) => this.markUploadErrored(name));
-      this.component.$wire.$on("upload:removed", ([name, tmpFilename]) => this.removeBag.shift(name).finishCallback(tmpFilename));
+      this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
+      this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
+      this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
     }
     upload(name, file, finishCallback, errorCallback, progressCallback) {
       this.setUpload(name, {
@@ -5210,10 +5208,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } catch (e) {
     }
     parentComponent && (wrapper.__livewire = parentComponent);
-    let to2 = wrapper.firstElementChild;
-    to2.__livewire = component;
-    trigger("morph", el, to2, component);
-    Alpine.morph(el, to2, {
+    let to = wrapper.firstElementChild;
+    to.__livewire = component;
+    trigger("morph", el, to, component);
+    Alpine.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip) => {
         if (isntElement(el2))
           return;
@@ -5303,7 +5301,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el2.remove();
       });
       visibility.state = false;
-      cleanups.push(on("morph", (from, to2, morphComponent) => {
+      cleanups.push(on("morph", (from, to, morphComponent) => {
         if (morphComponent !== component)
           return;
         el2.remove();
@@ -5411,6 +5409,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       () => delay(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
+    whenTargetsArePartOfFileUpload(component, targets, [
+      () => delay(() => toggleBooleanStateDirective(el, directive3, true)),
+      () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
+    ]);
   });
   function applyDelay(directive3) {
     if (!directive3.modifiers.includes("delay"))
@@ -5458,6 +5460,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return () => {
         endLoading();
       };
+    });
+  }
+  function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
+    let eventMismatch = (e) => {
+      let { id, property } = e.detail;
+      if (id !== component.id)
+        return true;
+      if (targets.length > 0 && !targets.map((i) => i.target).includes(property))
+        return true;
+      return false;
+    };
+    window.addEventListener("livewire-upload-start", (e) => {
+      if (eventMismatch(e))
+        return;
+      startLoading();
+    });
+    window.addEventListener("livewire-upload-finish", (e) => {
+      if (eventMismatch(e))
+        return;
+      endLoading();
+    });
+    window.addEventListener("livewire-upload-error", (e) => {
+      if (eventMismatch(e))
+        return;
+      endLoading();
     });
   }
   function containsTargets(payload, targets) {

@@ -12,14 +12,12 @@ function registerListeners(component, listeners) {
     listeners.forEach(name => {
         // Register a global listener...
         window.addEventListener(name, (e) => {
-           if (e.__livewire && e.__livewire.self === true) return
-
             component.$wire.call('__dispatch', name, e.detail)
         })
 
         // Register a listener for when "to" or "self"
         component.el.addEventListener(name, (e) => {
-            if (e.__livewire && (e.__livewire.self === false && e.__livewire.to === undefined)) return
+            if (e.__livewire && e.bubbles) return
 
             component.$wire.call('__dispatch', name, e.detail)
         })
@@ -37,7 +35,7 @@ function dispatchEvents(component, dispatches) {
 function dispatchEvent(el, name, params, bubbles = true) {
     let e = new CustomEvent(name, { bubbles, detail: params })
 
-    e.__livewire = { name, params, self, to }
+    e.__livewire = { name, params }
 
     el.dispatchEvent(e)
 }

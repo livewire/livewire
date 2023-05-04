@@ -18,9 +18,9 @@ function getUploadManager(component) {
 export function handleFileUpload(el, property, component, cleanup) {
     let manager = getUploadManager(component)
 
-    let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true }))
-    let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true }))
-    let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true }))
+    let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
+    let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property} }))
+    let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property} }))
     let progress = (progressEvent) => {
         var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
 
@@ -65,7 +65,7 @@ class UploadManager {
     }
 
     registerListeners() {
-        this.component.$wire.$on('upload:generatedSignedUrl', ([ [name, url] ]) => {
+        this.component.$wire.$on('upload:generatedSignedUrl', ({ name, url }) => {
             // We have to add reduntant "setLoading" calls because the dom-patch
             // from the first response will clear the setUploadLoading call
             // from the first upload call.
@@ -74,15 +74,15 @@ class UploadManager {
             this.handleSignedUrl(name, url)
         })
 
-        this.component.$wire.$on('upload:generatedSignedUrlForS3', ([ [name, payload] ]) => {
+        this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payload }) => {
             setUploadLoading(this.component, name)
 
             this.handleS3PreSignedUrl(name, payload)
         })
 
-        this.component.$wire.$on('upload:finished', ([name, tmpFilenames]) => this.markUploadFinished(name, tmpFilenames))
-        this.component.$wire.$on('upload:errored', ([name]) => this.markUploadErrored(name))
-        this.component.$wire.$on('upload:removed', ([name, tmpFilename]) => this.removeBag.shift(name).finishCallback(tmpFilename))
+        this.component.$wire.$on('upload:finished', ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames))
+        this.component.$wire.$on('upload:errored', ({ name }) => this.markUploadErrored(name))
+        this.component.$wire.$on('upload:removed', ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename))
     }
 
     upload(name, file, finishCallback, errorCallback, progressCallback) {

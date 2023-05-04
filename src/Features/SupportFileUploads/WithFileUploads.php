@@ -18,12 +18,12 @@ trait WithFileUploads
 
             $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
 
-            $this->dispatch('upload:generatedSignedUrlForS3', [$name, GenerateSignedUploadUrl::forS3($file)])->self();
+            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payload: GenerateSignedUploadUrl::forS3($file))->self();
 
             return;
         }
 
-        $this->dispatch('upload:generatedSignedUrl', [$name, GenerateSignedUploadUrl::forLocal()])->self();
+        $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrl::forLocal())->self();
     }
 
     public function finishUpload($name, $tmpPath, $isMultiple)
@@ -34,10 +34,10 @@ trait WithFileUploads
             $file = collect($tmpPath)->map(function ($i) {
                 return TemporaryUploadedFile::createFromLivewire($i);
             })->toArray();
-            $this->dispatch('upload:finished', [$name, collect($file)->map->getFilename()->toArray()])->self();
+            $this->dispatch('upload:finished', name: $name, tmpFilenames: collect($file)->map->getFilename()->toArray())->self();
         } else {
             $file = TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
-            $this->dispatch('upload:finished', [$name, [$file->getFilename()]])->self();
+            $this->dispatch('upload:finished', name: $name, tmpFilenames: [$file->getFilename()])->self();
 
             // If the property is an array, but the upload ISNT set to "multiple"
             // then APPEND the upload to the array, rather than replacing it.
@@ -50,7 +50,7 @@ trait WithFileUploads
     }
 
     public function uploadErrored($name, $errorsInJson, $isMultiple) {
-        $this->dispatch('upload:errored', [$name])->self();
+        $this->dispatch('upload:errored', name: $name)->self();
 
         if (is_null($errorsInJson)) {
             // Handle any translations/custom names
@@ -79,7 +79,7 @@ trait WithFileUploads
         $uploads = $this->getPropertyValue($name);
 
         if (is_array($uploads) && isset($uploads[0]) && $uploads[0] instanceof TemporaryUploadedFile) {
-            $this->dispatch('upload:removed', [$name, $tmpFilename])->self();
+            $this->dispatch('upload:removed', name: $name, tmpFilename: $tmpFilename)->self();
 
             app('livewire')->updateProperty($this, $name, array_values(array_filter($uploads, function ($upload) use ($tmpFilename) {
                 if ($upload->getFilename() === $tmpFilename) {
@@ -92,7 +92,7 @@ trait WithFileUploads
         } elseif ($uploads instanceof TemporaryUploadedFile && $uploads->getFilename() === $tmpFilename) {
             $uploads->delete();
 
-            $this->dispatch('upload:removed', [$name, $tmpFilename])->self();
+            $this->dispatch('upload:removed', name: $name, tmpFilename: $tmpFilename)->self();
 
             app('livewire')->updateProperty($this, $name, null);
         }
