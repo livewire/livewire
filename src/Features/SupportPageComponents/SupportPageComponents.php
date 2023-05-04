@@ -70,10 +70,15 @@ class SupportPageComponents extends ComponentHook
         $layoutConfig = null;
 
         $handler = function ($target, $view, $data) use (&$layoutConfig) {
-            $attribute = AttributeCollection::fromObject($target)->find(Layout::class);
+            $layoutAttr = AttributeCollection::fromObject($target)->find(Layout::class);
+            $titleAttr = AttributeCollection::fromObject($target)->find(Title::class);
 
-            if ($attribute) {
-                $view->layout($attribute->name, $attribute->params);
+            if ($layoutAttr) {
+                $view->layout($layoutAttr->name, $layoutAttr->params);
+            }
+
+            if ($titleAttr) {
+                $view->layoutData(['title' => $titleAttr->content]);
             }
 
             // Here, ->layoutConfig is set from the layout view macros...
