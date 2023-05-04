@@ -36,6 +36,12 @@ class SupportPageComponents extends ComponentHook
             return $this;
         });
 
+        View::macro('title', function ($title) {
+            $this->layoutConfig['params'] = array_merge($this->layoutConfig['params'], ['title' => $title]);
+
+            return $this;
+        });
+
         View::macro('slot', function ($slot) {
             $this->layoutConfig['slotOrSection'] = $slot;
 
@@ -78,7 +84,7 @@ class SupportPageComponents extends ComponentHook
             }
 
             if ($titleAttr) {
-                $view->layoutData(['title' => $titleAttr->content]);
+                $view->title($titleAttr->content);
             }
 
             // Here, ->layoutConfig is set from the layout view macros...
