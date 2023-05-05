@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\URL;
 use League\Flysystem\Cached\CachedAdapter;
 
@@ -17,6 +18,7 @@ class GenerateSignedUploadUrl
     public function forS3($file, $visibility = 'private')
     {
         $driver = FileUploadConfiguration::storage()->getDriver();
+
 
         // Flysystem V2+ doesn't allow direct access to adapter, so we need to invade instead.
         if (method_exists($driver, 'getAdapter')) {
@@ -43,6 +45,13 @@ class GenerateSignedUploadUrl
             $bucket = invade($adapter)->bucket;
         }
 
+        // Flysystem V2+ doesn't allow direct access to options, so we need to invade instead.
+        if (method_exists($adapter, 'getOptions')) {
+            $options = $adapter->getOptions();
+        } else {
+            $options = invade($adapter)->options;
+        }
+
         $fileType = $file->getMimeType();
         $fileHashName = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
         $path = FileUploadConfiguration::path($fileHashName);
@@ -54,6 +63,7 @@ class GenerateSignedUploadUrl
             'ContentType' => $fileType ?: 'application/octet-stream',
             'CacheControl' => null,
             'Expires' => null,
+            'ServerSideEncryption' => Arr::get($options, 'ServerSideEncryption'),
         ]));
 
         $signedRequest = $client->createPresignedRequest(
