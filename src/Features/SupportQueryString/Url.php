@@ -2,10 +2,10 @@
 
 namespace Livewire\Features\SupportQueryString;
 
-use Livewire\PropertyHook;
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Url extends PropertyHook
+class Url extends LivewireAttribute
 {
     public function __construct(
         public $as = null,

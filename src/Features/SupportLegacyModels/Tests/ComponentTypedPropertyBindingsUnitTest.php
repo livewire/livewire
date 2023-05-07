@@ -24,7 +24,7 @@ class ComponentTypedPropertyBindingsUnitTest extends \Tests\TestCase
     {
         Route::get('/foo/{model}', ComponentWithPropBindings::class);
 
-        $this->get('/foo/route-model')->assertSeeText('prop:via-route:route-model');
+        $this->withoutExceptionHandling()->get('/foo/route-model')->assertSeeText('prop:via-route:route-model');
     }
 
     /** @test */

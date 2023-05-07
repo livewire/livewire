@@ -327,7 +327,7 @@ You can take advantage of Laravel's dependency injection by type-hinting paramet
 namespace App\Http\Livewire;
 
 use Livewire\Component;
-use App\Repositories\PostRepository
+use App\Repositories\PostRepository;
 
 class ShowPosts extends Component
 {

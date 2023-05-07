@@ -2,8 +2,10 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+
 #[\Attribute]
-class Title
+class Title extends LivewireAttribute
 {
     function __construct(
         public $content,

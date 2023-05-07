@@ -2,17 +2,17 @@
 
 namespace Livewire\Features\SupportEvents;
 
-use Livewire\PropertyHook;
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use function Livewire\store;
 
 #[\Attribute]
-class Listener extends PropertyHook
+class Listener extends LivewireAttribute
 {
     public function __construct(public $event) {}
 
     public function boot()
     {
-        store($this->component)->push('listenersFromPropertyHooks', $this->getName(), $this->event);
+        store($this->component)->push('listenersFromPropertyAttributes', $this->getName(), $this->event);
     }
 }

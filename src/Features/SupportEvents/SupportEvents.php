@@ -72,7 +72,7 @@ class SupportEvents extends ComponentHook
     {
         $fromClass = invade($component)->getListeners();
 
-        $fromAttributes = store($component)->get('listenersFromPropertyHooks', []);
+        $fromAttributes = store($component)->get('listenersFromPropertyAttributes', []);
 
         return array_merge($fromClass, $fromAttributes);
     }

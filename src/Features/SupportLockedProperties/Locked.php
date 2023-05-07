@@ -2,10 +2,10 @@
 
 namespace Livewire\Features\SupportLockedProperties;
 
-use Livewire\PropertyHook;
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Locked extends PropertyHook
+class Locked extends LivewireAttribute
 {
     public function update()
     {

@@ -2,15 +2,17 @@
 
 namespace Livewire;
 
+use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Mechanisms\NestingComponents\HandlesNestingComponents;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Features\SupportValidation\HandlesValidation;
+use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
 use Livewire\Features\SupportQueryString\HandlesQueryString;
+use Livewire\Features\SupportPagination\HandlesPagination;
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;
 use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
-use Livewire\Features\SupportPagination\HandlesPagination;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Drawer\Utils;
 use Livewire\Drawer\Utils as SyntheticUtils;
@@ -18,7 +20,6 @@ use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Str;
 use BadMethodCallException;
-use Livewire\Features\SupportStreaming\HandlesStreaming;
 
 /**
  * @todo - add Facade-esque method signatures to this file (from triggered __get and __call)
@@ -33,6 +34,7 @@ abstract class Component
     use HandlesRedirects;
     use HandlesStreaming;
     use HandlesPagination;
+    use HandlesAttributes;
     use HandlesValidation;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;

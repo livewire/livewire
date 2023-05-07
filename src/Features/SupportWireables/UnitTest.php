@@ -13,6 +13,8 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function a_wireable_can_be_set_as_a_public_property_and_validates()
     {
+        // @todo: Josh Hanley: this is broken because of the morph aware conditional stuff...
+
         $wireable = new WireableClass($message = Str::random(), $embeddedMessage = Str::random());
 
         Livewire::test(ComponentWithWireablePublicProperty::class, ['wireable' => $wireable])

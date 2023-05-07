@@ -2,12 +2,11 @@
 
 namespace Livewire\Features\SupportReactiveProps;
 
-use Livewire\PropertyHook;
-
 use function Livewire\store;
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Prop extends PropertyHook
+class Prop extends LivewireAttribute
 {
     public function mount($params)
     {

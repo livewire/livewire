@@ -76,8 +76,8 @@ class SupportPageComponents extends ComponentHook
         $layoutConfig = null;
 
         $handler = function ($target, $view, $data) use (&$layoutConfig) {
-            $layoutAttr = AttributeCollection::fromObject($target)->find(Layout::class);
-            $titleAttr = AttributeCollection::fromObject($target)->find(Title::class);
+            $layoutAttr = $target->getAttributes()->whereInstanceOf(Layout::class)->first();
+            $titleAttr = $target->getAttributes()->whereInstanceOf(Title::class)->first();
 
             if ($layoutAttr) {
                 $view->layout($layoutAttr->name, $layoutAttr->params);

@@ -5,6 +5,7 @@ namespace Livewire;
 use WeakMap;
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 class ComponentHookRegistry
 {
@@ -71,7 +72,7 @@ class ComponentHookRegistry
         });
 
         on('exception', function ($component, $e, $stopPropagation) {
-            return static::proxyCallToHooks($component, 'callException')($e, $stopPropagation);
+            static::proxyCallToHooks($component, 'callException')($e, $stopPropagation);
         });
     }
 
@@ -83,24 +84,7 @@ class ComponentHookRegistry
 
         $hook->setComponent($target);
 
-        $propertiesAndMethods = [
-            ...(new \ReflectionClass($target))->getProperties(),
-            ...(new \ReflectionClass($target))->getMethods(),
-        ];
-
-        foreach ($propertiesAndMethods as $property) {
-            $attributes = $property->getAttributes();
-
-            foreach ($attributes as $attribute) {
-                if (is_subclass_of($attribute->getName(), PropertyHook::class)) {
-                    $propertyHook = $attribute->newInstance();
-
-                    $hook->setPropertyHook($property->getName(), $propertyHook);
-                }
-            }
-        }
-
-        return $hook;
+        return tap($hook)->setComponent($target);
     }
 
     static function proxyCallToHooks($target, $method) {

@@ -32,6 +32,16 @@ class ComponentSkipRenderTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function with_skip_render_attribute_render_is_not_called()
+    {
+        $component = Livewire::test(ComponentSkipRenderAttributeStub::class);
+
+        $component->call('noop');
+
+        $this->assertNull($component->html());
+    }
+
+    /** @test */
     public function on_redirect_in_mount_render_is_not_called()
     {
         // $component = Livewire::test(ComponentSkipRenderOnRedirectInMountStub::class);
@@ -61,6 +71,26 @@ class ComponentSkipRenderStub extends Component
         $this->noop = true;
 
         $this->skipRender();
+    }
+
+    public function render()
+    {
+        if ($this->noop) {
+            throw new \RuntimeException('Render should not be called after noop()');
+        }
+
+        return app('view')->make('null-view');
+    }
+}
+
+class ComponentSkipRenderAttributeStub extends Component
+{
+    private $noop = false;
+
+    #[\Livewire\Attributes\SkipRender]
+    public function noop()
+    {
+        $this->noop = true;
     }
 
     public function render()

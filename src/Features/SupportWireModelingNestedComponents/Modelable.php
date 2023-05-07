@@ -2,11 +2,11 @@
 
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
-use Livewire\PropertyHook;
 use function Livewire\store;
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Modelable extends PropertyHook
+class Modelable extends LivewireAttribute
 {
     public function mount($params, $parent)
     {

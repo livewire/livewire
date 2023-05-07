@@ -2,11 +2,10 @@
 
 namespace Livewire\Features\SupportJavaScriptMethods;
 
-use Livewire\PropertyHook;
-use ReflectionMethod;
+use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class JavaScript extends PropertyHook
+class JavaScript extends LivewireAttribute
 {
     function dehydrate($context)
     {
@@ -17,3 +16,7 @@ class JavaScript extends PropertyHook
         $context->pushEffect('js', $stringifiedMethod, $name);
     }
 }
+
+
+
+

@@ -71,7 +71,7 @@ class TraitsUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function trait_hooks_are_run_at_the_same_time_as_component_hoks()
+    public function trait_hooks_are_run_at_the_same_time_as_component_hooks()
     {
         Livewire::test(ComponentWithTraitStubAndComponentLifecycleHooks::class)
             ->assertSet(
