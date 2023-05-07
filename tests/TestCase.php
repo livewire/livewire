@@ -11,7 +11,6 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 {
     public function setUp(): void
     {
-
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();
         });

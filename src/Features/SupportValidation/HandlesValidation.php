@@ -20,6 +20,13 @@ trait HandlesValidation
 {
     protected $withValidatorCallback;
 
+    protected $rulesFromAttributes = [];
+
+    public function addRuleFromAttribute($property, $rule)
+    {
+        $this->rulesFromAttributes[$property] = $rule;
+    }
+
     public function getErrorBag()
     {
         return store($this)->get('errorBag', new MessageBag);
@@ -82,10 +89,12 @@ trait HandlesValidation
 
     public function getRules()
     {
-        if (method_exists($this, 'rules')) return $this->rules();
-        if (property_exists($this, 'rules')) return $this->rules;
+        $rulesFromComponent = [];
 
-        return [];
+        if (method_exists($this, 'rules')) $rulesFromComponent = $this->rules();
+        else if (property_exists($this, 'rules')) $rulesFromComponent = $this->rules;
+
+        return array_merge($rulesFromComponent, $this->rulesFromAttributes);
     }
 
     protected function getMessages()
@@ -213,7 +222,7 @@ trait HandlesValidation
         return $validatedData;
     }
 
-    public function validateOnly($field, $rules = null, $messages = [], $attributes = [])
+    public function validateOnly($field, $rules = null, $messages = [], $attributes = [], $dataOverrides = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
@@ -246,7 +255,7 @@ trait HandlesValidation
 
         $ruleKeysForField = array_keys($rulesForField);
 
-        $data = $this->getDataForValidation($rules);
+        $data = array_merge($this->getDataForValidation($rules), $dataOverrides);
 
         $data = $this->prepareForValidation($data);
 

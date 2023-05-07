@@ -2,18 +2,44 @@
 
 namespace Livewire\Features\SupportValidation;
 
-use Illuminate\Contracts\Validation\Rule;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\ViewErrorBag;
-use Livewire\Component;
-use Livewire\Exceptions\MissingRulesException;
-
-use Livewire\Livewire;
 use Livewire\Wireable;
+use Livewire\Livewire;
+use Livewire\Exceptions\MissingRulesException;
+use Livewire\Component;
+
+use Illuminate\Support\ViewErrorBag;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Collection;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
+    /** @test */
+    public function validate_update_triggers_rule_attribute()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Rule('required')]
+            public $foo = '';
+
+            #[Rule('required')]
+            public $bar = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('bar', 'testing...')
+            ->assertHasNoErrors()
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->call('clear')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors([
+                'foo' => 'required',
+            ]);
+    }
+
     /** @test */
     public function validate_with_rules_property()
     {
@@ -805,7 +831,7 @@ class ForValidation extends Component
     }
 }
 
-class ValueEqualsFoobar implements Rule
+class ValueEqualsFoobar implements \Illuminate\Contracts\Validation\Rule
 {
     public function passes($attribute, $value)
     {
