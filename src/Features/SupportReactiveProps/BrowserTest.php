@@ -28,7 +28,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends Component {
-                #[Prop]
+                #[ReactiveProp]
                 public $count;
 
                 public function inc() { $this->count++; }

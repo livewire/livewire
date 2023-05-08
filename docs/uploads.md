@@ -65,19 +65,19 @@ public function save()
 
     // Store the uploaded file in the "photos" directory of the default filesystem disk.
     $this->photo->store('photos');
-    
+
     // Store in the "photos" directory in a configured "s3" bucket.
     $this->photo->store('photos', 's3');
-    
+
     // Store in the "photos" directory with the filename "avatar.png".
     $this->photo->storeAs('photos', 'avatar');
-    
+
     // Store in the "photos" directory in a configured "s3" bucket with the filename "avatar.png".
     $this->photo->storeAs('photos', 'avatar', 's3');
-    
+
     // Store in the "photos" directory, with "public" visibility in a configured "s3" bucket.
     $this->photo->storePublicly('photos', 's3');
-    
+
     // Store in the "photos" directory, with the name "avatar.png", with "public" visibility in a configured "s3" bucket.
     $this->photo->storePubliclyAs('photos', 'avatar', 's3');
 }
@@ -132,7 +132,7 @@ Like you've seen previously, validating file uploads with Livewire is exactly th
 
 For more information, visit [Laravel's file validation documentation](https://laravel.com/docs/validation#available-validation-rules).
 
-### Real-time validation 
+### Real-time validation
 
 It's possible to validate a user's upload in real-time, *before* they submit the form.
 
@@ -248,13 +248,13 @@ class UploadPhotoTest extends TestCase
     public function can_upload_photo()
     {
         Storage::fake('avatars');
-    
+
         $file = UploadedFile::fake()->image('avatar.png');
-    
+
         Livewire::test(UploadPhoto::class)
             ->set('photo', $file)
             ->call('upload', 'uploaded-avatar.png');
-    
+
         Storage::disk('avatars')->assertExists('uploaded-avatar.png');
     }
 }
@@ -313,7 +313,7 @@ Now, when a user uploads a file, the file will never actually hit your server. I
 > php artisan livewire:publish --config
 > ```
 
-### Configuring automatic file cleanup 
+### Configuring automatic file cleanup
 
 This temporary directory will fill up with files quickly; therefore, it's important to configure S3 to cleanup files older than 24 hours.
 
@@ -325,10 +325,9 @@ php artisan livewire:configure-s3-upload-cleanup
 
 Now, any temporary files older than 24 hours will be cleaned up by S3 automatically.
 
-> [!tip]
 > If you are not using S3, Livewire will handle the file cleanup automatically. No need to run this command.
 
-## Loading indicators 
+## Loading indicators
 
 Although `wire:model` for file uploads works differently than other `wire:model` input types under the hood, the interface for showing loading indicators remains the same.
 
@@ -370,7 +369,7 @@ Here is an example of wrapping a Livewire file upload in an AlpineJS component t
     >
         <!-- File Input -->
         <input type="file" wire:model="photo">
-    
+
         <!-- Progress Bar -->
         <div x-show="uploading">
             <progress max="100" x-bind:value="progress"></progress>
@@ -381,7 +380,7 @@ Here is an example of wrapping a Livewire file upload in an AlpineJS component t
 </form>
 ```
 
-## JavaScript upload API 
+## JavaScript upload API
 
 Integrating with 3rd-party file-uploading libraries often requires finer-tuned control than a simple `<input type="file">` tag.
 
@@ -413,11 +412,11 @@ The functions exist on the JavaScript component object, which can be accessed us
 </script>
 ```
 
-## Configuration 
+## Configuration
 
 Because Livewire stores all file uploads temporarily before the developer has a chance to validate or store them, Livewire assumes some default handling of all file uploads.
 
-### Global validation 
+### Global validation
 
 By default, Livewire will validate ALL temporary file uploads with the following rules: `file|max:12288` (Must be a file less than 12MB).
 
@@ -430,7 +429,7 @@ If you wish to customize this, you can configure exactly what validate rules sho
 ],
 ```
 
-### Global middleware 
+### Global middleware
 
 The temporary file upload endpoint has throttling middleware by default. You can customize exactly what middleware this endpoint uses with the following configuration variable:
 
@@ -441,7 +440,7 @@ The temporary file upload endpoint has throttling middleware by default. You can
 ],
 ```
 
-### Temporary upload directory 
+### Temporary upload directory
 
 Temporary files are uploaded to the `livewire-tmp/` directory on the specified disk. You can customize this with the following configuration key:
 

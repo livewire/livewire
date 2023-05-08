@@ -16,6 +16,9 @@
 ## `wire:submit.prevent` no longer needed
 - Change `wire:submit.prevent` to `wire:submit`
 
+## Must now add #[Prop]
+- Add `#[Prop]` to properties that inherit from the parent component
+
 ## QueryString
 - Replace by default now, add "push" to keep the same
 - "except" is no longer needed
@@ -50,7 +53,7 @@ use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 Route::prefix(LaravelLocalization::setLocale())
     ->group(function () {
         ... // Your other localized routes.
-        
+
         Livewire::setUpdateRoute(function ($handle) {
             return Route::post('livewire/update', $handle);
         });

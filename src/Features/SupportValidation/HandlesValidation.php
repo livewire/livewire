@@ -22,9 +22,9 @@ trait HandlesValidation
 
     protected $rulesFromAttributes = [];
 
-    public function addRuleFromAttribute($property, $rule)
+    public function addRulesFromAttribute($rules)
     {
-        $this->rulesFromAttributes[$property] = $rule;
+        $this->rulesFromAttributes = array_merge($this->rulesFromAttributes, $rules);
     }
 
     public function getErrorBag()

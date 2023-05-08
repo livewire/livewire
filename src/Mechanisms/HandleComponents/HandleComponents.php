@@ -43,7 +43,7 @@ class HandleComponents
 
         if ($html = $this->shortCircuitMount($name, $params, $key, $parent)) return $html;
 
-        $component = app('livewire')->new($name, $params);
+        $component = app('livewire')->new($name);
 
         $context = new ComponentContext($component, mounting: true);
 

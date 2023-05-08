@@ -24,7 +24,7 @@ class ComponentRegistry
         }
     }
 
-    function new($nameOrClass, $params = [], $id = null)
+    function new($nameOrClass, $id = null)
     {
         [$class, $name] = $this->getNameAndClass($nameOrClass);
 
@@ -34,15 +34,15 @@ class ComponentRegistry
 
         $component->setName($name);
 
-        // Parameters passed in automatically set public properties by the same name...
-        foreach ($params as $key => $value) {
-            if (! property_exists($component, $key)) continue;
+        // // Parameters passed in automatically set public properties by the same name...
+        // foreach ($params as $key => $value) {
+        //     if (! property_exists($component, $key)) continue;
 
-            // Typed properties shouldn't be set back to "null". It will throw an error...
-            if ((new \ReflectionProperty($component, $key))->getType() && is_null($value)) continue;
+        //     // Typed properties shouldn't be set back to "null". It will throw an error...
+        //     if ((new \ReflectionProperty($component, $key))->getType() && is_null($value)) continue;
 
-            $component->$key = $value;
-        }
+        //     $component->$key = $value;
+        // }
 
         return $component;
     }

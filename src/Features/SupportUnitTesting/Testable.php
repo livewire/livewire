@@ -30,7 +30,7 @@ class Testable extends BaseTestable
         if (is_array($otherComponents = $name)) {
             $name = array_shift($otherComponents);
 
-            foreach ($name as $key => $value) {
+            foreach ($otherComponents as $key => $value) {
                 if (is_numeric($key)) app('livewire')->component($value);
                 else app('livewire')->component($key, $value);
             }

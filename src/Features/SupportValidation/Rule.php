@@ -15,7 +15,17 @@ class Rule extends LivewireAttribute
 
     function boot()
     {
-        $this->component->addRuleFromAttribute($this->getName(), $this->rule);
+        $rules = [];
+
+        // Support setting rules by key-value for this and other properties:
+        // For example, #[Rule(['foo' => 'required', 'foo.*' => 'required'])]
+        if (is_array($this->rule) && count($this->rule) > 0 && ! is_numeric(array_keys($this->rule)[0])) {
+            $rules = $this->rule;
+        } else {
+            $rules[$this->getName()] = $this->rule;
+        }
+
+        $this->component->addRulesFromAttribute($rules);
     }
 
     function update($fullPath, $newValue)

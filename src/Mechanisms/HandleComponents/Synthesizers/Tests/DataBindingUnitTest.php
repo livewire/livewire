@@ -12,20 +12,6 @@ class DataBindingUnitTest extends \Tests\TestCase
     /** @test */
     public function update_component_data()
     {
-        // app('livewire')->component('databinding', DataBindingStub::class);
-
-        // $component = app('livewire')->new('databinding', ['foo' => 'yo']);
-
-        // ['snapshot' => $snapshot] = app('synthetic')->synthesize($component);
-
-        // ['snapshot' => $snapshot, 'effects' => $effects] = app('synthetic')->update($snapshot, ['foo' => 'bar'], [
-        //     [
-        //         'method' => 'changeFoo',
-        //         'params' => ['blob'],
-        //         'path' => '',
-        //     ],
-        // ]);
-
         $component = Livewire::test(DataBindingStub::class);
 
         $component->set('foo', 'bar');

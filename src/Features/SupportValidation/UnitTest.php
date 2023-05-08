@@ -15,7 +15,7 @@ use Tests\TestComponent;
 class UnitTest extends \Tests\TestCase
 {
     /** @test */
-    public function validate_update_triggers_rule_attribute()
+    public function update_triggers_rule_attribute()
     {
         Livewire::test(new class extends TestComponent {
             #[Rule('required')]
@@ -37,6 +37,32 @@ class UnitTest extends \Tests\TestCase
             ->call('save')
             ->assertHasErrors([
                 'foo' => 'required',
+            ]);
+    }
+
+    /** @test */
+    public function rule_attributes_can_contain_multiple_rules()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Rule(['foo' => 'required', 'bar' => 'required'])]
+            public $foo = '';
+
+            public $bar = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('bar', '')
+            ->assertHasNoErrors()
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->call('clear')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors([
+                'foo' => 'required',
+                'bar' => 'required',
             ]);
     }
 

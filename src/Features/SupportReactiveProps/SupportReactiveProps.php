@@ -23,8 +23,8 @@ class SupportReactiveProps extends ComponentHook
         });
 
         on('dehydrate', function ($target, $context) {
-            $props = store($target)->get('props', []);
-            $propHashes = store($target)->get('propHashes', []);
+            $props = store($target)->get('reactiveProps', []);
+            $propHashes = store($target)->get('reactivePropHashes', []);
 
             foreach ($propHashes as $key => $hash) {
                 if (crc32(json_encode($target->{$key})) !== $hash) {
@@ -52,8 +52,8 @@ class SupportReactiveProps extends ComponentHook
                 $propHashes[$key] = crc32(json_encode($target->{$key}));
             }
 
-            store($target)->set('props', $propKeys);
-            store($target)->set('propHashes', $propHashes);
+            store($target)->set('reactiveProps', $propKeys);
+            store($target)->set('reactivePropHashes', $propHashes);
 
             return $target;
         });

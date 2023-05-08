@@ -6,7 +6,7 @@ use function Livewire\store;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Prop extends LivewireAttribute
+class ReactiveProp extends LivewireAttribute
 {
     public function mount($params)
     {
@@ -16,7 +16,7 @@ class Prop extends LivewireAttribute
 
         $this->setValue($params[$property]);
 
-        store($this->component)->push('props', $property);
+        store($this->component)->push('reactiveProps', $property);
     }
 
     public function dehydrate($context)

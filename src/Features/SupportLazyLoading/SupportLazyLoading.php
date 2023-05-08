@@ -59,9 +59,11 @@ class SupportLazyLoading extends ComponentHook
     {
         $this->registerContainerComponent();
 
-        $snapshot = app('livewire')->snapshot(
-            $container = app('livewire')->new('__mountParamsContainer', ['forMount' => $params])
-        );
+        $container = app('livewire')->new('__mountParamsContainer');
+
+        $container->forMount = $params;
+
+        $snapshot = app('livewire')->snapshot($container);
 
         $encoded = base64_encode(json_encode($snapshot));
 
