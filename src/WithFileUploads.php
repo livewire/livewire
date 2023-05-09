@@ -103,7 +103,6 @@ trait WithFileUploads
             return;
         }
 
-        CleanupUploadedFilesJob::dispatch()
-            ->delay(600);
+        CleanupUploadedFilesJob::dispatch();
     }
 }
