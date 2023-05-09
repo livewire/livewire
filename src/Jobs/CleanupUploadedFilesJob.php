@@ -4,11 +4,10 @@ namespace Livewire\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Livewire\FileUploadConfiguration;
 
-class CleanupUploadedFilesJob implements ShouldQueue, ShouldBeUnique
+class CleanupUploadedFilesJob implements ShouldQueue
 {
     use Dispatchable;
     use Queueable;

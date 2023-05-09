@@ -33,7 +33,8 @@ use Livewire\Commands\{
     DiscoverCommand,
     S3CleanupCommand,
     CleanupCommand,
-    MakeLivewireCommand};
+    MakeLivewireCommand
+};
 use Livewire\Macros\ViewMacros;
 use Livewire\HydrationMiddleware\{
     RenderView,
