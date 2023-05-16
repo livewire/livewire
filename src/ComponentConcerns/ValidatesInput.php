@@ -191,7 +191,7 @@ trait ValidatesInput
         $validator = Validator::make($data, $rules, $messages, $attributes);
 
         if ($this->withValidatorCallback) {
-            call_user_func($this->withValidatorCallback, $validator);
+            call_user_func($this->withValidatorCallback, &$validator);
 
             $this->withValidatorCallback = null;
         }
