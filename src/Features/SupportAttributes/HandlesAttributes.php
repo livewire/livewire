@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportAttributes;
 
-use Attribute;
 use ReflectionObject;
 use ReflectionAttribute;
+use Attribute;
 
 trait HandlesAttributes
 {
@@ -13,5 +13,10 @@ trait HandlesAttributes
     function getAttributes()
     {
         return $this->attributes ??= AttributeCollection::fromComponent($this);
+    }
+
+    function mergeOutsideAttributes(AttributeCollection $attributes)
+    {
+        $this->attributes = $this->getAttributes()->concat($attributes);
     }
 }

@@ -29,7 +29,7 @@ class BaseUtils
         });
     }
 
-    static function getPublicProperties($target, $filter)
+    static function getPublicProperties($target, $filter = null)
     {
         return collect((new \ReflectionObject($target))->getProperties())
             ->filter(function ($property) {

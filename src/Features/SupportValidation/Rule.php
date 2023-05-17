@@ -25,13 +25,17 @@ class Rule extends LivewireAttribute
             $rules[$this->getName()] = $this->rule;
         }
 
-        $this->component->addRulesFromAttribute($rules);
+        $this->component->addRulesFromOutside($rules);
     }
 
     function update($fullPath, $newValue)
     {
-        wrap($this->component)->validateOnly($this->getName(), dataOverrides: [
-            $this->getName() => $newValue,
-        ]);
+        // wrap($this->component)->validateOnly($this->getName(), dataOverrides: [
+        //     $this->getName() => $newValue,
+        // ]);
+
+        return function () {
+            wrap($this->component)->validateOnly($this->getName());
+        };
     }
 }

@@ -1,4 +1,3 @@
-import { monkeyPatchDomSetAttributeToAllowAtSymbols } from 'utils'
 import { closestComponent, initComponent } from './store'
 import { initDirectives } from './directives'
 import { trigger } from './events'
@@ -8,8 +7,6 @@ import morph from '@alpinejs/morph'
 import Alpine from 'alpinejs'
 
 export function start() {
-    monkeyPatchDomSetAttributeToAllowAtSymbols()
-
     Alpine.plugin(morph)
     Alpine.plugin(history)
     Alpine.plugin(intersect)

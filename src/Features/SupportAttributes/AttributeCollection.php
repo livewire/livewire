@@ -8,30 +8,30 @@ use ReflectionObject;
 
 class AttributeCollection extends Collection
 {
-    static function fromComponent($target)
+    static function fromComponent($component, $subTarget = null, $propertyNamePrefix = '')
     {
         $instance = new static;
 
-        $reflected = new ReflectionObject($target);
+        $reflected = new ReflectionObject($subTarget ?? $component);
 
         foreach ($reflected->getAttributes() as $attribute) {
-            $instance->push(tap($attribute->newInstance(), function ($attribute) use ($target) {
-                $attribute->__boot($target, AttributeLevel::ROOT);
+            $instance->push(tap($attribute->newInstance(), function ($attribute) use ($component) {
+                $attribute->__boot($component, AttributeLevel::ROOT);
             }));
         }
 
         foreach ($reflected->getMethods() as $method) {
             foreach ($method->getAttributes() as $attribute) {
-                $instance->push(tap($attribute->newInstance(), function ($attribute) use ($target, $method) {
-                    $attribute->__boot($target, AttributeLevel::METHOD, $method->getName());
+                $instance->push(tap($attribute->newInstance(), function ($attribute) use ($component, $method, $propertyNamePrefix) {
+                    $attribute->__boot($component, AttributeLevel::METHOD, $propertyNamePrefix . $method->getName());
                 }));
             }
         }
 
         foreach ($reflected->getProperties() as $property) {
             foreach ($property->getAttributes() as $attribute) {
-                $instance->push(tap($attribute->newInstance(), function ($attribute) use ($target, $property) {
-                    $attribute->__boot($target, AttributeLevel::PROPERTY, $property->getName());
+                $instance->push(tap($attribute->newInstance(), function ($attribute) use ($component, $property, $propertyNamePrefix) {
+                    $attribute->__boot($component, AttributeLevel::PROPERTY, $propertyNamePrefix . $property->getName());
                 }));
             }
         }

@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportValidation;
 use function Livewire\invade;
 use function Livewire\store;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Livewire\Wireable;
 use Livewire\Exceptions\MissingRulesException;
 use Livewire\Drawer\Utils;
@@ -20,11 +21,11 @@ trait HandlesValidation
 {
     protected $withValidatorCallback;
 
-    protected $rulesFromAttributes = [];
+    protected $rulesFromOutside = [];
 
-    public function addRulesFromAttribute($rules)
+    public function addRulesFromOutside($rules)
     {
-        $this->rulesFromAttributes = array_merge($this->rulesFromAttributes, $rules);
+        $this->rulesFromOutside = array_merge($this->rulesFromOutside, $rules);
     }
 
     public function getErrorBag()
@@ -94,7 +95,7 @@ trait HandlesValidation
         if (method_exists($this, 'rules')) $rulesFromComponent = $this->rules();
         else if (property_exists($this, 'rules')) $rulesFromComponent = $this->rules;
 
-        return array_merge($rulesFromComponent, $this->rulesFromAttributes);
+        return array_merge($rulesFromComponent, $this->rulesFromOutside);
     }
 
     protected function getMessages()
@@ -310,6 +311,7 @@ trait HandlesValidation
 
     protected function filterCollectionDataDownToSpecificKeys($data, $ruleKeys, $fieldKeys)
     {
+
         // Filter data down to specified keys in collections, but leave all other data intact
         if (count($ruleKeys)) {
             $ruleKey = $ruleKeys->shift();
@@ -322,13 +324,13 @@ trait HandlesValidation
                 }
             } else {
                 // Otherwise filter collection down to a specific key
-                $keyData = $data[$fieldKey] ?? null;
+                $keyData = data_get($data, $fieldKey, null);
 
                 if ($ruleKey == '*') {
                     $data = [];
                 }
 
-                $data[$fieldKey] = $this->filterCollectionDataDownToSpecificKeys($keyData, $ruleKeys, $fieldKeys);
+                data_set($data, $fieldKey, $this->filterCollectionDataDownToSpecificKeys($keyData, $ruleKeys, $fieldKeys));
             }
         }
 
@@ -385,7 +387,7 @@ trait HandlesValidation
         return collect($data)->map(function ($value) {
             // @todo: this logic should be contained within "SupportWireables"...
             if ($value instanceof Wireable) return $value->toLivewire();
-            else if ($value instanceof Collection || $value instanceof EloquentCollection || $value instanceof Model) return $value->toArray();
+            else if ($value instanceof Arrayable) return $value->toArray();
 
             return $value;
         })->all();

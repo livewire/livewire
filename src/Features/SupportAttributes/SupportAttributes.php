@@ -49,7 +49,7 @@ class SupportAttributes extends ComponentHook
             ->getAttributes()
             ->whereInstanceOf(LivewireAttribute::class)
             ->filter(fn ($attr) => $attr->getLevel() === AttributeLevel::PROPERTY)
-            ->filter(fn ($attr) => $attr->getName() === $propertyName)
+            ->filter(fn ($attr) => $attr->getName() === $fullPath)
             ->map(function ($attribute) use ($fullPath, $newValue) {
                 if (method_exists($attribute, 'update')) {
                     return $attribute->update($fullPath, $newValue);

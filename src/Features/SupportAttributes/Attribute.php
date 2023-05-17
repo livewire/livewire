@@ -40,7 +40,7 @@ abstract class Attribute
             throw new \Exception('Can\'t set the value of a non-property attribute.');
         }
 
-        return $this->component->all()[$this->levelName];
+        return data_get($this->component->all(), $this->levelName);
     }
 
     function setValue($value)
