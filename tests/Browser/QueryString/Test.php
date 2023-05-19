@@ -325,4 +325,18 @@ class Test extends TestCase
             ;
         });
     }
+
+    public function test_query_string_for_enum_propery()
+    {
+        $this->browse(function (Browser $browser) {
+            Livewire::visit($browser, ComponentWithEnum::class, '?status=published')
+                ->assertSeeIn('@output', Status::PUBLISHED->name)
+                ->waitForLivewire()
+                ->click('@set-draft')
+                ->assertQueryStringHas('status', Status::DRAFT->value)
+                ->refresh()
+                ->assertSeeIn('@output', Status::DRAFT->name)
+            ;
+        });
+    }
 }
