@@ -2,15 +2,17 @@
 
 namespace Livewire\Features;
 
+use Exception;
 use Livewire\Livewire;
 use Livewire\Response;
 use Livewire\Component;
+use ReflectionProperty;
+use function Livewire\str;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
-use function Livewire\str;
 
 class SupportBrowserHistory
 {
@@ -40,7 +42,20 @@ class SupportBrowserHistory
                     ? json_decode(json_encode($fromQueryString), true)
                     : json_decode($fromQueryString, true);
 
-                $component->$property = $decoded === null ? $fromQueryString : $decoded;
+                $value = $decoded === null ? $fromQueryString : $decoded;
+
+                try {
+                    if(! is_null($value)){
+                        $type = (new ReflectionProperty($component, $property))->getType()->getName();
+
+                        if(enum_exists($type)){
+                            $value = $type::tryFrom($value);
+                        }
+                    }
+                } catch (Exception $ex) {
+                }
+
+                $component->$property = $value;
             }
         });
 
@@ -204,6 +219,13 @@ class SupportBrowserHistory
             return '';
         }
 
-        return '?'.http_build_query($queryParams->toArray(), '', '&', PHP_QUERY_RFC1738);
+        return '?'.http_build_query(
+            $queryParams
+                ->map(function($value){
+                    return $value instanceof \UnitEnum ? $value->value : $value;
+                })
+                ->toArray(),
+            '', '&', PHP_QUERY_RFC1738
+        );
     }
 }
