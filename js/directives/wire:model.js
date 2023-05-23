@@ -11,7 +11,7 @@ directive('model', (el, { expression, modifiers }, { component, cleanup }) => {
     }
 
     // Handle file uploads differently...
-    if (el.type.toLowerCase() === 'file') {
+    if (el.type && el.type.toLowerCase() === 'file') {
         return handleFileUpload(el, expression, component, cleanup)
     }
 
