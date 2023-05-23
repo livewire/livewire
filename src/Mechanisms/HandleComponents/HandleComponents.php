@@ -24,6 +24,7 @@ class HandleComponents
     ];
 
     public static $renderStack = [];
+    public static $componentStack = [];
 
     public function boot()
     {
@@ -45,6 +46,8 @@ class HandleComponents
 
         $component = app('livewire')->new($name);
 
+        $this->pushOntoComponentStack($component);
+
         $context = new ComponentContext($component, mounting: true);
 
         $finish = trigger('mount', $component, $params, $key, $parent);
@@ -55,10 +58,14 @@ class HandleComponents
 
         $snapshot = $this->snapshot($component, $context);
 
+        trigger('destroy', $component, $context);
+
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:snapshot' => $snapshot,
             'wire:effects' => $context->effects,
         ]);
+
+        $this->popOffComponentStack();
 
         return $finish($html, $snapshot);
     }
@@ -79,7 +86,11 @@ class HandleComponents
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
 
+        if (config('app.debug')) $start = microtime(true);
         [ $component, $context ] = $this->fromSnapshot($snapshot);
+        if (config('app.debug')) trigger('wiretap', 'hydrate', $component->getId(), [$start, microtime(true)]);
+
+        $this->pushOntoComponentStack($component);
 
         trigger('hydrate', $component, $memo, $context);
 
@@ -87,13 +98,21 @@ class HandleComponents
 
         $this->callMethods($component, $calls, $context);
 
+        if (config('app.debug')) $start = microtime(true);
         if ($html = $this->render($component)) {
             $context->addEffect('html', $html);
+            if (config('app.debug')) trigger('wiretap', 'render', $component->getId(), [$start, microtime(true)]);
         }
 
+        if (config('app.debug')) $start = microtime(true);
         trigger('dehydrate', $component, $context);
 
         $snapshot = $this->snapshot($component, $context);
+        if (config('app.debug')) trigger('wiretap', 'dehydrate', $component->getId(), [$start, microtime(true)]);
+
+        trigger('destroy', $component, $context);
+
+        $this->popOffComponentStack();
 
         return [ $snapshot, $context->effects ];
     }
@@ -375,7 +394,9 @@ class HandleComponents
                 throw new MethodNotFoundException($method);
             }
 
+            if (config('app.debug')) $start = microtime(true);
             $return = wrap($root)->{$method}(...$params);
+            if (config('app.debug')) trigger('wiretap', 'call', $root->getId(), [$start, microtime(true)]);
 
             $returns[] = $finish($return);
         }
@@ -410,5 +431,15 @@ class HandleComponents
         }
 
         throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
+    }
+
+    protected function pushOntoComponentStack($component)
+    {
+        array_push($this::$componentStack, $component);
+    }
+
+    protected function popOffComponentStack()
+    {
+        array_pop($this::$componentStack);
     }
 }

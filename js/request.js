@@ -131,7 +131,7 @@ async function sendMethodCall() {
         successReceivers.push((snapshot, effects) => {
             target.mergeNewSnapshot(snapshot, effects)
 
-            processEffects(target)
+            processEffects(target, target.effects)
 
             if (effects['returns']) {
                 let returns = effects['returns']
@@ -145,7 +145,7 @@ async function sendMethodCall() {
                 })
             }
 
-            finishTarget()
+            finishTarget({ snapshot, effects })
 
             request.handleResponse()
         })
@@ -165,6 +165,8 @@ async function sendMethodCall() {
         },
     }
 
+    let finishWiretap = trigger('wiretap.request', options)
+
     let finishFetch = trigger('fetch', uri, options)
 
     let response = await fetch(uri, options)
@@ -172,10 +174,10 @@ async function sendMethodCall() {
     response = finishFetch(response)
 
     let succeed = async (responseContent) => {
-        let response = JSON.parse(responseContent)
+        let { components } = JSON.parse(responseContent)
 
-        for (let i = 0; i < response.length; i++) {
-            let { snapshot, effects } = response[i];
+        for (let i = 0; i < components.length; i++) {
+            let { snapshot, effects } = components[i];
 
             successReceivers[i](snapshot, effects)
         }
@@ -189,7 +191,7 @@ async function sendMethodCall() {
         let failed = true
     }
 
-    await handleResponse(response, succeed, fail)
+    await handleResponse(response, succeed, fail, finishWiretap)
 }
 
 /**
@@ -210,13 +212,11 @@ export function getCsrfToken() {
  * users interact with, triggering reactive effects.
  */
 
-export function processEffects(target) {
-    let effects = target.effects
-
+export function processEffects(target, effects) {
     trigger('effects', target, effects)
 }
 
-export async function handleResponse(response, succeed, fail) {
+export async function handleResponse(response, succeed, fail, finishWiretap) {
     let content = await response.text()
 
     if (response.ok) {
@@ -239,10 +239,16 @@ export async function handleResponse(response, succeed, fail) {
             [dump, content] = splitDumpFromContent(content)
 
             showHtmlModal(dump)
+
+            finishWiretap({ content: '{}', failed: true })
+        } else {
+            finishWiretap({ content, failed: false })
         }
 
         return await succeed(content)
     }
+
+    finishWiretap({ content: '{}', failed: true })
 
     let skipDefault = false
 

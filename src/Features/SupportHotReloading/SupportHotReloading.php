@@ -14,6 +14,7 @@ class SupportHotReloading
 
     public function boot()
     {
+        return;
         if (! app()->environment('local') || ! config('app.debug')) return;
 
         app('livewire')->enableJsFeature('hot-reloading');
@@ -28,51 +29,20 @@ class SupportHotReloading
             }
         });
 
-        // on('dehydrate', function ($target, $context) {
-        //     if (! $context->mounting) return;
+        on('dehydrate', function ($target, $context) {
+            if (! $context->mounting) return;
 
-        //     $path = (new \ReflectionObject($target))->getFileName();
+            $paths = [];
 
-        //     return function ($stuff) use ($target, $context, $path) {
-        //         $context->addEffect('hotReload', [
-        //             $path,
-        //             ...array_values($this->pathsByComponentId[$target->getId()] ?? [])
-        //         ]);
+            $paths[] = (new \ReflectionObject($target))->getFileName();
 
-        //         return $stuff;
-        //     };
-        // });
+            foreach ($this->pathsByComponentId[$target->getId()] ?? [] as $path) {
+                $paths[] = $path;
+            }
 
-        Route::get('/livewire/hot-reload', function () {
-            return response()->stream(function () {
-                $filesByTime = [];
+            $context->addEffect('wiretap', $paths, 'files');
 
-                while(true) {
-                    foreach ([
-                        ...File::allFiles(base_path()),
-                        ...File::allFiles(resource_path())
-                    ] as $file) {
-                        $time = filemtime((string) $file);
-
-                        if (isset($filesByTime[(string) $file]) && $filesByTime[(string) $file] !== $time) {
-                            echo 'data: ' . json_encode(['file' => (string) $file]) . "\n\n";
-                            ob_flush();
-                            flush();
-                        }
-
-                        $filesByTime[(string) $file] = $time;
-                    }
-
-                    sleep(.25);
-                    echo 'data: ' . json_encode(['ping']) . "\n\n";
-                    ob_flush();
-                    flush();
-                }
-            }, 200, [
-                'Cache-Control' => 'no-cache',
-                'Content-Type' => 'text/event-stream',
-                'X-Accel-Buffering' => 'no',
-            ]);
+            dd($paths);
         });
     }
 }

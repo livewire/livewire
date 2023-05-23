@@ -7,6 +7,8 @@ use Livewire\Mechanisms\HandleComponents\Checksum;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
+use function Livewire\trigger;
+
 class HandleRequests
 {
     protected $updateRoute;
@@ -93,6 +95,12 @@ class HandleRequests
             ];
         }
 
-        return $responses;
+        $response = [
+            'components' => $responses,
+        ];
+
+        $finish = trigger('wiretap.response', $response);
+
+        return $finish($response);
     }
 }
