@@ -18,7 +18,7 @@ class SupportRedirects
             static::$redirectorCacheStack[] = app('redirect');
 
             app()->bind('redirect', function () use ($component) {
-                $redirector = app(Redirector::class)->component($component);
+                $redirector = (new Redirector(app('url')))->component($component);
 
                 if (app()->has('session.store')) {
                     $redirector->setSession(app('session.store'));
