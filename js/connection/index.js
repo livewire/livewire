@@ -31,10 +31,12 @@ export default class Connection {
         let payload = message.payload()
         let csrfToken = getCsrfToken()
         let socketId = this.getSocketId()
-        let appUrl = window.livewire_app_url
+        let appUrl = window.livewire_message_url.replace('$name$', payload.fingerprint.name)
 
         if (this.shouldUseLocalePrefix(payload)) {
-            appUrl = `${appUrl}/${payload.fingerprint.locale}`
+            appUrl = window.livewire_message_url_localized
+                .replace('$name$', payload.fingerprint.name)
+                .replace('$locale$', payload.fingerprint.locale)
         }
 
 
@@ -44,7 +46,7 @@ export default class Connection {
 
         // Forward the query string for the ajax requests.
         fetch(
-            `${appUrl}/livewire/message/${payload.fingerprint.name}`,
+            appUrl,
             {
                 method: 'POST',
                 body: JSON.stringify(payload),

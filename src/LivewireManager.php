@@ -248,10 +248,8 @@ HTML;
 
         $assetsUrl = config('livewire.asset_url') ?: rtrim($options['asset_url'] ?? '', '/');
 
-        $appUrl = config('livewire.app_url')
-            ?: rtrim($options['app_url'] ?? '', '/')
-            ?: $assetsUrl;
-
+        $messageUrl = route('livewire.message', ['name' => '$name$']);
+        $messageUrlLocalized = route('livewire.message-localized', ['name' => '$name$', 'locale' => '$locale$']);
         $jsLivewireToken = app()->has('session.store') ? "'" . csrf_token() . "'" : 'null';
 
         $manifest = json_decode(file_get_contents(__DIR__.'/../dist/manifest.json'), true);
@@ -318,7 +316,8 @@ HTML;
     window.livewire = new Livewire({$jsonEncodedOptions});
     {$devTools}
     window.Livewire = window.livewire;
-    window.livewire_app_url = '{$appUrl}';
+    window.livewire_message_url = '{$messageUrl}';
+    window.livewire_message_url_localized = '{$messageUrlLocalized}';
     window.livewire_token = {$jsLivewireToken};
 
 	{$windowAlpineCheck}
