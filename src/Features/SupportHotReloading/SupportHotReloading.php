@@ -40,7 +40,7 @@ class SupportHotReloading
                 $paths[] = $path;
             }
 
-            $context->addEffect('wiretap', $paths, 'files');
+            $context->addEffect('profile', $paths, 'files');
 
             dd($paths);
         });

@@ -67,11 +67,6 @@ class Manager
         return app(HandleComponents::class)->mount($name, $params, $key);
     }
 
-    function render($component, $default = null)
-    {
-        return app(RenderComponent::class)->render($component, $default);
-    }
-
     function snapshot($component)
     {
         return app(HandleComponents::class)->snapshot($component);

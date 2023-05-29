@@ -1,5 +1,6 @@
 {
-    "name": "syntheticjs/support",
+    "name": "livewire/livewire",
+    "version": "2.99.99",
     "description": "A front-end framework for Laravel.",
     "license": "MIT",
     "authors": [
