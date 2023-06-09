@@ -1,5 +1,6 @@
 import { trigger } from "@vue/reactivity"
 import { closestComponent } from "@/store"
+import Alpine from 'alpinejs'
 
 export function morph(component, el, html) {
     let wrapper = document.createElement('div')

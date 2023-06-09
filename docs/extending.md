@@ -1,0 +1,3 @@
+## Registering components manually
+
+## Synthesizers

@@ -1,5 +1,5 @@
 import { componentsByName, findComponent } from '@/store'
-import { on as hook } from '@/events'
+import { on as hook, trigger } from '@/events'
 import Alpine from 'alpinejs'
 
 hook('effects', (component, effects) => {
@@ -12,12 +12,16 @@ function registerListeners(component, listeners) {
     listeners.forEach(name => {
         // Register a global listener...
         window.addEventListener(name, (e) => {
+            if (e.__livewire) e.__livewire.receivedBy.push(component)
+
             component.$wire.call('__dispatch', name, e.detail)
         })
 
         // Register a listener for when "to" or "self"
         component.el.addEventListener(name, (e) => {
             if (e.__livewire && e.bubbles) return
+
+            if (e.__livewire) e.__livewire.receivedBy.push(component.id)
 
             component.$wire.call('__dispatch', name, e.detail)
         })
@@ -26,47 +30,44 @@ function registerListeners(component, listeners) {
 
 function dispatchEvents(component, dispatches) {
     dispatches.forEach(({ name, params = {}, self = false, to }) => {
-        if (self) dispatchSelf(component.id, name, params)
-        else if (to) dispatchTo(to, name, params)
-        else dispatch(name, params)
+        if (self) dispatchSelf(component, component.id, name, params)
+        else if (to) dispatchTo(component, to, name, params)
+        else dispatch(component, name, params)
     })
 }
 
-function dispatchEvent(el, name, params, bubbles = true) {
+function dispatchEvent(component, target, name, params, bubbles = true) {
     let e = new CustomEvent(name, { bubbles, detail: params })
 
-    e.__livewire = { name, params }
+    e.__livewire = { from: component.id, name, params, receivedBy: [] }
 
-    el.dispatchEvent(e)
+    trigger('dispatch', e)
+
+    target.dispatchEvent(e)
 }
 
-export function dispatch(name, params) {
-    dispatchEvent(window, name, params)
+export function dispatch(component, name, params) {
+    dispatchEvent(component, window, name, params)
 }
 
-export function dispatchSelf(id, name, params) {
-    let component = findComponent(id)
-
-    dispatchEvent(component.el, name, params, false)
+export function dispatchSelf(component, name, params) {
+    dispatchEvent(component, component.el, name, params, false)
 }
 
-export function dispatchTo(componentName, name, params) {
-    let components = componentsByName(componentName)
+export function dispatchTo(component, componentName, name, params) {
+    let targets = componentsByName(componentName)
 
-    components.forEach(component => {
-        dispatchEvent(component.el, name, params, false)
+    targets.forEach(target => {
+        dispatchEvent(component, target.el, name, params, false)
     })
 }
 
 export function listen(component, name, callback) {
     component.el.addEventListener(name, e => {
-        // @todo: Should we accept multiple parameters in sequence?
-
-
         callback(e.detail)
     })
 }
 
-export function on(name, callback) {
-    globalListeners.add(name, callback)
+export function on() {
+    // @todo: Implement for backwards compat...
 }

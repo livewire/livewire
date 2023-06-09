@@ -2,11 +2,7 @@ import { findComponent } from "../store";
 import { on } from '@/events'
 
 on('request.prepare', (component) => {
-    let meta = component.snapshot.memo
-    let childIds = Object.values(meta.children).map(i => i[1])
-
-    childIds.forEach((id) => {
-        let child = findComponent(id)
+    component.children.forEach(child => {
         let childMeta = child.snapshot.memo
         let bindings = childMeta.bindings
 

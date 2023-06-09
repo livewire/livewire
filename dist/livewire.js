@@ -810,7 +810,10 @@
     return (result) => {
       let latest = result;
       for (let i = 0; i < finishers.length; i++) {
-        latest = finishers[i](latest);
+        let iResult = finishers[i](latest);
+        if (iResult !== void 0) {
+          latest = iResult;
+        }
       }
       return latest;
     };
@@ -1485,7 +1488,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let typeB = directiveOrder.indexOf(b.type) === -1 ? DEFAULT : b.type;
     return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
   }
-  function dispatch(el, name, detail = {}) {
+  function dispatch2(el, name, detail = {}) {
     el.dispatchEvent(new CustomEvent(name, {
       detail,
       bubbles: true,
@@ -1526,7 +1529,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Array.from(document.querySelectorAll(allSelectors())).filter(outNestedComponents).forEach((el) => {
       initTree(el);
     });
-    dispatch(document, "alpine:initialized");
+    dispatch2(document, "alpine:initialized");
   }
   var rootSelectorCallbacks = [];
   var initSelectorCallbacks = [];
@@ -2991,7 +2994,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return Boolean(r && r.__v_isRef === true);
   }
   magic("nextTick", () => nextTick);
-  magic("dispatch", (el) => dispatch.bind(dispatch, el));
+  magic("dispatch", (el) => dispatch2.bind(dispatch2, el));
   magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
     let evaluate2 = evaluateLater2(key);
     let firstTime = true;
@@ -3835,7 +3838,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       successReceivers.push((snapshot, effects) => {
         target.mergeNewSnapshot(snapshot, effects);
-        processEffects(target);
+        processEffects(target, target.effects);
         if (effects["returns"]) {
           let returns = effects["returns"];
           let returnHandlerStack = request.calls.map(({ handleReturn }) => handleReturn);
@@ -3843,7 +3846,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             handleReturn(returns[index]);
           });
         }
-        finishTarget();
+        finishTarget({ snapshot, effects });
         request.handleResponse();
       });
     });
@@ -3859,13 +3862,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "X-Synthetic": ""
       }
     };
+    let finishWiretap = trigger2("wiretap.request", options);
     let finishFetch = trigger2("fetch", uri, options);
     let response = await fetch(uri, options);
     response = finishFetch(response);
     let succeed = async (responseContent) => {
-      let response2 = JSON.parse(responseContent);
-      for (let i = 0; i < response2.length; i++) {
-        let { snapshot, effects } = response2[i];
+      let { components: components2 } = JSON.parse(responseContent);
+      for (let i = 0; i < components2.length; i++) {
+        let { snapshot, effects } = components2[i];
         successReceivers[i](snapshot, effects);
       }
     };
@@ -3875,7 +3879,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let failed = true;
     };
-    await handleResponse(response, succeed, fail);
+    await handleResponse(response, succeed, fail, finishWiretap);
   }
   function getCsrfToken() {
     if (document.querySelector("[data-csrf]")) {
@@ -3883,11 +3887,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     throw "Livewire: No CSRF token detected";
   }
-  function processEffects(target) {
-    let effects = target.effects;
+  function processEffects(target, effects) {
     trigger2("effects", target, effects);
   }
-  async function handleResponse(response, succeed, fail) {
+  async function handleResponse(response, succeed, fail, finishWiretap) {
     let content = await response.text();
     if (response.ok) {
       if (response.redirected) {
@@ -3896,9 +3899,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (contentIsFromDump(content)) {
         [dump, content] = splitDumpFromContent(content);
         showHtmlModal(dump);
+        finishWiretap({ content: "{}", failed: true });
+      } else {
+        finishWiretap({ content, failed: false });
       }
       return await succeed(content);
     }
+    finishWiretap({ content: "{}", failed: true });
     let skipDefault = false;
     trigger2("response.error", response, content, () => skipDefault = true);
     if (skipDefault)
@@ -4054,12 +4061,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return parent.$wire;
   });
   wireProperty("$on", (component) => (...params) => listen(component, ...params));
-  wireProperty("$dispatch", (component) => (...params) => dispatch2(...params));
-  wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component.id, ...params));
-  wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(...params));
-  wireProperty("dispatch", (component) => (...params) => dispatch2(...params));
-  wireProperty("dispatchSelf", (component) => (...params) => dispatchSelf(component.id, ...params));
-  wireProperty("dispatchTo", (component) => (...params) => dispatchTo(...params));
+  wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
+  wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
+  wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(component, ...params));
+  wireProperty("dispatch", (component) => (...params) => dispatch3(component, ...params));
+  wireProperty("dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
+  wireProperty("dispatchTo", (component) => (...params) => dispatchTo(component, ...params));
 
   // js/component.js
   var Component = class {
@@ -4080,7 +4087,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.ephemeral = extractData(deepClone(this.snapshot.data));
       this.reactive = Alpine.reactive(this.ephemeral);
       this.$wire = generateWireObject(this, this.reactive);
-      processEffects(this);
+      processEffects(this, this.effects);
     }
     mergeNewSnapshot(encodedSnapshot, effects) {
       this.encodedSnapshot = encodedSnapshot;
@@ -4094,6 +4101,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           this.reactive[key] = newData[key];
         }
       });
+    }
+    replayUpdate(snapshot, html, dirty) {
+      let effects = { ...this.effects, html, dirty };
+      this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
+      processEffects(this, { html, dirty });
+    }
+    get children() {
+      let meta = this.snapshot.memo;
+      let childIds = Object.values(meta.children).map((i) => i[1]);
+      return childIds.map((id) => findComponent(id));
     }
   };
 
@@ -4126,6 +4143,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return name == component.name;
     });
   }
+  function getByName(name) {
+    return componentsByName(name).map((i) => i.$wire);
+  }
   function find(id) {
     let component = components[id];
     return component && component.$wire;
@@ -4142,11 +4162,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function registerListeners(component, listeners2) {
     listeners2.forEach((name) => {
       window.addEventListener(name, (e) => {
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component);
         component.$wire.call("__dispatch", name, e.detail);
       });
       component.el.addEventListener(name, (e) => {
         if (e.__livewire && e.bubbles)
           return;
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component.id);
         component.$wire.call("__dispatch", name, e.detail);
       });
     });
@@ -4154,29 +4178,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function dispatchEvents(component, dispatches) {
     dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
       if (self2)
-        dispatchSelf(component.id, name, params);
+        dispatchSelf(component, component.id, name, params);
       else if (to)
-        dispatchTo(to, name, params);
+        dispatchTo(component, to, name, params);
       else
-        dispatch2(name, params);
+        dispatch3(component, name, params);
     });
   }
-  function dispatchEvent(el, name, params, bubbles = true) {
+  function dispatchEvent(component, target, name, params, bubbles = true) {
     let e = new CustomEvent(name, { bubbles, detail: params });
-    e.__livewire = { name, params };
-    el.dispatchEvent(e);
+    e.__livewire = { from: component.id, name, params, receivedBy: [] };
+    trigger2("dispatch", e);
+    target.dispatchEvent(e);
   }
-  function dispatch2(name, params) {
-    dispatchEvent(window, name, params);
+  function dispatch3(component, name, params) {
+    dispatchEvent(component, window, name, params);
   }
-  function dispatchSelf(id, name, params) {
-    let component = findComponent(id);
-    dispatchEvent(component.el, name, params, false);
+  function dispatchSelf(component, name, params) {
+    dispatchEvent(component, component.el, name, params, false);
   }
-  function dispatchTo(componentName, name, params) {
-    let components2 = componentsByName(componentName);
-    components2.forEach((component) => {
-      dispatchEvent(component.el, name, params, false);
+  function dispatchTo(component, componentName, name, params) {
+    let targets = componentsByName(componentName);
+    targets.forEach((target) => {
+      dispatchEvent(component, target.el, name, params, false);
     });
   }
   function listen(component, name, callback) {
@@ -4184,8 +4208,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       callback(e.detail);
     });
   }
-  function on3(name, callback) {
-    globalListeners.add(name, callback);
+  function on3() {
   }
 
   // js/directives.js
@@ -4844,10 +4867,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportWireModelingNestedComponents.js
   on("request.prepare", (component) => {
-    let meta = component.snapshot.memo;
-    let childIds = Object.values(meta.children).map((i) => i[1]);
-    childIds.forEach((id) => {
-      let child = findComponent(id);
+    component.children.forEach((child) => {
       let childMeta = child.snapshot.memo;
       let bindings = childMeta.bindings;
       if (bindings)
@@ -4931,10 +4951,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportReactiveProps.js
   on("request.prepare", (component) => {
-    let meta = component.snapshot.memo;
-    let childIds = Object.values(meta.children).map((i) => i[1]);
-    childIds.forEach((id) => {
-      let child = findComponent(id);
+    component.children.forEach((child) => {
       let childMeta = child.snapshot.memo;
       let props = childMeta.props;
       if (props)
@@ -5208,7 +5225,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let to = wrapper.firstElementChild;
     to.__livewire = component;
     trigger("morph", el, to, component);
-    Alpine.morph(el, to, {
+    module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip) => {
         if (isntElement(el2))
           return;
@@ -5809,11 +5826,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire = {
     directive: directive2,
     dispatchTo,
+    getByName,
     start: start2,
     first,
     find,
     hook: on,
-    dispatch: dispatch2,
+    trigger: trigger2,
+    dispatch: dispatch3,
     on: on3
   };
   if (window.Livewire)
@@ -5822,5 +5841,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     console.warn("Detected multiple instances of Alpine running");
   window.Livewire = Livewire;
   window.Alpine = module_default;
+  dispatch(document, "livewire:init");
   Livewire.start();
+  dispatch(document, "livewire:initialized");
 })();
