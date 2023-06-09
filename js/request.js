@@ -165,7 +165,7 @@ async function sendMethodCall() {
         },
     }
 
-    let finishWiretap = trigger('wiretap.request', options)
+    let finishProfile = trigger('profile.request', options)
 
     let finishFetch = trigger('fetch', uri, options)
 
@@ -191,7 +191,7 @@ async function sendMethodCall() {
         let failed = true
     }
 
-    await handleResponse(response, succeed, fail, finishWiretap)
+    await handleResponse(response, succeed, fail, finishProfile)
 }
 
 /**
@@ -216,7 +216,7 @@ export function processEffects(target, effects) {
     trigger('effects', target, effects)
 }
 
-export async function handleResponse(response, succeed, fail, finishWiretap) {
+export async function handleResponse(response, succeed, fail, finishProfile) {
     let content = await response.text()
 
     if (response.ok) {
@@ -240,15 +240,15 @@ export async function handleResponse(response, succeed, fail, finishWiretap) {
 
             showHtmlModal(dump)
 
-            finishWiretap({ content: '{}', failed: true })
+            finishProfile({ content: '{}', failed: true })
         } else {
-            finishWiretap({ content, failed: false })
+            finishProfile({ content, failed: false })
         }
 
         return await succeed(content)
     }
 
-    finishWiretap({ content: '{}', failed: true })
+    finishProfile({ content: '{}', failed: true })
 
     let skipDefault = false
 

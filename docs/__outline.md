@@ -1,5 +1,5 @@
 
-Should I ditch the terms "hydrate" and "dehydrate"? Hydrate is normally used for hydrating front-end behavior from a frozen state. Well, we're just applying it to the backend. Serialize and unserialize are alternatives as are "sleep" and "wakeup".
+Should I ditch the terms "hydrate" and "dehydrate"? Hydrate is normally used for hydrating frontend behavior from a frozen state. Well, we're just applying it to the backend. Serialize and unserialize are alternatives as are "sleep" and "wakeup".
 
 * more examples
 * best practices

@@ -99,7 +99,7 @@ class HandleRequests
             'components' => $responses,
         ];
 
-        $finish = trigger('wiretap.response', $response);
+        $finish = trigger('profile.response', $response);
 
         return $finish($response);
     }

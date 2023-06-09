@@ -5222,7 +5222,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let to = wrapper.firstElementChild;
     to.__livewire = component;
     trigger("morph", el, to, component);
-    Alpine.morph(el, to, {
+    module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip) => {
         if (isntElement(el2))
           return;
