@@ -16,6 +16,14 @@
       return this.get(key).forEach(callback);
     }
   };
+  function dispatch(el, name, detail = {}, bubbles = true) {
+    el.dispatchEvent(new CustomEvent(name, {
+      detail,
+      bubbles,
+      composed: true,
+      cancelable: true
+    }));
+  }
   function isObjecty(subject) {
     return typeof subject === "object" && subject !== null;
   }
@@ -1517,8 +1525,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function start() {
     if (!document.body)
       warn2("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
-    dispatch(document, "alpine:init");
-    dispatch(document, "alpine:initializing");
+    dispatch2(document, "alpine:init");
+    dispatch2(document, "alpine:initializing");
     startObservingMutations();
     onElAdded((el) => initTree(el, walk));
     onElRemoved((el) => destroyTree(el));
@@ -3862,7 +3870,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "X-Synthetic": ""
       }
     };
-    let finishWiretap = trigger2("wiretap.request", options);
+    let finishProfile = trigger2("profile.request", options);
     let finishFetch = trigger2("fetch", uri, options);
     let response = await fetch(uri, options);
     response = finishFetch(response);
@@ -3879,7 +3887,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let failed = true;
     };
-    await handleResponse(response, succeed, fail, finishWiretap);
+    await handleResponse(response, succeed, fail, finishProfile);
   }
   function getCsrfToken() {
     if (document.querySelector("[data-csrf]")) {
@@ -3890,7 +3898,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function processEffects(target, effects) {
     trigger2("effects", target, effects);
   }
-  async function handleResponse(response, succeed, fail, finishWiretap) {
+  async function handleResponse(response, succeed, fail, finishProfile) {
     let content = await response.text();
     if (response.ok) {
       if (response.redirected) {
@@ -3899,13 +3907,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (contentIsFromDump(content)) {
         [dump, content] = splitDumpFromContent(content);
         showHtmlModal(dump);
-        finishWiretap({ content: "{}", failed: true });
+        finishProfile({ content: "{}", failed: true });
       } else {
-        finishWiretap({ content, failed: false });
+        finishProfile({ content, failed: false });
       }
       return await succeed(content);
     }
-    finishWiretap({ content: "{}", failed: true });
+    finishProfile({ content: "{}", failed: true });
     let skipDefault = false;
     trigger2("response.error", response, content, () => skipDefault = true);
     if (skipDefault)
