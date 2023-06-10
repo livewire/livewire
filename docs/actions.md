@@ -47,7 +47,7 @@ class CreatePost extends Component
 
 In the above example, when a user submits the form by clicking "Save", `wire:submit` picks up the submit event and calls the `save` action on the server.
 
-In essance, Actions are a way to easily map user interactions to server-side functionality without the hastle of submiting and handling AJAX requests manually.
+In essence, Actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
 
 ## Event Listeners
 
@@ -110,7 +110,7 @@ For example, if you need to call `event.preventDefault()` from inside an event l
 <input wire:keydown.prevent="...">
 ```
 
-Here is a full list of all the avilable event listener modifiers and their functions:
+Here is a full list of all the available event listener modifiers and their functions:
 
 | Modifier         | Key                                                     |
 |------------------|---------------------------------------------------------|
@@ -134,7 +134,7 @@ Because `wire:` uses Alpine's `x-on` under the hood, these modifiers are actuall
 
 ### Handling third-party events
 
-For example, let's say you're using the [Trix](https://trix-editor.org/) rich text editor in your project and you want to listen for the `trix-change` event to capture the editor's content. You can do this using the `wire:trix-change` directive:
+For example, let's say you're using the [Trix](https://trix-editor.org/) rich text editor in your project, and you want to listen for the `trix-change` event to capture the editor's content. You can do this using the `wire:trix-change` directive:
 
 In your component's Blade template, use the `wire:trix-change` directive to listen for the `trix-change` event:
 
@@ -608,13 +608,13 @@ class ShowPost extends Component
 
 Keep in mind that any public method in your Livewire component can be called from the client-side. Even without something like `wire:click` directive associated with it, users can still trigger it from the browser's DevTools.
 
-Below are three examples of easy to miss vulnerabilities in Livewire components. Each will show the vulnerable component first, and the secure component after. As an excercise, you may want to try spotting the vulnerabilities in the first, yourself, before viewing the solution after.
+Below are three examples of easy to miss vulnerabilities in Livewire components. Each will show the vulnerable component first, and the secure component after. As an exercise, you may want to try spotting the vulnerabilities in the first, yourself, before viewing the solution after.
 
 If you are having difficulty spotting the vulnerabilities and that makes you concerned about your ability to keep your own apps secure, remember all these vulnerabilities apply to standard web applications that use requests and controllers. If you use a component method as a proxy for a controller method, and its parameters as a proxy for request input, you should be able to apply your existing knowledge of application security to your Livewire code.
 
 ### Always authorize action parameters
 
-Just like controller request input, it's imperitive to authorize action parameters as users can pass any parameters they want.
+Just like controller request input, it's imperative to authorize action parameters as users can pass any parameters they want.
 
 The following is a `ShowPosts` component where a user can view all of their posts on one page. They are able to delete any component they'd like using one of the post's "Delete" button.
 
@@ -659,7 +659,7 @@ class ShowPosts extends Component
 </div>
 ```
 
-Keep in mind that a maliscous user can call `delete` directly from a JavaScript console and pass in any paramters they'd like. This means that a user viewing one of their own posts, can delete another users post by passing the un-owned post id to `delete()`.
+Keep in mind that a malicious user can call `delete` directly from a JavaScript console and pass in any parameters they'd like. This means that a user viewing one of their own posts, can delete another users post by passing the un-owned post id to `delete()`.
 
 To protected against this, we need to authorize that the post about to be deleted is owned by the user:
 
@@ -830,7 +830,7 @@ class BrowsePosts extends Component
 </div>
 ```
 
-As you can see, we refactored the post deletion logic into a dedicated method called `delete()`. Even though this method isn't referenced anywhere in our template, if a user gained knowledge of it's existance, because it's `public`, they would be able to call it from the browser's DevTools.
+As you can see, we refactored the post deletion logic into a dedicated method called `delete()`. Even though this method isn't referenced anywhere in our template, if a user gained knowledge of its existence, because it's `public`, they would be able to call it from the browser's DevTools.
 
 To remedy this, we can mark the property as `protected` or `private` and if a user tries to call it they will receive an error:
 
