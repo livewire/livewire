@@ -128,7 +128,8 @@ class SupportPagination extends ComponentHook
         $use = $queryStringDetails['use'];
         $alwaysShow = $queryStringDetails['alwaysShow'];
 
-        $this->setPropertyHook($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
+        // @todo: make this work...
+        // $this->setPropertyHook($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
     }
 
     protected function paginationView()

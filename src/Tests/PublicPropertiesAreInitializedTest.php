@@ -4,6 +4,7 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use Stringable;
 
 class PublicPropertiesAreInitializedTest extends \Tests\TestCase
 {
@@ -41,6 +42,13 @@ class PublicPropertiesAreInitializedTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function uninitialized_public_union_typed_property_is_null()
+    {
+        Livewire::test(UninitializedPublicUnionTypedPropertyComponent::class)
+            ->assertSet('message', null);
+    }
+
+    /** @test */
     public function uninitialized_public_typed_property_is_still_null_after_refresh()
     {
         Livewire::test(UninitializedPublicTypedPropertyAfterRefreshComponent::class)
@@ -53,7 +61,6 @@ class PublicPropertiesAreInitializedTest extends \Tests\TestCase
     {
         Livewire::test(InitializedPublicTypedPropertyComponent::class)
             ->assertSee('Typed Properties FTW!');
-
     }
 }
 
@@ -81,6 +88,16 @@ class InitializedPublicPropertyComponent extends Component
 class UninitializedPublicTypedPropertyComponent extends Component
 {
     public string $message;
+
+    public function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class UninitializedPublicUnionTypedPropertyComponent extends Component
+{
+    public string | Stringable $message;
 
     public function render()
     {

@@ -12,7 +12,6 @@ Essentials:
     Lifecycle Hooks: { uri: /docs/lifecycle-hooks, file: /lifecycle-hooks.md }
     Nesting Components: { uri: /docs/nesting, file: /nesting.md }
     Testing: { uri: /docs/testing, file: /testing.md }
-    Upgrade Guide: { uri: /docs/upgrading, file: /upgrading.md }
 Features:
     Navigation: { uri: /docs/navigation, file: /navigation.md }
     Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
@@ -25,8 +24,14 @@ Features:
     Redirecting: { uri: /docs/redirecting, file: /redirecting.md }
     Polling: { uri: /docs/polling, file: /polling.md }
     File Downloads: { uri: /docs/downloads, file: /downloads.md }
+    Locked Properties: { uri: /docs/locked, file: /locked.md }
     Dirty states: { uri: /docs/dirty, file: /dirty.md }
     Offline states: { uri: /docs/offline, file: /offline.md }
+Concepts:
+    Hydration: { uri: /docs/hydration, file: /hydration.md }
+    Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
+Advanced:
+    Extending Livewire: { uri: /docs/extending, file: /extending.md }
 ---
 
 Concepts:

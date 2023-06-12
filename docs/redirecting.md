@@ -1,6 +1,6 @@
-After a user submits a form or performs some other action, you may want to redirect them to another page in your app.
+After a user performs some action—like submiting a form—you may want to redirect them to another page in your app.
 
-Because Livewire requests aren't standard full-page browser requests, standard HTTP redirects won't work. However, Livewire hides this complexity by allowing you to use [Laravel's built-in redirect utilties](https://laravel.com/docs/10.x/responses#redirects) within your components, and interally, it will handle the process of redirecting via JavaScript on the front-end.
+Because Livewire requests aren't standard full-page browser requests, standard HTTP redirects won't work. You need to trigger redirects via JavaScript. Fortunately, Livewire hides this complexity by allowing you to use [Laravel's built-in redirect utilties](https://laravel.com/docs/10.x/responses#redirects) within your components, and internally, it will handle the process of redirecting on the frontend.
 
 Here's an example of a `CreatePost` Livewire component that redirects the user after they submit the form:
 
@@ -25,7 +25,7 @@ class CreatePost extends Component
 			'content' => $this->content,
 		]);
 
-		return redirect()->to('/posts');
+		return redirect()->to('/posts'); // [tl! highlight]
     }
 
     public function render()
@@ -35,11 +35,11 @@ class CreatePost extends Component
 }
 ```
 
-As you can see, when the `save` action is triggered a redirect will also be triggere to `/posts`. When Livewire receives this response, it will redirect the user on the front-end to the new URL.
+As you can see, when the `save` action is triggered, a redirect will also be triggered to `/posts`. When Livewire receives this response, it will redirect the user on the frontend to the new URL.
 
-## Redirecting to full page components
+## Redirecting to full-page components
 
-Because Livewire uses Laravel's built-in redirector, you can use all the methods available to you.
+Because Livewire uses Laravel's built-in redirector, you can use all the available methods.
 
 If you are using a Livewire component as a full-page component for a route like so:
 
@@ -49,7 +49,7 @@ use App\Http\Livewire\ShowPosts;
 Route::get('/posts', ShowPosts::class);
 ```
 
-You can redirect there by referencing the Livewire component directly, instead of the route name or URL:
+You can redirect there by referencing the Livewire component directly instead of the route name or URL:
 
 ```php
 public function save()
@@ -64,7 +64,7 @@ This works because Livewire components are also [single-action controllers](http
 
 ## Flash messages
 
-In addition to allowing you to use Laravel's built-in redirector, Livewire also supports Laravel's [flash data utilities](https://laravel.com/docs/10.x/session#flash-data).
+In addition to allowing you to use Laravel's built-in redirector, Livewire supports Laravel's [flash data utilities](https://laravel.com/docs/10.x/session#flash-data).
 
 To pass flash data along with a redirect, you can use Laravels' `->with()` method like so:
 
@@ -88,19 +88,15 @@ Assuming the page being redirected to contains the following Blade snippet, the 
 
 ```html
 @if (session('status'))
-
     <div class="alert alert-success">
-    
         {{ session('status') }}
-    
     </div>
-
 @endif
 ```
 
 ### Flashing without redirecting
 
-Sometimes you may want to flash data to users from the same component they're interacting with without redirecting them away.
+You may want to flash data to users from the same component they're interacting with without redirecting them away.
 
 You can use Laravel's session data utilities like the following directly from any Livewire action:
 

@@ -29,8 +29,13 @@ class SupportNestingComponents extends ComponentHook
         });
 
         on('mount', function ($component, $params, $key, $parent) {
-            return function ($html) use ($component, $key, $parent) {
+            $start = null;
+            if ($parent && config('app.debug')) $start = microtime(true);
+
+            return function ($html) use ($component, $key, $parent, $start) {
                 if ($parent) {
+                    if (config('app.debug')) trigger('profile', 'child:'.$component->getId(), $parent->getId(), [$start, microtime(true)]);
+
                     preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
                     $tag = $matches[1][0];
                     static::setParentChild($parent, $key, $tag, $component->getId());

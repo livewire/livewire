@@ -66,7 +66,11 @@ export function trigger(name, ...params) {
         let latest = result
 
         for (let i = 0; i < finishers.length; i++) {
-            latest = finishers[i](latest)
+            let iResult = finishers[i](latest)
+
+            if (iResult !== undefined) {
+                latest = iResult
+            }
         }
 
         return latest

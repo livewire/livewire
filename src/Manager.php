@@ -4,18 +4,19 @@ namespace Livewire;
 
 use function Livewire\trigger;
 use Orchestra\DuskUpdater\UpdateCommand;
+use Livewire\Mechanisms\RenderComponent;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
 use Livewire\Mechanisms\HandleComponents\ComponentContext;
-use Livewire\Mechanisms\RenderComponent;
-use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportUnitTesting\Testable;
 use Livewire\Features\SupportUnitTesting\DuskTestable;
+use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
 use Livewire\ComponentHookRegistry;
 use Livewire\ComponentHook;
-use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
 class Manager
 {
@@ -66,11 +67,6 @@ class Manager
         return app(HandleComponents::class)->mount($name, $params, $key);
     }
 
-    function render($component, $default = null)
-    {
-        return app(RenderComponent::class)->render($component, $default);
-    }
-
     function snapshot($component)
     {
         return app(HandleComponents::class)->snapshot($component);
@@ -81,9 +77,12 @@ class Manager
         return app(HandleComponents::class)->fromSnapshot($snapshot);
     }
 
+    function listen($eventName, $callback) {
+        return on($eventName, $callback);
+    }
     function current()
     {
-        return last(app(HandleComponents::class)::$renderStack);
+        return last(app(HandleComponents::class)::$componentStack);
     }
 
     function update($snapshot, $diff, $calls)
@@ -103,6 +102,11 @@ class Manager
         return app(HandleRequests::class)->isLivewireRequest();
     }
 
+    function componentHasBeenRendered()
+    {
+        return SupportAutoInjectedAssets::$hasRenderedAComponentThisRequest;
+    }
+
     function setUpdateRoute($callback)
     {
         return app(HandleRequests::class)->setUpdateRoute($callback);
@@ -117,7 +121,6 @@ class Manager
     {
         return app(FrontendAssets::class)->setJavaScriptRoute($callback);
     }
-
 
     protected $queryParamsForTesting = [];
 

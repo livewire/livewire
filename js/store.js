@@ -44,6 +44,10 @@ export function componentsByName(name) {
     })
 }
 
+export function getByName(name) {
+    return componentsByName(name).map(i => i.$wire)
+}
+
 export function find(id) {
     let component = components[id]
 

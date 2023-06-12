@@ -1,7 +1,7 @@
 
-File downloads in Livewire work much the same as in Laravel itself. For the most part, you can use any Laravel download utility inside a Livewire component and it should work as expected.
+File downloads in Livewire work much the same as in Laravel itself. For the most part, you can use any Laravel download utility inside a Livewire component, and it should work as expected.
 
-It's worth noting however, that under the hood, file downloads are handled differently than in a standard Laravel application. In Livewire, the file's contents are base 64 encoded, sent to the front-end, and decoded back into binary to be downloaded directly from the client.
+It's worth noting, however, that under the hood, file downloads are handled differently than in a standard Laravel application. In Livewire, the file's contents are base 64 encoded, sent to the frontend, and decoded back into binary to be downloaded directly from the client.
 
 ## Basic usage
 
@@ -62,7 +62,7 @@ public function download()
 
 ## Streaming downloads
 
-Livewire can also stream downloads, however, they aren't truly streamed. The download isn't triggered until the entirety of its contents are collected and delivered to the content.
+Livewire can also stream downloads; however, they aren't truly streamed. The download isn't triggered until its contents are collected and delivered to the browser.
 
 ```php
 public function download()
