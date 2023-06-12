@@ -1,6 +1,7 @@
 import { deepClone, deeplyEqual, extractData} from './utils'
 import { store, processEffects } from './request'
 import { generateWireObject } from './$wire'
+import { findComponent } from './store';
 
 export class Component {
     constructor(el) {
@@ -37,7 +38,7 @@ export class Component {
         this.$wire = generateWireObject(this, this.reactive)
 
         // Effects will be processed after every request, but we'll also handle them on initialization.
-        processEffects(this)
+        processEffects(this, this.effects)
     }
 
     mergeNewSnapshot(encodedSnapshot, effects) {
@@ -58,5 +59,20 @@ export class Component {
                 this.reactive[key] = newData[key]
             }
         })
+    }
+
+    replayUpdate(snapshot, html, dirty) {
+        let effects = { ...this.effects, html, dirty }
+
+        this.mergeNewSnapshot(JSON.stringify(snapshot), effects)
+
+        processEffects(this, { html, dirty })
+    }
+
+    get children() {
+        let meta = this.snapshot.memo
+        let childIds = Object.values(meta.children).map(i => i[1])
+
+        return childIds.map(id => findComponent(id))
     }
 }

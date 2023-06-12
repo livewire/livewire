@@ -1,17 +1,20 @@
 import { dispatch, dispatchTo, on } from './features/supportEvents'
 import { directive } from './directives'
-import { find, first } from './store'
-import { on as hook } from './events'
+import { find, first, getByName } from './store'
+import { on as hook, trigger } from './events'
+import { dispatch as doDispatch } from './utils'
 import { start } from './lifecycle'
 import Alpine from 'alpinejs'
 
 export let Livewire = {
     directive,
     dispatchTo,
+    getByName,
     start,
     first,
     find,
     hook,
+    trigger,
     dispatch,
     on,
 }
@@ -29,5 +32,9 @@ import './directives/index'
 window.Livewire = Livewire
 window.Alpine = Alpine
 
+doDispatch(document, 'livewire:init')
+
 // Start Livewire...
 Livewire.start()
+
+doDispatch(document, 'livewire:initialized')

@@ -1,8 +1,8 @@
-In real-time applications, it can be helpful to provide visual indication that the users device isn't connected to the internet.
+In real-time applications, it can be helpful to provide a visual indication that the user's device is no longer connected to the internet.
 
 Livewire provides the `wire:offline` directive for such cases.
 
-By adding `wire:offline` to an element inside a Livewire component, it will be hidden by default, and become visible when the user loses connection:
+By adding `wire:offline` to an element inside a Livewire component, it will be hidden by default and become visible when the user loses connection:
 
 ```html
 <div wire:offline>
@@ -18,9 +18,9 @@ Adding the `class` modifier allows you to add a class to an element when "offl
 <div wire:offline.class="bg-red-300">
 ```
 
-Now, when the browser goes offline, the element will receive the `bg-red-300` class. The class will be removed again once the user is back online.
+When the browser goes offline, the element will receive the `bg-red-300` class. The class will be removed again once the user is back online.
 
-You can also perform the inverse; removing classes by adding the `.remove` modifier, similar to how `wire:loading` works.
+You can also perform the inverse, removing classes by adding the `.remove` modifier, similar to how [`wire:loading`](/docs/loading) works.
 
 ```html
 <div class="bg-green-300" wire:offline.class.remove="bg-green-300">
