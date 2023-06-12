@@ -1,9 +1,9 @@
 
-Getters are a way to create "derived" or "computed" properties in Livewire. Similar to accessors on an Eloquent model, getters allow you to access values and cache them for future access during the request.
+Getters are a way to create "derived" or "computed" properties in Livewire. Like accessors on an Eloquent model, getters allow you to access values and cache them for future access during the request.
 
 Getters are particularly useful in combination with a component's properties.
 
-To create one, you can add the `#[Getter]` attribute above any method in your Livewire component and you can now access it like any other property.
+To create one, you can add the `#[Getter]` attribute above any method in your Livewire component, and you can now access it like any other property.
 
 For example, here's a `ShowUser` component that uses a getter called `user` to access a `User` eloquent model based on a property called `$userId`:
 
@@ -46,10 +46,10 @@ class ShowUser extends Component
 </div>
 ```
 
-Because the `#[Getter]` attribute has been added to the `user()` method, the value is accessible in other methods in the component as well as in the Blade template.
+Because the `#[Getter]` attribute has been added to the `user()` method, the value is accessible in other methods in the component and the Blade template.
 
-> [!note] Must use `$this` in your template
-> Unlike normal properties, getters aren't directly available inside your component's template. Instead, you must access them on the `$this` object. For example, a getter called `posts`, must be accessed via `$this->posts` inside your template.
+> [!info] Must use `$this` in your template
+> Unlike normal properties, getters aren't directly available inside your component's template. Instead, you must access them on the `$this` object. For example, a getter called `posts()` must be accessed via `$this->posts` inside your template.
 
 ## Performance advantage
 
@@ -59,19 +59,19 @@ Accessing a method as a getter offers a performance advantage over calling a met
 
 This allows you to freely access a derived value and not worry about the performance implications.
 
-> [!warning] Getters are only cached for the current request
-> It's a common misconception that Livewire caches getters for the entire life-span of your Livewire component on a page. However, this isn't the case. Instead, Livewire only caches the getter for the duration of a single component request. This means that if your getter contains an expensive database query, it will be executed every time your Livewire component performans an update.
+> [!warning] Getters are only cached for a single request
+> It's a common misconception that Livewire caches getters for the entire lifespan of your Livewire component on a page. However, this isn't the case. Instead, Livewire only caches the getter for the duration of a single component request. This means that if your getter contains an expensive database query, it will be executed every time your Livewire component performs an update.
 
 ### Busting the cache
 
 Consider the following problematic scenario:
 1) You access a getter that depends on a certain property or database state
 2) The underlying property or database state changes
-3) Now the cached value for the getter is stale and needs to be re-computed
+3) The cached value for the getter becomes stale and needs to be re-computed
 
 To clear, or "bust", the stored cache of a getter, you can use PHP's `unset()` function.
 
-Below is an example of an action called `createPost` that, by creating a new post in the application, makes the `posts` getter stale--meaning the `posts` getter needs to be re-computed to include the newly added post:
+Below is an example of an action called `createPost()` that, by creating a new post in the application, makes the `posts()` getter stale—meaning the `posts` getter needs to be re-computed to include the newly added post:
 
 ```php
 <?php
@@ -89,7 +89,7 @@ class ShowPosts extends Component
 
         Auth::user()->posts()->create(...);
 
-        unset($this->posts);
+        unset($this->posts); // [tl! highlight]
     }
 
     #[Getter]
@@ -102,13 +102,13 @@ class ShowPosts extends Component
 }
 ```
 
-In the above component, because the `createPost` method accesses `$this->posts` up-front, the getter is cached before a new post is created. To ensure that `$this->posts` contains the most up-to-date contents when accessed inside the view, the cache is invalidated using `unset($this->posts)`.
+In the above component, the getter is cached before a new post is created because the `createPost` method accesses `$this->posts` up-front. To ensure that `$this->posts` contains the most up-to-date contents when accessed inside the view, the cache is invalidated using `unset($this->posts)`.
 
 ### Caching a getter between requests
 
-If you would like to cache the value of a getter for the lifespan of a Livewire component, rather than it being cleared after every request, you can use [Laravel's caching utilities](https://laravel.com/docs/10.x/cache#retrieve-store).
+Suppose you would like to cache the value of a getter for the lifespan of a Livewire component, rather than it being cleared after every request. In that case, you can use [Laravel's caching utilities](https://laravel.com/docs/10.x/cache#retrieve-store).
 
-Below is an example of a `user()` getter, where instead of executing the Eloquent query, we wrap it in `Cache::remember()` to ensure that any future requests retreive it from Laravel's cache instead of re-executing the query:
+Below is an example of a `user()` getter, where instead of executing the Eloquent query, we wrap it in `Cache::remember()` to ensure that any future requests retrieve it from Laravel's cache instead of re-executing the query:
 
 ```php
 <?php
@@ -137,11 +137,11 @@ class ShowUser extends Component
 }
 ```
 
-Because each unique instance of a Livewire component has a unique ID, we can use `$this->getId()` to generate a unique cache key that will only be applied to future requests for this exact component instance.
+Because each unique instance of a Livewire component has a unique ID, we can use `$this->getId()` to generate a unique cache key that will only be applied to future requests for this same component instance.
 
-Because most of this added code is boilerplate in the sense that it's predictable and can easily be abstracted, Livewire provides you with a helpful `#[Cached]` attribute as a shortcut.
+Because most of this added code is boilerplate in that it's predictable and can easily be abstracted, Livewire provides a helpful `#[Cached]` attribute as a shortcut.
 
-By applying `#[Cached]` in addition to `#[Getter]`, you can achieve the same result without any of the extra code. For example:
+By applying `#[Cached]` and `#[Getter]`, you can achieve the same result without any extra code. For example:
 
 ```php
 use Livewire\Attributes\Getter;
@@ -155,16 +155,16 @@ public function user()
 }
 ```
 
-Now, in the above, when `$this->user` is accessed from your component, it will continue to be cached for the duration of the Livewire component on the page. This means the actual Eloquent query will only be executed once.
+In the above, when `$this->user` is accessed from your component, it will continue to be cached for the duration of the Livewire component on the page. This means the actual Eloquent query will only be executed once.
 
 > [!tip] Calling `unset()` will bust this cache as well
-> As mentioned earlier, you can clear a getter's cache by using PHP's `unset()` method. This also applies to the `#[Cached]` attribute. When calling `unset()` on a cached getter, Livewire will not only clear the getter cache, but also the extra Laravel cache.
+> As mentioned, you can clear a getter's cache using PHP's `unset()` method. This also applies to the `#[Cached]` attribute. When calling `unset()` on a cached getter, Livewire will clear not only the getter cache but also the extra Laravel cache.
 
 ## When to use Getters?
 
 In addition to offering performance advantages, there are a few other scenarios where getters are helpful.
 
-In particular, when passing data into your component's Blade template, there are few occasions where a getter is a better alternative.
+In particular, when passing data into your component's Blade template, there are a few occasions where a getter is a better alternative.
 
 Below is an example of a simple component's `render()` method passing a collection of `posts` to the Blade template:
 
@@ -185,11 +185,11 @@ public function render()
 </div>
 ```
 
-For the most part, this is a fine approach, however, here are three scenarios you're better off using a getter:
+For the most part, this is a good approach, however, here are three scenarios you're better off using a getter:
 
 ### Conditionally accessing values
 
-If you are conditionally accessing an expensive value in your Blade template, you can save on performance overhead by using a getter.
+If you are conditionally accessing an expensive value in your Blade template, you can save on performance overhead using a getter.
 
 Consider the following template without a getter:
 
@@ -233,11 +233,11 @@ public function render()
 </div>
 ```
 
-Now, because we are providing the posts to the template using a getter, we are only executing the database query when the data is needed in the template.
+Now, because we are providing the posts to the template using a getter, we only execute the database query when the data is needed.
 
 ### Using inline templates
 
-Another scenario when getters are helpful is when using [inline templates](/docs/components#inline-components) in your component.
+Another scenario when getters are helpful is using [inline templates](/docs/components#inline-components) in your component.
 
 Below is an example of an inline component where, because we are returning a template string directly inside `render()`, we never have an opportunity to pass data into the view:
 
@@ -269,13 +269,13 @@ class ShowPosts extends Component
 }
 ```
 
-In the above example, without a getter, we would have no way to explicity pass data into the Blade template. 
+In the above example, without a getter, we would have no way to explicitly pass data into the Blade template. 
 
 ### Omitting the render method
 
-In Livewire, another way to cut down on boilerplate in your components is by ommiting the `render()` method entirely. Livewire will use it's own `render()` method returning the corresponding Blade view by convention.
+In Livewire, another way to cut down on boilerplate in your components is by omitting the `render()` method entirely. Livewire will use its own `render()` method returning the corresponding Blade view by convention.
 
-In this case, you don't have a render method to pass data into a Blade view from.
+In this case, you don't have a render method to pass data into a Blade view.
 
 Rather than re-introducing the `render()` method into your component, you can instead provide that data to the view through getters like so:
 

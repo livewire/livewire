@@ -27,7 +27,9 @@ class SupportQueryString extends ComponentHook
             $use = $value['use'] ?? 'push';
             $alwaysShow = $value['alwaysShow'] ?? false;
 
-            $this->setPropertyHook($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
+
+            // @todo: make this work...
+            // $this->setPropertyHook($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
         }
     }
 

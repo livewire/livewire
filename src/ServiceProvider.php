@@ -8,11 +8,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         $this->registerLivewireSingleton();
         $this->registerConfig();
+        $this->bootEventBus();
     }
 
     public function boot()
     {
-        $this->bootEventBus();
         $this->bootMechanisms();
         $this->bootFeatures();
     }

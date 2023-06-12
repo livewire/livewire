@@ -24,6 +24,7 @@ class HandleComponents
     ];
 
     public static $renderStack = [];
+    public static $componentStack = [];
 
     public function boot()
     {
@@ -45,20 +46,32 @@ class HandleComponents
 
         $component = app('livewire')->new($name);
 
+        $this->pushOntoComponentStack($component);
+
         $context = new ComponentContext($component, mounting: true);
 
+        if (config('app.debug')) $start = microtime(true);
         $finish = trigger('mount', $component, $params, $key, $parent);
+        if (config('app.debug')) trigger('profile', 'mount', $component->getId(), [$start, microtime(true)]);
 
+        if (config('app.debug')) $start = microtime(true);
         $html = $this->render($component, '<div></div>');
+        if (config('app.debug')) trigger('profile', 'render', $component->getId(), [$start, microtime(true)]);
 
+        if (config('app.debug')) $start = microtime(true);
         trigger('dehydrate', $component, $context);
 
         $snapshot = $this->snapshot($component, $context);
+        if (config('app.debug')) trigger('profile', 'dehydrate', $component->getId(), [$start, microtime(true)]);
+
+        trigger('destroy', $component, $context);
 
         $html = Utils::insertAttributesIntoHtmlRoot($html, [
             'wire:snapshot' => $snapshot,
             'wire:effects' => $context->effects,
         ]);
+
+        $this->popOffComponentStack();
 
         return $finish($html, $snapshot);
     }
@@ -79,21 +92,33 @@ class HandleComponents
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
 
+        if (config('app.debug')) $start = microtime(true);
         [ $component, $context ] = $this->fromSnapshot($snapshot);
+
+        $this->pushOntoComponentStack($component);
 
         trigger('hydrate', $component, $memo, $context);
 
         $this->updateProperties($component, $updates, $data, $context);
+        if (config('app.debug')) trigger('profile', 'hydrate', $component->getId(), [$start, microtime(true)]);
 
         $this->callMethods($component, $calls, $context);
 
+        if (config('app.debug')) $start = microtime(true);
         if ($html = $this->render($component)) {
             $context->addEffect('html', $html);
+            if (config('app.debug')) trigger('profile', 'render', $component->getId(), [$start, microtime(true)]);
         }
 
+        if (config('app.debug')) $start = microtime(true);
         trigger('dehydrate', $component, $context);
 
         $snapshot = $this->snapshot($component, $context);
+        if (config('app.debug')) trigger('profile', 'dehydrate', $component->getId(), [$start, microtime(true)]);
+
+        trigger('destroy', $component, $context);
+
+        $this->popOffComponentStack();
 
         return [ $snapshot, $context->effects ];
     }
@@ -343,7 +368,7 @@ class HandleComponents
     {
         $returns = [];
 
-        foreach ($calls as $call) {
+        foreach ($calls as $idx => $call) {
             $method = $call['method'];
             $params = $call['params'];
 
@@ -375,7 +400,9 @@ class HandleComponents
                 throw new MethodNotFoundException($method);
             }
 
+            if (config('app.debug')) $start = microtime(true);
             $return = wrap($root)->{$method}(...$params);
+            if (config('app.debug')) trigger('profile', 'call'.$idx, $root->getId(), [$start, microtime(true)]);
 
             $returns[] = $finish($return);
         }
@@ -410,5 +437,15 @@ class HandleComponents
         }
 
         throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
+    }
+
+    protected function pushOntoComponentStack($component)
+    {
+        array_push($this::$componentStack, $component);
+    }
+
+    protected function popOffComponentStack()
+    {
+        array_pop($this::$componentStack);
     }
 }
