@@ -77,10 +77,9 @@ class Manager
         return app(HandleComponents::class)->fromSnapshot($snapshot);
     }
 
-    function listen() {
-        //
+    function listen($eventName, $callback) {
+        return on($eventName, $callback);
     }
-
     function current()
     {
         return last(app(HandleComponents::class)::$componentStack);
