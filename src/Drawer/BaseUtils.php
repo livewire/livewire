@@ -51,12 +51,11 @@ class BaseUtils
     static function getPublicMethodsDefinedBySubClass($target)
     {
         $methods = array_filter((new \ReflectionObject($target))->getMethods(), function ($method) use ($target) {
-            $isInSyntheticTrait = str($method->getFilename())->afterLast('/')->exactly('Synthetic.php');
+            $isInBaseComponentClass = $method->getDeclaringClass()->getName() === \Livewire\Component::class;
 
             return $method->isPublic()
                 && ! $method->isStatic()
-                && ! $isInSyntheticTrait
-                && $method->getDeclaringClass()->getName() === $target::class;
+                && ! $isInBaseComponentClass;
         });
 
         return array_map(function ($method) {
