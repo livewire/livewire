@@ -20,7 +20,7 @@ function wireFallback(callback) {
 export function generateWireObject(component, state) {
     return new Proxy({}, {
         get(target, property) {
-            if (property === '__target') return component
+            if (property === '__instance') return component
 
             if (property in properties) {
                 return getProperty(component, property)
@@ -49,7 +49,7 @@ function getFallback(component) {
 
 Alpine.magic('wire', el => closestComponent(el).$wire)
 
-wireProperty('__target', (component) => component)
+wireProperty('__instance', (component) => component)
 
 wireProperty('get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
 
