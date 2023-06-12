@@ -269,6 +269,8 @@ class OrderShipped implements ShouldBroadcast
 {
     use InteractsWithSockets, SerializesModels;
 
+    public Order $order;
+
     public function broadcastOn()
     {
         return new Channel('orders');
@@ -287,15 +289,15 @@ OrderShipped::dispatch();
 If you were to listen for this event in JavaScript using only Laravel Echo, it would look something like this:
 
 ```js
-Echo.private('orders')
-    .listen('OrderShipmentStatusUpdated', e => {
+Echo.channel('orders')
+    .listen('OrderShipped', e => {
         console.log(e.order)
     })
 ```
 
 Assuming you have Laravel Echo installed and configured, you can listen for this event from inside a Livewire component.
 
-Below is an example of a component called `OrderTracker` that is listening for the `OrderShipped` event and to show users a visual indication of a new order:
+Below is an example of a component called `OrderTracker` that is listening for the `OrderShipped` event to show users a visual indication of a new order:
 
 ```php
 <?php
@@ -309,24 +311,7 @@ class OrderTracker extends Component
 {
     public $showNewOrderNotification = false;
 
-    // @todo - left off here
-    protected function mount() {
-        $this->js(<<<JS
-            Echo.listen('orders')
-                .presence()
-        JS);
-    }
-
-    protected function echo() {
-        return [
-            'notifyNewOrder' => new Echo(
-                private: true,
-                channel: 'orders',
-                event: '',
-            ),
-        ];
-    }
-
+    #[On('echo:orders,OrderShipped')]
     public function notifyNewOrder()
     {
         $this->showNewOrderNotification = true;
@@ -336,3 +321,83 @@ class OrderTracker extends Component
 }
 ```
 
+If you have Echo channels with variables embedded in it (such as a Order ID) you can use the `getListeners()` function instead of the `#[On]` attribute:
+
+```php
+<?php
+
+namespace App\Http\Livewire;
+
+use Livewire\Attributes\Prop;
+use Livewire\Attributes\On;
+use Livewire\Component;
+use App\Models\Order;
+
+class OrderTracker extends Component
+{
+    #[Prop]
+    public Order $order;
+
+    public $showOrderShippedNotification = false;
+
+    public function getListeners()
+    {
+        return [
+            "echo:orders.{$this->order->id},OrderShipped" => 'notifyShipped',
+        ];
+    }
+
+    #[On('echo:orders,OrderShipped')]
+    public function notifyShipped()
+    {
+        $this->showOrderShippedNotification = true;
+    }
+
+    // ...
+}
+```
+
+Now, Livewire will intercept the received event from Echo, and act accordingly.
+
+### Private & presence channels
+
+In a similar way to regular public channels, you can also listen to events broadcasted to private and presence channels:
+
+> [!info]
+> Make sure you have your <a href="https://laravel.com/docs/master/broadcasting#defining-authorization-callbacks">Authentication Callbacks</a> properly defined.
+
+```php
+<?php
+
+namespace App\Http\Livewire;
+
+use Livewire\Attributes\On;
+use Livewire\Component;
+
+class OrderTracker extends Component
+{
+    public $showNewOrderNotification = false;
+
+    public function getListeners()
+    {
+        return [
+            // Public Channel
+            "echo:orders,OrderShipped" => 'notifyNewOrder',
+            
+            // Private Channel
+            "echo-private:orders,OrderShipped" => 'notifyNewOrder',
+            
+            // Presence Channel
+            "echo-presence:orders,OrderShipped" => 'notifyNewOrder',
+            "echo-presence:orders,here" => 'notifyNewOrder',
+            "echo-presence:orders,joining" => 'notifyNewOrder',
+            "echo-presence:orders,leaving" => 'notifyNewOrder',
+        ];
+    }
+
+    public function notifyNewOrder()
+    {
+        $this->showNewOrderNotification = true;
+    }
+}
+```

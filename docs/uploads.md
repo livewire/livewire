@@ -335,9 +335,7 @@ Integrating with 3rd-party file-uploading libraries often requires finer-tuned c
 
 For these cases, Livewire exposes dedicated JavaScript functions.
 
-The functions exist on the JavaScript component object, which can be accessed using the convenience Blade directive: `@this`. If you haven't seen `@this` before, you can read more about it [here](inline-scripts).
-
-// todo: haven't really thought about @this in V3
+The functions exist on the JavaScript component object, which can be accessed using the convenience Blade directive from within your Livewire component's template: `@this`.
 
 ```html
 <script>

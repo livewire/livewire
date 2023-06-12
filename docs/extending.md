@@ -1,3 +1,4 @@
-## Registering components manually
+Coming soon...
 
-## Synthesizers
+<!--  @todo -->
+j

@@ -2,7 +2,7 @@ Loading indicators are an important part of crafting good user interfaces. They 
 
 ## Basic Usage
 
-Livewire provides a simple yet extremely powerful syntax for controlling loading indicators: `wire:loading`. Adding `wire:loading` to any element will hide it by default (using `display: none`) and show it when a request is sent to the server.
+Livewire provides a simple yet extremely powerful syntax for controlling loading indicators: `wire:loading`. Adding `wire:loading` to any element will hide it by default (using `display: none` in CSS) and show it when a request is sent to the server.
 
 Here's a basic example of a `CreatePost` component's form with `wire:loading` being used to toggle a loading message:
 
@@ -12,7 +12,7 @@ Here's a basic example of a `CreatePost` component's form with `wire:loading` be
 
     <button type="submit">Save</button>
 
-    <div wire:loading>
+    <div wire:loading> <!-- [tl! highlight:2] -->
         Saving post...
     </div>
 </form>
@@ -38,7 +38,7 @@ Below is a simple example of using the [Tailwind](https://tailwindcss.com/) clas
 <button wire:loading.class="opacity-50">Save</button>
 ```
 
-Like toggling an element, you can perform the inverse by using appending `.remove`:
+Like toggling an element, you can perform the inverse by appending `.remove`:
 
 ```html
 <button class="bg-blue-500" wire:loading.class.remove="bg-blue-500">
@@ -52,7 +52,7 @@ The above button's `bg-blue-500` class will be removed instead of added when the
 
 By default, when a form is submitted, Livewire will automatically disable the submit button while the form is being processed, as well as add the `readonly` attribute to each input element.
 
-However, there may be other times when you want this behavior outside of a form submission or want to toggle other attributes on an element while "loading".
+However, there may be other times when you want this behavior outside of a form submission or want to toggle other attributes on an element while loading.
 
 For these cases, Livewire provides a `.attr` modifier that works like `.class`, except it toggles HTML attributes instead of toggling classes on and off.
 
@@ -86,7 +86,7 @@ By adding `wire:target` to the following `wire:loading` element you can tell Liv
 
     <button type="button" wire:click="remove">Remove</button>
 
-    <div wire:loading wire:target="remove">
+    <div wire:loading wire:target="remove">  <!-- [tl! highlight:2] -->
         Removing post...
     </div>
 </form>
@@ -106,7 +106,7 @@ In cases where you have multiple of the same action trigger with different param
 
             <button wire:click="remove({{ $post->id }})">Remove</button>
 
-            <div wire:loading wire:target="remove({{ $post->id }})">
+            <div wire:loading wire:target="remove({{ $post->id }})">  <!-- [tl! highlight:2] -->
                 Removing post...
             </div>
         </div>
@@ -127,8 +127,9 @@ Take the following example where a form input called `username` uses `wire:model
 ```html
 <form wire:submit="save">
     <input type="text" wire:model.live="username">
+    @error('username') <span>{{ $message }}</span> @enderror
 
-    <div wire:loading wire:target="username">
+    <div wire:loading wire:target="username"> <!-- [tl! highlight:2] -->
         Checking avilability of username...
     </div>
 

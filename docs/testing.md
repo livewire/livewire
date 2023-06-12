@@ -398,7 +398,7 @@ $this->assertHasErrors('title', ['required']);
 
 ### Authorization
 
-Authorizing actions relying on untrusted input in your Livewire components is essential. [Read more about authorization in Livewire here](todo).
+Authorizing actions relying on untrusted input in your Livewire components is essential. [Read more about authorization in Livewire here](/docs/properties#authorizing-the-input).
 
 Livewire provides an `assertUnauthorized()` testing method to ensure that an authorization check has failed and a harmful action has been prevented:
 
@@ -544,7 +544,7 @@ There are many more testing utilities that Livewire provides. Below is a compreh
 | `Livewire::test(CreatePost::class)`                      | Test the `CreatePost` component |
 | `Livewire::test(UpdatePost::class, ['post' => $post])`                      | Test the `UpdatePost` component with the `post` parameter (To be received through the `mount()` method) |
 | `Livewire::actingAs($user)`                      | Set the provided user as the session's logged in user |
-| `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's URL query parameter `search` to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](todo) | 
+| `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's URL query parameter `search` to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/url) | 
 
 ### Interacting with components
 | Method                                                  | Description                                                                                                      |
