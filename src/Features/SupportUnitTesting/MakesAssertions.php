@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportUnitTesting;
 
+use Illuminate\Testing\Constraints\SeeInOrder;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Illuminate\Support\Arr;
 
@@ -39,6 +40,16 @@ trait MakesAssertions
                 $this->html()
             );
         }
+
+        return $this;
+    }
+
+    public function assertSeeHtmlInOrder($values)
+    {
+        PHPUnit::assertThat(
+            $values,
+            new SeeInOrder($this->html())
+        );
 
         return $this;
     }
