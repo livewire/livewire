@@ -402,7 +402,7 @@ You can call it directly from Alpine inside your Livewire component's Blade temp
 </div>
 ```
 
-If a user had typed in "Take out the trash", when they press the "Add Todo" button, the `addTodo()` method will be triggered with the `$todo` paramter value being "Take out the trash".
+If a user had typed in "Take out the trash", when they press the "Add Todo" button, the `addTodo()` method will be triggered with the `$todo` parameter value being "Take out the trash".
 
 ### Receiving return values
 
@@ -862,7 +862,7 @@ class BrowsePosts extends Component
 </div>
 ```
 
-As you can see, we refactored the post deletion logic into a dedicated method called `delete()`. Even though this method isn't referenced anywhere in our template, if a user gained knowledge of its existance, because it's `public`, they would be able to call it from the browser's DevTools.
+As you can see, we refactored the post deletion logic into a dedicated method called `delete()`. Even though this method isn't referenced anywhere in our template, if a user gained knowledge of its existence, because it's `public`, they would be able to call it from the browser's DevTools.
 
 To remedy this, we can mark the property as `protected` or `private`, and if a user tries to call it, they will receive an error:
 
