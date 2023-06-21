@@ -360,7 +360,7 @@ In this example, the `delete` method receives an instance of `PostRepository` re
 
 ## Calling actions from Alpine
 
-Livewire integrates seamlessly with [AlpineJS](https://alpinejs.dev/). In fact, under the hood, every Livewire component is also an AlpineJS component. This means you can take full advantage of AlpineJS within your components to add interactivity better suited to the client side.
+Livewire integrates seamlessly with [AlpineJS](https://alpinejs.dev/). In fact, under the hood, every Livewire component is also an AlpineJS component. This means you can take full advantage of AlpineJS within your components to add interactivity better suited to the client-side.
 
 To make this pairing even more powerful, Livewire exposes a magic object called `$wire` to Alpine that can be treated as a JavaScript representation of your PHP component. In addition to [accessing and mutating public properties on `$wire`](/docs/properties#accessing-properties-from-javascript), you can call methods directly on it, and the PHP method will be called in the backend.
 
@@ -638,7 +638,7 @@ class ShowPost extends Component
 
 ## Security Concerns
 
-Remember that any public method in your Livewire component can be called from the client side. Even without something like `wire:click`  associated with it, users can still trigger it from the browser's DevTools.
+Remember that any public method in your Livewire component can be called from the client-side. Even without something like `wire:click`  associated with it, users can still trigger it from the browser's DevTools.
 
 Below are three examples of easy-to-miss vulnerabilities in Livewire components. Each will show the vulnerable component first and the secure component after. As an exercise, try spotting the vulnerabilities in the first, before viewing the solution after.
 
@@ -810,7 +810,7 @@ Now only administrators can ever delete a post from this component because only 
 
 ### Keep dangerous methods protected or private
 
-Every public method inside your Livewire component is callable from the client. Even ones you haven't referenced inside a `wire:click` handler. To prevent a user from calling a method that isn't intended to be callable client-side, you should mark them as `protected` or `private`. By doing so, you restrict the visibility of that sensitive method to the component's class and its subclasses, ensuring they cannot be called from the client side.
+Every public method inside your Livewire component is callable from the client. Even ones you haven't referenced inside a `wire:click` handler. To prevent a user from calling a method that isn't intended to be callable client-side, you should mark them as `protected` or `private`. By doing so, you restrict the visibility of that sensitive method to the component's class and its subclasses, ensuring they cannot be called from the client-side.
 
 Take the last `BrowsePosts` example, where users can view all posts in your application, but only administrators can delete one. In the [Always authorize server-side](/docs/actions#always-authorize-server-side) section, we made the action secure by adding server-side authorization. Now let's say we refactor the actual deletion of the post into a dedicated method like you might do to clean up your codebase in a more complex situation:
 

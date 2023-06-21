@@ -1,8 +1,8 @@
-Properties store and manage data inside your Livewire components. They are defined as public properties on component classes and can be accessed and modified both on the server and client side.
+Properties store and manage data inside your Livewire components. They are defined as public properties on component classes and can be accessed and modified on both the server and client-side.
 
 ## Initializing properties
 
-You can set initial values for your properties within your component's `mount` method.
+You can set initial values for properties within your component's `mount` method.
 
 Consider the following example:
 
@@ -28,11 +28,11 @@ class TodoList extends Component
 }
 ```
 
-In this example, we've defined an empty `todos` array and initialized it with existing todos from the authenticated user. This way, when the component renders for the first time, all the existing todos in the database are shown to the user.
+In this example, we've defined an empty `todos` array and initialized it with existing todos from the authenticated user. Now, when the component renders for the first time, all the existing todos in the database are shown to the user.
 
 ## Bulk assignment
 
-Sometimes initializing many properties in the `mount()` method can feel verbose. To help with this, Livewire provides a convenient way to assign multiple properties at once called `fill()`. By passing an associative array of property names and their respective values, you can set several properties simultaneously and cut down on repetitive lines of code in `mount`.
+Sometimes initializing many properties in the `mount()` method can feel verbose. To help with this, Livewire provides a convenient way to assign multiple properties at once via the `fill()` method. By passing an associative array of property names and their respective values, you can set several properties simultaneously and cut down on repetitive lines of code in `mount`.
 
 For example:
 
@@ -65,13 +65,13 @@ class UpdatePost extends Component
 }
 ```
 
-Because `$post->only(...)` returns an associative array of model attributes and values based on the names you pass into it,  the `$title` and `$description` properties will be initially set to the `title` and `description` of the `$post` model from the database without having to set each one individually.
+Because `$post->only(...)` returns an associative array of model attributes and values based on the names you pass into it, the `$title` and `$description` properties will be initially set to the `title` and `description` of the `$post` model from the database without having to set each one individually.
 
 ## Data binding
 
-Livewire supports two-way data binding through an HTML attribute called `wire:model`. This allows you to easily synchronize data between component properties and HTML inputs, keeping your user interface and component state in sync. 
+Livewire supports two-way data binding through the `wire:model` HTML attribute. This allows you to easily synchronize data between component properties and HTML inputs, keeping your user interface and component state in sync.
 
-Here's a basic example of using `wire:model` to bind the `todo` property in a `TodoList` component to a basic input element. 
+Let's use the `wire:model` directive to bind the `todo` property in a `TodoList` component to a basic input element:
 
 ```php
 <?php
@@ -111,15 +111,15 @@ class TodoList extends Component
 </div>
 ```
 
-In the above example, the text input's value will synchronize with the `$todo` property on the server when the "Add Todo" button is clicked.
+In the example above, the text input's value will synchronize with the `$todo` property on the server when the "Add Todo" button is clicked.
 
-This is just scratching the surface of `wire:model`. For deeper information on data binding, refer to the [Livewire documentation on Forms](/forms).
+This is just scratching the surface of `wire:model`. For deeper information on data binding, check out our [documentation on forms](/forms).
 
 ## Resetting properties
 
 Sometimes, you may need to reset your properties back to their initial state after an action is performed by the user. In these cases, Livewire provides a `reset()` method that accepts one or more property names and resets their values to their initial state.
 
-Below is an example where we can avoid code duplication using `$this->reset()` to reset the `todo` field after the "Add Todo" button is clicked:
+In the example below, we can avoid code duplication by using `$this->reset()` to reset the `todo` field after the "Add Todo" button is clicked:
 
 ```php
 <?php
@@ -145,14 +145,14 @@ class ManageTodos extends Controller
 }
 ```
 
-In the above example, after a user clicks "Add Todo", the input field holding the todo that has just been added will clear, allowing them to write a new one.
+In the example above, after a user clicks "Add Todo", the input field holding the todo that has just been added will clear, allowing the user to write a new todo.
 
 > [!warning] `reset()` won't work on values set in `mount()`
-> `reset()` will reset a value to its original state BEFORE the `mount` method was called. If you initialized the value in `mount()` to something different, you will need to reset the value manually instead.
+> `reset()` will reset a property to its state before the `mount` method was called. If you initialized the property in `mount()` to a different value, you will need to reset the property manually.
 
 ## Supported property types
 
-Livewire supports a limited set of property types because of its unique way of managing component data between server roundtrips.
+Livewire supports a limited set of property types because of its unique approach to managing component data between server requests.
 
 Each property in a Livewire component is serialized or "dehydrated" into JSON between requests, then "hydrated" from JSON back into PHP for the next request.
 
@@ -214,18 +214,18 @@ public function mount()
 
 ### Supporting custom types
 
-Livewire allows you to support custom types in your application through two powerful mechanisms:
+Livewire allows your application to support custom types through two powerful mechanisms:
 
 * Wireables
 * Synthesizers
 
-Wireables deliver simplicity and ease of use for most applications, which we'll explore in this guide. If you're an advanced user or package author wanting more flexibility, Synthesizers are the way to go: [Read more about Synthesizers here](/docs/extending).
+Wireables are simple and easy to use for most applications, so we'll explore them below. If you're an advanced user or package author wanting more flexibility, [Synthesizers are the way to go](/docs/extending).
 
 #### Wireables
 
 Wireables are any class in your application that implements the `Wireable` interface.
 
-For example, let's say you have a `Customer` object in your application that represents primary data about a customer:
+For example, let's imagine you have a `Customer` object in your application that contains the primary data about a customer:
 
 ```php
 class Customer
@@ -241,7 +241,7 @@ class Customer
 }
 ```
 
-Now if you set it as a property inside a Livewire component, an error will be thrown telling you that the `Customer` property type isn't supported:
+Attempting to set an instance of this class to a Livewire component property will result in an error telling you that the `Customer` property type isn't supported:
 
 ```php
 class ShowCustomer extends Component
@@ -255,7 +255,7 @@ class ShowCustomer extends Component
 }
 ```
 
-However, you can add support for `Customer` by implementing the `Wireable` interface and adding a `toLivewire()` and `fromLivewire()` method, which tells Livewire how to turn this property into JSON and back again:
+However, you can solve this by implementing the `Wireable` interface and adding a `toLivewire()` and `fromLivewire()` method to your class. These methods tell Livewire how to turn properties of this type into JSON and back again:
 
 ```php
 use Livewire\Wireable;
@@ -289,27 +289,27 @@ class Customer implements Wireable
 }
 ```
 
-Now you can freely set `Customer` objects on your Livewire components, and Livewire will know how to convert these objects to JSON for the browser and back again.
+Now you can freely set `Customer` objects on your Livewire components and Livewire will know how to convert these objects into JSON and back into PHP.
 
-As mentioned earlier, if you want to support types more globally and powerfully, Livewire exposes its internal mechanism called Synthesizers for handling different property types: [Read more about Synthesizers here](/docs/extending).
+As mentioned earlier, if you want to support types more globally and powerfully, Livewire offers Synthesizers, its advanced internal mechanism for handling different property types. [Learn more about Synthesizers](/docs/extending).
 
 ## Accessing properties from JavaScript
 
-Because Livewire properties are also available in the Browser via JavaScript, you can access and manipulate their JavaScript representations from [AlpineJS](https://alpinejs.dev/)
+Because Livewire properties are also available in the browser via JavaScript, you can access and manipulate their JavaScript representations from [AlpineJS](https://alpinejs.dev/)
 
-Alpine is a lightweight JavaScript library that comes bundled with Livewire. It provides a way to build lightweight interactions into your Livewire components without making full server roundtrips.
+Alpine is a lightweight JavaScript library that is included with Livewire. Alpine provides a way to build lightweight interactions into your Livewire components without making full server roundtrips.
 
-Internally, Livewire's frontend is built on-top of Alpine. So much so that every Livewire component is actually an Alpine component under-the-hood. This means that you can freely utilize Alpine inside your Livewire components.
+Internally, Livewire's frontend is built on top of Alpine. In fact, every Livewire component is actually an Alpine component under-the-hood. This means that you can freely utilize Alpine inside your Livewire components.
 
-The rest of this page assumes a basic familiarity with Alpine. If you're unfamiliar, [take a look at the AlpineJS documentation to get up to speed](https://alpinejs.dev/docs).
+The rest of this page assumes a basic familiarity with Alpine. If you're unfamiliar with Alpine, [take a look at the Alpine documentation](https://alpinejs.dev/docs).
 
 ### Accessing properties
 
-Livewire exposes a magic object inside Alpine called `$wire`, which you can access from any Alpine expression inside your Livewire component.
+Livewire exposes a magic `$wire` object to Alpine. You can access the `$wire` object from any Alpine expression inside your Livewire component.
 
 The `$wire` object can be treated like a JavaScript version of your Livewire component. It has all the same properties and methods as the PHP version of your component, but also contains a few dedicated methods to perform specific functions in your template.
 
-Here's an example of using `$wire` to show a live character count of the `todo` input field:
+For example, we can use `$wire` to show a live character count of the `todo` input field:
 
 ```html
 <div>
@@ -335,7 +335,7 @@ If you prefer, you can use the more explicit `.get()` method to accomplish the s
 
 Similarly, you can manipulate your Livewire component properties in JavaScript using `$wire`.
 
-Here's an example of adding a "Clear" button to the `TodoList` component to allow the user to reset the input field to empty using only JavaScript:
+For example, let's add a "Clear" button to the `TodoList` component to allow the user to reset the input field using only JavaScript:
 
 ```html
 <div>
@@ -345,13 +345,11 @@ Here's an example of adding a "Clear" button to the `TodoList` component to allo
 </div>
 ```
 
-After the user clicks "Clear", the input will be reset to empty without sending a network request.
+After the user clicks "Clear", the input will be reset to an empty string without sending a network request to the server.
 
 On the subsequent request, the server-side value of `$todo` will be updated and synchronized.
 
-If you prefer, you can also use the more explicit `.set()` method for setting properties client side. However, you should note that using `.set()` immediately triggers a network request and synchronizes the state with the server. If that is desired, then this is an excellent API, if not, you should stick with setting the property directly.
-
-Here's an example of the same example as above but with `.set()`:
+If you prefer, you can also use the more explicit `.set()` method for setting properties client-side. However, you should note that using `.set()` immediately triggers a network request and synchronizes the state with the server. If that is desired, then this is an excellent API:
 
 ```html
 <button x-on:click="$wire.todo.set('todo', '')">Clear</button>
@@ -361,7 +359,7 @@ Here's an example of the same example as above but with `.set()`:
 
 While Livewire properties are a powerful feature, there are a few security considerations that you should be aware of before using them.
 
-In short, always treat public properties as user input—as if they were request input from a traditional endpoint. Because of this, it's essential to validate and authorize properties before persisting them to a database—just like you would do when working with request input in a controller.
+In short, always treat public properties as user input—as if they were request input from a traditional endpoint. In light of this, it's essential to validate and authorize properties before persisting them to a database—just like you would do when working with request input in a controller.
 
 ### Don't trust property values
 
@@ -392,10 +390,10 @@ class UpdatePost extends Component
     {
         $post = Post::findOrFail($this->id);
 
-        $post->update(
+        $post->update([
 			'title' => $this->title,
 			'content' => $this->content,
-        );
+        ]);
 
         session()->flash('message', 'Post updated successfully!');
     }
@@ -416,7 +414,7 @@ class UpdatePost extends Component
 </form>
 ```
 
-At first glance, this component may look completely fine to you. Now, let's walk you through how an attacker could use it to do unauthorized things in your system.
+At first glance, this component may look completely fine. But, let's walk through how an attacker could use the component to do unauthorized things in your application.
 
 Because we are storing the `id` of the post as a public property on the component, it can be manipulated on the client just the same as the `title` and `content` properties.
 
@@ -432,7 +430,7 @@ It doesn't matter that we didn't write an input with `wire:model="id"`. A malici
 </form>
 ```
 
-Now they can update the `id` input to the ID of a different post model, and when they submit the form and `update()` is called, `Post::findOrFail()` will return and update a post they are not the owner of.
+Now the malicious user can update the `id` input to the ID of a different post model. When the form is submitted and `update()` is called, `Post::findOrFail()` will return and update a post the user is not the owner of.
 
 To prevent this kind of attack, we can use one or both of the following strategies:
 
@@ -458,7 +456,7 @@ If a malicious user mutates the `$id` property, the added authorization will cat
 
 #### Locking the property
 
-Livewire provides a "locked" property feature that allows you to prevent properties from being modified on the client side. You can "lock" a property from client-side manipulation using the `#[Locked]` attribute:
+Livewire also allows you to "lock" properties in order to prevent properties from being modified on the client-side. You can "lock" a property from client-side manipulation using the `#[Locked]` attribute:
 
 ```php
 use Livewire\Attributes\Locked;
@@ -473,13 +471,15 @@ class UpdatePost extends Component
 }
 ```
 
-Now, if a user tries to modify `$id` on the frontend using something like `wire:model` an error will be thrown.
+Now, if a user tries to modify `$id` on the front end an error will be thrown.
 
 By using `#[Locked]`, you can assume this property has not been manipulated anywhere outside your component's class.
 
-For more information, [visit the Locked properties documentation](/docs/locked).
+For more information on locking properties, [consult the Locked properties documentation](/docs/locked).
 
-As an added note, if instead of storing the `$id` as a string property, you stored the entire `Post` model to a property called `$post`, Livewire will automatically lock the property and ensure the ID isn't changed so that you are safe from these kinds of attacks:
+#### Eloquent models and locking
+
+When an Eloquent model is assigned to a Livewire component property, Livewire will automatically lock the property and ensure the ID isn't changed so that you are safe from these kinds of attacks:
 
 ```php
 <?php
@@ -504,10 +504,10 @@ class UpdatePost extends Component
 
     public function update()
     {
-        $this->post->update(
+        $this->post->update([
 			'title' => $this->title,
 			'content' => $this->content,
-        );
+        ]);
 
         session()->flash('message', 'Post updated successfully!');
     }
@@ -523,7 +523,7 @@ class UpdatePost extends Component
 
 Another essential thing to remember is that Livewire properties are serialized or "dehydrated" before they are sent to the browser. This means that their values are converted to a format that can be sent over the wire and understood by JavaScript. This format can expose information about your application to the browser, including the names and class names of your properties.
 
-For example, suppose you have a Livewire component that defines a public property called `$post`, which contains an instance of a `Post` model from your database. In that case, the dehydrated value of this property sent over the wire might look something like this:
+For example, suppose you have a Livewire component that defines a public property named `$post`. This property contains an instance of a `Post` model from your database. In this case, the dehydrated value of this property sent over the wire might look something like this:
 
 ```json
 {
@@ -557,7 +557,7 @@ class AppServiceProvider extends ServiceProvider
 }
 ```
 
-Now, when the Eloquent model is "dehydrated" (serialized), the original class name won't be exposed, only the above "post" alias:
+Now, when the Eloquent model is "dehydrated" (serialized), the original class name won't be exposed, only the "post" alias:
 
 ```json
 {
@@ -571,9 +571,9 @@ Now, when the Eloquent model is "dehydrated" (serialized), the original class na
 
 ### Eloquent constraints aren't preserved between requests
 
-For the most part, Livewire is able to preserve and recreate server-side properties between requests, however, there are certain scenarios where perserving values are impossible between requests.
+Typically, Livewire is able to preserve and recreate server-side properties between requests; however, there are certain scenarios where preserving values are impossible between requests.
 
-For example, when storing Eloquent collections as Livewire properties, if you add any extra query constraints like `select(...)`, Livewire is unable to re-apply those constraints on a subsequent request.
+For example, when storing Eloquent collections as Livewire properties, additional query constraints like `select(...)` will not be re-applied on subsequent requests.
 
 To demonstrate, consider the following `ShowTodos` component with a `select()` constraint applied to the `Todos` Eloquent collection:
 
@@ -603,15 +603,15 @@ class ShowTodos extends Component
 }
 ```
 
-When this component is initially loaded, the `$todos` property will be set to an Eloquent collection of the user's todos, however, only the `title` and `content` fields of each row in the database will have been queried and loaded into each models.
+When this component is initially loaded, the `$todos` property will be set to an Eloquent collection of the user's todos; however, only the `title` and `content` fields of each row in the database will have been queried and loaded into each of the models.
 
-However, when Livewire _hydrates_ the JSON of this property back into PHP on a subsequent request, the select constraint will have been lost.
+When Livewire _hydrates_ the JSON of this property back into PHP on a subsequent request, the select constraint will have been lost.
 
-To ensure the integrity of eloquent queries, we recommend that you use [Getters](/docs/getters) instead of properties.
+To ensure the integrity of Eloquent queries, we recommend that you use [Getters](/docs/getters) instead of properties.
 
 Getters are methods in your component marked with the `#[Getter]` attribute. They can be accessed as a dynamic property that isn't stored as part of the component's state but is instead evaluated on-the-fly.
 
-Here's the above example re-written using a getter:
+Here's the example above re-written using a getter:
 
 ```php
 <?php
@@ -651,7 +651,7 @@ Here's how you would access these _todos_ from the Blade view:
 
 Notice, inside your views, you can only access getters on the `$this` object like so: `$this->todos`. 
 
-You can also access `$todos` from inside your class for example, if you had a "markAllAsComplete" action:
+You can also access `$todos` from inside your class. For example, if you had a `markAllAsComplete()` action:
 
 ```php
 <?php
@@ -685,6 +685,6 @@ class ShowTodos extends Component
 
 You might wonder, why not just call `$this->todos()` as a method directly where you need to? Why use `#[Getter]` in the first place? 
 
-The reason is that getters have a performance advantage; they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once so that you don't run an expensive query multiple times in the same request.
+The reason is that getters have a performance advantage. Getters are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once so that you don't run an expensive query multiple times in the same request.
 
 For more information, [visit the Getters documentation](/docs/getters).

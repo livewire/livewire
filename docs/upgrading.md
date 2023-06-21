@@ -1,7 +1,7 @@
 ## Prerequisits
 - Run `artisan view:clear`
 
-## Alpine is included now
+## Alpine is now included
 - Remove any Alpine CDN scripts or Alpine npm imports and use the one Livewire provides
 
 ## `wire:model.defer` is now default
@@ -38,12 +38,12 @@
 - Republish pagination views if you have previously published them.
 - Can no longer access `$page` directly -> `$paginators['page']` or `getPage()`
 
-## Localisation
-In version 2 there was support for a locale prefix.
+## Localization
+Livewire 2 included support for a locale prefix.
 
-In V3 this automatic prefix has been removed and instead, you will need to add a custom Livewire update route to your `routes/web.php` file inside your route group that applies localization.
+In Livewire 3 this automatic prefix has been removed. Instead, you will need to add a custom Livewire update route to your `routes/web.php` file inside your route group that applies localization.
 
-Below is an example of how you would use a custom Livewire update route along with `mcamara/laravel-localization` package.
+For example, here is how you would use a custom Livewire update route along with the `mcamara/laravel-localization` package:
 
 ```php
 use Illuminate\Support\Facades\Route;

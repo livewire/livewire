@@ -1,6 +1,4 @@
-To begin your Livewire journey, we will create a simple "counter" component and render it in the browser.
-
-Most applications have no use for a "counter" component. Still, it's a great way to experience Livewire for the first time as it demonstrates Livewire's _liveness_ in the simplest way possible.
+To begin your Livewire journey, we will create a simple "counter" component and render it in the browser. This example is a great way to experience Livewire for the first time as it demonstrates Livewire's _liveness_ in the simplest way possible
 
 ## Prerequisites
 
@@ -62,9 +60,9 @@ class Counter extends Component
 ```
 
 Here's a brief explanation of the code above:
-- `public $count = 1;` — Declares a public property called `$count` with an initial value of `1`.
-- `public function increment()` — Declares a public method called `increment()` that increments the `$count` property each time it's called. Public methods like this can be triggered from the browser when, for example, a user clicks a button.
-- `public function render()` — Declares a `render()` method that returns a Blade view. This Blade view will be used as the HTML template for our component.
+- `public $count = 1;` — Declares a public property named `$count` with an initial value of `1`.
+- `public function increment()` — Declares a public method named `increment()` that increments the `$count` property each time it's called. Public methods like this can be triggered from the browser in a variety of ways, including when a user clicks a button.
+- `public function render()` — Declares a `render()` method that returns a Blade view. This Blade view will contain the HTML template for our component.
 
 ## Overwrite the view
 
@@ -80,7 +78,7 @@ Open the `resources/views/livewire/counter.blade.php` file and replace its conte
 </div>
 ```
 
-This code will display the `$count` property and two buttons that increment and decrement the `$count` property, respectively.
+This code will display the value of the `$count` property and two buttons that increment and decrement the `$count` property, respectively.
 
 ## Register a route for the component
 
@@ -92,13 +90,13 @@ use App\Http\Livewire\Counter;
 Route::get('/counter', Counter::class);
 ```
 
-Now, our _counter_ component is assigned to the `/counter` route so that when a user visits the `/counter` endpoint in your application, this component will be used as the page.
+Now, our _counter_ component is assigned to the `/counter` route so that when a user visits the `/counter` endpoint in your application, this component will be rendered by the browser.
 
 ## Create a template layout 
 
-Before you can visit `/counter` in the browser, we need an HTML layout for our component to render inside. By default, Livewire will automatically look for a layout file called: `resources/views/components/layout.blade.php`
+Before you can visit `/counter` in the browser, we need an HTML layout for our component to render inside. By default, Livewire will automatically look for a layout file named: `resources/views/components/layout.blade.php`
 
-Create this file if it doesn't already exist by running the following command:
+You may create this file if it doesn't already exist by running the following command:
 
 ```shell
 php artisan livewire:layout
@@ -122,16 +120,16 @@ This command will generate a file called `resources/views/components/layout.blad
 </html>
 ```
 
-The _counter_ component will be rendered in place of the `$slot` variable in the above template.
+The _counter_ component will be rendered in place of the `$slot` variable in the template above.
 
-You may have noticed there is no JavaScript or CSS assets provided by Livewire. That is because version 3 and above automatically inject any frontend assets it needs.
+You may have noticed there is no JavaScript or CSS assets provided by Livewire. That is because Livewire 3 and above automatically injects any frontend assets it needs.
 
 ## Test it out
 
-Now that we're all set up, our component is ready to test!
+With our component class and templates in place, our component is ready to test!
 
 Visit `/counter` in your browser, and you should see a number displayed on the screen with two buttons to increment and decrement the number.
 
 After clicking one of the buttons, you will notice that the count updates in real time without the page reloading. This is the magic of Livewire: dynamic frontend applications written entirely in PHP.
 
-We've barely scratched the surface of what Livewire is capable of. Keep reading the documentation to see all of what's available.
+We've barely scratched the surface of what Livewire is capable of. Keep reading the documentation to see everything Livewire has to offer.

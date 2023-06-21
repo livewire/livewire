@@ -148,7 +148,7 @@ class Revenue extends Component
 }
 ```
 
-However, it's worth noting that, UNLIKE a normal component load, a `lazy` component has to serialize or "dehydrate" any passed-in properties and temporarily store them on the client side until the component is fully loaded.
+However, it's worth noting that, UNLIKE a normal component load, a `lazy` component has to serialize or "dehydrate" any passed-in properties and temporarily store them on the client-side until the component is fully loaded.
 
 For example, you might want to pass in an Eloquent model to the `Revenue` component like so:
 

@@ -6,17 +6,17 @@ To install Livewire, open your terminal and navigate to your Laravel application
 composer require livewire/livewire
 ```
 
-That's it—really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
+That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
 ## Publishing the configuration file
 
-Livewire is "zero-config", meaning you can use it by following conventions without any need for special configuration. However, you may still want to customize it further. In those cases, you can publish and customize Livewire's config file by running the following Artisan command:
+Livewire is "zero-config", meaning you can use it by following conventions without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file by running the following Artisan command:
 
 ```shell
 php artisan livewire:publish --config
 ```
 
-This will create a new `livewire.php` file in your Laravel app under: `config/livewire.php`
+This will create a new `livewire.php` file in your Laravel application's `config` directory.
 
 ## Manually including Livewire's frontend assets
 
@@ -39,7 +39,7 @@ If you want more control over this behavior, you can manually include the assets
 
 By including these assets manually on a page, Livewire knows to not inject the assets automatically.
 
-If for some reason you want to force Livewire to disable its auto-injecting assets behavior, you can do so by updating the `inject_assets` configuration in `config/livewire.php`: (See: [Publishing config](#publishing-config) if haven't published this config file yet)
+Though rarely required, you may disable Livewire's auto-injecting asset behavior by updating the `inject_assets` [configuration option](#publishing-config) in your application's `config/livewire.php` file:
 
 ```json
 'inject_assets': false,
@@ -47,11 +47,11 @@ If for some reason you want to force Livewire to disable its auto-injecting asse
 
 ## Configuring Livewire's update endpoint
 
-Every update in a Livewire component sends a network request to the server using the following endpoint: `https://example.com/livewire/update`
+Every update in a Livewire component sends a network request to the server at the following endpoint: `https://example.com/livewire/update`
 
 This can be a problem for some applications that use localization or multi-tenancy.
 
-In those cases, you can register your own endpoint however you like, and as long as you do it inside `Livewire::setUpdateRoute()`,  Livewire will know to use this endpoint for all component updates.
+In those cases, you can register your own endpoint however you like, and as long as you do it inside `Livewire::setUpdateRoute()`,  Livewire will know to use this endpoint for all component updates:
 
 ```php
 Livewire::setUpdateRoute(function ($handle) {
@@ -59,19 +59,19 @@ Livewire::setUpdateRoute(function ($handle) {
 });
 ```
 
-Now instead of `/livewire/update`, Livewire will send component updates to `/custom/livewire/update`.
+Now, instead of using `/livewire/update`, Livewire will send component updates to `/custom/livewire/update`.
 
 ## Customizing the asset URL
 
-By default, Livewire will serve its JavaScript assets from the following URL: `https://example.com/livewire/livewire.js` and reference them from a script tag like so:
+By default, Livewire will serve its JavaScript assets from the following URL: `https://example.com/livewire/livewire.js`. Additionally, Livewire will reference this asset from a script tag like so:
 
 ```html
 <script src="/livewire/livewire.js" ...
 ```
 
-If your application has global route prefixes because of something like localization or multi-tenancy, you can register your own endpoint to be used by Livewire internally for fetching its JavaScript.
+If your application has global route prefixes due to localization or multi-tenancy, you can register your own endpoint that Livewire should use internally when fetching its JavaScript.
 
-To use a custom JavaScript asset endpoint, you can register your own route inside `Livewire::setJavaScriptRoute()` like so:
+To use a custom JavaScript asset endpoint, you can register your own route inside `Livewire::setJavaScriptRoute()`:
 
 ```php
 Livewire::setJavaScriptRoute(function ($handle) {
@@ -79,7 +79,7 @@ Livewire::setJavaScriptRoute(function ($handle) {
 });
 ```
 
-Now, Livewire will use a `<script src` like the following:
+Now, Livewire will load its JavaScript like so:
 
 ```html
 <script src="/custom/livewire/livewire.js" ...

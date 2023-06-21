@@ -108,7 +108,7 @@ You can use this technique to have complete control over initializing a componen
 > The technique used above is powerful; however, often a better alternative is to use [Livewire's getters](/docs/getters) to accomplish this same thing.
 
 > [!warning] Always lock sensitive public properties
-> As you can see above, we are using the `#[Locked]` attribute on the `$postId` property. In a scenario like the above, where you want to ensure the `$postId` property isn't tampered with by users on the client side, it's important to authorize their value before using them or add `#[Locked]` to ensure they are never changed.
+> As you can see above, we are using the `#[Locked]` attribute on the `$postId` property. In a scenario like the above, where you want to ensure the `$postId` property isn't tampered with by users on the client-side, it's important to authorize their value before using them or add `#[Locked]` to ensure they are never changed.
 > 
 > For more information, check out the [documentation on Locked properties](/docs/locked).
 
@@ -198,7 +198,7 @@ Of course, you can also apply this technique to the `updating` hook.
 
 Hydrate and dehydrate are lesser-known and lesser-utilized hooks. However, there are specific scenarios where they can be powerful.
 
-The terms "dehydrate" and "hydrate" refer to a Livewire component being serialized to JSON for the client side and then unserialized back into a PHP on the subsequent request.
+The terms "dehydrate" and "hydrate" refer to a Livewire component being serialized to JSON for the client-side and then unserialized back into a PHP on the subsequent request.
 
 We often use the terms "hydrate" and "dehydrate" to refer to this process throughout Livewire's codebase and the documentation. If you'd like more clarity on them, [you can get a deeper understanding here.](/docs/hydration)
 
