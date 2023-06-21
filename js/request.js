@@ -108,7 +108,7 @@ async function sendMethodCall() {
 
         let propertiesDiff = diff(target.canonical, target.ephemeral)
 
-        let targetPaylaod = {
+        let targetPayload = {
             snapshot: target.encodedSnapshot,
             updates: propertiesDiff,
             calls: request.calls.map(i => ({
@@ -118,9 +118,9 @@ async function sendMethodCall() {
             }))
         }
 
-        payload.push(targetPaylaod)
+        payload.push(targetPayload)
 
-        let finishTarget = trigger('request', target, targetPaylaod)
+        let finishTarget = trigger('request', target, targetPayload)
 
         failureReceivers.push(() => {
             let failed = true
