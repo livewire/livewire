@@ -117,13 +117,14 @@ You can use this technique to have complete control over initializing a componen
 
 Client-side users can update public properties in many different ways, most commonly by modifying an input with `wire:model` on it.
 
-Livewire provides convenient hooks to intercept the updating of a public property so that you can validate or authorize a value before it's set or ensure a property is set in a given format.
+Livewire provides convenient hooks to intercept the updating of a public property so that you can validate or authorize a value before it's set, or ensure a property is set in a given format.
 
 Below is an example of using `updating` to prevent the modification of the `$postId` property. 
 
 It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/locked) instead, like in the above example.
 
 ```php
+use Exception;
 use Livewire\Component;
 
 class ShowPost extends Component
@@ -136,7 +137,7 @@ class ShowPost extends Component
         // $value: The value about to be set to the property
 
         if ($property === 'postId') {
-            throw new \Exception;
+            throw new Exception;
         }
     }
 
@@ -144,7 +145,7 @@ class ShowPost extends Component
 }
 ```
 
-The above `updating()` method runs BEFORE the actual property is updated, allowing you to catch invalid input and prevent its updating. Below is an example of using `updated()` to ensure a property's value stays consistent. 
+The above `updating()` method runs before the property is updated, allowing you to catch invalid input and prevent the property from updating. Below is an example of using `updated()` to ensure a property's value stays consistent:
 
 ```php
 use Livewire\Component;
@@ -168,9 +169,9 @@ class CreateUser extends Component
 }
 ```
 
-Now, anytime the `$username` property is updated client-side because we added the `updated()` hook, we can ensure that the value will always be lowercase.
+Now, anytime the `$username` property is updated client-side, we will ensure that the value will always be lowercase.
 
-Because you are often targeting a specific property when using update hooks, Livewire allows you to specify the property name directly as part of the method name. Here's the same example from above but rewritten utilizing this technique.
+Because you are often targeting a specific property when using update hooks, Livewire allows you to specify the property name directly as part of the method name. Here's the same example from above but rewritten utilizing this technique:
 
 ```php
 use Livewire\Component;
@@ -190,8 +191,6 @@ class CreateUser extends Component
 }
 ```
 
-This cleans up the code quite a bit by removing the conditional check for the "username" property.
-
 Of course, you can also apply this technique to the `updating` hook.
 
 ## Hydrate & Dehydrate
@@ -200,7 +199,7 @@ Hydrate and dehydrate are lesser-known and lesser-utilized hooks. However, there
 
 The terms "dehydrate" and "hydrate" refer to a Livewire component being serialized to JSON for the client-side and then unserialized back into a PHP on the subsequent request.
 
-We often use the terms "hydrate" and "dehydrate" to refer to this process throughout Livewire's codebase and the documentation. If you'd like more clarity on them, [you can get a deeper understanding here.](/docs/hydration)
+We often use the terms "hydrate" and "dehydrate" to refer to this process throughout Livewire's codebase and the documentation. If you'd like more clarity on these terms, you can learn more by [consulting our hydration documentation](/docs/hydration).
 
 Let's look at an example that uses both `mount()` , `hydrate()`, and `dehydrate()` all together to support using a custom [data transfer object (DTO)](https://en.wikipedia.org/wiki/Data_transfer_object) instead of an Eloquent model to store the post data in the component:
 
@@ -240,13 +239,13 @@ class ShowPost extends Component
 }
 ```
 
-Now, from actions and other places inside your component, you can access the `PostDto` object instead of the primitive data directly.
+Now, from actions and other places inside your component, you can access the `PostDto` object instead of the primitive data.
 
 The above example mainly demonstrates the abilities and nature of the `hydrate()` and `dehydrate()` hooks. However, it is recommended that you use [Wireables or Synthesizers](/docs/properties#supporting-custom-types) to accomplish this instead.
 
 ## Render
 
-If, for any reason, you want to hook into the process of rendering a component's Blade view, you can do so using the `rendering()` and `rendered()` hooks: 
+If you want to hook into the process of rendering a component's Blade view, you can do so using the `rendering()` and `rendered()` hooks:
 
 ```php
 use Livewire\Component;
@@ -289,7 +288,7 @@ To avoid multiple traits conflicting with each other when declaring lifecycle ho
 
 This way, you can have multiple traits using the same lifecycle hooks and avoid conflicting method definitions.
 
-Here's a component referencing a trait called `HasPostForm`:
+Below is an example of a component referencing a trait called `HasPostForm`:
 
 ```php
 use Livewire\Component;
