@@ -26,7 +26,9 @@
 ## `emit()` and `dispatchBrowserEvent()` are now just `dispatch()`
 - Change `$this->emit()` and `$emit` to `$this->dispatch()` and `$dispatch()`
     - Same with `emitTo()`
+    - Add parameter names
 - Change `dispatchBrowserEvent()` to `dispatch()`
+    - Change array syntax to named param syntax to match ->emit()
 - Remove the concept of "up"
 - "assertEmitted" -> "assertedDispatched"
 

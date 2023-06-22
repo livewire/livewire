@@ -80,6 +80,7 @@ class Manager
     function listen($eventName, $callback) {
         return on($eventName, $callback);
     }
+
     function current()
     {
         return last(app(HandleComponents::class)::$componentStack);
