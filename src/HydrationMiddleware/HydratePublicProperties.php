@@ -20,6 +20,7 @@ use DateTimeImmutable;
 use Carbon\Carbon;
 use DateTime;
 use DateTimeInterface;
+use Illuminate\Support\Facades\Crypt;
 use stdClass;
 use Normalizer;
 
@@ -147,6 +148,8 @@ class HydratePublicProperties implements HydrationMiddleware
 
     protected static function hydrateModel($serialized, $property, $request, $instance)
     {
+        $serialized = Crypt::decrypt($serialized);
+        
         if (isset($serialized['id'])) {
             $model = (new static)->getRestoredPropertyValue(
                 new ModelIdentifier($serialized['class'], $serialized['id'], $serialized['relations'], $serialized['connection'])
@@ -217,6 +220,8 @@ class HydratePublicProperties implements HydrationMiddleware
         $serializedModel = $value instanceof QueueableEntity && ! $value->exists
             ? ['class' => get_class($value)]
             : (array) (new static)->getSerializedPropertyValue($value);
+
+        $serializedModel = Crypt::encrypt($serializedModel);
 
         // Deserialize the models into the "meta" bag.
         data_set($response, 'memo.dataMeta.models.'.$property, $serializedModel);
