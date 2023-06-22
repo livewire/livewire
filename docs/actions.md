@@ -162,6 +162,7 @@ In this example, the `setPostContent` action is called whenever the `trix-change
 >></trix-editor>
 > ```
 
+
 ### Listening for dispatched custom events
 
 If your application dispatches custom events from Alpine, you can also listen for those using Livewire:

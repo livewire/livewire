@@ -150,6 +150,7 @@ In the above example, after a user clicks "Add Todo", the input field holding th
 > [!warning] `reset()` won't work on values set in `mount()`
 > `reset()` will reset a property to its state before the `mount` method was called. If you initialized the property in `mount()` to a different value, you will need to reset the property manually.
 
+
 ## Supported property types
 
 Livewire supports a limited set of property types because of its unique approach to managing component data between server requests.

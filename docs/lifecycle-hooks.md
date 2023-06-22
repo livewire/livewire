@@ -1,4 +1,4 @@
-Livewire provides a set of lifecycle hooks that allow you to execute code at specific points during a component's lifecycle. These hooks enable you to perform actions before or after particular events, such as initializing the component, updating properties, or rendering the template.
+Livewire provides a variety of lifecycle hooks that allow you to execute code at specific points during a component's lifecycle. These hooks enable you to perform actions before or after particular events, such as initializing the component, updating properties, or rendering the template.
 
 Here's a list of all the available component lifecycle hooks:
 
@@ -15,9 +15,9 @@ Here's a list of all the available component lifecycle hooks:
 
 ## Mount
 
-In a standard PHP class, a constructor (`__construct()`) takes in outside parameters and initializes the object's state. In Livewire, instead, you use the `mount()` method for accepting parameters and initializing the state of your component.
+In a standard PHP class, a constructor (`__construct()`) takes in outside parameters and initializes the object's state. However, in Livewire, you use the `mount()` method for accepting parameters and initializing the state of your component.
 
-We don't use `__construct()` because Livewire components are _re-constructed_ on subsequent network requests, and we only want to initialize the component once when it is first created.
+Livewire components don't use `__construct()` because Livewire components are _re-constructed_ on subsequent network requests, and we only want to initialize the component once when it is first created.
 
 Here's an example of using the `mount()` method to initialize the `name` and `email` properties of an `UpdateProfile` component:
 
@@ -41,7 +41,7 @@ class UpdateProfile extends Component
 }
 ```
 
-As mentioned earlier, the `mount()` method receives data passed into the component as method parameters.
+As mentioned earlier, the `mount()` method receives data passed into the component as method parameters:
 
 ```php
 use Livewire\Component;
@@ -65,9 +65,9 @@ class UpdatePost extends Component
 ```
 
 > [!tip] You can use dependency injection with all hook methods
-> Because you may be used to using dependancy injection inside your Laravel controllers, Livewire allows you to resolve dependancies out of [Laravel's service container](https://laravel.com/docs/10.x/container#automatic-injection) by typehinting method parameters on Lifecycle hooks. 
+> Livewire allows you to resolve dependencies out of [Laravel's service container](https://laravel.com/docs/container#automatic-injection) by type-hinting method parameters on lifecycle hooks.
 
-The `mount()` method is crucial part of using Livewire. Here are three more references to learn more about practical usage:
+The `mount()` method is a crucial part of using Livewire. The following documentation provides further examples of using the `mount()` method to accomplish common tasks:
 
 * [Initializing properties](/docs/properties#initializing-properties)
 * [Receiving data from parent components](/docs/nesting#passing-props-to-children)
@@ -75,11 +75,11 @@ The `mount()` method is crucial part of using Livewire. Here are three more refe
 
 ## Boot
 
-As helpful as `mount()` is, it only runs once per component lifecycle. You may want to run logic at the beginning of every single request to the server for a given component.
+As helpful as `mount()` is, it only runs once per component lifecycle, and you may want to run logic at the beginning of every single request to the server for a given component.
 
-For these cases, Livewire provides a `boot()` method where you can write component setup code that you intend to run every single time the component class is booted up: both on initialization and on subsequent requests.
+For these cases, Livewire provides a `boot()` method where you can write component setup code that you intend to run every single time the component class is booted: both on initialization and on subsequent requests.
 
-This can be useful for things like initializing protected properties, which are not persisted between requests. Below is an example of initializing a protected property as an eloquent model by referencing a public property:
+The `boot()` method can be useful for things like initializing protected properties, which are not persisted between requests. Below is an example of initializing a protected property as an Eloquent model:
 
 ```php
 use Livewire\Attributes\Locked;
@@ -105,10 +105,10 @@ class ShowPost extends Component
 You can use this technique to have complete control over initializing a component property in your Livewire component.
 
 > [!tip] Most of the time, you can use a getter instead
-> The technique used above is powerful; however, often a better alternative is to use [Livewire's getters](/docs/getters) to accomplish this same thing.
+> The technique used above is powerful; however, it's often better to use [Livewire's getters](/docs/getters) to solve this use case.
 
 > [!warning] Always lock sensitive public properties
-> As you can see above, we are using the `#[Locked]` attribute on the `$postId` property. In a scenario like the above, where you want to ensure the `$postId` property isn't tampered with by users on the client-side, it's important to authorize their value before using them or add `#[Locked]` to ensure they are never changed.
+> As you can see above, we are using the `#[Locked]` attribute on the `$postId` property. In a scenario like the above, where you want to ensure the `$postId` property isn't tampered with by users on the client-side, it's important to authorize the property's value before using it or add `#[Locked]` to the property ensure it is never changed.
 > 
 > For more information, check out the [documentation on Locked properties](/docs/locked).
 

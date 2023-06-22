@@ -210,6 +210,7 @@ Any changes made to the text input will be automatically synchronized with the `
 > [!warning] _"Why isn't my component live updating as I type?"_
 > If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](http://livewire-next-docs.test/docs/properties#data-binding).
 
+
 Livewire properties are extremely powerful and are an important concept to understand. For more information, check out the [Livewire properties documentation](/docs/properties).
 
 ## Calling actions
@@ -281,6 +282,7 @@ You can include a Livewire component in your Blade templates using the `<livewir
 > [!warning] You must use _kebab-case_
 > As you can see in the snippet above, you must use the _kebab-cased_ version of the component name. Using the _StudlyCase_ version of the name (`<livewire:CreatePost />`) is invalid and won't be recognized by Livewire.
 
+
 ### Passing data into components
 
 To pass outside data into a Livewire component, you can use attributes on the component tag. This is useful when you want to initialize a component with specific data.
@@ -346,6 +348,7 @@ This is effectively the same as assigning `$title` inside a `mount()` method.
 
 > [!warning] Props are not reactive by default
 > The `$title` property will not update automatically if the outer `:title="$initialValue"` changes after the initial page load. This is a common point of confusion when using Livewire, especially for developers who have used JavaScript frameworks like Vue or React and assume these "parameters" behave like "reactive props" in those frameworks. But, don't worry, Livewire allows you to opt-in to [making your props reactive](/docs/nesting#making-child-props-reactive).
+
 
 ## Full-page components
 
