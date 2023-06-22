@@ -111,7 +111,7 @@ class TodoList extends Component
 </div>
 ```
 
-In the example above, the text input's value will synchronize with the `$todo` property on the server when the "Add Todo" button is clicked.
+In the above example, the text input's value will synchronize with the `$todo` property on the server when the "Add Todo" button is clicked.
 
 This is just scratching the surface of `wire:model`. For deeper information on data binding, check out our [documentation on forms](/forms).
 
@@ -145,7 +145,7 @@ class ManageTodos extends Controller
 }
 ```
 
-In the example above, after a user clicks "Add Todo", the input field holding the todo that has just been added will clear, allowing the user to write a new todo.
+In the above example, after a user clicks "Add Todo", the input field holding the todo that has just been added will clear, allowing the user to write a new todo.
 
 > [!warning] `reset()` won't work on values set in `mount()`
 > `reset()` will reset a property to its state before the `mount` method was called. If you initialized the property in `mount()` to a different value, you will need to reset the property manually.
@@ -611,7 +611,7 @@ To ensure the integrity of Eloquent queries, we recommend that you use [Getters]
 
 Getters are methods in your component marked with the `#[Getter]` attribute. They can be accessed as a dynamic property that isn't stored as part of the component's state but is instead evaluated on-the-fly.
 
-Here's the example above re-written using a getter:
+Here's the above example re-written using a getter:
 
 ```php
 <?php

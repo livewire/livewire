@@ -1,6 +1,6 @@
-Livewire actions are methods on your components that can be triggered by frontend interactions like clicking a button or submitting a form. They provide the developer experience of being able to call a PHP method directly from the browser, which allows you to focus more on the logic of your application and not get bogged down with boilerplate code.
+Livewire actions are methods on your components that can be triggered by frontend interactions like clicking a button or submitting a form. They provide the developer experience of being able to call a PHP method directly from the browser, allowing you to focus on the logic of your application without getting bogged down writing boilerplate code connecting your application's frontend and backend.
 
-Let's take a look at a basic example of calling a `save` action in a `CreatePost` component:
+Let's explore a basic example of calling a `save` action on a `CreatePost` component:
 
 ```php
 <?php
@@ -43,13 +43,13 @@ class CreatePost extends Component
 </form>
 ```
 
-In the above example, when a user submits the form by clicking "Save", `wire:submit` picks up the `submit` event and calls the `save` action on the server.
+In the above example, when a user submits the form by clicking "Save", `wire:submit` intercepts the `submit` event and calls the `save` action on the server.
 
-In essence, Actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
+In essence, actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
 
 ## Event Listeners
 
-Livewire supports a variety of event listeners that allow you to respond to various types of user interaction. Below is a table of common events to listen for:
+Livewire supports a variety of event listeners, allowing you to respond to various types of user interactions:
 
 | Listener        | Description                               |
 |-----------------|-------------------------------------------|
@@ -58,11 +58,11 @@ Livewire supports a variety of event listeners that allow you to respond to vari
 | `wire:keydown`  | Triggered when a key is pressed down      |
 | `wire:mouseenter`| Triggered when the mouse enters an element |
 
-Because the event name after `wire:` can be anything, Livewire supports any browser event you might need to listen for. For example, to listen for a more niche event like `transitionend`, you can use `wire:transitionend`.
+Because the event name after `wire:` can be anything, Livewire supports any browser event you might need to listen for. For example, to listen for `transitionend`, you can use `wire:transitionend`.
 
 ### Listening for specific keys
 
-You can use one of the convenient aliases Livewire provides to narrow down key press event listeners to a specific key or combination of keys.
+You can use one of Livewire's convenient aliases to narrow down key press event listeners to a specific key or combination of keys.
 
 For example, to perform a search when a user hits `Enter` after typing into a search box, you can use `wire:keydown.enter`:
 
@@ -70,7 +70,7 @@ For example, to perform a search when a user hits `Enter` after typing into a se
 <input wire:model="query" wire:keydown.enter="searchPosts">
 ```
 
-You can chain more key aliases after the first to listen for combinations of keys. For example, if you wanted to listen for the `Enter` key but only while the `Shift` key is held down, you would write the following:
+You can chain more key aliases after the first to listen for combinations of keys. For example, if you would like to listen for the `Enter` key only while the `Shift` key is pressed, you may write the following:
 
 ```html
 <input wire:keydown.shift.enter="...">
@@ -100,7 +100,7 @@ Below is a list of all the available key modifiers:
 
 ### Event handler modifiers
 
-Livewire also ships with helpful modifiers to make common event-handling tasks trivial.
+Livewire also includes helpful modifiers to make common event-handling tasks trivial.
 
 For example, if you need to call `event.preventDefault()` from inside an event listener, you can suffix the event name with `.prevent`:
 
@@ -128,13 +128,13 @@ Here is a full list of all the available event listener modifiers and their func
 | `.passive`       | `wire:touchstart.passive` won't block scroll performance |
 | `.capture`       | Listen for event in the "capturing" phase                 |
 
-Because `wire:` uses Alpine's `x-on` under the hood, these modifiers are made available to you by AlpineJS. For more context on when you should use these modifiers, you can [visit the AlpineJS Events documentation](https://alpinejs.dev/essentials/events).
+Because `wire:` uses [Alpine's](https://alpinejs.dev) `x-on` directive under the hood, these modifiers are made available to you by Alpine. For more context on when you should use these modifiers, consult the [Alpine Events documentation](https://alpinejs.dev/essentials/events).
 
 ### Handling third-party events
 
 Livewire also supports listening for custom events fired by third-party libraries.
 
-For example, let's say you're using the [Trix](https://trix-editor.org/) rich text editor in your project, and you want to listen for the `trix-change` event to capture the editor's content. You can do this using the `wire:trix-change` directive.
+For example, let's imagine you're using the [Trix](https://trix-editor.org/) rich text editor in your project and you want to listen for the `trix-change` event to capture the editor's content. You can accomplish this using the `wire:trix-change` directive:
 
 ```html
 <form wire:submit="save">
@@ -151,11 +151,11 @@ For example, let's say you're using the [Trix](https://trix-editor.org/) rich te
 In this example, the `setPostContent` action is called whenever the `trix-change` event is triggered, updating the `content` property in the Livewire component with the current value of the Trix editor.
 
 > [!info] You can access the event object using `$event`
-> Notice that from event handlers in Livewire, you can access the event object through `$event`. This is useful for referencing any event information you may need to. For example, you can access the element that triggered the event via `$event.target`.
+> Within Livewire event handlers, you can access the event object via `$event`. This is useful for referencing information on the event. For example, you can access the element that triggered the event via `$event.target`.
 
 > [!warning]
-> The above demo code for the Trix editor is incomplete and only useful as a demonstration of event listeners. If used verbatim, a network request would be fired on every single key stroke. A more performant implementation would be:
-> 
+> The Trix demo code above is incomplete and only useful as a demonstration of event listeners. If used verbatim, a network request would be fired on every single key stroke. A more performant implementation would be:
+>
 > ```html
 > <trix-editor
 >    x-on:trix-change="$wire.content = $event.target.value"
@@ -164,7 +164,7 @@ In this example, the `setPostContent` action is called whenever the `trix-change
 
 ### Listening for dispatched custom events
 
-If you dispatch custom events from AlpineJS inside your application, you can also listen for those using Livewire, for example:
+If your application dispatches custom events from Alpine, you can also listen for those using Livewire:
 
 ```html
 <div wire:custom-event="...">
@@ -175,7 +175,7 @@ If you dispatch custom events from AlpineJS inside your application, you can als
 </div>
 ```
 
-In the above example, when the button is clicked, the `custom-event` event is dispatched and bubbles up to the root of the Livewire component, where `wire:custom-event` catches it, and the action is called.
+When the button is clicked in the above example, the `custom-event` event is dispatched and bubbles up to the root of the Livewire component where `wire:custom-event` catches it and invokes a given action.
 
 If you want to listen for an event dispatched somewhere else in your application, you will need to wait instead for the event to bubble up to the `window` object and listen for it there. Fortunately, Livewire makes this easy by allowing you to add a simple `.window` modifier to any event listener:
 
@@ -190,7 +190,7 @@ If you want to listen for an event dispatched somewhere else in your application
 
 ### Disabling inputs while a form is being submitted
 
-Consider the `CreatePost` example from before:
+Consider the `CreatePost` example we previously discussed:
 
 ```html
 <form wire:submit="save">
@@ -202,15 +202,15 @@ Consider the `CreatePost` example from before:
 </form>
 ```
 
-When a user clicks "Save", a network request is sent to the server to call the `save` action in the Livewire component.
+When a user clicks "Save", a network request is sent to the server to call the `save` action on the Livewire component.
 
-Let's say, for example, that a user is filling out this form on a slow internet connection. They click "Save", and nothing happens initially because the network request takes longer. They might wonder if the submission failed and attempt to click the "Save" button again while the first request is still out.
+But, let's imagine that a user is filling out this form on a slow internet connection. The user clicks "Save" and nothing happens initially because the network request takes longer than usual. They might wonder if the submission failed and attempt to click the "Save" button again while the first request is still being handled.
 
-In this case, there would be TWO requests for the same action out at the same time.
+In this case, there would be two requests for the same action being processed at the same time.
 
-To prevent this scenario, Livewire automatically disables the submit button and all form inputs inside the `<form>` element while a `wire:submit` action is being processed. This ensures that a form isn't submitted twice accidentally.
+To prevent this scenario, Livewire automatically disables the submit button and all form inputs inside the `<form>` element while a `wire:submit` action is being processed. This ensures that a form isn't accidentally submitted twice.
 
-To further lessen the confusion for users on slower connections, it is often helpful to show some loading indicator, whether a subtle background color change, or an SVG animation.
+To further lessen the confusion for users on slower connections, it is often helpful to show some loading indicator such as a subtle background color change or SVG animation.
 
 Livewire provides a `wire:loading` directive that makes it trivial to show and hide loading indicators anywhere on a page. Here's a short example of using `wire:loading` to show a loading message below the "Save" button:
 
@@ -224,13 +224,13 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 </form>
 ```
 
-`wire:loading` is a powerful feature capable of much more than the above snippet. [Check out the full documentation on it for more info](/docs/loading).
+`wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/loading).
 
 ## Passing Parameters
 
-Livewire allows you to pass parameters from your Blade template to the actions in your component. This enables you to pass additional data or state from the frontend when an action is called.
+Livewire allows you to pass parameters from your Blade template to the actions in your component, giving you the opportunity to provide an action additional data or state from the frontend when the action is called.
 
-For example, let's say you have a `ShowPosts` component that allows users to delete a post. You can pass the post's ID as a parameter to the `delete()` action in your Livewire component to fetch the relevant post and delete it from the database:
+For example, let's imagine you have a `ShowPosts` component that allows users to delete a post. You can pass the post's ID as a parameter to the `delete()` action in your Livewire component. Then, the action can fetch the relevant post and delete it from the database:
 
 ```php
 <?php
@@ -273,21 +273,21 @@ class ShowPosts extends Component
 </div>
 ```
 
-As you can see, for a post with an ID of 2, the "Delete" button in the above Blade template will render in the browser as:
+For a post with an ID of 2, the "Delete" button in the Blade template above will render in the browser as:
 
 ```html
 <button wire:click="delete(2)">Delete</button>
 ```
 
-When this button is clicked, the `delete()` method will be called, and `$id` will be passed in with a value of "2".
+When this button is clicked, the `delete()` method will be called and `$id` will be passed in with a value of "2".
 
 > [!warning] Don't trust action parameters
-> Action parameters should be treated as any form of user input, meaning they should not be trusted. Be sure to authorize ownership of an entity before updating it in the database.
-> 
-> For more information, visit the section on [security concerns and best practices](/docs/actions#security-concerns).
+> Action parameters should be treated just like HTTP request input, meaning action parameter values should not be trusted. You should always authorize ownership of an entity before updating it in the database.
+>
+> For more information, consult our documentation regarding [security concerns and best practices](/docs/actions#security-concerns).
 
 
-As an added convenience, you can also take advantage of the same mechanism behind [route model binding](/docs/components#using-route-model-binding) to avoid looking up a model by ID. Instead, you can type-hint a parameter with a model class, and the appropriate model will automatically be retrieved from the database and passed to the action instead of the ID:
+As an added convenience, you may automatically resolve Eloquent models by a corresponding model ID that is provided to an action as a parameter. This is very similar to [route model binding](/docs/components#using-route-model-binding). To get started, type-hint an action parameter with a model class and the appropriate model will automatically be retrieved from the database and passed to the action instead of the ID:
 
 ```php
 <?php
@@ -317,7 +317,7 @@ class ShowPosts extends Component
 
 ## Dependency injection
 
-You can take advantage of [Laravel's dependency injection](https://laravel.com/docs/10.x/controllers#dependency-injection-and-controllers) system by type-hinting parameters to be resolved out of the container just like you would in a normal controller method:
+You can take advantage of [Laravel's dependency injection](https://laravel.com/docs/controllers#dependency-injection-and-controllers) system by type-hinting parameters in your action's signature. Livewire and Laravel will automatically resolve the action's dependencies from the container:
 
 ```php
 <?php
@@ -356,34 +356,27 @@ class ShowPosts extends Component
 </div>
 ```
 
-In this example, the `delete` method receives an instance of `PostRepository` resolved from [Laravel's service container](https://laravel.com/docs/10.x/container#main-content) before receiving the passed in `$postId` parameter after.
+In this example, the `delete` method receives an instance of `PostRepository` resolved via [Laravel's service container](https://laravel.com/docs/container#main-content) before receiving the provided `$postId` parameter.
 
 ## Calling actions from Alpine
 
-Livewire integrates seamlessly with [AlpineJS](https://alpinejs.dev/). In fact, under the hood, every Livewire component is also an AlpineJS component. This means you can take full advantage of AlpineJS within your components to add interactivity better suited to the client-side.
+Livewire integrates seamlessly with [Alpine](https://alpinejs.dev/). In fact, under the hood, every Livewire component is also an Alpine component. This means you can take full advantage of Alpine within your components to add JavaScript powered client-side interactivity.
 
-To make this pairing even more powerful, Livewire exposes a magic object called `$wire` to Alpine that can be treated as a JavaScript representation of your PHP component. In addition to [accessing and mutating public properties on `$wire`](/docs/properties#accessing-properties-from-javascript), you can call methods directly on it, and the PHP method will be called in the backend.
-
-For example:
+To make this pairing even more powerful, Livewire exposes a magic `$wire` object to Alpine that can be treated as a JavaScript representation of your PHP component. In addition to [accessing and mutating public properties via `$wire`](/docs/properties#accessing-properties-from-javascript), you can call actions. When an action is invoked on the `$wire` object, the corresponding PHP method will be invoked on your backend Livewire component:
 
 ```html
 <button x-on:click="$wire.save()">Save Post</button>
 ```
 
-As you can see above, we are calling `$wire.save()` from an Alpine event listener. In this case, you would probably use `wire:click="save"`, but as you can imagine, there are many places where it's helpful to call actions from Alpine.
-
-For example, here's a more complex scenario where you might use Alpine's [`x-intersect`](https://alpinejs.dev/plugins/intersect) utility to trigger a Livewire action called `incrementViewCount()` when a certain element is visible on the page:
+Or, to illustrate a more complex example, you might use Alpine's [`x-intersect`](https://alpinejs.dev/plugins/intersect) utility to trigger a `incrementViewCount()` Livewire action when a given element is visible on the page:
 
 ```html
 <div x-intersect="$wire.incrementViewCount()">...</div>
 ```
 
-
 ### Passing parameters
 
-Any parameters you pass to the `$wire` method will also be passed into the PHP class method.
-
-For example, consider the following Livewire action:
+Any parameters you pass to the `$wire` method will also be passed to the PHP class method. For example, consider the following Livewire action:
 
 ```php
 public function addTodo($todo)
@@ -392,7 +385,7 @@ public function addTodo($todo)
 }
 ```
 
-You can call it directly from Alpine inside your Livewire component's Blade template like so:
+Within your component's Blade template, you can invoke this action via Alpine, providing the parameter that should be given to the action:
 
 ```html
 <div x-data="{ todo: '' }">
@@ -402,15 +395,13 @@ You can call it directly from Alpine inside your Livewire component's Blade temp
 </div>
 ```
 
-If a user had typed in "Take out the trash", when they press the "Add Todo" button, the `addTodo()` method will be triggered with the `$todo` parameter value being "Take out the trash".
+If a user had typed in "Take out the trash" into the text input and the pressed the "Add Todo" button, the `addTodo()` method will be triggered with the `$todo` parameter value being "Take out the trash".
 
 ### Receiving return values
 
-For even more power, this method is an `async` JavaScript method that returns a promise while the network request is processing. When the server response is received, the promise resolves with any value you returned from the method in PHP.
+For even more power, invoked `$wire` actions return a promise while the network request is processing. When the server response is received, the promise resolves with the value returned by the backend action.
 
-This gives you the convenience of calling a JavaScript method, with the power of the server side behind it.
-
-For example, assume a Livewire component has the following action:
+For example, consider a Livewire component that has the following action:
 
 ```php
 use App\Models\Post;
@@ -421,21 +412,21 @@ public function getPostCount()
 }
 ```
 
-You could now call it and receive the actual returned value using `$wire`:
+Using `$wire`, the action may be invoked and its returned value resolved:
 
 ```html
 <span x-text="await $wire.getPostCount()"></span>
 ```
 
-Now, if the `getPostCount` method returns "10", the `<span>` tag will also contain "10".
+In this example, if the `getPostCount()` method returns "10", the `<span>` tag will also contain "10".
 
-Alpine knowledge is not required when using Livewire, however, it's an extremely powerful tool, and knowing it is well worth your time.
+Alpine knowledge is not required when using Livewire; however, it's an extremely powerful tool and knowing Alpine will augment your Livewire experience and productivity.
 
 ## Livewire's "hybrid" JavaScript functions
 
-Sometimes there are actions in your component that don't need to communicate with the server and can be better written in JavaScript.
+Sometimes there are actions in your component that don't need to communicate with the server and can be more efficiently written using only JavaScript.
 
-In these cases, rather than writing them inside your Blade template or somewhere else, you can return the JavaScript function as a string directly inside your PHP class, and by marking the method with the `#[JS]` attribute, it will be callable from the frontend.
+In these cases, rather than writing the actions inside your Blade template or another file, your component action may return the JavaScript function as a string. If the action is marked with the `#[JS]` attribute, it will be callable from your application's frontend:
 
 For example:
 
@@ -480,15 +471,15 @@ class SearchPosts extends Component
 </div>
 ```
 
-In the above example, when the "Reset Search" button is pressed, the text input will be cleared without sending a single request to the server.
+In the above example, when the "Reset Search" button is pressed, the text input will be cleared without sending any requests to the server.
 
 ## Magic actions
 
-Livewire provides a set of "magic" actions that allow you to perform common tasks in your components without defining custom methods. These magic actions can be used directly in your Blade templates inside event listeners.
+Livewire provides a set of "magic" actions that allow you to perform common tasks in your components without defining custom methods. These magic actions can be used within event listeners defined in your Blade templates.
 
 ### `$parent`
 
-The `$parent` magic variable allows you to access parent component properties and call parent component actions from a child component.
+The `$parent` magic variable allows you to access parent component properties and call parent component actions from a child component:
 
 ```html
 <button wire:click="$parent.removePost({{ $post->id }})">Remove</button>
@@ -498,17 +489,17 @@ In the above example, if a parent component has a `removePost` action, a child c
 
 ### `$set`
 
-The `$set` magic action allows you to update a property in your Livewire component directly from the Blade template. To use `$set`, specify the property you want to update and the new value as arguments.
+The `$set` magic action allows you to update a property in your Livewire component directly from the Blade template. To use `$set`, provide the property you want to update and the new value as arguments:
 
 ```html
 <button wire:click="$set('query', '')">Reset Search</button>
 ```
 
-In this example, when the button is clicked, a network request is sent, setting the `$query` property in the component to `''`.
+In this example, when the button is clicked, a network request is dispatched that sets the `$query` property in the component to `''`.
 
 ### `$refresh`
 
-The `$refresh` action triggers a re-render of your Livewire component. This can be useful when updating the component's view without changing any property values.
+The `$refresh` action triggers a re-render of your Livewire component. This can be useful when updating the component's view without changing any property values:
 
 ```html
 <button wire:click="$refresh">Refresh</button>
@@ -518,7 +509,7 @@ When the button is clicked, the component will re-render, allowing you to see th
 
 ### `$toggle`
 
-The `$toggle` magic is used to toggle the value of a boolean property in your Livewire component.
+The `$toggle` action is used to toggle the value of a boolean property in your Livewire component:
 
 ```html
 <button wire:click="$toggle('sortAsc')">
@@ -530,7 +521,7 @@ In this example, when the button is clicked, the `sortAsc` property in the compo
 
 ### `$emit`
 
-The `$emit` magic allows you to emit a Livewire event purely from the browser. Here's an example of a button that, when clicked, will emit the `post-deleted` event:
+The `$emit` action allows you to emit a Livewire event directly from the browser. Below is an example of a button that, when clicked, will emit the `post-deleted` event:
 
 ```html
 <button type="submit" wire:click="$emit('post-deleted')">Delete Post</button>
@@ -538,7 +529,7 @@ The `$emit` magic allows you to emit a Livewire event purely from the browser. H
 
 ### `$event`
 
-The `$event` magic variable is available for use within event listeners like `wire:click`. It gives you access to the actual JavaScript event that was triggered, allowing you to reference the triggering element and other relevant information.
+The `$event` action may be used within event listeners like `wire:click`. This action gives you access to the actual JavaScript event that was triggered, allowing you to reference the triggering element and other relevant information:
 
 ```html
 <input type="text" wire:keydown.enter="search($event.target.value)">
@@ -548,7 +539,7 @@ When the enter key is pressed while a user is typing in the input above, the con
 
 ### Using magic actions from Alpine
 
-You can also call magic actions from AlpineJS using the `$wire` object. For example, here's how you would call the `$refresh` magic action:
+You can also call magic actions from Alpine using the `$wire` object. For example, you may use the `$wire` object to invoke the `$refresh` magic action:
 
 ```html
 <button x-on:click="$wire.$refresh()">Refresh</button>
@@ -556,9 +547,9 @@ You can also call magic actions from AlpineJS using the `$wire` object. For exam
 
 ## Skipping re-renders
 
-Sometimes there might be an action in your component with no side effects that would change the rendered Blade template when it's called. If so, you can skip the `render` portion of Livewire's lifecycle by adding the `#[SkipRender]` attribute above that action method.
+Sometimes there might be an action in your component with no side effects that would change the rendered Blade template when the action is invoked. If so, you can skip the `render` portion of Livewire's lifecycle by adding the `#[SkipRender]` attribute above the action method.
 
-To demonstrate, here's an example `ShowPost` component that after a user has scrolled to the bottom of the post, a "view count" is logged:
+To demonstrate, in the `ShowPost` component below, the "view count" is logged when the user has scrolled to the bottom of the post:
 
 ```php
 <?php
@@ -570,7 +561,7 @@ use App\Models\Post;
 
 class ShowPost extends Component
 {
-	Post $post;
+	public Post $post;
 
 	public function mount(Post $post)
 	{
@@ -599,11 +590,11 @@ class ShowPost extends Component
 </div>
 ```
 
-This example uses [`x-intersect`](https://alpinejs.dev/plugins/intersect), an Alpine utility that calls the expression when the element enters the viewport (typically used to detect when a user scrolls to an element further down the page).
+The example above uses [`x-intersect`](https://alpinejs.dev/plugins/intersect), an Alpine utility that calls the expression when the element enters the viewport (typically used to detect when a user scrolls to an element further down the page).
 
-As you can see, when a user scrolls to the bottom, `incrementViewCount` is called, and because `#[SkipRender]` was added, the view is logged, but the template doesn't re-render and no part of the page is affected.
+As you can see, when a user scrolls to the bottom of the post, `incrementViewCount()` is invoked. Since `#[SkipRender]` was added to the action, the view is logged, but the template doesn't re-render and no part of the page is affected.
 
-You can also call the `$this->skipRender()` method directly if you prefer that syntax or if you want to skip rendering conditionally:
+If you prefer to not utilize method attributes or need to conditionally skip rendering, you may invoke the `skipRender()` method in your component action:
 
 ```php
 <?php
@@ -615,7 +606,7 @@ use App\Models\Post;
 
 class ShowPost extends Component
 {
-	Post $post;
+	public Post $post;
 
 	public function mount(Post $post)
 	{
@@ -638,17 +629,17 @@ class ShowPost extends Component
 
 ## Security Concerns
 
-Remember that any public method in your Livewire component can be called from the client-side. Even without something like `wire:click`  associated with it, users can still trigger it from the browser's DevTools.
+Remember that any public method in your Livewire component can be called from the client-side, Even without an associated `wire:click` handler that invokes it. In these scenarios, users can still trigger the action from the browser's DevTools.
 
-Below are three examples of easy-to-miss vulnerabilities in Livewire components. Each will show the vulnerable component first and the secure component after. As an exercise, try spotting the vulnerabilities in the first, before viewing the solution after.
+Below are three examples of easy-to-miss vulnerabilities in Livewire components. Each will show the vulnerable component first and the secure component after. As an exercise, try spotting the vulnerabilities in the first example before viewing the solution.
 
-If you are having difficulty spotting the vulnerabilities and that makes you concerned about your ability to keep your own apps secure, remember all these vulnerabilities apply to standard web applications that use requests and controllers. If you use a component method as a proxy for a controller method, and its parameters as a proxy for request input, you should be able to apply your existing application security knowledge to your Livewire code.
+If you are having difficulty spotting the vulnerabilities and that makes you concerned about your ability to keep your own applications secure, remember all these vulnerabilities apply to standard web applications that use requests and controllers. If you use a component method as a proxy for a controller method, and its parameters as a proxy for request input, you should be able to apply your existing application security knowledge to your Livewire code.
 
 ### Always authorize action parameters
 
-Just like controller request input, it's imperative to authorize action parameters as users can pass any parameters they want.
+Just like controller request input, it's imperative to authorize action parameters since they are arbitrary user input.
 
-The following is a `ShowPosts` component where users can view all their posts on one page. They can delete any post they'd like using one of the post's "Delete" button.
+Below is a `ShowPosts` component where users can view all their posts on one page. They can delete any post they like using one of the post's "Delete" buttons.
 
 Here is a vulnerable version of component:
 
@@ -691,9 +682,9 @@ class ShowPosts extends Component
 </div>
 ```
 
-Remember that a malicious user can call `delete` directly from a JavaScript console and pass in any parameters they'd like. This means that a user viewing one of their posts can delete another user's post by passing the un-owned post id to `delete()`.
+Remember that a malicious user can call `delete` directly from a JavaScript console, passing any parameters they would like to the action. This means that a user viewing one of their posts can delete another user's post by passing the un-owned post ID to `delete()`.
 
-To protected against this, we need to authorize that the user owns the post about to be deleted:
+To protect against this, we need to authorize that the user owns the post about to be deleted:
 
 ```php
 <?php
@@ -727,7 +718,7 @@ class ShowPosts extends Component
 
 ### Always authorize server-side
 
-Like with standard Laravel controllers, Livewire actions can be called from any user, even if there isn't an affordance in the UI.
+Like standard Laravel controllers, Livewire actions can be called by any user, even if there isn't an affordance for invoking the action in the UI.
 
 Consider the following `BrowsePosts` component where any user can view all the posts in the application, but only administrators can delete a post:
 
@@ -772,9 +763,9 @@ class BrowsePosts extends Component
 </div>
 ```
 
-As you can see, only administrators can see the "Delete" button; however, any user can call `deletePost()` on the component from the browser's DevTools console.
+As you can see, only administrators can see the "Delete" button; however, any user can call `deletePost()` on the component from the browser's DevTools.
 
-To patch this hole, we need to also authorize the action on the server like so:
+To patch this vulnerability, we need to authorize the action on the server like so:
 
 ```php
 <?php
@@ -806,13 +797,13 @@ class BrowsePosts extends Component
 }
 ```
 
-Now only administrators can ever delete a post from this component because only server-side authorization and validation can be trusted.
+With this change, only administrators can delete a post from this component.
 
 ### Keep dangerous methods protected or private
 
-Every public method inside your Livewire component is callable from the client. Even ones you haven't referenced inside a `wire:click` handler. To prevent a user from calling a method that isn't intended to be callable client-side, you should mark them as `protected` or `private`. By doing so, you restrict the visibility of that sensitive method to the component's class and its subclasses, ensuring they cannot be called from the client-side.
+Every public method inside your Livewire component is callable from the client. Even methods you haven't referenced inside a `wire:click` handler. To prevent a user from calling a method that isn't intended to be callable client-side, you should mark them as `protected` or `private`. By doing so, you restrict the visibility of that sensitive method to the component's class and its subclasses, ensuring they cannot be called from the client-side.
 
-Take the last `BrowsePosts` example, where users can view all posts in your application, but only administrators can delete one. In the [Always authorize server-side](/docs/actions#always-authorize-server-side) section, we made the action secure by adding server-side authorization. Now let's say we refactor the actual deletion of the post into a dedicated method like you might do to clean up your codebase in a more complex situation:
+Consider the `BrowsePosts` example that we previously discussed, where users can view all posts in your application, but only administrators can delete posts. In the [Always authorize server-side](/docs/actions#always-authorize-server-side) section, we made the action secure by adding server-side authorization. Now imagine we refactor the actual deletion of the post into a dedicated method like you might do in order to simplify your code:
 
 ```php
 <?php
@@ -862,9 +853,9 @@ class BrowsePosts extends Component
 </div>
 ```
 
-As you can see, we refactored the post deletion logic into a dedicated method called `delete()`. Even though this method isn't referenced anywhere in our template, if a user gained knowledge of its existence, because it's `public`, they would be able to call it from the browser's DevTools.
+As you can see, we refactored the post deletion logic into a dedicated method named `delete()`. Even though this method isn't referenced anywhere in our template, if a user gained knowledge of its existence, they would be able to call it from the browser's DevTools because it is `public`.
 
-To remedy this, we can mark the property as `protected` or `private`, and if a user tries to call it, they will receive an error:
+To remedy this, we can mark the method as `protected` or `private`. Once the method is marked as `protected` or `private`, an error will be thrown if a user tries to invoke it:
 
 ```php
 <?php
@@ -903,11 +894,11 @@ class BrowsePosts extends Component
 
 ## Applying middleware
 
-By default, Livewire re-applies authentication and authorization middleware on subsequent requests applied on the initial page load request.
+By default, Livewire re-applies authentication and authorization related middleware on subsequent requests if those middleware were applied on the initial page load request.
 
-For example, if your component is loaded inside a route with the "auth" middleware and a user's session ends, when the user triggers an action, the "auth" middleware will be re-applied, and the user will receive an error.
+For example, imagine your component is loaded inside a route that is assigned the `auth` middleware and a user's session ends. When the user triggers another action, the `auth` middleware will be re-applied and the user will receive an error.
 
-If there are specific middleware that you'd like to apply to a specific action, you can do so with the `#[Middleware]` attribute. For example, if we wanted to apply a `LogPostCreation` middleware to an action, we could do it like so:
+If there are specific middleware that you would like to apply to a specific action, you may do so with the `#[Middleware]` attribute. For example, we could apply a `LogPostCreation` middleware to an action that creates posts:
 
 ```php
 <?php

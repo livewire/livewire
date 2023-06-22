@@ -430,7 +430,7 @@ class UpdatePost extends Component
 </form>
 ```
 
-In the example above, when a user completes a field (by clicking or tabbing to the next field), a network request is sent to update that property on the component. Immediately after the property is updated on the class, the `updated` hook is called for that specific property name and its new value.
+In the above example, when a user completes a field (by clicking or tabbing to the next field), a network request is sent to update that property on the component. Immediately after the property is updated on the class, the `updated` hook is called for that specific property name and its new value.
 
 We can use this hook to update only that specific field in the database.
 
@@ -450,7 +450,7 @@ Livewire provides the `wire:dirty` directive to allow you to toggle elements or 
 <input type="text" wire:model.blur="title" wire:dirty.class="border-yellow">
 ```
 
-In the example above, when a user types into the input field, a yellow border will appear around the field. When the user tabs away, the network request is sent and the border will disappear; signaling to them that the input has been persisted and is no longer "dirty".
+In the above example, when a user types into the input field, a yellow border will appear around the field. When the user tabs away, the network request is sent and the border will disappear; signaling to them that the input has been persisted and is no longer "dirty".
 
 If you want to toggle an entire element's visibility, you can do so by using `wire:dirty` in conjunction with `wire:target`. `wire:target` is used to specify which piece of data you want to watch for "dirtiness". In this case, the "title" field:
 
@@ -482,7 +482,7 @@ In these cases, you can instead use `.throttle` to signify a time interval to se
 <input type="text" wire:model.live.throttle.150ms="title" >
 ```
 
-In the example above, as a user is typing continuously in the "title" field, a network request will be sent every 150 milliseconds until the user is finished.
+In the above example, as a user is typing continuously in the "title" field, a network request will be sent every 150 milliseconds until the user is finished.
 
 ## Extracting input fields to Blade components
 

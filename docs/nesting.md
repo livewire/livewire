@@ -99,7 +99,7 @@ class TodoCount extends Component
 ```
 
 > [!tip] Use the #[Prop] attribute as a shorter alternative
-> If the `mount()` method in example above feels like redundant boilerplate code to you, you can instead use [Livewire's #[Prop] attribute](/docs/nesting#the-prop-attribute) as a shorthand:
+> If the `mount()` method in above example feels like redundant boilerplate code to you, you can instead use [Livewire's #[Prop] attribute](/docs/nesting#the-prop-attribute) as a shorthand:
 > ```php
 > #[Prop] // [tl! highlight]
 > public $todos;

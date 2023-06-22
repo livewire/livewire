@@ -121,7 +121,7 @@ Livewire provides convenient hooks to intercept the updating of a public propert
 
 Below is an example of using `updating` to prevent the modification of the `$postId` property. 
 
-It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/locked) instead, like in the example above.
+It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/locked) instead, like in the above example.
 
 ```php
 use Livewire\Component;
