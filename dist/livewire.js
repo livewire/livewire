@@ -3829,7 +3829,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     requestTargetQueue.forEach((request, symbol) => {
       let target = store2.get(symbol);
       let propertiesDiff = diff(target.canonical, target.ephemeral);
-      let targetPaylaod = {
+      let targetPayload = {
         snapshot: target.encodedSnapshot,
         updates: propertiesDiff,
         calls: request.calls.map((i) => ({
@@ -3838,8 +3838,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           params: i.params
         }))
       };
-      payload.push(targetPaylaod);
-      let finishTarget = trigger2("request", target, targetPaylaod);
+      payload.push(targetPayload);
+      let finishTarget = trigger2("request", target, targetPayload);
       failureReceivers.push(() => {
         let failed = true;
         finishTarget(failed);
