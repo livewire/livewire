@@ -29,15 +29,15 @@ class CreatePostTest extends TestCase
 }
 ```
 
-You can always create these files by hand or use Livewire's testing utilities inside any other existing PHPUnit test in your Laravel application.
+Of course, you can always create these files by hand or even use Livewire's testing utilities inside any other existing PHPUnit test in your Laravel application.
 
-[You can read more about testing your Laravel applications here.](https://laravel.com/docs/10.x/testing)
+Before reading further, you may wish to familiarize yourself with [Laravel's own built-in testing features](https://laravel.com/docs/testing).
 
 ## Testing a page contains a component
 
-The most basic test you can write is asserting that a given endpoint in your application includes and successfully renders a given Livewire component.
+The simplest Livewire test you can write is asserting that a given endpoint in your application includes and successfully renders a given Livewire component.
 
-Livewire provides an `assertHasLivewire` method that can be used from any Laravel test:
+Livewire provides an `assertHasLivewire()` method that can be used from any Laravel test:
 
 ```php
 <?php
@@ -59,13 +59,13 @@ class CreatePostTest extends TestCase
 ```
 
 > [!tip] These are called smoke tests
-> Smoke tests are broad tests that ensure no catastrophic problems in your application. Although it may seem like a test that isn't worth writing, pound for pound, these are some of the most valuable tests you can write as they require very little maintenance and provide you a base level of confidence that your app will render successfully with no major errors.
+> Smoke tests are broad tests that ensure there are no catastrophic problems in your application. Although it may seem like a test that isn't worth writing, pound for pound, these are some of the most valuable tests you can write as they require very little maintenance and provide you a base level of confidence that your application will render successfully with no major errors.
 
 ## Testing views
 
-Livewire provides a simple yet powerful utility for asserting the existence of text in the component's rendered output: `assertSee`
+Livewire provides a simple yet powerful utility for asserting the existence of text in the component's rendered output: `assertSee()`.
 
-Here's an example of using `assertSee` to ensure that all the posts in the database are displayed on the page:
+Below is an example of using `assertSee()` to ensure that all posts in the database are displayed on the page:
 
 ```php
 <?php
@@ -94,9 +94,9 @@ class ShowPostsTest extends TestCase
 
 ### Asserting data from the view
 
-In addition to asserting the output of a rendered view, sometimes it's helpful to alternatively test the data being passed into the view.
+In addition to asserting the output of a rendered view, sometimes it's helpful to test the data being passed into the view.
 
-Here's the same test as above, this time testing view data rather than rendered output:
+Here's the same test as above, but testing the view data rather than the rendered output:
 
 ```php
 <?php
@@ -124,9 +124,11 @@ class ShowPostsTest extends TestCase
 }
 ```
 
-As you can see, `->assertViewHas()` gives you lots of control over what assertions you want to make against the specified data. If you'd rather make a simple assertion, such as ensuring a piece of view data matches a given value, you can pass a value directly instead of a closure.
+As you can see, `assertViewHas()` provides control over what assertions you want to make against the specified data.
 
-Assuming you have a component with a variable called `$postCount` being passed into the view, you can make assertions against its literal value like so:
+If you would rather make a simple assertion, such as ensuring a piece of view data matches a given value, you can pass the value directly as the second argument given to the `assertViewHas()` method.
+
+For example, assuming you have a component with a variable named `$postCount` being passed into the view, you can make assertions against its literal value like so:
 
 ```php
 $this->assertViewHas('postCount', 3)
@@ -134,9 +136,9 @@ $this->assertViewHas('postCount', 3)
 
 ## Setting the authenticated user
 
-Most web applications require users to log in before using them. Rather than manually authenticating a fake user at the beginning of your tests, Livewire provides an `actingAs` utility.
+Most web applications require users to log in before using them. Rather than manually authenticating a fake user at the beginning of your tests, Livewire provides an `actingAs()` method.
 
-Here's an example of a test where multiple users have posts, yet the logged-in user should only see their own posts:
+Below is an example of a test where multiple users have posts, yet the authenticated user should only be able to see their own posts:
 
 ```php
 <?php
@@ -173,11 +175,11 @@ class ShowPostsTest extends TestCase
 
 ## Testing properties
 
-Livewire provides helpful utilities for setting and asserting properties within your components.
+Livewire also provides helpful testing utilities for setting and asserting properties within your components.
 
-Component properties are typically updated in your application when users interact with form inputs containing `wire:model`. Because these tests don't type into an actual browser, Livewire allows you to set properties directly using the `->set()` method.
+Component properties are typically updated in your application when users interact with form inputs containing `wire:model`. But, because tests don't typically type into an actual browser, Livewire allows you to set properties directly using the `set()` method.
 
-Here's an example of using `->set()` to update the `$title` property of a `CreatePosts` component:
+Below is an example of using `set()` to update the `$title` property of a `CreatePosts` component:
 
 ```php
 <?php
@@ -200,11 +202,9 @@ class CreatePostTest extends TestCase
 }
 ```
 
-The above example simulates a user typing into an input field with `wire:model="title"` on it.
-
 ### Initializing properties
 
-Often, Livewire components receive data being passed in from a parent component or route parameters. Because Livewire components are tested in isolation, you can manually pass data into them using the second parameter of the `Livewire::test()` method like so:
+Often, Livewire components receive data being passed in from a parent component or route parameters. Because Livewire components are tested in isolation, you can manually pass data into them using the second parameter of the `Livewire::test()` method:
 
 ```php
 <?php
@@ -221,9 +221,9 @@ class UpdatePostTest extends TestCase
     /** @test */
     public function title_field_is_populated()
     {
-        $post = Post::factory()->make(
-            'title' => 'Top ten bath bombs'
-        );
+        $post = Post::factory()->make([
+            'title' => 'Top ten bath bombs',
+        ]);
 
         Livewire::test(UpdatePost::class, ['post' => $post])
             ->assertSet('title', 'Top ten bath bombs');
@@ -231,9 +231,7 @@ class UpdatePostTest extends TestCase
 }
 ```
 
-The underlying component being tested (`UpdatePost`) will receive `$post` through its `mount()` method.
-
-Here's the source for `UpdatePost` to give you a clear picture:
+The underlying component being tested (`UpdatePost`) will receive `$post` through its `mount()` method. Let's look at the source for `UpdatePost` to paint a clearer picture of this feature:
 
 ```php
 <?php
@@ -260,13 +258,11 @@ class UpdatePost extends Component
 }
 ```
 
-The `$post` model that was passed into the component from the test will now be received inside `mount()` and assigned as properties of the component.
-
 ### Setting URL parameters
 
-If your Livewire component depends on specific query parameters in the URL of the page it's loaded on, you can use the `withUrlParams()` method to set them manually for your test.
+If your Livewire component depends on specific query parameters in the URL of the page it's loaded on, you can use the `withUrlParams()` method to set the query parameters manually for your test.
 
-Here is a basic `SearchPosts` component that uses [Livewire's URL feature](/docs/url) to store and track the current search query in the query string:
+Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/docs/url) to store and track the current search query in the query string:
 
 ```php
 <?php
@@ -293,7 +289,7 @@ class SearchPosts extends Component
 
 As you can see, the `$search` property above uses Livewire's `#[Url]` attribute to denote that its value should be stored in the URL.
 
-Below is how you would simulate the scenario of loading this component on a page with specific query parameters in the URL:
+Below is an example of how you would simulate the scenario of loading this component on a page with specific query parameters in the URL:
 
 ```php
 <?php
@@ -325,9 +321,9 @@ class SearchPostsTest extends TestCase
 
 Livewire actions are typically called from the frontend using something like `wire:click`.
 
-Because Livewire component tests don't use an actual browser, you can instead trigger actions in your tests using the `->call()` method.
+Because Livewire component tests don't use an actual browser, you can instead trigger actions in your tests using the `call()` method.
 
-Here's an example of a `CreatePosts` component using the `call()` method to trigger the `save()` action:
+Below is an example of a `CreatePosts` component using the `call()` method to trigger the `save()` action:
 
 ```php
 <?php
@@ -358,7 +354,7 @@ class CreatePostTest extends TestCase
 
 In the above test, we assert that calling `save()` creates a new post in the database.
 
-You can also pass parameters to actions by passing additional parameters into the `->call()` method. For example:
+You can also pass parameters to actions by passing additional parameters into the `call()` method:
 
 ```php
 ->call('deletePost', $postId);
@@ -366,7 +362,7 @@ You can also pass parameters to actions by passing additional parameters into th
 
 ### Validation
 
-To test that a validation error has been thrown, you can use Livewire's `assertHasErrors`:
+To test that a validation error has been thrown, you can use Livewire's `assertHasErrors()` method:
 
 ```php
 <?php
@@ -390,7 +386,7 @@ class CreatePostTest extends TestCase
 }
 ```
 
-If you want to test that a specific validation rule has failed, you can pass an array of rules as a second argument to `assertHasErrors`:
+If you want to test that a specific validation rule has failed, you can pass an array of rules as a second argument to `assertHasErrors()`:
 
 ```php
 $this->assertHasErrors('title', ['required']);
@@ -398,9 +394,7 @@ $this->assertHasErrors('title', ['required']);
 
 ### Authorization
 
-Authorizing actions relying on untrusted input in your Livewire components is essential. [Read more about authorization in Livewire here](/docs/properties#authorizing-the-input).
-
-Livewire provides an `assertUnauthorized()` testing method to ensure that an authorization check has failed and a harmful action has been prevented:
+Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides an `assertUnauthorized()` method to ensure that an authorization check has failed:
 
 ```php
 <?php
@@ -440,7 +434,7 @@ If you prefer, you can also test for explicit status codes that an action in you
 
 ### Redirects
 
-You can test that a Livewire action performed a redirect by using the `assertRedirect()` method:
+You can test that a Livewire action performed a redirect using the `assertRedirect()` method:
 
 ```php
 <?php
@@ -465,7 +459,7 @@ class CreatePostTest extends TestCase
 }
 ```
 
-As an added convenience, you can assert that the user was redirected to a specific page component, instead of a hard-coded URL.
+As an added convenience, you can assert that the user was redirected to a specific page component instead of a hard-coded URL.
 
 ```php
 ->assertRedirect(CreatePost::class);
@@ -498,11 +492,7 @@ class CreatePostTest extends TestCase
 }
 ```
 
-It is often helpful to test that two components can communicate with each other by dispatching and listening for events.
-
-Below is an example of simulating a `CreatePost` component dispatching a `create-post` event and a `PostCountBadge` component listening for that event and updating its count.
-
-To simulate an event dispatch and trigger a listener on a component, you can use the `->dispatch()` method:
+It is often helpful to test that two components can communicate with each other by dispatching and listening for events. Using the `dispatch()` method, let's simulate a `CreatePost` component dispatching a `create-post` event. Then, when will assert that a `PostCountBadge` component which listens for that event updates its post count appropriately:
 
 ```php
 <?php
@@ -536,43 +526,43 @@ class PostCountBadgeTest extends TestCase
 
 ## All available testing utilities
 
-There are many more testing utilities that Livewire provides. Below is a comprehensive list of every testing method available to you, with a short description of how it's intended to be used:
+Livewire provides many more testing utilities. Below is a comprehensive list of every testing method available to you, with a short description of how it's intended to be used:
 
 ### Setup methods
 | Method                                                  | Description                                                                                                      |
 |---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | `Livewire::test(CreatePost::class)`                      | Test the `CreatePost` component |
 | `Livewire::test(UpdatePost::class, ['post' => $post])`                      | Test the `UpdatePost` component with the `post` parameter (To be received through the `mount()` method) |
-| `Livewire::actingAs($user)`                      | Set the provided user as the session's logged in user |
-| `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's URL query parameter `search` to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/url) | 
+| `Livewire::actingAs($user)`                      | Set the provided user as the session's authenticated user |
+| `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's `search` URL query parameter to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/url) |
 
 ### Interacting with components
 | Method                                                  | Description                                                                                                      |
 |---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | `set('title', '...')`                      | Set the `title` property to the provided value |
 | `toggle('sortAsc')`                      | Toggle the `sortAsc` property between `true` and `false`  |
-| `call('save')`                      | Call the `save` action/method |
-| `call('remove', $post->id)`                      | Call the "remove" method, and pass the `$post->id` as the first parameter (Accepts subsequent parameters as well) |
+| `call('save')`                      | Call the `save` action / method |
+| `call('remove', $post->id)`                      | Call the `remove` method and pass the `$post->id` as the first parameter (Accepts subsequent parameters as well) |
 | `refresh()`                      | Trigger a component re-render |
-| `dispatch('post-created')`                      | Dispatches the `post-created` event onto the component  |
-| `dispatch('post-created', $post->id)`                      | Dispatches the `post-created` event with `$post->id` as an additional parameter (`$event.detail` from AlpineJS) |
+| `dispatch('post-created')`                      | Dispatch the `post-created` event from the component  |
+| `dispatch('post-created', $post->id)`                      | Dispatch the `post-created` event with `$post->id` as an additional parameter (`$event.detail` from Alpine) |
 
 ### Assertions
 | Method                                                  | Description                                                                                                      |
 |---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | `assertSet('title', '...')`                      | Assert that the `title` property is set to the provided value |
-| `assertNotSet('title', '...')`                   | Assert that the `title` property is NOT set to the provided value |
+| `assertNotSet('title', '...')`                   | Assert that the `title` property is not set to the provided value |
 | `assertCount('posts', 3)`                    | Assert that the `posts` property is an array-like value with `3` items in it |
-| `assertSnapshotSet('date', '08/26/1990')`               | Assert that the `date` property's raw/dehydrated value (from JSON) is set to `08/26/1990`. Instead of asserting against the hydrated `DateTime` instance in the case of `date` |
-| `assertSnapshotNotSet('date', '08/26/1990')`            | Assert that `date`'s raw/dehydrated value is NOT equal to the provided value |
+| `assertSnapshotSet('date', '08/26/1990')`               | Assert that the `date` property's raw / dehydrated value (from JSON) is set to `08/26/1990`. Alternative to asserting against the hydrated `DateTime` instance in the case of `date` |
+| `assertSnapshotNotSet('date', '08/26/1990')`            | Assert that `date`'s raw / dehydrated value is not equal to the provided value |
 | `assertSee($post->title)`                                    | Assert that the rendered HTML of the component contains the provided value |
-| `assertDontSee($post->title)`                                | Assert that the rendered HTML does NOT contain the provided value |
-| `assertSeeHtml('<div>...</div>')`          | Assert the provided string literal is contained in the rendered HTML without escaping the HTML characters (unlike `assertSee`, which DOES escape the provided characters by default)  |
+| `assertDontSee($post->title)`                                | Assert that the rendered HTML does not contain the provided value |
+| `assertSeeHtml('<div>...</div>')`          | Assert the provided string literal is contained in the rendered HTML without escaping the HTML characters (unlike `assertSee`, which does escape the provided characters by default)  |
 | `assertDontSeeHtml('<div>...</div>')`                            | Assert the provided string is contained in the rendered HTML |
 | `assertSeeInOrder(['...', '...'])`       | Assert that the provided strings appear in order in the rendered HTML output of the component |
 | `assertSeeHtmlInOrder([$firstString, $secondString])`   | Assert that the provided HTML strings appear in order in the rendered output of the component |
-| `assertDispatched('post-created')`              | Assert the given event has been dispatched by the component |
-| `assertNotDispatched('post-created')`              | Assert the given event has NOT been dispatched by the component |
+| `assertDispatched('post-created')`              | Assert that the given event has been dispatched by the component |
+| `assertNotDispatched('post-created')`              | Assert that the given event has not been dispatched by the component |
 | `assertHasErrors('title')`                        | Assert that validation has failed for the `title` property |
 | `assertHasErrors('title', ['required', 'min:6'])` | Assert that the provided validation rules failed for the `title` property |
 | `assertHasNoErrors('title')`                      | Assert that there are no validation errors for the `title` property |
@@ -585,8 +575,8 @@ There are many more testing utilities that Livewire provides. Below is a compreh
 | `assertViewHas('postCount', 3)`           | Assert that a `postCount` variable has been passed to the view with a value of `3` |
 | `assertViewHas('posts', function ($posts) { ... })` | Assert that `postCount` view data exists and that it passes any assertions declared in the provided callback |
 | `assertViewIs('livewire.show-posts')`     | Assert that the component's render method returned the provided view name |
-| `assertFileDownloaded()`             | Assert that a file download has been triggered |``
-| `assertFileDownloaded($filename)`             | Assert that a file download matching the provided file name has been triggered |``
-| `assertUnauthorized()`             | Assert that an authorization exception has been thrown within the component (status code: 401) |``
-| `assertForbidden()`             | Assert that an error response was triggered with the status code: 403 |``
-| `assertStatus(500)`             | Assert that the latest response matches the provided status code |``
+| `assertFileDownloaded()`             | Assert that a file download has been triggered |
+| `assertFileDownloaded($filename)`             | Assert that a file download matching the provided file name has been triggered |
+| `assertUnauthorized()`             | Assert that an authorization exception has been thrown within the component (status code: 401) |
+| `assertForbidden()`             | Assert that an error response was triggered with the status code: 403 |
+| `assertStatus(500)`             | Assert that the latest response matches the provided status code |
