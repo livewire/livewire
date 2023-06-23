@@ -3974,7 +3974,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/$wire.js
   var properties = {};
   var fallback;
-  function wireProperty(name, callback) {
+  function wireProperty(name, callback, component = null) {
     properties[name] = callback;
   }
   function wireFallback(callback) {
@@ -4043,9 +4043,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$watchEffect", (component) => (callback) => effect(callback));
   wireProperty("$refresh", (component) => async () => await requestCommit(component.symbol));
   wireProperty("$commit", (component) => async () => await requestCommit(component.symbol));
+  var overriddenMethods = /* @__PURE__ */ new WeakMap();
+  function overrideMethod(component, method, callback) {
+    if (!overriddenMethods.has(component)) {
+      overriddenMethods.set(component, {});
+    }
+    let obj = overriddenMethods.get(component);
+    obj[method] = callback;
+    overriddenMethods.set(component, obj);
+  }
   wireFallback((component) => (property) => async (...params) => {
     if (params.length === 1 && params[0] instanceof Event) {
       params = [];
+    }
+    if (overriddenMethods.has(component)) {
+      let overrides = overriddenMethods.get(component);
+      if (typeof overrides[property] === "function") {
+        return overrides[property](params);
+      }
     }
     return await callMethod(component.symbol, property, params);
   });
@@ -5864,6 +5879,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanupStackByComponentId[component.id].shift()();
     }
   }
+
+  // js/features/supportHybridJavaScriptMethods.js
+  on("effects", (component, effects) => {
+    let js = effects.js;
+    if (!js)
+      return;
+    Object.entries(js).forEach(([method, body]) => {
+      overrideMethod(component, method, () => {
+        let func = new Function([], body);
+        func.bind(component.$wire)();
+      });
+    });
+  });
 
   // js/features/supportFileDownloads.js
   on("request", (component) => {

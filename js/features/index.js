@@ -1,6 +1,7 @@
 
 import './supportWireModelingNestedComponents';
 import './supportDisablingFormsDuringRequest';
+import './supportHybridJavaScriptMethods';
 import './supportFileDownloads';
 import './supportReactiveProps';
 import './supportFileUploads';

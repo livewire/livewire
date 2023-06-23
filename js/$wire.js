@@ -2,14 +2,14 @@ import { dispatch, dispatchSelf, dispatchTo, listen } from '@/features/supportEv
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
 import { callMethod, requestCommit } from '@/request'
-import { dataGet, dataSet } from '@/utils'
+import { WeakBag, dataGet, dataSet } from '@/utils'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
 
 let properties = {}
 let fallback
 
-function wireProperty(name, callback) {
+function wireProperty(name, callback, component = null) {
     properties[name] = callback
 }
 
@@ -105,12 +105,34 @@ wireProperty('$watchEffect', (component) => (callback) => effect(callback))
 wireProperty('$refresh', (component) => async () => await requestCommit(component.symbol))
 wireProperty('$commit', (component) => async () => await requestCommit(component.symbol))
 
+let overriddenMethods = new WeakMap
+
+export function overrideMethod(component, method, callback) {
+    if (! overriddenMethods.has(component)) {
+        overriddenMethods.set(component, {})
+    }
+
+    let obj = overriddenMethods.get(component)
+
+    obj[method] = callback
+
+    overriddenMethods.set(component, obj)
+}
+
 wireFallback((component) => (property) => async (...params) => {
     // If this method is passed directly to a Vue or Alpine
     // event listener (@click="someMethod") without using
     // parens, strip out the automatically added event.
     if (params.length === 1 && params[0] instanceof Event) {
         params = []
+    }
+
+    if (overriddenMethods.has(component)) {
+        let overrides = overriddenMethods.get(component)
+
+        if (typeof overrides[property] === 'function') {
+            return overrides[property](params)
+        }
     }
 
     return await callMethod(component.symbol, property, params)
