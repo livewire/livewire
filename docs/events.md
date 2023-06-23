@@ -2,7 +2,7 @@ Livewire offers a robust event system that you can use to communicate between di
 
 To trigger an event, you may use the `dispatch()` method from anywhere inside your component and listen for that event from any other component on the page.
 
-# Dispatching events
+## Dispatching events
 
 To dispatch an event from a Livewire component, you can call the `dispatch()` method, passing it the event name and any additional data you want to send along with the event.
 
@@ -30,7 +30,7 @@ You can pass additional data with the event by passing the data as the second pa
 $this->dispatch('post-created', title: $post->title);
 ```
 
-# Listening for events
+## Listening for events
 
 To listen for an event in a Livewire component, add the `#[On]` attribute above the method you want to be called when a given event is dispatched:
 
@@ -51,11 +51,11 @@ Now, when the `post-created` event is dispatched from `CreatePost`, a network re
 
 As you can see, additional data sent with the event will be provided to the action as its first argument.
 
-# Events in Alpine
+## Events in Alpine
 
 Because Livewire events are plain browser events under the hood, you can use Alpine to listen for them or even dispatch them.
 
-## Listening for Livewire events in Alpine
+### Listening for Livewire events in Alpine
 
 For example, we may easily listen for the `post-created` event using Alpine:
 
@@ -79,7 +79,7 @@ If you want to access additional data that was sent with the event, you can do s
 
 The Alpine documentation provides further information on [listening for events](https://alpinejs.dev/directives/on).
 
-## Dispatching Livewire events from Alpine
+### Dispatching Livewire events from Alpine
 
 Any event dispatched from Alpine is capable of being intercepted by a Livewire component.
 
@@ -97,7 +97,7 @@ Like Livewire's `dispatch()` method, you can pass additional data along with the
 
 To learn more about dispatching events using Alpine, consult the [Alpine documentation](https://alpinejs.dev/magics/dispatch).
 
-## Listening for events from children only
+### Listening for events from children only
 
 By default, when you register a Livewire event listener using `#[On]`, it will listen for that event anywhere on the page. Livewire does this by listening for the event on the `window` object.
 
