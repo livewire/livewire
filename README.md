@@ -45,7 +45,7 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] Remove all `->markTestSkipped()` statements
 
 #### Documentation
-- [ ] Rewrite it lol
+- [x] Rewrite it lol
 
 #### Finishing touches
 - [ ] Unify modern/legacy tests and "TestCase"s
@@ -56,4 +56,5 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] Finalize internal exceptions
 - [ ] Brainstorm Form Object solution
 - [ ] Brainstorm 3rd party plugin API
+- [ ] Brainstorm providing key-value attribute methods (protected getListeners() kinda thing)
 

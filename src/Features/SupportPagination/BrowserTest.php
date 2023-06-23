@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\WithPagination;
 use Sushi\Sushi;
 use Tests\BrowserTestCase;
 
@@ -14,6 +15,8 @@ class BrowserTest extends BrowserTestCase
     public function test_tailwind()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             public function render()
             {
                 return Blade::render(
@@ -84,6 +87,8 @@ class BrowserTest extends BrowserTestCase
     public function test_bootstrap()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             protected $paginationTheme = 'bootstrap';
 
             public function render()
@@ -139,6 +144,8 @@ class BrowserTest extends BrowserTestCase
     public function test_cursor_tailwind()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             public function render()
             {
                 return Blade::render(
@@ -203,6 +210,8 @@ class BrowserTest extends BrowserTestCase
     public function test_cursor_bootstrap()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             protected $paginationTheme = 'bootstrap';
 
             public function render()
@@ -270,6 +279,8 @@ class BrowserTest extends BrowserTestCase
     public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page_tailwind()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             public function render()
             {
                 return Blade::render(
@@ -318,8 +329,10 @@ class BrowserTest extends BrowserTestCase
     public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page_bootstrap()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             protected $paginationTheme = 'bootstrap';
-        
+
             public function render()
             {
                 return Blade::render(
@@ -368,13 +381,15 @@ class BrowserTest extends BrowserTestCase
     public function it_calls_pagination_hook_method_when_pagination_changes()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             public $hookOutput = null;
-        
+
             public function updatedPage($page)
             {
                 $this->hookOutput = 'page-is-set-to-' . $page;
             }
-        
+
             public function render()
             {
                 return Blade::render(
@@ -432,19 +447,21 @@ class BrowserTest extends BrowserTestCase
     public function it_can_have_two_pagination_instances_on_a_page_tailwind()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             public $pageHookOutput = null;
             public $itemPageHookOutput = null;
-        
+
             public function updatedPage($page)
             {
                 $this->pageHookOutput = 'page-is-set-to-' . $page;
             }
-        
+
             public function updatedItemPage($page)
             {
                 $this->itemPageHookOutput = 'item-page-is-set-to-' . $page;
             }
-        
+
             public function render()
             {
                 return Blade::render(
@@ -553,21 +570,23 @@ class BrowserTest extends BrowserTestCase
     public function it_can_have_two_pagination_instances_on_a_page_bootstrap()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             protected $paginationTheme = 'bootstrap';
-        
+
             public $pageHookOutput = null;
             public $itemPageHookOutput = null;
-        
+
             public function updatedPage($page)
             {
                 $this->pageHookOutput = 'page-is-set-to-' . $page;
             }
-        
+
             public function updatedItemPage($page)
             {
                 $this->itemPageHookOutput = 'item-page-is-set-to-' . $page;
             }
-        
+
             public function render()
             {
                 return Blade::render(
@@ -676,19 +695,21 @@ class BrowserTest extends BrowserTestCase
     public function it_calls_pagination_hook_methods_when_pagination_changes_with_multiple_paginators()
     {
         Livewire::visit(new class extends Component {
+            use WithPagination;
+
             public $pageHookOutput = null;
             public $itemPageHookOutput = null;
-        
+
             public function updatedPage($page)
             {
                 $this->pageHookOutput = 'page-is-set-to-' . $page;
             }
-        
+
             public function updatedItemPage($page)
             {
                 $this->itemPageHookOutput = 'item-page-is-set-to-' . $page;
             }
-        
+
             public function render()
             {
                 return Blade::render(
@@ -768,10 +789,12 @@ class BrowserTest extends BrowserTestCase
     {
         Livewire::withQueryParams(['p' => '2'])
         ->visit(new class extends Component {
+            use WithPagination;
+
             protected $queryString = [
                 'paginators.page' => ['as' => 'p']
             ];
-        
+
             public function render()
             {
                 return Blade::render(
@@ -783,14 +806,14 @@ class BrowserTest extends BrowserTestCase
 
                         {{ $posts->links() }}
                     </div>
-                    HTML, 
+                    HTML,
                     [
                         'posts' => Post::paginate(3),
                     ]
                 );
             }
         })
-        
+
         // Test a deeplink to page 2 with "p" from the query string shows the second page.
         ->assertDontSee('Post #3')
         ->assertSee('Post #4')

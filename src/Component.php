@@ -9,7 +9,6 @@ use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
 use Livewire\Features\SupportQueryString\HandlesQueryString;
-use Livewire\Features\SupportPagination\HandlesPagination;
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;
 use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
@@ -33,7 +32,6 @@ abstract class Component
     use HandlesEvents;
     use HandlesRedirects;
     use HandlesStreaming;
-    use HandlesPagination;
     use HandlesAttributes;
     use HandlesValidation;
     use HandlesPageComponents;

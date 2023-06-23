@@ -23,9 +23,7 @@ class BaseUtils
     static function getPublicPropertiesDefinedOnSubclass($target) {
         return static::getPublicProperties($target, function ($property) use ($target) {
             // Filter out any properties from the first-party Component class...
-            return $property->getDeclaringClass()->getName() !== \Livewire\Component::class
-                // Unless the property is explicitly marked for public consumption...
-                || $target->propertyIsExposed($property->getName());
+            return $property->getDeclaringClass()->getName() !== \Livewire\Component::class;
         });
     }
 

@@ -18,8 +18,7 @@ use function Livewire\on;
 
 class Testable extends BaseTestable
 {
-    use
-        MakesAssertions,
+    use MakesAssertions,
         TestsEvents,
         TestsRedirects,
         TestsValidation,
@@ -74,7 +73,6 @@ class Testable extends BaseTestable
 
             $component = $instance;
         });
-
 
         $html = app('livewire')->mount($name, $params);
 
@@ -200,5 +198,4 @@ class Testable extends BaseTestable
     {
         //
     }
-
 }

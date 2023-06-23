@@ -7,7 +7,6 @@ use function Livewire\off;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\ComponentHook;
-use Livewire\AttributeCollection;
 use Illuminate\View\View;
 use Illuminate\View\AnonymousComponent;
 
