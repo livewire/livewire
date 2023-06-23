@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
+use Livewire\Attributes\Prop;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -77,6 +78,7 @@ class PropBoundModel extends Model
 
 class ComponentWithPropBindings extends Component
 {
+    #[Prop]
     public PropBoundModel $model;
 
     public $name;
@@ -91,8 +93,10 @@ class ComponentWithPropBindings extends Component
 
 class ComponentWithDependentPropBindings extends Component
 {
+    #[Prop]
     public PropBoundModel $parent;
 
+    #[Prop]
     public PropBoundModel $child;
 
     public $name;
@@ -107,6 +111,7 @@ class ComponentWithDependentPropBindings extends Component
 
 class ComponentWithPropBindingsAndMountMethod extends Component
 {
+    #[Prop]
     public PropBoundModel $child;
 
     public $parent;

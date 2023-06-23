@@ -2,10 +2,11 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
-use Illuminate\Database\Eloquent\Model;
-use Livewire\Component;
-use Livewire\Livewire;
 use Sushi\Sushi;
+use Livewire\Livewire;
+use Livewire\Component;
+use Livewire\Attributes\Prop;
+use Illuminate\Database\Eloquent\Model;
 
 class TestableLivewireCanAssertModelUnitTest extends \Tests\TestCase
 {
@@ -35,6 +36,7 @@ class ModelForPropertyTesting extends Model
 
 class PropertyTestingComponent extends Component
 {
+    #[Prop]
     public $model;
 
     public function render()

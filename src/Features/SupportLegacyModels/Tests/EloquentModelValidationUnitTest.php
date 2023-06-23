@@ -2,10 +2,11 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
-use Illuminate\Database\Eloquent\Model;
-use Livewire\Component;
-use Livewire\Livewire;
 use Sushi\Sushi;
+use Livewire\Livewire;
+use Livewire\Component;
+use Livewire\Attributes\Prop;
+use Illuminate\Database\Eloquent\Model;
 
 class EloquentModelValidationUnitTest extends \Tests\TestCase
 {
@@ -260,6 +261,7 @@ class CamelFoo extends Model
 
 class ComponentWithCamelCasedModelProperty extends Component
 {
+    #[Prop]
     public $camelFoo;
 
     protected $rules = [
@@ -279,7 +281,9 @@ class ComponentWithCamelCasedModelProperty extends Component
 
 class ComponentForEloquentModelHydrationMiddleware extends Component
 {
+    #[Prop]
     public $foo;
+
     protected $rules = [
         'foo.bar' => 'required',
         'foo.bar_baz' => 'required',
@@ -310,6 +314,7 @@ class ComponentForEloquentModelHydrationMiddleware extends Component
 
 class ComponentForEloquentModelCollectionHydrationMiddleware extends Component
 {
+    #[Prop]
     public $foos;
 
     protected $rules = [
@@ -368,6 +373,7 @@ class Cart extends Model
 
 class ComponentForEloquentModelNestedHydrationMiddleware extends Component
 {
+    #[Prop]
     public $cart;
 
     protected $rules = [

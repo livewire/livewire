@@ -36,7 +36,6 @@
 - Previous: `resources/views/layouts/app.blade.php` | New: `resources/views/components/layouts/app.blade.php`
 
 ## Pagination
-- Remove `Livewire\WithPagination` trait from components as it's no longer needed to get pagination to work.
 - Republish pagination views if you have previously published them.
 - Can no longer access `$page` directly -> `$paginators['page']` or `getPage()`
 
