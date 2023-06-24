@@ -27,7 +27,7 @@ This command will generate two new files in your project:
 * `app\Http\Livewire\Counter.php`
 * `resources/views/livewire/counter.blade.php`
 
-## Overwrite the class
+## Writing the class
 
 Open `app/Http/Livewire/Counter.php` and replace its contents with the following:
 
@@ -64,7 +64,7 @@ Here's a brief explanation of the code above:
 - `public function increment()` — Declares a public method named `increment()` that increments the `$count` property each time it's called. Public methods like this can be triggered from the browser in a variety of ways, including when a user clicks a button.
 - `public function render()` — Declares a `render()` method that returns a Blade view. This Blade view will contain the HTML template for our component.
 
-## Overwrite the view
+## Writing the view
 
 Open the `resources/views/livewire/counter.blade.php` file and replace its content with the following:  
 
@@ -92,7 +92,7 @@ Route::get('/counter', Counter::class);
 
 Now, our _counter_ component is assigned to the `/counter` route so that when a user visits the `/counter` endpoint in your application, this component will be rendered by the browser.
 
-## Create a template layout 
+## Create a template layout
 
 Before you can visit `/counter` in the browser, we need an HTML layout for our component to render inside. By default, Livewire will automatically look for a layout file named: `resources/views/components/layout.blade.php`
 
