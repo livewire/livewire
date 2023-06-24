@@ -2,6 +2,8 @@ Getters are a way to create "derived" or "computed" properties in Livewire. Like
 
 Getters are particularly useful in combination with a component's properties.
 
+## Basic usage
+
 To create a getter, you can add the `#[Getter]` attribute above any method in your Livewire component. Once the attribute has been added to the method, you can access it like any other property.
 
 For example, here's a `ShowUser` component that uses a getter named `user` to access a `User` Eloquent model based on a property named `$userId`:

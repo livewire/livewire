@@ -2,7 +2,9 @@ After a user performs some action — like submiting a form — you may want to 
 
 Because Livewire requests aren't standard full-page browser requests, standard HTTP redirects won't work. Instead, you need to trigger redirects via JavaScript. Fortunately, Livewire hides this complexity by allowing you to use [Laravel's built-in redirect utilties](https://laravel.com/docs/responses#redirects) within your components. Internally, Livewire will handle the process of redirecting on the frontend.
 
-Here's an example of a `CreatePost` Livewire component that redirects the user to another page after they submit the form to create a post:
+## Basic usage
+
+Below is an example of a `CreatePost` Livewire component that redirects the user to another page after they submit the form to create a post:
 
 ```php
 <?php

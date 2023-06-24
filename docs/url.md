@@ -1,22 +1,5 @@
 Livewire allows you to store component properties in the URL's query string. For example, you may want a `$search` property in your component to be included in the URL: `https://example.com/users?search=bob`. This is particularly useful for things like filtering, sorting, and pagination, as it allows users to share and bookmark specific states of a page.
 
-## Reference
-
-Livewire uses the `#[Url]` attribute to denote that a property should be tracked in the query string:
-
-```php
-use Livewire\Attributes\Url;
-
-#[Url]
-public $search = '';
-```
-
-| Attribute      | Description                          |
-|---------------|------------------------------|
-| `#[Url]`      | Persist a property's value in the URL query string |
-| `#[Url(keep: true)]`      | Always show the property in the query string |
-| `#[Url(history: true)]`      | Use `history.pushState()` to track the value changes in the browser's history stack  |
-
 ## Basic usage
 
 Below is a `ShowUsers` component that allows you to search users by their name via a simple text input:

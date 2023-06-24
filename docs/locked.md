@@ -1,5 +1,7 @@
 Livewire properties are able to modified freely on both the frontend and backend using utilities like `wire:model`. If you want to prevent a property — like a model ID — from being modified on the frontend, you can use Livewire's `#[Locked]` attribute.
 
+## Basic usage
+
 Below is a `ShowPost` component that stores a post model's ID as a public property named `$id`. To keep this property from being modified by a curious or malicious user, you can add the `#[Locked]` attribute to the property:
 
 ```php

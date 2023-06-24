@@ -47,7 +47,7 @@ In the above example, when a user submits the form by clicking "Save", `wire:sub
 
 In essence, actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
 
-## Event Listeners
+## Event listeners
 
 Livewire supports a variety of event listeners, allowing you to respond to various types of user interactions:
 
@@ -227,7 +227,7 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 
 `wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/loading).
 
-## Passing Parameters
+## Passing parameters
 
 Livewire allows you to pass parameters from your Blade template to the actions in your component, giving you the opportunity to provide an action additional data or state from the frontend when the action is called.
 
@@ -628,7 +628,7 @@ class ShowPost extends Component
 }
 ```
 
-## Security Concerns
+## Security concerns
 
 Remember that any public method in your Livewire component can be called from the client-side, Even without an associated `wire:click` handler that invokes it. In these scenarios, users can still trigger the action from the browser's DevTools.
 
