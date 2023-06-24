@@ -32,7 +32,7 @@ class Component extends BaseComponent
 
     public function dispatchSomeEvent()
     {
-        $this->dispatchBrowserEvent('some-event', 'bar');
+        $this->dispatch('some-event', bar: 'bar');
     }
 
     public function returnValue($value)

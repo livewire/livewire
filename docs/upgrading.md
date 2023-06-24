@@ -29,7 +29,7 @@
     - Add parameter names
 - Change `dispatchBrowserEvent()` to `dispatch()`
     - Change array syntax to named param syntax to match ->emit()
-- Remove the concept of "up"
+- Remove the concept of "up" ($emitUp or ->emitUp)
 - "assertEmitted" -> "assertedDispatched"
 
 ## New component layout file default
@@ -38,6 +38,8 @@
 ## Pagination
 - Republish pagination views if you have previously published them.
 - Can no longer access `$page` directly -> `$paginators['page']` or `getPage()`
+
+## Remove wire:click.prefetch
 
 ## Localisation
 In version 2 there was support for a locale prefix.

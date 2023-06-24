@@ -44,58 +44,17 @@ class ExtendBlade
         on('render', function ($target, $view) {
             $this->startLivewireRendering($target);
 
-            $removals = [];
-
-            if ($this->renderCounter === 0) {
-                $customDirectives = app('blade.compiler')->getCustomDirectives();
-                $precompilers = invade(app('blade.compiler'))->precompilers;
-
-                foreach ($this->directives as $name => $handler) {
-                    if (! isset($customDirectives[$name])) {
-                        $customDirectives[$name] = $handler;
-
-                        invade(app('blade.compiler'))->customDirectives = $customDirectives;
-
-                        $removals[] = function () use ($name) {
-                            $customDirectives = app('blade.compiler')->getCustomDirectives();
-
-                            unset($customDirectives[$name]);
-
-                            invade(app('blade.compiler'))->customDirectives = $customDirectives;
-                        };
-                    }
-                }
-
-                foreach ($this->precompilers as $handler) {
-                    if (array_search($handler, $precompilers) === false) {
-                        array_unshift($precompilers, $handler);
-
-                        invade(app('blade.compiler'))->precompilers = $precompilers;
-
-                        $removals[] = function () use ($handler) {
-                            $precompilers = invade(app('blade.compiler'))->precompilers;
-
-                            $index = array_search($handler, $precompilers);
-
-                            if ($index === false) return;
-
-                            unset($precompilers[$index]);
-
-                            invade(app('blade.compiler'))->precompilers = $precompilers;
-                        };
-                    }
-                }
-            }
+            $undo = $this->livewireifyBladeCompiler();
 
             $this->renderCounter++;
 
-            return function ($html) use ($view, $removals, $target) {
+            return function ($html) use ($view, $undo, $target) {
                 $this->endLivewireRendering();
 
                 $this->renderCounter--;
 
                 if ($this->renderCounter === 0) {
-                    while ($removals) array_pop($removals)();
+                    $undo();
                 }
 
                 return $html;
@@ -124,10 +83,52 @@ class ExtendBlade
         };
     }
 
-    function getLivewireCompiler()
-    {
-        return new class extends \Illuminate\View\Compilers\BladeCompiler {
-            //
+    function livewireifyBladeCompiler() {
+        $removals = [];
+
+        if ($this->renderCounter === 0) {
+            $customDirectives = app('blade.compiler')->getCustomDirectives();
+            $precompilers = invade(app('blade.compiler'))->precompilers;
+
+            foreach ($this->directives as $name => $handler) {
+                if (! isset($customDirectives[$name])) {
+                    $customDirectives[$name] = $handler;
+
+                    invade(app('blade.compiler'))->customDirectives = $customDirectives;
+
+                    $removals[] = function () use ($name) {
+                        $customDirectives = app('blade.compiler')->getCustomDirectives();
+
+                        unset($customDirectives[$name]);
+
+                        invade(app('blade.compiler'))->customDirectives = $customDirectives;
+                    };
+                }
+            }
+
+            foreach ($this->precompilers as $handler) {
+                if (array_search($handler, $precompilers) === false) {
+                    array_unshift($precompilers, $handler);
+
+                    invade(app('blade.compiler'))->precompilers = $precompilers;
+
+                    $removals[] = function () use ($handler) {
+                        $precompilers = invade(app('blade.compiler'))->precompilers;
+
+                        $index = array_search($handler, $precompilers);
+
+                        if ($index === false) return;
+
+                        unset($precompilers[$index]);
+
+                        invade(app('blade.compiler'))->precompilers = $precompilers;
+                    };
+                }
+            }
+        }
+
+        return function () use ($removals) {
+            while ($removals) array_pop($removals)();
         };
     }
 }

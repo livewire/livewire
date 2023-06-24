@@ -177,6 +177,7 @@
   var flushPending = false;
   var flushing = false;
   var queue = [];
+  var lastFlushedIndex = -1;
   function scheduler(callback) {
     queueJob(callback);
   }
@@ -187,7 +188,7 @@
   }
   function dequeueJob(job) {
     let index = queue.indexOf(job);
-    if (index !== -1)
+    if (index !== -1 && index > lastFlushedIndex)
       queue.splice(index, 1);
   }
   function queueFlush() {
@@ -201,8 +202,10 @@
     flushing = true;
     for (let i = 0; i < queue.length; i++) {
       queue[i]();
+      lastFlushedIndex = i;
     }
     queue.length = 0;
+    lastFlushedIndex = -1;
     flushing = false;
   }
   var reactive;
@@ -423,12 +426,6 @@
       node._x_dataStack = node._x_dataStack.filter((i) => i !== data2);
     };
   }
-  function refreshScope(element, scope2) {
-    let existingScope = element._x_dataStack[0];
-    Object.entries(scope2).forEach(([key, value]) => {
-      existingScope[key] = value;
-    });
-  }
   function closestDataStack(node) {
     if (node._x_dataStack)
       return node._x_dataStack;
@@ -555,12 +552,20 @@
   }
   function injectMagics(obj, el) {
     Object.entries(magics).forEach(([name, callback]) => {
+      let memoizedUtilities = null;
+      function getUtilities() {
+        if (memoizedUtilities) {
+          return memoizedUtilities;
+        } else {
+          let [utilities, cleanup22] = getElementBoundUtilities(el);
+          memoizedUtilities = { interceptor, ...utilities };
+          onElRemoved(el, cleanup22);
+          return memoizedUtilities;
+        }
+      }
       Object.defineProperty(obj, `$${name}`, {
         get() {
-          let [utilities, cleanup22] = getElementBoundUtilities(el);
-          utilities = { interceptor, ...utilities };
-          onElRemoved(el, cleanup22);
-          return callback(el, utilities);
+          return callback(el, getUtilities());
         },
         enumerable: false
       });
@@ -606,10 +611,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let overriddenMagics = {};
     injectMagics(overriddenMagics, el);
     let dataStack = [overriddenMagics, ...closestDataStack(el)];
-    if (typeof expression === "function") {
-      return generateEvaluatorFromFunction(dataStack, expression);
-    }
-    let evaluator = generateEvaluatorFromString(dataStack, expression, el);
+    let evaluator = typeof expression === "function" ? generateEvaluatorFromFunction(dataStack, expression) : generateEvaluatorFromString(dataStack, expression, el);
     return tryCatch.bind(null, el, expression, evaluator);
   }
   function generateEvaluatorFromFunction(dataStack, func) {
@@ -689,10 +691,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           console.warn("Cannot find directive `${directive}`. `${name}` will use the default order of execution");
           return;
         }
-        const pos = directiveOrder.indexOf(directive22) ?? directiveOrder.indexOf("DEFAULT");
-        if (pos >= 0) {
-          directiveOrder.splice(pos, 0, name);
-        }
+        const pos = directiveOrder.indexOf(directive22);
+        directiveOrder.splice(pos >= 0 ? pos : directiveOrder.indexOf("DEFAULT"), 0, name);
       }
     };
   }
@@ -818,17 +818,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "ref",
     "data",
     "id",
-    "radio",
-    "tabs",
-    "switch",
-    "disclosure",
-    "menu",
-    "listbox",
-    "combobox",
     "bind",
     "init",
     "for",
-    "mask",
     "model",
     "modelable",
     "transition",
@@ -868,7 +860,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function warn(message2, ...args) {
     console.warn(`Alpine Warning: ${message2}`, ...args);
   }
+  var started = false;
   function start() {
+    if (started)
+      warn("Alpine has already been initialized on this page. Calling Alpine.start() more than once can cause problems.");
+    started = true;
     if (!document.body)
       warn("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
     dispatch2(document, "alpine:init");
@@ -1056,7 +1052,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("transition", (el, { value, modifiers, expression }, { evaluate: evaluate2 }) => {
     if (typeof expression === "function")
       expression = evaluate2(expression);
-    if (!expression) {
+    if (expression === false)
+      return;
+    if (!expression || typeof expression === "boolean") {
       registerTransitionsFromHelper(el, modifiers, value);
     } else {
       registerTransitionsFromClassString(el, expression, value);
@@ -1102,7 +1100,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let wantsScale = wantsAll || modifiers.includes("scale");
     let opacityValue = wantsOpacity ? 0 : 1;
     let scaleValue = wantsScale ? modifierValue(modifiers, "scale", 95) / 100 : 1;
-    let delay3 = modifierValue(modifiers, "delay", 0);
+    let delay3 = modifierValue(modifiers, "delay", 0) / 1e3;
     let origin = modifierValue(modifiers, "origin", "center");
     let property = "opacity, transform";
     let durationIn = modifierValue(modifiers, "duration", 150) / 1e3;
@@ -1111,7 +1109,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (transitioningIn) {
       el._x_transition.enter.during = {
         transformOrigin: origin,
-        transitionDelay: delay3,
+        transitionDelay: `${delay3}s`,
         transitionProperty: property,
         transitionDuration: `${durationIn}s`,
         transitionTimingFunction: easing
@@ -1128,7 +1126,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (transitioningOut) {
       el._x_transition.leave.during = {
         transformOrigin: origin,
-        transitionDelay: delay3,
+        transitionDelay: `${delay3}s`,
         transitionProperty: property,
         transitionDuration: `${durationOut}s`,
         transitionTimingFunction: easing
@@ -1314,7 +1312,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (isNaN(rawValue))
         return fallback2;
     }
-    if (key === "duration") {
+    if (key === "duration" || key === "delay") {
       let match = rawValue.match(/([0-9]+)ms/);
       if (match)
         return match[1];
@@ -1381,6 +1379,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       case "class":
         bindClasses(el, value);
         break;
+      case "selected":
+      case "checked":
+        bindAttributeAndProperty(el, name, value);
+        break;
       default:
         bindAttribute(el, name, value);
         break;
@@ -1424,6 +1426,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_undoAddedStyles();
     el._x_undoAddedStyles = setStyles(el, value);
   }
+  function bindAttributeAndProperty(el, name, value) {
+    bindAttribute(el, name, value);
+    setPropertyIfChanged(el, name, value);
+  }
   function bindAttribute(el, name, value) {
     if ([null, void 0, false].includes(value) && attributeShouldntBePreservedIfFalsy(name)) {
       el.removeAttribute(name);
@@ -1436,6 +1442,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function setIfChanged(el, attrName, value) {
     if (el.getAttribute(attrName) != value) {
       el.setAttribute(attrName, value);
+    }
+  }
+  function setPropertyIfChanged(el, propName, value) {
+    if (el[propName] !== value) {
+      el[propName] = value;
     }
   }
   function updateSelect(el, value) {
@@ -1523,7 +1534,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
     let firstRun = true;
-    let outerHash, innerHash;
+    let outerHash, innerHash, outerHashLatest, innerHashLatest;
     let reference = effect2(() => {
       let outer, inner;
       if (firstRun) {
@@ -1553,7 +1564,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   function plugin(callback) {
-    callback(alpine_default);
+    let callbacks = Array.isArray(callback) ? callback : [callback];
+    callbacks.forEach((i) => i(alpine_default));
   }
   var stores = {};
   var isReactive = false;
@@ -1645,7 +1657,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.10.5",
+    version: "3.12.2",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -2514,6 +2526,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       listenerTarget = window;
     if (modifiers.includes("document"))
       listenerTarget = document;
+    if (modifiers.includes("debounce")) {
+      let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
+      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
+      handler3 = debounce(handler3, wait);
+    }
+    if (modifiers.includes("throttle")) {
+      let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
+      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
+      handler3 = throttle(handler3, wait);
+    }
     if (modifiers.includes("prevent"))
       handler3 = wrapHandler(handler3, (next, e) => {
         e.preventDefault();
@@ -2556,16 +2578,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       next(e);
     });
-    if (modifiers.includes("debounce")) {
-      let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
-      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler3 = debounce(handler3, wait);
-    }
-    if (modifiers.includes("throttle")) {
-      let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
-      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler3 = throttle(handler3, wait);
-    }
     listenerTarget.addEventListener(event, handler3, options);
     return () => {
       listenerTarget.removeEventListener(event, handler3, options);
@@ -2590,7 +2602,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
     let keyModifiers = modifiers.filter((i) => {
-      return !["window", "document", "prevent", "stop", "once"].includes(i);
+      return !["window", "document", "prevent", "stop", "once", "capture"].includes(i);
     });
     if (keyModifiers.includes("debounce")) {
       let debounceIndex = keyModifiers.indexOf("debounce");
@@ -2685,9 +2697,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
-    let removeListener = on2(el, event, modifiers, (e) => {
+    let removeListener = isCloning ? () => {
+    } : on2(el, event, modifiers, (e) => {
       setValue(getInputValue(el, modifiers, e, getValue()));
     });
+    if (modifiers.includes("fill") && [null, ""].includes(getValue())) {
+      el.dispatchEvent(new Event(event, {}));
+    }
     if (!el._x_removeModelListeners)
       el._x_removeModelListeners = {};
     el._x_removeModelListeners["default"] = removeListener;
@@ -2722,9 +2738,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function getInputValue(el, modifiers, event, currentValue) {
     return mutateDom(() => {
-      if (event instanceof CustomEvent && event.detail !== void 0) {
-        return typeof event.detail != "undefined" ? event.detail : event.target.value;
-      } else if (el.type === "checkbox") {
+      if (event instanceof CustomEvent && event.detail !== void 0)
+        return event.detail ?? event.target.value;
+      else if (el.type === "checkbox") {
         if (Array.isArray(currentValue)) {
           let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
           return event.target.checked ? currentValue.concat([newValue]) : currentValue.filter((el2) => !checkedAttrLooseCompare2(el2, newValue));
@@ -2820,7 +2836,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let dataProviderContext = {};
     injectDataProviders(dataProviderContext, magicContext);
     let data2 = evaluate(el, expression, { scope: dataProviderContext });
-    if (data2 === void 0)
+    if (data2 === void 0 || data2 === true)
       data2 = {};
     injectMagics(data2, el);
     let reactiveData = reactive(data2);
@@ -2960,6 +2976,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let elForSpot = lookup[keyForSpot];
         let marker = document.createElement("div");
         mutateDom(() => {
+          if (!elForSpot)
+            warn(`x-for ":key" is undefined or invalid`, templateEl);
           elForSpot.after(marker);
           elInSpot.after(elForSpot);
           elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
@@ -2967,7 +2985,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           elInSpot._x_currentIfEl && elInSpot.after(elInSpot._x_currentIfEl);
           marker.remove();
         });
-        refreshScope(elForSpot, scopes[keys.indexOf(keyForSpot)]);
+        elForSpot._x_refreshXForScope(scopes[keys.indexOf(keyForSpot)]);
       }
       for (let i = 0; i < adds.length; i++) {
         let [lastKey2, index] = adds[i];
@@ -2977,7 +2995,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let scope2 = scopes[index];
         let key = keys[index];
         let clone2 = document.importNode(templateEl.content, true).firstElementChild;
-        addScopeToNode(clone2, reactive(scope2), templateEl);
+        let reactiveScope = reactive(scope2);
+        addScopeToNode(clone2, reactiveScope, templateEl);
+        clone2._x_refreshXForScope = (newScope) => {
+          Object.entries(newScope).forEach(([key2, value]) => {
+            reactiveScope[key2] = value;
+          });
+        };
         mutateDom(() => {
           lastEl.after(clone2);
           initTree(clone2);
@@ -2988,7 +3012,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         lookup[key] = clone2;
       }
       for (let i = 0; i < sames.length; i++) {
-        refreshScope(lookup[sames[i]], scopes[keys.indexOf(sames[i])]);
+        lookup[sames[i]]._x_refreshXForScope(scopes[keys.indexOf(sames[i])]);
       }
       templateEl._x_prevKeys = keys;
     });
@@ -3533,14 +3557,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       window.addEventListener(name, (e) => {
         if (e.__livewire)
           e.__livewire.receivedBy.push(component);
-        component.$wire.call("__dispatch", name, e.detail);
+        component.$wire.call("__dispatch", name, e.detail || {});
       });
       component.el.addEventListener(name, (e) => {
         if (e.__livewire && e.bubbles)
           return;
         if (e.__livewire)
           e.__livewire.receivedBy.push(component.id);
-        component.$wire.call("__dispatch", name, e.detail);
+        component.$wire.call("__dispatch", name, e.detail || {});
       });
     });
   }
@@ -3554,22 +3578,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         dispatch3(component, name, params);
     });
   }
-  function dispatchEvent(component, target, name, params, bubbles = true) {
+  function dispatchEvent(target, name, params, bubbles = true) {
     let e = new CustomEvent(name, { bubbles, detail: params });
-    e.__livewire = { from: component.id, name, params, receivedBy: [] };
+    e.__livewire = { name, params, receivedBy: [] };
     trigger("dispatch", e);
     target.dispatchEvent(e);
   }
   function dispatch3(component, name, params) {
-    dispatchEvent(component, window, name, params);
+    dispatchEvent(component.el, name, params);
+  }
+  function dispatchGlobal(name, params) {
+    dispatchEvent(window, name, params);
   }
   function dispatchSelf(component, name, params) {
-    dispatchEvent(component, component.el, name, params, false);
+    dispatchEvent(component.el, name, params, false);
   }
   function dispatchTo(component, componentName, name, params) {
     let targets = componentsByName(componentName);
     targets.forEach((target) => {
-      dispatchEvent(component, target.el, name, params, false);
+      dispatchEvent(target.el, name, params, false);
     });
   }
   function listen(component, name, callback) {
@@ -3577,7 +3604,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       callback(e.detail);
     });
   }
-  function on3() {
+  function on3(eventName, callback) {
+    window.addEventListener(eventName, (e) => {
+      if (!e.__livewire)
+        return;
+      callback(e.detail);
+    });
   }
 
   // js/directives.js
@@ -4910,6 +4942,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var logger = () => {
   };
   function morph(from, toHtml, options) {
+    monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
     let toEl;
     let key, lookahead, updating, updated, removing, removed, adding, added;
@@ -5161,6 +5194,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (from._x_dataStack) {
       window.Alpine.clone(from, to);
     }
+  }
+  var patched = false;
+  function monkeyPatchDomSetAttributeToAllowAtSymbols() {
+    if (patched)
+      return;
+    patched = true;
+    let original = Element.prototype.setAttribute;
+    let hostDiv = document.createElement("div");
+    Element.prototype.setAttribute = function newSetAttribute(name, value) {
+      if (!name.includes("@")) {
+        return original.call(this, name, value);
+      }
+      hostDiv.innerHTML = `<span ${name}="${value}"></span>`;
+      let attr = hostDiv.firstElementChild.getAttributeNode(name);
+      hostDiv.firstElementChild.removeAttributeNode(attr);
+      this.setAttributeNode(attr);
+    };
   }
   function src_default6(Alpine3) {
     Alpine3.morph = morph;
@@ -5514,10 +5564,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       } else if (use === "push") {
         on("request", (component2, payload) => {
-          let beforeValue = dataGet(component2.ephemeral, name);
+          let beforeValue = dataGet(component2.canonical, name);
           return () => {
-            let afterValue = dataGet(component2.ephemeral, name);
-            console.log(afterValue);
+            let afterValue = dataGet(component2.canonical, name);
             if (JSON.stringify(beforeValue) === JSON.stringify(afterValue))
               return;
             push2(afterValue);
@@ -5787,16 +5836,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
     let timeout;
-    let started = false;
+    let started2 = false;
     return [
       (callback) => {
         timeout = setTimeout(() => {
           callback();
-          started = true;
+          started2 = true;
         }, duration);
       },
       (callback) => {
-        if (started) {
+        if (started2) {
           callback();
         } else {
           clearTimeout(timeout);
@@ -6172,7 +6221,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     find,
     hook: on,
     trigger,
-    dispatch: dispatch3,
+    dispatch: dispatchGlobal,
     on: on3
   };
   if (window.Livewire)

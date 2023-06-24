@@ -15,30 +15,38 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
     static function registerPrecompilers($precompile)
     {
-        $isNotInAHtmlTagBefore = '(<[^>]*>|\{\{[^}]*\}\}|\([^)]*\))(*SKIP)(*FAIL)|';
-        $isNotInAHtmlTagAfter = '\s*\(';
+        $outsideOfHtmlTag = function ($directive) {
+            $ignoreIfInsideHtmlTagOrExpression = '(<[^>]*>|\{\{[^}]*\}\}|\([^)]*\))(*SKIP)(*FAIL)|';
+            $noOpeningAngleBracketBefore = '(?<!<)';
+            $noClosingAngleBracketAfter = '(?!>)';
 
-        $hasOpeningTagAfter = '[^>]*<';
+            return '/'
+                .$ignoreIfInsideHtmlTagOrExpression
+                .$noOpeningAngleBracketBefore
+                .$directive
+                .$noClosingAngleBracketAfter
+                .'/mU';
+        };
 
-        $precompile('/'. $isNotInAHtmlTagBefore . '@if' . $isNotInAHtmlTagAfter.'/mU', function ($matches) {
+        $precompile($outsideOfHtmlTag('@if'), function ($matches) {
             [$before, $after] = explode('@if', $matches[0]);
 
             return $before.'<!-- __BLOCK__ -->@if'.$after;
         });
 
-        $precompile('/@endif'.$hasOpeningTagAfter.'/sm', function ($matches) {
+        $precompile($outsideOfHtmlTag('@endif'), function ($matches) {
             [$before, $after] = explode('@endif', $matches[0]);
 
             return $before.'@endif <!-- __ENDBLOCK__ -->'.$after;
         });
 
-        $precompile('/'.$isNotInAHtmlTagBefore.'@foreach'.$isNotInAHtmlTagAfter.'/mU', function ($matches) {
+        $precompile($outsideOfHtmlTag('@foreach'), function ($matches) {
             [$before, $after] = explode('@foreach', $matches[0]);
 
             return $before.'<!-- __BLOCK__ -->@foreach'.$after;
         });
 
-        $precompile('/@endforeach'.$hasOpeningTagAfter.'/sm', function ($matches) {
+        $precompile($outsideOfHtmlTag('@endforeach'), function ($matches) {
             [$before, $after] = explode('@endforeach', $matches[0]);
 
             return $before.'@endforeach <!-- __ENDBLOCK__ -->'.$after;

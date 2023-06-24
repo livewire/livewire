@@ -22,19 +22,12 @@ on('component.init', component => {
             })
         } else if (use === 'push') {
             on('request', (component, payload) => {
-                let beforeValue = dataGet(component.ephemeral, name)
+                let beforeValue = dataGet(component.canonical, name)
 
                 return () => {
-                    let afterValue = dataGet(component.ephemeral, name)
-                    console.log(afterValue)
+                    let afterValue = dataGet(component.canonical, name)
 
                     if (JSON.stringify(beforeValue) === JSON.stringify(afterValue)) return
-
-                    // @todo: i went with the above json.stringify strategy, but left this here
-                    // in case for some reason it was better... Remove it if all tests pass...
-                    // let updates = payload.updates
-                    // let dirty = component.effects.dirty || []
-                    // if (! Object.keys(updates).includes(name) && ! dirty.some(i => i.startsWith(name))) return
 
                     push(afterValue)
                 }

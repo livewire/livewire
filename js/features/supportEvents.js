@@ -14,7 +14,7 @@ function registerListeners(component, listeners) {
         window.addEventListener(name, (e) => {
             if (e.__livewire) e.__livewire.receivedBy.push(component)
 
-            component.$wire.call('__dispatch', name, e.detail)
+            component.$wire.call('__dispatch', name, e.detail || {})
         })
 
         // Register a listener for when "to" or "self"
@@ -23,7 +23,7 @@ function registerListeners(component, listeners) {
 
             if (e.__livewire) e.__livewire.receivedBy.push(component.id)
 
-            component.$wire.call('__dispatch', name, e.detail)
+            component.$wire.call('__dispatch', name, e.detail || {})
         })
     })
 }
@@ -36,10 +36,10 @@ function dispatchEvents(component, dispatches) {
     })
 }
 
-function dispatchEvent(component, target, name, params, bubbles = true) {
+function dispatchEvent(target, name, params, bubbles = true) {
     let e = new CustomEvent(name, { bubbles, detail: params })
 
-    e.__livewire = { from: component.id, name, params, receivedBy: [] }
+    e.__livewire = { name, params, receivedBy: [] }
 
     trigger('dispatch', e)
 
@@ -47,18 +47,22 @@ function dispatchEvent(component, target, name, params, bubbles = true) {
 }
 
 export function dispatch(component, name, params) {
-    dispatchEvent(component, window, name, params)
+    dispatchEvent(component.el, name, params)
+}
+
+export function dispatchGlobal(name, params) {
+    dispatchEvent(window, name, params)
 }
 
 export function dispatchSelf(component, name, params) {
-    dispatchEvent(component, component.el, name, params, false)
+    dispatchEvent(component.el, name, params, false)
 }
 
 export function dispatchTo(component, componentName, name, params) {
     let targets = componentsByName(componentName)
 
     targets.forEach(target => {
-        dispatchEvent(component, target.el, name, params, false)
+        dispatchEvent(target.el, name, params, false)
     })
 }
 
@@ -68,6 +72,11 @@ export function listen(component, name, callback) {
     })
 }
 
-export function on() {
-    // @todo: Implement for backwards compat...
+export function on(eventName, callback) {
+    // Implemented for backwards compatibility...
+    window.addEventListener(eventName, (e) => {
+        if (! e.__livewire) return
+
+        callback(e.detail)
+    })
 }

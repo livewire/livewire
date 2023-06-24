@@ -1,5 +1,5 @@
 <div>
-    <div x-data="{ output: '' }" x-on:some-event.window="output = $event.detail">
+    <div x-data="{ output: '' }" x-on:some-event.window="output = $event.detail.bar">
         <span x-text="output" dusk="foo.output"></span>
         <button type="button" dusk="foo.button" wire:click="dispatchSomeEvent">Dispatch</button>
     </div>

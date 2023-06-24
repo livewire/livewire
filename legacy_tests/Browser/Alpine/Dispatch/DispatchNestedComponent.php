@@ -12,7 +12,7 @@ class DispatchNestedComponent extends BaseComponent
 <<<'HTML'
 <div>
     <div x-data>
-        <button dusk="dispatchTo" @click="$wire.dispatchTo('parent', 'dispatch', 'dispatchTo')">Dispatch To</button>
+        <button dusk="dispatchTo" @click="$wire.dispatchTo('parent', 'dispatch', { name: 'dispatchTo' })">Dispatch To</button>
     </div>
 </div>
 HTML;

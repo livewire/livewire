@@ -14,7 +14,7 @@ class Test extends TestCase
                 /**
                  * receive event from global fire
                  */
-                ->waitForLivewire()->tap(function ($browser) { $browser->script('window.Livewire.dispatch("foo", "bar")'); })
+                ->waitForLivewire()->tap(function ($browser) { $browser->script('window.Livewire.dispatch("foo", { value: "bar" })'); })
                 ->waitUsing(5, 75, function () use ($browser) {
                     return $browser->assertSeeIn('@lastEventForParent', 'bar')
                              ->assertSeeIn('@lastEventForChildA', 'bar')
@@ -36,23 +36,11 @@ class Test extends TestCase
                  */
                 ->tap(function ($b) { $b->script([
                     "window.lastFooEventValue = ''",
-                    "window.Livewire.on('foo', value => { lastFooEventValue = value })",
+                    "window.Livewire.on('foo', ({ value }) => { lastFooEventValue = value })",
                 ]);})
                 ->waitForLivewire()->click('@dispatch.bob')
                 ->waitUsing(5, 75, function () use ($browser) {
                     return $browser->assertScript('window.lastFooEventValue', 'bob');
-                })
-
-
-                /**
-                 * receive event from component fired only to ancestors, and make sure global listener doesnt receive it
-                 */
-                ->waitForLivewire()->click('@dispatch.lob')
-                ->waitUsing(5, 75, function () use ($browser) {
-                    return $browser->assertSeeIn('@lastEventForParent', 'lob')
-                                   ->assertSeeIn('@lastEventForChildA', 'bob')
-                                   ->assertSeeIn('@lastEventForChildB', 'bob')
-                                   ->assertScript('window.lastFooEventValue', 'bob');
                 })
 
                 /**

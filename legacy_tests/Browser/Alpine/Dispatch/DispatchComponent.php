@@ -15,9 +15,9 @@ class DispatchComponent extends BaseComponent
 
     protected $listeners = ['dispatch' => 'dispatchHandler'];
 
-    public function dispatchHandler($eventName)
+    public function dispatchHandler($name)
     {
-        $this->events[$eventName] = true;
+        $this->events[$name] = true;
     }
 
     public function render()
@@ -26,7 +26,7 @@ class DispatchComponent extends BaseComponent
 <<<'HTML'
 <div>
     <div x-data>
-        <button dusk="dispatch" @click="$wire.dispatch('dispatch', 'dispatch')">Dispatch</button>
+        <button dusk="dispatch" @click="$wire.dispatch('dispatch', { name: 'dispatch' })">Dispatch</button>
 
         @if ($events['dispatch'])
             Dispatch worked!
@@ -34,7 +34,7 @@ class DispatchComponent extends BaseComponent
     </div>
 
     <div x-data>
-        <button dusk="dispatchSelf" @click="$wire.dispatchSelf('dispatch', 'dispatchSelf')">Dispatch Self</button>
+        <button dusk="dispatchSelf" @click="$wire.dispatchSelf('dispatch', { name: 'dispatchSelf' })">Dispatch Self</button>
 
         @if ($events['dispatchSelf'])
             Dispatch self worked!

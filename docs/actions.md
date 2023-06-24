@@ -468,7 +468,7 @@ class SearchPosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
 	<input wire:model.live="query">
 
@@ -476,7 +476,7 @@ class SearchPosts extends Component
 
 	@foreach ($posts as $post)
 		<!-- ... -->
-	@enforeach
+	@endforeach
 </div>
 ```
 
