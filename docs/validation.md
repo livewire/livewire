@@ -1,6 +1,6 @@
 Livewire aims to make validating a user's input and giving them feedback as pleasant as possible. By building on top of Laravel's validation features, Livewire leverages your existing knowledge while also providing you with robust, additional features like real-time validation.
 
-Here's an example `CreatePost` component that demonstrates the most basic validation workflow in Livewire.
+Here's an example `CreatePost` component that demonstrates the most basic validation workflow in Livewire:
 
 ```php
 <?php
@@ -47,17 +47,17 @@ class CreatePost extends Component
 </form>
 ```
 
-As you can see, Livewire provides a `validate()` method that you can call to validate your component's properties. It returns the validated set of data that you can then use to insert into the database safely.
+As you can see, Livewire provides a `validate()` method that you can call to validate your component's properties. It returns the validated set of data that you can then safely insert into the database.
 
 On the frontend, you can use Laravel's existing Blade directives to show validation messages to your users.
 
-For more information, see [Laravel's documentation on validation errors in Blade](https://laravel.com/docs/10.x/blade#validation-errors).
+For more information, see [Laravel's documentation on rendering validation errors in Blade](https://laravel.com/docs/blade#validation-errors).
 
 ## Rule attributes
 
 If you prefer to co-locate your component's validation rules with the properties directly, you can use Livewire's `#[Rule]` attribute.
 
-By associating validation rules with properties using `#[Rule]`, Livewire will automatically run the properties validation rules before each update. This frees you from having to run `$this->validate()` manually.
+By associating validation rules with properties using `#[Rule]`, Livewire will automatically run the properties validation rules before each update. This frees you from needing to run `$this->validate()` manually:
 
 ```php
 use Livewire\Attributes\Rule;
@@ -86,7 +86,7 @@ class CreatePost extends Component
 }
 ```
 
-If you prefer more control over when the properties are validated, you can pass a `realTime: flase` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validated()` method:
+If you prefer more control over when the properties are validated, you can pass a `realTime: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validated()` method:
 
 ```php
 use Livewire\Attributes\Rule;
@@ -95,7 +95,7 @@ use App\Models\Post;
 
 class CreatePost extends Component
 {
-    #[Rule('required|min:3'), realtTime: false]
+    #[Rule('required|min:3'), realTime: false]
 	public $title = '';
 
     #[Rule('required|min:3'), realTime: false]
@@ -118,7 +118,7 @@ class CreatePost extends Component
 
 When applying validation rules directly to a property using the `#[Rule]` attribute, Livewire assumes the validation key should be the name of the property itself. However, there are times when you may want to customize the validation key.
 
-For example, you might want to provide separate validation rules for both an array property and its children. In this case, instead of passing a validation rule as the first parameter, you can pass an array of key-value pairs as validation rules:
+For example, you might want to provide separate validation rules for an array property and its children. In this case, instead of passing a validation rule as the first argument to the `#[Rule]` attribute, you can pass an array of key-value pairs instead:
 
 ```php
 #[Rule([
@@ -136,11 +136,9 @@ Now, when a user updates `$todos`, or the `validate()` method is called, both of
 
 ## Form objects
 
-As more properties and validation rules are added to a Livewire component, it can feel too crowded.
+As more properties and validation rules are added to a Livewire component, it can begin to feel too crowded. To alleviate this pain and also provide a helpful abstraction for code reuse, you can use Livewire's *Form Objects* to store your properties and validation rules.
 
-To alleviate this pain and also provide a helpful abstraction for code reuse, you can use Livewire's *Form Objects* to store your properties and validation rules.
-
-Below is the same `CreatePost` example, except this time, the properties and rules have been extracted to a dedicated form object called `PostForm`:
+Below is the same `CreatePost` example, but now the properties and rules have been extracted to a dedicated form object named `PostForm`:
 
 ```php
 <?php
@@ -159,7 +157,7 @@ class PostForm extends Form
 }
 ```
 
-The `PostForm` above can now be set directly as its own property on the `CreatePost` component:
+The `PostForm` above can now be defined as a property on the `CreatePost` component:
 
 ```php
 <?php
@@ -203,9 +201,7 @@ Also, when referencing the property names in the template, you must prepend `for
 </form>
 ```
 
-The same as when you're not using a form object, any `#[Rule]` attribute validation will be run every time a property is updated.
-
-However, if you disable this behavior using `realTime: false`, you can manually run a form object's validation using `$this->form->validate()` like so:
+When using form objects, `#[Rule]` attribute validation will be run every time a property is updated. However, if you disable this behavior by specifying `realTime: false` on the attribute, you can manually run a form object's validation using `$this->form->validate()`:
 
 ```php
 public function save()
@@ -218,9 +214,7 @@ public function save()
 }
 ```
 
-Form objects are a useful abstraction for most larger datasets and have many more features to make them even more powerful.
-
-For more information, check out the [Form Object documentation](/docs/forms#extracting-a-form-object).
+Form objects are a useful abstraction for most larger datasets and a variety of additional features that make them even more powerful. For more information, check out the comprehensive [form object documentation](/docs/forms#extracting-a-form-object).
 
 ## Real-time validation
 
@@ -228,9 +222,9 @@ Real-time validation is the term used for when you validate a user's input as th
 
 By using `#[Rule]` attributes directly on Livewire properties, any time a network request is sent to update a property's value on the server, the provided validation rules will be applied.
 
-This means to provide a real-time validation experience for your users on a specific input, no extra backend work is required. The only thing that is required is using `wire:model.live` or `wire:model.blur` to tell Livewire to trigger network requests as the fields are filled out.
+This means to provide a real-time validation experience for your users on a specific input, no extra backend work is required. The only thing that is required is using `wire:model.live` or `wire:model.blur` to instruct Livewire to trigger network requests as the fields are filled out.
 
-In the below example, `wire:model.lazy` has been added to the text input. This means that when a user has tabbed or clicked away from this field—after typing into it—a network request will be triggered with the updated value, and the validation rules will run:
+In the below example, `wire:model.lazy` has been added to the text input. Now, when a user types in the field and then tabs or clicks away from the field, a network request will be triggered with the updated value and the validation rules will run:
 
 ```html
 <form wire:submit="save">
@@ -248,7 +242,7 @@ However, you may need to customize the language of these error messages to bette
 
 ### Custom attribute names
 
-Sometimes the property you are validating has a name that isn't suited for displaying to users. For example, if you have a database field in your app called `dob` that stands for "Date of birth", you would want to show your users "The date of birth field is required" instead of "The dob field is required".
+Sometimes the property you are validating has a name that isn't suited for displaying to users. For example, if you have a database field in your app named `dob` that stands for "Date of birth", you would want to show your users "The date of birth field is required" instead of "The dob field is required".
 
 Livewire allows you to specify an alternative name for a property using the `attribute: ` parameter:
 
@@ -259,11 +253,11 @@ use Livewire\Attributes\Rule;
 public $dob = '';
 ```
 
-Now, if the `required` validation rule fails, it will say "The date of birth field is required." instead of "The dob field is required.".
+Now, if the `required` validation rule fails, the error message will state "The date of birth field is required." instead of "The dob field is required.".
 
 ### Custom messages
 
-If customizing the property name isn't enough, you can customize the complete validation message using the `message: ` parameter like so:
+If customizing the property name isn't enough, you can customize the entire validation message using the `message: ` parameter:
 
 ```php
 use Livewire\Attributes\Rule;
@@ -282,7 +276,7 @@ use Livewire\Attributes\Rule;
 public $title = '';
 ```
 
-If you instead wish to use the `#[Rule]` attribute's array syntax, you can specify custom attributes and messages like so:
+If you want to use the `#[Rule]` attribute's array syntax instead, you can specify custom attributes and messages like so:
 
 ```php
 use Livewire\Attributes\Rule;
@@ -302,18 +296,19 @@ public $titles = [];
 
 ## Manually controlling validation errors
 
-Livewire's validation utilities should handle most scenarios; however, there are times when you want full control over the validation messages in your component.
+Livewire's validation utilities should handle most common validation scenarios; however, there are times when you may want full control over the validation messages in your component.
 
 Below are all the available methods for manipulating the validation errors in your Livewire component:
+
 Method | Description
 --- | ---
 `$this->addError([key], [message])` | Manually add a validation message to the error bag
-`$this->resetValidation([?key])` | Resets the validation errors for the provided key, or resets all errors if no key is supplied
-`$this->getErrorBag()` | Retrieves the underlying Laravel error bag used in the Livewire component
+`$this->resetValidation([?key])` | Reset the validation errors for the provided key, or reset all errors if no key is supplied
+`$this->getErrorBag()` | Retrieve the underlying Laravel error bag used in the Livewire component
 
 ## Accessing the validator instance
 
-Sometimes you may want to access the Validator instance that Livewire uses internally in the `validate()` method. This is possible using the `withValidator` method. The closure you provide receives the fully constructed validator as an argument, allowing you to call any of its methods before the validation rules are actually evaluated.
+Sometimes you may want to access the Validator instance that Livewire uses internally in the `validate()` method. This is possible using the `withValidator` method. The closure you provide receives the fully constructed validator as an argument, allowing you to call any of its methods before the validation rules are actually evaluated.
 
 Below is an example of intercepting Livewire's internal validator to manually check a condition and add an additional validation message:
 
@@ -354,7 +349,7 @@ class CreatePost extends Component
 
 ## Using custom validators
 
-If you wish to use your own validation system in Livewire, that isn't a problem. Livewire will catch any `ValidationException` exceptions thrown inside of it and provide the errors to the view just as if you were using the `validate()` method.
+If you wish to use your own validation system in Livewire, that isn't a problem. Livewire will catch any `ValidationException` exceptions thrown inside of components and provide the errors to the view just as if you were using Livewire's own `validate()` method.
 
 Below is an example of the `CreatePost` component, but instead of using Livewire's validation features, a completely custom validator is being created and applied to the component properties:
 
@@ -393,7 +388,7 @@ class CreatePost extends Component
 
 ## Testing validation
 
-Livewire provides useful testing utilities for validation scenarios such as the `assertHasErrors()` method.
+Livewire provides useful testing utilities for validation scenarios, such as the `assertHasErrors()` method.
 
 Below is a basic test case that ensures validation errors are thrown if no input is set for the `title` property:
 
@@ -419,9 +414,7 @@ class CreatePostTest extends TestCase
 }
 ```
 
-The above test uses Livewire's `assertHasErrors()` method to ensure that validation errors were thrown for `title`.
-
-In addition to testing the presence of errors, `assertHasErrors` allows you to also narrow down the assertion to specific rules by passing the rules to assert against as the second argument:
+In addition to testing the presence of errors, `assertHasErrors` allows you to also narrow down the assertion to specific rules by passing the rules to assert against as the second argument to the method:
 
 ```php
 /** @test */
@@ -447,4 +440,4 @@ public function cant_create_post_without_title_and_content()
 }
 ```
 
-For more information on other available testing utilities, visit the [testing documentation](/docs/testing).
+For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/testing).
