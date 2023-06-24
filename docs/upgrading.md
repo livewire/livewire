@@ -1,4 +1,4 @@
-## Prerequisits
+## Prerequisites
 - Run `artisan view:clear`
 
 ## Alpine is now included
