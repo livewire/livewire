@@ -2,7 +2,7 @@ Polling is a technique used in web applications to "poll" the server (send regul
 
 Using polling inside Livewire is as simple as adding `wire:poll` to an element.
 
-Here's an example of a `SubscriberCount` component that shows a user's number of subscribers:
+Below is an example of a `SubscriberCount` component that shows a user's subscriber count:
 
 ```php
 <?php
@@ -22,21 +22,19 @@ class SubscriberCount extends Component
 }
 ```
 
-```html
+```blade
 <div wire:poll>
     Subscribers: {{ $count }}
 </div>
 ```
 
-Normally, this component would render with the page, showing the subscriber count for the user and never updating until the page was refreshed.
-
-Instead, because of `wire:poll` on the component's template, this component will refresh itself every `2.5` seconds, keeping the subscriber count up-to-date.
+Normally, this component would show the subscriber count for the user and never update until the page was refreshed. However, because of `wire:poll` on the component's template, this component will now refresh itself every `2.5` seconds, keeping the subscriber count up-to-date.
 
 ## Timing control
 
 The primary drawback of polling is that it can be resource intensive. If you have a thousand visitors on a page that uses polling, one thousand network requests will be triggered every `2.5` seconds.
 
-The best way to reduce server-roundtrips is to make the polling interval longer.
+The best way to reduce requests in this scenario is simply to make the polling interval longer.
 
 You can manually control how often the component will poll by appending the desired duration to `wire:poll` like so:
 
@@ -48,9 +46,9 @@ You can manually control how often the component will poll by appending the desi
 
 ## Background throttling
 
-To further cut down on server round-trips, Livewire automatically throttles polling when a web page is in the background. For example, if a user keeps a web page open in a different browser tab, Livewire will reduce the number of polling requests by 95% until the user revisits the tab.
+To further cut down on server requests, Livewire automatically throttles polling when a page is in the background. For example, if a user keeps a page open in a different browser tab, Livewire will reduce the number of polling requests by 95% until the user revisits the tab.
 
-If you want to opt out of this behavior and keep polling continuously, even when a tab is in the background, you can add the `.keep-alive` modifier like so:
+If you want to opt-out of this behavior and keep polling continuously, even when a tab is in the background, you can add the `.keep-alive` modifier to `wire:poll`:
 
 ```html
 <div wire:poll.keep-alive>
@@ -58,9 +56,7 @@ If you want to opt out of this behavior and keep polling continuously, even when
 
 ##  Viewport throttling
 
-Another measure you can take only to poll when necessary is to add the `.visible` modifier.
-
-By adding `.visible`, Livewire will only poll the component when it is visible on the page:
+Another measure you can take to only poll when necessary is to add the `.visible` modifier to `wire:poll`. The `.visible` modifier instructs Livewire to only poll the component when it is visible on the page:
 
 ```html
 <div wire:poll.visible>
