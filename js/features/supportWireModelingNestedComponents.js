@@ -10,3 +10,4 @@ on('request.prepare', (component) => {
         if (bindings) child.$wire.$commit()
     })
 })
+

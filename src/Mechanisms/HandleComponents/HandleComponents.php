@@ -243,7 +243,11 @@ class HandleComponents
                 'wire:id' => $component->getId(),
             ]);
 
-            $finish($html);
+            $replaceHtml = function ($newHtml) use (&$html) {
+                $html = $newHtml;
+            };
+
+            $html = $finish($html, $replaceHtml);
 
             return $html;
         });

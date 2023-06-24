@@ -30,7 +30,7 @@ function registerListeners(component, listeners) {
 
 function dispatchEvents(component, dispatches) {
     dispatches.forEach(({ name, params = {}, self = false, to }) => {
-        if (self) dispatchSelf(component, component.id, name, params)
+        if (self) dispatchSelf(component, name, params)
         else if (to) dispatchTo(component, to, name, params)
         else dispatch(component, name, params)
     })

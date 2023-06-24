@@ -41,8 +41,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@toggle')
         ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
         ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity', 1)
-        ->pause(250)
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'none')
+        ->pause(200)
+        ->assertPresent('@target')
+        ->pause(100)
+        ->assertMissing('@target')
         ;
     }
 }

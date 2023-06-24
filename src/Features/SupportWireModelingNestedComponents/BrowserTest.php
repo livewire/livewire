@@ -16,6 +16,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public function render() { return <<<'HTML'
                 <div>
                     <span dusk="parent">Parent: {{ $foo }}</span>
+                    <span x-text="$wire.foo" dusk="parent.ephemeral"></span>
 
                     <livewire:child wire:model="foo" />
 
@@ -30,6 +31,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public function render() { return <<<'HTML'
                 <div>
                     <span dusk="child">Child: {{ $bar }}</span>
+                    <span x-text="$wire.bar" dusk="child.ephemeral"></span>
                     <button wire:click="bar++" dusk="increment">increment</button>
                 </div>
                 HTML; }
@@ -37,12 +39,18 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
         ->assertSeeIn('@parent', 'Parent: 0')
         ->assertSeeIn('@child', 'Child: 0')
+        ->assertSeeIn('@parent.ephemeral', '0')
+        ->assertSeeIn('@child.ephemeral', '0')
         ->click('@increment')
         ->assertSeeIn('@parent', 'Parent: 0')
         ->assertSeeIn('@child', 'Child: 0')
+        ->assertSeeIn('@parent.ephemeral', '1')
+        ->assertSeeIn('@child.ephemeral', '1')
         ->waitForLivewire()->click('@refresh')
         ->assertSeeIn('@parent', 'Parent: 1')
         ->assertSeeIn('@child', 'Child: 1')
+        ->assertSeeIn('@parent.ephemeral', '1')
+        ->assertSeeIn('@child.ephemeral', '1')
         ;
     }
 }

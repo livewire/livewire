@@ -96,7 +96,9 @@ class SupportAttributes extends ComponentHook
 
         return function (...$params) use ($callbacks) {
             foreach ($callbacks as $callback) {
-                if (is_callable($callback)) $callback(...$params);
+                if (is_callable($callback)) {
+                    $callback(...$params);
+                }
             }
         };
     }

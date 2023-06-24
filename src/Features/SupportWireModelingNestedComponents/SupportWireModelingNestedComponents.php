@@ -49,16 +49,13 @@ class SupportWireModelingNestedComponents extends ComponentHook
         }
     }
 
-    public function dehydrate($context)
+    public function render($view, $data)
     {
-        $bindings = store($this->component)->get('bindings', false);
+        return function ($html, $replaceHtml) {
+            $bindings = store($this->component)->get('bindings', false);
 
-        if (! $bindings) return;
+            if (! $bindings) return;
 
-        // Add the bindings metadata to the payload for later reference...
-        $context->addMemo('bindings', $bindings);
-
-        return function () use ($bindings, $context) {
             // Currently we can only support a single wire:model bound value,
             // so we'll just get the first one. But in the future we will
             // likely want to support named bindings, so we'll keep
@@ -68,10 +65,20 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
             // Attach the necessary Alpine directives so that the child and
             // parent's JS, ephemeral, values are bound.
-            $context->effects['html'] = Utils::insertAttributesIntoHtmlRoot($context->effects['html'], [
+            $replaceHtml(Utils::insertAttributesIntoHtmlRoot($html, [
                 'x-model' => '$wire.$parent.'.$outer,
                 'x-modelable' => '$wire.'.$inner,
-            ]);
+            ]));
         };
+    }
+
+    public function dehydrate($context)
+    {
+        $bindings = store($this->component)->get('bindings', false);
+
+        if (! $bindings) return;
+
+        // Add the bindings metadata to the paylad for later reference...
+        $context->addMemo('bindings', $bindings);
     }
 }

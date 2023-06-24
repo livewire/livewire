@@ -22,6 +22,7 @@ class SupportProps extends ComponentHook
 
             foreach (array_keys($params) as $key) {
                 $reflected = new ReflectionObject($component);
+                if (! $reflected->hasProperty($key)) continue;
                 $property = $reflected->getProperty($key);
                 $attributes = $property->getAttributes();
 

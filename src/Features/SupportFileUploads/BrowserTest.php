@@ -48,7 +48,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML; }
         })
         ->assertMissing('@preview')
-        ->tinker()
         ->attach('@upload', __DIR__ . '/browser_test_image.png')
         ->pause(250)
         ->assertVisible('@preview')

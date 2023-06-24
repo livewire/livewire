@@ -101,649 +101,6 @@
     return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
   }
 
-  // node_modules/@vue/shared/dist/shared.esm-bundler.js
-  function makeMap(str, expectsLowerCase) {
-    const map = /* @__PURE__ */ Object.create(null);
-    const list = str.split(",");
-    for (let i = 0; i < list.length; i++) {
-      map[list[i]] = true;
-    }
-    return expectsLowerCase ? (val) => !!map[val.toLowerCase()] : (val) => !!map[val];
-  }
-  var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
-  var isBooleanAttr = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = false ? Object.freeze({}) : {};
-  var EMPTY_ARR = false ? Object.freeze([]) : [];
-  var hasOwnProperty = Object.prototype.hasOwnProperty;
-  var hasOwn = (val, key) => hasOwnProperty.call(val, key);
-  var isArray2 = Array.isArray;
-  var isMap = (val) => toTypeString(val) === "[object Map]";
-  var isString = (val) => typeof val === "string";
-  var isSymbol = (val) => typeof val === "symbol";
-  var isObject2 = (val) => val !== null && typeof val === "object";
-  var objectToString = Object.prototype.toString;
-  var toTypeString = (value) => objectToString.call(value);
-  var toRawType = (value) => {
-    return toTypeString(value).slice(8, -1);
-  };
-  var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
-  var cacheStringFunction = (fn) => {
-    const cache = /* @__PURE__ */ Object.create(null);
-    return (str) => {
-      const hit = cache[str];
-      return hit || (cache[str] = fn(str));
-    };
-  };
-  var camelizeRE = /-(\w)/g;
-  var camelize = cacheStringFunction((str) => {
-    return str.replace(camelizeRE, (_, c) => c ? c.toUpperCase() : "");
-  });
-  var hyphenateRE = /\B([A-Z])/g;
-  var hyphenate = cacheStringFunction((str) => str.replace(hyphenateRE, "-$1").toLowerCase());
-  var capitalize = cacheStringFunction((str) => str.charAt(0).toUpperCase() + str.slice(1));
-  var toHandlerKey = cacheStringFunction((str) => str ? `on${capitalize(str)}` : ``);
-  var hasChanged = (value, oldValue) => !Object.is(value, oldValue);
-  var toNumber = (val) => {
-    const n = parseFloat(val);
-    return isNaN(n) ? val : n;
-  };
-
-  // node_modules/@vue/reactivity/dist/reactivity.esm-bundler.js
-  var createDep = (effects) => {
-    const dep = new Set(effects);
-    dep.w = 0;
-    dep.n = 0;
-    return dep;
-  };
-  var wasTracked = (dep) => (dep.w & trackOpBit) > 0;
-  var newTracked = (dep) => (dep.n & trackOpBit) > 0;
-  var targetMap = /* @__PURE__ */ new WeakMap();
-  var effectTrackDepth = 0;
-  var trackOpBit = 1;
-  var maxMarkerBits = 30;
-  var activeEffect;
-  var ITERATE_KEY = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
-  var shouldTrack = true;
-  var trackStack = [];
-  function pauseTracking2() {
-    trackStack.push(shouldTrack);
-    shouldTrack = false;
-  }
-  function resetTracking() {
-    const last = trackStack.pop();
-    shouldTrack = last === void 0 ? true : last;
-  }
-  function track(target, type, key) {
-    if (shouldTrack && activeEffect) {
-      let depsMap = targetMap.get(target);
-      if (!depsMap) {
-        targetMap.set(target, depsMap = /* @__PURE__ */ new Map());
-      }
-      let dep = depsMap.get(key);
-      if (!dep) {
-        depsMap.set(key, dep = createDep());
-      }
-      const eventInfo = false ? { effect: activeEffect, target, type, key } : void 0;
-      trackEffects(dep, eventInfo);
-    }
-  }
-  function trackEffects(dep, debuggerEventExtraInfo) {
-    let shouldTrack3 = false;
-    if (effectTrackDepth <= maxMarkerBits) {
-      if (!newTracked(dep)) {
-        dep.n |= trackOpBit;
-        shouldTrack3 = !wasTracked(dep);
-      }
-    } else {
-      shouldTrack3 = !dep.has(activeEffect);
-    }
-    if (shouldTrack3) {
-      dep.add(activeEffect);
-      activeEffect.deps.push(dep);
-      if (false) {
-        activeEffect.onTrack(Object.assign({ effect: activeEffect }, debuggerEventExtraInfo));
-      }
-    }
-  }
-  function trigger(target, type, key, newValue, oldValue, oldTarget) {
-    const depsMap = targetMap.get(target);
-    if (!depsMap) {
-      return;
-    }
-    let deps = [];
-    if (type === "clear") {
-      deps = [...depsMap.values()];
-    } else if (key === "length" && isArray2(target)) {
-      const newLength = toNumber(newValue);
-      depsMap.forEach((dep, key2) => {
-        if (key2 === "length" || key2 >= newLength) {
-          deps.push(dep);
-        }
-      });
-    } else {
-      if (key !== void 0) {
-        deps.push(depsMap.get(key));
-      }
-      switch (type) {
-        case "add":
-          if (!isArray2(target)) {
-            deps.push(depsMap.get(ITERATE_KEY));
-            if (isMap(target)) {
-              deps.push(depsMap.get(MAP_KEY_ITERATE_KEY));
-            }
-          } else if (isIntegerKey(key)) {
-            deps.push(depsMap.get("length"));
-          }
-          break;
-        case "delete":
-          if (!isArray2(target)) {
-            deps.push(depsMap.get(ITERATE_KEY));
-            if (isMap(target)) {
-              deps.push(depsMap.get(MAP_KEY_ITERATE_KEY));
-            }
-          }
-          break;
-        case "set":
-          if (isMap(target)) {
-            deps.push(depsMap.get(ITERATE_KEY));
-          }
-          break;
-      }
-    }
-    const eventInfo = false ? { target, type, key, newValue, oldValue, oldTarget } : void 0;
-    if (deps.length === 1) {
-      if (deps[0]) {
-        if (false) {
-          triggerEffects(deps[0], eventInfo);
-        } else {
-          triggerEffects(deps[0]);
-        }
-      }
-    } else {
-      const effects = [];
-      for (const dep of deps) {
-        if (dep) {
-          effects.push(...dep);
-        }
-      }
-      if (false) {
-        triggerEffects(createDep(effects), eventInfo);
-      } else {
-        triggerEffects(createDep(effects));
-      }
-    }
-  }
-  function triggerEffects(dep, debuggerEventExtraInfo) {
-    const effects = isArray2(dep) ? dep : [...dep];
-    for (const effect3 of effects) {
-      if (effect3.computed) {
-        triggerEffect(effect3, debuggerEventExtraInfo);
-      }
-    }
-    for (const effect3 of effects) {
-      if (!effect3.computed) {
-        triggerEffect(effect3, debuggerEventExtraInfo);
-      }
-    }
-  }
-  function triggerEffect(effect3, debuggerEventExtraInfo) {
-    if (effect3 !== activeEffect || effect3.allowRecurse) {
-      if (false) {
-        effect3.onTrigger(extend({ effect: effect3 }, debuggerEventExtraInfo));
-      }
-      if (effect3.scheduler) {
-        effect3.scheduler();
-      } else {
-        effect3.run();
-      }
-    }
-  }
-  var isNonTrackableKeys = /* @__PURE__ */ makeMap(`__proto__,__v_isRef,__isVue`);
-  var builtInSymbols = new Set(/* @__PURE__ */ Object.getOwnPropertyNames(Symbol).filter((key) => key !== "arguments" && key !== "caller").map((key) => Symbol[key]).filter(isSymbol));
-  var get = /* @__PURE__ */ createGetter();
-  var readonlyGet = /* @__PURE__ */ createGetter(true);
-  var arrayInstrumentations = /* @__PURE__ */ createArrayInstrumentations();
-  function createArrayInstrumentations() {
-    const instrumentations = {};
-    ["includes", "indexOf", "lastIndexOf"].forEach((key) => {
-      instrumentations[key] = function(...args) {
-        const arr = toRaw(this);
-        for (let i = 0, l = this.length; i < l; i++) {
-          track(arr, "get", i + "");
-        }
-        const res = arr[key](...args);
-        if (res === -1 || res === false) {
-          return arr[key](...args.map(toRaw));
-        } else {
-          return res;
-        }
-      };
-    });
-    ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
-      instrumentations[key] = function(...args) {
-        pauseTracking2();
-        const res = toRaw(this)[key].apply(this, args);
-        resetTracking();
-        return res;
-      };
-    });
-    return instrumentations;
-  }
-  function createGetter(isReadonly2 = false, shallow = false) {
-    return function get3(target, key, receiver) {
-      if (key === "__v_isReactive") {
-        return !isReadonly2;
-      } else if (key === "__v_isReadonly") {
-        return isReadonly2;
-      } else if (key === "__v_isShallow") {
-        return shallow;
-      } else if (key === "__v_raw" && receiver === (isReadonly2 ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target)) {
-        return target;
-      }
-      const targetIsArray = isArray2(target);
-      if (!isReadonly2 && targetIsArray && hasOwn(arrayInstrumentations, key)) {
-        return Reflect.get(arrayInstrumentations, key, receiver);
-      }
-      const res = Reflect.get(target, key, receiver);
-      if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
-        return res;
-      }
-      if (!isReadonly2) {
-        track(target, "get", key);
-      }
-      if (shallow) {
-        return res;
-      }
-      if (isRef(res)) {
-        return targetIsArray && isIntegerKey(key) ? res : res.value;
-      }
-      if (isObject2(res)) {
-        return isReadonly2 ? readonly(res) : reactive(res);
-      }
-      return res;
-    };
-  }
-  var set = /* @__PURE__ */ createSetter();
-  function createSetter(shallow = false) {
-    return function set3(target, key, value, receiver) {
-      let oldValue = target[key];
-      if (isReadonly(oldValue) && isRef(oldValue) && !isRef(value)) {
-        return false;
-      }
-      if (!shallow) {
-        if (!isShallow(value) && !isReadonly(value)) {
-          oldValue = toRaw(oldValue);
-          value = toRaw(value);
-        }
-        if (!isArray2(target) && isRef(oldValue) && !isRef(value)) {
-          oldValue.value = value;
-          return true;
-        }
-      }
-      const hadKey = isArray2(target) && isIntegerKey(key) ? Number(key) < target.length : hasOwn(target, key);
-      const result = Reflect.set(target, key, value, receiver);
-      if (target === toRaw(receiver)) {
-        if (!hadKey) {
-          trigger(target, "add", key, value);
-        } else if (hasChanged(value, oldValue)) {
-          trigger(target, "set", key, value, oldValue);
-        }
-      }
-      return result;
-    };
-  }
-  function deleteProperty(target, key) {
-    const hadKey = hasOwn(target, key);
-    const oldValue = target[key];
-    const result = Reflect.deleteProperty(target, key);
-    if (result && hadKey) {
-      trigger(target, "delete", key, void 0, oldValue);
-    }
-    return result;
-  }
-  function has(target, key) {
-    const result = Reflect.has(target, key);
-    if (!isSymbol(key) || !builtInSymbols.has(key)) {
-      track(target, "has", key);
-    }
-    return result;
-  }
-  function ownKeys(target) {
-    track(target, "iterate", isArray2(target) ? "length" : ITERATE_KEY);
-    return Reflect.ownKeys(target);
-  }
-  var mutableHandlers = {
-    get,
-    set,
-    deleteProperty,
-    has,
-    ownKeys
-  };
-  var readonlyHandlers = {
-    get: readonlyGet,
-    set(target, key) {
-      if (false) {
-        warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
-      }
-      return true;
-    },
-    deleteProperty(target, key) {
-      if (false) {
-        warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
-      }
-      return true;
-    }
-  };
-  var toShallow = (value) => value;
-  var getProto = (v) => Reflect.getPrototypeOf(v);
-  function get$1(target, key, isReadonly2 = false, isShallow2 = false) {
-    target = target["__v_raw"];
-    const rawTarget = toRaw(target);
-    const rawKey = toRaw(key);
-    if (!isReadonly2) {
-      if (key !== rawKey) {
-        track(rawTarget, "get", key);
-      }
-      track(rawTarget, "get", rawKey);
-    }
-    const { has: has3 } = getProto(rawTarget);
-    const wrap = isShallow2 ? toShallow : isReadonly2 ? toReadonly : toReactive;
-    if (has3.call(rawTarget, key)) {
-      return wrap(target.get(key));
-    } else if (has3.call(rawTarget, rawKey)) {
-      return wrap(target.get(rawKey));
-    } else if (target !== rawTarget) {
-      target.get(key);
-    }
-  }
-  function has$1(key, isReadonly2 = false) {
-    const target = this["__v_raw"];
-    const rawTarget = toRaw(target);
-    const rawKey = toRaw(key);
-    if (!isReadonly2) {
-      if (key !== rawKey) {
-        track(rawTarget, "has", key);
-      }
-      track(rawTarget, "has", rawKey);
-    }
-    return key === rawKey ? target.has(key) : target.has(key) || target.has(rawKey);
-  }
-  function size(target, isReadonly2 = false) {
-    target = target["__v_raw"];
-    !isReadonly2 && track(toRaw(target), "iterate", ITERATE_KEY);
-    return Reflect.get(target, "size", target);
-  }
-  function add(value) {
-    value = toRaw(value);
-    const target = toRaw(this);
-    const proto = getProto(target);
-    const hadKey = proto.has.call(target, value);
-    if (!hadKey) {
-      target.add(value);
-      trigger(target, "add", value, value);
-    }
-    return this;
-  }
-  function set$1(key, value) {
-    value = toRaw(value);
-    const target = toRaw(this);
-    const { has: has3, get: get3 } = getProto(target);
-    let hadKey = has3.call(target, key);
-    if (!hadKey) {
-      key = toRaw(key);
-      hadKey = has3.call(target, key);
-    } else if (false) {
-      checkIdentityKeys(target, has3, key);
-    }
-    const oldValue = get3.call(target, key);
-    target.set(key, value);
-    if (!hadKey) {
-      trigger(target, "add", key, value);
-    } else if (hasChanged(value, oldValue)) {
-      trigger(target, "set", key, value, oldValue);
-    }
-    return this;
-  }
-  function deleteEntry(key) {
-    const target = toRaw(this);
-    const { has: has3, get: get3 } = getProto(target);
-    let hadKey = has3.call(target, key);
-    if (!hadKey) {
-      key = toRaw(key);
-      hadKey = has3.call(target, key);
-    } else if (false) {
-      checkIdentityKeys(target, has3, key);
-    }
-    const oldValue = get3 ? get3.call(target, key) : void 0;
-    const result = target.delete(key);
-    if (hadKey) {
-      trigger(target, "delete", key, void 0, oldValue);
-    }
-    return result;
-  }
-  function clear2() {
-    const target = toRaw(this);
-    const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
-    const result = target.clear();
-    if (hadItems) {
-      trigger(target, "clear", void 0, void 0, oldTarget);
-    }
-    return result;
-  }
-  function createForEach(isReadonly2, isShallow2) {
-    return function forEach(callback, thisArg) {
-      const observed = this;
-      const target = observed["__v_raw"];
-      const rawTarget = toRaw(target);
-      const wrap = isShallow2 ? toShallow : isReadonly2 ? toReadonly : toReactive;
-      !isReadonly2 && track(rawTarget, "iterate", ITERATE_KEY);
-      return target.forEach((value, key) => {
-        return callback.call(thisArg, wrap(value), wrap(key), observed);
-      });
-    };
-  }
-  function createIterableMethod(method, isReadonly2, isShallow2) {
-    return function(...args) {
-      const target = this["__v_raw"];
-      const rawTarget = toRaw(target);
-      const targetIsMap = isMap(rawTarget);
-      const isPair = method === "entries" || method === Symbol.iterator && targetIsMap;
-      const isKeyOnly = method === "keys" && targetIsMap;
-      const innerIterator = target[method](...args);
-      const wrap = isShallow2 ? toShallow : isReadonly2 ? toReadonly : toReactive;
-      !isReadonly2 && track(rawTarget, "iterate", isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY);
-      return {
-        next() {
-          const { value, done } = innerIterator.next();
-          return done ? { value, done } : {
-            value: isPair ? [wrap(value[0]), wrap(value[1])] : wrap(value),
-            done
-          };
-        },
-        [Symbol.iterator]() {
-          return this;
-        }
-      };
-    };
-  }
-  function createReadonlyMethod(type) {
-    return function(...args) {
-      if (false) {
-        const key = args[0] ? `on key "${args[0]}" ` : ``;
-        console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
-      }
-      return type === "delete" ? false : this;
-    };
-  }
-  function createInstrumentations() {
-    const mutableInstrumentations3 = {
-      get(key) {
-        return get$1(this, key);
-      },
-      get size() {
-        return size(this);
-      },
-      has: has$1,
-      add,
-      set: set$1,
-      delete: deleteEntry,
-      clear: clear2,
-      forEach: createForEach(false, false)
-    };
-    const shallowInstrumentations3 = {
-      get(key) {
-        return get$1(this, key, false, true);
-      },
-      get size() {
-        return size(this);
-      },
-      has: has$1,
-      add,
-      set: set$1,
-      delete: deleteEntry,
-      clear: clear2,
-      forEach: createForEach(false, true)
-    };
-    const readonlyInstrumentations3 = {
-      get(key) {
-        return get$1(this, key, true);
-      },
-      get size() {
-        return size(this, true);
-      },
-      has(key) {
-        return has$1.call(this, key, true);
-      },
-      add: createReadonlyMethod("add"),
-      set: createReadonlyMethod("set"),
-      delete: createReadonlyMethod("delete"),
-      clear: createReadonlyMethod("clear"),
-      forEach: createForEach(true, false)
-    };
-    const shallowReadonlyInstrumentations3 = {
-      get(key) {
-        return get$1(this, key, true, true);
-      },
-      get size() {
-        return size(this, true);
-      },
-      has(key) {
-        return has$1.call(this, key, true);
-      },
-      add: createReadonlyMethod("add"),
-      set: createReadonlyMethod("set"),
-      delete: createReadonlyMethod("delete"),
-      clear: createReadonlyMethod("clear"),
-      forEach: createForEach(true, true)
-    };
-    const iteratorMethods2 = ["keys", "values", "entries", Symbol.iterator];
-    iteratorMethods2.forEach((method) => {
-      mutableInstrumentations3[method] = createIterableMethod(method, false, false);
-      readonlyInstrumentations3[method] = createIterableMethod(method, true, false);
-      shallowInstrumentations3[method] = createIterableMethod(method, false, true);
-      shallowReadonlyInstrumentations3[method] = createIterableMethod(method, true, true);
-    });
-    return [
-      mutableInstrumentations3,
-      readonlyInstrumentations3,
-      shallowInstrumentations3,
-      shallowReadonlyInstrumentations3
-    ];
-  }
-  var [mutableInstrumentations, readonlyInstrumentations, shallowInstrumentations, shallowReadonlyInstrumentations] = /* @__PURE__ */ createInstrumentations();
-  function createInstrumentationGetter(isReadonly2, shallow) {
-    const instrumentations = shallow ? isReadonly2 ? shallowReadonlyInstrumentations : shallowInstrumentations : isReadonly2 ? readonlyInstrumentations : mutableInstrumentations;
-    return (target, key, receiver) => {
-      if (key === "__v_isReactive") {
-        return !isReadonly2;
-      } else if (key === "__v_isReadonly") {
-        return isReadonly2;
-      } else if (key === "__v_raw") {
-        return target;
-      }
-      return Reflect.get(hasOwn(instrumentations, key) && key in target ? instrumentations : target, key, receiver);
-    };
-  }
-  var mutableCollectionHandlers = {
-    get: /* @__PURE__ */ createInstrumentationGetter(false, false)
-  };
-  var readonlyCollectionHandlers = {
-    get: /* @__PURE__ */ createInstrumentationGetter(true, false)
-  };
-  var reactiveMap = /* @__PURE__ */ new WeakMap();
-  var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
-  var readonlyMap = /* @__PURE__ */ new WeakMap();
-  var shallowReadonlyMap = /* @__PURE__ */ new WeakMap();
-  function targetTypeMap(rawType) {
-    switch (rawType) {
-      case "Object":
-      case "Array":
-        return 1;
-      case "Map":
-      case "Set":
-      case "WeakMap":
-      case "WeakSet":
-        return 2;
-      default:
-        return 0;
-    }
-  }
-  function getTargetType(value) {
-    return value["__v_skip"] || !Object.isExtensible(value) ? 0 : targetTypeMap(toRawType(value));
-  }
-  function reactive(target) {
-    if (isReadonly(target)) {
-      return target;
-    }
-    return createReactiveObject(target, false, mutableHandlers, mutableCollectionHandlers, reactiveMap);
-  }
-  function readonly(target) {
-    return createReactiveObject(target, true, readonlyHandlers, readonlyCollectionHandlers, readonlyMap);
-  }
-  function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
-    if (!isObject2(target)) {
-      if (false) {
-        console.warn(`value cannot be made reactive: ${String(target)}`);
-      }
-      return target;
-    }
-    if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
-      return target;
-    }
-    const existingProxy = proxyMap.get(target);
-    if (existingProxy) {
-      return existingProxy;
-    }
-    const targetType = getTargetType(target);
-    if (targetType === 0) {
-      return target;
-    }
-    const proxy = new Proxy(target, targetType === 2 ? collectionHandlers : baseHandlers);
-    proxyMap.set(target, proxy);
-    return proxy;
-  }
-  function isReadonly(value) {
-    return !!(value && value["__v_isReadonly"]);
-  }
-  function isShallow(value) {
-    return !!(value && value["__v_isShallow"]);
-  }
-  function toRaw(observed) {
-    const raw2 = observed && observed["__v_raw"];
-    return raw2 ? toRaw(raw2) : observed;
-  }
-  var toReactive = (value) => isObject2(value) ? reactive(value) : value;
-  var toReadonly = (value) => isObject2(value) ? readonly(value) : value;
-  function isRef(r) {
-    return !!(r && r.__v_isRef === true);
-  }
-  var _a;
-  _a = "__v_isReadonly";
-  var _a$1;
-  _a$1 = "__v_isReadonly";
-
   // js/modal.js
   function showHtmlModal(html) {
     let page = document.createElement("html");
@@ -796,7 +153,7 @@
       listeners[name] = listeners[name].filter((i) => i !== callback);
     };
   }
-  function trigger2(name, ...params) {
+  function trigger(name, ...params) {
     let callbacks = listeners[name] || [];
     let finishers = [];
     for (let i = 0; i < callbacks.length; i++) {
@@ -848,7 +205,7 @@
     queue.length = 0;
     flushing = false;
   }
-  var reactive2;
+  var reactive;
   var effect2;
   var release;
   var raw;
@@ -859,7 +216,7 @@
     shouldSchedule = true;
   }
   function setReactivityEngine(engine) {
-    reactive2 = engine.reactive;
+    reactive = engine.reactive;
     release = engine.release;
     effect2 = (callback) => engine.effect(callback, { scheduler: (task) => {
       if (shouldSchedule) {
@@ -998,7 +355,7 @@
         let el = mutations[i].target;
         let name = mutations[i].attributeName;
         let oldValue = mutations[i].oldValue;
-        let add22 = () => {
+        let add2 = () => {
           if (!addedAttributes.has(el))
             addedAttributes.set(el, []);
           addedAttributes.get(el).push({ name, value: el.getAttribute(name) });
@@ -1009,10 +366,10 @@
           removedAttributes.get(el).push(name);
         };
         if (el.hasAttribute(name) && oldValue === null) {
-          add22();
+          add2();
         } else if (el.hasAttribute(name)) {
           remove();
-          add22();
+          add2();
         } else {
           remove();
         }
@@ -1155,7 +512,7 @@
       initialValue: void 0,
       _x_interceptor: true,
       initialize(data2, path, key) {
-        return callback(this.initialValue, () => get2(data2, path), (value) => set2(data2, path, value), path, key);
+        return callback(this.initialValue, () => get(data2, path), (value) => set(data2, path, value), path, key);
       }
     };
     mutateObj(obj);
@@ -1173,10 +530,10 @@
       return obj;
     };
   }
-  function get2(obj, path) {
+  function get(obj, path) {
     return path.split(".").reduce((carry, segment) => carry[segment], obj);
   }
-  function set2(obj, path, value) {
+  function set(obj, path, value) {
     if (typeof path === "string")
       path = path.split(".");
     if (path.length === 1)
@@ -1185,10 +542,10 @@
       throw error;
     else {
       if (obj[path[0]])
-        return set2(obj[path[0]], path.slice(1), value);
+        return set(obj[path[0]], path.slice(1), value);
       else {
         obj[path[0]] = {};
-        return set2(obj[path[0]], path.slice(1), value);
+        return set(obj[path[0]], path.slice(1), value);
       }
     }
   }
@@ -2011,7 +1368,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function bind(el, name, value, modifiers = []) {
     if (!el._x_bindings)
-      el._x_bindings = reactive2({});
+      el._x_bindings = reactive({});
     el._x_bindings[name] = value;
     name = modifiers.includes("camel") ? camelCase(name) : name;
     switch (name) {
@@ -2071,7 +1428,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if ([null, void 0, false].includes(value) && attributeShouldntBePreservedIfFalsy(name)) {
       el.removeAttribute(name);
     } else {
-      if (isBooleanAttr2(name))
+      if (isBooleanAttr(name))
         value = name;
       setIfChanged(el, name, value);
     }
@@ -2095,7 +1452,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function checkedAttrLooseCompare(valueA, valueB) {
     return valueA == valueB;
   }
-  function isBooleanAttr2(attrName) {
+  function isBooleanAttr(attrName) {
     const booleanAttributes = [
       "disabled",
       "checked",
@@ -2136,7 +1493,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return typeof fallback2 === "function" ? fallback2() : fallback2;
     if (attr === "")
       return true;
-    if (isBooleanAttr2(name)) {
+    if (isBooleanAttr(name)) {
       return !![name, "true"].includes(attr);
     }
     return attr;
@@ -2202,7 +1559,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var isReactive = false;
   function store(name, value) {
     if (!isReactive) {
-      stores = reactive2(stores);
+      stores = reactive(stores);
       isReactive = true;
     }
     if (value === void 0) {
@@ -2277,7 +1634,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var Alpine2 = {
     get reactive() {
-      return reactive2;
+      return reactive;
     },
     get release() {
       return release;
@@ -2336,7 +1693,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     bind: bind2
   };
   var alpine_default = Alpine2;
-  function makeMap2(str, expectsLowerCase) {
+  function makeMap(str, expectsLowerCase) {
     const map = /* @__PURE__ */ Object.create(null);
     const list = str.split(",");
     for (let i = 0; i < list.length; i++) {
@@ -2344,49 +1701,49 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return expectsLowerCase ? (val) => !!map[val.toLowerCase()] : (val) => !!map[val];
   }
-  var specialBooleanAttrs2 = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
-  var isBooleanAttr22 = /* @__PURE__ */ makeMap2(specialBooleanAttrs2 + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ2 = true ? Object.freeze({}) : {};
-  var EMPTY_ARR2 = true ? Object.freeze([]) : [];
-  var extend2 = Object.assign;
-  var hasOwnProperty2 = Object.prototype.hasOwnProperty;
-  var hasOwn2 = (val, key) => hasOwnProperty2.call(val, key);
-  var isArray3 = Array.isArray;
-  var isMap2 = (val) => toTypeString2(val) === "[object Map]";
-  var isString2 = (val) => typeof val === "string";
-  var isSymbol2 = (val) => typeof val === "symbol";
-  var isObject3 = (val) => val !== null && typeof val === "object";
-  var objectToString2 = Object.prototype.toString;
-  var toTypeString2 = (value) => objectToString2.call(value);
-  var toRawType2 = (value) => {
-    return toTypeString2(value).slice(8, -1);
+  var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
+  var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
+  var EMPTY_OBJ = true ? Object.freeze({}) : {};
+  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var extend = Object.assign;
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  var hasOwn = (val, key) => hasOwnProperty.call(val, key);
+  var isArray2 = Array.isArray;
+  var isMap = (val) => toTypeString(val) === "[object Map]";
+  var isString = (val) => typeof val === "string";
+  var isSymbol = (val) => typeof val === "symbol";
+  var isObject2 = (val) => val !== null && typeof val === "object";
+  var objectToString = Object.prototype.toString;
+  var toTypeString = (value) => objectToString.call(value);
+  var toRawType = (value) => {
+    return toTypeString(value).slice(8, -1);
   };
-  var isIntegerKey2 = (key) => isString2(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
-  var cacheStringFunction2 = (fn) => {
+  var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
+  var cacheStringFunction = (fn) => {
     const cache = /* @__PURE__ */ Object.create(null);
     return (str) => {
       const hit = cache[str];
       return hit || (cache[str] = fn(str));
     };
   };
-  var camelizeRE2 = /-(\w)/g;
-  var camelize2 = cacheStringFunction2((str) => {
-    return str.replace(camelizeRE2, (_, c) => c ? c.toUpperCase() : "");
+  var camelizeRE = /-(\w)/g;
+  var camelize = cacheStringFunction((str) => {
+    return str.replace(camelizeRE, (_, c) => c ? c.toUpperCase() : "");
   });
-  var hyphenateRE2 = /\B([A-Z])/g;
-  var hyphenate2 = cacheStringFunction2((str) => str.replace(hyphenateRE2, "-$1").toLowerCase());
-  var capitalize2 = cacheStringFunction2((str) => str.charAt(0).toUpperCase() + str.slice(1));
-  var toHandlerKey2 = cacheStringFunction2((str) => str ? `on${capitalize2(str)}` : ``);
-  var hasChanged2 = (value, oldValue) => value !== oldValue && (value === value || oldValue === oldValue);
-  var targetMap2 = /* @__PURE__ */ new WeakMap();
+  var hyphenateRE = /\B([A-Z])/g;
+  var hyphenate = cacheStringFunction((str) => str.replace(hyphenateRE, "-$1").toLowerCase());
+  var capitalize = cacheStringFunction((str) => str.charAt(0).toUpperCase() + str.slice(1));
+  var toHandlerKey = cacheStringFunction((str) => str ? `on${capitalize(str)}` : ``);
+  var hasChanged = (value, oldValue) => value !== oldValue && (value === value || oldValue === oldValue);
+  var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
-  var activeEffect2;
-  var ITERATE_KEY2 = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY2 = Symbol(true ? "Map key iterate" : "");
+  var activeEffect;
+  var ITERATE_KEY = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
-  function effect22(fn, options = EMPTY_OBJ2) {
+  function effect22(fn, options = EMPTY_OBJ) {
     if (isEffect(fn)) {
       fn = fn.raw;
     }
@@ -2416,12 +1773,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         try {
           enableTracking2();
           effectStack.push(effect3);
-          activeEffect2 = effect3;
+          activeEffect = effect3;
           return fn();
         } finally {
           effectStack.pop();
-          resetTracking2();
-          activeEffect2 = effectStack[effectStack.length - 1];
+          resetTracking();
+          activeEffect = effectStack[effectStack.length - 1];
         }
       }
     };
@@ -2443,38 +1800,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       deps.length = 0;
     }
   }
-  var shouldTrack2 = true;
-  var trackStack2 = [];
-  function pauseTracking3() {
-    trackStack2.push(shouldTrack2);
-    shouldTrack2 = false;
+  var shouldTrack = true;
+  var trackStack = [];
+  function pauseTracking2() {
+    trackStack.push(shouldTrack);
+    shouldTrack = false;
   }
   function enableTracking2() {
-    trackStack2.push(shouldTrack2);
-    shouldTrack2 = true;
+    trackStack.push(shouldTrack);
+    shouldTrack = true;
   }
-  function resetTracking2() {
-    const last = trackStack2.pop();
-    shouldTrack2 = last === void 0 ? true : last;
+  function resetTracking() {
+    const last = trackStack.pop();
+    shouldTrack = last === void 0 ? true : last;
   }
-  function track2(target, type, key) {
-    if (!shouldTrack2 || activeEffect2 === void 0) {
+  function track(target, type, key) {
+    if (!shouldTrack || activeEffect === void 0) {
       return;
     }
-    let depsMap = targetMap2.get(target);
+    let depsMap = targetMap.get(target);
     if (!depsMap) {
-      targetMap2.set(target, depsMap = /* @__PURE__ */ new Map());
+      targetMap.set(target, depsMap = /* @__PURE__ */ new Map());
     }
     let dep = depsMap.get(key);
     if (!dep) {
       depsMap.set(key, dep = /* @__PURE__ */ new Set());
     }
-    if (!dep.has(activeEffect2)) {
-      dep.add(activeEffect2);
-      activeEffect2.deps.push(dep);
-      if (activeEffect2.options.onTrack) {
-        activeEffect2.options.onTrack({
-          effect: activeEffect2,
+    if (!dep.has(activeEffect)) {
+      dep.add(activeEffect);
+      activeEffect.deps.push(dep);
+      if (activeEffect.options.onTrack) {
+        activeEffect.options.onTrack({
+          effect: activeEffect,
           target,
           type,
           key
@@ -2482,55 +1839,55 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   }
-  function trigger3(target, type, key, newValue, oldValue, oldTarget) {
-    const depsMap = targetMap2.get(target);
+  function trigger2(target, type, key, newValue, oldValue, oldTarget) {
+    const depsMap = targetMap.get(target);
     if (!depsMap) {
       return;
     }
     const effects = /* @__PURE__ */ new Set();
-    const add22 = (effectsToAdd) => {
+    const add2 = (effectsToAdd) => {
       if (effectsToAdd) {
         effectsToAdd.forEach((effect3) => {
-          if (effect3 !== activeEffect2 || effect3.allowRecurse) {
+          if (effect3 !== activeEffect || effect3.allowRecurse) {
             effects.add(effect3);
           }
         });
       }
     };
     if (type === "clear") {
-      depsMap.forEach(add22);
-    } else if (key === "length" && isArray3(target)) {
+      depsMap.forEach(add2);
+    } else if (key === "length" && isArray2(target)) {
       depsMap.forEach((dep, key2) => {
         if (key2 === "length" || key2 >= newValue) {
-          add22(dep);
+          add2(dep);
         }
       });
     } else {
       if (key !== void 0) {
-        add22(depsMap.get(key));
+        add2(depsMap.get(key));
       }
       switch (type) {
         case "add":
-          if (!isArray3(target)) {
-            add22(depsMap.get(ITERATE_KEY2));
-            if (isMap2(target)) {
-              add22(depsMap.get(MAP_KEY_ITERATE_KEY2));
+          if (!isArray2(target)) {
+            add2(depsMap.get(ITERATE_KEY));
+            if (isMap(target)) {
+              add2(depsMap.get(MAP_KEY_ITERATE_KEY));
             }
-          } else if (isIntegerKey2(key)) {
-            add22(depsMap.get("length"));
+          } else if (isIntegerKey(key)) {
+            add2(depsMap.get("length"));
           }
           break;
         case "delete":
-          if (!isArray3(target)) {
-            add22(depsMap.get(ITERATE_KEY2));
-            if (isMap2(target)) {
-              add22(depsMap.get(MAP_KEY_ITERATE_KEY2));
+          if (!isArray2(target)) {
+            add2(depsMap.get(ITERATE_KEY));
+            if (isMap(target)) {
+              add2(depsMap.get(MAP_KEY_ITERATE_KEY));
             }
           }
           break;
         case "set":
-          if (isMap2(target)) {
-            add22(depsMap.get(ITERATE_KEY2));
+          if (isMap(target)) {
+            add2(depsMap.get(ITERATE_KEY));
           }
           break;
       }
@@ -2555,23 +1912,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     effects.forEach(run);
   }
-  var isNonTrackableKeys2 = /* @__PURE__ */ makeMap2(`__proto__,__v_isRef,__isVue`);
-  var builtInSymbols2 = new Set(Object.getOwnPropertyNames(Symbol).map((key) => Symbol[key]).filter(isSymbol2));
-  var get22 = /* @__PURE__ */ createGetter2();
-  var shallowGet = /* @__PURE__ */ createGetter2(false, true);
-  var readonlyGet2 = /* @__PURE__ */ createGetter2(true);
-  var shallowReadonlyGet = /* @__PURE__ */ createGetter2(true, true);
-  var arrayInstrumentations2 = {};
+  var isNonTrackableKeys = /* @__PURE__ */ makeMap(`__proto__,__v_isRef,__isVue`);
+  var builtInSymbols = new Set(Object.getOwnPropertyNames(Symbol).map((key) => Symbol[key]).filter(isSymbol));
+  var get2 = /* @__PURE__ */ createGetter();
+  var shallowGet = /* @__PURE__ */ createGetter(false, true);
+  var readonlyGet = /* @__PURE__ */ createGetter(true);
+  var shallowReadonlyGet = /* @__PURE__ */ createGetter(true, true);
+  var arrayInstrumentations = {};
   ["includes", "indexOf", "lastIndexOf"].forEach((key) => {
     const method = Array.prototype[key];
-    arrayInstrumentations2[key] = function(...args) {
-      const arr = toRaw2(this);
+    arrayInstrumentations[key] = function(...args) {
+      const arr = toRaw(this);
       for (let i = 0, l = this.length; i < l; i++) {
-        track2(arr, "get", i + "");
+        track(arr, "get", i + "");
       }
       const res = method.apply(arr, args);
       if (res === -1 || res === false) {
-        return method.apply(arr, args.map(toRaw2));
+        return method.apply(arr, args.map(toRaw));
       } else {
         return res;
       }
@@ -2579,100 +1936,100 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
     const method = Array.prototype[key];
-    arrayInstrumentations2[key] = function(...args) {
-      pauseTracking3();
+    arrayInstrumentations[key] = function(...args) {
+      pauseTracking2();
       const res = method.apply(this, args);
-      resetTracking2();
+      resetTracking();
       return res;
     };
   });
-  function createGetter2(isReadonly2 = false, shallow = false) {
+  function createGetter(isReadonly = false, shallow = false) {
     return function get3(target, key, receiver) {
       if (key === "__v_isReactive") {
-        return !isReadonly2;
+        return !isReadonly;
       } else if (key === "__v_isReadonly") {
-        return isReadonly2;
-      } else if (key === "__v_raw" && receiver === (isReadonly2 ? shallow ? shallowReadonlyMap2 : readonlyMap2 : shallow ? shallowReactiveMap2 : reactiveMap2).get(target)) {
+        return isReadonly;
+      } else if (key === "__v_raw" && receiver === (isReadonly ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target)) {
         return target;
       }
-      const targetIsArray = isArray3(target);
-      if (!isReadonly2 && targetIsArray && hasOwn2(arrayInstrumentations2, key)) {
-        return Reflect.get(arrayInstrumentations2, key, receiver);
+      const targetIsArray = isArray2(target);
+      if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key)) {
+        return Reflect.get(arrayInstrumentations, key, receiver);
       }
       const res = Reflect.get(target, key, receiver);
-      if (isSymbol2(key) ? builtInSymbols2.has(key) : isNonTrackableKeys2(key)) {
+      if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
         return res;
       }
-      if (!isReadonly2) {
-        track2(target, "get", key);
+      if (!isReadonly) {
+        track(target, "get", key);
       }
       if (shallow) {
         return res;
       }
-      if (isRef2(res)) {
-        const shouldUnwrap = !targetIsArray || !isIntegerKey2(key);
+      if (isRef(res)) {
+        const shouldUnwrap = !targetIsArray || !isIntegerKey(key);
         return shouldUnwrap ? res.value : res;
       }
-      if (isObject3(res)) {
-        return isReadonly2 ? readonly2(res) : reactive22(res);
+      if (isObject2(res)) {
+        return isReadonly ? readonly(res) : reactive2(res);
       }
       return res;
     };
   }
-  var set22 = /* @__PURE__ */ createSetter2();
-  var shallowSet = /* @__PURE__ */ createSetter2(true);
-  function createSetter2(shallow = false) {
+  var set2 = /* @__PURE__ */ createSetter();
+  var shallowSet = /* @__PURE__ */ createSetter(true);
+  function createSetter(shallow = false) {
     return function set3(target, key, value, receiver) {
       let oldValue = target[key];
       if (!shallow) {
-        value = toRaw2(value);
-        oldValue = toRaw2(oldValue);
-        if (!isArray3(target) && isRef2(oldValue) && !isRef2(value)) {
+        value = toRaw(value);
+        oldValue = toRaw(oldValue);
+        if (!isArray2(target) && isRef(oldValue) && !isRef(value)) {
           oldValue.value = value;
           return true;
         }
       }
-      const hadKey = isArray3(target) && isIntegerKey2(key) ? Number(key) < target.length : hasOwn2(target, key);
+      const hadKey = isArray2(target) && isIntegerKey(key) ? Number(key) < target.length : hasOwn(target, key);
       const result = Reflect.set(target, key, value, receiver);
-      if (target === toRaw2(receiver)) {
+      if (target === toRaw(receiver)) {
         if (!hadKey) {
-          trigger3(target, "add", key, value);
-        } else if (hasChanged2(value, oldValue)) {
-          trigger3(target, "set", key, value, oldValue);
+          trigger2(target, "add", key, value);
+        } else if (hasChanged(value, oldValue)) {
+          trigger2(target, "set", key, value, oldValue);
         }
       }
       return result;
     };
   }
-  function deleteProperty2(target, key) {
-    const hadKey = hasOwn2(target, key);
+  function deleteProperty(target, key) {
+    const hadKey = hasOwn(target, key);
     const oldValue = target[key];
     const result = Reflect.deleteProperty(target, key);
     if (result && hadKey) {
-      trigger3(target, "delete", key, void 0, oldValue);
+      trigger2(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
-  function has2(target, key) {
+  function has(target, key) {
     const result = Reflect.has(target, key);
-    if (!isSymbol2(key) || !builtInSymbols2.has(key)) {
-      track2(target, "has", key);
+    if (!isSymbol(key) || !builtInSymbols.has(key)) {
+      track(target, "has", key);
     }
     return result;
   }
-  function ownKeys2(target) {
-    track2(target, "iterate", isArray3(target) ? "length" : ITERATE_KEY2);
+  function ownKeys(target) {
+    track(target, "iterate", isArray2(target) ? "length" : ITERATE_KEY);
     return Reflect.ownKeys(target);
   }
-  var mutableHandlers2 = {
-    get: get22,
-    set: set22,
-    deleteProperty: deleteProperty2,
-    has: has2,
-    ownKeys: ownKeys2
+  var mutableHandlers = {
+    get: get2,
+    set: set2,
+    deleteProperty,
+    has,
+    ownKeys
   };
-  var readonlyHandlers2 = {
-    get: readonlyGet2,
+  var readonlyHandlers = {
+    get: readonlyGet,
     set(target, key) {
       if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
@@ -2686,130 +2043,130 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return true;
     }
   };
-  var shallowReactiveHandlers = extend2({}, mutableHandlers2, {
+  var shallowReactiveHandlers = extend({}, mutableHandlers, {
     get: shallowGet,
     set: shallowSet
   });
-  var shallowReadonlyHandlers = extend2({}, readonlyHandlers2, {
+  var shallowReadonlyHandlers = extend({}, readonlyHandlers, {
     get: shallowReadonlyGet
   });
-  var toReactive2 = (value) => isObject3(value) ? reactive22(value) : value;
-  var toReadonly2 = (value) => isObject3(value) ? readonly2(value) : value;
-  var toShallow2 = (value) => value;
-  var getProto2 = (v) => Reflect.getPrototypeOf(v);
-  function get$12(target, key, isReadonly2 = false, isShallow2 = false) {
+  var toReactive = (value) => isObject2(value) ? reactive2(value) : value;
+  var toReadonly = (value) => isObject2(value) ? readonly(value) : value;
+  var toShallow = (value) => value;
+  var getProto = (v) => Reflect.getPrototypeOf(v);
+  function get$1(target, key, isReadonly = false, isShallow = false) {
     target = target["__v_raw"];
-    const rawTarget = toRaw2(target);
-    const rawKey = toRaw2(key);
+    const rawTarget = toRaw(target);
+    const rawKey = toRaw(key);
     if (key !== rawKey) {
-      !isReadonly2 && track2(rawTarget, "get", key);
+      !isReadonly && track(rawTarget, "get", key);
     }
-    !isReadonly2 && track2(rawTarget, "get", rawKey);
-    const { has: has22 } = getProto2(rawTarget);
-    const wrap = isShallow2 ? toShallow2 : isReadonly2 ? toReadonly2 : toReactive2;
-    if (has22.call(rawTarget, key)) {
+    !isReadonly && track(rawTarget, "get", rawKey);
+    const { has: has2 } = getProto(rawTarget);
+    const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive;
+    if (has2.call(rawTarget, key)) {
       return wrap(target.get(key));
-    } else if (has22.call(rawTarget, rawKey)) {
+    } else if (has2.call(rawTarget, rawKey)) {
       return wrap(target.get(rawKey));
     } else if (target !== rawTarget) {
       target.get(key);
     }
   }
-  function has$12(key, isReadonly2 = false) {
+  function has$1(key, isReadonly = false) {
     const target = this["__v_raw"];
-    const rawTarget = toRaw2(target);
-    const rawKey = toRaw2(key);
+    const rawTarget = toRaw(target);
+    const rawKey = toRaw(key);
     if (key !== rawKey) {
-      !isReadonly2 && track2(rawTarget, "has", key);
+      !isReadonly && track(rawTarget, "has", key);
     }
-    !isReadonly2 && track2(rawTarget, "has", rawKey);
+    !isReadonly && track(rawTarget, "has", rawKey);
     return key === rawKey ? target.has(key) : target.has(key) || target.has(rawKey);
   }
-  function size2(target, isReadonly2 = false) {
+  function size(target, isReadonly = false) {
     target = target["__v_raw"];
-    !isReadonly2 && track2(toRaw2(target), "iterate", ITERATE_KEY2);
+    !isReadonly && track(toRaw(target), "iterate", ITERATE_KEY);
     return Reflect.get(target, "size", target);
   }
-  function add2(value) {
-    value = toRaw2(value);
-    const target = toRaw2(this);
-    const proto = getProto2(target);
+  function add(value) {
+    value = toRaw(value);
+    const target = toRaw(this);
+    const proto = getProto(target);
     const hadKey = proto.has.call(target, value);
     if (!hadKey) {
       target.add(value);
-      trigger3(target, "add", value, value);
+      trigger2(target, "add", value, value);
     }
     return this;
   }
-  function set$12(key, value) {
-    value = toRaw2(value);
-    const target = toRaw2(this);
-    const { has: has22, get: get3 } = getProto2(target);
-    let hadKey = has22.call(target, key);
+  function set$1(key, value) {
+    value = toRaw(value);
+    const target = toRaw(this);
+    const { has: has2, get: get3 } = getProto(target);
+    let hadKey = has2.call(target, key);
     if (!hadKey) {
-      key = toRaw2(key);
-      hadKey = has22.call(target, key);
+      key = toRaw(key);
+      hadKey = has2.call(target, key);
     } else if (true) {
-      checkIdentityKeys(target, has22, key);
+      checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3.call(target, key);
     target.set(key, value);
     if (!hadKey) {
-      trigger3(target, "add", key, value);
-    } else if (hasChanged2(value, oldValue)) {
-      trigger3(target, "set", key, value, oldValue);
+      trigger2(target, "add", key, value);
+    } else if (hasChanged(value, oldValue)) {
+      trigger2(target, "set", key, value, oldValue);
     }
     return this;
   }
-  function deleteEntry2(key) {
-    const target = toRaw2(this);
-    const { has: has22, get: get3 } = getProto2(target);
-    let hadKey = has22.call(target, key);
+  function deleteEntry(key) {
+    const target = toRaw(this);
+    const { has: has2, get: get3 } = getProto(target);
+    let hadKey = has2.call(target, key);
     if (!hadKey) {
-      key = toRaw2(key);
-      hadKey = has22.call(target, key);
+      key = toRaw(key);
+      hadKey = has2.call(target, key);
     } else if (true) {
-      checkIdentityKeys(target, has22, key);
+      checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
     const result = target.delete(key);
     if (hadKey) {
-      trigger3(target, "delete", key, void 0, oldValue);
+      trigger2(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
-  function clear3() {
-    const target = toRaw2(this);
+  function clear2() {
+    const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap2(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
-      trigger3(target, "clear", void 0, void 0, oldTarget);
+      trigger2(target, "clear", void 0, void 0, oldTarget);
     }
     return result;
   }
-  function createForEach2(isReadonly2, isShallow2) {
+  function createForEach(isReadonly, isShallow) {
     return function forEach(callback, thisArg) {
       const observed = this;
       const target = observed["__v_raw"];
-      const rawTarget = toRaw2(target);
-      const wrap = isShallow2 ? toShallow2 : isReadonly2 ? toReadonly2 : toReactive2;
-      !isReadonly2 && track2(rawTarget, "iterate", ITERATE_KEY2);
+      const rawTarget = toRaw(target);
+      const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive;
+      !isReadonly && track(rawTarget, "iterate", ITERATE_KEY);
       return target.forEach((value, key) => {
         return callback.call(thisArg, wrap(value), wrap(key), observed);
       });
     };
   }
-  function createIterableMethod2(method, isReadonly2, isShallow2) {
+  function createIterableMethod(method, isReadonly, isShallow) {
     return function(...args) {
       const target = this["__v_raw"];
-      const rawTarget = toRaw2(target);
-      const targetIsMap = isMap2(rawTarget);
+      const rawTarget = toRaw(target);
+      const targetIsMap = isMap(rawTarget);
       const isPair = method === "entries" || method === Symbol.iterator && targetIsMap;
       const isKeyOnly = method === "keys" && targetIsMap;
       const innerIterator = target[method](...args);
-      const wrap = isShallow2 ? toShallow2 : isReadonly2 ? toReadonly2 : toReactive2;
-      !isReadonly2 && track2(rawTarget, "iterate", isKeyOnly ? MAP_KEY_ITERATE_KEY2 : ITERATE_KEY2);
+      const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive;
+      !isReadonly && track(rawTarget, "iterate", isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY);
       return {
         next() {
           const { value, done } = innerIterator.next();
@@ -2824,119 +2181,119 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       };
     };
   }
-  function createReadonlyMethod2(type) {
+  function createReadonlyMethod(type) {
     return function(...args) {
       if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
-        console.warn(`${capitalize2(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
+        console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
       return type === "delete" ? false : this;
     };
   }
-  var mutableInstrumentations2 = {
+  var mutableInstrumentations = {
     get(key) {
-      return get$12(this, key);
+      return get$1(this, key);
     },
     get size() {
-      return size2(this);
+      return size(this);
     },
-    has: has$12,
-    add: add2,
-    set: set$12,
-    delete: deleteEntry2,
-    clear: clear3,
-    forEach: createForEach2(false, false)
+    has: has$1,
+    add,
+    set: set$1,
+    delete: deleteEntry,
+    clear: clear2,
+    forEach: createForEach(false, false)
   };
-  var shallowInstrumentations2 = {
+  var shallowInstrumentations = {
     get(key) {
-      return get$12(this, key, false, true);
+      return get$1(this, key, false, true);
     },
     get size() {
-      return size2(this);
+      return size(this);
     },
-    has: has$12,
-    add: add2,
-    set: set$12,
-    delete: deleteEntry2,
-    clear: clear3,
-    forEach: createForEach2(false, true)
+    has: has$1,
+    add,
+    set: set$1,
+    delete: deleteEntry,
+    clear: clear2,
+    forEach: createForEach(false, true)
   };
-  var readonlyInstrumentations2 = {
+  var readonlyInstrumentations = {
     get(key) {
-      return get$12(this, key, true);
+      return get$1(this, key, true);
     },
     get size() {
-      return size2(this, true);
+      return size(this, true);
     },
     has(key) {
-      return has$12.call(this, key, true);
+      return has$1.call(this, key, true);
     },
-    add: createReadonlyMethod2("add"),
-    set: createReadonlyMethod2("set"),
-    delete: createReadonlyMethod2("delete"),
-    clear: createReadonlyMethod2("clear"),
-    forEach: createForEach2(true, false)
+    add: createReadonlyMethod("add"),
+    set: createReadonlyMethod("set"),
+    delete: createReadonlyMethod("delete"),
+    clear: createReadonlyMethod("clear"),
+    forEach: createForEach(true, false)
   };
-  var shallowReadonlyInstrumentations2 = {
+  var shallowReadonlyInstrumentations = {
     get(key) {
-      return get$12(this, key, true, true);
+      return get$1(this, key, true, true);
     },
     get size() {
-      return size2(this, true);
+      return size(this, true);
     },
     has(key) {
-      return has$12.call(this, key, true);
+      return has$1.call(this, key, true);
     },
-    add: createReadonlyMethod2("add"),
-    set: createReadonlyMethod2("set"),
-    delete: createReadonlyMethod2("delete"),
-    clear: createReadonlyMethod2("clear"),
-    forEach: createForEach2(true, true)
+    add: createReadonlyMethod("add"),
+    set: createReadonlyMethod("set"),
+    delete: createReadonlyMethod("delete"),
+    clear: createReadonlyMethod("clear"),
+    forEach: createForEach(true, true)
   };
   var iteratorMethods = ["keys", "values", "entries", Symbol.iterator];
   iteratorMethods.forEach((method) => {
-    mutableInstrumentations2[method] = createIterableMethod2(method, false, false);
-    readonlyInstrumentations2[method] = createIterableMethod2(method, true, false);
-    shallowInstrumentations2[method] = createIterableMethod2(method, false, true);
-    shallowReadonlyInstrumentations2[method] = createIterableMethod2(method, true, true);
+    mutableInstrumentations[method] = createIterableMethod(method, false, false);
+    readonlyInstrumentations[method] = createIterableMethod(method, true, false);
+    shallowInstrumentations[method] = createIterableMethod(method, false, true);
+    shallowReadonlyInstrumentations[method] = createIterableMethod(method, true, true);
   });
-  function createInstrumentationGetter2(isReadonly2, shallow) {
-    const instrumentations = shallow ? isReadonly2 ? shallowReadonlyInstrumentations2 : shallowInstrumentations2 : isReadonly2 ? readonlyInstrumentations2 : mutableInstrumentations2;
+  function createInstrumentationGetter(isReadonly, shallow) {
+    const instrumentations = shallow ? isReadonly ? shallowReadonlyInstrumentations : shallowInstrumentations : isReadonly ? readonlyInstrumentations : mutableInstrumentations;
     return (target, key, receiver) => {
       if (key === "__v_isReactive") {
-        return !isReadonly2;
+        return !isReadonly;
       } else if (key === "__v_isReadonly") {
-        return isReadonly2;
+        return isReadonly;
       } else if (key === "__v_raw") {
         return target;
       }
-      return Reflect.get(hasOwn2(instrumentations, key) && key in target ? instrumentations : target, key, receiver);
+      return Reflect.get(hasOwn(instrumentations, key) && key in target ? instrumentations : target, key, receiver);
     };
   }
-  var mutableCollectionHandlers2 = {
-    get: createInstrumentationGetter2(false, false)
+  var mutableCollectionHandlers = {
+    get: createInstrumentationGetter(false, false)
   };
   var shallowCollectionHandlers = {
-    get: createInstrumentationGetter2(false, true)
+    get: createInstrumentationGetter(false, true)
   };
-  var readonlyCollectionHandlers2 = {
-    get: createInstrumentationGetter2(true, false)
+  var readonlyCollectionHandlers = {
+    get: createInstrumentationGetter(true, false)
   };
   var shallowReadonlyCollectionHandlers = {
-    get: createInstrumentationGetter2(true, true)
+    get: createInstrumentationGetter(true, true)
   };
-  function checkIdentityKeys(target, has22, key) {
-    const rawKey = toRaw2(key);
-    if (rawKey !== key && has22.call(target, rawKey)) {
-      const type = toRawType2(target);
+  function checkIdentityKeys(target, has2, key) {
+    const rawKey = toRaw(key);
+    if (rawKey !== key && has2.call(target, rawKey)) {
+      const type = toRawType(target);
       console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
     }
   }
-  var reactiveMap2 = /* @__PURE__ */ new WeakMap();
-  var shallowReactiveMap2 = /* @__PURE__ */ new WeakMap();
-  var readonlyMap2 = /* @__PURE__ */ new WeakMap();
-  var shallowReadonlyMap2 = /* @__PURE__ */ new WeakMap();
-  function targetTypeMap2(rawType) {
+  var reactiveMap = /* @__PURE__ */ new WeakMap();
+  var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
+  var readonlyMap = /* @__PURE__ */ new WeakMap();
+  var shallowReadonlyMap = /* @__PURE__ */ new WeakMap();
+  function targetTypeMap(rawType) {
     switch (rawType) {
       case "Object":
       case "Array":
@@ -2950,33 +2307,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return 0;
     }
   }
-  function getTargetType2(value) {
-    return value["__v_skip"] || !Object.isExtensible(value) ? 0 : targetTypeMap2(toRawType2(value));
+  function getTargetType(value) {
+    return value["__v_skip"] || !Object.isExtensible(value) ? 0 : targetTypeMap(toRawType(value));
   }
-  function reactive22(target) {
+  function reactive2(target) {
     if (target && target["__v_isReadonly"]) {
       return target;
     }
-    return createReactiveObject2(target, false, mutableHandlers2, mutableCollectionHandlers2, reactiveMap2);
+    return createReactiveObject(target, false, mutableHandlers, mutableCollectionHandlers, reactiveMap);
   }
-  function readonly2(target) {
-    return createReactiveObject2(target, true, readonlyHandlers2, readonlyCollectionHandlers2, readonlyMap2);
+  function readonly(target) {
+    return createReactiveObject(target, true, readonlyHandlers, readonlyCollectionHandlers, readonlyMap);
   }
-  function createReactiveObject2(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
-    if (!isObject3(target)) {
+  function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
+    if (!isObject2(target)) {
       if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
     }
-    if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
+    if (target["__v_raw"] && !(isReadonly && target["__v_isReactive"])) {
       return target;
     }
     const existingProxy = proxyMap.get(target);
     if (existingProxy) {
       return existingProxy;
     }
-    const targetType = getTargetType2(target);
+    const targetType = getTargetType(target);
     if (targetType === 0) {
       return target;
     }
@@ -2984,10 +2341,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     proxyMap.set(target, proxy);
     return proxy;
   }
-  function toRaw2(observed) {
-    return observed && toRaw2(observed["__v_raw"]) || observed;
+  function toRaw(observed) {
+    return observed && toRaw(observed["__v_raw"]) || observed;
   }
-  function isRef2(r) {
+  function isRef(r) {
     return Boolean(r && r.__v_isRef === true);
   }
   magic("nextTick", () => nextTick);
@@ -3466,7 +2823,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (data2 === void 0)
       data2 = {};
     injectMagics(data2, el);
-    let reactiveData = reactive2(data2);
+    let reactiveData = reactive(data2);
     initInterceptors(reactiveData);
     let undo = addScopeToNode(el, reactiveData);
     reactiveData["init"] && evaluate(el, reactiveData["init"]);
@@ -3620,7 +2977,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let scope2 = scopes[index];
         let key = keys[index];
         let clone2 = document.importNode(templateEl.content, true).firstElementChild;
-        addScopeToNode(clone2, reactive2(scope2), templateEl);
+        addScopeToNode(clone2, reactive(scope2), templateEl);
         mutateDom(() => {
           lastEl.after(clone2);
           initTree(clone2);
@@ -3754,7 +3111,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   alpine_default.setEvaluator(normalEvaluator);
-  alpine_default.setReactivityEngine({ reactive: reactive22, effect: effect22, release: stop, raw: toRaw2 });
+  alpine_default.setReactivityEngine({ reactive: reactive2, effect: effect22, release: stop, raw: toRaw });
   var src_default = alpine_default;
   var module_default = src_default;
 
@@ -3810,7 +3167,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   async function sendMethodCall() {
     requestTargetQueue.forEach((request, symbol) => {
       let target = store2.get(symbol);
-      trigger2("request.prepare", target);
+      trigger("request.prepare", target);
     });
     let payload = [];
     let successReceivers = [];
@@ -3828,7 +3185,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }))
       };
       payload.push(targetPayload);
-      let finishTarget = trigger2("request", target, targetPayload);
+      let finishTarget = trigger("request", target, targetPayload);
       failureReceivers.push(() => {
         let failed = true;
         finishTarget(failed);
@@ -3859,8 +3216,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "X-Synthetic": ""
       }
     };
-    let finishProfile = trigger2("profile.request", options);
-    let finishFetch = trigger2("fetch", uri, options);
+    let finishProfile = trigger("profile.request", options);
+    let finishFetch = trigger("fetch", uri, options);
     let response = await fetch(uri, options);
     response = finishFetch(response);
     let succeed = async (responseContent) => {
@@ -3885,7 +3242,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     throw "Livewire: No CSRF token detected";
   }
   function processEffects(target, effects) {
-    trigger2("effects", target, effects);
+    trigger("effects", target, effects);
   }
   async function handleResponse(response, succeed, fail, finishProfile) {
     let content = await response.text();
@@ -3904,7 +3261,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     finishProfile({ content: "{}", failed: true });
     let skipDefault = false;
-    trigger2("response.error", response, content, () => skipDefault = true);
+    trigger("response.error", response, content, () => skipDefault = true);
     if (skipDefault)
       return await fail();
     if (response.status === 419) {
@@ -4132,7 +3489,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let component = new Component(el);
     if (components[component.id])
       throw "Component already registered";
-    trigger2("component.init", component);
+    trigger("component.init", component);
     components[component.id] = component;
   }
   function findComponent(id) {
@@ -4188,9 +3545,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
-      if (self2)
-        dispatchSelf(component, component.id, name, params);
+    dispatches.forEach(({ name, params = {}, self = false, to }) => {
+      if (self)
+        dispatchSelf(component, name, params);
       else if (to)
         dispatchTo(component, to, name, params);
       else
@@ -4200,7 +3557,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function dispatchEvent(component, target, name, params, bubbles = true) {
     let e = new CustomEvent(name, { bubbles, detail: params });
     e.__livewire = { from: component.id, name, params, receivedBy: [] };
-    trigger2("dispatch", e);
+    trigger("dispatch", e);
     target.dispatchEvent(e);
   }
   function dispatch3(component, name, params) {
@@ -4569,7 +3926,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return isNodeMatchingSelectorFocusable(options, node);
   };
-  function ownKeys3(object, enumerableOnly) {
+  function ownKeys2(object, enumerableOnly) {
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
       var symbols = Object.getOwnPropertySymbols(object);
@@ -4586,13 +3943,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i] != null ? arguments[i] : {};
       if (i % 2) {
-        ownKeys3(Object(source), true).forEach(function(key) {
+        ownKeys2(Object(source), true).forEach(function(key) {
           _defineProperty(target, key, source[key]);
         });
       } else if (Object.getOwnPropertyDescriptors) {
         Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
       } else {
-        ownKeys3(Object(source)).forEach(function(key) {
+        ownKeys2(Object(source)).forEach(function(key) {
           Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
         });
       }
@@ -5318,7 +4675,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let usePush = false;
       return interceptor2((initialSeedValue, getter, setter, path, key) => {
         let queryKey = alias || path;
-        let { initial, replace: replace2, push: push2, pop } = track3(queryKey, initialSeedValue, alwaysShow);
+        let { initial, replace: replace2, push: push2, pop } = track2(queryKey, initialSeedValue, alwaysShow);
         setter(initial);
         if (!usePush) {
           Alpine3.effect(() => replace2(getter()));
@@ -5346,12 +4703,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         };
       });
     });
-    Alpine3.history = { track: track3 };
+    Alpine3.history = { track: track2 };
   }
-  function track3(name, initialSeedValue, alwaysShow = false) {
-    let { has: has3, get: get3, set: set3, remove } = queryStringUtils();
+  function track2(name, initialSeedValue, alwaysShow = false) {
+    let { has: has2, get: get3, set: set3, remove } = queryStringUtils();
     let url = new URL(window.location.href);
-    let isInitiallyPresentInUrl = has3(url, name);
+    let isInitiallyPresentInUrl = has2(url, name);
     let initialValue = isInitiallyPresentInUrl ? get3(url, name) : initialSeedValue;
     let initialValueMemo = JSON.stringify(initialValue);
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
@@ -5825,7 +5182,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let component = closestComponent(el, false);
       if (component) {
         initDirectives(el, component);
-        trigger2("element.init", el, component);
+        trigger("element.init", el, component);
       }
     }));
     module_default.start();
@@ -6150,7 +5507,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Object.entries(queryString).forEach(([key, value]) => {
       let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value);
       let initialValue = dataGet(component.ephemeral, name);
-      let { initial, replace: replace2, push: push2, pop } = track3(as, initialValue, alwaysShow);
+      let { initial, replace: replace2, push: push2, pop } = track2(as, initialValue, alwaysShow);
       if (use === "replace") {
         module_default.effect(() => {
           replace2(dataGet(component.reactive, name));
@@ -6279,7 +5636,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire:transition.js
-  on("morph.added", (el) => el.__addedByMorph = true);
+  on("morph.added", (el) => {
+    el.__addedByMorph = true;
+  });
   directive2("transition", (el, directive3, { component, cleanup: cleanup3 }) => {
     let visibility = module_default.reactive({ state: false });
     module_default.bind(el, {
@@ -6544,7 +5903,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         status: 200,
         async text() {
           let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger2("stream", streamed);
+            trigger("stream", streamed);
           });
           if (contentIsFromDump(finalResponse)) {
             this.ok = false;
@@ -6812,7 +6171,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     first,
     find,
     hook: on,
-    trigger: trigger2,
+    trigger,
     dispatch: dispatch3,
     on: on3
   };
