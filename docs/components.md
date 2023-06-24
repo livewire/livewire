@@ -279,7 +279,7 @@ You can include a Livewire component in your Blade templates using the `<livewir
 <livewire:create-post />
 ```
 
-> [!warning] You must use _kebab-case_
+> [!warning] You must use kebab-case
 > As you can see in the snippet above, you must use the _kebab-cased_ version of the component name. Using the _StudlyCase_ version of the name (`<livewire:CreatePost />`) is invalid and won't be recognized by Livewire.
 
 
