@@ -69,7 +69,7 @@ class UnitTest extends \Tests\TestCase
         $output = $this->compile(<<<'HTML'
         <div>
             {{ 1 < 5 ? "true" : "false" }}
-            
+
             @foreach(range(1,4) as $key => $value)
                 {{ $key }}="{{ $value }}"
             @endforeach
@@ -82,6 +82,23 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertOccurrences(2, '__BLOCK__', $output);
         $this->assertOccurrences(2, '__ENDBLOCK__', $output);
+    }
+
+    /** @test */
+    public function conditional_markers_do_not_remove_nested_endif_statements_without_a_parent_tag()
+    {
+        Livewire::component('foo', new class extends \Livewire\Component {
+            public function render() {
+                return '<div> @if (true) @if (true) <div></div> @endif @endif </div>';
+            }
+        });
+
+        $output = Blade::render('
+            <livewire:foo />
+        ');
+
+        $this->assertCount(2, explode('__BLOCK__', $output));
+        $this->assertCount(2, explode('__ENDBLOCK__', $output));
     }
 
     protected function compile($string)

@@ -17,13 +17,13 @@ class SupportMorphAwareIfStatement extends ComponentHook
     {
         $isNotInAHtmlTagBefore = '(<[^>]*>|\{\{[^}]*\}\}|\([^)]*\))(*SKIP)(*FAIL)|';
         $isNotInAHtmlTagAfter = '\s*\(';
-        
+
         $hasOpeningTagAfter = '[^>]*<';
 
         $precompile('/'. $isNotInAHtmlTagBefore . '@if' . $isNotInAHtmlTagAfter.'/mU', function ($matches) {
-            [$beforeIf, $afterIf] = explode('@if', $matches[0]);
+            [$before, $after] = explode('@if', $matches[0]);
 
-            return $beforeIf.'<!-- __BLOCK__ -->@if'.$afterIf;
+            return $before.'<!-- __BLOCK__ -->@if'.$after;
         });
 
         $precompile('/@endif'.$hasOpeningTagAfter.'/sm', function ($matches) {
@@ -33,9 +33,9 @@ class SupportMorphAwareIfStatement extends ComponentHook
         });
 
         $precompile('/'.$isNotInAHtmlTagBefore.'@foreach'.$isNotInAHtmlTagAfter.'/mU', function ($matches) {
-            [$beforeIf, $afterIf] = explode('@foreach', $matches[0]);
+            [$before, $after] = explode('@foreach', $matches[0]);
 
-            return $beforeIf.'<!-- __BLOCK__ -->@foreach'.$afterIf;
+            return $before.'<!-- __BLOCK__ -->@foreach'.$after;
         });
 
         $precompile('/@endforeach'.$hasOpeningTagAfter.'/sm', function ($matches) {
