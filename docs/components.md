@@ -293,7 +293,7 @@ To pass an initial value to the `title` property of the `CreatePost` component, 
 <livewire:create-post title="Initial Title" />
 ```
 
-If you need to pass dynamic values or variables to a component, you can write PHP expressions in component attributes using the following syntax:
+If you need to pass dynamic values or variables to a component, you can write PHP expressions in component attributes by prefixing the attribute with a colon:
 
 ```html
 <livewire:create-post :title="$initialTitle" />
