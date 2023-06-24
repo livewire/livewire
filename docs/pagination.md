@@ -6,7 +6,7 @@ However, when you use pagination inside a Livewire component, users can navigate
 
 ## Basic usage
 
-Here's the most basic example of using pagination inside a `ShowPosts` component to only show ten posts at a time.
+Below is the most basic example of using pagination inside a `ShowPosts` component to only show ten posts at a time:
 
 ```php
 <?php
@@ -37,15 +37,15 @@ class ShowPosts extends Component
 </div>
 ```
 
-As you can see, in addition to limiting the number of posts shown, `$posts->links()` will inject page navigation links.
+As you can see, in addition to limiting the number of posts shown via the `Post::paginate()` method, we will also use `$posts->links()` to render page navigation links.
 
-For more information, visit [the Laravel pagination documentation](https://laravel.com/docs/10.x/pagination).
+For more information on pagination using Laravel, check out [Laravel's comprehensive pagination documentation](https://laravel.com/docs/pagination).
 
 ## Resetting the page
 
 When sorting or filtering results, it is common to want to reset the page number back to `1`.
 
-Livewire exposes a method called `$this->resetPage()` that allows you to reset the page number from anywhere in your component.
+For this reason, Livewire provides the `$this->resetPage()` method, allowing you to reset the page number from anywhere in your component.
 
 The following component demonstrates using this method to reset the page after a search field is updated and submitted:
 
@@ -91,7 +91,7 @@ class SearchPosts extends Component
 </div>
 ```
 
-Now, if a user was on page `5` of the results, then filtered the results further by pressing "Search posts", the page would be reset back to `1`.
+Now, if a user was on page `5` of the results and then filtered the results further by pressing "Search posts", the page would be reset back to `1`.
 
 ### Available page navigation methods
 
@@ -100,13 +100,13 @@ In addition to `$this->resetPage()`, Livewire provides other useful methods for 
 | Method        | Description                               |
 |-----------------|-------------------------------------------|
 | `$this->setPage($page)`    | Set the paginator to a specific page number |
-| `$this->resetPage()`    | Reset the page back to 0 |
+| `$this->resetPage()`    | Reset the page back to 1 |
 | `$this->nextPage()`    | Go to the next page |
 | `$this->previousPage()`    | Go to the previous page |
 
 ## Multiple paginators
 
-Because both Laravel and Livewire use URL query string parameters to store and track the current page number, if a single page contains multiple paginators, it's important to designate one of them with a different name.
+Because both Laravel and Livewire use URL query string parameters to store and track the current page number, if a single page contains multiple paginators, it's important to assign them different names.
 
 To demonstrate the problem more clearly, consider the following `ShowClients` component:
 
@@ -131,7 +131,7 @@ As you can see, the above component contains a paginated set of *clients*. If a 
 http://application.test/?page=2`
 ```
 
-Suppose the page also contained a `ShowInvoices` component using pagination. To independantly track each paginator's current page, you need to specify a name for the second paginator like so:
+Suppose the page also contains a `ShowInvoices` component that also uses pagination. To independently track each paginator's current page, you need to specify a name for the second paginator like so:
 
 ```php
 use Livewire\Component;
@@ -148,13 +148,13 @@ class ShowInvoices extends Component
 }
 ```
 
-Now, because of the `pageName` parameter, added to the `paginate` method, when a user visits page `2` of the *invoices* as well, the URL will show the following:
+Now, because of the `pageName` parameter that has been added to the `paginate` method, when a user visits page `2` of the *invoices*, the URL will contain the following:
 
 ```
 `https://application.test/customers?page=2&invoice-page=2`
 ```
 
-To use Livewire's page navigation methods on a named paginator, you must pass in the page name as the second parameter like so:
+When using Livewire's page navigation methods on a named paginator, you must provide the page name as an additional parameter:
 
 ```php
 $this->setPage(2, pageName: 'invoice-page');
@@ -175,12 +175,12 @@ class ShowPosts extends Component
 {
     public function updatingPage($page)
     {
-        // Runs BEFORE the page is updated for this component...
+        // Runs before the page is updated for this component...
     }
     
     public function updatedPage($page)
     {
-        // Runs AFTER the page is updated for this component...
+        // Runs after the page is updated for this component...
     }
 
     pubic function render()
@@ -194,9 +194,9 @@ class ShowPosts extends Component
 
 ### Named paginator hooks
 
-The previous hooks only apply to the default paginator. If you used a named paginator, like in the case of multiple paginators on a page, you must define the methods using the paginator's name.
+The previous hooks only apply to the default paginator. If you are using a named paginator, you must define the methods using the paginator's name.
 
-Here's what a hook for a paginator named `invoices-page` would look like:
+For example, below is an example of what a hook for a paginator named `invoices-page` would look like:
 
 ```php
 public function updatingInvoicesPage($page)
@@ -207,27 +207,25 @@ public function updatingInvoicesPage($page)
 
 ### General paginator hooks
 
-If you prefer not to reference the paginator name in the hook method name, you can use the more generic alternatives:
+If you prefer to not reference the paginator name in the hook method name, you can use the more generic alternatives and simply receive the `$pageName` as a second argument to the hook method:
 
 ```php
 public function updatingPaginator($page, $pageName)
 {
-    // Runs BEFORE the page is updated for this component...
+    // Runs before the page is updated for this component...
 }
 
 public function updatedPaginator($page, $pageName)
 {
-    // Runs AFTER the page is updated for this component...
+    // Runs after the page is updated for this component...
 }
 ```
-
-Notice the second parameter passed called `$pageName` that you have access to if you still want to access the name of the paginator.
 
 ## Using the simple theme
 
 You can use Laravel's `simplePaginate()` method instead of `paginate()` for added speed and simplicity.
 
-When paginating results using this method, only *next* and *previous* navigation buttons will be shown to the user, instead of individual buttons for each page number:
+When paginating results using this method, only *next* and *previous* navigation links will be shown to the user instead of individual links for each page number:
 
 ```php
 pubic function render()
@@ -238,11 +236,11 @@ pubic function render()
 }
 ```
 
-For more information, check out [Laravel's "simplePaginator" documentation.](https://laravel.com/docs/10.x/pagination#simple-pagination)
+For more information on simple pagination, check out [Laravel's "simplePaginator" documentation](https://laravel.com/docs/pagination#simple-pagination).
 
 ## Using cursor pagination
 
-Livewire also supports using Laravel's cursor pagination—a faster pagination method useful in large datasets:
+Livewire also supports using Laravel's cursor pagination — a faster pagination method useful in large datasets:
 
 ```php
 pubic function render()
@@ -253,25 +251,25 @@ pubic function render()
 }
 ```
 
-By using `cursorPaginate()`, instead of `paginate()` or `simplePaginate()`, the query string in your app's URL will store an encoded *cursor* instead of a standard page number. For example:
+By using `cursorPaginate()` instead of `paginate()` or `simplePaginate()`, the query string in your application's URL will store an encoded *cursor* instead of a standard page number. For example:
 
 ```
 https://example.com/posts?cursor=eyJpZCI6MTUsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0
 ```
 
-For more information, check out [Laravel's cursor pagination documentation.](https://laravel.com/docs/10.x/pagination#cursor-pagination)
+For more information on cursor pagination, check out [Laravel's cursor pagination documentation](https://laravel.com/docs/pagination#cursor-pagination).
 
 ## Using Bootstrap instead of Tailwind
 
-If you are using [Bootstrap](https://getbootstrap.com/) instead of [Tailwind](https://tailwindcss.com/) as your app's CSS framework, you can configure Livewire to use pagination views constructed using Bootstrap classes instead of Tailwind classes.
+If you are using [Bootstrap](https://getbootstrap.com/) instead of [Tailwind](https://tailwindcss.com/) as your application's CSS framework, you can configure Livewire to use Bootstrap styled pagination views instead of the default Tailwind views.
 
-You can configure this by opening `config/livewire.php` and setting the `pagination_theme` value to "bootstrap":
+To accomplish this, set the `pagination_theme` configuration value in your application's `config/livewire.php` file:
 
-```json
-"pagination_theme": "bootstrap",
+```php
+'pagination_theme' => 'bootstrap',
 ```
 
-> [!info] You must publish Livewire's config file if you haven't already
+> [!info] Publishing Livewire's configuration file
 > Before customizing the pagination theme, you must first publish Livewire's configuration file to your application's `/config` directory by running the following command:
 > ```shell
 > php artisan livewire:publish --config
@@ -279,13 +277,13 @@ You can configure this by opening `config/livewire.php` and setting the `paginat
 
 ## Modifying the default pagination views
 
-If you wish to modify Livewire's pagination views to fit your application's style, you can do so by *publishing* them using the following command:
+If you want to modify Livewire's pagination views to fit your application's style, you can do so by *publishing* them using the following command:
 
 ```shell
 php artisan livewire:publish --pagination
 ```
 
-After running this command, the following four files will be inserted into `resources/views/vendor/livewire`:
+After running this command, the following four files will be inserted into the `resources/views/vendor/livewire` directory:
 
 | View file name        | Description                               |
 |-----------------|-------------------------------------------|
@@ -294,7 +292,7 @@ After running this command, the following four files will be inserted into `reso
 | `bootstrap.blade.php`    | The standard Bootstrap pagination theme |
 | `bootstrap-simple.blade.php`    | The *simple* Bootstrap pagination theme |
 
-Now, you have complete control over these files. When rendering pagination views using the paginated result's `->links()` method inside your template, Livewire will use these files instead of its own.
+Once the files have been published, you have complete control over them. When rendering pagination links using the paginated result's `->links()` method inside your template, Livewire will use these files instead of its own.
 
 ## Using custom pagination views
 
@@ -305,17 +303,17 @@ If you wish to bypass Livewire's pagination views entirely, you can render your 
 
 ### Via `->links()`
 
-The first is by passing your custom pagination Blade view name to the `->links()` method directly:
+The first approach is to simply pass your custom pagination Blade view name to the `->links()` method directly:
 
 ```html
 {{ $posts->links('custom-pagination-links') }}
 ```
 
-When rendering the pagination links, Livewire will now look for a file called `resources/views/custom-pagination-links.blade.php`.
+When rendering the pagination links, Livewire will now look for a view at `resources/views/custom-pagination-links.blade.php`.
 
 ### Via `paginationView()`
 
-The second is by declaring a `paginationView` method inside your component and returning the name of the view you'd like to use:
+The second approach is to declare a `paginationView` method inside your component which returns the name of the view you would like to use:
 
 ```php
 public function paginationView()
@@ -328,7 +326,7 @@ public function paginationView()
 
 Below is an unstyled sample of a simple Livewire pagination view for your reference.
 
-As you can see, you can use Livewire's page navigation helpers like `$this->nextPage()` directly inside your template using `wire:click="nextPage"`:
+As you can see, you can use Livewire's page navigation helpers like `$this->nextPage()` directly inside your template by adding `wire:click="nextPage"` to buttons:
 
 ```html
 <div>
