@@ -12,29 +12,23 @@ By adding `wire:offline` to an element inside a Livewire component, it will be h
 
 ## Toggling classes
 
-Adding the `class` modifier allows you to add a class to an element when "offline".
+Adding the `class` modifier allows you to add a class to an element when the user loses their connection. The class will be removed again once the user is back online:
 
 ```html
 <div wire:offline.class="bg-red-300">
 ```
 
-When the browser goes offline, the element will receive the `bg-red-300` class. The class will be removed again once the user is back online.
-
-You can also perform the inverse, removing classes by adding the `.remove` modifier, similar to how [`wire:loading`](/docs/loading) works.
+Or, using the `.remove` modifier, you can remove a class when a user loses their connection. In this example, the `bg-green-300` class will be removed from the `<div>` while the user has lost their connection:
 
 ```html
 <div class="bg-green-300" wire:offline.class.remove="bg-green-300">
 ```
 
-The `bg-green-300` class will be removed from the `<div>` while offline.
-
 ## Toggling attributes
 
-Adding the `attr` modifier allows you to add an attribute to an element when offline.
+The `.attr` modifier allows you to add an attribute to an element the user loses their connection. In this example, the "Save" button will be disabled while the user has lost their connection:
 
 ```html
 <button wire:offline.attr="disabled">Save</button>
 ```
-
-Now, when the browser goes offline, the button will be disabled.
 
