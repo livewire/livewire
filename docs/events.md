@@ -240,10 +240,10 @@ In this example, the test dispatches the `post-created` event, then checks that 
 
 ## Real-time events using Laravel Echo
 
-Livewire pairs nicely with [Laravel Echo](https://laravel.com/docs/10.x/broadcasting#client-side-installation) to provide real-time functionality on your web-pages using WebSockets.
+Livewire pairs nicely with [Laravel Echo](https://laravel.com/docs/broadcasting#client-side-installation) to provide real-time functionality on your web-pages using WebSockets.
 
 > [!warning] Installing Laravel Echo is a prerequisite
-> This feature assumes you have installed Laravel Echo and the `window.Echo` object is globally available in your application. For more information on installing echo, check out the [Laravel Echo documentation](https://laravel.com/docs/10.x/broadcasting#client-side-installation).
+> This feature assumes you have installed Laravel Echo and the `window.Echo` object is globally available in your application. For more information on installing echo, check out the [Laravel Echo documentation](https://laravel.com/docs/broadcasting#client-side-installation).
 
 ### Listening for Echo events
 

@@ -440,7 +440,7 @@ To prevent this kind of attack, we can use one or both of the following strategi
 
 #### Authorizing the input
 
-Because `$id` can be manipulated client-side with something like `wire:model`, just like in a controller, we can use [Laravel's authorization](https://laravel.com/docs/10.x/authorization) to make sure the current user can update the post:
+Because `$id` can be manipulated client-side with something like `wire:model`, just like in a controller, we can use [Laravel's authorization](https://laravel.com/docs/authorization) to make sure the current user can update the post:
 
 ```php
 public function update()
