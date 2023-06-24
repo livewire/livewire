@@ -17,7 +17,7 @@ Features:
     Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
     Validation: { uri: /docs/validation, file: /validation.md }
     File Uploads: { uri: /docs/uploads, file: /uploads.md }
-    Loading states: { uri: /docs/loading, file: /loading.md }
+    Loading States: { uri: /docs/loading, file: /loading.md }
     Pagination: { uri: /docs/pagination, file: /pagination.md }
     URL Query Parameters: { uri: /docs/url, file: /url.md }
     Getters: { uri: /docs/getters, file: /getters.md }
@@ -25,8 +25,8 @@ Features:
     Polling: { uri: /docs/polling, file: /polling.md }
     File Downloads: { uri: /docs/downloads, file: /downloads.md }
     Locked Properties: { uri: /docs/locked, file: /locked.md }
-    Dirty states: { uri: /docs/dirty, file: /dirty.md }
-    Offline states: { uri: /docs/offline, file: /offline.md }
+    Dirty States: { uri: /docs/dirty, file: /dirty.md }
+    Offline States: { uri: /docs/offline, file: /offline.md }
 Concepts:
     Hydration: { uri: /docs/hydration, file: /hydration.md }
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
