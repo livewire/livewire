@@ -59,7 +59,7 @@ Because Livewire events are plain browser events under the hood, you can use Alp
 
 For example, we may easily listen for the `post-created` event using Alpine:
 
-```html
+```blade
 <div x-on:post-created="..."></div>
 ```
 
@@ -67,13 +67,13 @@ The above snippet would listen for for the `post-created` event from any Livewir
 
 To listen for the event from any Livewire component on the page, you can add `.window` to the listener:
 
-```html
+```blade
 <div x-on:post-created.window="..."></div>
 ```
 
 If you want to access additional data that was sent with the event, you can do so using `$event.detail`:
 
-```html
+```blade
 <div x-on:post-created="notify('New post: ' + $event.detail.title)"></div>
 ```
 
@@ -85,13 +85,13 @@ Any event dispatched from Alpine is capable of being intercepted by a Livewire c
 
 For example, we may easily dispatch the `post-created` event from Alpine:
 
-```html
+```blade
 <button @click="$dispatch('post-created')">...</button>
 ```
 
 Like Livewire's `dispatch()` method, you can pass additional data along with the event by passing the data as the second parameter to the method:
 
-```html
+```blade
 <button @click="$dispatch('post-created', { title: 'Post Title' })">...</button>
 ```
 
@@ -123,7 +123,7 @@ Now, the `updatePostCount()` method will only be triggered when a child componen
 > [!tip] You might not need events
 > If you are using events to call behavior on a parent from a child, you can instead call the action directly from the child using `$parent` in your Blade template. For example:
 >
-> ```html
+> ```blade
 > <button wire:click="$parent.showCreatePostForm()">Create Post</button>
 > ```
 >
@@ -171,7 +171,7 @@ class CreatePost extends Component
 
 You can dispatch events directly from your Blade templates using the `$dispatch` JavaScript function. This is useful when you want to trigger an event from a user interaction, such as a button click:
 
-```html
+```blade
 <button wire:click="$dispatch('show-post-modal', { id: {{ $post->id }} })">
     EditPost
 </button>

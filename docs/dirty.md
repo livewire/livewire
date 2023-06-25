@@ -15,7 +15,7 @@ By adding `wire:dirty` to an element, you are instructing Livewire to only show 
 
 To demonstrate, here is an example of an `UpdatePost` form containing an "Unsaved changes..." visual indication that signals to the user that the form contains input that has not been saved:
 
-```html
+```blade
 <form wire:submit="update">
     <input type="text" wire:model="title">
 
@@ -35,7 +35,7 @@ When the user submits the form, the message will disappear again since the serve
 
 By adding the `.remove` modifier to `wire:dirty`, you can instead show an element by default and only hide it when the component has "dirty" state:
 
-```html
+```blade
 <div wire:dirty.remove>The data is in-sync...</div>
 ```
 
@@ -45,7 +45,7 @@ Imagine you are using `wire:model.blur` to update a property on the server immed
 
 Here is an example of only showing a dirty indication when the title property has been changed:
 
-```html
+```blade
 <form wire:submit="update">
     <input wire:model.blur="title">
 
@@ -61,7 +61,7 @@ Often, instead of toggling entire elements, you may want to toggle individual CS
 
 Below is an example where a user types into an input field and the border becomes yellow, indicating an "unsaved" state. Then, when the user tabs away from the field, the border is removed, indicating that the state has been saved on the server:
 
-```html
+```blade
 <input wire:model.lazy="title" wire:dirty.class="border-yellow-500">
 ```
 

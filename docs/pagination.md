@@ -27,7 +27,7 @@ class ShowPosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
     @foreach ($posts as $post)
         <!-- ... -->
@@ -75,7 +75,7 @@ class SearchPosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <form wire:submit="search">
         <input type="text" wire:model="query">
@@ -305,7 +305,7 @@ If you wish to bypass Livewire's pagination views entirely, you can render your 
 
 The first approach is to simply pass your custom pagination Blade view name to the `->links()` method directly:
 
-```html
+```blade
 {{ $posts->links('custom-pagination-links') }}
 ```
 
@@ -328,7 +328,7 @@ Below is an unstyled sample of a simple Livewire pagination view for your refere
 
 As you can see, you can use Livewire's page navigation helpers like `$this->nextPage()` directly inside your template by adding `wire:click="nextPage"` to buttons:
 
-```html
+```blade
 <div>
     @if ($paginator->hasPages())
         <nav role="navigation" aria-label="Pagination Navigation">

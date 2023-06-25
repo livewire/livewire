@@ -27,9 +27,9 @@ class Revenue extends Component
 }
 ```
 
-```html
+```blade
 <div>
-    Revenue this month: {{ $amount }} 
+    Revenue this month: {{ $amount }}
 </div>
 ```
 
@@ -37,7 +37,7 @@ Without lazy loading, this component would delay the loading of the entire page 
 
 To enable lazy loading, you can pass the `lazy` parameter into the component:
 
-```html
+```blade
 <livewire:revenue lazy />
 ```
 
@@ -51,7 +51,7 @@ For example, if the lazy loaded component is located at the bottom of the page, 
 
 If you would rather load the component immediately after the page load, even if it's out of sight for the user, you can add the `on-load` attribute to the component:
 
-```html
+```blade
 <livewire:revenue lazy on-load />
 ```
 
@@ -104,7 +104,7 @@ In general, you can treat `lazy` components the same as normal components since 
 
 For example, here's a scenario where you might pass a time interval into the `Revenue` component from a parent component:
 
-```html
+```blade
 <input type="date" wire:model="start">
 <input type="date" wire:model="end">
 
@@ -152,7 +152,7 @@ However, unlike a normal component load, a `lazy` component has to serialize or 
 
 For example, you might want to pass in an Eloquent model to the `Revenue` component like so:
 
-```html
+```blade
 <livewire:revenue lazy :user="$user" />
 ```
 

@@ -37,7 +37,7 @@ class ShowUser extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <h1>{{ $this->user->name }}</h1>
 
@@ -174,7 +174,7 @@ public function render()
 }
 ```
 
-```html
+```blade
 <div>
     @foreach ($posts as $post)
         <!-- ... -->
@@ -190,7 +190,7 @@ If you are conditionally accessing a value that is computationally expensive to 
 
 Consider the following template without a getter:
 
-```html
+```blade
 <div>
     @if (Auth::user()->can_see_posts)
         @foreach ($posts as $post)
@@ -220,7 +220,7 @@ public function render()
 }
 ```
 
-```html
+```blade
 <div>
     @if (Auth::user()->can_see_posts)
         @foreach ($this->posts as $post)
@@ -266,7 +266,7 @@ class ShowPosts extends Component
 }
 ```
 
-In the above example, without a getter, we would have no way to explicitly pass data into the Blade template. 
+In the above example, without a getter, we would have no way to explicitly pass data into the Blade template.
 
 ### Omitting the render method
 
@@ -293,7 +293,7 @@ class ShowPosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
     @foreach ($this->posts as $post)
         <!-- ... -->

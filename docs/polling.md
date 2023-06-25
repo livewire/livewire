@@ -40,7 +40,7 @@ The best way to reduce requests in this scenario is simply to make the polling i
 
 You can manually control how often the component will poll by appending the desired duration to `wire:poll` like so:
 
-```html
+```blade
 <div wire:poll.15s> <!-- In seconds... -->
 
 <div wire:poll.15000ms> <!-- In milliseconds... -->
@@ -52,7 +52,7 @@ To further cut down on server requests, Livewire automatically throttles polling
 
 If you want to opt-out of this behavior and keep polling continuously, even when a tab is in the background, you can add the `.keep-alive` modifier to `wire:poll`:
 
-```html
+```blade
 <div wire:poll.keep-alive>
 ```
 
@@ -60,7 +60,7 @@ If you want to opt-out of this behavior and keep polling continuously, even when
 
 Another measure you can take to only poll when necessary is to add the `.visible` modifier to `wire:poll`. The `.visible` modifier instructs Livewire to only poll the component when it is visible on the page:
 
-```html
+```blade
 <div wire:poll.visible>
 ```
 

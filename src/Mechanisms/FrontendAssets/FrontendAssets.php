@@ -18,7 +18,7 @@ class FrontendAssets
     {
         app()->singleton($this::class);
 
-        app($this::class)->setJavaScriptRoute(function ($handle) {
+        app($this::class)->setScriptRoute(function ($handle) {
             return Route::get('/livewire/livewire.js', $handle);
         });
 
@@ -26,7 +26,7 @@ class FrontendAssets
         Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
     }
 
-    function setJavaScriptRoute($callback)
+    function setScriptRoute($callback)
     {
         $route = $callback(function () {
             return $this->returnJavaScriptAsFile();
@@ -105,7 +105,6 @@ class FrontendAssets
     {
         // Use the default endpoint...
         $url = app(static::class)->javaScriptRoute->uri;
-
 
         // Use the configured one...
         $url = config('livewire.asset_url') ?: $url;

@@ -34,54 +34,6 @@ class Test extends TestCase
             ;
         });
     }
-
-    /** @test */
-    public function it_should_disable_browser_cache_when_disable_back_button_cache_is_set_to_true()
-    {
-        $this->markTestSkipped(); // @todo: Think we're going to remove the back button stuff in lieu of SPA mode...
-
-        Foo::first()->update(['name' => 'foo']);
-
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, Component::class, '?disableBackButtonCache=true')
-                ->assertSeeIn('@redirect.blade.model-output', 'foo')
-                ->assertSeeIn('@redirect.alpine.model-output', 'foo')
-
-                ->waitForLivewire()->click('@redirect-with-model.button')
-                // Pause to allow redirect to happen
-                ->pause(500)
-
-                ->back()
-                // Should see fresh output
-                ->assertSeeIn('@redirect.blade.model-output', 'bar')
-                ->assertSeeIn('@redirect.alpine.model-output', 'bar')
-            ;
-        });
-    }
-
-    /** @test */
-    public function it_should_not_disable_browser_cache_when_disable_back_button_cache_is_set_to_false()
-    {
-        $this->markTestSkipped(); // @todo: Think we're going to remove the back button stuff in lieu of SPA mode...
-
-        Foo::first()->update(['name' => 'foo']);
-
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, Component::class, '?disableBackButtonCache=false')
-                ->assertSeeIn('@redirect.blade.model-output', 'foo')
-                ->assertSeeIn('@redirect.alpine.model-output', 'foo')
-
-                ->waitForLivewire()->click('@redirect-with-model.button')
-                // Pause to allow redirect to happen
-                ->pause(500)
-
-                ->back()
-                // Should see cached output
-                ->assertSeeIn('@redirect.blade.model-output', 'foo')
-                ->assertSeeIn('@redirect.alpine.model-output', 'foo')
-            ;
-        });
-    }
 }
 
 class Foo extends Model

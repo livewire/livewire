@@ -23,7 +23,7 @@ Route::get('/users', ShowUsers::class);
 
 By adding `wire:navigate` to each link in a navigation menu on each page, Livewire will prevent the standard handling of the link click and replace it with its own, faster version:
 
-```html
+```blade
 <nav>
     <a href="/" wire:navigate>Dashboard</a>
     <a href="/posts" wire:navigate>Posts</a>
@@ -63,7 +63,7 @@ Surprisingly, the time between a user pressing down and lifting up on the mouse 
 
 If you want an even more aggressive approach to prefetching, you may use the `.prefetch.hover` modifier on a link:
 
-```html
+```blade
 <a href="/posts" wire:navigate.prefetch.hover>Posts</a>
 ```
 
@@ -82,7 +82,7 @@ By adding `wire:persist` to an element and providing it with a name, when a new 
 
 Here is an example of an `<audio>` player element being persisted across pages using `wire:persist`:
 
-```html
+```blade
 <div wire:persist="player">
     <audio src="{{ $episode->file }}" controls></audio>
 </div>
@@ -94,7 +94,7 @@ If the above HTML appears on both pages—the current page, and the next one—t
 
 Typically, you can use standard Blade utilities to detect the current page and show a corresponding visual indication that the page is "active":
 
-```html
+```blade
 <nav>
     <a href="/" wire:navigate class="{{ request()->is('/') && 'active' }}">Dashboard</a>
 
@@ -149,7 +149,7 @@ Listening to this event is useful for things like initializing third-party libra
 
 If two pages include the same `<script>` tag in the `<head>`, that script will only be run on the initial page visit and not on subsequent page visits.
 
-```html
+```blade
 <!-- Page one -->
 <head>
     <script src="/app.js"></script>
@@ -167,7 +167,7 @@ If a subsequent page includes a new `<script>` tag in the `<head>` that was not 
 
 In the below example, _page two_ includes a new JavaScript library for a third-party tool. When the user navigates to _page two_, that library will be evaluated.
 
-```html
+```blade
 <!-- Page one -->
 <head>
     <script src="/app.js"></script>
@@ -188,7 +188,7 @@ But, now that you are using `wire:navigate` and each page visit is no longer a f
 
 To prevent this, you may add `data-navigate-track` to a `<script>` tag in `<head>`:
 
-```html
+```blade
 <!-- Page one -->
 <head>
     <script src="/app.js?id=123" data-navigate-track></script>
@@ -206,7 +206,7 @@ When a user visits _page two_, Livewire will detect a fresh JavaScript asset and
 
 If you are using [Laravel's Vite plug-in](https://laravel.com/docs/vite#loading-your-scripts-and-styles) to bundle and serve your assets, Livewire adds `data-navigate-track` to the rendered HTML asset tags automatically. You can continue referencing your assets and scripts like normal:
 
-```html
+```blade
 <head>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -218,7 +218,7 @@ Livewire will automatically inject `data-navigate-track` onto the rendered HTML 
 
 Because Livewire replaces the entire contents of the `<body>` on every new page, all `<script>` tags on the new page will be run:
 
-```html
+```blade
 <!-- Page one -->
 <body>
     <script>
@@ -236,7 +236,7 @@ Because Livewire replaces the entire contents of the `<body>` on every new page,
 
 If you have a `<script>` tag in the body that you only want to be run once, you can add the `data-navigate-once` attribute to the `<script>` tag and Livewire will only run it on the initial page visit:
 
-```html
+```blade
 <script data-navigate-once>
     console.log('Runs only on page one')
 </script>

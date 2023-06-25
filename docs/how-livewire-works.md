@@ -47,7 +47,7 @@ class Counter extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <button wire:click="increment">Increment</button>
 
@@ -57,7 +57,7 @@ class Counter extends Component
 
 ## Rendering the component
 
-```html
+```blade
 <livewire:counter />
 ```
 
@@ -73,9 +73,9 @@ public function mount($name)
     $component = new $class;
 
     $id = str()->random(20);
-    
+
     $component->setId($id);
-    
+
     $data = $component->getData();
 
     $view = $component->render();
@@ -94,7 +94,7 @@ public function mount($name)
 }
 ```
 
-```html
+```blade
 <div wire:id="123456789" wire:snapshot="{ data: { count: 0 }, memo: { 'id': '123456789', 'name': 'counter' }">
     <button wire:click="increment">Increment</button>
 
@@ -119,7 +119,7 @@ walk(el, el => {
 
         el.addEventListener('click', e => {
             updateComponent(el, component, action)
-        }) 
+        })
     }
 })
 

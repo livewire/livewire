@@ -33,7 +33,7 @@ class CreatePost extends Component
 }
 ```
 
-```html
+```blade
 <form wire:submit="save"> <!-- [tl! highlight] -->
 	<input type="text" wire:model="title">
 
@@ -66,13 +66,13 @@ You can use one of Livewire's convenient aliases to narrow down key press event 
 
 For example, to perform a search when a user hits `Enter` after typing into a search box, you can use `wire:keydown.enter`:
 
-```html
+```blade
 <input wire:model="query" wire:keydown.enter="searchPosts">
 ```
 
 You can chain more key aliases after the first to listen for combinations of keys. For example, if you would like to listen for the `Enter` key only while the `Shift` key is pressed, you may write the following:
 
-```html
+```blade
 <input wire:keydown.shift.enter="...">
 ```
 
@@ -104,7 +104,7 @@ Livewire also includes helpful modifiers to make common event-handling tasks tri
 
 For example, if you need to call `event.preventDefault()` from inside an event listener, you can suffix the event name with `.prevent`:
 
-```html
+```blade
 <input wire:keydown.prevent="...">
 ```
 
@@ -136,7 +136,7 @@ Livewire also supports listening for custom events fired by third-party librarie
 
 For example, let's imagine you're using the [Trix](https://trix-editor.org/) rich text editor in your project and you want to listen for the `trix-change` event to capture the editor's content. You can accomplish this using the `wire:trix-change` directive:
 
-```html
+```blade
 <form wire:submit="save">
 	<!-- ... -->
 
@@ -156,7 +156,7 @@ In this example, the `setPostContent` action is called whenever the `trix-change
 > [!warning]
 > The Trix demo code above is incomplete and only useful as a demonstration of event listeners. If used verbatim, a network request would be fired on every single key stroke. A more performant implementation would be:
 >
-> ```html
+> ```blade
 > <trix-editor
 >    x-on:trix-change="$wire.content = $event.target.value"
 >></trix-editor>
@@ -167,7 +167,7 @@ In this example, the `setPostContent` action is called whenever the `trix-change
 
 If your application dispatches custom events from Alpine, you can also listen for those using Livewire:
 
-```html
+```blade
 <div wire:custom-event="...">
 
 	<!-- Deeply nested within this component: -->
@@ -180,7 +180,7 @@ When the button is clicked in the above example, the `custom-event` event is dis
 
 If you want to listen for an event dispatched somewhere else in your application, you will need to wait instead for the event to bubble up to the `window` object and listen for it there. Fortunately, Livewire makes this easy by allowing you to add a simple `.window` modifier to any event listener:
 
-```html
+```blade
 <div wire:custom-event.window="...">
 	<!-- ... -->
 </div>
@@ -193,7 +193,7 @@ If you want to listen for an event dispatched somewhere else in your application
 
 Consider the `CreatePost` example we previously discussed:
 
-```html
+```blade
 <form wire:submit="save">
 	<input wire:model="title">
 
@@ -215,7 +215,7 @@ To further lessen the confusion for users on slower connections, it is often hel
 
 Livewire provides a `wire:loading` directive that makes it trivial to show and hide loading indicators anywhere on a page. Here's a short example of using `wire:loading` to show a loading message below the "Save" button:
 
-```html
+```blade
 <form wire:submit="save">
 	<textarea wire:submit="content"></textarea>
 
@@ -261,7 +261,7 @@ class ShowPosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
 	@foreach ($posts as $post)
 		<div>
@@ -276,7 +276,7 @@ class ShowPosts extends Component
 
 For a post with an ID of 2, the "Delete" button in the Blade template above will render in the browser as:
 
-```html
+```blade
 <button wire:click="delete(2)">Delete</button>
 ```
 
@@ -344,7 +344,7 @@ class ShowPosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
 	@foreach ($posts as $post)
 		<div>
@@ -365,13 +365,13 @@ Livewire integrates seamlessly with [Alpine](https://alpinejs.dev/). In fact, un
 
 To make this pairing even more powerful, Livewire exposes a magic `$wire` object to Alpine that can be treated as a JavaScript representation of your PHP component. In addition to [accessing and mutating public properties via `$wire`](/docs/properties#accessing-properties-from-javascript), you can call actions. When an action is invoked on the `$wire` object, the corresponding PHP method will be invoked on your backend Livewire component:
 
-```html
+```blade
 <button x-on:click="$wire.save()">Save Post</button>
 ```
 
 Or, to illustrate a more complex example, you might use Alpine's [`x-intersect`](https://alpinejs.dev/plugins/intersect) utility to trigger a `incrementViewCount()` Livewire action when a given element is visible on the page:
 
-```html
+```blade
 <div x-intersect="$wire.incrementViewCount()">...</div>
 ```
 
@@ -388,7 +388,7 @@ public function addTodo($todo)
 
 Within your component's Blade template, you can invoke this action via Alpine, providing the parameter that should be given to the action:
 
-```html
+```blade
 <div x-data="{ todo: '' }">
     <input type="text" wire:model="todo">
 
@@ -415,7 +415,7 @@ public function getPostCount()
 
 Using `$wire`, the action may be invoked and its returned value resolved:
 
-```html
+```blade
 <span x-text="await $wire.getPostCount()"></span>
 ```
 
@@ -482,7 +482,7 @@ Livewire provides a set of "magic" actions that allow you to perform common task
 
 The `$parent` magic variable allows you to access parent component properties and call parent component actions from a child component:
 
-```html
+```blade
 <button wire:click="$parent.removePost({{ $post->id }})">Remove</button>
 ```
 
@@ -492,7 +492,7 @@ In the above example, if a parent component has a `removePost` action, a child c
 
 The `$set` magic action allows you to update a property in your Livewire component directly from the Blade template. To use `$set`, provide the property you want to update and the new value as arguments:
 
-```html
+```blade
 <button wire:click="$set('query', '')">Reset Search</button>
 ```
 
@@ -502,7 +502,7 @@ In this example, when the button is clicked, a network request is dispatched tha
 
 The `$refresh` action triggers a re-render of your Livewire component. This can be useful when updating the component's view without changing any property values:
 
-```html
+```blade
 <button wire:click="$refresh">Refresh</button>
 ```
 
@@ -512,7 +512,7 @@ When the button is clicked, the component will re-render, allowing you to see th
 
 The `$toggle` action is used to toggle the value of a boolean property in your Livewire component:
 
-```html
+```blade
 <button wire:click="$toggle('sortAsc')">
 	Sort {{ $sortAsc ? 'Descending' : 'Ascending' }}
 </button>
@@ -524,7 +524,7 @@ In this example, when the button is clicked, the `sortAsc` property in the compo
 
 The `$emit` action allows you to emit a Livewire event directly from the browser. Below is an example of a button that, when clicked, will emit the `post-deleted` event:
 
-```html
+```blade
 <button type="submit" wire:click="$emit('post-deleted')">Delete Post</button>
 ```
 
@@ -532,7 +532,7 @@ The `$emit` action allows you to emit a Livewire event directly from the browser
 
 The `$event` action may be used within event listeners like `wire:click`. This action gives you access to the actual JavaScript event that was triggered, allowing you to reference the triggering element and other relevant information:
 
-```html
+```blade
 <input type="text" wire:keydown.enter="search($event.target.value)">
 ```
 
@@ -542,7 +542,7 @@ When the enter key is pressed while a user is typing in the input above, the con
 
 You can also call magic actions from Alpine using the `$wire` object. For example, you may use the `$wire` object to invoke the `$refresh` magic action:
 
-```html
+```blade
 <button x-on:click="$wire.$refresh()">Refresh</button>
 ```
 
@@ -582,7 +582,7 @@ class ShowPost extends Component
 }
 ```
 
-```html
+```blade
 <div>
 	<h1>{{ $post->title }}</h1>
 	<p>{{ $post->content }}</p>
@@ -670,13 +670,13 @@ class ShowPosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
 	@foreach ($posts as $post)
 		<div>
-			<h1>{{ $post->title }}</h1>	
-			<span>{{ $post->content }}</span>	
-	
+			<h1>{{ $post->title }}</h1>
+			<span>{{ $post->content }}</span>
+
 			<button wire:click="delete({{ $post->id }})">Delete</button>
 		</div>
 	@endforeach
@@ -702,7 +702,7 @@ class ShowPosts extends Component
 		$post = Post::find($id);
 
 		if (! Auth::user()->can('update', $post)) { // [tl! highlight:2]
-			abort(403);	
+			abort(403);
 		}
 
 		$post->delete();
@@ -749,13 +749,13 @@ class BrowsePosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
 	@foreach ($posts as $post)
 		<div>
-			<h1>{{ $post->title }}</h1>	
-			<span>{{ $post->content }}</span>	
-	
+			<h1>{{ $post->title }}</h1>
+			<span>{{ $post->content }}</span>
+
 			@if (Auth::user()->isAdmin())
 				<button wire:click="deletePost({{ $post->id }})">Delete</button>
 			@endif
@@ -841,12 +841,12 @@ class BrowsePosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
 	@foreach ($posts as $post)
 	<div>
-		<h1>{{ $post->title }}</h1>	
-		<span>{{ $post->content }}</span>	
+		<h1>{{ $post->title }}</h1>
+		<span>{{ $post->content }}</span>
 
 		<button wire:click="deletePost({{ $post->id }})">Delete</button>
 	</div>

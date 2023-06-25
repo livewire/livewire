@@ -29,7 +29,7 @@ class CreatePost extends Component
 }
 ```
 
-```html
+```blade
 <!-- create-post.blade.php -->
 <form wire:submit.prevent="save">
     <input type="text" wire:model="title">
@@ -61,7 +61,7 @@ class SearchPosts extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <input type="text" wire:model.live="query" placeholder="Search posts...">
 
@@ -143,7 +143,7 @@ class TodoList extends Component
 
 In the `todo-list` Blade template, you can bind each task's `title` and `completed` properties to the corresponding input fields using dot notation:
 
-```html
+```blade
 <div>
     @foreach ($tasks as $index => $task)
         <div>
@@ -197,7 +197,7 @@ class ChildComponent extends Component
 
 In the `create-post` Blade template, you can bind data to the child component like this:
 
-```html
+```blade
 <div>
     <input type="text" wire:model="title">
 

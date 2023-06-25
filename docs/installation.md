@@ -24,7 +24,7 @@ By default, Livewire injects the JavaScript and CSS assets it needs into each pa
 
 If you want more control over this behavior, you can manually include the assets on a page using the following Blade directives:
 
-```html
+```blade
 <html>
 <head>
 	...
@@ -65,22 +65,22 @@ Now, instead of using `/livewire/update`, Livewire will send component updates t
 
 By default, Livewire will serve its JavaScript assets from the following URL: `https://example.com/livewire/livewire.js`. Additionally, Livewire will reference this asset from a script tag like so:
 
-```html
+```blade
 <script src="/livewire/livewire.js" ...
 ```
 
 If your application has global route prefixes due to localization or multi-tenancy, you can register your own endpoint that Livewire should use internally when fetching its JavaScript.
 
-To use a custom JavaScript asset endpoint, you can register your own route inside `Livewire::setJavaScriptRoute()`:
+To use a custom JavaScript asset endpoint, you can register your own route inside `Livewire::setScriptRoute()`:
 
 ```php
-Livewire::setJavaScriptRoute(function ($handle) {
+Livewire::setScriptRoute(function ($handle) {
     return Route::get('/custom/livewire/livewire.js', $handle);
 });
 ```
 
 Now, Livewire will load its JavaScript like so:
 
-```html
+```blade
 <script src="/custom/livewire/livewire.js" ...
 ```

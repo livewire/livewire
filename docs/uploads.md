@@ -27,7 +27,7 @@ class UploadPhoto extends Component
 }
 ```
 
-```html
+```blade
 <form wire:submit="save">
     <input type="file" wire:model="photo">
 
@@ -104,7 +104,7 @@ class UploadPhotos extends Component
 }
 ```
 
-```html
+```blade
 <form wire:submit="save">
     <input type="file" wire:model="photos" multiple>
 
@@ -150,7 +150,7 @@ class UploadPhoto extends Component
 }
 ```
 
-```html
+```blade
 <form wire:submit="save">
     @if ($photo) <!-- [tl! highlight:2] -->
         <img src="{{ $photo->temporaryUrl() }}">
@@ -279,7 +279,7 @@ Although `wire:model` for file uploads works differently than other `wire:model`
 
 You can display a loading indicator scoped to the file upload like so:
 
-```html
+```blade
 <input type="file" wire:model="photo">
 
 <div wire:loading wire:target="photo">Uploading...</div>
@@ -302,7 +302,7 @@ Event | Description
 
 Below is an example of wrapping a Livewire file upload in an Alpine component to display an upload progress bar:
 
-```html
+```blade
 <form wire:submit="save">
     <div
         x-data="{ uploading: false, progress: 0 }"
@@ -332,7 +332,7 @@ For these cases, Livewire exposes dedicated JavaScript functions.
 
 These functions exist on a JavaScript component object, which can be accessed using Livewire's convenient `@this` Blade directive from within your Livewire component's template:
 
-```html
+```blade
 <script>
     let file = document.querySelector('input[type="file"]').files[0]
 

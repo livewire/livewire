@@ -7,9 +7,9 @@ class [class] extends \Livewire\Component
     public function render()
     {
         return <<<'HTML'
-            <div>
-                {{-- [quote] --}}
-            </div>
+        <div>
+            {{-- [quote] --}}
+        </div>
         HTML;
     }
 }

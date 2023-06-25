@@ -26,7 +26,7 @@ class Dashboard extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <h1>Dashboard</h1>
 
@@ -60,7 +60,7 @@ class TodoList extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <livewire:todo-count :todos="$todos" />
 
@@ -109,28 +109,28 @@ class TodoCount extends Component
 
 In the previous example, we passed props to our child component using Livewire's dynamic prop syntax, which supports PHP expressions like so:
 
-```html
+```blade
 <livewire:todo-count :todos="$todos" />
 ```
 
 However, sometimes you may want to pass a component a simple static value such as a string. In these cases, you may omit the colon from the beginning of the statement:
 
-```html
+```blade
 <livewire:todo-count :todos="$todos" label="Todo Count:" />
 ```
 
 Boolean values may be provided to components by only specifying the key. For example, to pass an `$inline` variable with a value of `true` to a component, we may simply place `inline` on the component tag:
 
-```html
+```blade
 <livewire:todo-count :todos="$todos" inline />
 ```
 
-> [!tip] 
+> [!tip]
 > If the name of the the property and variable you are passing into the child component match, you can use the following shorter, alternative syntax:
-> 
-> ```html
+>
+> ```blade
 > <livewire:todo-count :todos="$todos" /> <!-- [tl! remove] -->
-> 
+>
 > <livewire:todo-count :$todos /> <!-- [tl! add] -->
 > ```
 
@@ -142,7 +142,7 @@ Component keys are how Livewire tracks each component on subsequent renders, par
 
 You can specify the component's key by specifying a `:key` prop on the child component:
 
-```html
+```blade
 <div>
     <h1>Todos</h1>
 
@@ -165,7 +165,7 @@ Livewire provides a few helpful shorthand syntaxes to help eliminate repetitive 
 
 The `#[Prop]` attribute allows you to omit a `mount()` method on your component and instructs Livewire to assign the property automatically. For example, if the following `todo-item` component is rendered on the page:
 
-```html
+```blade
 <livewire:todo-item :todo="$todo" :key="$todo->id" />
 ```
 
@@ -192,7 +192,7 @@ class TodoItem extends Component
 
 When passing PHP variables into a component, the variable name and the prop name are often the same. To avoid writing the name twice, Livewire allows you to simply prefix the variable with a colon:
 
-```html
+```blade
 <livewire:todo-item :todo="$todo" /> <!-- [tl! remove] -->
 
 <livewire:todo-item :$todo /> <!-- [tl! add] -->
@@ -208,7 +208,7 @@ But, if you want or need a prop to be reactive, you can easily enable this behav
 
 For example, below is the template of a parent `TodoList` component. Inside, it is rendering a `TodoCount` component and passing in the current list of todos:
 
-```html
+```blade
 <div>
     <h1>Todos:</h1>
 
@@ -282,7 +282,7 @@ class TodoList extends Component
 
 As you can see in the `TodoList` template, `wire:model` is being used to bind the `$todo` property directly to a nested `TodoInput` component:
 
-```html
+```blade
 <div>
     <h1>Todos</h1>
 
@@ -321,7 +321,7 @@ class TodoInput extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <input type="text" wire:model="value" >
 </div>
@@ -353,7 +353,7 @@ class TodoList extends Component
 
         if (! Auth::user()->can('update', $todo)) {
             abort(403);
-        } 
+        }
 
         $todo->delete();
     }
@@ -367,7 +367,7 @@ class TodoList extends Component
 }
 ```
 
-```html
+```blade
 <div>
     @foreach ($todos as $todo)
         <livewire:todo-item :$todo :key="$todo->id" />
@@ -394,7 +394,7 @@ class TodoList extends Component
 
         if (! Auth::user()->can('update', $todo)) {
             abort(403);
-        } 
+        }
 
         $todo->delete();
     }
@@ -435,7 +435,7 @@ class TodoItem extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <span>{{ $todo->content }}</span>
 
@@ -476,7 +476,7 @@ class TodoItem extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <span>{{ $todo->content }}</span>
 
@@ -494,7 +494,7 @@ This indirection is sometimes desirable; however, in other cases you may prefer 
 
 Livewire allows you to accomplish this by providing a magic `$parent` variable to your Blade template that you can use to access actions and properties directly from the child. Here's the above `TodoItem` template rewritten to call the `remove()` action directly on the parent via the magic `$parent` variable:
 
-```html
+```blade
 <div>
     <span>{{ $todo->content }}</span>
 
@@ -508,7 +508,7 @@ Events and direct parent communication are a few of the ways to communicate back
 
 Sometimes, you may not know which child component should be rendered on a page until run-time. Therefore, Livewire allows you to choose a child component at run-time via `<livewire:dynamic-component ...>`, which receives an `:is` prop:
 
-```html
+```blade
 <livewire:dynamic-component :is="$current" />
 ```
 
@@ -545,7 +545,7 @@ class Steps extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <livewire:dynamic-component :is="$current" />
 
@@ -598,7 +598,7 @@ class SurveyQuestion extends Component
 }
 ```
 
-```html
+```blade
 <div>
     Question: {{ $question->content }}
 
@@ -617,7 +617,7 @@ Behind the scenes, Livewire generates a key for each nested Livewire component i
 
 For example, consider the following nested `todo-count` component:
 
-```html
+```blade
 <div>
     <livewire:todo-count :todos="$todos" />
 </div>
@@ -625,7 +625,7 @@ For example, consider the following nested `todo-count` component:
 
 Livewire internally attaches a random string key to the component like so:
 
-```html
+```blade
 <div>
     <livewire:todo-count :todos="$todos" key="lska" />
 </div>
@@ -645,7 +645,7 @@ Using this knowledge, if you want to force a component to re-render, you can sim
 
 Below is an example where we might want to destroy and re-initialize the `todo-count` component if the `$todos` being passed to the component are changed:
 
-```html
+```blade
 <div>
     <livewire:todo-count :todos="$todos" :key="$todos->pluck('id')->join('-')" />
 </div>

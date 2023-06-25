@@ -6,7 +6,7 @@ Livewire provides a simple yet extremely powerful syntax for controlling loading
 
 Below is a basic example of a `CreatePost` component's form with `wire:loading` being used to toggle a loading message:
 
-```html
+```blade
 <form wire:submit="save">
     <!-- ... -->
 
@@ -24,7 +24,7 @@ When a user presses "Save", the "Saving post..." message will appear below the b
 
 Alternatively, you can append `.remove` for the inverse effect, showing an element by default and hiding it during requests to the server:
 
-```html
+```blade
 <div wire:loading.remove>...</div>
 ```
 
@@ -34,13 +34,13 @@ In addition to toggling the visibility of entire elements, it's often useful to 
 
 Below is a simple example of using the [Tailwind](https://tailwindcss.com/) class `opacity-50` to make the "Save" button fainter while the form is being submitted:
 
-```html
+```blade
 <button wire:loading.class="opacity-50">Save</button>
 ```
 
 Like toggling an element, you can perform the inverse class operation by appending `.remove` to the `wire:loading` directive. In the example below, the button's `bg-blue-500` class will be removed when the "Save" button is pressed:
 
-```html
+```blade
 <button class="bg-blue-500" wire:loading.class.remove="bg-blue-500">
     Save
 </button>
@@ -52,7 +52,7 @@ By default, when a form is submitted, Livewire will automatically disable the su
 
 However, in addition to this default behavior, Livewire offers the `.attr` modifier to allow you to toggle other attributes on an element or toggle attributes on elements that are outside of forms:
 
-```html
+```blade
 <button
     type="button"
     wire:click="remove"
@@ -74,7 +74,7 @@ For example, consider the following "Save post" form. In addition to a "Save" bu
 
 By adding `wire:target` to the following `wire:loading` element, you can instruct Livewire to only show the loading message when the "Remove" button is clicked:
 
-```html
+```blade
 <form wire:submit="save">
     <!-- ... -->
 
@@ -94,7 +94,7 @@ When the above "Remove" button is pressed, the "Removing post..." message will b
 
 In situations where the same action is triggered with different parameters from multiple places on a page, you can further scope `wire:target` to a specific action by passing in additional parameters. For example, consider the following scenario where a "Remove" button exists for each post on the page:
 
-```html
+```blade
 <div>
     @foreach ($posts as $post)
         <div>
@@ -120,7 +120,7 @@ Livewire also allows you to target specific component property updates by passin
 
 Consider the following example where a form input named `username` uses `wire:model.live` for real-time validation as a user types:
 
-```html
+```blade
 <form wire:submit="save">
     <input type="text" wire:model.live="username">
     @error('username') <span>{{ $message }}</span> @enderror
@@ -141,13 +141,13 @@ When `wire:loading` is added to an element, Livewire updates the CSS `display` p
 
 If you are toggling an element that uses a display value other than `inline-block`, like `flex` in the following example, you can append `.flex` to `wire:loading`:
 
-```html
+```blade
 <div class="flex" wire:loading.flex>...</div>
 ```
 
 Below is the complete list of available display values:
 
-```html
+```blade
 <div wire:loading.inline-flex>...</div>
 <div wire:loading.inline>...</div>
 <div wire:loading.block>...</div>
@@ -162,7 +162,7 @@ On fast connections, updates often happen so quickly that loading indicators onl
 
 For this reason, Livewire provides a `.delay` modifier to delay the showing of an indicator. For example, if you add `wire:loading.delay` to an element like so:
 
-```html
+```blade
 <div wire:loading.delay>...</div>
 ```
 
@@ -170,7 +170,7 @@ The above element will only appear if the request takes over 200 milliseconds. T
 
 To customize the amount of time to delay the loading indicator, you can use one of Livewire's helpful interval aliases:
 
-```html
+```blade
 <div wire:loading.delay.shortest>...</div> <!-- 50ms -->
 <div wire:loading.delay.shorter>...</div>  <!-- 100ms -->
 <div wire:loading.delay.short>...</div>    <!-- 150ms -->

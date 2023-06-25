@@ -38,7 +38,7 @@ class CreatePost extends Component
 }
 ```
 
-```html
+```blade
 <form wire:submit="save">
     <input type="text" wire:model="title">
 
@@ -100,7 +100,7 @@ class CreatePost extends Component
 
 We'll also modify our Blade template to show any validation errors on the page.
 
-```html
+```blade
 <form wire:submit="save">
     <input type="text" wire:model="title">
     @error('title') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
@@ -172,7 +172,7 @@ class CreatePost extends Component
 }
 ```
 
-```html
+```blade
 <form wire:submit="save">
     <input type="text" wire:model="form.title">
     @error('form.title') <span class="error">{{ $message }}</span> @enderror
@@ -320,7 +320,7 @@ However, it can be difficult for users to detect this "loading" state without ex
 
 Here's an example of adding a small loading spinner to the "Save" button via `wire:loading` so that a user understands that the form is being submitted:
 
-```html
+```blade
 <button type="submit">
     Save
 
@@ -340,7 +340,7 @@ By default, Livewire only sends a network request when the form is submitted (or
 
 Take the `CreatePost` component, for example. If you want to make sure the "title" input field is synchronized with the `$title` property on the backend as the user types, you may add the `.live` modifier to `wire:model` like so:
 
-```html
+```blade
 <input type="text" wire:model.live="title">
 ```
 
@@ -352,7 +352,7 @@ For most cases, `wire:model.live` is fine for real-time form field updating; how
 
 If instead of sending network requests as a user types, you want to instead only send the request when a user "tabs" out of the text input (also referred to as "blurring" an input), you can use the `.blur` modifier instead:
 
-```html
+```blade
 <input type="text" wire:model.blur="title" >
 ```
 
@@ -364,7 +364,7 @@ Sometimes, you may want to show validation errors as the user fills out the form
 
 Livewire handles this sort of thing automatically. By using `.live` or `.blur` on `wire:model`, Livewire will send network requests as the user fills out the form. Each of those network requests will run the appropriate validation rules before updating each property. If validation fails, the property won't be updated on the server and a validation message will be shown to the user:
 
-```html
+```blade
 <input type="text" wire:model.blur="title">
 
 @error('title') <span class="error">{{ $message }}</span> @enderror
@@ -420,7 +420,7 @@ class UpdatePost extends Component
 }
 ```
 
-```html
+```blade
 <form wire:submit.prevent>
     <input type="text" wire:model.blur="title">
     @error('title') <span class="error">{{ $message }}</span> @enderror
@@ -446,7 +446,7 @@ For example, if a user visits an `UpdatePost` page and starts modifying the titl
 
 Livewire provides the `wire:dirty` directive to allow you to toggle elements or modify classes when an input's value diverges from the server-side component:
 
-```html
+```blade
 <input type="text" wire:model.blur="title" wire:dirty.class="border-yellow">
 ```
 
@@ -454,7 +454,7 @@ In the above example, when a user types into the input field, a yellow border wi
 
 If you want to toggle an entire element's visibility, you can do so by using `wire:dirty` in conjunction with `wire:target`. `wire:target` is used to specify which piece of data you want to watch for "dirtiness". In this case, the "title" field:
 
-```html
+```blade
 <input type="text" wire:model="title">
 
 <div wire:dirty wire:target="title">Unsaved...</div>
@@ -464,7 +464,7 @@ If you want to toggle an entire element's visibility, you can do so by using `wi
 
 When using `.live` on a text input, you may want more fine-grained control over how often a network request is sent. By default, a debounce of "250ms" is applied to the input; however, you can customize this using the `.debounce` modifier:
 
-```html
+```blade
 <input type="text" wire:model.live.debounce.150ms="title" >
 ```
 
@@ -478,7 +478,7 @@ Sometimes this isn't the desired behavior, and you would rather send a request a
 
 In these cases, you can instead use `.throttle` to signify a time interval to send network requests:
 
-```html
+```blade
 <input type="text" wire:model.live.throttle.150ms="title" >
 ```
 
@@ -492,7 +492,7 @@ It can be helpful to extract repetitive UI elements such as these into dedicated
 
 For example, below is the original Blade template from the `CreatePost` component. We will be extracting the following two text inputs into dedicated Blade components:
 
-```html
+```blade
 <form wire:submit="save">
     <input type="text" wire:model="title"> <!-- [tl! highlight] -->
     @error('title') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
@@ -506,7 +506,7 @@ For example, below is the original Blade template from the `CreatePost` componen
 
 Here's what the template will look like after extracting a re-usable Blade component called `<x-input-text>`:
 
-```html
+```blade
 <form wire:submit="save">
     <x-input-text name="title" wire:model="title" /> <!-- [tl! highlight] -->
 
@@ -518,7 +518,7 @@ Here's what the template will look like after extracting a re-usable Blade compo
 
 Next, here's the source for the `x-input-text` component:
 
-```html
+```blade
 <!-- resources/views/components/input-text.blade.php -->
 
 @props(['name'])
@@ -543,7 +543,7 @@ For other attributes that don't have an explicit purpose, we used the `{{ $attri
 
 This ensures `wire:model="title"` and any other extra attributes such as `disabled`, `class="..."`, or `required` still get forwarded to the actual `<input>` element.
 
-### Custom form controls 
+### Custom form controls
 
 In the previous example, we "wrapped" an input element into a re-usable Blade component we can use as if it was a native HTML input element.
 
@@ -553,13 +553,13 @@ For example, let's imagine you wanted to create an `<x-input-counter />` compone
 
 Before we create a Blade component, let's first look at a simple, pure-Alpine, "counter" component for reference:
 
-```html
+```blade
 <div x-data="{ count: 0 }">
-    <button x-on:click="count--">-</button> 
+    <button x-on:click="count--">-</button>
 
     <span x-text="count"></span>
 
-    <button x-on:click="count++">+</button> 
+    <button x-on:click="count++">+</button>
 </div>
 ```
 
@@ -567,7 +567,7 @@ As you can see, the component above shows a number alongside two buttons to incr
 
 Now, let's imagine we want to extract this component into a Blade component called `<x-input-counter />` that we would use within a component like so:
 
-```html
+```blade
 <x-input-counter wire:model="quantity" />
 ```
 
@@ -577,15 +577,15 @@ However, making it work with `wire:model="quantity"` so that you can easily bind
 
 Here's the source for the component:
 
-```html
+```blade
 <!-- resources/view/components/input-counter.blade.php -->
 
 <div x-data="{ count: 0 }" x-modelable="count" {{ $attributes}}>
-    <button x-on:click="count--">-</button> 
+    <button x-on:click="count--">-</button>
 
     <span x-text="count"></span>
 
-    <button x-on:click="count++">+</button> 
+    <button x-on:click="count++">+</button>
 </div>
 ```
 
@@ -597,7 +597,7 @@ As you can see, the only different bit about this HTML is the `x-modelable="coun
 
 Because of `{{ $attributes }}`, when the HTML is rendered in the browser, `wire:model="quantity"` will be rendered alongside `x-modelable="count"` on the root `<div>` of the Alpine component like so:
 
-```html
+```blade
 <div x-data="{ count: 0 }" x-modelable="count" wire:model="quantity">
 ```
 
@@ -605,7 +605,7 @@ Because of `{{ $attributes }}`, when the HTML is rendered in the browser, `wire:
 
 Because `x-modelable` works for both `wire:model` and `x-model`, you can also use this Blade component interchangeably with Livewire and Alpine. For example, here's an example of using this Blade component in a purely Alpine context:
 
-```html
+```blade
 <x-input-counter x-model="quantity" />
 ```
 
@@ -621,7 +621,7 @@ Here's a comprehensive list of the different available input types and how you u
 
 First and foremost, text inputs are the bedrock of most forms. Here's how to bind a property named "title" to one:
 
-```html
+```blade
 <input type="text" wire:model="title">
 ```
 
@@ -629,13 +629,13 @@ First and foremost, text inputs are the bedrock of most forms. Here's how to bin
 
 Textarea elements are similarly straightforward. Simply add `wire:model` to a textarea and the value will be bound:
 
-```html
+```blade
 <textarea type="text" wire:model="content"></textarea>
 ```
 
 If the "content" value is initialized with a string, Livewire will fill the textarea with that value - there's no need to do something like the following:
 
-```html
+```blade
 <!-- Warning: This snippet demonstrates what NOT to do... -->
 
 <textarea type="text" wire:model="content">{{ $content }}</textarea>
@@ -649,7 +649,7 @@ Checkboxes can be used for single values, such as when toggling a boolean proper
 
 At the end of a signup form, you might have a checkbox allowing the user to opt-in to email updates. You might call this property `$receiveUpdates`. You can easily bind this value to the checkbox using `wire:model`:
 
-```html
+```blade
 <input type="checkbox" wire:model="receiveUpdates">
 ```
 
@@ -665,7 +665,7 @@ public $updateTypes = [];
 
 By binding multiple checkboxes to the `$updateTypes` property, the user can select multiple update types and they will be added to the `$updateTypes` array property:
 
-```html
+```blade
 <input type="checkbox" value="email" wire:model="updateTypes">
 <input type="checkbox" value="sms" wire:model="updateTypes">
 <input type="checkbox" value="notificaiton" wire:model="updateTypes">
@@ -677,7 +677,7 @@ For example, if the user checks the first two boxes but not the third, the value
 
 To toggle between two different values for a single property, you may use radio buttons:
 
-```html
+```blade
 <input type="radio" value="yes" wire:model="receiveUpdates">
 <input type="radio" value="no" wire:model="receiveUpdates">
 ```
@@ -690,7 +690,7 @@ In addition, there's no need to manually add `selected` to the option that will 
 
 Below is an example of a select dropdown filled with a static list of states:
 
-```html
+```blade
 <select wire:model="state">
     <option value="AL">Alabama<option>
     <option value="AK">Alaska</option>
@@ -703,7 +703,7 @@ When a specific state is selected, for example, "Alaska", the `$state` property 
 
 Often, you may build your dropdown options dynamically using Blade:
 
-```html
+```blade
 <select wire:model="state">
     @foreach (\App\Models\State::all() as $state)
         <option value="{{ $option->id }}">{{ $option->label }}</option>
@@ -713,7 +713,7 @@ Often, you may build your dropdown options dynamically using Blade:
 
 If you don't have a specific option selected by default, you may want to show a muted placeholder option by default, such as "Select a state":
 
-```html
+```blade
 <select wire:model="state">
     <option disabled>Select a state...</option>
 
@@ -729,7 +729,7 @@ As you can see, there is no "placeholder" attribute for a select menu like there
 
 If you are using a "multiple" select menu, Livewire works as expected. In this example, states will be added to the `$states` array property when they are selected and removed if they are deselected:
 
-```html
+```blade
 <select wire:model="states" multiple>
     <option value="AL">Alabama<option>
     <option value="AK">Alaska</option>

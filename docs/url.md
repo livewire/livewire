@@ -26,7 +26,7 @@ class ShowUsers extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <input type="text" wire:model.live="search">
 

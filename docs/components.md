@@ -41,7 +41,7 @@ class CreatePost extends Component
 
 The second will be the component's Blade view: `resources/views/livewire/create-post.blade.php`
 
-```html
+```blade
 <div>
 	{{-- ... --}}
 </div>
@@ -141,7 +141,7 @@ class CreatePost extends Component
 
 Component properties are automatically made available to the component's Blade view. You can reference it using standard Blade syntax. Here we'll display the value of the `$title` property:
 
-```html
+```blade
 <div>
     <h1>Title: "{{ $title }}"</h1>
 </div>
@@ -149,7 +149,7 @@ Component properties are automatically made available to the component's Blade v
 
 The rendered output of this component would be:
 
-```html
+```blade
 <div>
     <h1>Title: "Post title...""</h1>
 </div>
@@ -183,7 +183,7 @@ class CreatePost extends Component
 
 Now you may access the `$author` from the component's Blade view:
 
-```html
+```blade
 <div>
 	<h1>Title: {{ $title }}</h1>
 
@@ -197,7 +197,7 @@ One of Livewire's most powerful feautures is "data binding": the ability to auto
 
 Let's bind the `$title` property from the `CreatePost` component to a text input using the `wire:model` directive:
 
-```html
+```blade
 <form>
     <label for="title">Title:</label>
 
@@ -250,7 +250,7 @@ class CreatePost extends Component
 
 Next, let's call the `save` action from the component's Blade view by adding the `wire:submit` directive to the `<form>` element:
 
-```html
+```blade
 <form wire:submit="save">
     <label for="title">Title:</label>
 
@@ -275,7 +275,7 @@ Let's cover the first way to render your component, as it's simpler than the sec
 
 You can include a Livewire component in your Blade templates using the `<livewire:component-name />` syntax:
 
-```html
+```blade
 <livewire:create-post />
 ```
 
@@ -289,13 +289,13 @@ To pass outside data into a Livewire component, you can use attributes on the co
 
 To pass an initial value to the `title` property of the `CreatePost` component, you can use the following syntax:
 
-```html
+```blade
 <livewire:create-post title="Initial Title" />
 ```
 
 If you need to pass dynamic values or variables to a component, you can write PHP expressions in component attributes by prefixing the attribute with a colon:
 
-```html
+```blade
 <livewire:create-post :title="$initialTitle" />
 ```
 
@@ -372,7 +372,7 @@ Remember that full-page components will use your application's layout, typically
 
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
-```html
+```blade
 <!-- resources/views/components/layout.blade.php -->
 
 <html>
@@ -436,7 +436,7 @@ Assigning unique page titles to each page in your application is helpful for bot
 
 To set a custom page title for a full-page component, first, update your layout file to include a dynamic title:
 
-```html
+```blade
 <html>
 	<head>
 	    <title>{{ $title ?? 'Default Page Title' }}</title> <!-- [tl! highlight] -->

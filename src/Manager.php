@@ -118,9 +118,9 @@ class Manager
         return app(HandleRequests::class)->getUpdateUri();
     }
 
-    function setJavaScriptRoute($callback)
+    function setScriptRoute($callback)
     {
-        return app(FrontendAssets::class)->setJavaScriptRoute($callback);
+        return app(FrontendAssets::class)->setScriptRoute($callback);
     }
 
     protected $queryParamsForTesting = [];

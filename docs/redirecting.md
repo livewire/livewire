@@ -88,7 +88,7 @@ class UpdatePost extends Component
 
 Assuming the page being redirected to contains the following Blade snippet, the user will see a "Post updated!" message after updating the post:
 
-```html
+```blade
 @if (session('status'))
     <div class="alert alert-success">
         {{ session('status') }}

@@ -69,3 +69,8 @@ See [[installation#Configuring Livewire's update endpoint]] for more details on 
 
 ## Extras
 - Can no longer use same names for properties and methods
+
+
+## Config modifications
+- "asset_url" (in favor of the run-time one)
+- "app_url" (in favor of the new run-time one)

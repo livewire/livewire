@@ -51,7 +51,7 @@ class UpdatePost extends Component
 	public $title;
 
 	public $description;
-	
+
 	public function mount(Post $post)
 	{
 		$this->post = $post;
@@ -97,7 +97,7 @@ class TodoList extends Component
 }
 ```
 
-```html
+```blade
 <div>
 	<input type="text" wire:model="todo" placeholder="Todo..."> <!-- [tl! highlight] -->
 
@@ -137,7 +137,7 @@ class ManageTodos extends Controller
 	public function addTodo()
 	{
 		$this->todos[] = $this->todo;
-	
+
 		$this->reset('todo'); // [tl! highlight]
 	}
 
@@ -285,7 +285,7 @@ class Customer implements Wireable
 		$name = $data['name'];
 		$age = $data['age'];
 
-        return new static($name, $age); 
+        return new static($name, $age);
     }
 }
 ```
@@ -312,7 +312,7 @@ The `$wire` object can be treated like a JavaScript version of your Livewire com
 
 For example, we can use `$wire` to show a live character count of the `todo` input field:
 
-```html
+```blade
 <div>
 	<input type="text" wire:model="todo">
 
@@ -324,7 +324,7 @@ As the user types in the field, the character length of the current todo being w
 
 If you prefer, you can use the more explicit `.get()` method to accomplish the same thing:
 
-```html
+```blade
 <div>
 	<input type="text" wire:model="todo">
 
@@ -338,7 +338,7 @@ Similarly, you can manipulate your Livewire component properties in JavaScript u
 
 For example, let's add a "Clear" button to the `TodoList` component to allow the user to reset the input field using only JavaScript:
 
-```html
+```blade
 <div>
 	<input type="text" wire:model="todo">
 
@@ -352,7 +352,7 @@ On the subsequent request, the server-side value of `$todo` will be updated and 
 
 If you prefer, you can also use the more explicit `.set()` method for setting properties client-side. However, you should note that using `.set()` immediately triggers a network request and synchronizes the state with the server. If that is desired, then this is an excellent API:
 
-```html
+```blade
 <button x-on:click="$wire.todo.set('todo', '')">Clear</button>
 ```
 
@@ -406,7 +406,7 @@ class UpdatePost extends Component
 }
 ```
 
-```html
+```blade
 <form wire:submit="update">
 	<input type="text" wire:model="title">
 	<input type="text" wire:model="content">
@@ -421,7 +421,7 @@ Because we are storing the `id` of the post as a public property on the componen
 
 It doesn't matter that we didn't write an input with `wire:model="id"`. A malicious user can easily change the view to the following using their browser DevTools:
 
-```html
+```blade
 <form wire:submit="update">
 	<input type="text" wire:model="id"> <!-- [tl! highlight] -->
 	<input type="text" wire:model="title">
@@ -642,7 +642,7 @@ class ShowTodos extends Component
 
 Here's how you would access these _todos_ from the Blade view:
 
-```html
+```blade
 <ul>
 	@foreach ($this->todos as $todo)
 		<li>{{ $todo }}</li>
@@ -650,7 +650,7 @@ Here's how you would access these _todos_ from the Blade view:
 </ul>
 ```
 
-Notice, inside your views, you can only access getters on the `$this` object like so: `$this->todos`. 
+Notice, inside your views, you can only access getters on the `$this` object like so: `$this->todos`.
 
 You can also access `$todos` from inside your class. For example, if you had a `markAllAsComplete()` action:
 
@@ -684,7 +684,7 @@ class ShowTodos extends Component
 }
 ```
 
-You might wonder, why not just call `$this->todos()` as a method directly where you need to? Why use `#[Getter]` in the first place? 
+You might wonder, why not just call `$this->todos()` as a method directly where you need to? Why use `#[Getter]` in the first place?
 
 The reason is that getters have a performance advantage. Getters are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once so that you don't run an expensive query multiple times in the same request.
 

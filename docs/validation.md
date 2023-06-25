@@ -35,7 +35,7 @@ class CreatePost extends Component
 }
 ```
 
-```html
+```blade
 <form wire:submit="save">
 	<input type="text" wire:model="title">
     <div>@error('title') {{ $message }} @enderror</div>
@@ -153,7 +153,7 @@ class PostForm extends Form
 	public $title = '';
 
     #[Rule('required|min:3')]
-    public $content = '';   
+    public $content = '';
 }
 ```
 
@@ -189,7 +189,7 @@ As you can see, instead of listing out each property individually, we can retrei
 
 Also, when referencing the property names in the template, you must prepend `form.` to each instance:
 
-```html
+```blade
 <form wire:submit="save">
 	<input type="text" wire:model="form.title">
     <div>@error('form.title') {{ $message }} @enderror</div>
@@ -226,7 +226,7 @@ This means to provide a real-time validation experience for your users on a spec
 
 In the below example, `wire:model.lazy` has been added to the text input. Now, when a user types in the field and then tabs or clicks away from the field, a network request will be triggered with the updated value and the validation rules will run:
 
-```html
+```blade
 <form wire:submit="save">
     <input type="text" wire:model.blur="title">
 
@@ -289,7 +289,7 @@ use Livewire\Attributes\Rule;
     'titles.required' => 'The :attribute are missing.',
     'min' => 'The :attribute is too short.',
 ], attributes: [
-    'titles.*' => 'title', 
+    'titles.*' => 'title',
 ])]
 public $titles = [];
 ```
@@ -323,7 +323,7 @@ class CreatePost extends Component
 	public $title = '';
 
     #[Rule('required|min:3')]
-    public $content = '';   
+    public $content = '';
 
     public function boot()
     {
@@ -362,7 +362,7 @@ class CreatePost extends Component
 {
 	public $title = '';
 
-    public $content = '';   
+    public $content = '';
 
     public function save()
     {
@@ -376,7 +376,7 @@ class CreatePost extends Component
             // Custom validation messages...
             ['required' => 'The :attribute field is required'],
          )->validate();
-        
+
 		Post::create($validated);
 
 		return redirect()->to('/posts');

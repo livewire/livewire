@@ -40,7 +40,7 @@ class ShowInvoice extends Component
 }
 ```
 
-```html
+```blade
 <div>
     <h1>{{ $invoice->title }}</h1>
 
