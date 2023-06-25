@@ -4,10 +4,11 @@ namespace LegacyTests\Browser\QueryString;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Component;
-use LegacyTests\Browser\Pagination\Post;
+use Livewire\WithPagination;
 
 class ComponentWithTraits extends Component
 {
+    use WithPagination;
     use WithSearch;
 
     public function render()

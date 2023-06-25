@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportReactiveProps;
 
+use Livewire\Attributes\Prop;
 use Livewire\Livewire;
 use Livewire\Component;
 
@@ -28,7 +29,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends Component {
-                #[ReactiveProp]
+                #[Prop(reactive: true)]
                 public $count;
 
                 public function inc() { $this->count++; }

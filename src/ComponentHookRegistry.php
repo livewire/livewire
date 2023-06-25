@@ -38,7 +38,7 @@ class ComponentHookRegistry
         static::$components = new WeakMap;
 
         foreach (static::$componentHooks as $hook) {
-            on('mount', function ($component, $params, $parent) use ($hook) {
+            on('mount', function ($component, $params, $key, $parent) use ($hook) {
                 $hook = static::initializeHook($hook, $component);
                 $hook->callBoot();
                 $hook->callMount($params, $parent);
@@ -67,7 +67,9 @@ class ComponentHookRegistry
 
         on('dehydrate', function ($component, $context) {
             static::proxyCallToHooks($component, 'callDehydrate')($context);
+        });
 
+        on('destroy', function ($component, $context) {
             static::proxyCallToHooks($component, 'callDestroy')($context);
         });
 

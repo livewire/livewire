@@ -1,4 +1,4 @@
-import { dispatch, dispatchTo, on } from './features/supportEvents'
+import { dispatchGlobal as dispatch, dispatchTo, on } from './features/supportEvents'
 import { directive } from './directives'
 import { find, first, getByName } from './store'
 import { on as hook, trigger } from './events'

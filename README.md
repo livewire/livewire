@@ -1,22 +1,4 @@
 
-## V3 Upgrade instructions:
-From the root directory of a V2 project, you can run the following commands to test out V3:
-
-**Upgrade from V2 to V3:**
-```
-source <(curl -s https://calebporzio-public.s3.amazonaws.com/upgrade.sh)
-```
-
-**Update to latest V3:**
-```
-composer clear-cache && composer reinstall livewire/livewire
-```
-
-**Revert back to V2:**
-```
-source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
-```
-
 ## Todo:
 
 #### V3 Features
@@ -30,8 +12,8 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [x] JavaScript functions
 - [x] Lazy components
 - [x] `@if` markers (Josh)
-- [ ] PHP Attributes
-- [ ] SPA Mode (`wire:navigate`, `@persist`)
+- [x] PHP Attributes
+- [x] SPA Mode (`wire:navigate`, `@persist`)
 - [ ] Hot-reloading
 
 #### V2 Parity
@@ -45,7 +27,7 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] Remove all `->markTestSkipped()` statements
 
 #### Documentation
-- [ ] Rewrite it lol
+- [x] Rewrite it lol
 
 #### Finishing touches
 - [ ] Unify modern/legacy tests and "TestCase"s
@@ -56,4 +38,5 @@ source <(curl -s https://calebporzio-public.s3.amazonaws.com/revert.sh)
 - [ ] Finalize internal exceptions
 - [ ] Brainstorm Form Object solution
 - [ ] Brainstorm 3rd party plugin API
+- [ ] Brainstorm providing key-value attribute methods (protected getListeners() kinda thing)
 

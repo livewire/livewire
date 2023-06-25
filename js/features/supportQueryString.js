@@ -22,13 +22,14 @@ on('component.init', component => {
             })
         } else if (use === 'push') {
             on('request', (component, payload) => {
+                let beforeValue = dataGet(component.canonical, name)
+
                 return () => {
-                    let updates = payload.updates
-                    let dirty = component.effects.dirty || []
+                    let afterValue = dataGet(component.canonical, name)
 
-                    if (! Object.keys(updates).includes(name) && ! dirty.some(i => i.startsWith(name))) return
+                    if (JSON.stringify(beforeValue) === JSON.stringify(afterValue)) return
 
-                    push(dataGet(component.ephemeral, name))
+                    push(afterValue)
                 }
             })
 

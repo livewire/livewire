@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportAttributes;
 
 use ReflectionObject;
 use ReflectionAttribute;
+use Livewire\Features\SupportAttributes\AttributeLevel;
 use Attribute;
 
 trait HandlesAttributes
@@ -13,6 +14,13 @@ trait HandlesAttributes
     function getAttributes()
     {
         return $this->attributes ??= AttributeCollection::fromComponent($this);
+    }
+
+    function setPropertyAttribute($property, $attribute)
+    {
+        $attribute->__boot($this, AttributeLevel::PROPERTY, $property);
+
+        $this->mergeOutsideAttributes(new AttributeCollection([$attribute]));
     }
 
     function mergeOutsideAttributes(AttributeCollection $attributes)

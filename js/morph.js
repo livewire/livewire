@@ -1,4 +1,4 @@
-import { trigger } from "@vue/reactivity"
+import { trigger } from "@/events"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 

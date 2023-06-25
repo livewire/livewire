@@ -88,6 +88,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportLocales\SupportLocales::class,
             \Livewire\Features\SupportModels\SupportModels::class,
             \Livewire\Features\SupportEvents\SupportEvents::class,
+            \Livewire\Features\SupportProps\SupportProps::class,
 
             // Some features we want to have priority over others...
             \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,

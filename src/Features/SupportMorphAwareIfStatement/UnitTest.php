@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -69,7 +70,7 @@ class UnitTest extends \Tests\TestCase
         $output = $this->compile(<<<'HTML'
         <div>
             {{ 1 < 5 ? "true" : "false" }}
-            
+
             @foreach(range(1,4) as $key => $value)
                 {{ $key }}="{{ $value }}"
             @endforeach
@@ -84,19 +85,56 @@ class UnitTest extends \Tests\TestCase
         $this->assertOccurrences(2, '__ENDBLOCK__', $output);
     }
 
+    /** @test */
+    public function conditional_markers_do_not_remove_nested_endif_statements_without_a_parent_tag()
+    {
+        Livewire::component('foo', new class extends \Livewire\Component {
+            public function render() {
+                return '<div> @if (true) @if (true) <div></div> @endif @endif </div>';
+            }
+        });
+
+        $output = Blade::render('
+            <livewire:foo />
+        ');
+
+        $this->assertOccurrences(2, '__BLOCK__', $output);
+        $this->assertOccurrences(2, '__ENDBLOCK__', $output);
+    }
+
+    /** @test */
+    public function supports_two_in_a_row()
+    {
+        $compiled = $this->compile('<div>
+    @if (true)
+        Dispatch up worked!
+    @endif
+
+    @if (true)
+        Dispatch to worked!
+    @endif
+</div>');
+
+        $this->assertEquals('<div>
+    <!-- __BLOCK__ --><?php if(true): ?>
+        Dispatch up worked!
+    <?php endif; ?> <!-- __ENDBLOCK__ -->
+
+    <!-- __BLOCK__ --><?php if(true): ?>
+        Dispatch to worked!
+    <?php endif; ?> <!-- __ENDBLOCK__ -->
+</div>', $compiled);
+    }
+
     protected function compile($string)
     {
-        $precompile = function ($pattern, $handler) {
-            app('blade.compiler')->precompiler(function ($string) use ($pattern, $handler) {
-                return preg_replace_callback($pattern, function ($matches) use ($handler, $string) {
-                    return $handler($matches, $string);
-                }, $string);
-            });
-        };
+        $undo = app(ExtendBlade::class)->livewireifyBladeCompiler();
 
-        SupportMorphAwareIfStatement::registerPrecompilers($precompile);
+        $html = Blade::compileString($string);
 
-        return app('blade.compiler')->compileString($string);
+        $undo();
+
+        return $html;
     }
 
     protected function assertOccurrences($expected, $needle, $haystack)

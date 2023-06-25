@@ -16,7 +16,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 $response = $handle();
 
                 // Override normal Livewire and force the updated count to be "5" instead of 2...
-                $response[0]['effects']['html'] = (string) str($response[0]['effects']['html'])->replace(
+                $response['components'][0]['effects']['html'] = (string) str($response['components'][0]['effects']['html'])->replace(
                     '<span dusk="output">2</span>',
                     '<span dusk="output">5</span>'
                 );

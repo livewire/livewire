@@ -56,23 +56,6 @@ class SupportPagination extends ComponentHook
         Paginator::defaultSimpleView($this->paginationSimpleView());
     }
 
-    function call($method, $params, $returnEarly)
-    {
-        $methods = [
-            'previousPage',
-            'nextPage',
-            'gotoPage',
-            'resetPage',
-            'setPage',
-        ];
-
-        if (! in_array($method, $methods)) return;
-
-        $returnEarly(
-            wrap($this->component)->$method(...$params)
-        );
-    }
-
     protected function setPageResolvers()
     {
         CursorPaginator::currentCursorResolver(function ($pageName) {
@@ -92,16 +75,17 @@ class SupportPagination extends ComponentHook
     {
         if (isset($this->component->paginators[$pageName])) return;
 
-        if (! $this->component->propertyIsExposed('paginators')) {
-            $this->component->exposeInternalPropertyInSnapshotData('paginators');
-        }
-
         $queryStringDetails = $this->getQueryStringDetails($pageName);
 
         $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
 
         // As the page name key didn't exist when query string was initialised earlier,
         // we need to initalise it now so the page name gets added to the querystring.
+        $key = 'paginators.' . $pageName;
+        $alias = $queryStringDetails['as'];
+        $use = $queryStringDetails['use'];
+        $alwaysShow = $queryStringDetails['alwaysShow'];
+
         $this->addUrlHook($pageName, $queryStringDetails);
     }
 
@@ -129,7 +113,7 @@ class SupportPagination extends ComponentHook
         $alwaysShow = $queryStringDetails['alwaysShow'];
 
         // @todo: make this work...
-        // $this->setPropertyHook($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
+        $this->component->setPropertyAttribute($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
     }
 
     protected function paginationView()

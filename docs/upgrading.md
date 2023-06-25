@@ -26,17 +26,20 @@
 ## `emit()` and `dispatchBrowserEvent()` are now just `dispatch()`
 - Change `$this->emit()` and `$emit` to `$this->dispatch()` and `$dispatch()`
     - Same with `emitTo()`
+    - Add parameter names
 - Change `dispatchBrowserEvent()` to `dispatch()`
-- Remove the concept of "up"
+    - Change array syntax to named param syntax to match ->emit()
+- Remove the concept of "up" ($emitUp or ->emitUp)
 - "assertEmitted" -> "assertedDispatched"
 
 ## New component layout file default
 - Previous: `resources/views/layouts/app.blade.php` | New: `resources/views/components/layouts/app.blade.php`
 
 ## Pagination
-- Remove `Livewire\WithPagination` trait from components as it's no longer needed to get pagination to work.
 - Republish pagination views if you have previously published them.
 - Can no longer access `$page` directly -> `$paginators['page']` or `getPage()`
+
+## Remove wire:click.prefetch
 
 ## Localization
 Livewire 2 included support for a locale prefix.
