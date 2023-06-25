@@ -6,7 +6,7 @@ To install Livewire, open your terminal and navigate to your Laravel application
 composer require livewire/livewire
 ```
 
-That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
+That's it—really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
 ## Publishing the configuration file
 

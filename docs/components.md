@@ -106,10 +106,10 @@ php artisan livewire:stubs
 
 This will create four new files in your application:
 
-* `stubs/livewire.stub` — used for generating new components
-* `stubs/livewire.inline.stub` — used for generating _inline_ components
-* `stubs/livewire.test.stub` — used for generating test files
-* `stubs/livewire.view.stub` — used for generating component views
+* `stubs/livewire.stub`—used for generating new components
+* `stubs/livewire.inline.stub`—used for generating _inline_ components
+* `stubs/livewire.test.stub`—used for generating test files
+* `stubs/livewire.view.stub`—used for generating component views
 
 Even though these files live in your application, you can still use the `make:livewire` Artisan command and Livewire will automatically use your custom stubs when generating files.
 
@@ -157,7 +157,7 @@ The rendered output of this component would be:
 
 ### Sharing additional data with the view
 
-In addition to accessing properties from the view, you can explicitly pass data to the view from the `render()` method like you might typically do from a controller. This can be useful when you want to pass additional data without first storing it as a property — because properties have [specific performance and security implications](http://livewire-next-docs.test/docs/properties#security-concerns).
+In addition to accessing properties from the view, you can explicitly pass data to the view from the `render()` method like you might typically do from a controller. This can be useful when you want to pass additional data without first storing it as a property—because properties have [specific performance and security implications](http://livewire-next-docs.test/docs/properties#security-concerns).
 
 To pass data to the view in the `render()` method, you can use the `with()` method on the view instance. For example, let's say you want to pass the post author's name to the view. In this case, the post's author is the currently authenticated user:
 
@@ -411,7 +411,7 @@ use Livewire\Component;
 class CreatePost extends Component
 {
 	// ...
-	
+
 	#[Layout('layouts.app')] // [tl! highlight]
 	public function render()
 	{
@@ -461,7 +461,7 @@ use Livewire\Component;
 class CreatePost extends Component
 {
 	// ...
-	
+
 	#[Title('Create Post')] // [tl! highlight]
 	public function render()
 	{

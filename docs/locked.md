@@ -1,4 +1,4 @@
-Livewire properties are able to modified freely on both the frontend and backend using utilities like `wire:model`. If you want to prevent a property — like a model ID — from being modified on the frontend, you can use Livewire's `#[Locked]` attribute.
+Livewire properties are able to modified freely on both the frontend and backend using utilities like `wire:model`. If you want to prevent a property—like a model ID—from being modified on the frontend, you can use Livewire's `#[Locked]` attribute.
 
 ## Basic usage
 
@@ -37,7 +37,7 @@ By adding the `#[Locked]` attribute, you are ensured that the `$id` property wil
 >    }
 >
 >	// ...
->} 
+>}
 > ```
 
 ### Why not use protected properties?

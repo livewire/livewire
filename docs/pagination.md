@@ -177,7 +177,7 @@ class ShowPosts extends Component
     {
         // Runs before the page is updated for this component...
     }
-    
+
     public function updatedPage($page)
     {
         // Runs after the page is updated for this component...
@@ -240,7 +240,7 @@ For more information on simple pagination, check out [Laravel's "simplePaginator
 
 ## Using cursor pagination
 
-Livewire also supports using Laravel's cursor pagination — a faster pagination method useful in large datasets:
+Livewire also supports using Laravel's cursor pagination—a faster pagination method useful in large datasets:
 
 ```php
 pubic function render()

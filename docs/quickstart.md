@@ -40,7 +40,7 @@ use Livewire\Component;
 
 class Counter extends Component
 {
-    public $count = 1; 
+    public $count = 1;
 
     public function increment()
     {
@@ -60,15 +60,15 @@ class Counter extends Component
 ```
 
 Here's a brief explanation of the code above:
-- `public $count = 1;` — Declares a public property named `$count` with an initial value of `1`.
-- `public function increment()` — Declares a public method named `increment()` that increments the `$count` property each time it's called. Public methods like this can be triggered from the browser in a variety of ways, including when a user clicks a button.
-- `public function render()` — Declares a `render()` method that returns a Blade view. This Blade view will contain the HTML template for our component.
+- `public $count = 1;`—Declares a public property named `$count` with an initial value of `1`.
+- `public function increment()`—Declares a public method named `increment()` that increments the `$count` property each time it's called. Public methods like this can be triggered from the browser in a variety of ways, including when a user clicks a button.
+- `public function render()`—Declares a `render()` method that returns a Blade view. This Blade view will contain the HTML template for our component.
 
 ## Writing the view
 
-Open the `resources/views/livewire/counter.blade.php` file and replace its content with the following:  
+Open the `resources/views/livewire/counter.blade.php` file and replace its content with the following:
 
-```html
+```blade
 <div>
     <h1>{{ $count }}</h1>
 
@@ -104,18 +104,18 @@ php artisan livewire:layout
 
 This command will generate a file called `resources/views/components/layout.blade.php` with the following contents:
 
-```html
+```blade
 <html>
     <head>
         <title>{{ $title ?? 'Page Title' }}</title>
     </head>
-    
+
     <body>
-    
+
     <!-- // -->
-    
+
     {{ $slot }}
-    
+
     </body>
 </html>
 ```

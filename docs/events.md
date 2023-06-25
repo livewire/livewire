@@ -121,8 +121,8 @@ class Dashboard extends Component
 Now, the `updatePostCount()` method will only be triggered when a child component dispatches a `post-created` event.
 
 > [!tip] You might not need events
-> If you are using events to call behavior on a parent from a child‹, you can instead call the action directly from the child using `$parent` in your Blade template. For example:
-> 
+> If you are using events to call behavior on a parent from a child, you can instead call the action directly from the child using `$parent` in your Blade template. For example:
+>
 > ```html
 > <button wire:click="$parent.showCreatePostForm()">Create Post</button>
 > ```
@@ -376,10 +376,10 @@ class OrderTracker extends Component
         return [
             // Public Channel
             "echo:orders,OrderShipped" => 'notifyNewOrder',
-            
+
             // Private Channel
             "echo-private:orders,OrderShipped" => 'notifyNewOrder',
-            
+
             // Presence Channel
             "echo-presence:orders,OrderShipped" => 'notifyNewOrder',
             "echo-presence:orders,here" => 'notifyNewOrder',
