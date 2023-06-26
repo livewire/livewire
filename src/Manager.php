@@ -62,6 +62,11 @@ class Manager
         return app(ComponentRegistry::class)->new($name, $id);
     }
 
+    function resolveMissingComponent($resolver)
+    {
+        return app(ComponentRegistry::class)->resolveMissingComponent($resolver);
+    }
+
     function mount($name, $params = [], $key = null)
     {
         return app(HandleComponents::class)->mount($name, $params, $key);
