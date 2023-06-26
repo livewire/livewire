@@ -119,6 +119,46 @@ class UnitTest extends TestCase
             ->call('foo');
     }
 
+
+    /** @test */
+    function can_use_multiple_getters_for_different_properties()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Getter]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            #[Getter]
+            function bob() {
+                $this->count++;
+
+                return 'lob';
+            }
+
+            function render() {
+                $noop = $this->foo;
+                $noop = $this->foo;
+                $noop = $this->bob;
+                $noop = $this->bob;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                    <div>bob{{ $this->bob }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->assertSee('boblob')
+            ->assertSet('count', 2)
+            ->call('$refresh')
+            ->assertSet('count', 4);
+    }
+
     /** @test */
     function parses_computed_properties()
     {

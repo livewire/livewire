@@ -39,6 +39,7 @@ class Getter extends Attribute
     protected function handleMagicGet($target, $property, $returnValue)
     {
         if ($target !== $this->component) return;
+        if ($property !== $this->getName()) return;
 
         if ($this->persist) {
             $returnValue($this->handlePersistedGet());
@@ -54,6 +55,7 @@ class Getter extends Attribute
     protected function handleMagicUnset($target, $property)
     {
         if ($target !== $this->component) return;
+        if ($property !== $this->getName()) return;
 
         if ($this->persist) {
             $this->handlePersistedUnset();
