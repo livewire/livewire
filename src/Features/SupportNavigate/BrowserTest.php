@@ -22,7 +22,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         $this->browse(function ($browser) {
             $browser
                 ->visit('/first')
-                ->tinker()
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')
