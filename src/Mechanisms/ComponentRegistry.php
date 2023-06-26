@@ -7,6 +7,7 @@ use Livewire\Component;
 
 class ComponentRegistry
 {
+    protected $missingComponentResolvers = [];
     protected $nonAliasedClasses = [];
     protected $aliases = [];
 
@@ -54,6 +55,11 @@ class ComponentRegistry
         return $name;
     }
 
+    function resolveMissingComponent($resolver)
+    {
+        $this->missingComponentResolvers[] = $resolver;
+    }
+
     protected function getNameAndClass($nameComponentOrClass)
     {
         // If a component itself was passed in, just take the class name...
@@ -69,6 +75,18 @@ class ComponentRegistry
             // If class can't be found, see if there is an index component in a subfolder...
             if(! class_exists($class)) {
                 $class = $class . '\\Index';
+            }
+
+            if(! class_exists($class)) {
+                foreach ($this->missingComponentResolvers as $resolve) {
+                    if ($resolved = $resolve($nameOrClass)) {
+                        $this->register($nameOrClass, $resolved);
+
+                        $class = $this->aliases[$nameOrClass];
+
+                        break;
+                    }
+                }
             }
         }
 
