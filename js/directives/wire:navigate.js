@@ -1,20 +1,11 @@
-import { getDirectives } from "@/directives"
-import { on } from '@/events'
+import { directive } from "@/directives"
+import Alpine from 'alpinejs'
 
-// on('element.init', (el, component) => {
-//     let directives = getDirectives(el)
-
-//     if (directives.missing('navigate')) return
-
-//     let directive = directives.get('navigate')
-
+// directive('navigate', (el, directive) => {
 //     Alpine.bind(el, {
-//         'x-init'() {
-//             component.$wire.$poll(() => {
-//                 directive.value
-//                     ? Alpine.evaluate(el, '$wire.'+directive.value)
-//                     : Alpine.evaluate(el, '$wire.$commit()')
-//             })
-//         },
+//         ['x-navigate']() {
+//             //
+//         }
 //     })
 // })
+
