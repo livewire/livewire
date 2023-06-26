@@ -62,6 +62,6 @@ Often, instead of toggling entire elements, you may want to toggle individual CS
 Below is an example where a user types into an input field and the border becomes yellow, indicating an "unsaved" state. Then, when the user tabs away from the field, the border is removed, indicating that the state has been saved on the server:
 
 ```blade
-<input wire:model.lazy="title" wire:dirty.class="border-yellow-500">
+<input wire:model.blur="title" wire:dirty.class="border-yellow-500">
 ```
 

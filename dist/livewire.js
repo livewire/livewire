@@ -6047,12 +6047,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     forceUpdateOnDirty(component, el, expression, cleanup3);
     let isLive = modifiers.includes("live");
     let isLazy = modifiers.includes("lazy");
+    let onBlur = modifiers.includes("blur");
     let isDebounced = modifiers.includes("debounce");
     let update = () => component.$wire.$commit();
     let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounceByComponent(component, update, 150) : update;
     module_default.bind(el, {
       ["@change"]() {
-        isLazy && isTextInput(el) && update();
+        isLazy && update();
+      },
+      ["@blur"]() {
+        onBlur && update();
       },
       ["x-model.unintrusive" + getModifierTail(modifiers)]() {
         return {
@@ -6061,7 +6065,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           },
           set(value) {
             dataSet(component.$wire, expression, value);
-            isLive && debouncedUpdate();
+            isLive && !isLazy && !onBlur && debouncedUpdate();
           }
         };
       }

@@ -19,6 +19,7 @@ directive('model', (el, { expression, modifiers }, { component, cleanup }) => {
 
     let isLive = modifiers.includes('live')
     let isLazy = modifiers.includes('lazy')
+    let onBlur = modifiers.includes('blur')
     let isDebounced = modifiers.includes('debounce')
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
@@ -32,7 +33,10 @@ directive('model', (el, { expression, modifiers }, { component, cleanup }) => {
 
     Alpine.bind(el, {
         ['@change']() {
-            isLazy && isTextInput(el) && update()
+            isLazy && update()
+        },
+        ['@blur']() {
+            onBlur && update()
         },
         // "unintrusive" in this case means to not update the value of the input
         // if it is a currently focused text input.
@@ -45,7 +49,7 @@ directive('model', (el, { expression, modifiers }, { component, cleanup }) => {
                 set(value) {
                     dataSet(component.$wire, expression, value)
 
-                    isLive && debouncedUpdate()
+                    isLive && (! isLazy) && (! onBlur) && debouncedUpdate()
                 },
             }
         }
