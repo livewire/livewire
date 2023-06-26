@@ -140,14 +140,13 @@ class ShowUser extends Component
 
 Because each unique instance of a Livewire component has a unique ID, we can use `$this->getId()` to generate a unique cache key that will only be applied to future requests for this same component instance.
 
-Because most of this added code is boilerplate in that it's predictable and can easily be abstracted, Livewire provides a helpful `#[Cached]` attribute. By applying `#[Cached]` and `#[Getter]` to a method, you can achieve the same result without any extra code:
+Because most of this added code is boilerplate in that it's predictable and can easily be abstracted, Livewire provides a helpful `persist` parameter. By applying `[Getter(persist: true)]` to a method, you can achieve the same result without any extra code:
 
 ```php
 use Livewire\Attributes\Getter;
-use Livewire\Attributes\Cached;
 use App\Models\User;
 
-#[Getter, Cached(seconds: 3600)]
+#[Getter(persist: true)]
 public function user()
 {
     return User::find($this->userId);
@@ -156,8 +155,15 @@ public function user()
 
 In the example above, when `$this->user` is accessed from your component, it will continue to be cached for the duration of the Livewire component on the page. This means the actual Eloquent query will only be executed once.
 
+Livewire caches persisted values for 3600 seconds (one hour). You can override this default by passing an additional `seconds` parameter to the `#[Getter]` attribute:
+
+```php
+#[Getter(persist: true, seconds: 7200)]
+```
+
 > [!tip] Calling `unset()` will bust this cache
-> As previously discussed, you can clear a getter's cache using PHP's `unset()` method. This also applies to the `#[Cached]` attribute. When calling `unset()` on a cached getter, Livewire will clear not only the getter cache but also the underlying cached value in the Laravel cache.
+> As previously discussed, you can clear a getter's cache using PHP's `unset()` method. This also applies to the `persist: true` parameter. When calling `unset()` on a cached getter, Livewire will clear not only the getter cache but also the underlying cached value in the Laravel cache.
+
 
 ## When to use Getters?
 

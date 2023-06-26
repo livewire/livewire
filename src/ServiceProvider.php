@@ -64,7 +64,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
-            \Livewire\Features\SupportComputedProperties\SupportComputedProperties::class,
+            \Livewire\Features\SupportGetters\SupportLegacyComputedPropertySyntax::class,
             \Livewire\Features\SupportNestingComponents\SupportNestingComponents::class,
             \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class,
             \Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class,
