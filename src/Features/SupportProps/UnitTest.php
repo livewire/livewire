@@ -28,5 +28,11 @@ class UnitTest extends \Tests\TestCase
         }])
         ->assertSee('bar');
     }
+
+    /** @test */
+    function can_change_reactive_prop_in_child_component()
+    {
+        // @todo - Nuno, can you write a failing test here...
+    }
 }
 
