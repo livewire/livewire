@@ -131,7 +131,7 @@ class FrontendAssets
         $updateUri = app('livewire')->getUpdateUri();
 
         return <<<HTML
-        <script src="{$url}" {$nonce} data-csrf="{$token}" data-uri="{$updateUri}"></script>
+        <script src="{$url}" {$nonce} data-csrf="{$token}" data-uri="{$updateUri}" data-navigate-once></script>
         HTML;
     }
 

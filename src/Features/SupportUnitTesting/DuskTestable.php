@@ -40,7 +40,7 @@ class DuskTestable
         on('browser.testCase.tearDown', function () {
             static::wipeRuntimeComponentRegistration();
 
-            static::$browser->quit();
+            static::$browser && static::$browser->quit();
 
             static::$currentTestCase = null;
         });

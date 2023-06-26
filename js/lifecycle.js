@@ -5,6 +5,7 @@ import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
 import persist from '@alpinejs/persist'
 import intersect from '@alpinejs/intersect'
+import navigate from '@alpinejs/navigate'
 import history from '@alpinejs/history'
 import morph from '@alpinejs/morph'
 import Alpine from 'alpinejs'
@@ -16,6 +17,7 @@ export function start() {
     Alpine.plugin(collapse)
     Alpine.plugin(focus)
     Alpine.plugin(persist)
+    Alpine.plugin(navigate)
 
     Alpine.addRootSelector(() => '[wire\\:id]')
 
