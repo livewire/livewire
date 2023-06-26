@@ -70,21 +70,18 @@ class UnitTest extends \Tests\TestCase
         $output = $this->compile(<<<'HTML'
         <div
             @if ($foo)
-                foo=">"
-            @endif
-        >
-            @if (true)
-                foo
+                foo="{{ $foo->bar }}"
             @endif
 
-            @if (true)
-                bar
+            @if ($foo)
+                foo="{{ $foo=>bar }}"
             @endif
+        >
         </div>
         HTML);
 
-        $this->assertOccurrences(2, '__BLOCK__', $output);
-        $this->assertOccurrences(2, '__ENDBLOCK__', $output);
+        $this->assertOccurrences(0, '__BLOCK__', $output);
+        $this->assertOccurrences(0, '__ENDBLOCK__', $output);
     }
 
     /** @test */
