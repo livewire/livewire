@@ -1,8 +1,7 @@
 <?php
 
-namespace Livewire\Features\SupportReactiveProps;
+namespace Livewire\Features\SupportProps;
 
-use Livewire\Attributes\Prop;
 use Livewire\Livewire;
 use Livewire\Component;
 

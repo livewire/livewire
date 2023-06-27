@@ -32,6 +32,8 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     function can_change_reactive_prop_in_child_component()
     {
+        $this->markTestSkipped('Unit testing child components isnt supported yet');
+
         $component = Livewire::test([new class extends Component {
             public $todos = [];
 

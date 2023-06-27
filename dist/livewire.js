@@ -7411,16 +7411,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return new Blob(byteArrays, { type: contentType });
   }
 
-  // js/features/supportReactiveProps.js
-  on("request.prepare", (component) => {
-    component.children.forEach((child2) => {
-      let childMeta = child2.snapshot.memo;
-      let props = childMeta.props;
-      if (props)
-        child2.$wire.$commit();
-    });
-  });
-
   // js/features/supportFileUploads.js
   var uploadManagers = /* @__PURE__ */ new WeakMap();
   function getUploadManager(component) {
@@ -7756,6 +7746,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     queueMicrotask(() => {
       morph2(component, component.el, html);
+    });
+  });
+
+  // js/features/supportProps.js
+  on("request.prepare", (component) => {
+    component.children.forEach((child2) => {
+      let childMeta = child2.snapshot.memo;
+      let props = childMeta.props;
+      console.log(props);
+      if (props)
+        child2.$wire.$commit();
     });
   });
 

@@ -9,7 +9,26 @@ use Livewire\ComponentHook;
 
 class SupportProps extends ComponentHook
 {
+    public static $pendingChildParams = [];
+
     static function provide()
+    {
+        on('flush-state', fn() => static::$pendingChildParams = []);
+
+        on('mount.stub', function ($tag, $id, $params, $parent, $key) {
+            static::$pendingChildParams[$id] = $params;
+        });
+
+        static::throwErrorIfPropAttributeIsMissing();
+    }
+
+    static function getPassedInProp($id, $name) {
+        $params = static::$pendingChildParams[$id] ?? [];
+
+        return $params[$name] ?? null;
+    }
+
+    static function throwErrorIfPropAttributeIsMissing()
     {
         // Throw a helpful error if someone is trying to pass in a component value
         // and the property on the component isn't marked with `#[Prop]`...
