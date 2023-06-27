@@ -11,6 +11,8 @@ class Prop extends LivewireAttribute
 {
     function __construct(public $reactive = false) {}
 
+    protected $originalValueHash;
+
     public function mount($params)
     {
         $property = $this->getName();
@@ -22,11 +24,28 @@ class Prop extends LivewireAttribute
         if ($this->reactive) {
             store($this->component)->push('reactiveProps', $property);
         }
+
+        $this->originalValueHash = crc32(json_encode($this->getValue()));
+    }
+
+    public function hydrate()
+    {
+        $updatedValue = SupportProps::getPassedInProp(
+            $this->component->getId(), $this->getName()
+        );
+
+        $this->setValue($updatedValue);
+
+        $this->originalValueHash = crc32(json_encode($this->getValue()));
     }
 
     public function dehydrate($context)
     {
         if (! $this->reactive) return;
+
+        if ($this->originalValueHash !== crc32(json_encode($this->getValue()))) {
+            throw new CannotMutateReactivePropException($this->component->getName(), $this->getName());
+        }
 
         $context->pushMemo('props', $this->getName());
     }

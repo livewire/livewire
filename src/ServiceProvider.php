@@ -70,7 +70,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class,
             \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
-            \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
+            // \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
             \Livewire\Features\SupportQueryString\SupportQueryString::class,
             \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
