@@ -36,7 +36,7 @@ class UnitTest extends \Tests\TestCase
             public $todos = [];
 
             public function render() {
-                return '<livewire:child :todos="$todos" />';
+                return '<div><livewire:child :todos="$todos" /></div>';
             }
         }, 'child' => new class extends Component {
             #[Prop(reactive: true)]
