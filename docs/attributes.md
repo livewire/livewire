@@ -5,7 +5,7 @@ Current:
 #[Url]
 #[Locked]
 #[Title]
-#[SkipRender]
+#[Renderless]
 #[Getter]
 #[Rule]
 #[On]

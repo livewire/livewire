@@ -548,7 +548,7 @@ You can also call magic actions from Alpine using the `$wire` object. For exampl
 
 ## Skipping re-renders
 
-Sometimes there might be an action in your component with no side effects that would change the rendered Blade template when the action is invoked. If so, you can skip the `render` portion of Livewire's lifecycle by adding the `#[SkipRender]` attribute above the action method.
+Sometimes there might be an action in your component with no side effects that would change the rendered Blade template when the action is invoked. If so, you can skip the `render` portion of Livewire's lifecycle by adding the `#[Renderless]` attribute above the action method.
 
 To demonstrate, in the `ShowPost` component below, the "view count" is logged when the user has scrolled to the bottom of the post:
 
@@ -557,6 +557,7 @@ To demonstrate, in the `ShowPost` component below, the "view count" is logged wh
 
 namespace App\Http\Livewire;
 
+use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -569,7 +570,7 @@ class ShowPost extends Component
 		$this->post = $post;
 	}
 
-	#[SkipRender] // [tl! highlight]
+	#[Renderless] // [tl! highlight]
 	public function incrementViewCount()
 	{
 		$this->post->incrementViewCount();
@@ -593,7 +594,7 @@ class ShowPost extends Component
 
 The example above uses [`x-intersect`](https://alpinejs.dev/plugins/intersect), an Alpine utility that calls the expression when the element enters the viewport (typically used to detect when a user scrolls to an element further down the page).
 
-As you can see, when a user scrolls to the bottom of the post, `incrementViewCount()` is invoked. Since `#[SkipRender]` was added to the action, the view is logged, but the template doesn't re-render and no part of the page is affected.
+As you can see, when a user scrolls to the bottom of the post, `incrementViewCount()` is invoked. Since `#[Renderless]` was added to the action, the view is logged, but the template doesn't re-render and no part of the page is affected.
 
 If you prefer to not utilize method attributes or need to conditionally skip rendering, you may invoke the `skipRender()` method in your component action:
 

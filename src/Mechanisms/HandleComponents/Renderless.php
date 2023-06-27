@@ -5,7 +5,7 @@ namespace Livewire\Mechanisms\HandleComponents;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class SkipRender extends LivewireAttribute
+class Renderless extends LivewireAttribute
 {
     function call()
     {

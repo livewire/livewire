@@ -2,10 +2,10 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Mechanisms\HandleComponents\SkipRender as BaseSkipRender;
+use Livewire\Mechanisms\HandleComponents\Renderless as BaseRenderless;
 
 #[\Attribute]
-class SkipRender extends BaseSkipRender
+class Renderless extends BaseRenderless
 {
     function call()
     {
