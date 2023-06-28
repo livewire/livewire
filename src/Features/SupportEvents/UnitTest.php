@@ -28,6 +28,28 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function listen_for_dynamic_event_name()
+    {
+        $component = Livewire::test(new class extends Component {
+            public $post = ['id' => 2];
+
+            public $foo = 'bar';
+
+            #[On('bar.{post.id}')]
+            public function onBar($param)
+            {
+                $this->foo = $param;
+            }
+
+            public function render() { return '<div></div>'; }
+        });
+
+        $component->dispatch('bar.2', 'baz');
+
+        $this->assertEquals($component->get('foo'), 'baz');
+    }
+
+    /** @test */
     public function listens_for_event_with_named_params()
     {
         $component = Livewire::test(new class extends Component {

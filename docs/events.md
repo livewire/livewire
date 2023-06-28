@@ -51,6 +51,30 @@ Now, when the `post-created` event is dispatched from `CreatePost`, a network re
 
 As you can see, additional data sent with the event will be provided to the action as its first argument.
 
+### Listening for dynamic event names
+
+Occasionally, you may want to dynamically generate event listener names at run-time using data from your component.
+
+For example, if you wanted to scope an event listener to a specific Eloquent model, you could append the model's ID to the event name like so:
+
+```php
+use Livewire\Component;
+use App\Models\Post;
+
+class ShowPost extends Component
+{
+    public Post $post;
+
+	#[On('post-updated.{post.id}')] // [tl! highlight]
+    public function refreshPost()
+    {
+		// ...
+    }
+}
+```
+
+If the above `$post` model had an ID of `3`, the `refreshPost()` method would only be triggered by an event named: `post-updated.3`.
+
 ## Events in Alpine
 
 Because Livewire events are plain browser events under the hood, you can use Alpine to listen for them or even dispatch them.

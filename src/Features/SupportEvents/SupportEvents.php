@@ -74,7 +74,9 @@ class SupportEvents extends ComponentHook
 
         $fromAttributes = store($component)->get('listenersFromPropertyAttributes', []);
 
-        return array_merge($fromClass, $fromAttributes);
+        $listeners = array_merge($fromClass, $fromAttributes);
+
+        return static::replaceDynamicEventNamePlaceholers($listeners, $component);
     }
 
     function getServerDispatchedEvents($component)
@@ -82,5 +84,33 @@ class SupportEvents extends ComponentHook
         return collect(store($component)->get('dispatched', []))
             ->map(fn ($event) => $event->serialize())
             ->toArray();
+    }
+
+    static function replaceDynamicEventNamePlaceholers($listeners, $component)
+    {
+        foreach ($listeners as $event => $method) {
+            if (is_numeric($event)) continue;
+
+            $replaced = static::replaceDynamicPlaceholders($event, $component);
+
+            unset($listeners[$event]);
+
+            $listeners[$replaced] = $method;
+        }
+
+        return $listeners;
+    }
+
+    static function replaceDynamicPlaceholders($event, $component)
+    {
+        return preg_replace_callback('/\{.*\}/U', function ($matches) use ($component) {
+            $value = str($matches[0])->between('{', '}')->toString();
+
+            $value = data_get($component, $value, function () use ($matches) {
+                throw new \Exception('Unable to evaluate dynamic event name placeholder: '.$matches[0]);
+            });
+
+            return $value;
+        }, $event);
     }
 }

@@ -13,6 +13,12 @@ class On extends LivewireAttribute
 
     public function boot()
     {
-        store($this->component)->push('listenersFromPropertyAttributes', $this->getName(), $this->event);
+        $eventName =
+
+        store($this->component)->push(
+            'listenersFromPropertyAttributes',
+            $this->getName(),
+            $this->event,
+        );
     }
 }
