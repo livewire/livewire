@@ -14,7 +14,7 @@ class SupportLazyLoading extends ComponentHook
 {
     public function mount($params)
     {
-        if (! isset($params['lazy'])) return;
+        if (! ($params['lazy'] ?? false)) return;
 
         $this->component->skipMount();
 
