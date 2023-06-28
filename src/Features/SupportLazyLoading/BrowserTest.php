@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
-use Livewire\Attributes\Prop;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -78,7 +77,6 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }, 'child' => new class extends Component {
-            #[Prop]
             public $count;
             public function mount() { sleep(1); }
             public function render() { return <<<'HTML'
@@ -103,7 +101,6 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }, 'child' => new class extends Component {
-            #[Prop]
             public $count;
             public function mount($count) { $this->count = $this->count + 2; }
             public function render() { return <<<'HTML'

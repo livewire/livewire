@@ -98,11 +98,10 @@ class TodoCount extends Component
 }
 ```
 
-> [!tip] Use the #[Prop] attribute as a shorter alternative
-> If the `mount()` method in above example feels like redundant boilerplate code to you, you can use [Livewire's #[Prop] attribute](/docs/nesting#the-prop-attribute) as an alternative shorthand syntax:
+> [!tip] Omit `mount()` as a shorter alternative
+> If the `mount()` method in above example feels like redundant boilerplate code to you, it can be omitted as long as the property and parameter names match:
 > ```php
-> #[Prop] // [tl! highlight]
-> public $todos;
+> public $todos; // [tl! highlight]
 > ```
 
 ### Passing static props
@@ -157,37 +156,6 @@ As you can see, each child component will have a unique key set to the ID of eac
 > [!warning] Keys aren't optional
 > If you have used frontend frameworks like Vue or Alpine, you are familiar with adding a key to a nested element in a loop. However, in those frameworks, a key isn't _mandatory_, meaning the items will render, but a re-order might not be tracked properly. However, Livewire relies more heavily on keys and will behave incorrectly without them.
 
-## Shorthand syntaxes
-
-Livewire provides a few helpful shorthand syntaxes to help eliminate repetitive code when passing props to components.
-
-### The `#[Prop]` attribute
-
-The `#[Prop]` attribute allows you to omit a `mount()` method on your component and instructs Livewire to assign the property automatically. For example, if the following `todo-item` component is rendered on the page:
-
-```blade
-<livewire:todo-item :todo="$todo" :key="$todo->id" />
-```
-
-Within the component's class, you can add the `#[Prop]` attribute above the `$todo` property and Livewire will automatically set it's value to the `$todo` prop that is passed into the component:
-
-```php
-<?php
-
-namespace App\Http\Livewire;
-
-use Livewire\Component;
-use App\Models\Todo;
-
-class TodoItem extends Component
-{
-    #[Prop]
-    public Todo $todo;
-
-    // ...
-}
-```
-
 ### Shortened attribute syntax
 
 When passing PHP variables into a component, the variable name and the prop name are often the same. To avoid writing the name twice, Livewire allows you to simply prefix the variable with a colon:
@@ -204,7 +172,7 @@ Developers new to Livewire expect that props are "reactive" by default. In other
 
 When using Livewire, [every component is an island](/docs/understanding-nesting). This means that when an update is triggered on the parent and a network request is dispatched, only the parent component's state is sent to the server to re-render - not the child component's. The intention behind this behavior is to only send the minimal amount of data back and forth between the server and client, making updates as performant as possible.
 
-But, if you want or need a prop to be reactive, you can easily enable this behavior using the `#[Prop(reactive: true)]` attribute parameter.
+But, if you want or need a prop to be reactive, you can easily enable this behavior using the `#[Reactive]` attribute parameter.
 
 For example, below is the template of a parent `TodoList` component. Inside, it is rendering a `TodoCount` component and passing in the current list of todos:
 
@@ -218,19 +186,20 @@ For example, below is the template of a parent `TodoList` component. Inside, it 
 </div>
 ```
 
-Now let's add `#[Prop(reactive: true)]` to the `$todos` prop in the `TodoCount` component. Once we have done so, any todos that are added or removed inside the parent component will automatically trigger an update within the `TodoCount` component:
+Now let's add `#[Reactive]` to the `$todos` prop in the `TodoCount` component. Once we have done so, any todos that are added or removed inside the parent component will automatically trigger an update within the `TodoCount` component:
 
 ```php
 <?php
 
 namespace App\Http\Livewire;
 
+use Livewire\Attributes\Reactive;
 use Livewire\Component;
 use App\Models\Todo;
 
 class TodoCount extends Component
 {
-    #[Prop(reactive: true)]
+    #[Reactive]
     public $todos;
 
     public function render()
@@ -242,7 +211,7 @@ class TodoCount extends Component
 }
 ```
 
-Reactive properties are an incredibly powerful feature, making Livewire more similar to frontend component libraries like Vue and React. But, it is important to understand the performance implications of this feature and only add `reactive: true` when it makes sense for your particular scenario.
+Reactive properties are an incredibly powerful feature, making Livewire more similar to frontend component libraries like Vue and React. But, it is important to understand the performance implications of this feature and only add `#[Reactive]` when it makes sense for your particular scenario.
 
 ## Binding to child data using `wire:model`
 
@@ -420,7 +389,6 @@ use App\Models\Todo;
 
 class TodoItem extends Component
 {
-    #[Prop]
     public Todo $todo;
 
     public function remove()
@@ -466,7 +434,6 @@ use App\Models\Todo;
 
 class TodoItem extends Component
 {
-    #[Prop]
     public Todo $todo;
 
     public function render()

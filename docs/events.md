@@ -323,14 +323,12 @@ If you have Echo channels with variables embedded in them (such as a Order ID), 
 
 namespace App\Http\Livewire;
 
-use Livewire\Attributes\Prop;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use App\Models\Order;
 
 class OrderTracker extends Component
 {
-    #[Prop]
     public Order $order;
 
     public $showOrderShippedNotification = false;

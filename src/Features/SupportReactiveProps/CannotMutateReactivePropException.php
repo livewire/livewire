@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportProps;
+namespace Livewire\Features\SupportReactiveProps;
 
 use Exception;
 

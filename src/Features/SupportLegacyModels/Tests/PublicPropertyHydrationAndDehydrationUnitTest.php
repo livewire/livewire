@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
-use Livewire\Attributes\Prop;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
@@ -895,9 +894,7 @@ class PostComponent extends Component
 
 class ModelsComponent extends Component
 {
-    #[Prop]
     public $model;
-    #[Prop]
     public $models;
 
     public $_rules = [

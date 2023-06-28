@@ -3,12 +3,10 @@
 namespace LegacyTests\Browser\Nesting;
 
 use Livewire\Component as BaseComponent;
-use Livewire\Attributes\Prop;
 use Illuminate\Support\Facades\View;
 
 class NestedComponent extends BaseComponent
 {
-    #[Prop]
     public $output = '';
 
     public function render()

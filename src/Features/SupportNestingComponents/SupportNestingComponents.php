@@ -8,6 +8,7 @@ use function Livewire\on;
 
 use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\ComponentHook;
+use Livewire\Drawer\Utils;
 
 class SupportNestingComponents extends ComponentHook
 {
@@ -31,6 +32,8 @@ class SupportNestingComponents extends ComponentHook
         on('mount', function ($component, $params, $key, $parent) {
             $start = null;
             if ($parent && config('app.debug')) $start = microtime(true);
+
+            static::setParametersToMatchingProperties($component, $params);
 
             return function ($html) use ($component, $key, $parent, $start) {
                 if ($parent) {
@@ -77,5 +80,14 @@ class SupportNestingComponents extends ComponentHook
     function keepRenderedChildren()
     {
         $this->storeSet('children', $this->storeGet('previousChildren'));
+    }
+
+    static function setParametersToMatchingProperties($component, $params)
+    {
+        // Assign all public component properties that have matching parameters.
+        collect(array_intersect_key($params, Utils::getPublicPropertiesDefinedOnSubclass($component)))
+            ->each(function ($value, $property) use ($component) {
+                $component->{$property} = $value;
+            });
     }
 }

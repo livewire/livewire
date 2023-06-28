@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportProps;
+namespace Livewire\Features\SupportReactiveProps;
 
 use Livewire\Livewire;
 use Livewire\Component;
@@ -15,10 +15,9 @@ class UnitTest extends \Tests\TestCase
             public $foo = 'bar';
 
             public function render() {
-                return '<livewire:child :oof="$foo" />';
+                return '<div><livewire:child :oof="$foo" /></div>';
             }
         }, 'child' => new class extends Component {
-            #[Prop]
             public $oof;
 
             public function render() {

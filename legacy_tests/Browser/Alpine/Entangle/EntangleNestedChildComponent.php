@@ -3,11 +3,9 @@
 namespace LegacyTests\Browser\Alpine\Entangle;
 
 use Livewire\Component as BaseComponent;
-use Livewire\Attributes\Prop;
 
 class EntangleNestedChildComponent extends BaseComponent
 {
-    #[Prop]
     public $item;
 
     protected $rules = ['item.name' => ''];

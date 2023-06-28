@@ -1,15 +1,15 @@
 <?php
 
-namespace Livewire\Features\SupportProps;
+namespace Livewire\Features\SupportReactiveProps;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use function Livewire\store;
 
 #[\Attribute]
-class Prop extends LivewireAttribute
+class Reactive extends LivewireAttribute
 {
-    function __construct(public $reactive = false) {}
+    function __construct() {}
 
     protected $originalValueHash;
 
@@ -17,13 +17,7 @@ class Prop extends LivewireAttribute
     {
         $property = $this->getName();
 
-        if (! array_key_exists($property, $params)) return;
-
-        $this->setValue($params[$property]);
-
-        if ($this->reactive) {
-            store($this->component)->push('reactiveProps', $property);
-        }
+        store($this->component)->push('reactiveProps', $property);
 
         $this->originalValueHash = crc32(json_encode($this->getValue()));
     }
@@ -41,8 +35,6 @@ class Prop extends LivewireAttribute
 
     public function dehydrate($context)
     {
-        if (! $this->reactive) return;
-
         if ($this->originalValueHash !== crc32(json_encode($this->getValue()))) {
             throw new CannotMutateReactivePropException($this->component->getName(), $this->getName());
         }

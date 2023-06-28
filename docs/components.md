@@ -325,20 +325,18 @@ In this example, the `title` property will be initialized with the value "Initia
 
 You can think of the `mount()` method as a class constructor. It runs on the initial load of the component, but not on subsequent requests within a page. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](http://livewire-next-docs.test/docs/lifecycle-hooks).
 
-To reduce boilerplate code in your components, you can alternatively use the `#[Prop]` attribute to denote that a property should be assigned from an attribute passed into the component:
+To reduce boilerplate code in your components, you can alternatively omit the `mount()` method and Livewire will automatically set any properties on your component with names matching the passed in values:
 
 ```php
 <?php
 
 namespace App\Http\Livewire;
 
-use Livewire\Attributes\Prop;
 use Livewire\Component;
 
 class CreatePost extends Component
 {
-    #[Prop] // [tl! highlight]
-    public $title;
+    public $title; // [tl! highlight]
 
     // ...
 }
@@ -346,7 +344,7 @@ class CreatePost extends Component
 
 This is effectively the same as assigning `$title` inside a `mount()` method.
 
-> [!warning] Props are not reactive by default
+> [!warning] These properties are not reactive by default
 > The `$title` property will not update automatically if the outer `:title="$initialValue"` changes after the initial page load. This is a common point of confusion when using Livewire, especially for developers who have used JavaScript frameworks like Vue or React and assume these "parameters" behave like "reactive props" in those frameworks. But, don't worry, Livewire allows you to opt-in to [making your props reactive](/docs/nesting#making-child-props-reactive).
 
 
@@ -565,21 +563,19 @@ class ShowPost extends Component
 
 Livewire knows to use "route model binding" because the `Post` type-hint is prepended to the `$post` parameter in `mount()`.
 
-Like before, you can reduce boilerplate by using the `#[Prop]` attribute:
+Like before, you can reduce boilerplate by omitting the `mount()` method:
 
 ```php
 <?php
 
 namespace App\Http\Livewire;
 
-use Livewire\Attributes\Prop;
 use Livewire\Component;
 use App\Models\Post;
 
 class ShowPost extends Component
 {
-    #[Prop] // [tl! highlight]
-    public Post $post;
+    public Post $post; // [tl! highlight]
 
     public function render()
     {

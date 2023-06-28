@@ -16,9 +16,6 @@
 ## `wire:submit.prevent` no longer needed
 - Change `wire:submit.prevent` to `wire:submit`
 
-## Must now add #[Prop]
-- Add `#[Prop]` to properties that inherit from the parent component
-
 ## QueryString
 - Replace by default now, add "push" to keep the same
 - "except" is no longer needed
