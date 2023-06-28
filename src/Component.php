@@ -2,7 +2,6 @@
 
 namespace Livewire;
 
-use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Mechanisms\NestingComponents\HandlesNestingComponents;
 use Livewire\Mechanisms\DataStore;
 use Livewire\Features\SupportValidation\HandlesValidation;
@@ -10,8 +9,10 @@ use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
 use Livewire\Features\SupportQueryString\HandlesQueryString;
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;
+use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
 use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
+use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Drawer\Utils;
 use Livewire\Drawer\Utils as SyntheticUtils;
@@ -34,6 +35,7 @@ abstract class Component
     use HandlesStreaming;
     use HandlesAttributes;
     use HandlesValidation;
+    use HandlesJsEvaluation;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
 

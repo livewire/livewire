@@ -104,12 +104,12 @@ class ShowPost extends Component
 
 You can use this technique to have complete control over initializing a component property in your Livewire component.
 
-> [!tip] Most of the time, you can use a getter instead
-> The technique used above is powerful; however, it's often better to use [Livewire's getters](/docs/getters) to solve this use case.
+> [!tip] Most of the time, you can use a computed property instead
+> The technique used above is powerful; however, it's often better to use [Livewire's computed properties](/docs/computed-properties) to solve this use case.
 
 > [!warning] Always lock sensitive public properties
 > As you can see above, we are using the `#[Locked]` attribute on the `$postId` property. In a scenario like the above, where you want to ensure the `$postId` property isn't tampered with by users on the client-side, it's important to authorize the property's value before using it or add `#[Locked]` to the property ensure it is never changed.
-> 
+>
 > For more information, check out the [documentation on Locked properties](/docs/locked).
 
 
@@ -119,7 +119,7 @@ Client-side users can update public properties in many different ways, most comm
 
 Livewire provides convenient hooks to intercept the updating of a public property so that you can validate or authorize a value before it's set, or ensure a property is set in a given format.
 
-Below is an example of using `updating` to prevent the modification of the `$postId` property. 
+Below is an example of using `updating` to prevent the modification of the `$postId` property.
 
 It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/locked) instead, like in the above example.
 
@@ -223,7 +223,7 @@ class ShowPost extends Component
     public function hydrate()
     {
         // Runs at the begninning of every "subsequent" request...
-        // This doesn't run on the initial request ("mount" does)... 
+        // This doesn't run on the initial request ("mount" does)...
 
         $this->post = new PostDto($this->post);
     }

@@ -608,23 +608,23 @@ When this component is initially loaded, the `$todos` property will be set to an
 
 When Livewire _hydrates_ the JSON of this property back into PHP on a subsequent request, the select constraint will have been lost.
 
-To ensure the integrity of Eloquent queries, we recommend that you use [Getters](/docs/getters) instead of properties.
+To ensure the integrity of Eloquent queries, we recommend that you use [computed properties](/docs/computed-properties) instead of properties.
 
-Getters are methods in your component marked with the `#[Getter]` attribute. They can be accessed as a dynamic property that isn't stored as part of the component's state but is instead evaluated on-the-fly.
+Computed properties are methods in your component marked with the `#[Computed]` attribute. They can be accessed as a dynamic property that isn't stored as part of the component's state but is instead evaluated on-the-fly.
 
-Here's the above example re-written using a getter:
+Here's the above example re-written using a computed property:
 
 ```php
 <?php
 
 namespace App\Http\Livewire;
 
+use Livewire\Attributes\Computed;
 use Livewire\Component;
-use Livewire\Attributes\Getter;
 
 class ShowTodos extends Component
 {
-	#[Getter]
+	#[Computed]
 	public function todos()
 	{
 		return Auth::user()
@@ -650,7 +650,7 @@ Here's how you would access these _todos_ from the Blade view:
 </ul>
 ```
 
-Notice, inside your views, you can only access getters on the `$this` object like so: `$this->todos`.
+Notice, inside your views, you can only access computed properties on the `$this` object like so: `$this->todos`.
 
 You can also access `$todos` from inside your class. For example, if you had a `markAllAsComplete()` action:
 
@@ -659,11 +659,12 @@ You can also access `$todos` from inside your class. For example, if you had a `
 
 namespace App\Http\Livewire;
 
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 class ShowTodos extends Component
 {
-	#[Getter]
+	#[Computed]
 	public function todos()
 	{
 		return Auth::user()
@@ -684,8 +685,8 @@ class ShowTodos extends Component
 }
 ```
 
-You might wonder, why not just call `$this->todos()` as a method directly where you need to? Why use `#[Getter]` in the first place?
+You might wonder, why not just call `$this->todos()` as a method directly where you need to? Why use `#[Computed]` in the first place?
 
-The reason is that getters have a performance advantage. Getters are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once so that you don't run an expensive query multiple times in the same request.
+The reason is that computed properties have a performance advantage; they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once so that you don't run an expensive query multiple times in the same request.
 
-For more information, [visit the Getters documentation](/docs/getters).
+For more information, [visit the computed properties documentation](/docs/computed-properties).

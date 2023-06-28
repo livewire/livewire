@@ -1,8 +1,8 @@
 <?php
 
-namespace Livewire\Features\SupportGetters;
+namespace Livewire\Features\SupportComputed;
 
-use Livewire\Attributes\Getter;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\BrowserTestCase;
@@ -10,14 +10,14 @@ use Tests\BrowserTestCase;
 class BrowserTest extends BrowserTestCase
 {
     /** @test */
-    public function can_cache_getters_between_requests_and_bust_them()
+    public function can_cache_computed_between_requests_and_bust_them()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;
 
             protected $thing = 'hey';
 
-            #[Getter(persist: true)]
+            #[Computed(persist: true)]
             public function foo() {
                 $this->count++;
 

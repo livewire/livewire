@@ -1,8 +1,8 @@
 
 import './supportWireModelingNestedComponents';
 import './supportDisablingFormsDuringRequest';
-import './supportHybridJavaScriptMethods';
 import './supportFileDownloads';
+import './supportJsEvaluation';
 import './supportFileUploads';
 import './supportQueryString';
 import './supportRedirects';

@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\Features\SupportJavaScriptMethods;
+namespace Livewire\Features\SupportJsEvaluation;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class JavaScript extends LivewireAttribute
+class Js extends LivewireAttribute
 {
     function dehydrate($context)
     {

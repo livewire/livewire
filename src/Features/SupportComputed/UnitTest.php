@@ -1,20 +1,20 @@
 <?php
 
-namespace Livewire\Features\SupportGetters;
+namespace Livewire\Features\SupportComputed;
 
 use Tests\TestComponent;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Livewire\Component;
-use Livewire\Attributes\Getter;
+use Livewire\Attributes\Computed;
 
 class UnitTest extends TestCase
 {
     /** @test */
-    function can_make_method_a_getter()
+    function can_make_method_a_computed()
     {
         Livewire::test(new class extends TestComponent {
-            #[Getter]
+            #[Computed]
             function foo() {
                 return 'bar';
             }
@@ -23,10 +23,10 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function can_access_getters_inside_views()
+    function can_access_computed_properties_inside_views()
     {
         Livewire::test(new class extends TestComponent {
-            #[Getter]
+            #[Computed]
             function foo() {
                 return 'bar';
             }
@@ -41,12 +41,12 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function getters_only_get_accessed_once_per_request()
+    function computed_properties_only_get_accessed_once_per_request()
     {
         Livewire::test(new class extends TestComponent {
             public $count = 0;
 
-            #[Getter]
+            #[Computed]
             function foo() {
                 $this->count++;
 
@@ -70,12 +70,12 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function can_bust_getter_cache_using_unset()
+    function can_bust_computed_cache_using_unset()
     {
         Livewire::test(new class extends TestComponent {
             public $count = 0;
 
-            #[Getter]
+            #[Computed]
             function foo() {
                 $this->count++;
 
@@ -99,12 +99,12 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function cant_call_a_getter_directly()
+    function cant_call_a_computed_directly()
     {
-        $this->expectException(CannotCallGetterDirectlyException::class);
+        $this->expectException(CannotCallComputedDirectlyException::class);
 
         Livewire::test(new class extends TestComponent {
-            #[Getter]
+            #[Computed]
             function foo() {
                 return 'bar';
             }
@@ -121,19 +121,19 @@ class UnitTest extends TestCase
 
 
     /** @test */
-    function can_use_multiple_getters_for_different_properties()
+    function can_use_multiple_computed_properties_for_different_properties()
     {
         Livewire::test(new class extends TestComponent {
             public $count = 0;
 
-            #[Getter]
+            #[Computed]
             function foo() {
                 $this->count++;
 
                 return 'bar';
             }
 
-            #[Getter]
+            #[Computed]
             function bob() {
                 $this->count++;
 

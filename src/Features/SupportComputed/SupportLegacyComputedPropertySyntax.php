@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportGetters;
+namespace Livewire\Features\SupportComputed;
 
 use Livewire\ComponentHook;
 use Livewire\Drawer\ImplicitlyBoundMethod;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportGetters;
+namespace Livewire\Features\SupportComputed;
 
 use function Livewire\invade;
 use function Livewire\on;
@@ -10,7 +10,7 @@ use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
 
 #[\Attribute]
-class Getter extends Attribute
+class Computed extends Attribute
 {
     protected $requestCachedValue;
 
@@ -30,7 +30,7 @@ class Getter extends Attribute
 
     function call()
     {
-        throw new CannotCallGetterDirectlyException(
+        throw new CannotCallComputedDirectlyException(
             $this->component->getName(),
             $this->getName(),
         );
@@ -48,7 +48,7 @@ class Getter extends Attribute
         }
 
         $returnValue(
-            $this->requestCachedValue ??= $this->evaluateGetter()
+            $this->requestCachedValue ??= $this->evaluateComputed()
         );
     }
 
@@ -71,7 +71,7 @@ class Getter extends Attribute
         $key = $this->generateCacheKey();
 
         return Cache::remember($key, $this->seconds, function () {
-            return $this->evaluateGetter();
+            return $this->evaluateComputed();
         });
     }
 
@@ -84,10 +84,10 @@ class Getter extends Attribute
 
     protected function generateCacheKey()
     {
-        return 'lw_getter.'.$this->component->getId().'.'.$this->getName();
+        return 'lw_computed.'.$this->component->getId().'.'.$this->getName();
     }
 
-    protected function evaluateGetter()
+    protected function evaluateComputed()
     {
         return invade($this->component)->{$this->getName()}();
     }

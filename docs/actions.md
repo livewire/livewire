@@ -474,6 +474,38 @@ class SearchPosts extends Component
 
 In the above example, when the "Reset Search" button is pressed, the text input will be cleared without sending any requests to the server.
 
+### Evaluating one-off JavaScript expressions
+
+In addition to designating entire methods to be evaluated in JavaScript, you can use the `js()` method to evaluate smaller, individual expressions.
+
+This is generally useful for performing some kind of client-side followup after a server-side action is performed.
+
+For example, here is an example of a `CreatePost` component that triggers a client-side alert dialog after the post is saved to the database:
+
+```php
+<?php
+
+namespace App\Http\Livewire;
+
+use Livewire\Component;
+
+class CreatePost extends Component
+{
+	public $title = '';
+
+    public function save()
+    {
+        // ...
+
+        $this->js("alert('Post saved!')"); // [tl! highlight:6]
+    }
+}
+```
+
+The JavaScript expression `alert('Post saved!')`, will now be executed on the client after the post has been saved to the database on the server.
+
+Similar to `#[Js]` methods, you can access the current component's `$wire` object as `this` inside the expression.
+
 ## Magic actions
 
 Livewire provides a set of "magic" actions that allow you to perform common tasks in your components without defining custom methods. These magic actions can be used within event listeners defined in your Blade templates.

@@ -7358,19 +7358,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
-  // js/features/supportHybridJavaScriptMethods.js
-  on("effects", (component, effects) => {
-    let js = effects.js;
-    if (!js)
-      return;
-    Object.entries(js).forEach(([method, body]) => {
-      overrideMethod(component, method, () => {
-        let func = new Function([], body);
-        func.bind(component.$wire)();
-      });
-    });
-  });
-
   // js/features/supportFileDownloads.js
   on("request", (component) => {
     return () => {
@@ -7406,6 +7393,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return new Blob(byteArrays, { type: contentType });
   }
+
+  // js/features/supportJsEvaluation.js
+  on("effects", (component, effects) => {
+    let js = effects.js;
+    let xjs = effects.xjs;
+    if (js) {
+      Object.entries(js).forEach(([method, body]) => {
+        overrideMethod(component, method, () => {
+          let func = new Function([], body);
+          func.bind(component.$wire)();
+        });
+      });
+    }
+    if (xjs) {
+      xjs.forEach((expression) => {
+        let func = new Function([], expression);
+        func.bind(component.$wire)();
+      });
+    }
+  });
 
   // js/features/supportFileUploads.js
   var uploadManagers = /* @__PURE__ */ new WeakMap();
