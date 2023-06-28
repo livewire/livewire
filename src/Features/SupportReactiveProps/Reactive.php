@@ -24,7 +24,7 @@ class Reactive extends LivewireAttribute
 
     public function hydrate()
     {
-        $updatedValue = SupportProps::getPassedInProp(
+        $updatedValue = SupportReactiveProps::getPassedInProp(
             $this->component->getId(), $this->getName()
         );
 
