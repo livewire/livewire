@@ -207,7 +207,7 @@ Let's bind the `$title` property from the `CreatePost` component to a text input
 
 Any changes made to the text input will be automatically synchronized with the `$title` property in your Livewire component.
 
-> [!warning] _"Why isn't my component live updating as I type?"_
+> [!warning] "Why isn't my component live updating as I type?"
 > If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](http://livewire-next-docs.test/docs/properties#data-binding).
 
 
