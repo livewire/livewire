@@ -5,7 +5,6 @@ on('request.prepare', (component) => {
     component.children.forEach(child => {
         let childMeta = child.snapshot.memo
         let props = childMeta.props
-        console.log(props)
 
         // If this child has a prop from the parent
         if (props) child.$wire.$commit()

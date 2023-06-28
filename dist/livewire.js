@@ -4997,8 +4997,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function whenTheBackOrForwardButtonIsClicked(callback) {
     window.addEventListener("popstate", (e) => {
-      let { html } = fromSessionStorage(e);
-      console.log(html);
+      let state = e.state || {};
+      let alpine = state.alpine || {};
+      if (!alpine._html)
+        return;
+      let html = fromSessionStorage(alpine._html);
       callback(html);
     });
   }
@@ -5013,19 +5016,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function updateUrl(method, url, html) {
     let key = new Date().getTime();
-    tryToStoreInSession(key, JSON.stringify({ html }));
-    let state = Object.assign(history.state || {}, { alpine: key });
+    tryToStoreInSession(key, html);
+    let state = history.state || {};
+    if (!state.alpine)
+      state.alpine = {};
+    state.alpine._html = key;
     history[method](state, document.title, url);
   }
-  function fromSessionStorage(event) {
-    if (!event.state.alpine)
-      return {};
-    let state = JSON.parse(sessionStorage.getItem("alpine:" + event.state.alpine));
+  function fromSessionStorage(timestamp) {
+    let state = JSON.parse(sessionStorage.getItem("alpine:" + timestamp));
     return state;
   }
   function tryToStoreInSession(timestamp, value) {
     try {
-      sessionStorage.setItem("alpine:" + timestamp, value);
+      sessionStorage.setItem("alpine:" + timestamp, JSON.stringify(value));
     } catch (error2) {
       if (![22, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(error2.code))
         return;
@@ -6721,8 +6725,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
     });
-    updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
-    console.log("hey");
     whenTheBackOrForwardButtonIsClicked((html) => {
       storeScrollInformationInHtmlBeforeNavigatingAway();
       preventAlpineFromPickingUpDomChanges(Alpine22, (andAfterAllThis) => {
@@ -7748,7 +7750,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     component.children.forEach((child2) => {
       let childMeta = child2.snapshot.memo;
       let props = childMeta.props;
-      console.log(props);
       if (props)
         child2.$wire.$commit();
     });
