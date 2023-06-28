@@ -5085,7 +5085,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function extractDestinationFromLink(linkEl) {
-    return new URL(linkEl.getAttribute("href"), document.baseURI);
+    return createUrlObjectFromString(linkEl.getAttribute("href"));
+  }
+  function createUrlObjectFromString(urlString) {
+    return new URL(urlString, document.baseURI);
   }
   function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute("data-scroll-x", document.body.scrollLeft);
@@ -6694,6 +6697,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var restoreScroll = true;
   var autofocus = false;
   function src_default6(Alpine22) {
+    Alpine22.navigate = (url) => {
+      navigateTo(createUrlObjectFromString(url));
+    };
     Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater22, cleanup: cleanup3 }) => {
       let shouldPrefetch = modifiers.includes("prefetch");
       shouldPrefetch && whenThisLinkIsHovered(el, () => {
@@ -6703,28 +6709,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
       whenThisLinkIsClicked(el, () => {
-        showProgressBar && showAndStartProgressBar();
-        let fromDestination = extractDestinationFromLink(el);
-        fetchHtmlOrUsePrefetchedHtml(fromDestination, (html) => {
-          restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
-          showProgressBar && finishAndHideProgressBar();
-          updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
-          preventAlpineFromPickingUpDomChanges(Alpine22, (andAfterAllThis) => {
-            enablePersist && storePersistantElementsForLater();
-            swapCurrentPageWithNewHtml(html, () => {
-              enablePersist && putPersistantElementsBack();
-              restoreScroll && restoreScrollPosition();
-              fireEventForOtherLibariesToHookInto();
-              updateUrlAndStoreLatestHtmlForFutureBackButtons(html, fromDestination);
-              andAfterAllThis(() => {
-                autofocus && autofocusElementsWithTheAutofocusAttribute();
-                nowInitializeAlpineOnTheNewPage(Alpine22);
-              });
+        let destination = extractDestinationFromLink(el);
+        navigateTo(destination);
+      });
+    });
+    function navigateTo(destination) {
+      showProgressBar && showAndStartProgressBar();
+      fetchHtmlOrUsePrefetchedHtml(destination, (html) => {
+        restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
+        showProgressBar && finishAndHideProgressBar();
+        updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
+        preventAlpineFromPickingUpDomChanges(Alpine22, (andAfterAllThis) => {
+          enablePersist && storePersistantElementsForLater();
+          swapCurrentPageWithNewHtml(html, () => {
+            enablePersist && putPersistantElementsBack();
+            restoreScroll && restoreScrollPosition();
+            fireEventForOtherLibariesToHookInto();
+            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
+            andAfterAllThis(() => {
+              autofocus && autofocusElementsWithTheAutofocusAttribute();
+              nowInitializeAlpineOnTheNewPage(Alpine22);
             });
           });
         });
       });
-    });
+    }
     whenTheBackOrForwardButtonIsClicked((html) => {
       storeScrollInformationInHtmlBeforeNavigatingAway();
       preventAlpineFromPickingUpDomChanges(Alpine22, (andAfterAllThis) => {
@@ -7664,7 +7673,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!effects["redirect"])
       return;
     let url = effects["redirect"];
-    window.location.href = url;
+    let prevented = false;
+    let preventDefault = () => prevented = true;
+    trigger("redirect", { component, url, preventDefault, effects });
+    if (!prevented)
+      window.location.href = url;
+  });
+
+  // js/features/supportNavigate.js
+  var isNavigating = false;
+  window.addEventListener("alpine:navigated", () => {
+    isNavigating = true;
+  });
+  on("redirect", ({ url, preventDefault, effects }) => {
+    let forceNavigate = effects.redirectUsingNavigate;
+    if (forceNavigate || isNavigating) {
+      preventDefault();
+      Alpine.navigate(url);
+    }
   });
 
   // js/morph.js

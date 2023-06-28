@@ -40,6 +40,7 @@ class SupportRedirects extends ComponentHook
         app()->instance('redirect', array_pop(static::$redirectorCacheStack));
 
         $to = $this->storeGet('redirect');
+        $usingNavigate = $this->storeGet('redirectUsingNavigate');
 
         if ($to && ! app(HandleRequests::class)->isLivewireRequest()) {
             abort(redirect($to));
@@ -55,5 +56,6 @@ class SupportRedirects extends ComponentHook
         };
 
         $context->addEffect('redirect', $to);
+        $usingNavigate && $context->addEffect('redirectUsingNavigate', true);
     }
 }

@@ -6,6 +6,7 @@ import './supportJsEvaluation';
 import './supportFileUploads';
 import './supportQueryString';
 import './supportRedirects';
+import './supportNavigate';
 import './supportMorphDom';
 import './supportEntangle';
 import './supportEvents';

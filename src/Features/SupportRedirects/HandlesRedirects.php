@@ -8,9 +8,11 @@ use function Livewire\store;
 
 trait HandlesRedirects
 {
-    public function redirect($url)
+    public function redirect($url, $navigate = false)
     {
         store($this)->set('redirect', $url);
+
+        if ($navigate) store($this)->set('redirectUsingNavigate', true);
 
         $shouldSkipRender = ! config('livewire.render_on_redirect', false);
 
