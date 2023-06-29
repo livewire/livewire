@@ -65,7 +65,27 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function it_does_not_add_condtional_markers_around_an_attribute_containing_a_greater_than_symbol()
+    public function it_does_not_add_condtional_markers_around_an_attribute_name_containing_a_greater_than_symbol()
+    {
+        $output = $this->compile(<<<'HTML'
+        <div
+            @if ($foo)
+                {{ $foo->bar }}
+            @endif
+
+            @if ($foo)
+                {{ $foo=>bar }}="bar"
+            @endif
+        >
+        </div>
+        HTML);
+
+        $this->assertOccurrences(0, '__BLOCK__', $output);
+        $this->assertOccurrences(0, '__ENDBLOCK__', $output);
+    }
+
+    /** @test */
+    public function it_does_not_add_condtional_markers_around_an_attribute_value_containing_a_greater_than_symbol()
     {
         $output = $this->compile(<<<'HTML'
         <div
