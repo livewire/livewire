@@ -16,7 +16,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
     static function registerPrecompilers($precompile)
     {
         $outsideOfHtmlTag = function ($directive) {
-            $htmlTag = '<[^>]*("[^"]*"|\'[^\']*\'|\{\{[^}]*\}\}|[^>])*?>';
+            $htmlTag = '<[^>]*("[^"]*"|\'[^\']*\'|\{\{[^}]*\}\}|@if[^(]*\([^)]*\)[^@]*@endif|@foreach[^(]*\([^)]*\)[^@]*@endforeach|[^>])*?>';
             $bladeEchoExpression = '\{\{[^}]*\}\}';
             $bladeParameters = '\([^)]*\)';
             $ignoreIfInsideHtmlTagOrExpression = "({$htmlTag}|{$bladeEchoExpression}|{$bladeParameters})(*SKIP)(*FAIL)|";
