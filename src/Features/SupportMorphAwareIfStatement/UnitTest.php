@@ -105,6 +105,26 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function it_does_not_add_condtional_markers_around_an_condition_containing_a_greater_than_symbol()
+    {
+        $output = $this->compile(<<<'HTML'
+        <div
+            @if ($foo->bar)
+                foo="bar"
+            @endif
+
+            @if ($foo=>bar)
+                foo="bar"
+            @endif
+        >
+        </div>
+        HTML);
+
+        $this->assertOccurrences(0, '__BLOCK__', $output);
+        $this->assertOccurrences(0, '__ENDBLOCK__', $output);
+    }
+
+    /** @test */
     public function it_still_adds_conditional_markers_if_there_is_a_blade_expression_before_it_that_contains_a_less_than_symbol()
     {
         $output = $this->compile(<<<'HTML'
