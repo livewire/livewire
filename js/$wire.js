@@ -5,6 +5,7 @@ import { callMethod, requestCommit } from '@/request'
 import { WeakBag, dataGet, dataSet } from '@/utils'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
+import { removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 
 let properties = {}
 let fallback
@@ -159,3 +160,7 @@ wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, 
 wireProperty('dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
 wireProperty('dispatchTo', (component) => (...params) => dispatchTo(component, ...params))
+
+wireProperty('upload', (component) => (...params) => upload(component, ...params))
+wireProperty('uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
+wireProperty('removeUpload', (component) => (...params) =>removeUpload(component, ...params))
