@@ -2,10 +2,10 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Features\SupportLockedProperties\Locked as BaseLocked;
+use Livewire\Features\SupportJsEvaluation\Js as BaseJs;
 
 #[\Attribute]
-class Locked extends BaseLocked
+class Js extends BaseJs
 {
     //
 }

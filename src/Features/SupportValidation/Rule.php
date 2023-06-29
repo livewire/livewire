@@ -30,10 +30,6 @@ class Rule extends LivewireAttribute
 
     function update($fullPath, $newValue)
     {
-        // wrap($this->component)->validateOnly($this->getName(), dataOverrides: [
-        //     $this->getName() => $newValue,
-        // ]);
-
         return function () {
             wrap($this->component)->validateOnly($this->getName());
         };

@@ -85,6 +85,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportRedirects\SupportRedirects::class,
             \Livewire\Features\SupportWireables\SupportWireables::class,
             \Livewire\Features\SupportStreaming\SupportStreaming::class,
+            \Livewire\Features\SupportNavigate\SupportNavigate::class,
             \Livewire\Features\SupportEntangle\SupportEntangle::class,
             \Livewire\Features\SupportLocales\SupportLocales::class,
             \Livewire\Features\SupportModels\SupportModels::class,
