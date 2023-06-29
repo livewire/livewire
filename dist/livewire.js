@@ -3345,6 +3345,228 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
 
+  // js/features/supportFileUploads.js
+  var uploadManagers = /* @__PURE__ */ new WeakMap();
+  function getUploadManager(component) {
+    if (!uploadManagers.has(component)) {
+      let manager = new UploadManager(component);
+      uploadManagers.set(component, manager);
+      manager.registerListeners();
+    }
+    return uploadManagers.get(component);
+  }
+  function handleFileUpload(el, property, component, cleanup3) {
+    let manager = getUploadManager(component);
+    let start4 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
+    let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
+    let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
+    let progress = (progressEvent) => {
+      var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
+      el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
+        bubbles: true,
+        detail: { progress: percentCompleted }
+      }));
+    };
+    let eventHandler = (e) => {
+      if (e.target.files.length === 0)
+        return;
+      start4();
+      if (e.target.multiple) {
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress);
+      } else {
+        manager.upload(property, e.target.files[0], finish, error2, progress);
+      }
+    };
+    el.addEventListener("change", eventHandler);
+    let clearFileInputValue = () => {
+      el.value = null;
+    };
+    el.addEventListener("click", clearFileInputValue);
+    cleanup3(() => {
+      el.removeEventListener("change", eventHandler);
+      el.removeEventListener("click", clearFileInputValue);
+    });
+  }
+  var UploadManager = class {
+    constructor(component) {
+      this.component = component;
+      this.uploadBag = new MessageBag();
+      this.removeBag = new MessageBag();
+    }
+    registerListeners() {
+      this.component.$wire.$on("upload:generatedSignedUrl", ({ name, url }) => {
+        setUploadLoading(this.component, name);
+        this.handleSignedUrl(name, url);
+      });
+      this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
+        setUploadLoading(this.component, name);
+        this.handleS3PreSignedUrl(name, payload);
+      });
+      this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
+      this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
+      this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
+    }
+    upload(name, file, finishCallback, errorCallback, progressCallback) {
+      this.setUpload(name, {
+        files: [file],
+        multiple: false,
+        finishCallback,
+        errorCallback,
+        progressCallback
+      });
+    }
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+      this.setUpload(name, {
+        files: Array.from(files),
+        multiple: true,
+        finishCallback,
+        errorCallback,
+        progressCallback
+      });
+    }
+    removeUpload(name, tmpFilename, finishCallback) {
+      this.removeBag.push(name, {
+        tmpFilename,
+        finishCallback
+      });
+      this.component.$wire.call("removeUpload", name, tmpFilename);
+    }
+    setUpload(name, uploadObject) {
+      this.uploadBag.add(name, uploadObject);
+      if (this.uploadBag.get(name).length === 1) {
+        this.startUpload(name, uploadObject);
+      }
+    }
+    handleSignedUrl(name, url) {
+      let formData = new FormData();
+      Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
+      let headers = {
+        "Accept": "application/json"
+      };
+      let csrfToken = getCsrfToken();
+      if (csrfToken)
+        headers["X-CSRF-TOKEN"] = csrfToken;
+      this.makeRequest(name, formData, "post", url, headers, (response) => {
+        return response.paths;
+      });
+    }
+    handleS3PreSignedUrl(name, payload) {
+      let formData = this.uploadBag.first(name).files[0];
+      let headers = payload.headers;
+      if ("Host" in headers)
+        delete headers.Host;
+      let url = payload.url;
+      this.makeRequest(name, formData, "put", url, headers, (response) => {
+        return [payload.path];
+      });
+    }
+    makeRequest(name, formData, method, url, headers, retrievePaths) {
+      let request = new XMLHttpRequest();
+      request.open(method, url);
+      Object.entries(headers).forEach(([key, value]) => {
+        request.setRequestHeader(key, value);
+      });
+      request.upload.addEventListener("progress", (e) => {
+        e.detail = {};
+        e.detail.progress = Math.round(e.loaded * 100 / e.total);
+        this.uploadBag.first(name).progressCallback(e);
+      });
+      request.addEventListener("load", () => {
+        if ((request.status + "")[0] === "2") {
+          let paths = retrievePaths(request.response && JSON.parse(request.response));
+          this.component.$wire.call("finishUpload", name, paths, this.uploadBag.first(name).multiple);
+          return;
+        }
+        let errors = null;
+        if (request.status === 422) {
+          errors = request.response;
+        }
+        this.component.$wire.call("uploadErrored", name, errors, this.uploadBag.first(name).multiple);
+      });
+      request.send(formData);
+    }
+    startUpload(name, uploadObject) {
+      let fileInfos = uploadObject.files.map((file) => {
+        return { name: file.name, size: file.size, type: file.type };
+      });
+      this.component.$wire.call("startUpload", name, fileInfos, uploadObject.multiple);
+      setUploadLoading(this.component, name);
+    }
+    markUploadFinished(name, tmpFilenames) {
+      unsetUploadLoading(this.component);
+      let uploadObject = this.uploadBag.shift(name);
+      uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
+    }
+    markUploadErrored(name) {
+      unsetUploadLoading(this.component);
+      this.uploadBag.shift(name).errorCallback();
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
+    }
+  };
+  var MessageBag = class {
+    constructor() {
+      this.bag = {};
+    }
+    add(name, thing) {
+      if (!this.bag[name]) {
+        this.bag[name] = [];
+      }
+      this.bag[name].push(thing);
+    }
+    push(name, thing) {
+      this.add(name, thing);
+    }
+    first(name) {
+      if (!this.bag[name])
+        return null;
+      return this.bag[name][0];
+    }
+    last(name) {
+      return this.bag[name].slice(-1)[0];
+    }
+    get(name) {
+      return this.bag[name];
+    }
+    shift(name) {
+      return this.bag[name].shift();
+    }
+    call(name, ...params) {
+      (this.listeners[name] || []).forEach((callback) => {
+        callback(...params);
+      });
+    }
+    has(name) {
+      return Object.keys(this.listeners).includes(name);
+    }
+  };
+  function setUploadLoading() {
+  }
+  function unsetUploadLoading() {
+  }
+  function upload(component, name, file, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback);
+  }
+  function uploadMultiple(component, name, files, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
+  }
+  function removeUpload(component, name, tmpFilename, finishCallback = () => {
+  }, errorCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+  }
+
   // js/$wire.js
   var properties = {};
   var fallback;
@@ -3453,6 +3675,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("dispatch", (component) => (...params) => dispatch3(component, ...params));
   wireProperty("dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
   wireProperty("dispatchTo", (component) => (...params) => dispatchTo(component, ...params));
+  wireProperty("upload", (component) => (...params) => upload(component, ...params));
+  wireProperty("uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
+  wireProperty("removeUpload", (component) => (...params) => removeUpload(component, ...params));
 
   // js/component.js
   var Component = class {
@@ -5073,15 +5298,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       };
     }
   }
-  function whenThisLinkIsClicked(el, callback) {
-    el.addEventListener("click", (e) => {
+  function whenThisLinkIsPressed(el, callback) {
+    el.addEventListener("click", (e) => e.preventDefault());
+    el.addEventListener("mousedown", (e) => {
       e.preventDefault();
-      callback(el);
+      callback((whenReleased) => {
+        let handler3 = (e2) => {
+          e2.preventDefault();
+          whenReleased();
+          el.removeEventListener("mouseup", handler3);
+        };
+        el.addEventListener("mouseup", handler3);
+      });
     });
   }
-  function whenThisLinkIsHovered(el, callback) {
+  function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
     el.addEventListener("mouseenter", (e) => {
-      callback(e);
+      let timeout = setTimeout(() => {
+        callback(e);
+      }, ms);
+      let handler3 = () => {
+        clearTimeout(timeout);
+        el.removeEventListener("mouseleave", handler3);
+      };
+      el.addEventListener("mouseleave", handler3);
     });
   }
   function extractDestinationFromLink(linkEl) {
@@ -6654,6 +6894,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     for (child of Array.from(newHead.children)) {
       if (isAsset(child)) {
         if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
+          if (isTracked(child)) {
+            setTimeout(() => window.location.reload());
+            return;
+          }
           if (isScript(child)) {
             document.head.appendChild(cloneScriptTag(child));
           } else {
@@ -6681,6 +6925,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return script;
   }
+  function isTracked(el) {
+    return el.hasAttribute("data-navigate-track");
+  }
   function isAsset(el) {
     return el.tagName.toLowerCase() === "link" && el.getAttribute("rel").toLowerCase() === "stylesheet" || el.tagName.toLowerCase() === "style" || el.tagName.toLowerCase() === "script";
   }
@@ -6701,16 +6948,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       navigateTo(createUrlObjectFromString(url));
     };
     Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater22, cleanup: cleanup3 }) => {
-      let shouldPrefetch = modifiers.includes("prefetch");
-      shouldPrefetch && whenThisLinkIsHovered(el, () => {
-        let forDestination = extractDestinationFromLink(el);
-        prefetchHtml(forDestination, (html) => {
-          storeThePrefetchedHtmlForWhenALinkIsClicked(html, forDestination);
+      if (value === "persist")
+        return;
+      let shouldPrefetch = modifiers.includes("prefetch") && modifiers.includes("hover");
+      shouldPrefetch && whenThisLinkIsHoveredFor(el, 60, () => {
+        let destination = extractDestinationFromLink(el);
+        prefetchHtml(destination, (html) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
         });
       });
-      whenThisLinkIsClicked(el, () => {
+      whenThisLinkIsPressed(el, (whenItIsReleased) => {
         let destination = extractDestinationFromLink(el);
-        navigateTo(destination);
+        prefetchHtml(destination, (html) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+        });
+        whenItIsReleased(() => {
+          navigateTo(destination);
+        });
       });
     });
     function navigateTo(destination) {
@@ -7423,208 +7677,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/features/supportFileUploads.js
-  var uploadManagers = /* @__PURE__ */ new WeakMap();
-  function getUploadManager(component) {
-    if (!uploadManagers.has(component)) {
-      let manager = new UploadManager(component);
-      uploadManagers.set(component, manager);
-      manager.registerListeners();
-    }
-    return uploadManagers.get(component);
-  }
-  function handleFileUpload(el, property, component, cleanup3) {
-    let manager = getUploadManager(component);
-    let start4 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
-    let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
-    let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
-    let progress = (progressEvent) => {
-      var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
-      el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
-        bubbles: true,
-        detail: { progress: percentCompleted }
-      }));
-    };
-    let eventHandler = (e) => {
-      if (e.target.files.length === 0)
-        return;
-      start4();
-      if (e.target.multiple) {
-        manager.uploadMultiple(property, e.target.files, finish, error2, progress);
-      } else {
-        manager.upload(property, e.target.files[0], finish, error2, progress);
-      }
-    };
-    el.addEventListener("change", eventHandler);
-    let clearFileInputValue = () => {
-      el.value = null;
-    };
-    el.addEventListener("click", clearFileInputValue);
-    cleanup3(() => {
-      el.removeEventListener("change", eventHandler);
-      el.removeEventListener("click", clearFileInputValue);
-    });
-  }
-  var UploadManager = class {
-    constructor(component) {
-      this.component = component;
-      this.uploadBag = new MessageBag();
-      this.removeBag = new MessageBag();
-    }
-    registerListeners() {
-      this.component.$wire.$on("upload:generatedSignedUrl", ({ name, url }) => {
-        setUploadLoading(this.component, name);
-        this.handleSignedUrl(name, url);
-      });
-      this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
-        setUploadLoading(this.component, name);
-        this.handleS3PreSignedUrl(name, payload);
-      });
-      this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
-      this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
-      this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
-    }
-    upload(name, file, finishCallback, errorCallback, progressCallback) {
-      this.setUpload(name, {
-        files: [file],
-        multiple: false,
-        finishCallback,
-        errorCallback,
-        progressCallback
-      });
-    }
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
-      this.setUpload(name, {
-        files: Array.from(files),
-        multiple: true,
-        finishCallback,
-        errorCallback,
-        progressCallback
-      });
-    }
-    removeUpload(name, tmpFilename, finishCallback) {
-      this.removeBag.push(name, {
-        tmpFilename,
-        finishCallback
-      });
-      this.component.$wire.call("removeUpload", name, tmpFilename);
-    }
-    setUpload(name, uploadObject) {
-      this.uploadBag.add(name, uploadObject);
-      if (this.uploadBag.get(name).length === 1) {
-        this.startUpload(name, uploadObject);
-      }
-    }
-    handleSignedUrl(name, url) {
-      let formData = new FormData();
-      Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
-      let headers = {
-        "Accept": "application/json"
-      };
-      let csrfToken = getCsrfToken();
-      if (csrfToken)
-        headers["X-CSRF-TOKEN"] = csrfToken;
-      this.makeRequest(name, formData, "post", url, headers, (response) => {
-        return response.paths;
-      });
-    }
-    handleS3PreSignedUrl(name, payload) {
-      let formData = this.uploadBag.first(name).files[0];
-      let headers = payload.headers;
-      if ("Host" in headers)
-        delete headers.Host;
-      let url = payload.url;
-      this.makeRequest(name, formData, "put", url, headers, (response) => {
-        return [payload.path];
-      });
-    }
-    makeRequest(name, formData, method, url, headers, retrievePaths) {
-      let request = new XMLHttpRequest();
-      request.open(method, url);
-      Object.entries(headers).forEach(([key, value]) => {
-        request.setRequestHeader(key, value);
-      });
-      request.upload.addEventListener("progress", (e) => {
-        e.detail = {};
-        e.detail.progress = Math.round(e.loaded * 100 / e.total);
-        this.uploadBag.first(name).progressCallback(e);
-      });
-      request.addEventListener("load", () => {
-        if ((request.status + "")[0] === "2") {
-          let paths = retrievePaths(request.response && JSON.parse(request.response));
-          this.component.$wire.call("finishUpload", name, paths, this.uploadBag.first(name).multiple);
-          return;
-        }
-        let errors = null;
-        if (request.status === 422) {
-          errors = request.response;
-        }
-        this.component.$wire.call("uploadErrored", name, errors, this.uploadBag.first(name).multiple);
-      });
-      request.send(formData);
-    }
-    startUpload(name, uploadObject) {
-      let fileInfos = uploadObject.files.map((file) => {
-        return { name: file.name, size: file.size, type: file.type };
-      });
-      this.component.$wire.call("startUpload", name, fileInfos, uploadObject.multiple);
-      setUploadLoading(this.component, name);
-    }
-    markUploadFinished(name, tmpFilenames) {
-      unsetUploadLoading(this.component);
-      let uploadObject = this.uploadBag.shift(name);
-      uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
-      if (this.uploadBag.get(name).length > 0)
-        this.startUpload(name, this.uploadBag.last(name));
-    }
-    markUploadErrored(name) {
-      unsetUploadLoading(this.component);
-      this.uploadBag.shift(name).errorCallback();
-      if (this.uploadBag.get(name).length > 0)
-        this.startUpload(name, this.uploadBag.last(name));
-    }
-  };
-  var MessageBag = class {
-    constructor() {
-      this.bag = {};
-    }
-    add(name, thing) {
-      if (!this.bag[name]) {
-        this.bag[name] = [];
-      }
-      this.bag[name].push(thing);
-    }
-    push(name, thing) {
-      this.add(name, thing);
-    }
-    first(name) {
-      if (!this.bag[name])
-        return null;
-      return this.bag[name][0];
-    }
-    last(name) {
-      return this.bag[name].slice(-1)[0];
-    }
-    get(name) {
-      return this.bag[name];
-    }
-    shift(name) {
-      return this.bag[name].shift();
-    }
-    call(name, ...params) {
-      (this.listeners[name] || []).forEach((callback) => {
-        callback(...params);
-      });
-    }
-    has(name) {
-      return Object.keys(this.listeners).includes(name);
-    }
-  };
-  function setUploadLoading() {
-  }
-  function unsetUploadLoading() {
-  }
-
   // js/features/supportQueryString.js
   on("component.init", (component) => {
     let effects = component.effects;
@@ -7684,6 +7736,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var isNavigating = false;
   window.addEventListener("alpine:navigated", () => {
     isNavigating = true;
+    window.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
   });
   on("redirect", ({ url, preventDefault, effects }) => {
     let forceNavigate = effects.redirectUsingNavigate;
@@ -7869,8 +7922,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire:navigate.js
   directive2("navigate", (el, directive4) => {
+    let alpineDirective = directive4.rawName.replace("wire:", "x-");
     module_default.bind(el, {
-      "x-navigate": true
+      [alpineDirective]: true
     });
   });
 

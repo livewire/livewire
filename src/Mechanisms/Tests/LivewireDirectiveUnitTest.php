@@ -7,7 +7,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 
 // TODO - Change this to \Tests\TestCase
-class LivewireDirectiveTest extends \LegacyTests\Unit\TestCase
+class LivewireDirectiveUnitTest extends \LegacyTests\Unit\TestCase
 {
     /** @test */
     public function component_is_loaded_with_blade_directive()

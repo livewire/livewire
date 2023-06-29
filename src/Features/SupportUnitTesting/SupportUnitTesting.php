@@ -40,6 +40,7 @@ class SupportUnitTesting extends ComponentHook
         return function ($html) use ($view) {
             $this->storeSet('testing.view', $view);
             $this->storeSet('testing.html', $html);
+            Testable::$htmlById[$this->component->getId()] = $html;
         };
     }
 

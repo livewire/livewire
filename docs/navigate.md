@@ -76,16 +76,16 @@ The `.prefetch.hover` modifier will instruct Livewire to prefetch the page after
 
 Sometimes, there are parts of a user interface that you need to persist between page loads, such as audio or video players. For example, in a podcasting application, a user may want to keep listening to an episode as they browse other pages.
 
-You can achieve this in Livewire with the `wire:persist` directive.
+You can achieve this in Livewire with the `@persist` directive.
 
-By adding `wire:persist` to an element and providing it with a name, when a new page is requested using `wire:navigate`, Livewire will look for an element on the new page that has the same `wire:persist` name. Instead of replacing the element like normal, Livewire will use the existing DOM element from the previous page in the new page, preserving any state within the element.
+By wrapping an element with `@persist` and providing it with a name, when a new page is requested using `wire:navigate`, Livewire will look for an element on the new page that has a matching `@persist`. Instead of replacing the element like normal, Livewire will use the existing DOM element from the previous page in the new page, preserving any state within the element.
 
-Here is an example of an `<audio>` player element being persisted across pages using `wire:persist`:
+Here is an example of an `<audio>` player element being persisted across pages using `@persist`:
 
 ```blade
-<div wire:persist="player">
+@persist('player')
     <audio src="{{ $episode->file }}" controls></audio>
-</div>
+@endpersist
 ```
 
 If the above HTML appears on both pages—the current page, and the next one—the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
@@ -102,20 +102,6 @@ Typically, you can use standard Blade utilities to detect the current page and s
 
     <a href="/users" wire:navigate class="{{ request()->is('/users') && 'active' }}">Users</a>
 </nav>
-```
-
-## The progress bar
-
-By default, Livewire will show a progress bar at the top of the page while a new page is being fetched from the server.
-
-### Hiding the progress bar
-
-If you wish to remove this progress bar entirely, you can do so in Livewire's configuration file—`config/livewire.php`:
-
-```php
-'navigate' => [
-    'show_progress_bar' => false,
-],
 ```
 
 ## Script evaluation
@@ -198,8 +184,6 @@ To prevent this, you may add `data-navigate-track` to a `<script>` tag in `<head
 <head>
     <script src="/app.js?id=456" data-navigate-track></script>
 </head>
-
-@vite('')
 ```
 
 When a user visits _page two_, Livewire will detect a fresh JavaScript asset and trigger a full browser page reload.
