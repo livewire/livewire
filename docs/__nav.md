@@ -27,6 +27,7 @@ Features:
     Locked Properties: { uri: /docs/locked, file: /locked.md }
     Dirty States: { uri: /docs/dirty, file: /dirty.md }
     Offline States: { uri: /docs/offline, file: /offline.md }
+    Teleporting: { uri: /docs/teleporting, file: /teleporting.md }
 Concepts:
     Hydration: { uri: /docs/hydration, file: /hydration.md }
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
