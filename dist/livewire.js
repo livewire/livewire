@@ -5073,15 +5073,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       };
     }
   }
-  function whenThisLinkIsClicked(el, callback) {
-    el.addEventListener("click", (e) => {
+  function whenThisLinkIsPressed(el, callback) {
+    el.addEventListener("click", (e) => e.preventDefault());
+    el.addEventListener("mousedown", (e) => {
       e.preventDefault();
-      callback(el);
+      callback((whenReleased) => {
+        let handler3 = (e2) => {
+          e2.preventDefault();
+          whenReleased();
+          el.removeEventListener("mouseup", handler3);
+        };
+        el.addEventListener("mouseup", handler3);
+      });
     });
   }
-  function whenThisLinkIsHovered(el, callback) {
+  function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
     el.addEventListener("mouseenter", (e) => {
-      callback(e);
+      let timeout = setTimeout(() => {
+        callback(e);
+      }, ms);
+      let handler3 = () => {
+        clearTimeout(timeout);
+        el.removeEventListener("mouseleave", handler3);
+      };
+      el.addEventListener("mouseleave", handler3);
     });
   }
   function extractDestinationFromLink(linkEl) {
@@ -6654,6 +6669,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     for (child of Array.from(newHead.children)) {
       if (isAsset(child)) {
         if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
+          if (isTracked(child)) {
+            setTimeout(() => window.location.reload());
+            return;
+          }
           if (isScript(child)) {
             document.head.appendChild(cloneScriptTag(child));
           } else {
@@ -6681,6 +6700,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return script;
   }
+  function isTracked(el) {
+    return el.hasAttribute("data-navigate-track");
+  }
   function isAsset(el) {
     return el.tagName.toLowerCase() === "link" && el.getAttribute("rel").toLowerCase() === "stylesheet" || el.tagName.toLowerCase() === "style" || el.tagName.toLowerCase() === "script";
   }
@@ -6701,16 +6723,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       navigateTo(createUrlObjectFromString(url));
     };
     Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater22, cleanup: cleanup3 }) => {
-      let shouldPrefetch = modifiers.includes("prefetch");
-      shouldPrefetch && whenThisLinkIsHovered(el, () => {
-        let forDestination = extractDestinationFromLink(el);
-        prefetchHtml(forDestination, (html) => {
-          storeThePrefetchedHtmlForWhenALinkIsClicked(html, forDestination);
+      if (value === "persist")
+        return;
+      let shouldPrefetch = modifiers.includes("prefetch") && modifiers.includes("hover");
+      shouldPrefetch && whenThisLinkIsHoveredFor(el, 60, () => {
+        let destination = extractDestinationFromLink(el);
+        prefetchHtml(destination, (html) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
         });
       });
-      whenThisLinkIsClicked(el, () => {
+      whenThisLinkIsPressed(el, (whenItIsReleased) => {
         let destination = extractDestinationFromLink(el);
-        navigateTo(destination);
+        prefetchHtml(destination, (html) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+        });
+        whenItIsReleased(() => {
+          navigateTo(destination);
+        });
       });
     });
     function navigateTo(destination) {
