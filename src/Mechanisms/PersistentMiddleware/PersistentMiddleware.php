@@ -3,9 +3,8 @@
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use function Livewire\on;
-use Illuminate\Http\Response;
-use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Str;
+use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class PersistentMiddleware
@@ -81,7 +80,7 @@ class PersistentMiddleware
             ! isset($snapshot['memo']['path'])
             || ! isset($snapshot['memo']['method'])
         ) return;
-        
+
         // Store these locally, so dynamically added child components can use this data.
         $this->path = $snapshot['memo']['path'];
         $this->method = $snapshot['memo']['method'];
@@ -96,12 +95,7 @@ class PersistentMiddleware
         // Only send through pipeline if there are middleware found
         if (is_null($middleware)) return;
 
-        return (new Pipeline(app()))
-            ->send($request)
-            ->through($middleware)
-            ->then(function() {
-                return new Response();
-            });
+        return Utils::applyMiddleware($request, $middleware);
     }
 
     protected function makeFakeRequest()

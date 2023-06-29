@@ -185,4 +185,14 @@ $body
 }
 PHP;
     }
+
+    static function applyMiddleware(\Illuminate\Http\Request $request, $middleware = [])
+    {
+        return (new \Illuminate\Pipeline\Pipeline(app()))
+            ->send($request)
+            ->through($middleware)
+            ->then(function() {
+                return new \Illuminate\Http\Response();
+            });
+    }
 }
