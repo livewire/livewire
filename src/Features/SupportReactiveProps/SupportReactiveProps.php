@@ -20,6 +20,10 @@ class SupportReactiveProps extends ComponentHook
         });
     }
 
+    static function hasPassedInProps($id) {
+        return isset(static::$pendingChildParams[$id]);
+    }
+
     static function getPassedInProp($id, $name) {
         $params = static::$pendingChildParams[$id] ?? [];
 

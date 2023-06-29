@@ -52,4 +52,45 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child.count', 1)
         ;
     }
+
+    /** @test */
+    public function can_pass_a_reactive_property_from_parent_to_lazy_child()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+
+                public function inc() { $this->count++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
+
+                        <button wire:click="inc" dusk="parent.inc">inc</button>
+
+                        <livewire:child :$count lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[Reactive]
+                public $count;
+
+                public function inc() { $this->count++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Child count: <span dusk="child.count">{{ $count }}</span>
+                        <button wire:click="inc" dusk="child.inc">inc</button>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@parent.count', 0)
+            ->waitFor('@child.count')
+            ->assertSeeIn('@child.count', 0)
+        ;
+    }
 }

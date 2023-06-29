@@ -24,11 +24,13 @@ class Reactive extends LivewireAttribute
 
     public function hydrate()
     {
-        $updatedValue = SupportReactiveProps::getPassedInProp(
-            $this->component->getId(), $this->getName()
-        );
+        if (SupportReactiveProps::hasPassedInProps($this->component->getId())) {
+            $updatedValue = SupportReactiveProps::getPassedInProp(
+                $this->component->getId(), $this->getName()
+            );
 
-        $this->setValue($updatedValue);
+            $this->setValue($updatedValue);
+        }
 
         $this->originalValueHash = crc32(json_encode($this->getValue()));
     }
