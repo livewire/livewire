@@ -52,6 +52,9 @@ class BrowserTest extends BrowserTestCase
                 @endteleport
             </div>
             HTML; }
-        })->assertSeeIn('#foo', 'bar')->click('@setFoo')->assertSeeIn('#foo', 'baz');
+        })
+            ->assertSeeIn('#foo', 'bar')
+            ->click('@setFoo')
+            ->assertSeeIn('#foo', 'baz');
     }
 }
