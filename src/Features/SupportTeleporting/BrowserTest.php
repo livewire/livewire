@@ -13,17 +13,15 @@ class BrowserTest extends BrowserTestCase
     {
         Livewire::visit(new class extends Component {
             public function render() { return <<<'HTML'
-            <div>
-                <div>
-                    <span id="foo"></span>
-                </div>
-
-                @teleport('#foo')
-                    <span>bar</span>
+            <div dusk="component">
+                @teleport('body')
+                    <span>teleportedbar</span>
                 @endteleport
             </div>
             HTML; }
-        })->assertSeeIn('#foo', 'bar');
+        })
+            ->assertDontSeeIn('@component', 'teleportedbar')
+            ->assertSee('teleportedbar');
     }
 
     /** @test */
@@ -38,23 +36,21 @@ class BrowserTest extends BrowserTestCase
             }
 
             public function render() { return <<<'HTML'
-            <div>
-                <div>
-                    <span id="foo"></span>
-                </div>
-
+            <div dusk="component">
                 <button dusk="setFoo" type="button" wire:click="setFoo">
                     Set foo
                 </button>
 
-                @teleport('#foo')
-                    <span>{{ $foo }}</span>
+                @teleport('body')
+                    <span>teleported{{ $foo }}</span>
                 @endteleport
             </div>
             HTML; }
         })
-            ->assertSeeIn('#foo', 'bar')
-            ->click('@setFoo')
-            ->assertSeeIn('#foo', 'baz');
+            ->assertDontSeeIn('@component', 'teleportedbar')
+            ->assertSee('teleportedbar')
+            ->waitForLivewire()->click('@setFoo')
+            ->assertDontSeeIn('@component', 'teleportedbaz')
+            ->assertSee('teleportedbaz');
     }
 }
