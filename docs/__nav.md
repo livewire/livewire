@@ -13,7 +13,7 @@ Essentials:
     Nesting Components: { uri: /docs/nesting, file: /nesting.md }
     Testing: { uri: /docs/testing, file: /testing.md }
 Features:
-    Navigation: { uri: /docs/navigation, file: /navigation.md }
+    Navigate: { uri: /docs/navigate, file: /navigate.md }
     Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
     Validation: { uri: /docs/validation, file: /validation.md }
     File Uploads: { uri: /docs/uploads, file: /uploads.md }
@@ -27,7 +27,7 @@ Features:
     Locked Properties: { uri: /docs/locked, file: /locked.md }
     Dirty States: { uri: /docs/dirty, file: /dirty.md }
     Offline States: { uri: /docs/offline, file: /offline.md }
-    Teleporting: { uri: /docs/teleporting, file: /teleporting.md }
+    Teleport: { uri: /docs/teleport, file: /teleport.md }
 Concepts:
     Hydration: { uri: /docs/hydration, file: /hydration.md }
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
