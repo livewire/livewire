@@ -4,6 +4,9 @@ let isNavigating = false
 
 window.addEventListener('alpine:navigated', () => {
     isNavigating = true
+
+    // Forward a "livewire" version of the Alpine event...
+    window.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
 })
 
 on('redirect', ({ url, preventDefault, effects }) => {

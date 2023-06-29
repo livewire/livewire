@@ -268,3 +268,58 @@ function setUploadLoading() {
 function unsetUploadLoading() {
     // @todo
 }
+
+export function upload(
+    component,
+    name,
+    file,
+    finishCallback = () => { },
+    errorCallback = () => { },
+    progressCallback = () => { }
+) {
+    let uploadManager = getUploadManager(component)
+
+    uploadManager.upload(
+        name,
+        file,
+        finishCallback,
+        errorCallback,
+        progressCallback
+    )
+}
+
+export function uploadMultiple(
+    component,
+    name,
+    files,
+    finishCallback = () => { },
+    errorCallback = () => { },
+    progressCallback = () => { }
+) {
+    let uploadManager = getUploadManager(component)
+
+    uploadManager.uploadMultiple(
+        name,
+        files,
+        finishCallback,
+        errorCallback,
+        progressCallback
+    )
+}
+
+export function removeUpload(
+    component,
+    name,
+    tmpFilename,
+    finishCallback = () => { },
+    errorCallback = () => { }
+) {
+    let uploadManager = getUploadManager(component)
+
+    uploadManager.removeUpload(
+        name,
+        tmpFilename,
+        finishCallback,
+        errorCallback
+    )
+}

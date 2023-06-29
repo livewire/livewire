@@ -14,6 +14,8 @@ class FrontendAssets
 
     public $javaScriptRoute;
 
+    public $scriptTagAttributes = [];
+
     public function boot()
     {
         app()->singleton($this::class);
@@ -24,6 +26,11 @@ class FrontendAssets
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
         Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
+    }
+
+    function useScriptTagAttributes($attributes)
+    {
+        $this->scriptTagAttributes = array_merge($this->scriptTagAttributes, $attributes);
     }
 
     function setScriptRoute($callback)
@@ -130,8 +137,12 @@ class FrontendAssets
 
         $updateUri = app('livewire')->getUpdateUri();
 
+        $extraAttributes = Utils::stringifyHtmlAttributes(
+            app(static::class)->scriptTagAttributes,
+        );
+
         return <<<HTML
-        <script src="{$url}" {$nonce} data-csrf="{$token}" data-uri="{$updateUri}" data-navigate-once></script>
+        <script src="{$url}" {$nonce} data-csrf="{$token}" data-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 

@@ -5,7 +5,7 @@ namespace Livewire\Mechanisms\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class InlineBladeTemplatesTest extends \Tests\TestCase
+class InlineBladeTemplatesUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function renders_inline_blade_template()

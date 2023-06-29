@@ -128,6 +128,11 @@ class Manager
         return app(FrontendAssets::class)->setScriptRoute($callback);
     }
 
+    function useScriptTagAttributes($attributes)
+    {
+        return app(FrontendAssets::class)->useScriptTagAttributes($attributes);
+    }
+
     protected $queryParamsForTesting = [];
 
     function withQueryParams($params)

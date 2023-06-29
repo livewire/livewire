@@ -105,9 +105,11 @@ class Testable extends BaseTestable
         auth()->shouldUse($driver);
     }
 
+    public static $htmlById = [];
+
     function html($stripInitialData = false)
     {
-        $html = store($this->target)->get('testing.html');
+        $html = static::$htmlById[$this->target->getId()];
 
         if ($stripInitialData) {
             $removeMe = (string) str($html)->betweenFirst(
