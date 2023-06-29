@@ -9,7 +9,7 @@ use Livewire\Livewire;
 use function Livewire\store;
 use function Livewire\str;
 
-class ComponentSkipRenderTest extends \Tests\TestCase
+class ComponentSkipRenderUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function component_renders_like_normal()
@@ -26,9 +26,11 @@ class ComponentSkipRenderTest extends \Tests\TestCase
     {
         $component = Livewire::test(ComponentSkipRenderStub::class);
 
-        $component->call('noop');
+        $component->assertSet('skipped', false);
+        $component->call('skip');
+        $component->assertSet('skipped', true);
 
-        $this->assertNull($component->html());
+        $this->assertNotNull($component->html());
     }
 
     /** @test */
@@ -36,9 +38,11 @@ class ComponentSkipRenderTest extends \Tests\TestCase
     {
         $component = Livewire::test(ComponentSkipRenderAttributeStub::class);
 
-        $component->call('noop');
+        $component->assertSet('skipped', false);
+        $component->call('skip');
+        $component->assertSet('skipped', true);
 
-        $this->assertNull($component->html());
+        $this->assertNotNull($component->html());
     }
 
     /** @test */
@@ -64,18 +68,18 @@ class ComponentSkipRenderTest extends \Tests\TestCase
 
 class ComponentSkipRenderStub extends Component
 {
-    private $noop = false;
+    public $skipped = false;
 
-    public function noop()
+    public function skip()
     {
-        $this->noop = true;
+        $this->skipped = true;
 
         $this->skipRender();
     }
 
     public function render()
     {
-        if ($this->noop) {
+        if ($this->skipped) {
             throw new \RuntimeException('Render should not be called after noop()');
         }
 
@@ -85,17 +89,17 @@ class ComponentSkipRenderStub extends Component
 
 class ComponentSkipRenderAttributeStub extends Component
 {
-    private $noop = false;
+    public $skipped = false;
 
-    #[\Livewire\Attributes\SkipRender]
-    public function noop()
+    #[\Livewire\Attributes\Renderless]
+    public function skip()
     {
-        $this->noop = true;
+        $this->skipped = true;
     }
 
     public function render()
     {
-        if ($this->noop) {
+        if ($this->skipped) {
             throw new \RuntimeException('Render should not be called after noop()');
         }
 
