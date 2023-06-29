@@ -926,6 +926,7 @@ class BrowsePosts extends Component
 }
 ```
 
+<!--
 ## Applying middleware
 
 By default, Livewire re-applies authentication and authorization related middleware on subsequent requests if those middleware were applied on the initial page load request.
@@ -959,3 +960,5 @@ class CreatePost extends Component
 ```
 
 Now, the `LogPostCreation` middleware will be applied only to the `createPost` action, ensuring that the activity is only being logged when users create a new post.
+
+-->
