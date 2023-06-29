@@ -18,6 +18,10 @@ class SupportNavigate extends ComponentHook
             return '</div>';
         });
 
+        app('livewire')->useScriptTagAttributes([
+            'data-navigate-once' => true,
+        ]);
+
         Vite::useScriptTagAttributes([
             'data-navigate-track' => 'reload',
         ]);

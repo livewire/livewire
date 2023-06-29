@@ -10,12 +10,7 @@ use function Livewire\invade;
 class Utils extends BaseUtils
 {
     static function insertAttributesIntoHtmlRoot($html, $attributes) {
-        $attributesFormattedForHtmlElement = collect($attributes)
-            ->mapWithKeys(function ($value, $key) {
-                return [$key => static::escapeStringForHtml($value)];
-            })->map(function ($value, $key) {
-                return sprintf('%s="%s"', $key, $value);
-            })->implode(' ');
+        $attributesFormattedForHtmlElement = static::stringifyHtmlAttributes($attributes);
 
         preg_match('/(?:\n\s*|^\s*)<([a-zA-Z0-9\-]+)/', $html, $matches, PREG_OFFSET_CAPTURE);
 
@@ -34,6 +29,16 @@ class Utils extends BaseUtils
             $positionOfFirstCharacterInTagName + $lengthOfTagName,
             0
         );
+    }
+
+    static function stringifyHtmlAttributes($attributes)
+    {
+        return collect($attributes)
+            ->mapWithKeys(function ($value, $key) {
+                return [$key => static::escapeStringForHtml($value)];
+            })->map(function ($value, $key) {
+                return sprintf('%s="%s"', $key, $value);
+            })->implode(' ');
     }
 
     static function escapeStringForHtml($subject)

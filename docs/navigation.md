@@ -104,20 +104,6 @@ Typically, you can use standard Blade utilities to detect the current page and s
 </nav>
 ```
 
-## The progress bar
-
-By default, Livewire will show a progress bar at the top of the page while a new page is being fetched from the server.
-
-### Hiding the progress bar
-
-If you wish to remove this progress bar entirely, you can do so in Livewire's configuration file—`config/livewire.php`:
-
-```php
-'navigate' => [
-    'show_progress_bar' => false,
-],
-```
-
 ## Script evaluation
 
 When navigating to a new page using `wire:navigate`, it _feels_ like the browser has changed pages; however, from the browser's perspective, you are technically still on the original page.
