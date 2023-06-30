@@ -1,4 +1,4 @@
-import { closestComponent, initComponent } from './store'
+import { closestComponent, destroyComponent, initComponent } from './store'
 import { initDirectives } from './directives'
 import { trigger } from './events'
 import collapse from '@alpinejs/collapse'
@@ -23,7 +23,13 @@ export function start() {
 
     Alpine.interceptInit(
         Alpine.skipDuringClone(el => {
-            if (el.hasAttribute('wire:id')) initComponent(el)
+            if (el.hasAttribute('wire:id')) {
+                let component = initComponent(el)
+
+                Alpine.onAttributeRemoved(el, 'wire:id', () => {
+                    destroyComponent(component.id)
+                })
+            }
 
             let component = closestComponent(el, false)
 

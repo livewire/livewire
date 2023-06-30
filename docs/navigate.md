@@ -61,16 +61,16 @@ By default, Livewire includes a gentle strategy to _prefetch_ pages before a use
 
 Surprisingly, the time between a user pressing down and lifting up on the mouse button is often enough time to load half or even an entire page from the server.
 
-If you want an even more aggressive approach to prefetching, you may use the `.prefetch.hover` modifier on a link:
+If you want an even more aggressive approach to prefetching, you may use the `.hover` modifier on a link:
 
 ```blade
-<a href="/posts" wire:navigate.prefetch.hover>Posts</a>
+<a href="/posts" wire:navigate.hover>Posts</a>
 ```
 
-The `.prefetch.hover` modifier will instruct Livewire to prefetch the page after a user has hovered over the link for `60` milliseconds.
+The `.hover` modifier will instruct Livewire to prefetch the page after a user has hovered over the link for `60` milliseconds.
 
 > [!warning] Prefetching on hover increases server usage
-> Because not all users will click a link they hover over, adding `.prefetch.hover` will request pages that may not be needed, though Livewire attempts to mitigate some of this overhead by waiting `60` milliseconds before prefetching the page.
+> Because not all users will click a link they hover over, adding `.hover` will request pages that may not be needed, though Livewire attempts to mitigate some of this overhead by waiting `60` milliseconds before prefetching the page.
 
 ## Persisting elements across page visits
 

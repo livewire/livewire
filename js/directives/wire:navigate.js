@@ -1,11 +1,15 @@
 import { directive } from "@/directives"
 import Alpine from 'alpinejs'
 
-directive('navigate', (el, directive) => {
-    let alpineDirective = directive.rawName.replace('wire:', 'x-')
+Alpine.addInitSelector(() => `[wire\\:navigate]`)
+Alpine.addInitSelector(() => `[wire\\:navigate\\.hover]`)
 
-    Alpine.bind(el, {
-        [alpineDirective]: true,
+Alpine.interceptInit(
+    Alpine.skipDuringClone(el => {
+        if (el.hasAttribute('wire:navigate')) {
+            Alpine.bind(el, { ['x-navigate']: true })
+        } else if (el.hasAttribute('wire:navigate.hover')) {
+            Alpine.bind(el, { ['x-navigate.hover']: true })
+        }
     })
-})
-
+)

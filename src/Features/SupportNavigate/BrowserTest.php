@@ -8,6 +8,7 @@ use Livewire\Drawer\Utils;
 use Livewire\Component;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
+use Livewire\Attributes\Layout;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -16,6 +17,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             View::addNamespace('test-views', __DIR__.'/test-views');
 
             Livewire::component('first-page', FirstPage::class);
+            Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
             Livewire::component('first-asset-page', FirstAssetPage::class);
             Livewire::component('second-asset-page', SecondAssetPage::class);
@@ -24,6 +26,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
 
             Route::get('/first', FirstPage::class)->middleware('web');
+            Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
@@ -148,6 +151,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return _lw_dusk_asset_count', 1);
         });
     }
+
+    /** @test */
+    function can_use_wire_navigate_outside_of_a_livewire_component()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-outside')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@outside.link.to.second')
+                ->waitForText('On second')
+                ->assertScript('return window._lw_dusk_test');
+        });
+    }
 }
 
 class FirstPage extends Component
@@ -163,7 +181,7 @@ class FirstPage extends Component
         <div>
             <div>On first</div>
 
-            <a href="/second" wire:navigate.prefetch.hover dusk="link.to.second">Go to second page</a>
+            <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
 
             @persist('foo')
@@ -174,6 +192,13 @@ class FirstPage extends Component
             @endpersist
         </div>
         HTML;
+    }
+}
+
+class FirstPageWithLinkOutside extends Component {
+    #[Layout('test-views::layout-with-navigate-outside')]
+    function render() {
+        return '<div>On first</div>';
     }
 }
 

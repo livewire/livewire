@@ -12,6 +12,16 @@ export function initComponent(el) {
     trigger('component.init', component)
 
     components[component.id] = component
+
+    return component
+}
+
+export function destroyComponent(id) {
+    let component = components[id]
+
+    if (! component) return
+
+    delete components[id]
 }
 
 export function hasComponent(id) {

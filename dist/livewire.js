@@ -1678,6 +1678,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setEvaluator,
     mergeProxies,
     findClosest,
+    onElRemoved,
     closestRoot,
     destroyTree,
     interceptor,
@@ -3733,6 +3734,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       throw "Component already registered";
     trigger("component.init", component);
     components[component.id] = component;
+    return component;
+  }
+  function destroyComponent(id) {
+    let component = components[id];
+    if (!component)
+      return;
+    delete components[id];
   }
   function findComponent(id) {
     let component = components[id];
@@ -6712,6 +6720,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setEvaluator: setEvaluator2,
     mergeProxies: mergeProxies2,
     findClosest: findClosest2,
+    onElRemoved: onElRemoved2,
     closestRoot: closestRoot2,
     destroyTree: destroyTree2,
     interceptor: interceptor2,
@@ -6742,16 +6751,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var els = {};
   function storePersistantElementsForLater() {
     els = {};
-    document.querySelectorAll("[x-navigate\\:persist]").forEach((i) => {
-      els[i.getAttribute("x-navigate:persist")] = i;
+    document.querySelectorAll("[x-persist]").forEach((i) => {
+      els[i.getAttribute("x-persist")] = i;
       alpine_default2.mutateDom(() => {
         i.remove();
       });
     });
   }
   function putPersistantElementsBack() {
-    document.querySelectorAll("[x-navigate\\:persist]").forEach((i) => {
-      let old = els[i.getAttribute("x-navigate:persist")];
+    document.querySelectorAll("[x-persist]").forEach((i) => {
+      let old = els[i.getAttribute("x-persist")];
       old._x_wasPersisted = true;
       alpine_default2.mutateDom(() => {
         i.replaceWith(old);
@@ -6947,11 +6956,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Alpine22.navigate = (url) => {
       navigateTo(createUrlObjectFromString(url));
     };
+    Alpine22.addInitSelector(() => `[${prefix2("navigate")}]`);
     Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater22, cleanup: cleanup3 }) => {
-      if (value === "persist")
-        return;
-      let shouldPrefetch = modifiers.includes("prefetch") && modifiers.includes("hover");
-      shouldPrefetch && whenThisLinkIsHoveredFor(el, 60, () => {
+      let shouldPrefetchOnHover = modifiers.includes("hover");
+      shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
         let destination = extractDestinationFromLink(el);
         prefetchHtml(destination, (html) => {
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
@@ -7561,8 +7569,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.plugin(module_default6);
     module_default.addRootSelector(() => "[wire\\:id]");
     module_default.interceptInit(module_default.skipDuringClone((el) => {
-      if (el.hasAttribute("wire:id"))
-        initComponent(el);
+      if (el.hasAttribute("wire:id")) {
+        let component2 = initComponent(el);
+        module_default.onAttributeRemoved(el, "wire:id", () => {
+          destroyComponent(component2.id);
+        });
+      }
       let component = closestComponent(el, false);
       if (component) {
         initDirectives(el, component);
@@ -7921,12 +7933,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire:navigate.js
-  directive2("navigate", (el, directive4) => {
-    let alpineDirective = directive4.rawName.replace("wire:", "x-");
-    module_default.bind(el, {
-      [alpineDirective]: true
-    });
-  });
+  module_default.addInitSelector(() => `[wire\\:navigate]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+  module_default.interceptInit(module_default.skipDuringClone((el) => {
+    if (el.hasAttribute("wire:navigate")) {
+      module_default.bind(el, { ["x-navigate"]: true });
+    } else if (el.hasAttribute("wire:navigate.hover")) {
+      module_default.bind(el, { ["x-navigate.hover"]: true });
+    }
+  }));
 
   // js/directives/shared.js
   function toggleBooleanStateDirective(el, directive4, isTruthy) {
