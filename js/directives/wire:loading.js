@@ -64,7 +64,7 @@ function applyDelay(directive) {
 }
 
 function whenTargetsArePartOfRequest(component, targets, [ startLoading, endLoading ]) {
-    on('request', (iComponent, payload) => {
+    on('commit', (iComponent, payload) => {
         if (iComponent !== component) return
 
         if (targets.length > 0 && ! containsTargets(payload, targets)) return

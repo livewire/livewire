@@ -68,7 +68,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportNestingComponents\SupportNestingComponents::class,
             \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class,
             \Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class,
-            \Livewire\Features\SupportDirtyDetection\SupportDirtyDetection::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
             \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,

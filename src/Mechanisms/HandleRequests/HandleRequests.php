@@ -32,12 +32,11 @@ class HandleRequests
     function skipRequestPayloadTamperingMiddleware()
     {
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::skipWhen(function () {
-            // @todo: update this...
-            return request()->is('synthetic/update');
+            return $this->isLivewireRequest();
         });
 
         \Illuminate\Foundation\Http\Middleware\TrimStrings::skipWhen(function () {
-            return request()->is('synthetic/update');
+            return $this->isLivewireRequest();
         });
     }
 
@@ -55,9 +54,7 @@ class HandleRequests
 
     function isLivewireRequest()
     {
-        // @todo: Needed to re-add this as Testable Livewire doesn't use the update route, and instead sets this.
-        // @todo: Also remove `X-Synthetic` from front end and then delete it here.
-        return request()->hasHeader('X-Livewire') || request()->hasHeader('X-Synthetic');
+        return request()->hasHeader('X-Livewire');
     }
 
     function isLivewireRoute()

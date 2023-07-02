@@ -42,9 +42,6 @@
   function deepClone(obj) {
     return JSON.parse(JSON.stringify(obj));
   }
-  function deeplyEqual(a, b) {
-    return JSON.stringify(a) === JSON.stringify(b);
-  }
   function dataGet(object, key) {
     if (key === "")
       return object;
@@ -99,6 +96,19 @@
   }
   function isSynthetic(subject) {
     return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
+  }
+  function getCsrfToken() {
+    if (document.querySelector("[data-csrf]")) {
+      return document.querySelector("[data-csrf]").getAttribute("data-csrf");
+    }
+    throw "Livewire: No CSRF token detected";
+  }
+  function contentIsFromDump(content) {
+    return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
+  }
+  function splitDumpFromContent(content) {
+    let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+    return [dump2, content.replace(dump2, "")];
   }
 
   // js/modal.js
@@ -171,6 +181,203 @@
       }
       return latest;
     };
+  }
+
+  // js/request.js
+  var updateUri = document.querySelector("[data-uri]").getAttribute("data-uri");
+  function triggerSend() {
+    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
+      sendRequestToServer();
+    });
+  }
+  var requestBufferTimeout;
+  function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callback) {
+    if (requestBufferTimeout)
+      return;
+    requestBufferTimeout = setTimeout(() => {
+      callback();
+      requestBufferTimeout = void 0;
+    }, 5);
+  }
+  async function sendRequestToServer() {
+    await queueNewRequestAttemptsWhile(async () => {
+      let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
+      let options = {
+        method: "POST",
+        body: JSON.stringify({
+          _token: getCsrfToken(),
+          components: payload
+        }),
+        headers: {
+          "Content-type": "application/json",
+          "X-Livewire": ""
+        }
+      };
+      let finishProfile = trigger("request.profile", options);
+      let finishRequestHook = trigger("request", updateUri, options);
+      let response = await fetch(updateUri, options);
+      response = finishRequestHook(response);
+      let content = await response.text();
+      if (!response.ok) {
+        finishProfile({ content: "{}", failed: true });
+        let preventDefault = false;
+        trigger("request.error", response, content, () => preventDefault = true);
+        if (preventDefault)
+          return await fail();
+        if (response.status === 419) {
+          handlePageExpiry();
+          return await fail();
+        }
+        handleFailure();
+        await fail();
+      }
+      if (response.redirected) {
+        window.location.href = response.url;
+      }
+      if (contentIsFromDump(content)) {
+        [dump, content] = splitDumpFromContent(content);
+        showHtmlModal(dump);
+        finishProfile({ content: "{}", failed: true });
+      } else {
+        finishProfile({ content, failed: false });
+      }
+      let { components: components2 } = JSON.parse(content);
+      handleSuccess(components2);
+    });
+  }
+  function compileCommitPayloads() {
+    let commits = getCommits();
+    commits.forEach((i) => i.prepare());
+    let commitPayloads = [];
+    let successReceivers = [];
+    let failureReceivers = [];
+    flushCommits((commit) => {
+      let [payload, succeed2, fail3] = commit.toRequestPayload();
+      commitPayloads.push(payload);
+      successReceivers.push(succeed2);
+      failureReceivers.push(fail3);
+    });
+    let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
+    let fail2 = () => failureReceivers.forEach((receiver) => receiver());
+    return [commitPayloads, succeed, fail2];
+  }
+  function handlePageExpiry() {
+    confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+  }
+  var sendingRequest = false;
+  var afterSendStack = [];
+  async function waitUntilTheCurrentRequestIsFinished(callback) {
+    return new Promise((resolve) => {
+      if (sendingRequest) {
+        afterSendStack.push(() => resolve(callback()));
+      } else {
+        resolve(callback());
+      }
+    });
+  }
+  async function queueNewRequestAttemptsWhile(callback) {
+    sendingRequest = true;
+    await callback();
+    sendingRequest = false;
+    while (afterSendStack.length > 0)
+      afterSendStack.shift()();
+  }
+
+  // js/commit.js
+  var commitQueue = [];
+  function getCommits() {
+    return commitQueue;
+  }
+  function flushCommits(callback) {
+    while (commitQueue.length > 0) {
+      callback(commitQueue.shift());
+    }
+  }
+  function findOrCreateCommit(component) {
+    let commit = commitQueue.find((i) => {
+      return i.component.id === component.id;
+    });
+    if (!commit) {
+      commitQueue.push(commit = new Commit(component));
+    }
+    return commit;
+  }
+  async function requestCommit(component) {
+    return await waitUntilTheCurrentRequestIsFinished(() => {
+      let commit = findOrCreateCommit(component);
+      triggerSend();
+      return new Promise((resolve, reject) => {
+        commit.addResolver(resolve);
+      });
+    });
+  }
+  async function requestCall(component, method, params) {
+    return await waitUntilTheCurrentRequestIsFinished(() => {
+      let commit = findOrCreateCommit(component);
+      triggerSend();
+      return new Promise((resolve, reject) => {
+        commit.addCall(method, params, (value) => resolve(value));
+      });
+    });
+  }
+  var Commit = class {
+    constructor(component) {
+      this.component = component;
+      this.calls = [];
+      this.receivers = [];
+      this.resolvers = [];
+    }
+    addResolver(resolver) {
+      this.resolvers.push(resolver);
+    }
+    addCall(method, params, receiver) {
+      this.calls.push({
+        path: "",
+        method,
+        params,
+        handleReturn(value) {
+          receiver(value);
+        }
+      });
+    }
+    prepare() {
+      trigger("commit.prepare", this.component);
+    }
+    toRequestPayload() {
+      let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
+      let payload = {
+        snapshot: this.component.encodedSnapshot,
+        updates: propertiesDiff,
+        calls: this.calls.map((i) => ({
+          path: i.path,
+          method: i.method,
+          params: i.params
+        }))
+      };
+      let finishTarget = trigger("commit", this.component, payload);
+      let handleResponse = (response) => {
+        let { snapshot, effects } = response;
+        this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
+        processEffects(this.component, this.component.effects);
+        if (effects["returns"]) {
+          let returns = effects["returns"];
+          let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
+          returnHandlerStack.forEach((handleReturn, index) => {
+            handleReturn(returns[index]);
+          });
+        }
+        finishTarget({ snapshot, effects });
+        this.resolvers.forEach((i) => i());
+      };
+      let handleFailure = () => {
+        let failed = true;
+        finishTarget(failed);
+      };
+      return [payload, handleResponse, handleFailure];
+    }
+  };
+  function processEffects(target, effects) {
+    trigger("effects", target, effects);
   }
 
   // ../alpine/packages/alpinejs/dist/module.esm.js
@@ -3133,177 +3340,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var src_default = alpine_default;
   var module_default = src_default;
 
-  // js/request.js
-  var store2 = /* @__PURE__ */ new Map();
-  var uri = document.querySelector("[data-uri]").getAttribute("data-uri");
-  async function callMethod(symbol, method, params) {
-    let result = await requestMethodCall(symbol, method, params);
-    return result;
-  }
-  var requestTargetQueue = /* @__PURE__ */ new Map();
-  function requestMethodCall(symbol, method, params) {
-    requestCommit(symbol);
-    return new Promise((resolve, reject) => {
-      let queue3 = requestTargetQueue.get(symbol);
-      let path = "";
-      queue3.calls.push({
-        path,
-        method,
-        params,
-        handleReturn(value) {
-          resolve(value);
-        }
-      });
-    });
-  }
-  function requestCommit(symbol) {
-    if (!requestTargetQueue.has(symbol)) {
-      requestTargetQueue.set(symbol, {
-        calls: [],
-        receivers: [],
-        resolvers: [],
-        handleResponse() {
-          this.resolvers.forEach((i) => i());
-        }
-      });
-    }
-    triggerSend();
-    return new Promise((resolve, reject) => {
-      let queue3 = requestTargetQueue.get(symbol);
-      queue3.resolvers.push(resolve);
-    });
-  }
-  var requestBufferTimeout;
-  function triggerSend() {
-    if (requestBufferTimeout)
-      return;
-    requestBufferTimeout = setTimeout(() => {
-      sendMethodCall();
-      requestBufferTimeout = void 0;
-    }, 5);
-  }
-  async function sendMethodCall() {
-    requestTargetQueue.forEach((request, symbol) => {
-      let target = store2.get(symbol);
-      trigger("request.prepare", target);
-    });
-    let payload = [];
-    let successReceivers = [];
-    let failureReceivers = [];
-    requestTargetQueue.forEach((request, symbol) => {
-      let target = store2.get(symbol);
-      let propertiesDiff = diff(target.canonical, target.ephemeral);
-      let targetPayload = {
-        snapshot: target.encodedSnapshot,
-        updates: propertiesDiff,
-        calls: request.calls.map((i) => ({
-          path: i.path,
-          method: i.method,
-          params: i.params
-        }))
-      };
-      payload.push(targetPayload);
-      let finishTarget = trigger("request", target, targetPayload);
-      failureReceivers.push(() => {
-        let failed = true;
-        finishTarget(failed);
-      });
-      successReceivers.push((snapshot, effects) => {
-        target.mergeNewSnapshot(snapshot, effects);
-        processEffects(target, target.effects);
-        if (effects["returns"]) {
-          let returns = effects["returns"];
-          let returnHandlerStack = request.calls.map(({ handleReturn }) => handleReturn);
-          returnHandlerStack.forEach((handleReturn, index) => {
-            handleReturn(returns[index]);
-          });
-        }
-        finishTarget({ snapshot, effects });
-        request.handleResponse();
-      });
-    });
-    requestTargetQueue.clear();
-    let options = {
-      method: "POST",
-      body: JSON.stringify({
-        _token: getCsrfToken(),
-        components: payload
-      }),
-      headers: {
-        "Content-type": "application/json",
-        "X-Synthetic": ""
-      }
-    };
-    let finishProfile = trigger("profile.request", options);
-    let finishFetch = trigger("fetch", uri, options);
-    let response = await fetch(uri, options);
-    response = finishFetch(response);
-    let succeed = async (responseContent) => {
-      let { components: components2 } = JSON.parse(responseContent);
-      for (let i = 0; i < components2.length; i++) {
-        let { snapshot, effects } = components2[i];
-        successReceivers[i](snapshot, effects);
-      }
-    };
-    let fail = async () => {
-      for (let i = 0; i < failureReceivers.length; i++) {
-        failureReceivers[i]();
-      }
-      let failed = true;
-    };
-    await handleResponse(response, succeed, fail, finishProfile);
-  }
-  function getCsrfToken() {
-    if (document.querySelector("[data-csrf]")) {
-      return document.querySelector("[data-csrf]").getAttribute("data-csrf");
-    }
-    throw "Livewire: No CSRF token detected";
-  }
-  function processEffects(target, effects) {
-    trigger("effects", target, effects);
-  }
-  async function handleResponse(response, succeed, fail, finishProfile) {
-    let content = await response.text();
-    if (response.ok) {
-      if (response.redirected) {
-        window.location.href = response.url;
-      }
-      if (contentIsFromDump(content)) {
-        [dump, content] = splitDumpFromContent(content);
-        showHtmlModal(dump);
-        finishProfile({ content: "{}", failed: true });
-      } else {
-        finishProfile({ content, failed: false });
-      }
-      return await succeed(content);
-    }
-    finishProfile({ content: "{}", failed: true });
-    let skipDefault = false;
-    trigger("response.error", response, content, () => skipDefault = true);
-    if (skipDefault)
-      return await fail();
-    if (response.status === 419) {
-      handlePageExpiry();
-      return await fail();
-    }
-    handleFailure(content);
-    await fail();
-  }
-  function contentIsFromDump(content) {
-    return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
-  }
-  function splitDumpFromContent(content) {
-    let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
-    return [dump2, content.replace(dump2, "")];
-  }
-  function handlePageExpiry() {
-    confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-  }
-  function handleFailure(content) {
-    let html = content;
-    showHtmlModal(html);
-  }
-
   // js/features/supportEntangle.js
   function generateEntangleFunction(component) {
     return (name, live) => {
@@ -3608,7 +3644,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("get", (component) => (property, reactive4 = true) => dataGet(reactive4 ? component.reactive : component.ephemeral, property));
   wireProperty("set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
-    return live ? await requestCommit(component.symbol) : Promise.resolve();
+    return live ? await requestCommit(component) : Promise.resolve();
   });
   wireProperty("call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
@@ -3638,8 +3674,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   wireProperty("$watchEffect", (component) => (callback) => effect(callback));
-  wireProperty("$refresh", (component) => async () => await requestCommit(component.symbol));
-  wireProperty("$commit", (component) => async () => await requestCommit(component.symbol));
+  wireProperty("$refresh", (component) => async () => await requestCommit(component));
+  wireProperty("$commit", (component) => async () => await requestCommit(component));
   var overriddenMethods = /* @__PURE__ */ new WeakMap();
   function overrideMethod(component, method, callback) {
     if (!overriddenMethods.has(component)) {
@@ -3659,7 +3695,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return overrides[property](params);
       }
     }
-    return await callMethod(component.symbol, property, params);
+    return await requestCall(component, property, params);
   });
   var parentMemo;
   wireProperty("$parent", (component) => {
@@ -3687,7 +3723,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         throw "Component already initialized";
       el.__livewire = this;
       this.symbol = Symbol();
-      store2.set(this.symbol, this);
       this.el = el;
       this.id = el.getAttribute("wire:id");
       this.__livewireId = this.id;
@@ -3701,23 +3736,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.$wire = generateWireObject(this, this.reactive);
       processEffects(this, this.effects);
     }
-    mergeNewSnapshot(encodedSnapshot, effects) {
-      this.encodedSnapshot = encodedSnapshot;
+    mergeNewSnapshot(encodedSnapshot, effects, updates = {}) {
       let snapshot = JSON.parse(encodedSnapshot);
+      let oldCanonical = deepClone(this.canonical);
+      let updatedOldCanonical = this.applyUpdates(oldCanonical, updates);
+      let newCanonical = extractData(deepClone(snapshot.data));
+      let dirty = diff(updatedOldCanonical, newCanonical);
+      this.encodedSnapshot = encodedSnapshot;
       this.snapshot = snapshot;
       this.effects = effects;
       this.canonical = extractData(deepClone(snapshot.data));
       let newData = extractData(deepClone(snapshot.data));
-      Object.entries(this.ephemeral).forEach(([key, value]) => {
-        if (!deeplyEqual(this.ephemeral[key], newData[key])) {
-          this.reactive[key] = newData[key];
-        }
+      Object.entries(dirty).forEach(([key, value]) => {
+        dataSet(this.reactive, key, value);
       });
+      return dirty;
     }
-    replayUpdate(snapshot, html, dirty) {
-      let effects = { ...this.effects, html, dirty };
+    applyUpdates(object, updates) {
+      for (let key in updates) {
+        dataSet(object, key, updates[key]);
+      }
+      return object;
+    }
+    replayUpdate(snapshot, html) {
+      let effects = { ...this.effects, html };
       this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
-      processEffects(this, { html, dirty });
+      processEffects(this, { html });
     }
     get children() {
       let meta = this.snapshot.memo;
@@ -5323,13 +5367,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
     el.addEventListener("mouseenter", (e) => {
       let timeout = setTimeout(() => {
-        callback(e);
       }, ms);
       let handler3 = () => {
-        clearTimeout(timeout);
+        clear;
         el.removeEventListener("mouseleave", handler3);
       };
       el.addEventListener("mouseleave", handler3);
+      callback(e);
     });
   }
   function extractDestinationFromLink(linkEl) {
@@ -6639,7 +6683,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var stores2 = {};
   var isReactive2 = false;
-  function store3(name, value) {
+  function store2(name, value) {
     if (!isReactive2) {
       stores2 = reactive3(stores2);
       isReactive2 = true;
@@ -6738,7 +6782,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     prefix: setPrefix2,
     plugin: plugin2,
     magic: magic2,
-    store: store3,
+    store: store2,
     start: start2,
     clone: clone2,
     bound: getBinding2,
@@ -7586,7 +7630,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportWireModelingNestedComponents.js
-  on("request.prepare", (component) => {
+  on("commit.prepare", (component) => {
     component.children.forEach((child2) => {
       let childMeta = child2.snapshot.memo;
       let bindings = childMeta.bindings;
@@ -7620,7 +7664,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
-  on("request", (component) => {
+  on("commit", (component) => {
     return () => {
       cleanup2(component);
     };
@@ -7634,7 +7678,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportFileDownloads.js
-  on("request", (component) => {
+  on("commit", (component) => {
     return () => {
       let download = component.effects.download;
       if (!download)
@@ -7704,7 +7748,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           replace2(dataGet(component.reactive, name));
         });
       } else if (use === "push") {
-        on("request", (component2, payload) => {
+        on("commit", (component2, payload) => {
           let beforeValue = dataGet(component2.canonical, name);
           return () => {
             let afterValue = dataGet(component2.canonical, name);
@@ -7732,30 +7776,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
-  // js/features/supportRedirects.js
-  on("effects", (component, effects) => {
-    if (!effects["redirect"])
-      return;
-    let url = effects["redirect"];
-    let prevented = false;
-    let preventDefault = () => prevented = true;
-    trigger("redirect", { component, url, preventDefault, effects });
-    if (!prevented)
-      window.location.href = url;
-  });
-
   // js/features/supportNavigate.js
   var isNavigating = false;
   window.addEventListener("alpine:navigated", () => {
     isNavigating = true;
     window.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
   });
-  on("redirect", ({ url, preventDefault, effects }) => {
+  function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
     if (forceNavigate || isNavigating) {
-      preventDefault();
       Alpine.navigate(url);
+    } else {
+      or();
     }
+  }
+
+  // js/features/supportRedirects.js
+  on("effects", (component, effects) => {
+    if (!effects["redirect"])
+      return;
+    let url = effects["redirect"];
+    shouldRedirectUsingNavigateOr(effects, url, () => {
+      window.location.href = url;
+    });
   });
 
   // js/morph.js
@@ -7844,7 +7887,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportProps.js
-  on("request.prepare", (component) => {
+  on("commit.prepare", (component) => {
     component.children.forEach((child2) => {
       let childMeta = child2.snapshot.memo;
       let props = childMeta.props;
@@ -7885,25 +7928,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/debounce.js
   var callbacksByComponent = new WeakBag();
-  function debounceByComponent(component, callback, time) {
-    let callbackRegister = { callback: () => {
-    } };
-    callbacksByComponent.add(component, callbackRegister);
-    var timeout;
-    return (e) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        callback(e);
-        timeout = void 0;
-        callbackRegister.callback = () => {
-        };
-      }, time);
-      callbackRegister.callback = () => {
-        clearTimeout(timeout);
-        callback(e);
-      };
-    };
-  }
   function callAndClearComponentDebounces(component, callback) {
     callbacksByComponent.each(component, (callbackRegister) => {
       callbackRegister.callback();
@@ -8034,7 +8058,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     ];
   }
   function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
-    on("request", (iComponent, payload) => {
+    on("commit", (iComponent, payload) => {
       if (iComponent !== component)
         return;
       if (targets.length > 0 && !containsTargets(payload, targets))
@@ -8170,7 +8194,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire:dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
-  on("request", (component) => {
+  on("commit", (component) => {
     return () => {
       setTimeout(() => {
         refreshDirtyStatesByComponent.each(component, (i) => i(false));
@@ -8181,27 +8205,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let targets = dirtyTargets(el);
     let dirty = Alpine.reactive({ state: false });
     let oldIsDirty = false;
-    let refreshDirtyState = (isDirty2) => {
-      toggleBooleanStateDirective(el, directive4, isDirty2);
-      oldIsDirty = isDirty2;
+    let refreshDirtyState = (isDirty) => {
+      toggleBooleanStateDirective(el, directive4, isDirty);
+      oldIsDirty = isDirty;
     };
     refreshDirtyStatesByComponent.add(component, refreshDirtyState);
     Alpine.effect(() => {
-      let isDirty2 = false;
+      let isDirty = false;
       if (targets.length === 0) {
-        isDirty2 = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive);
+        isDirty = JSON.stringify(component.canonical) !== JSON.stringify(component.reactive);
       } else {
         for (let i = 0; i < targets.length; i++) {
-          if (isDirty2)
+          if (isDirty)
             break;
           let target = targets[i];
-          isDirty2 = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target));
+          isDirty = JSON.stringify(dataGet(component.canonical, target)) !== JSON.stringify(dataGet(component.reactive, target));
         }
       }
-      if (oldIsDirty !== isDirty2) {
-        refreshDirtyState(isDirty2);
+      if (oldIsDirty !== isDirty) {
+        refreshDirtyState(isDirty);
       }
-      oldIsDirty = isDirty2;
+      oldIsDirty = isDirty;
     });
   });
   function dirtyTargets(el) {
@@ -8217,20 +8241,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire:model.js
+  function debounce3(func, wait) {
+    var timeout;
+    return function() {
+      var context = this, args = arguments;
+      var later = function() {
+        timeout = null;
+        func.apply(context, args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
   directive2("model", (el, { expression, modifiers }, { component, cleanup: cleanup3 }) => {
     if (!expression) {
       return console.warn("Livewire: [wire:model] is missing a value.", el);
     }
+    if (componentIsMissingProperty(component, expression)) {
+      return console.warn('Livewire: [wire:model="' + expression + '"] property does not exist.', el);
+    }
     if (el.type && el.type.toLowerCase() === "file") {
       return handleFileUpload(el, expression, component, cleanup3);
     }
-    forceUpdateOnDirty(component, el, expression, cleanup3);
     let isLive = modifiers.includes("live");
     let isLazy = modifiers.includes("lazy");
     let onBlur = modifiers.includes("blur");
     let isDebounced = modifiers.includes("debounce");
     let update = () => component.$wire.$commit();
-    let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounceByComponent(component, update, 150) : update;
+    let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce3(update, 150) : update;
     module_default.bind(el, {
       ["@change"]() {
         isLazy && update();
@@ -8238,7 +8276,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       ["@blur"]() {
         onBlur && update();
       },
-      ["x-model.unintrusive" + getModifierTail(modifiers)]() {
+      ["x-model" + getModifierTail(modifiers)]() {
         return {
           get() {
             return dataGet(component.$wire, expression);
@@ -8263,25 +8301,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isTextInput(el) {
     return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
   }
-  function forceUpdateOnDirty(component, el, expression, cleanup3) {
-    let off = on("request", (iComponent) => {
-      if (iComponent !== component)
-        return;
-      return () => {
-        let dirty = component.effects.dirty;
-        if (!dirty)
-          return;
-        if (isDirty(expression, dirty)) {
-          el._x_forceModelUpdate(component.$wire.get(expression, false));
-        }
-      };
-    });
-    cleanup3(off);
-  }
-  function isDirty(subject, dirty) {
-    if (dirty.includes(subject))
-      return true;
-    return dirty.some((i) => subject.startsWith(i));
+  function componentIsMissingProperty(component, property) {
+    let baseProperty = property.split(".")[0];
+    return !Object.keys(component.canonical).includes(baseProperty);
   }
 
   // js/directives/wire:init.js

@@ -9,13 +9,12 @@ window.addEventListener('alpine:navigated', () => {
     window.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
 })
 
-on('redirect', ({ url, preventDefault, effects }) => {
+export function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate
 
     if (forceNavigate || isNavigating) {
-        preventDefault()
-
         Alpine.navigate(url)
+    } else {
+        or()
     }
-})
-
+}

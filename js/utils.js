@@ -160,3 +160,25 @@ export function isSynthetic(subject) {
         && typeof subject[1] === 'object'
         && Object.keys(subject[1]).includes('s')
 }
+
+/**
+ * Post requests in Laravel require a csrf token to be passed
+ * along with the payload. Here, we'll try and locate one.
+ */
+export function getCsrfToken() {
+    if (document.querySelector('[data-csrf]')) {
+        return document.querySelector('[data-csrf]').getAttribute('data-csrf')
+    }
+
+    throw 'Livewire: No CSRF token detected'
+}
+
+export function contentIsFromDump(content) {
+    return !! content.match(/<script>Sfdump\(".+"\)<\/script>/)
+}
+
+export function splitDumpFromContent(content) {
+    let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s)
+
+    return [dump, content.replace(dump, '')]
+}

@@ -1,6 +1,6 @@
 import { on } from '@/events'
 
-on('request', (component) => {
+on('commit', (component) => {
     return () => {
         let download = component.effects.download
 

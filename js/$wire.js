@@ -1,7 +1,7 @@
 import { dispatch, dispatchSelf, dispatchTo, listen } from '@/features/supportEvents'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
-import { callMethod, requestCommit } from '@/request'
+import { requestCommit, requestCall } from '@/commit'
 import { WeakBag, dataGet, dataSet } from '@/utils'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
@@ -58,7 +58,7 @@ wireProperty('set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
     return live
-        ? await requestCommit(component.symbol)
+        ? await requestCommit(component)
         : Promise.resolve()
 })
 
@@ -103,8 +103,8 @@ wireProperty('$watch', (component) => (path, callback) => {
 
 wireProperty('$watchEffect', (component) => (callback) => effect(callback))
 
-wireProperty('$refresh', (component) => async () => await requestCommit(component.symbol))
-wireProperty('$commit', (component) => async () => await requestCommit(component.symbol))
+wireProperty('$refresh', (component) => async () => await requestCommit(component))
+wireProperty('$commit', (component) => async () => await requestCommit(component))
 
 let overriddenMethods = new WeakMap
 
@@ -136,7 +136,7 @@ wireFallback((component) => (property) => async (...params) => {
         }
     }
 
-    return await callMethod(component.symbol, property, params)
+    return await requestCall(component, property, params)
 })
 
 let parentMemo

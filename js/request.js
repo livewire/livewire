@@ -1,83 +1,26 @@
-import { reactive as r, effect as e, toRaw as tr, stop as s, pauseTracking, enableTracking } from '@vue/reactivity'
-import { dataGet, dataSet, each, deeplyEqual, isObjecty, deepClone, diff, isObject } from '@/utils'
+import { getCsrfToken, contentIsFromDump, splitDumpFromContent } from '@/utils'
 import { showHtmlModal } from './modal'
-import { on, trigger } from '@/events'
-import Alpine from 'alpinejs'
+import { trigger } from '@/events'
+import { getCommits, flushCommits } from './commit'
 
 /**
- * We'll store all our "synthetic" instances in a single lookup so that
- * we can pass around an identifier, rather than the actual instance.
+ * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
  */
-export let store = new Map
+let updateUri = document.querySelector('[data-uri]').getAttribute('data-uri')
 
-let uri = document.querySelector('[data-uri]').getAttribute('data-uri')
-
-export async function callMethod(symbol, method, params) {
-    let result = await requestMethodCall(symbol, method, params)
-
-    return result
-}
-
-let requestTargetQueue = new Map
-
-function requestMethodCall(symbol, method, params) {
-    requestCommit(symbol)
-
-    return new Promise((resolve, reject) => {
-        let queue = requestTargetQueue.get(symbol)
-
-        let path = ''
-
-        queue.calls.push({
-            path,
-            method,
-            params,
-            handleReturn(value) {
-                resolve(value)
-            },
-        })
-    })
-}
-
-/**
- * The term "commit" here refers to anytime we're making a network
- * request, updating the server, and generating a new snapshot.
- * We're "requesting" a new commit rather than executing it
- * immediately, because we might want to batch multiple
- * simultaneus commits from other synthetic targets.
- */
-export function requestCommit(symbol) {
-    if (! requestTargetQueue.has(symbol)) {
-        requestTargetQueue.set(symbol, {
-            calls: [],
-            receivers: [],
-            resolvers: [],
-            handleResponse() {
-                this.resolvers.forEach(i => i())
-            }
-        })
-    }
-
-    triggerSend()
-
-    return new Promise((resolve, reject) => {
-        let queue = requestTargetQueue.get(symbol)
-
-        queue.resolvers.push(resolve)
+export function triggerSend() {
+    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
+        sendRequestToServer()
     })
 }
 
 let requestBufferTimeout
 
-/**
- * This is sort of "debounce" so that multiple
- * network requests can be bundled together.
- */
-function triggerSend() {
+function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callback) {
     if (requestBufferTimeout) return
 
     requestBufferTimeout = setTimeout(() => {
-        sendMethodCall()
+        callback()
 
         requestBufferTimeout = undefined
     }, 5)
@@ -87,139 +30,51 @@ function triggerSend() {
  * This method prepares the network request payload and makes
  * the actual request to the server to update the target,
  * store a new snapshot, and handle any side effects.
- *
- * This method should fire the following events:
- * - request.prepare
- * - request
  */
-async function sendMethodCall() {
-    requestTargetQueue.forEach((request, symbol) => {
-        let target = store.get(symbol)
+async function sendRequestToServer() {
+    await queueNewRequestAttemptsWhile(async () => {
+        let [payload, handleSuccess, handleFailure] = compileCommitPayloads()
 
-        trigger('request.prepare', target)
-    })
-
-    let payload = []
-    let successReceivers = []
-    let failureReceivers = []
-
-    requestTargetQueue.forEach((request, symbol) => {
-        let target = store.get(symbol)
-
-        let propertiesDiff = diff(target.canonical, target.ephemeral)
-
-        let targetPayload = {
-            snapshot: target.encodedSnapshot,
-            updates: propertiesDiff,
-            calls: request.calls.map(i => ({
-                path: i.path,
-                method: i.method,
-                params: i.params,
-            }))
+        let options = {
+            method: 'POST',
+            body: JSON.stringify({
+                _token: getCsrfToken(),
+                components: payload,
+            }),
+            headers: {
+                'Content-type': 'application/json',
+                'X-Livewire': '',
+            },
         }
 
-        payload.push(targetPayload)
+        let finishProfile = trigger('request.profile', options)
+        let finishRequestHook = trigger('request', updateUri, options)
 
-        let finishTarget = trigger('request', target, targetPayload)
+        let response = await fetch(updateUri, options)
 
-        failureReceivers.push(() => {
-            let failed = true
+        response = finishRequestHook(response)
 
-            finishTarget(failed)
-        })
+        let content = await response.text()
 
-        successReceivers.push((snapshot, effects) => {
-            target.mergeNewSnapshot(snapshot, effects)
+        // Handle error response...
+        if (! response.ok) {
+            finishProfile({ content: '{}', failed: true })
 
-            processEffects(target, target.effects)
+            let preventDefault = false
+            trigger('request.error', response, content, () => preventDefault = true)
+            if (preventDefault) return await fail()
 
-            if (effects['returns']) {
-                let returns = effects['returns']
+            if (response.status === 419) {
+                handlePageExpiry()
 
-                // Here we'll match up returned values with their method call handlers. We need to build up
-                // two "stacks" of the same length and walk through them together to handle them properly...
-                let returnHandlerStack = request.calls.map(({ handleReturn }) => (handleReturn))
-
-                returnHandlerStack.forEach((handleReturn, index) => {
-                    handleReturn(returns[index])
-                })
+                return await fail()
             }
 
-            finishTarget({ snapshot, effects })
+            handleFailure()
 
-            request.handleResponse()
-        })
-    })
-
-    requestTargetQueue.clear()
-
-    let options = {
-        method: 'POST',
-        body: JSON.stringify({
-            _token: getCsrfToken(),
-            components: payload,
-        }),
-        headers: {
-            'Content-type': 'application/json',
-            'X-Synthetic': '',
-        },
-    }
-
-    let finishProfile = trigger('profile.request', options)
-
-    let finishFetch = trigger('fetch', uri, options)
-
-    let response = await fetch(uri, options)
-
-    response = finishFetch(response)
-
-    let succeed = async (responseContent) => {
-        let { components } = JSON.parse(responseContent)
-
-        for (let i = 0; i < components.length; i++) {
-            let { snapshot, effects } = components[i];
-
-            successReceivers[i](snapshot, effects)
-        }
-    }
-
-    let fail = async () => {
-        for (let i = 0; i < failureReceivers.length; i++) {
-            failureReceivers[i]();
+            await fail()
         }
 
-        let failed = true
-    }
-
-    await handleResponse(response, succeed, fail, finishProfile)
-}
-
-/**
- * Post requests in Laravel require a csrf token to be passed
- * along with the payload. Here, we'll try and locate one.
- */
-export function getCsrfToken() {
-    if (document.querySelector('[data-csrf]')) {
-        return document.querySelector('[data-csrf]').getAttribute('data-csrf')
-    }
-
-    throw 'Livewire: No CSRF token detected'
-}
-
-/**
- * Here we'll take the new state and side effects from the
- * server and use them to update the existing data that
- * users interact with, triggering reactive effects.
- */
-
-export function processEffects(target, effects) {
-    trigger('effects', target, effects)
-}
-
-export async function handleResponse(response, succeed, fail, finishProfile) {
-    let content = await response.text()
-
-    if (response.ok) {
         /**
          * Sometimes a redirect happens on the backend outside of Livewire's control,
          * for example to a login page from a middleware, so we will just redirect
@@ -245,35 +100,37 @@ export async function handleResponse(response, succeed, fail, finishProfile) {
             finishProfile({ content, failed: false })
         }
 
-        return await succeed(content)
-    }
+        let { components } = JSON.parse(content)
 
-    finishProfile({ content: '{}', failed: true })
-
-    let skipDefault = false
-
-    trigger('response.error', response, content, () => skipDefault = true)
-
-    if (skipDefault) return await fail()
-
-    if (response.status === 419) {
-        handlePageExpiry()
-
-        return await fail()
-    }
-
-    handleFailure(content)
-
-    await fail()
+        handleSuccess(components)
+    })
 }
 
-export function contentIsFromDump(content) {
-    return !! content.match(/<script>Sfdump\(".+"\)<\/script>/)
-}
+function compileCommitPayloads() {
+    let commits = getCommits()
 
-function splitDumpFromContent(content) {
-    let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s)
-    return [dump, content.replace(dump, '')]
+    // Give each commit a chance to do any last-minute prep
+    // before being sent to the server.
+    commits.forEach(i => i.prepare())
+
+    let commitPayloads = []
+
+    let successReceivers = []
+    let failureReceivers = []
+
+    flushCommits(commit => {
+        let [payload, succeed, fail] = commit.toRequestPayload()
+
+        commitPayloads.push(payload)
+        successReceivers.push(succeed)
+        failureReceivers.push(fail)
+    })
+
+    let succeed = components => successReceivers.forEach(receiver => receiver(components.shift()))
+
+    let fail = () => failureReceivers.forEach(receiver => receiver())
+
+    return [ commitPayloads, succeed, fail ]
 }
 
 function handlePageExpiry() {
@@ -286,4 +143,28 @@ function handleFailure(content) {
     let html = content
 
     showHtmlModal(html)
+}
+
+let sendingRequest = false
+
+let afterSendStack = []
+
+export async function waitUntilTheCurrentRequestIsFinished(callback) {
+    return new Promise(resolve => {
+        if (sendingRequest) {
+            afterSendStack.push(() => resolve(callback()))
+        } else {
+            resolve(callback())
+        }
+    })
+}
+
+async function queueNewRequestAttemptsWhile(callback) {
+    sendingRequest = true
+
+    await callback()
+
+    sendingRequest = false
+
+    while (afterSendStack.length > 0) afterSendStack.shift()()
 }

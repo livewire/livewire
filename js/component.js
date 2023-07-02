@@ -1,5 +1,5 @@
-import { deepClone, deeplyEqual, extractData} from './utils'
-import { store, processEffects } from './request'
+import { dataSet, deepClone, deeplyEqual, diff, extractData} from './utils'
+import { processEffects } from './commit'
 import { generateWireObject } from './$wire'
 import { findComponent } from './store';
 
@@ -10,8 +10,6 @@ export class Component {
         el.__livewire = this
 
         this.symbol = Symbol()
-
-        store.set(this.symbol, this)
 
         this.el = el
 
@@ -41,10 +39,17 @@ export class Component {
         processEffects(this, this.effects)
     }
 
-    mergeNewSnapshot(encodedSnapshot, effects) {
-        this.encodedSnapshot = encodedSnapshot
-
+    mergeNewSnapshot(encodedSnapshot, effects, updates = {}) {
         let snapshot = JSON.parse(encodedSnapshot)
+
+        let oldCanonical = deepClone(this.canonical)
+        let updatedOldCanonical = this.applyUpdates(oldCanonical, updates)
+
+        let newCanonical = extractData(deepClone(snapshot.data))
+
+        let dirty = diff(updatedOldCanonical, newCanonical)
+
+        this.encodedSnapshot = encodedSnapshot
 
         this.snapshot = snapshot
 
@@ -54,19 +59,32 @@ export class Component {
 
         let newData = extractData(deepClone(snapshot.data))
 
-        Object.entries(this.ephemeral).forEach(([key, value]) => {
-            if (! deeplyEqual(this.ephemeral[key], newData[key])) {
-                this.reactive[key] = newData[key]
-            }
+        Object.entries(dirty).forEach(([key, value]) => {
+            dataSet(this.reactive, key, value)
         })
+        // Object.entries(this.ephemeral).forEach(([key, value]) => {
+        //     if (! deeplyEqual(this.ephemeral[key], newData[key])) {
+        //         this.reactive[key] = newData[key]
+        //     }
+        // })
+
+        return dirty
     }
 
-    replayUpdate(snapshot, html, dirty) {
-        let effects = { ...this.effects, html, dirty }
+    applyUpdates(object, updates) {
+        for (let key in updates) {
+            dataSet(object, key, updates[key])
+        }
+
+        return object
+    }
+
+    replayUpdate(snapshot, html) {
+        let effects = { ...this.effects, html}
 
         this.mergeNewSnapshot(JSON.stringify(snapshot), effects)
 
-        processEffects(this, { html, dirty })
+        processEffects(this, { html })
     }
 
     get children() {

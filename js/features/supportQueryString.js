@@ -21,7 +21,7 @@ on('component.init', component => {
                 replace(dataGet(component.reactive, name))
             })
         } else if (use === 'push') {
-            on('request', (component, payload) => {
+            on('commit', (component, payload) => {
                 let beforeValue = dataGet(component.canonical, name)
 
                 return () => {

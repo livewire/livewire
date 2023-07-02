@@ -5,7 +5,7 @@ import { on } from '@/events'
 
 let refreshDirtyStatesByComponent = new WeakBag
 
-on('request', (component) => {
+on('commit', (component) => {
     return () => {
         setTimeout(() => { // Doing a "setTimeout" to let morphdom do its thing first...
             refreshDirtyStatesByComponent.each(component, i => i(false))

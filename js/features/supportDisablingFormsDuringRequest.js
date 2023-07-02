@@ -54,7 +54,7 @@ on('element.init', (el, component) => {
     })
 })
 
-on('request', (component) => {
+on('commit', (component) => {
     return () => {
         cleanup(component)
     }

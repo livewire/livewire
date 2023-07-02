@@ -1,6 +1,6 @@
+import { contentIsFromDump } from '@/utils'
 import { directive } from '@/directives'
 import { on, trigger } from '@/events'
-import { contentIsFromDump } from '@/request'
 
 directive('stream', (el, { expression, modifiers }, { component, cleanup }) => {
     let off = on('stream', ({ name, content, append }) => {

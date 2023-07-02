@@ -91,7 +91,7 @@ class Component extends BaseComponent
     <script>
         // @todo: Change this to a Livewire init hook once implemented
         document.addEventListener('alpine:init', () => {
-            Livewire.hook('response.error', (response, content, skipDefault) => {
+            Livewire.hook('request.error', (response, content, skipDefault) => {
                 if (response.status === 419) {
                     confirm('Page Expired - Error Response')
 
