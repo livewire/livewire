@@ -32,7 +32,7 @@ Concepts:
     Hydration: { uri: /docs/hydration, file: /hydration.md }
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 Advanced:
-    Extending Livewire: { uri: /docs/extending, file: /extending.md }
+    JavaScript: { uri: /docs/javascript, file: /javascript.md }
 ---
 
 Concepts:

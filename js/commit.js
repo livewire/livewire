@@ -86,14 +86,14 @@ class Commit {
     }
 
     prepare() {
-        trigger('commit.prepare', this.component)
+        trigger('commit.prepare', { component: this.component })
     }
 
     toRequestPayload() {
         let propertiesDiff = diff(this.component.canonical, this.component.ephemeral)
 
         let payload = {
-            snapshot: this.component.encodedSnapshot,
+            snapshot: this.component.snapshotEncoded,
             updates: propertiesDiff,
             calls: this.calls.map(i => ({
                 path: i.path,
@@ -102,10 +102,32 @@ class Commit {
             }))
         }
 
-        let finishTarget = trigger('commit', this.component, payload)
+        let succeedCallbacks = []
+        let failCallbacks = []
+        let respondCallbacks = []
+
+        let succeed = (fwd) => succeedCallbacks.forEach(i => i(fwd))
+        let fail = () => failCallbacks.forEach(i => i())
+        let respond = () => respondCallbacks.forEach(i => i())
+
+        let finishTarget = trigger('commit', {
+            component: this.component,
+            commit: payload,
+            succeed: (callback) => {
+                succeedCallbacks.push(callback)
+            },
+            fail: (callback) => {
+                failCallbacks.push(callback)
+            },
+            respond: (callback) => {
+                respondCallbacks.push(callback)
+            },
+        })
 
         let handleResponse = (response) => {
             let { snapshot, effects } = response
+
+            respond()
 
             this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff)
 
@@ -123,15 +145,19 @@ class Commit {
                 })
             }
 
-            finishTarget({ snapshot, effects })
+            let parsedSnapshot = JSON.parse(snapshot)
+
+            finishTarget({ snapshot: parsedSnapshot, effects })
 
             this.resolvers.forEach(i => i())
+
+            succeed(response)
         }
 
         let handleFailure = () => {
-            let failed = true
+            respond()
 
-            finishTarget(failed)
+            fail()
         }
 
         return [payload, handleResponse, handleFailure]

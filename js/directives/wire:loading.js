@@ -2,7 +2,7 @@ import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
 import { on } from '@/events'
 
-directive('loading', (el, directive, { component }) => {
+directive('loading', ({ el, directive, component }) => {
     let targets = getTargets(el)
 
     let [delay, abortDelay] = applyDelay(directive)
@@ -64,16 +64,16 @@ function applyDelay(directive) {
 }
 
 function whenTargetsArePartOfRequest(component, targets, [ startLoading, endLoading ]) {
-    on('commit', (iComponent, payload) => {
+    on('commit', ({ component: iComponent, commit: payload, respond }) => {
         if (iComponent !== component) return
 
         if (targets.length > 0 && ! containsTargets(payload, targets)) return
 
         startLoading()
 
-        return () => {
+        respond(() => {
             endLoading()
-        }
+        })
     })
 }
 

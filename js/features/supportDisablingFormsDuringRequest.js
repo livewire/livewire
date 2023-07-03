@@ -5,7 +5,7 @@ import Alpine from 'alpinejs'
 
 let cleanupStackByComponentId = {}
 
-on('element.init', (el, component) => {
+on('element.init', ({ el, component }) => {
     let directives = getDirectives(el)
 
     if (directives.missing('submit')) return
@@ -54,10 +54,10 @@ on('element.init', (el, component) => {
     })
 })
 
-on('commit', (component) => {
-    return () => {
+on('commit', ({ component, respond }) => {
+    respond(() => {
         cleanup(component)
-    }
+    })
 })
 
 function cleanup(component) {

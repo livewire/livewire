@@ -38,6 +38,12 @@
 
 ## Remove wire:click.prefetch
 
+## JS changes:
+* prepend `$` to everything (`$watch`, `$upload`, etc...)
+* Changed lifecycle hooks
+* Removed page expired hook
+* 'livewire:load' => 'livewire:init'
+
 ## Localization
 Livewire 2 included support for a locale prefix.
 

@@ -9,7 +9,7 @@ export function initComponent(el) {
 
     if (components[component.id]) throw 'Component already registered'
 
-    trigger('component.init', component)
+    trigger('component.init', { component })
 
     components[component.id] = component
 
@@ -67,4 +67,9 @@ export function find(id) {
 export function first() {
     return Object.values(components)[0].$wire
 }
+
+export function all() {
+    return Object.values(components)
+}
+
 

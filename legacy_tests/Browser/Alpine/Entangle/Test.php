@@ -155,7 +155,6 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, EntangleConsecutiveActions::class)
-
                 // Trigger some consecutive alpine changes
                 ->waitForLivewire()->click('@alpineAdd')
                 ->assertSeeIn('@alpineOutput', 0)

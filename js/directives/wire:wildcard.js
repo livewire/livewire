@@ -3,7 +3,7 @@ import { getDirectives } from '@/directives'
 import { on } from '@/events'
 import Alpine from 'alpinejs'
 
-on('element.init', (el, component) => {
+on('element.init', ({ el, component }) => {
     getDirectives(el).all().forEach(directive => {
         if (['model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty'].includes(directive.type)) return
 

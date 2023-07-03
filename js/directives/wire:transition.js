@@ -6,7 +6,7 @@ on('morph.added', el => {
     el.__addedByMorph = true
 })
 
-directive('transition', (el, directive, { component, cleanup }) => {
+directive('transition', ({ el, directive, component, cleanup }) => {
     let visibility = Alpine.reactive({ state: false })
 
     // We're going to control the element's transition with Alpine transitions...

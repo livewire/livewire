@@ -9,8 +9,12 @@ import navigate from '@alpinejs/navigate'
 import history from '@alpinejs/history'
 import morph from '@alpinejs/morph'
 import Alpine from 'alpinejs'
+import { dispatch } from './utils'
 
 export function start() {
+    dispatch(document, 'livewire:init')
+    dispatch(document, 'livewire:initializing')
+
     Alpine.plugin(morph)
     Alpine.plugin(history)
     Alpine.plugin(intersect)
@@ -36,7 +40,7 @@ export function start() {
             if (component) {
                 initDirectives(el, component)
 
-                trigger('element.init', el, component)
+                trigger('element.init', { el, component })
             }
         })
     )
@@ -44,6 +48,14 @@ export function start() {
     Alpine.start()
 
     setTimeout(() => window.Livewire.initialRenderIsFinished = true)
+
+    dispatch(document, 'livewire:initialized')
 }
 
+export function stop() {
+    // @todo...
+}
 
+export function rescan() {
+    // @todo...
+}
