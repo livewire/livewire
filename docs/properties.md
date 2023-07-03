@@ -9,7 +9,7 @@ Consider the following example:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -39,7 +39,7 @@ For example:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -76,7 +76,7 @@ Let's use the `wire:model` directive to bind the `todo` property in a `TodoList`
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -124,7 +124,7 @@ In the example below, we can avoid code duplication by using `$this->reset()` to
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -369,7 +369,7 @@ To demonstrate how neglecting to authorize and validate properties can introduce
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -485,7 +485,7 @@ When an Eloquent model is assigned to a Livewire component property, Livewire wi
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -581,7 +581,7 @@ To demonstrate, consider the following `ShowTodos` component with a `select()` c
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -617,7 +617,7 @@ Here's the above example re-written using a computed property:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -657,7 +657,7 @@ You can also access `$todos` from inside your class. For example, if you had a `
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;

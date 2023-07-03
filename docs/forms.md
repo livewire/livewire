@@ -9,7 +9,7 @@ Let's start by looking at a very simple form in a `CreatePost` component. This f
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -67,7 +67,7 @@ Let's add some basic validation rules to the `$title` and `$content` properties 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -144,7 +144,7 @@ class PostForm extends Form
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -236,7 +236,7 @@ Here's what it would look like to use this same form object for an `UpdatePost` 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Forms\PostForm;
@@ -386,7 +386,7 @@ If you want to automatically save a form as the user fills it out rather than wa
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;

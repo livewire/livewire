@@ -13,7 +13,7 @@ To nest a Livewire component within a parent component, simply include it in the
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -45,7 +45,7 @@ For example, let's check out a `TodoList` component that passes a collection of 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -75,7 +75,7 @@ Now that `$todos` has been passed to the child component, you can receive that d
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -191,7 +191,7 @@ Now let's add `#[Reactive]` to the `$todos` prop in the `TodoCount` component. O
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Reactive;
 use Livewire\Component;
@@ -224,7 +224,7 @@ Below is an example of a parent `TodoList` component that contains a `$todo` pro
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -274,7 +274,7 @@ Below is the `TodoInput` component with the `#[Modelable]` attribute added above
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -309,7 +309,7 @@ Consider a `TodoList` component with functionality to show and remove todos:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -349,7 +349,7 @@ To call `remove()` from inside the child `TodoItem` components, you can add an e
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -382,7 +382,7 @@ Once the attribute has been added to the action, you can dispatch the `remove-to
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -427,7 +427,7 @@ You can avoid the first request entirely by dispatching the `remove-todo` event 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -484,7 +484,7 @@ Dynamic child components are useful in a variety of different scenarios, but bel
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -525,7 +525,7 @@ Now, if the `Steps` component's `$current` prop is set to "step-1", Livewire wil
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -547,7 +547,7 @@ Imagine a survey which contains a `SurveyQuestion` component that can have sub-q
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Question;

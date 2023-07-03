@@ -154,7 +154,7 @@ class CopyCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('bob-lob/lob-law.blade.php')));
 
         $this->artisan('livewire:copy', ['name' => 'BobLob.BobLob', 'new-name' => 'BobLob.LobLaw'])
-            ->expectsOutput('Class already exists: app/Http/Livewire/BobLob/LobLaw.php');
+            ->expectsOutput('Class already exists: app/Livewire/BobLob/LobLaw.php');
     }
 
     /** @test */
@@ -169,6 +169,6 @@ class CopyCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('bob-lob/lob-law.blade.php')));
 
         $this->artisan('livewire:copy', ['name' => 'BobLob.BobLob', 'new-name' => 'BobLob.LobLaw', '--force' => true])
-            ->expectsOutput('CLASS: app/Http/Livewire/BobLob/BobLob.php => app/Http/Livewire/BobLob/LobLaw.php');
+            ->expectsOutput('CLASS: app/Livewire/BobLob/BobLob.php => app/Livewire/BobLob/LobLaw.php');
     }
 }

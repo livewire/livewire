@@ -11,7 +11,7 @@ Below is the most basic example of using pagination inside a `ShowPosts` compone
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -52,7 +52,7 @@ The following component demonstrates using this method to reset the page after a
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;

@@ -5,7 +5,7 @@ For example, imagine you have a `Revenue` component which contains a slow databa
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Transaction;
@@ -52,7 +52,7 @@ To signal to your users that the component is being loaded, you can define a `pl
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Transaction;
@@ -104,7 +104,7 @@ You can accept this data in `mount()` just like any other component:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Transaction;

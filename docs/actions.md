@@ -5,7 +5,7 @@ Let's explore a basic example of calling a `save` action on a `CreatePost` compo
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -236,7 +236,7 @@ For example, let's imagine you have a `ShowPosts` component that allows users to
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -293,7 +293,7 @@ As an added convenience, you may automatically resolve Eloquent models by a corr
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -323,7 +323,7 @@ You can take advantage of [Laravel's dependency injection](https://laravel.com/d
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Repositories\PostRepository;
@@ -434,7 +434,7 @@ For example:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -485,7 +485,7 @@ For example, here is an example of a `CreatePost` component that triggers a clie
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -587,7 +587,7 @@ To demonstrate, in the `ShowPost` component below, the "view count" is logged wh
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Renderless;
 use Livewire\Component;
@@ -633,7 +633,7 @@ If you prefer to not utilize method attributes or need to conditionally skip ren
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -680,7 +680,7 @@ Here is a vulnerable version of component:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -723,7 +723,7 @@ To protect against this, we need to authorize that the user owns the post about 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -759,7 +759,7 @@ Consider the following `BrowsePosts` component where any user can view all the p
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -804,7 +804,7 @@ To patch this vulnerability, we need to authorize the action on the server like 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -842,7 +842,7 @@ Consider the `BrowsePosts` example that we previously discussed, where users can
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -894,7 +894,7 @@ To remedy this, we can mark the method as `protected` or `private`. Once the met
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -938,7 +938,7 @@ If there are specific middleware that you would like to apply to a specific acti
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Http\Middleware\LogPostCreation;
 use Livewire\Component;

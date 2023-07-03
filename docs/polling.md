@@ -9,7 +9,7 @@ Below is an example of a `SubscriberCount` component that shows a user's subscri
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 

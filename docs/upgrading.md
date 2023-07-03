@@ -1,6 +1,8 @@
 ## Prerequisites
 - Run `artisan view:clear`
 
+## app/Http/Livewire -> app/Livewire
+
 ## Alpine is now included
 - Remove any Alpine CDN scripts or Alpine npm imports and use the one Livewire provides
 

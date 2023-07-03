@@ -12,7 +12,7 @@ Below is an example of a `ShowInvoice` component that contains a "Download" butt
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Invoice;

@@ -21,12 +21,12 @@ php artisan make:livewire Posts\\CreatePost
 php artisan make:livewire posts.create-post
 ```
 
-After running this command, Livewire will create two new files in your application. The first will be the component's class: `app/Http/Livewire/CreatePost.php`
+After running this command, Livewire will create two new files in your application. The first will be the component's class: `app/Livewire/CreatePost.php`
 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -54,7 +54,7 @@ If your component is fairly small, you may want to create an _inline_ component.
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -84,7 +84,7 @@ To reduce boilerplate in your components, you can omit the `render()` method ent
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -122,7 +122,7 @@ To add a property to a Livewire component, declare a public property in your com
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -164,7 +164,7 @@ To pass data to the view in the `render()` method, you can use the `with()` meth
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -222,7 +222,7 @@ To learn more about actions, let's add a `save` action to the `CreatePost` compo
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -304,7 +304,7 @@ Data passed into components is received through the `mount()` lifecycle hook as 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -330,7 +330,7 @@ To reduce boilerplate code in your components, you can alternatively omit the `m
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -357,7 +357,7 @@ To create a full-page component, define a route in your `routes/web.php` file an
 You can accomplish this by adding the following line to your `routes/web.php` file:
 
 ```php
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 
 Route::get('/post/create', CreatePost::class);
 ```
@@ -401,7 +401,7 @@ To use a different layout for a specific component, you can place Livewire's `#[
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -451,7 +451,7 @@ Next, above your Livewire component's `render()` method, add the `#[Title]` attr
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -488,7 +488,7 @@ When working with full-page components, you may need to access route parameters 
 To demonstrate, first, define a route with a parameter in your `routes/web.php` file:
 
 ```php
-use App\Http\Livewire\ShowPost;
+use App\Livewire\ShowPost;
 
 Route::get('/post/{id}', ShowPost::class);
 ```
@@ -500,7 +500,7 @@ Next, update your Livewire component to accept the route parameter in the `mount
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Models\Post;
 use Livewire\Component;
@@ -530,7 +530,7 @@ Laravel's route model binding allows you to automatically resolve Eloquent model
 After defining a route with a model parameter in your `routes/web.php` file:
 
 ```php
-use App\Http\Livewire\ShowPost;
+use App\Livewire\ShowPost;
 
 Route::get('/post/{post}', ShowPost::class);
 ```
@@ -540,7 +540,7 @@ You can now accept the route model parameter through the `mount()` method of you
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Models\Post;
 use Livewire\Component;
@@ -568,7 +568,7 @@ Like before, you can reduce boilerplate by omitting the `mount()` method:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;

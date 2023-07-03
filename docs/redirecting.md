@@ -9,7 +9,7 @@ Below is an example of a `CreatePost` Livewire component that redirects the user
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -46,7 +46,7 @@ Because Livewire uses Laravel's built-in redirection feature, you can use all of
 For example, if you are using a Livewire component as a full-page component for a route like so:
 
 ```php
-use App\Http\Livewire\ShowPosts;
+use App\Livewire\ShowPosts;
 
 Route::get('/posts', ShowPosts::class);
 ```

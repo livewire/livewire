@@ -5,7 +5,7 @@ Here's an example `CreatePost` component that demonstrates the most basic valida
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -162,7 +162,7 @@ The `PostForm` above can now be defined as a property on the `CreatePost` compon
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Forms\PostForm;
@@ -397,7 +397,7 @@ Below is a basic test case that ensures validation errors are thrown if no input
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use Tests\TestCase;
 

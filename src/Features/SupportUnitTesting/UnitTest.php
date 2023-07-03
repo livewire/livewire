@@ -49,7 +49,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         $testResponse = new TestResponse($fakeClass);
 
-        $testResponse->assertSeeLivewire(\App\Http\Livewire\Foo::class);
+        $testResponse->assertSeeLivewire(\App\Livewire\Foo::class);
     }
 
     /** @test */
@@ -87,7 +87,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         $testResponse = new TestResponse($fakeClass);
 
-        $testResponse->assertSeeLivewire(\App\Http\Livewire\Foo::class);
+        $testResponse->assertSeeLivewire(\App\Livewire\Foo::class);
     }
 
     /** @test */
@@ -144,7 +144,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         $testResponse = new TestResponse($fakeClass);
 
-        $testResponse->assertDontSeeLivewire(\App\Http\Livewire\Foo::class);
+        $testResponse->assertDontSeeLivewire(\App\Livewire\Foo::class);
     }
 
     /** @test */
@@ -161,7 +161,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         $testResponse = new TestResponse($fakeClass);
 
-        $testResponse->assertDontSeeLivewire(\App\Http\Livewire\Foo::class);
+        $testResponse->assertDontSeeLivewire(\App\Livewire\Foo::class);
     }
 
     /** @test */
