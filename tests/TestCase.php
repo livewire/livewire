@@ -35,7 +35,7 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
     protected function getPackageProviders($app)
     {
         return [
-            \Livewire\ServiceProvider::class,
+            \Livewire\LivewireServiceProvider::class,
         ];
     }
 

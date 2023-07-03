@@ -44,10 +44,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Livewire\\ServiceProvider"
+                "Livewire\\LivewireServiceProvider"
             ],
             "aliases": {
-                "Livewire": "Livewire\\Livewire"
+                "Livewire": "Livewire\\LivewireManager"
             }
         }
     },

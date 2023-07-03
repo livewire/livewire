@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportUnitTesting\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
-use Livewire\LivewireManager;
 
 class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
 {

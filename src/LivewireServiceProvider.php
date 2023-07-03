@@ -2,7 +2,7 @@
 
 namespace Livewire;
 
-class ServiceProvider extends \Illuminate\Support\ServiceProvider
+class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     public function register()
     {
@@ -19,9 +19,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function registerLivewireSingleton()
     {
-        $this->app->alias(Manager::class, 'livewire');
+        $this->app->alias(LivewireManager::class, 'livewire');
 
-        $this->app->singleton(Manager::class);
+        $this->app->singleton(LivewireManager::class);
 
         app('livewire')->setProvider($this);
     }
@@ -98,12 +98,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         }
 
         ComponentHookRegistry::boot();
-
-        // V3 Todo:
-        // \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
-        // \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
-        // \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
-        // \Livewire\Features\SupportJavaScriptOrderedArrays\SupportJavaScriptOrderedArrays::class, @todo: there might be a better way than this...
     }
 }
 

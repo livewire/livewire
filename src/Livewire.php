@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Livewire\LivewireManager actingAs($user, $driver = null)
  * @method static \Livewire\LivewireManager withQueryParams($queryParams)
  *
- * @see \Livewire\Manager
+ * @see \Livewire\LivewireManager
  */
 class Livewire extends Facade
 {

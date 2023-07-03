@@ -18,11 +18,11 @@ use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
 use Livewire\ComponentHookRegistry;
 use Livewire\ComponentHook;
 
-class Manager
+class LivewireManager
 {
-    protected ServiceProvider $provider;
+    protected LivewireServiceProvider $provider;
 
-    function setProvider(ServiceProvider $provider)
+    function setProvider(LivewireServiceProvider $provider)
     {
         $this->provider = $provider;
     }
@@ -197,5 +197,36 @@ class Manager
     function getJsFeatures()
     {
         return $this->jsFeatures;
+    }
+
+    public function originalUrl()
+    {
+        if ($this->isLivewireRequest()) {
+            return url()->to($this->originalPath());
+        }
+
+        return url()->current();
+    }
+
+    public function originalPath()
+    {
+        if ($this->isLivewireRequest()) {
+            $snapshot = json_decode(request('components.0.snapshot'), true);
+
+            return data_get($snapshot, 'memo.path', 'POST');
+        }
+
+        return request()->path();
+    }
+
+    public function originalMethod()
+    {
+        if ($this->isLivewireRequest()) {
+            $snapshot = json_decode(request('components.0.snapshot'), true);
+
+            return data_get($snapshot, 'memo.method', 'POST');
+        }
+
+        return request()->method();
     }
 }

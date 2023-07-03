@@ -4,12 +4,10 @@ namespace LegacyTests\Browser;
 
 use function Livewire\str;
 use Throwable;
-use Synthetic\SyntheticServiceProvider;
 use Sushi\Sushi;
 use Psy\Shell;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
-use Livewire\ServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -193,7 +191,7 @@ class TestCase extends BaseTestCase
     protected function getPackageProviders($app)
     {
         return [
-            ServiceProvider::class,
+            LivewireServiceProvider::class,
         ];
     }
 

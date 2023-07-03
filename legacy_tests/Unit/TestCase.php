@@ -2,9 +2,8 @@
 
 namespace LegacyTests\Unit;
 
-use Synthetic\SyntheticServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
-use Livewire\ServiceProvider;
+use Livewire\LivewireServiceProvider;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
@@ -36,7 +35,7 @@ class TestCase extends BaseTestCase
     protected function getPackageProviders($app)
     {
         return [
-            ServiceProvider::class,
+            LivewireServiceProvider::class,
         ];
     }
 
