@@ -38,6 +38,8 @@
 
 ## Remove wire:click.prefetch
 
+### Update component ID references from $this->id or $id to $this->id()
+
 ## Localization
 Livewire 2 included support for a locale prefix.
 
