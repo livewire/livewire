@@ -38,7 +38,7 @@
 
 ## Remove wire:click.prefetch
 
-### Update component ID references from $this->id or $id to $this->id()
+### The component ID is no longer a public property ($id), please use $this->id() or $this->getId() to get the component id.
 
 ## Localization
 Livewire 2 included support for a locale prefix.
