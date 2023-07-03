@@ -41,8 +41,6 @@ function dispatchEvent(target, name, params, bubbles = true) {
 
     e.__livewire = { name, params, receivedBy: [] }
 
-    trigger('dispatch', e)
-
     target.dispatchEvent(e)
 }
 

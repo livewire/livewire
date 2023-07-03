@@ -5,15 +5,15 @@ import { on } from '@/events'
 
 let refreshDirtyStatesByComponent = new WeakBag
 
-on('commit', (component) => {
-    return () => {
+on('commit', ({ component, respond }) => {
+    respond(() => {
         setTimeout(() => { // Doing a "setTimeout" to let morphdom do its thing first...
             refreshDirtyStatesByComponent.each(component, i => i(false))
         })
-    }
+    })
 })
 
-directive('dirty', (el, directive, { component }) => {
+directive('dirty', ({ el, directive, component }) => {
     let targets = dirtyTargets(el)
 
     let dirty = Alpine.reactive({ state: false })

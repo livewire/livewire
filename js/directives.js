@@ -13,7 +13,9 @@ export function initDirectives(el, component) {
         elDirectives.directives
             .filter(({ value }) => value === name)
             .forEach(directive => {
-                callback(el, directive, {
+                callback({
+                    el,
+                    directive,
                     component,
                     cleanup: (callback) => {
                         Alpine.onAttributeRemoved(el, 'wire:'.directive, callback)
@@ -64,7 +66,7 @@ class DirectiveManager {
 
 class Directive {
     constructor(value, modifiers, rawName, el) {
-        this.rawName = rawName
+        this.rawName = this.raw = rawName
         this.el = el
         this.eventContext
 

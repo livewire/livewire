@@ -18,13 +18,15 @@ function debounce(func, wait) {
     };
   }
 
-directive('model', (el, { expression, modifiers }, { component, cleanup }) => {
+directive('model', ({ el, directive, component, cleanup }) => {
+    let { expression, modifiers } = directive
+
     if (! expression) {
         return console.warn('Livewire: [wire:model] is missing a value.', el)
     }
 
     if (componentIsMissingProperty(component, expression)) {
-        return console.warn('Livewire: [wire:model="'+expression+'"] property does not exist.', el)
+        return console.warn('Livewire: [wire:model="'+expression+'"] property does not exist on component: ['+component.name+']', el)
     }
 
     // Handle file uploads differently...

@@ -40,6 +40,12 @@
 
 ### The component ID is no longer a public property ($id), please use $this->id() or $this->getId() to get the component id.
 
+## JS changes:
+* prepend `$` to everything (`$watch`, `$upload`, etc...)
+* Changed lifecycle hooks
+* Removed page expired hook
+* 'livewire:load' => 'livewire:init'
+
 ## Localization
 Livewire 2 included support for a locale prefix.
 

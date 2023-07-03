@@ -9,17 +9,15 @@ export class Component {
 
         el.__livewire = this
 
-        this.symbol = Symbol()
-
         this.el = el
 
         this.id = el.getAttribute('wire:id')
 
         this.__livewireId = this.id // @legacy
 
-        this.encodedSnapshot = el.getAttribute('wire:snapshot')
+        this.snapshotEncoded = el.getAttribute('wire:snapshot')
 
-        this.snapshot = JSON.parse(this.encodedSnapshot)
+        this.snapshot = JSON.parse(this.snapshotEncoded)
 
         this.name = this.snapshot.memo.name
 
@@ -39,8 +37,8 @@ export class Component {
         processEffects(this, this.effects)
     }
 
-    mergeNewSnapshot(encodedSnapshot, effects, updates = {}) {
-        let snapshot = JSON.parse(encodedSnapshot)
+    mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
+        let snapshot = JSON.parse(snapshotEncoded)
 
         let oldCanonical = deepClone(this.canonical)
         let updatedOldCanonical = this.applyUpdates(oldCanonical, updates)
@@ -49,7 +47,7 @@ export class Component {
 
         let dirty = diff(updatedOldCanonical, newCanonical)
 
-        this.encodedSnapshot = encodedSnapshot
+        this.snapshotEncoded = snapshotEncoded
 
         this.snapshot = snapshot
 
@@ -59,8 +57,10 @@ export class Component {
 
         let newData = extractData(deepClone(snapshot.data))
 
+        console.log(dirty)
         Object.entries(dirty).forEach(([key, value]) => {
-            dataSet(this.reactive, key, value)
+            let rootKey = key.split('.')[0]
+            this.reactive[rootKey] = newData[rootKey]
         })
         // Object.entries(this.ephemeral).forEach(([key, value]) => {
         //     if (! deeplyEqual(this.ephemeral[key], newData[key])) {

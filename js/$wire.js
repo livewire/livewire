@@ -18,12 +18,30 @@ function wireFallback(callback) {
     fallback = callback
 }
 
+// For V2 backwards compatibility...
+// And I actually like both depending on the scenario...
+let aliases = {
+    'get': '$get',
+    'set': '$set',
+    'call': '$call',
+    'watch': '$watch',
+    'entangle': '$entangle',
+    'dispatch': '$dispatch',
+    'dispatchTo': '$dispatchTo',
+    'dispatchSelf': '$dispatchSelf',
+    'upload': '$upload',
+    'uploadMultiple': '$uploadMultiple',
+    'removeUpload': '$removeUpload',
+}
+
 export function generateWireObject(component, state) {
     return new Proxy({}, {
         get(target, property) {
             if (property === '__instance') return component
 
-            if (property in properties) {
+            if (property in aliases) {
+                return getProperty(component, aliases[property])
+            } else if (property in properties) {
                 return getProperty(component, property)
             } else if (property in state) {
                 return state[property]
@@ -52,9 +70,9 @@ Alpine.magic('wire', el => closestComponent(el).$wire)
 
 wireProperty('__instance', (component) => component)
 
-wireProperty('get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
+wireProperty('$get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
 
-wireProperty('set', (component) => async (property, value, live = true) => {
+wireProperty('$set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
     return live
@@ -62,16 +80,12 @@ wireProperty('set', (component) => async (property, value, live = true) => {
         : Promise.resolve()
 })
 
-wireProperty('call', (component) => async (method, ...params) => {
+wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
 })
 
-wireProperty('entangle', (component) => (name, live = false) => {
+wireProperty('$entangle', (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live)
-})
-
-wireProperty('$set', (component) => (...params) => {
-    return component.$wire.set(...params)
 })
 
 wireProperty('$toggle', (component) => (name) => {
@@ -80,31 +94,54 @@ wireProperty('$toggle', (component) => (name) => {
 
 wireProperty('$watch', (component) => (path, callback) => {
     let firstTime = true
-    let old = undefined
+    let oldValue = undefined
 
-    effect(() => {
+   Alpine.effect(() => {
+    // JSON.stringify touches every single property at any level enabling deep watching
         let value = dataGet(component.reactive, path)
+        JSON.stringify(value)
 
-        if (firstTime) {
-            firstTime = false
-            return
+        if (! firstTime) {
+            // We have to queue this watcher as a microtask so that
+            // the watcher doesn't pick up its own dependencies.
+            queueMicrotask(() => {
+                callback(value, oldValue)
+
+                oldValue = value
+            })
+        } else {
+            oldValue = value
         }
 
-        pauseTracking()
-
-        callback(value, old)
-
-        old = value
-
-        enableTracking()
+        firstTime = false
     })
-
 })
 
-wireProperty('$watchEffect', (component) => (callback) => effect(callback))
-
-wireProperty('$refresh', (component) => async () => await requestCommit(component))
+wireProperty('$refresh', (component) => component.$wire.$commit)
 wireProperty('$commit', (component) => async () => await requestCommit(component))
+
+wireProperty('$on', (component) => (...params) => listen(component, ...params))
+
+wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
+wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
+wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, ...params))
+
+wireProperty('$upload', (component) => (...params) => upload(component, ...params))
+wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
+wireProperty('$removeUpload', (component) => (...params) =>removeUpload(component, ...params))
+
+let parentMemo
+
+wireProperty('$parent', component => {
+    if (parentMemo) return parentMemo.$wire
+
+    let parent = closestComponent(component.el.parentElement)
+
+    parentMemo = parent
+
+    return parent.$wire
+})
+
 
 let overriddenMethods = new WeakMap
 
@@ -138,29 +175,3 @@ wireFallback((component) => (property) => async (...params) => {
 
     return await requestCall(component, property, params)
 })
-
-let parentMemo
-
-wireProperty('$parent', component => {
-    if (parentMemo) return parentMemo.$wire
-
-    let parent = closestComponent(component.el.parentElement)
-
-    parentMemo = parent
-
-    return parent.$wire
-})
-
-wireProperty('$on', (component) => (...params) => listen(component, ...params))
-
-wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
-wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
-wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, ...params))
-
-wireProperty('dispatch', (component) => (...params) => dispatch(component, ...params))
-wireProperty('dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
-wireProperty('dispatchTo', (component) => (...params) => dispatchTo(component, ...params))
-
-wireProperty('upload', (component) => (...params) => upload(component, ...params))
-wireProperty('uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
-wireProperty('removeUpload', (component) => (...params) =>removeUpload(component, ...params))

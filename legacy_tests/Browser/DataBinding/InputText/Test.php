@@ -42,12 +42,13 @@ class Test extends TestCase
                 /**
                  * Value won't change if focused but NOT dirty.
                  */
-                ->waitForLivewire(function ($b) {
-                    $b->click('@foo')
-                    ->tap(function ($b) { $b->script('window.Livewire.first().set("foo", "changed-alot")'); });
-                })
-                ->assertSeeIn('@foo.output', 'changed-alot')
-                ->assertInputValue('@foo', 'changed-again')
+                // @todo: waiting to see if we need to bring this "unintrusive" V2 functionality back...
+                // ->waitForLivewire(function ($b) {
+                //     $b->click('@foo')
+                //     ->tap(function ($b) { $b->script('window.Livewire.first().set("foo", "changed-alot")'); });
+                // })
+                // ->assertSeeIn('@foo.output', 'changed-alot')
+                // ->assertInputValue('@foo', 'changed-again')
 
                 /**
                  * Can set nested value
