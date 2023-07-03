@@ -143,7 +143,7 @@ Below is the same `CreatePost` example, but now the properties and rules have be
 ```php
 <?php
 
-namespace App\Forms;
+namespace App\Livewire\Forms;
 
 use Livewire\Form;
 
@@ -165,7 +165,7 @@ The `PostForm` above can now be defined as a property on the `CreatePost` compon
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Forms\PostForm;
+use App\Livewire\Forms\PostForm;
 use App\Models\Post;
 
 class CreatePost extends Component

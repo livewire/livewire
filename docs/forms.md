@@ -127,7 +127,7 @@ Let's rewrite the `CreatePost` component to use a `PostForm` class:
 ```php
 <?php
 
-namespace App\Forms;
+namespace App\Livewire\Forms;
 
 use Livewire\Form;
 
@@ -148,7 +148,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
-use App\Forms\PostForm;
+use App\Livewire\Forms\PostForm;
 
 class CreatePost extends Component
 {
@@ -189,7 +189,7 @@ If you'd like, you can also extract the post creation logic into the form object
 ```php
 <?php
 
-namespace App\Forms;
+namespace App\Livewire\Forms;
 
 use Livewire\Form;
 use App\Models\Post;
@@ -239,7 +239,7 @@ Here's what it would look like to use this same form object for an `UpdatePost` 
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Forms\PostForm;
+use App\Livewire\Forms\PostForm;
 use App\Models\Post;
 
 class UpdatePost extends Component
@@ -270,7 +270,7 @@ class UpdatePost extends Component
 ```php
 <?php
 
-namespace App\Forms;
+namespace App\Livewire\Forms;
 
 use Livewire\Form;
 use App\Models\Post;
