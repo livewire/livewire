@@ -38,6 +38,8 @@
 
 ## Remove wire:click.prefetch
 
+### The component ID is no longer a public property ($id), please use $this->id() or $this->getId() to get the component id.
+
 ## JS changes:
 * prepend `$` to everything (`$watch`, `$upload`, etc...)
 * Changed lifecycle hooks
