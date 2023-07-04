@@ -55,6 +55,7 @@ class DeleteCommand extends FileManipulationCommand
 
         return $testPath;
     }
+
     protected function removeClass($force = false)
     {
         $classPath = $this->parser->classPath();
