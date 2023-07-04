@@ -431,7 +431,7 @@ on('commit.prepare', ({ component, commit }) => {
 
 Every time a Livewire component is sent to the server, a _commit_ is made. To hook into the lifecycle and contents of an individual commit, Livewire exposes a `commit` hook.
 
-This hooks is extremely powerful as it provides methods for hooking into both the request and response of a Livewire commit.
+This hook is extremely powerful as it provides methods for hooking into both the request and response of a Livewire commit.
 
 ```js
 on('commit', ({ component, commit, respond, succeed, fail }) => {
