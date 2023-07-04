@@ -7809,6 +7809,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     Object.entries(queryString).forEach(([key, value]) => {
       let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value);
+      if (!as)
+        as = name;
       let initialValue = dataGet(component.ephemeral, name);
       let { initial, replace: replace2, push: push2, pop } = track2(as, initialValue, alwaysShow);
       if (use === "replace") {
