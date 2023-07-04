@@ -40,7 +40,8 @@ class BaseUtils
                 if (method_exists($property, 'isInitialized') && !$property->isInitialized($target)) {
                     // If a type of `array` is given with no value, let's assume users want
                     // it prefilled with an empty array...
-                    $value = $property->getType()->getName() === 'array' ? [] : null;
+                    $value = (method_exists($property->getType(), 'getName') && $property->getType()->getName() === 'array')
+                        ? [] : null;
                 } else {
                     $value = $property->getValue($target);
                 }
