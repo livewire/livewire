@@ -33,11 +33,16 @@ import './directives/index'
 
 // Make globals...
 window.Livewire = Livewire
-window.Alpine = Alpine
 
-doDispatch(document, 'livewire:init')
+if(window.livewireModule === undefined) {
+    window.Alpine = Alpine
 
-// Start Livewire...
-Livewire.start()
+    // Are these needed? I see the same events in lifecycle.js
+    // doDispatch(document, 'livewire:init')
 
-doDispatch(document, 'livewire:initialized')
+    // Start Livewire...
+    Livewire.start()
+
+    // Are these needed? I see the same events in lifecycle.js
+    // doDispatch(document, 'livewire:initialized')
+}

@@ -169,6 +169,9 @@ export function getCsrfToken() {
     if (document.querySelector('[data-csrf]')) {
         return document.querySelector('[data-csrf]').getAttribute('data-csrf')
     }
+    if(window.livewireModule['csrf'] ?? false) {
+        return window.livewireModule['csrf'];
+    }
 
     throw 'Livewire: No CSRF token detected'
 }
