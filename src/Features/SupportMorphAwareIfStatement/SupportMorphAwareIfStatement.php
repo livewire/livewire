@@ -8,6 +8,8 @@ class SupportMorphAwareIfStatement extends ComponentHook
 {
     static function provide()
     {
+        if (! config('inject_morph_markers')) return;
+
         static::registerPrecompilers(
             app('livewire')->precompiler(...)
         );

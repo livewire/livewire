@@ -99,4 +99,6 @@ return [
     'navigate' => [
         'show_progress_bar' => true,
     ],
+
+    'inject_morph_markers' => true,
 ];

@@ -1,6 +1,8 @@
 
 ## Todo:
 - [ ] Rethink Alpine bundling and JS extension/upgrade path
+- [ ] Polish config file
+- [ ] Add relevant docblocks
 - [ ] Support `->assertStatus()`
 - [ ] Write advanced documentation
 - [ ] Work through `@todo` comments
