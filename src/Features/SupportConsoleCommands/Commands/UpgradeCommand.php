@@ -7,6 +7,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Pipeline;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultNamespace;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ShowUpgradeIntroduction;
 
 class UpgradeCommand extends Command
@@ -21,6 +22,7 @@ class UpgradeCommand extends Command
             ShowUpgradeIntroduction::class,
             ChangeDefaultNamespace::class,
             AddLiveModifierToWireModelDirectives::class,
+            RemoveDeferModifierFromWireModelDirectives::class,
         ])->thenReturn();
     }
 }

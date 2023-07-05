@@ -20,31 +20,8 @@ class AddLiveModifierToWireModelDirectives extends UpgradeStep
 
         $console->line('Changing all occurrences of wire:model to wire:model.live...');
         $console->newLine();
-        
-        $console->table(
-            ['File', 'Occurrences'],
-            collect($this->filesystem()->allFiles('resources/views'))
-                ->map(function ($viewPath) {
-                    return [
-                        'path' => $viewPath,
-                        'content' => $this->filesystem()->get($viewPath),
-                    ];
-                })->map(function($view) {
-                    $view['content'] = preg_replace('/wire:model(?!\.(?:defer|lazy|live))/', 'wire:model.live', $view['content'], -1, $count);
-                    $view['occurrences'] = $count;
 
-                    return $count > 0 ? $view : null;
-                })
-                ->filter()
-                ->values()
-                ->map(function($view) {
-                    $this->filesystem()->put($view['path'], $view['content']);
-
-                    return [
-                        $view['path'], $view['occurrences'],
-                    ];
-                })
-        );
+        $console->table(['File', 'Occurrences'], $this->patternReplacement('/wire:model(?!\.(?:defer|lazy|live))/', 'wire:model.live'));
 
         return $next($console);
     }
