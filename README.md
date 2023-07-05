@@ -5,12 +5,13 @@
 - [ ] Talk as good and polished as possible
 
 ## Todo:
+- [x] Get testimonials
 - [ ] Write and practice talk
-- [ ] Get testimonials
 - [ ] Finish landing page copy
+- [ ] Fix bug where submit form disabling isn't re-enabled on failure
+- [ ] Write advanced documentation
 - [ ] Put old site on new URL: 'v2.laravel-livewire.com'
 - [ ] Add proper old site redirects
-- [ ] Write advanced documentation
 - [ ] Rethink Alpine bundling and JS extension/upgrade path
 - [ ] Polish config file
 - [ ] Add relevant docblocks

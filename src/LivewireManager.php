@@ -199,7 +199,7 @@ class LivewireManager
         return $this->jsFeatures;
     }
 
-    public function originalUrl()
+    function originalUrl()
     {
         if ($this->isLivewireRequest()) {
             return url()->to($this->originalPath());
@@ -208,7 +208,7 @@ class LivewireManager
         return url()->current();
     }
 
-    public function originalPath()
+    function originalPath()
     {
         if ($this->isLivewireRequest()) {
             $snapshot = json_decode(request('components.0.snapshot'), true);
@@ -219,7 +219,7 @@ class LivewireManager
         return request()->path();
     }
 
-    public function originalMethod()
+    function originalMethod()
     {
         if ($this->isLivewireRequest()) {
             $snapshot = json_decode(request('components.0.snapshot'), true);

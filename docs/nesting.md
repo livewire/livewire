@@ -393,7 +393,7 @@ class TodoItem extends Component
 
     public function remove()
     {
-        $this->dispatch('remove-todo', $this->todo->id); // [tl! highlight]
+        $this->dispatch('remove-todo', todoId: $this->todo->id); // [tl! highlight]
     }
 
     public function render()
@@ -447,7 +447,7 @@ class TodoItem extends Component
 <div>
     <span>{{ $todo->content }}</span>
 
-    <button wire:click="$dispatch('remove-todo', {{ $todo->id }})">Remove</button>
+    <button wire:click="$dispatch('remove-todo', { todoId: {{ $todo->id }} })">Remove</button>
 </div>
 ```
 

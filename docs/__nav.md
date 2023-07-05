@@ -28,11 +28,11 @@ Features:
     Dirty States: { uri: /docs/dirty, file: /dirty.md }
     Offline States: { uri: /docs/offline, file: /offline.md }
     Teleport: { uri: /docs/teleport, file: /teleport.md }
-Concepts:
-    Hydration: { uri: /docs/hydration, file: /hydration.md }
-    Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 Advanced:
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
+    Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }
+    Understanding Hydration: { uri: /docs/hydration, file: /hydration.md }
+    Understanding Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 ---
 
 Concepts:
