@@ -394,7 +394,7 @@ Every time a new component is discovered by Livewire—whether on the initial pa
 For more information, check out the [Livewire documentation on the component object](#the-component-object).
 
 ```js
-on('component.init', ({ component )} => {
+Livewire.hook('component.init', ({ component )} => {
     //
 })
 ```
@@ -406,7 +406,7 @@ In addition to triggering an event when new component's are initialized, Livewir
 This can be used to provide custom Livewire HTML attributes within your application.
 
 ```js
-on('element.init', ({ component, el }) => {
+Livewire.hook('element.init', ({ component, el }) => {
     //
 })
 ```
@@ -422,7 +422,7 @@ These hooks expose `commit` objects. You can learn more about their schema by re
 The `commit.prepare` hook will be triggered immediately before a request is sent to the server. This gives you a chance to add any last minute updates or calls to the outgoing request.
 
 ```js
-on('commit.prepare', ({ component, commit }) => {
+Livewire.hook('commit.prepare', ({ component, commit }) => {
     // Runs before commit payloads are collected and sent to the server...
 })
 ```
@@ -434,7 +434,7 @@ Every time a Livewire component is sent to the server, a _commit_ is made. To ho
 This hooks is extremely powerful as it provides methods for hooking into both the request and response of a Livewire commit.
 
 ```js
-on('commit', ({ component, commit, respond, succeed, fail }) => {
+Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
     // Runs immediately before a commit's payload is sent to the server...
 
     respond(() => {
@@ -457,7 +457,7 @@ on('commit', ({ component, commit, respond, succeed, fail }) => {
 If you'd like to instead hook into the entire HTTP request going out to the server and coming back, you can do so using the `request` hook.
 
 ```js
-on('request', ({ uri, options, payload, respond, succeed, fail }) => {
+Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
     // Runs after commit payloads are compiled, but before a network request is sent...
 
     respond(({ status, response }) => {
