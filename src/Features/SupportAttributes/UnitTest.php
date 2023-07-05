@@ -43,6 +43,16 @@ class UnitTest extends \Tests\TestCase
         })
         ->assertSet('items.count', 3);
     }
+
+    /** @test */
+    public function non_livewire_attribute_are_ignored()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[NonLivewire]
+            public $count = 0;
+        })
+            ->assertSet('count', 0);
+    }
 }
 
 #[\Attribute]
@@ -52,3 +62,6 @@ class LifecycleHookAttribute extends Attribute {
     function render() { $this->setValue($this->getValue() + 1); }
     function dehydrate() { $this->setValue($this->getValue() + 1); }
 }
+
+#[\Attribute]
+class NonLivewire {}
