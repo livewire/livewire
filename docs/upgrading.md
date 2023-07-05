@@ -5,6 +5,17 @@
 
 ## Alpine is now included
 - Remove any Alpine CDN scripts or Alpine npm imports and use the one Livewire provides
+- The following Alpine plugins are already bundled so you can remove these CDN or npm imports:
+
+```
+Alpine.plugin(morph)
+Alpine.plugin(history)
+Alpine.plugin(intersect)
+Alpine.plugin(collapse)
+Alpine.plugin(focus)
+Alpine.plugin(persist)
+Alpine.plugin(navigate)
+```
 
 ## `wire:model.defer` is now default
 - Change `wire:model.defer` to `wire:model`
