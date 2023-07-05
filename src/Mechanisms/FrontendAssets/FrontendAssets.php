@@ -25,7 +25,7 @@ class FrontendAssets
         });
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
-        Blade::directive('livewireAsModule', [static::class, 'livewireAsModule']);
+        Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
         Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
     }
 
@@ -48,9 +48,9 @@ class FrontendAssets
         return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts('.$expression.') !!}';
     }
 
-    public static function livewireAsModule($expression)
+    public static function livewireScriptConfig($expression)
     {
-        return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::asModule('.$expression.') !!}';
+        return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scriptConfig('.$expression.') !!}';
     }
 
     public static function livewireStyles($expression)
@@ -152,7 +152,7 @@ class FrontendAssets
         HTML;
     }
 
-    public static function asModule($options = [])
+    public static function scriptConfig($options = [])
     {
         $attributes = json_encode([
                 'nonce' => $options['nonce'] ?? '',
@@ -161,7 +161,7 @@ class FrontendAssets
             ]);
 
         return <<<HTML
-        <script data-navigate-once="true">window.livewireModule = {$attributes};</script>
+        <script data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
         HTML;
     }
 

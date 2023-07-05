@@ -517,7 +517,7 @@ Alpine.start()
 ### Solution #1
 To solve this, we can load Alpine and Livewire via npm and disable the assets from being loaded via the `<script>` tag. First, open `app/config/livewire.php` and set `inject_assets` to `false`.
 
-Next, you will need to manually add the `@livewireStyles` and `@livewireAsModule` directives to your layout like `resources/views/components/layouts/app.blade.php`:
+Next, you will need to manually add the `@livewireStyles` and `@livewireScriptConfig` directives to your layout like `resources/views/components/layouts/app.blade.php`:
 
 ```blade
 <html>  
@@ -532,7 +532,7 @@ Next, you will need to manually add the `@livewireStyles` and `@livewireAsModule
 <body>  
 {{ $slot }}  
   
-@livewireAsModule  
+@livewireScriptConfig  
 </body>  
 </html>
 ```
@@ -572,10 +572,14 @@ Livewire.start()
 
 ### Solution #2
 
-```js
-import Alpine from 'alpinejs';  
+```js  
 import '../../vendor/livewire/livewire/dist/livewire';  
-  
-window.Alpine = Alpine;  
+
+import mask from '@alpinejs/mask'  
+Alpine.plugin(mask);
+
 Livewire.start();
+
+// For readability and IDE completion this would be a bit better:
+import {Alpine, Livewire} from '../../vendor/livewire/livewire/dist/livewire';
 ```
