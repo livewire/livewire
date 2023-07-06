@@ -155,6 +155,7 @@ class FrontendAssets
     public static function scriptConfig($options = [])
     {
         app(static::class)->hasRenderedScripts = true;
+
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
         $attributes = json_encode([
