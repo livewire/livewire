@@ -10,6 +10,16 @@ build({
     define: { CDN: true },
 })
 
+build({
+    format: 'esm',
+    entryPoints: [`js/index.js`],
+    outfile: `dist/livewire_esm.js`,
+    bundle: true,
+    platform: 'node',
+    define: { CDN: false },
+    // external: ['alpinejs'],
+})
+
 let hash = crypto.randomBytes(4).toString('hex');
 
 fs.writeFileSync(__dirname+'/../dist/manifest.json', `

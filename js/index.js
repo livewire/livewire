@@ -6,7 +6,7 @@ import { dispatch as doDispatch } from './utils'
 import { start, stop, rescan } from './lifecycle'
 import Alpine from 'alpinejs'
 
-export let Livewire = {
+let Livewire = {
     directive,
     dispatchTo,
     start,
@@ -36,13 +36,9 @@ window.Livewire = Livewire
 window.Alpine = Alpine
 
 if(window.livewireScriptConfig === undefined) {
-
-    // Are these needed? I see the same events in lifecycle.js
-    // doDispatch(document, 'livewire:init')
-
     // Start Livewire...
     Livewire.start()
-
-    // Are these needed? I see the same events in lifecycle.js
-    // doDispatch(document, 'livewire:initialized')
 }
+
+export { Livewire, Alpine };
+
