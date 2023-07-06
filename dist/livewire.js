@@ -101,6 +101,9 @@
     if (document.querySelector("[data-csrf]")) {
       return document.querySelector("[data-csrf]").getAttribute("data-csrf");
     }
+    if (window.livewireScriptConfig["csrf"] ?? false) {
+      return window.livewireScriptConfig["csrf"];
+    }
     throw "Livewire: No CSRF token detected";
   }
   function contentIsFromDump(content) {
@@ -184,7 +187,7 @@
   }
 
   // js/request.js
-  var updateUri = document.querySelector("[data-uri]").getAttribute("data-uri");
+  var updateUri = document.querySelector("[data-uri]")?.getAttribute("data-uri") ?? window.livewireScriptConfig["uri"] ?? null;
   function triggerSend() {
     bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
       sendRequestToServer();
@@ -3691,6 +3694,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (property in state) {
           state[property] = value;
         }
+        return true;
       }
     });
   }
@@ -8459,9 +8463,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function theTabIsInTheBackground() {
     return inBackground;
   }
-  function theDirectiveIsMissingKeepAlive(directive4) {
-    return !directive4.modifiers.includes("keep-alive");
-  }
   function theDirectiveIsOffTheElement(el) {
     return !getDirectives(el).has("poll");
   }
@@ -8512,9 +8513,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     console.warn("Detected multiple instances of Alpine running");
   window.Livewire = Livewire;
   window.Alpine = module_default;
-  dispatch(document, "livewire:init");
-  Livewire.start();
-  dispatch(document, "livewire:initialized");
+  if (window.livewireScriptConfig === void 0) {
+    Livewire.start();
+  }
 })();
 /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
  * @license MIT */

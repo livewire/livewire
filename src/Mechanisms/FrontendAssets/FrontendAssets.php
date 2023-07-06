@@ -154,6 +154,8 @@ class FrontendAssets
 
     public static function scriptConfig($options = [])
     {
+        app(static::class)->hasRenderedScripts = true;
+
         $attributes = json_encode([
                 'nonce' => $options['nonce'] ?? '',
                 'csrf' => app()->has('session.store') ? csrf_token() : '',
