@@ -155,15 +155,15 @@ class FrontendAssets
     public static function scriptConfig($options = [])
     {
         app(static::class)->hasRenderedScripts = true;
+        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
         $attributes = json_encode([
-                'nonce' => $options['nonce'] ?? '',
-                'csrf' => app()->has('session.store') ? csrf_token() : '',
-                'uri' => app('livewire')->getUpdateUri(),
-            ]);
+            'csrf' => app()->has('session.store') ? csrf_token() : '',
+            'uri' => app('livewire')->getUpdateUri(),
+        ]);
 
         return <<<HTML
-        <script data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
+        <script {{ $nonce }} data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
         HTML;
     }
 
