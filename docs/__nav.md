@@ -31,6 +31,7 @@ Features:
 Advanced:
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }
+    Understanding Morph: { uri: /docs/morphing, file: /morph.md }
     Understanding Hydration: { uri: /docs/hydration, file: /hydration.md }
     Understanding Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 ---

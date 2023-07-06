@@ -59,6 +59,9 @@ Alpine.plugin(navigate)
 * Removed page expired hook
 * 'livewire:load' => 'livewire:init'
 
+## Eloquent model binding has been disabled
+* You must set the config "livewire.model_binding" to true
+
 ## Localization
 Livewire 2 included support for a locale prefix.
 
