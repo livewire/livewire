@@ -3,6 +3,7 @@
 - [ ] New site ready
 - [ ] Livewire 3 beta "good enough"
 - [ ] Talk as good and polished as possible
+- [ ] Have cool swag
 
 ## Todo:
 - [x] Get testimonials

@@ -54,11 +54,11 @@ on('element.init', ({ el, component }) => {
     })
 })
 
-on('commit', ({ component, respond }) => {
-    respond(() => {
-        cleanup(component)
-    })
-})
+// on('commit', ({ component, respond }) => {
+//     respond(() => {
+//         cleanup(component)
+//     })
+// })
 
 function cleanup(component) {
     if (!cleanupStackByComponentId[component.id]) return
