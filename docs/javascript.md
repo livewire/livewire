@@ -501,3 +501,42 @@ If the default page expired dialog isn't suitable, you can implement a custom so
 ```
 
 With the above code in your application, when a user's session has expired, instead of the default dialog they will receive a custom confirm dialog or whatever behavior you choose to implement.
+
+### Loading Alpine and Livewire as modules
+By default, Alpine and Livewire are loaded using the `<script src="livewire.js">` tag, which means you have no control over the order in which these libraries are loaded. Consequently, importing and registering Alpine plugins, as shown in the example below, will no longer function:
+
+```js
+import mask from '@alpinejs/mask'
+
+Alpine.plugin(mask)
+Alpine.start()
+```
+
+To address this issue, we need to inform Livewire that we want to use the ESM (ECMAScript module) version ourselves and prevent the injection of the `livewire.js` script tag. To achieve this, we must add the `@livewireScriptConfig` directive to our layout file (`resources/views/components/layouts/app.blade.php`):
+
+```blade
+<html>  
+<head>  
+    <title>Livewire</title>  
+    @vite(['resources/js/app.js'])  
+</head>  
+<body>  
+    {{ $slot }}  
+  
+    @livewireScriptConfig <!-- [tl! highlight] -->
+</body>  
+</html>
+```
+
+When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it.
+
+The final step involves importing Alpine and Livewire in our `app.js` file, allowing us to register any custom resources, and ultimately starting Livewire:
+
+```js
+import {Livewire, Alpine} from '../../vendor/livewire/livewire/dist/livewire.esm';
+
+import mask from '@alpinejs/mask'
+Alpine.plugin(mask)
+
+Livewire.start()
+```
