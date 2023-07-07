@@ -57,7 +57,6 @@ export class Component {
 
         let newData = extractData(deepClone(snapshot.data))
 
-        console.log(dirty)
         Object.entries(dirty).forEach(([key, value]) => {
             let rootKey = key.split('.')[0]
             this.reactive[rootKey] = newData[rootKey]
