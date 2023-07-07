@@ -13,11 +13,10 @@ build({
 build({
     format: 'esm',
     entryPoints: [`js/index.js`],
-    outfile: `dist/livewire_esm.js`,
+    outfile: `dist/livewire.esm.js`,
     bundle: true,
     platform: 'node',
-    define: { CDN: false },
-    // external: ['alpinejs'],
+    define: { CDN: true },
 })
 
 let hash = crypto.randomBytes(4).toString('hex');
