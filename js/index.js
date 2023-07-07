@@ -6,7 +6,7 @@ import { dispatch as doDispatch } from './utils'
 import { start, stop, rescan } from './lifecycle'
 import Alpine from 'alpinejs'
 
-export let Livewire = {
+let Livewire = {
     directive,
     dispatchTo,
     start,
@@ -35,5 +35,9 @@ import './directives/index'
 window.Livewire = Livewire
 window.Alpine = Alpine
 
-// Start Livewire...
-Livewire.start()
+if(window.livewireScriptConfig === undefined) {
+    // Start Livewire...
+    Livewire.start()
+}
+
+export { Livewire, Alpine };

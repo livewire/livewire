@@ -91,10 +91,6 @@ function theTabIsInTheBackground() {
     return inBackground
 }
 
-function theDirectiveIsMissingKeepAlive(directive) {
-    return ! directive.modifiers.includes('keep-alive')
-}
-
 function theDirectiveIsOffTheElement(el) {
     return ! getDirectives(el).has('poll')
 }
