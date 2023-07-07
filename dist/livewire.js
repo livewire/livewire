@@ -3695,6 +3695,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (property in state) {
           state[property] = value;
         }
+        return true;
       }
     });
   }
