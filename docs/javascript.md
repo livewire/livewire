@@ -503,7 +503,7 @@ If the default page expired dialog isn't suitable, you can implement a custom so
 With the above code in your application, when a user's session has expired, instead of the default dialog they will receive a custom confirm dialog or whatever behavior you choose to implement.
 
 ### Loading Alpine and Livewire as modules
-By default Alpine and Livewire are loaded via an `<script src="livewire.js">` tag. This means you cannot control the order how these libraries are loaded. The consequence is that importing and registering Alpine plugins like the example below will no longer work.
+By default, Alpine and Livewire are loaded using the `<script src="livewire.js">` tag, which means you have no control over the order in which these libraries are loaded. Consequently, importing and registering Alpine plugins, as shown in the example below, will no longer function:
 
 ```js
 import mask from '@alpinejs/mask'
@@ -512,74 +512,31 @@ Alpine.plugin(mask)
 Alpine.start()
 ```
 
-### Todo: Pick solution
-
-### Solution #1
-To solve this, we can load Alpine and Livewire via npm and disable the assets from being loaded via the `<script>` tag. First, open `app/config/livewire.php` and set `inject_assets` to `false`.
-
-Next, you will need to manually add the `@livewireStyles` and `@livewireScriptConfig` directives to your layout like `resources/views/components/layouts/app.blade.php`:
+To address this issue, we need to inform Livewire that we want to use the ESM (ECMAScript module) version ourselves and prevent the injection of the `livewire.js` script tag. To achieve this, we must add the `@livewireScriptConfig` directive to our layout file (`resources/views/components/layouts/app.blade.php`):
 
 ```blade
 <html>  
 <head>  
-<title>Livewire</title>  
-  
-@vite(['resources/js/app.js'])  
-  
-@livewireStyles  
+    <title>Livewire</title>  
+    @vite(['resources/js/app.js'])  
 </head>  
-  
 <body>  
-{{ $slot }}  
+    {{ $slot }}  
   
-@livewireScriptConfig  
+    @livewireScriptConfig <!-- [tl! highlight] -->
 </body>  
 </html>
 ```
 
-This will ensure  the necessary styles are loaded and a few global properties are set on the window object that Livewire requires.
+When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it.
 
-Let's move on and install our npm dependencies using the `npm install` command:
-
-```shell
-npm install alpinejs @livewire/core
-```
-
-It is important to keep these npm packages up-to-date with the `livewire/livewire` package. This can be done automatically by registering an `post-autoload-dump` script which will execute every time you run `composer update` and make sure the npm package versions in your packages.json are kept in sync.
+The final step involves importing Alpine and Livewire in our `app.js` file, allowing us to register any custom resources, and ultimately starting Livewire:
 
 ```js
-{
-    "scripts": {  
-        "post-autoload-dump": [  
-        "@php artisan livewire:npm-update"  
-        ]
-    }
-}
-```
-
-Now that our dependencies are installed we can import these into our `app.js`, register our Alpine plugin and start Livewire:
-
-```js
-import Alpine from 'alpinejs'
-import Livewire from '@livewire/core'
+import {Livewire, Alpine} from '../../vendor/livewire/livewire/dist/livewire.esm';
 
 import mask from '@alpinejs/mask'
 Alpine.plugin(mask)
 
-Livewire.registerAlpine(Alpine)
 Livewire.start()
-```
-
-### Solution #2
-
-```js  
-import '../../vendor/livewire/livewire/dist/livewire';  
-
-import mask from '@alpinejs/mask'  
-Alpine.plugin(mask);
-
-Livewire.start();
-
-// For readability and IDE completion this would be a bit better:
-import {Alpine, Livewire} from '../../vendor/livewire/livewire/dist/livewire';
 ```
