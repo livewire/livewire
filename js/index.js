@@ -35,9 +35,5 @@ import './directives/index'
 window.Livewire = Livewire
 window.Alpine = Alpine
 
-doDispatch(document, 'livewire:init')
-
 // Start Livewire...
 Livewire.start()
-
-doDispatch(document, 'livewire:initialized')
