@@ -41,4 +41,3 @@ if(window.livewireScriptConfig === undefined) {
 }
 
 export { Livewire, Alpine };
-

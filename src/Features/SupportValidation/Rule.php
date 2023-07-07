@@ -9,6 +9,7 @@ use function Livewire\wrap;
 #[\Attribute]
 class Rule extends LivewireAttribute
 {
+    // @todo: support custom messages...
     function __construct(
         public $rule,
     ) {}

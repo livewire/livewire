@@ -2,6 +2,7 @@ import { debounceByComponent } from '@/debounce'
 import { directive } from '@/directives'
 import { on } from '@/events'
 import { handleFileUpload } from '@/features/supportFileUploads'
+import { closestComponent } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 
@@ -97,6 +98,14 @@ function isDirty(subject, dirty) {
 }
 
 function componentIsMissingProperty(component, property) {
+    if (property.startsWith('$parent')) {
+        let parent = closestComponent(component.el.parentElement, false)
+
+        if (! parent) return true
+
+        return componentIsMissingProperty(parent, property.split('$parent.')[1])
+    }
+
     let baseProperty = property.split('.')[0]
 
     return ! Object.keys(component.canonical).includes(baseProperty)
