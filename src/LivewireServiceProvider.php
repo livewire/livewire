@@ -9,6 +9,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->registerLivewireSingleton();
         $this->registerConfig();
         $this->bootEventBus();
+        $this->registerMechanisms();
     }
 
     public function boot()
@@ -40,9 +41,9 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         (new \Livewire\EventBus)->boot();
     }
 
-    protected function bootMechanisms()
+    protected function getMechanisms()
     {
-        foreach ([
+        return [
             \Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware::class,
             \Livewire\Mechanisms\HandleComponents\HandleComponents::class,
             \Livewire\Mechanisms\HandleRequests\HandleRequests::class,
@@ -52,7 +53,19 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Mechanisms\ComponentRegistry::class,
             \Livewire\Mechanisms\RenderComponent::class,
             \Livewire\Mechanisms\DataStore::class,
-        ] as $mechanism) {
+        ];
+    }
+
+    protected function registerMechanisms()
+    {
+        foreach ($this->getMechanisms() as $mechanism) {
+            (new $mechanism)->register($this);
+        }
+    }
+
+    protected function bootMechanisms()
+    {
+        foreach ($this->getMechanisms() as $mechanism) {
             (new $mechanism)->boot($this);
         }
     }

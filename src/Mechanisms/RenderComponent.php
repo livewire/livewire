@@ -17,10 +17,13 @@ use function Livewire\wrap;
 
 class RenderComponent
 {
-    function boot()
+    function register()
     {
         app()->singleton($this::class);
+    }
 
+    function boot()
+    {
         Blade::directive('livewire', [static::class, 'livewire']);
     }
 
