@@ -12,7 +12,7 @@ class AddLiveModifierToWireModelDirectives extends UpgradeStep
         $console->newLine();
         $console->line('This means all <options=underscore>wire:model</> directives must be changed to <options=underscore>wire:model.live</>.');
 
-        $confirm = $console->confirm('Would you like to change all occurences of wire:model to wire:model.live?', true);
+        $confirm = $console->confirm('Would you like to change all occurrences of wire:model to wire:model.live?', true);
 
         if (! $confirm) {
             return $next($console);

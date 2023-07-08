@@ -12,7 +12,7 @@ class RemoveDeferModifierFromWireModelDirectives extends UpgradeStep
         $console->newLine();
         $console->line('This means all <options=underscore>wire:model.defer</> directives must be changed to <options=underscore>wire:model</>.');
 
-        $confirm = $console->confirm('Would you like to change all occurences of wire:model.defer to wire:model?', true);
+        $confirm = $console->confirm('Would you like to change all occurrences of wire:model.defer to wire:model?', true);
 
         if (! $confirm) {
             return $next($console);

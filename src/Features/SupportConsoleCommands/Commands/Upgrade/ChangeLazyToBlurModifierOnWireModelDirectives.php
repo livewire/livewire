@@ -12,7 +12,7 @@ class ChangeLazyToBlurModifierOnWireModelDirectives extends UpgradeStep
         $console->newLine();
         $console->line('This means all <options=underscore>wire:model.lazy</> directives must be changed to <options=underscore>wire:model.blur</>.');
 
-        $confirm = $console->confirm('Would you like to change all occurences of wire:model.lazy to wire:model.blur?', true);
+        $confirm = $console->confirm('Would you like to change all occurrences of wire:model.lazy to wire:model.blur?', true);
 
         if (! $confirm) {
             return $next($console);
