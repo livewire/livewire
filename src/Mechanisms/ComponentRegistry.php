@@ -55,6 +55,13 @@ class ComponentRegistry
         return $name;
     }
 
+    function getClass($nameOrClassOrComponent)
+    {
+        [$class, $name] = $this->getNameAndClass($nameOrClassOrComponent);
+
+        return $class;
+    }
+
     function resolveMissingComponent($resolver)
     {
         $this->missingComponentResolvers[] = $resolver;
