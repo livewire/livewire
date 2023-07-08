@@ -8,20 +8,24 @@ class AddLiveModifierToEntangleDirectives extends UpgradeStep
 {
     public function handle(UpgradeCommand $console, \Closure $next)
     {
-        $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> The @entangle(...) directive is now deferred by default. </>");
-        $console->newLine();
-        $console->line('This means all <options=underscore>@entangle(...)</> directives must be changed to <options=underscore>@entangle(...).live</>.');
+        $this->interactiveReplacement(
+            console: $console,
+            title: 'The @entangle(...) directive is now deferred by default.',
+            before: '@entangle(...)',
+            after: '@entangle(...).live',
+            pattern: '/@entangle\((.*)\)(?!\.(?:defer|live))/',
+            replacement: '@entangle($1).live',
+        );
 
-        $confirm = $console->confirm('Would you like to change all occurrences of @entangle(...) to @entangle(...).live?', true);
-
-        if (! $confirm) {
-            return $next($console);
-        }
-
-        $console->line('Changing all occurrences of @entangle(...) to @entangle(...).live...');
-        $console->newLine();
-
-        $console->table(['File', 'Occurrences'], $this->patternReplacement('/@entangle\((.*)\)(?!\.(?:defer))/', '@entangle($1).live'));
+        $this->interactiveReplacement(
+            console: $console,
+            title: 'The $wire.entangle function is now deferred by default and has been changed to $wire.$entangle.',
+            before: '$wire.entangle(...)',
+            after: '$wire.$entangle(..., true)',
+            pattern: '/\$wire\.entangle\((.*)\)(?!\.(?:defer))/',
+            replacement: '$wire.$entangle($1, true)',
+            directories: ['resources/views', 'resources/js']
+        );
 
         return $next($console);
     }
