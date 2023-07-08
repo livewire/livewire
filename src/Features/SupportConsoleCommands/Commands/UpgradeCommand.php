@@ -5,9 +5,11 @@ namespace Livewire\Features\SupportConsoleCommands\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Pipeline;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToEntangleDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultNamespace;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeLazyToBlurModifierOnWireModelDirectives;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromEntanglelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ShowUpgradeIntroduction;
 
@@ -24,7 +26,9 @@ class UpgradeCommand extends Command
             ChangeDefaultNamespace::class,
             AddLiveModifierToWireModelDirectives::class,
             RemoveDeferModifierFromWireModelDirectives::class,
-            ChangeLazyToBlurModifierOnWireModelDirectives::class
+            ChangeLazyToBlurModifierOnWireModelDirectives::class,
+            AddLiveModifierToEntangleDirectives::class,
+            RemoveDeferModifierFromEntanglelDirectives::class,
         ])->thenReturn();
     }
 }
