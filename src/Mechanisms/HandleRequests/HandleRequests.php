@@ -13,10 +13,13 @@ class HandleRequests
 {
     protected $updateRoute;
 
-    function boot()
+    function register()
     {
         app()->singleton($this::class);
+    }
 
+    function boot()
+    {
         app($this::class)->setUpdateRoute(function ($handle) {
             return Route::post('/livewire/update', $handle)->middleware('web');
         });

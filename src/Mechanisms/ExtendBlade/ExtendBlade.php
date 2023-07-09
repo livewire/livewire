@@ -35,6 +35,11 @@ class ExtendBlade
         return ! empty(static::$livewireComponents);
     }
 
+    function register()
+    {
+        //
+    }
+
     function boot()
     {
         app()->singleton($this::class, fn () => $this);

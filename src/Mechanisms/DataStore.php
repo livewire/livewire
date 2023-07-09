@@ -6,9 +6,14 @@ use WeakMap;
 
 class DataStore
 {
-    function boot()
+    function register()
     {
         app()->singleton($this::class);
+    }
+
+    function boot()
+    {
+        //
     }
 
     protected $lookup;

@@ -27,9 +27,14 @@ class HandleComponents
     public static $renderStack = [];
     public static $componentStack = [];
 
-    public function boot()
+    public function register()
     {
         app()->singleton($this::class);
+    }
+
+    public function boot()
+    {
+        //
     }
 
     public function registerPropertySynthesizer($synth)

@@ -34,7 +34,7 @@ class LivewireManager
 
     function component($name, $class = null)
     {
-        app(ComponentRegistry::class)->register($name, $class);
+        app(ComponentRegistry::class)->component($name, $class);
     }
 
     function componentHook($hook)

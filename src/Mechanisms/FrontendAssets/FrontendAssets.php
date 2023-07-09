@@ -16,10 +16,13 @@ class FrontendAssets
 
     public $scriptTagAttributes = [];
 
-    public function boot()
+    public function register()
     {
         app()->singleton($this::class);
+    }
 
+    public function boot()
+    {
         app($this::class)->setScriptRoute(function ($handle) {
             return Route::get('/livewire/livewire.js', $handle);
         });
