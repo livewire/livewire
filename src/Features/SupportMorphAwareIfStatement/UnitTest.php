@@ -163,6 +163,50 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function it_does_not_add_condtional_markers_around_an_attribute_if_a_class_helper_with_conditions_appears()
+    {
+        $output = $this->compile(<<<'BLADE'
+            <div
+                @class([
+                    'flex',
+                ])
+
+                @if(true)
+                    data-no-block
+                @endif
+            >
+                @if(true)
+                    <span>foo</span>
+                @endif
+            </div>
+        BLADE);
+
+
+        $this->assertOccurrences(1, '__BLOCK__', $output);
+        $this->assertOccurrences(1, '__ENDBLOCK__', $output);
+
+        $output = $this->compile(<<<'BLADE'
+            <div
+                @class([
+                    'flex' => true,
+                ])
+
+                @if(true)
+                    data-no-block
+                @endif
+            >
+                @if(true)
+                    <span>foo</span>
+                @endif
+            </div>
+        BLADE);
+
+
+        $this->assertOccurrences(1, '__BLOCK__', $output);
+        $this->assertOccurrences(1, '__ENDBLOCK__', $output);
+    }
+
+    /** @test */
     public function supports_two_in_a_row()
     {
         $compiled = $this->compile('<div>
