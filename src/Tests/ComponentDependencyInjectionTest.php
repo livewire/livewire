@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Routing\UrlGenerator;
 
-class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
+class ComponentDependencyInjectionTest extends \Tests\TestCase
 {
     /** @test */
     public function component_mount_action_with_dependency()
