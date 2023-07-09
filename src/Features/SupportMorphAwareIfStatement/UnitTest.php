@@ -170,6 +170,7 @@ class UnitTest extends \Tests\TestCase
                 @class([
                     'flex',
                 ])
+
                 @if(true)
                     data-no-block
                 @endif
@@ -189,6 +190,7 @@ class UnitTest extends \Tests\TestCase
                 @class([
                     'flex' => true,
                 ])
+
                 @if(true)
                     data-no-block
                 @endif
