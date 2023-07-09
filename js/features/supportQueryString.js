@@ -12,6 +12,8 @@ on('component.init', ({ component }) => {
     Object.entries(queryString).forEach(([key, value]) => {
         let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value)
 
+        if (! as) as = name
+
         let initialValue = dataGet(component.ephemeral, name)
 
         let { initial, replace, push, pop } = track(as, initialValue, alwaysShow)

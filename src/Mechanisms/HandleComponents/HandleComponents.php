@@ -11,6 +11,7 @@ use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Exception;
+use Illuminate\Support\Facades\View;
 
 class HandleComponents
 {
@@ -26,9 +27,14 @@ class HandleComponents
     public static $renderStack = [];
     public static $componentStack = [];
 
-    public function boot()
+    public function register()
     {
         app()->singleton($this::class);
+    }
+
+    public function boot()
+    {
+        //
     }
 
     public function registerPropertySynthesizer($synth)
@@ -255,9 +261,15 @@ class HandleComponents
 
     protected function getView($component)
     {
+        $viewPath = config('livewire.view_path', resource_path('views/livewire'));
+
+        $dotName = $component->getName();
+
+        $fileName = str($dotName)->replace('.', '/')->__toString();
+
         $viewOrString = method_exists($component, 'render')
             ? wrap($component)->render()
-            : view("livewire.{$component->getName()}");
+            : View::file($viewPath . '/' . $fileName . '.blade.php');
 
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
 

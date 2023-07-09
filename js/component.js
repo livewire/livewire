@@ -19,6 +19,10 @@ export class Component {
 
         this.snapshot = JSON.parse(this.snapshotEncoded)
 
+        if (! this.snapshot) {
+            throw new `Snapshot missing on Livewire component with id: ` + this.id
+        }
+
         this.name = this.snapshot.memo.name
 
         this.effects = JSON.parse(el.getAttribute('wire:effects'))
@@ -57,7 +61,6 @@ export class Component {
 
         let newData = extractData(deepClone(snapshot.data))
 
-        console.log(dirty)
         Object.entries(dirty).forEach(([key, value]) => {
             let rootKey = key.split('.')[0]
             this.reactive[rootKey] = newData[rootKey]

@@ -1,42 +1,27 @@
 
+## Big Laracon goals:
+- [ ] New site ready
+- [ ] Livewire 3 beta "good enough"
+- [ ] Talk as good and polished as possible
+- [ ] Have cool swag
+
 ## Todo:
-
-#### V3 Features
-- [x] Auto inject assets
-- [x] "locked" properties
-- [x] `$parent`
-- [x] Reactive properties
-- [x] `@teleport`
-- [x] `wire:model` props
-- [x] `wire:transition`
-- [x] JavaScript functions
-- [x] Lazy components
-- [x] `@if` markers (Josh)
-- [x] PHP Attributes
-- [x] SPA Mode (`wire:navigate`, `@persist`)
-- [ ] Hot-reloading
-
-#### V2 Parity
-- [x] Eloquent model support
-- [x] File uploads (javascript)
-- [x] Persistant middleware (Josh)
-- [x] Session expiration (Josh)
+- [x] Get testimonials
+- [x] Write advanced documentation
+- [x] Polish config file
+- [ ] Write morphing documentation
+- [ ] Review advanced documentation
+- [ ] Write and practice talk
+- [ ] Finish landing page copy
+- [ ] Fix bug where submit form disabling isn't re-enabled on failure
+- [ ] Put old site on new URL: 'v2.laravel-livewire.com'
+- [ ] Add proper old site redirects
+- [ ] Rethink Alpine bundling and JS extension/upgrade path
+- [ ] Add relevant docblocks
+- [ ] Resolve "PSR-4" not compliant artisan messages
+- [ ] Support `->assertStatus()`
+- [ ] Work through `@todo` comments
+- [ ] Work through `->markTestSkipped()` statements
 - [ ] Detect multiple root elements
-- [ ] JS hooks and `Livewire.?`
-- [ ] Work through all `@todo` comments
-- [ ] Remove all `->markTestSkipped()` statements
-
-#### Documentation
-- [x] Rewrite it lol
-
-#### Finishing touches
-- [ ] Unify modern/legacy tests and "TestCase"s
-- [ ] Add JS element & component
-- [ ] Performance testing
-- [ ] Refactor JS (hooks helpers, synthetic, etc.)
-- [ ] Finalize internal event names
-- [ ] Finalize internal exceptions
-- [ ] Brainstorm Form Object solution
-- [ ] Brainstorm 3rd party plugin API
 - [ ] Brainstorm providing key-value attribute methods (protected getListeners() kinda thing)
 

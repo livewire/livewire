@@ -23,10 +23,13 @@ class PersistentMiddleware
     protected $path;
     protected $method;
 
-    function boot()
+    function register()
     {
         app()->singleton($this::class, fn () => $this);
+    }
 
+    function boot()
+    {
         on('dehydrate', function ($component, $context) {
             [$path, $method] = $this->extractPathAndMethodFromRequest();
 

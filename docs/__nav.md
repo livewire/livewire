@@ -29,10 +29,12 @@ Features:
     Offline States: { uri: /docs/offline, file: /offline.md }
     Teleport: { uri: /docs/teleport, file: /teleport.md }
 Concepts:
+    Morphing: { uri: /docs/morphing, file: /morph.md }
     Hydration: { uri: /docs/hydration, file: /hydration.md }
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 Advanced:
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
+    Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }
 ---
 
 Concepts:

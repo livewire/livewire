@@ -101,6 +101,9 @@
     if (document.querySelector("[data-csrf]")) {
       return document.querySelector("[data-csrf]").getAttribute("data-csrf");
     }
+    if (window.livewireScriptConfig["csrf"] ?? false) {
+      return window.livewireScriptConfig["csrf"];
+    }
     throw "Livewire: No CSRF token detected";
   }
   function contentIsFromDump(content) {
@@ -184,7 +187,7 @@
   }
 
   // js/request.js
-  var updateUri = document.querySelector("[data-uri]").getAttribute("data-uri");
+  var updateUri = document.querySelector("[data-uri]")?.getAttribute("data-uri") ?? window.livewireScriptConfig["uri"] ?? null;
   function triggerSend() {
     bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
       sendRequestToServer();
@@ -200,6 +203,7 @@
     }, 5);
   }
   async function sendRequestToServer() {
+    prepareCommitPayloads();
     await queueNewRequestAttemptsWhile(async () => {
       let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
       let options = {
@@ -266,9 +270,12 @@
       succeed({ status: response.status, json: JSON.parse(content) });
     });
   }
-  function compileCommitPayloads() {
+  function prepareCommitPayloads() {
     let commits = getCommits();
     commits.forEach((i) => i.prepare());
+  }
+  function compileCommitPayloads() {
+    let commits = getCommits();
     let commitPayloads = [];
     let successReceivers = [];
     let failureReceivers = [];
@@ -487,7 +494,7 @@
     effect = override;
   }
   function elementBoundEffect(el) {
-    let cleanup22 = () => {
+    let cleanup2 = () => {
     };
     let wrappedEffect = (callback) => {
       let effectReference = effect(callback);
@@ -498,7 +505,7 @@
         };
       }
       el._x_effects.add(effectReference);
-      cleanup22 = () => {
+      cleanup2 = () => {
         if (effectReference === void 0)
           return;
         el._x_effects.delete(effectReference);
@@ -507,7 +514,7 @@
       return effectReference;
     };
     return [wrappedEffect, () => {
-      cleanup22();
+      cleanup2();
     }];
   }
   var onAttributeAddeds = [];
@@ -810,9 +817,9 @@
         if (memoizedUtilities) {
           return memoizedUtilities;
         } else {
-          let [utilities, cleanup22] = getElementBoundUtilities(el);
+          let [utilities, cleanup2] = getElementBoundUtilities(el);
           memoizedUtilities = { interceptor, ...utilities };
-          onElRemoved(el, cleanup22);
+          onElRemoved(el, cleanup2);
           return memoizedUtilities;
         }
       }
@@ -996,13 +1003,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function getElementBoundUtilities(el) {
     let cleanups = [];
-    let cleanup22 = (callback) => cleanups.push(callback);
+    let cleanup2 = (callback) => cleanups.push(callback);
     let [effect32, cleanupEffect] = elementBoundEffect(el);
     cleanups.push(cleanupEffect);
     let utilities = {
       Alpine: alpine_default,
       effect: effect32,
-      cleanup: cleanup22,
+      cleanup: cleanup2,
       evaluateLater: evaluateLater.bind(evaluateLater, el),
       evaluate: evaluate.bind(evaluate, el)
     };
@@ -1013,8 +1020,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let noop = () => {
     };
     let handler3 = directiveHandlers[directive22.type] || noop;
-    let [utilities, cleanup22] = getElementBoundUtilities(el);
-    onAttributeRemoved(el, directive22.original, cleanup22);
+    let [utilities, cleanup2] = getElementBoundUtilities(el);
+    onAttributeRemoved(el, directive22.original, cleanup2);
     let fullHandler = () => {
       if (el._x_ignore || el._x_ignoreSelf)
         return;
@@ -1022,7 +1029,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       handler3 = handler3.bind(handler3, el, directive22, utilities);
       isDeferringHandlers ? directiveHandlerStacks.get(currentHandlerStackKey).push(handler3) : handler3();
     };
-    fullHandler.runCleanups = cleanup22;
+    fullHandler.runCleanups = cleanup2;
     return fullHandler;
   }
   var startingWith = (subject, replacement) => ({ name, value }) => {
@@ -2674,7 +2681,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function warnMissingPluginMagic(name, magicName, slug) {
     magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
-  directive("modelable", (el, { expression }, { effect: effect32, evaluateLater: evaluateLater22, cleanup: cleanup22 }) => {
+  directive("modelable", (el, { expression }, { effect: effect32, evaluateLater: evaluateLater22, cleanup: cleanup2 }) => {
     let func = evaluateLater22(expression);
     let innerGet = () => {
       let result;
@@ -2707,11 +2714,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           innerSet(value);
         }
       });
-      cleanup22(releaseEntanglement);
+      cleanup2(releaseEntanglement);
     });
   });
   var teleportContainerDuringClone = document.createElement("div");
-  directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup22 }) => {
+  directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup2 }) => {
     if (el.tagName.toLowerCase() !== "template")
       warn("x-teleport can only be used on a <template> tag", el);
     let target = skipDuringClone(() => {
@@ -2744,13 +2751,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       initTree(clone22);
       clone22._x_ignore = true;
     });
-    cleanup22(() => clone22.remove());
+    cleanup2(() => clone22.remove());
   });
   var handler = () => {
   };
-  handler.inline = (el, { modifiers }, { cleanup: cleanup22 }) => {
+  handler.inline = (el, { modifiers }, { cleanup: cleanup2 }) => {
     modifiers.includes("self") ? el._x_ignoreSelf = true : el._x_ignore = true;
-    cleanup22(() => {
+    cleanup2(() => {
       modifiers.includes("self") ? delete el._x_ignoreSelf : delete el._x_ignore;
     });
   };
@@ -2905,7 +2912,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return modifier;
     }).filter((modifier) => modifier);
   }
-  directive("model", (el, { modifiers, expression }, { effect: effect32, cleanup: cleanup22 }) => {
+  directive("model", (el, { modifiers, expression }, { effect: effect32, cleanup: cleanup2 }) => {
     let scopeTarget = el;
     if (modifiers.includes("parent")) {
       scopeTarget = el.parentNode;
@@ -2954,12 +2961,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!el._x_removeModelListeners)
       el._x_removeModelListeners = {};
     el._x_removeModelListeners["default"] = removeListener;
-    cleanup22(() => el._x_removeModelListeners["default"]());
+    cleanup2(() => el._x_removeModelListeners["default"]());
     if (el.form) {
       let removeResetListener = on2(el.form, "reset", [], (e) => {
         nextTick(() => el._x_model && el._x_model.set(el.value));
       });
-      cleanup22(() => removeResetListener());
+      cleanup2(() => removeResetListener());
     }
     el._x_model = {
       get() {
@@ -3076,7 +3083,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el._x_keyExpression = expression;
   }
   addRootSelector(() => `[${prefix("data")}]`);
-  directive("data", skipDuringClone((el, { expression }, { cleanup: cleanup22 }) => {
+  directive("data", skipDuringClone((el, { expression }, { cleanup: cleanup2 }) => {
     expression = expression === "" ? "{}" : expression;
     let magicContext = {};
     injectMagics(magicContext, el);
@@ -3090,7 +3097,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     initInterceptors(reactiveData);
     let undo = addScopeToNode(el, reactiveData);
     reactiveData["init"] && evaluate(el, reactiveData["init"]);
-    cleanup22(() => {
+    cleanup2(() => {
       reactiveData["destroy"] && evaluate(el, reactiveData["destroy"]);
       undo();
     });
@@ -3141,14 +3148,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       firstTime = false;
     }));
   });
-  directive("for", (el, { expression }, { effect: effect32, cleanup: cleanup22 }) => {
+  directive("for", (el, { expression }, { effect: effect32, cleanup: cleanup2 }) => {
     let iteratorNames = parseForExpression(expression);
     let evaluateItems = evaluateLater(el, iteratorNames.items);
     let evaluateKey = evaluateLater(el, el._x_keyExpression || "index");
     el._x_prevKeys = [];
     el._x_lookup = {};
     effect32(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
-    cleanup22(() => {
+    cleanup2(() => {
       Object.values(el._x_lookup).forEach((el2) => el2.remove());
       delete el._x_prevKeys;
       delete el._x_lookup;
@@ -3312,15 +3319,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function handler2() {
   }
-  handler2.inline = (el, { expression }, { cleanup: cleanup22 }) => {
+  handler2.inline = (el, { expression }, { cleanup: cleanup2 }) => {
     let root = closestRoot(el);
     if (!root._x_refs)
       root._x_refs = {};
     root._x_refs[expression] = el;
-    cleanup22(() => delete root._x_refs[expression]);
+    cleanup2(() => delete root._x_refs[expression]);
   };
   directive("ref", handler2);
-  directive("if", (el, { expression }, { effect: effect32, cleanup: cleanup22 }) => {
+  directive("if", (el, { expression }, { effect: effect32, cleanup: cleanup2 }) => {
     let evaluate22 = evaluateLater(el, expression);
     let show = () => {
       if (el._x_currentIfEl)
@@ -3352,14 +3359,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     effect32(() => evaluate22((value) => {
       value ? show() : hide();
     }));
-    cleanup22(() => el._x_undoIf && el._x_undoIf());
+    cleanup2(() => el._x_undoIf && el._x_undoIf());
   });
   directive("id", (el, { expression }, { evaluate: evaluate22 }) => {
     let names = evaluate22(expression);
     names.forEach((name) => setIdRoot(el, name));
   });
   mapAttributes(startingWith("@", into(prefix("on:"))));
-  directive("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup22 }) => {
+  directive("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup2 }) => {
     let evaluate22 = expression ? evaluateLater(el, expression) : () => {
     };
     if (el.tagName.toLowerCase() === "template") {
@@ -3372,7 +3379,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       evaluate22(() => {
       }, { scope: { $event: e }, params: [e] });
     });
-    cleanup22(() => removeListener());
+    cleanup2(() => removeListener());
   }));
   warnMissingPluginDirective("Collapse", "collapse", "collapse");
   warnMissingPluginDirective("Intersect", "intersect", "intersect");
@@ -3438,7 +3445,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return uploadManagers.get(component);
   }
-  function handleFileUpload(el, property, component, cleanup3) {
+  function handleFileUpload(el, property, component, cleanup2) {
     let manager = getUploadManager(component);
     let start4 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
     let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
@@ -3465,7 +3472,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el.value = null;
     };
     el.addEventListener("click", clearFileInputValue);
-    cleanup3(() => {
+    cleanup2(() => {
       el.removeEventListener("change", eventHandler);
       el.removeEventListener("click", clearFileInputValue);
     });
@@ -3691,6 +3698,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (property in state) {
           state[property] = value;
         }
+        return true;
       }
     });
   }
@@ -3783,6 +3791,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.__livewireId = this.id;
       this.snapshotEncoded = el.getAttribute("wire:snapshot");
       this.snapshot = JSON.parse(this.snapshotEncoded);
+      if (!this.snapshot) {
+        throw new `Snapshot missing on Livewire component with id: `() + this.id;
+      }
       this.name = this.snapshot.memo.name;
       this.effects = JSON.parse(el.getAttribute("wire:effects"));
       this.canonical = extractData(deepClone(this.snapshot.data));
@@ -3802,7 +3813,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.effects = effects;
       this.canonical = extractData(deepClone(snapshot.data));
       let newData = extractData(deepClone(snapshot.data));
-      console.log(dirty);
       Object.entries(dirty).forEach(([key, value]) => {
         let rootKey = key.split(".")[0];
         this.reactive[rootKey] = newData[rootKey];
@@ -4841,7 +4851,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
     });
-    Alpine4.directive("trap", Alpine4.skipDuringClone((el, { expression, modifiers }, { effect: effect4, evaluateLater: evaluateLater3, cleanup: cleanup3 }) => {
+    Alpine4.directive("trap", Alpine4.skipDuringClone((el, { expression, modifiers }, { effect: effect4, evaluateLater: evaluateLater3, cleanup: cleanup2 }) => {
       let evaluator = evaluateLater3(expression);
       let oldValue = false;
       let options = {
@@ -4885,7 +4895,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         oldValue = !!value;
       }));
-      cleanup3(releaseFocus);
+      cleanup2(releaseFocus);
     }, (el, { expression, modifiers }, { evaluate: evaluate3 }) => {
       if (modifiers.includes("inert") && evaluate3(expression))
         setInert(el);
@@ -4977,7 +4987,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // ../alpine/packages/intersect/dist/module.esm.js
   function src_default5(Alpine4) {
-    Alpine4.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater3, cleanup: cleanup3 }) => {
+    Alpine4.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater3, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater3(expression);
       let options = {
         rootMargin: getRootMargin(modifiers),
@@ -4992,7 +5002,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       }, options);
       observer3.observe(el);
-      cleanup3(() => {
+      cleanup2(() => {
         observer3.disconnect();
       });
     });
@@ -5517,7 +5527,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     effect3 = override;
   }
   function elementBoundEffect2(el) {
-    let cleanup3 = () => {
+    let cleanup2 = () => {
     };
     let wrappedEffect = (callback) => {
       let effectReference = effect3(callback);
@@ -5528,7 +5538,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         };
       }
       el._x_effects.add(effectReference);
-      cleanup3 = () => {
+      cleanup2 = () => {
         if (effectReference === void 0)
           return;
         el._x_effects.delete(effectReference);
@@ -5537,7 +5547,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return effectReference;
     };
     return [wrappedEffect, () => {
-      cleanup3();
+      cleanup2();
     }];
   }
   var onAttributeAddeds2 = [];
@@ -5840,9 +5850,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (memoizedUtilities) {
           return memoizedUtilities;
         } else {
-          let [utilities, cleanup3] = getElementBoundUtilities2(el);
+          let [utilities, cleanup2] = getElementBoundUtilities2(el);
           memoizedUtilities = { interceptor: interceptor2, ...utilities };
-          onElRemoved2(el, cleanup3);
+          onElRemoved2(el, cleanup2);
           return memoizedUtilities;
         }
       }
@@ -6026,13 +6036,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function getElementBoundUtilities2(el) {
     let cleanups = [];
-    let cleanup3 = (callback) => cleanups.push(callback);
+    let cleanup2 = (callback) => cleanups.push(callback);
     let [effect22, cleanupEffect] = elementBoundEffect2(el);
     cleanups.push(cleanupEffect);
     let utilities = {
       Alpine: alpine_default2,
       effect: effect22,
-      cleanup: cleanup3,
+      cleanup: cleanup2,
       evaluateLater: evaluateLater2.bind(evaluateLater2, el),
       evaluate: evaluate2.bind(evaluate2, el)
     };
@@ -6043,8 +6053,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let noop = () => {
     };
     let handler3 = directiveHandlers2[directive22.type] || noop;
-    let [utilities, cleanup3] = getElementBoundUtilities2(el);
-    onAttributeRemoved2(el, directive22.original, cleanup3);
+    let [utilities, cleanup2] = getElementBoundUtilities2(el);
+    onAttributeRemoved2(el, directive22.original, cleanup2);
     let fullHandler = () => {
       if (el._x_ignore || el._x_ignoreSelf)
         return;
@@ -6052,7 +6062,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       handler3 = handler3.bind(handler3, el, directive22, utilities);
       isDeferringHandlers2 ? directiveHandlerStacks2.get(currentHandlerStackKey2).push(handler3) : handler3();
     };
-    fullHandler.runCleanups = cleanup3;
+    fullHandler.runCleanups = cleanup2;
     return fullHandler;
   }
   function toTransformedAttributes2(callback = () => {
@@ -7062,7 +7072,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       navigateTo(createUrlObjectFromString(url));
     };
     Alpine22.addInitSelector(() => `[${prefix2("navigate")}]`);
-    Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater22, cleanup: cleanup3 }) => {
+    Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater22, cleanup: cleanup2 }) => {
       let shouldPrefetchOnHover = modifiers.includes("hover");
       shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
         let destination = extractDestinationFromLink(el);
@@ -7732,18 +7742,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
-  on("commit", ({ component, respond }) => {
-    respond(() => {
-      cleanup2(component);
-    });
-  });
-  function cleanup2(component) {
-    if (!cleanupStackByComponentId[component.id])
-      return;
-    while (cleanupStackByComponentId[component.id].length > 0) {
-      cleanupStackByComponentId[component.id].shift()();
-    }
-  }
 
   // js/features/supportFileDownloads.js
   on("commit", ({ component, succeed }) => {
@@ -7809,6 +7807,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     Object.entries(queryString).forEach(([key, value]) => {
       let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value);
+      if (!as)
+        as = name;
       let initialValue = dataGet(component.ephemeral, name);
       let { initial, replace: replace2, push: push2, pop } = track2(as, initialValue, alwaysShow);
       if (use === "replace") {
@@ -7968,7 +7968,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on("morph.added", (el) => {
     el.__addedByMorph = true;
   });
-  directive2("transition", ({ el, directive: directive4, component, cleanup: cleanup3 }) => {
+  directive2("transition", ({ el, directive: directive4, component, cleanup: cleanup2 }) => {
     let visibility = module_default.reactive({ state: false });
     module_default.bind(el, {
       [directive4.rawName.replace("wire:", "x-")]: "",
@@ -7991,7 +7991,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         cleanups.forEach((i) => i());
       }));
     }));
-    cleanup3(() => cleanups.forEach((i) => i()));
+    cleanup2(() => cleanups.forEach((i) => i()));
   });
 
   // js/debounce.js
@@ -8064,12 +8064,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var onlineHandlers = /* @__PURE__ */ new Set();
   window.addEventListener("offline", () => offlineHandlers.forEach((i) => i()));
   window.addEventListener("online", () => onlineHandlers.forEach((i) => i()));
-  directive2("offline", ({ el, directive: directive4, cleanup: cleanup3 }) => {
+  directive2("offline", ({ el, directive: directive4, cleanup: cleanup2 }) => {
     let setOffline = () => toggleBooleanStateDirective(el, directive4, true);
     let setOnline = () => toggleBooleanStateDirective(el, directive4, false);
     offlineHandlers.add(setOffline);
     onlineHandlers.add(setOnline);
-    cleanup3(() => {
+    cleanup2(() => {
       offlineHandlers.delete(setOffline);
       onlineHandlers.delete(setOnline);
     });
@@ -8202,7 +8202,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire:stream.js
-  directive2("stream", ({ el, directive: directive4, component, cleanup: cleanup3 }) => {
+  directive2("stream", ({ el, directive: directive4, component, cleanup: cleanup2 }) => {
     let { expression, modifiers } = directive4;
     let off = on("stream", ({ name, content, append }) => {
       if (name !== expression)
@@ -8213,7 +8213,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el.innerHTML = content;
       }
     });
-    cleanup3(off);
+    cleanup2(off);
   });
   on("request", ({ respond }) => {
     respond((mutableObject) => {
@@ -8323,7 +8323,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       timeout = setTimeout(later, wait);
     };
   }
-  directive2("model", ({ el, directive: directive4, component, cleanup: cleanup3 }) => {
+  directive2("model", ({ el, directive: directive4, component, cleanup: cleanup2 }) => {
     let { expression, modifiers } = directive4;
     if (!expression) {
       return console.warn("Livewire: [wire:model] is missing a value.", el);
@@ -8332,7 +8332,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return console.warn('Livewire: [wire:model="' + expression + '"] property does not exist on component: [' + component.name + "]", el);
     }
     if (el.type && el.type.toLowerCase() === "file") {
-      return handleFileUpload(el, expression, component, cleanup3);
+      return handleFileUpload(el, expression, component, cleanup2);
     }
     let isLive = modifiers.includes("live");
     let isLazy = modifiers.includes("lazy");
@@ -8373,6 +8373,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
   }
   function componentIsMissingProperty(component, property) {
+    if (property.startsWith("$parent")) {
+      let parent = closestComponent(component.el.parentElement, false);
+      if (!parent)
+        return true;
+      return componentIsMissingProperty(parent, property.split("$parent.")[1]);
+    }
     let baseProperty = property.split(".")[0];
     return !Object.keys(component.canonical).includes(baseProperty);
   }
@@ -8457,9 +8463,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function theTabIsInTheBackground() {
     return inBackground;
   }
-  function theDirectiveIsMissingKeepAlive(directive4) {
-    return !directive4.modifiers.includes("keep-alive");
-  }
   function theDirectiveIsOffTheElement(el) {
     return !getDirectives(el).has("poll");
   }
@@ -8510,9 +8513,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     console.warn("Detected multiple instances of Alpine running");
   window.Livewire = Livewire;
   window.Alpine = module_default;
-  dispatch(document, "livewire:init");
-  Livewire.start();
-  dispatch(document, "livewire:initialized");
+  if (window.livewireScriptConfig === void 0) {
+    Livewire.start();
+  }
 })();
 /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
  * @license MIT */

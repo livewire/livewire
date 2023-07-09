@@ -394,7 +394,7 @@ Every time a new component is discovered by Livewire—whether on the initial pa
 For more information, check out the [Livewire documentation on the component object](#the-component-object).
 
 ```js
-on('component.init', ({ component )} => {
+Livewire.hook('component.init', ({ component )} => {
     //
 })
 ```
@@ -406,7 +406,7 @@ In addition to triggering an event when new component's are initialized, Livewir
 This can be used to provide custom Livewire HTML attributes within your application.
 
 ```js
-on('element.init', ({ component, el }) => {
+Livewire.hook('element.init', ({ component, el }) => {
     //
 })
 ```
@@ -422,7 +422,7 @@ These hooks expose `commit` objects. You can learn more about their schema by re
 The `commit.prepare` hook will be triggered immediately before a request is sent to the server. This gives you a chance to add any last minute updates or calls to the outgoing request.
 
 ```js
-on('commit.prepare', ({ component, commit }) => {
+Livewire.hook('commit.prepare', ({ component, commit }) => {
     // Runs before commit payloads are collected and sent to the server...
 })
 ```
@@ -431,14 +431,14 @@ on('commit.prepare', ({ component, commit }) => {
 
 Every time a Livewire component is sent to the server, a _commit_ is made. To hook into the lifecycle and contents of an individual commit, Livewire exposes a `commit` hook.
 
-This hooks is extremely powerful as it provides methods for hooking into both the request and response of a Livewire commit.
+This hook is extremely powerful as it provides methods for hooking into both the request and response of a Livewire commit.
 
 ```js
-on('commit', ({ component, commit, respond, succeed, fail }) => {
+Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
     // Runs immediately before a commit's payload is sent to the server...
 
     respond(() => {
-        // Runs after a any response is received but before it's processed...
+        // Runs after a response is received but before it's processed...
     })
 
     succeed(({ snapshot, effect }) => {
@@ -457,7 +457,7 @@ on('commit', ({ component, commit, respond, succeed, fail }) => {
 If you'd like to instead hook into the entire HTTP request going out to the server and coming back, you can do so using the `request` hook.
 
 ```js
-on('request', ({ uri, options, payload, respond, succeed, fail }) => {
+Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
     // Runs after commit payloads are compiled, but before a network request is sent...
 
     respond(({ status, response }) => {
@@ -501,3 +501,42 @@ If the default page expired dialog isn't suitable, you can implement a custom so
 ```
 
 With the above code in your application, when a user's session has expired, instead of the default dialog they will receive a custom confirm dialog or whatever behavior you choose to implement.
+
+### Loading Alpine and Livewire as modules
+By default, Alpine and Livewire are loaded using the `<script src="livewire.js">` tag, which means you have no control over the order in which these libraries are loaded. Consequently, importing and registering Alpine plugins, as shown in the example below, will no longer function:
+
+```js
+import mask from '@alpinejs/mask'
+
+Alpine.plugin(mask)
+Alpine.start()
+```
+
+To address this issue, we need to inform Livewire that we want to use the ESM (ECMAScript module) version ourselves and prevent the injection of the `livewire.js` script tag. To achieve this, we must add the `@livewireScriptConfig` directive to our layout file (`resources/views/components/layouts/app.blade.php`):
+
+```blade
+<html>  
+<head>  
+    <title>Livewire</title>  
+    @vite(['resources/js/app.js'])  
+</head>  
+<body>  
+    {{ $slot }}  
+  
+    @livewireScriptConfig <!-- [tl! highlight] -->
+</body>  
+</html>
+```
+
+When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it.
+
+The final step involves importing Alpine and Livewire in our `app.js` file, allowing us to register any custom resources, and ultimately starting Livewire:
+
+```js
+import {Livewire, Alpine} from '../../vendor/livewire/livewire/dist/livewire.esm';
+
+import mask from '@alpinejs/mask'
+Alpine.plugin(mask)
+
+Livewire.start()
+```

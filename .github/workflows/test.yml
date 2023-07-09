@@ -4,8 +4,14 @@ on:
   push:
     branches:
       - "**"
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
   pull_request:
     types: [ready_for_review, synchronize, opened]
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
 
 jobs:
   build:

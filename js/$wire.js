@@ -54,6 +54,8 @@ export function generateWireObject(component, state) {
             if (property in state) {
                 state[property] = value
             }
+
+            return true
         },
     })
 }

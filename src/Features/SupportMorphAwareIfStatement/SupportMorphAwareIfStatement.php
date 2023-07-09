@@ -6,8 +6,11 @@ use Livewire\ComponentHook;
 
 class SupportMorphAwareIfStatement extends ComponentHook
 {
+    // @todo: exempt @class and support @error?
     static function provide()
     {
+        if (! config('inject_morph_markers', true)) return;
+
         static::registerPrecompilers(
             app('livewire')->precompiler(...)
         );

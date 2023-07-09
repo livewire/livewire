@@ -11,12 +11,17 @@ class ComponentRegistry
     protected $nonAliasedClasses = [];
     protected $aliases = [];
 
-    function boot()
+    function register()
     {
         app()->singleton($this::class);
     }
 
-    function register($name, $class = null)
+    function boot()
+    {
+        //
+    }
+
+    function component($name, $class = null)
     {
         if (is_null($class)) {
             $this->nonAliasedClasses[] = $name;
@@ -53,6 +58,13 @@ class ComponentRegistry
         [$class, $name] = $this->getNameAndClass($nameOrClassOrComponent);
 
         return $name;
+    }
+
+    function getClass($nameOrClassOrComponent)
+    {
+        [$class, $name] = $this->getNameAndClass($nameOrClassOrComponent);
+
+        return $class;
     }
 
     function resolveMissingComponent($resolver)

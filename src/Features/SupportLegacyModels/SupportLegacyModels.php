@@ -16,7 +16,7 @@ class SupportLegacyModels extends ComponentHook
     static function provide()
     {
         // Only enable this feature if config option is set to `true`.
-        if (config('livewire.eloquent_model_binding', false) !== true) return;
+        if (config('livewire.model_binding', false) !== true) return;
 
         app('livewire')->propertySynthesizer([
             EloquentModelSynth::class,

@@ -6,7 +6,7 @@ import { getCommits, flushCommits } from './commit'
 /**
  * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
  */
-let updateUri = document.querySelector('[data-uri]').getAttribute('data-uri')
+let updateUri = document.querySelector('[data-uri]')?.getAttribute('data-uri') ?? window.livewireScriptConfig['uri'] ?? null
 
 export function triggerSend() {
     bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
@@ -32,6 +32,8 @@ function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callb
  * store a new snapshot, and handle any side effects.
  */
 async function sendRequestToServer() {
+    prepareCommitPayloads()
+
     await queueNewRequestAttemptsWhile(async () => {
         let [payload, handleSuccess, handleFailure] = compileCommitPayloads()
 
@@ -133,12 +135,16 @@ async function sendRequestToServer() {
     })
 }
 
-function compileCommitPayloads() {
+function prepareCommitPayloads() {
     let commits = getCommits()
 
     // Give each commit a chance to do any last-minute prep
     // before being sent to the server.
     commits.forEach(i => i.prepare())
+}
+
+function compileCommitPayloads() {
+    let commits = getCommits()
 
     let commitPayloads = []
 

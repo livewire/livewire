@@ -8,6 +8,11 @@ use Livewire\Drawer\Regexes;
 
 class CompileLivewireTags extends ComponentTagCompiler
 {
+    public function register()
+    {
+        //
+    }
+
     public function boot()
     {
         app('blade.compiler')->precompiler(function ($string) {
