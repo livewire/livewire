@@ -66,11 +66,17 @@ trait WithPagination
 
     public function previousPage($pageName = 'page')
     {
+        if (!isset($this->paginators[$pageName]) && isset($this->$pageName)) {
+            $this->paginators[$pageName] = $this->{$pageName};
+        }
         $this->setPage(max($this->paginators[$pageName] - 1, 1), $pageName);
     }
 
     public function nextPage($pageName = 'page')
     {
+        if (!isset($this->paginators[$pageName]) && isset($this->$pageName)) {
+            $this->paginators[$pageName] = $this->{$pageName};
+        }
         $this->setPage($this->paginators[$pageName] + 1, $pageName);
     }
 
