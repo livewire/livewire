@@ -34,7 +34,7 @@ class Dashboard extends Component
 </div>
 ```
 
-On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/understanding-nesting).
+On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/understanding-nesting#every-component-is-an-island).
 
 ## Passing props to children
 
@@ -170,7 +170,7 @@ When passing PHP variables into a component, the variable name and the prop name
 
 Developers new to Livewire expect that props are "reactive" by default. In other words, they expect that when a parent changes the value of a prop being passed into a child component, the child component will automatically be updated. However, by default, Livewire props are not reactive.
 
-When using Livewire, [every component is an island](/docs/understanding-nesting). This means that when an update is triggered on the parent and a network request is dispatched, only the parent component's state is sent to the server to re-render - not the child component's. The intention behind this behavior is to only send the minimal amount of data back and forth between the server and client, making updates as performant as possible.
+When using Livewire, [every component is an island](/docs/understanding-nesting#every-component-is-an-island). This means that when an update is triggered on the parent and a network request is dispatched, only the parent component's state is sent to the server to re-render - not the child component's. The intention behind this behavior is to only send the minimal amount of data back and forth between the server and client, making updates as performant as possible.
 
 But, if you want or need a prop to be reactive, you can easily enable this behavior using the `#[Reactive]` attribute parameter.
 
@@ -199,7 +199,7 @@ use App\Models\Todo;
 
 class TodoCount extends Component
 {
-    #[Reactive]
+    #[Reactive] // [tl! highlight]
     public $todos;
 
     public function render()
@@ -282,7 +282,7 @@ use Livewire\Component;
 
 class TodoInput extends Component
 {
-    #[Modelable]
+    #[Modelable] // [tl! highlight]
     public $value = '';
 
     public function render()
@@ -322,9 +322,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        if (! Auth::user()->can('update', $todo)) {
-            abort(403);
-        }
+        $this->authorize('update', $todo);
 
         $todo->delete();
     }
@@ -363,9 +361,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        if (! Auth::user()->can('update', $todo)) {
-            abort(403);
-        }
+        $this->authorize('update', $todo);
 
         $todo->delete();
     }
@@ -573,7 +569,7 @@ class SurveyQuestion extends Component
 
     @foreach ($subQuestions as $subQuestion)
         <livewire:survey-question :question="$subQuestion" />
-    @endforeaach
+    @endforeach
 </div>
 ```
 
@@ -606,7 +602,7 @@ When the parent component is rendering and encounters a child component like the
 'children' => ['lska'],
 ```
 
-Livewire uses this list for reference on subsequent renders in order to detect if a child component has already been rendered in a previous request. If it has already been rendered, the component is skipped. Remember, [nested components are islands](/docs/understanding-nesting). However, if the child key is not in the list, meaning it hasn't been rendered already, Livewire will create a new instance of the component and render it in place.
+Livewire uses this list for reference on subsequent renders in order to detect if a child component has already been rendered in a previous request. If it has already been rendered, the component is skipped. Remember, [nested components are islands](/docs/understanding-nesting#every-component-is-an-island). However, if the child key is not in the list, meaning it hasn't been rendered already, Livewire will create a new instance of the component and render it in place.
 
 These nuances are all behind-the-scenes behavior that most users don't need to be aware of; however, the concept of setting a key on a child is a powerful tool for controlling child rendering.
 

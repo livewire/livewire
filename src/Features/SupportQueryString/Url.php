@@ -9,8 +9,8 @@ class Url extends LivewireAttribute
 {
     public function __construct(
         public $as = null,
-        public $use = 'replace',
-        public $alwaysShow = false,
+        public $history = false,
+        public $keep = false,
     ) {}
 
     public function mount()
@@ -32,8 +32,8 @@ class Url extends LivewireAttribute
 
         $queryString = [
             'as' => $this->as,
-            'use' => $this->use,
-            'alwaysShow' => $this->alwaysShow,
+            'use' => $this->history ? 'push' : 'replace',
+            'alwaysShow' => $this->keep,
         ];
 
         $context->pushEffect('url', $queryString, $this->getName());

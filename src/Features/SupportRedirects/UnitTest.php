@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -43,6 +44,22 @@ class UnitTest extends \Tests\TestCase
         $component->runAction('triggerRedirectAction');
 
         $this->assertEquals('http://localhost/foo', $component->effects['redirect']);
+    }
+
+    /** @test */
+    public function can_redirect_to_other_component_from_redirect_method()
+    {
+        Route::get('/test', TriggersRedirectStub::class);
+
+        Livewire::test(new class extends TestComponent {
+            function triggerRedirect()
+            {
+                $this->redirect(TriggersRedirectStub::class);
+            }
+        })
+        ->call('triggerRedirect')
+        ->assertRedirect(TriggersRedirectStub::class)
+        ->assertRedirect('/test');
     }
 
     /** @test */

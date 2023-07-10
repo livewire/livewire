@@ -43,6 +43,73 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function realtime_validation_can_be_opted_out_of()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Rule('required|min:3', onUpdate: false)]
+            public $foo = '';
+
+            #[Rule('required|min:3')]
+            public $bar = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->assertHasNoErrors()
+            ->set('bar', 'te')
+            ->assertHasErrors()
+            ->set('bar', 'testing...')
+            ->assertHasNoErrors()
+            ->set('foo', 'te')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors();
+    }
+
+    /** @test */
+    public function rule_attribute_supports_custom_attribute()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Rule('required|min:3', attribute: 'The Foo')]
+            public $foo = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('foo', 'te')
+            ->assertHasErrors()
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+
+                $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+            })
+            ;
+    }
+
+    /** @test */
+    public function rule_attribute_supports_custom_messages()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Rule('min:5', message: 'Your foo is too short.')]
+            public $foo = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('foo', 'te')
+            ->assertHasErrors()
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+
+                $this->assertEquals('Your foo is too short.', $messages['foo'][0]);
+            })
+            ;
+    }
+
+    /** @test */
     public function rule_attributes_can_contain_multiple_rules()
     {
         Livewire::test(new class extends TestComponent {

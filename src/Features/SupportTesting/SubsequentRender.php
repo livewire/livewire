@@ -13,10 +13,10 @@ class SubsequentRender extends Render
     {
         $instance = new static($requestBroker, $lastState);
 
-        return $instance->renameme($calls, $updates);
+        return $instance->makeSubsequentRequest($calls, $updates);
     }
 
-    function renameme($calls = [], $updates = []) {
+    function makeSubsequentRequest($calls = [], $updates = []) {
         $uri = app('livewire')->getUpdateUri();
 
         $encodedSnapshot = json_encode($this->lastState->getSnapshot());

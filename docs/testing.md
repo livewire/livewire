@@ -275,7 +275,7 @@ use App\Models\Post;
 
 class SearchPosts extends Component
 {
-    #[Url]
+    #[Url] // [tl! highlight]
     public $search = '';
 
     public function render()
@@ -545,7 +545,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `call('remove', $post->id)`                      | Call the `remove` method and pass the `$post->id` as the first parameter (Accepts subsequent parameters as well) |
 | `refresh()`                      | Trigger a component re-render |
 | `dispatch('post-created')`                      | Dispatch the `post-created` event from the component  |
-| `dispatch('post-created', $post->id)`                      | Dispatch the `post-created` event with `$post->id` as an additional parameter (`$event.detail` from Alpine) |
+| `dispatch('post-created', postId: $post->id)`                      | Dispatch the `post-created` event with `$post->id` as an additional parameter (`$event.detail` from Alpine) |
 
 ### Assertions
 | Method                                                  | Description                                                                                                      |

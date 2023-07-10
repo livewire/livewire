@@ -231,7 +231,7 @@ class CreatePost extends Component
 {
     public $title;
 
-    public function save()
+    public function save() // [tl! highlight:8]
     {
 		$post = Post::create([
 			'title' => $this->title
@@ -251,7 +251,7 @@ class CreatePost extends Component
 Next, let's call the `save` action from the component's Blade view by adding the `wire:submit` directive to the `<form>` element:
 
 ```blade
-<form wire:submit="save">
+<form wire:submit="save"> <!-- [tl! highlight] -->
     <label for="title">Title:</label>
 
     <input type="text" id="title" wire:model="title">
@@ -373,14 +373,17 @@ Ensure you have created a Blade file at this location and included a `{{ $slot }
 ```blade
 <!-- resources/views/components/layout.blade.php -->
 
-<html>
-	<head>
-	    <title>Page Title</title>
-	</head>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<body>
-		{{ $slot }}
-	</body>
+        <title>{{ $title ?? 'Page Title' }}</title>
+    </head>
+    <body>
+        {{ $slot }}
+    </body>
 </html>
 ```
 
@@ -418,6 +421,23 @@ class CreatePost extends Component
 }
 ```
 
+Or if you prefer, you can use this attribute above the class declaration:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+#[Layout('layouts.app')] // [tl! highlight]
+class CreatePost extends Component
+{
+	// ...
+}
+```
+
 PHP attributes only support literal values. If you need to pass a dynamic value, or prefer this alternative syntax, you can use the fluent `->layout()` method in `render()`:
 
 ```php
@@ -432,18 +452,12 @@ public function render()
 
 Assigning unique page titles to each page in your application is helpful for both users and search engines.
 
-To set a custom page title for a full-page component, first, update your layout file to include a dynamic title:
+To set a custom page title for a full-page component, first, make sure your layout file includes a dynamic title:
 
 ```blade
-<html>
-	<head>
-	    <title>{{ $title ?? 'Default Page Title' }}</title> <!-- [tl! highlight] -->
-	</head>
-
-	<body>
-		{{ $slot }}
-	</body>
-</html>
+<head>
+    <title>{{ $title ?? 'Page Title' }}</title>
+</head>
 ```
 
 Next, above your Livewire component's `render()` method, add the `#[Title]` attribute and pass it your page title:
@@ -466,10 +480,26 @@ class CreatePost extends Component
 	    return view('livewire.create-post');
 	}
 }
-
 ```
 
 This will set the page title for the `CreatePost` Livewire component. In this example, the page title will be "Create Post" when the component is rendered.
+
+If you prefer, you can use this attribute above the class declaration:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\Title;
+use Livewire\Component;
+
+#[Title('Create Post')] // [tl! highlight]
+class CreatePost extends Component
+{
+	// ...
+}
+```
 
 If you need to pass a dynamic title, such as a title that uses a component property, you can use the `->title()` fluent method in `render()`:
 
@@ -509,7 +539,7 @@ class ShowPost extends Component
 {
     public Post $post;
 
-    public function mount($id)
+    public function mount($id) // [tl! highlight]
     {
         $this->post = Post::findOrFail($id);
     }
@@ -549,7 +579,7 @@ class ShowPost extends Component
 {
     public Post $post;
 
-    public function mount(Post $post)
+    public function mount(Post $post) // [tl! highlight]
     {
         $this->post = $post;
     }

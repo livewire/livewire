@@ -6,11 +6,11 @@ Natively, PHP serializes most primitive values into JSON easily. However, in ord
 Livewire provides a point of extension called "Synthesizers" that allow users to support any custom property types they wish.
 
 > [!tip] Make sure you understand hydration first
-> Before using synthesizers, it's helpful to fully understand Livewire's hydration system first. You can learn more by reading the [hydration documentation](/docs/hydration).
+> Before using Synthesizers, it's helpful to fully understand Livewire's hydration system first. You can learn more by reading the [hydration documentation](/docs/hydration).
 
 ## Understanding Synthesizers
 
-Before looking at creating custom synthesizers, let's first look at the internal Synthesizer that Livewire uses to support [Laravel Stringables](https://laravel.com/docs/helpers#method-str).
+Before looking at creating custom Synthesizers, let's first look at the internal Synthesizer that Livewire uses to support [Laravel Stringables](https://laravel.com/docs/helpers#method-str).
 
 Suppose your application contained the following `CreatePost` component:
 
@@ -40,7 +40,7 @@ class CreatePost extends Component
 }
 ```
 
-The dehydrated JSON representing this component's state now contains a metadata tuple instead of a plain empty string.
+The dehydrated JSON representing this component's state now contains a [metadata tuple](/docs/hydration#deeply-nested-tuples) instead of a plain empty string.
 
 ```js
 state: { title: ['', { s: 'str' }] },
@@ -78,9 +78,9 @@ First, is the `$key` property:
 public static $key = 'str';
 ```
 
-Every synth must contain a static `$key` property that Livewire uses to convert a metadata tuple like `['', { s: 'str' }]` back into a stringable. As you may notice, each metadata tuple has an `s` key referencing this key.
+Every synth must contain a static `$key` property that Livewire uses to convert a [metadata tuple](/docs/hydration#deeply-nested-tuples) like `['', { s: 'str' }]` back into a stringable. As you may notice, each metadata tuple has an `s` key referencing this key.
 
-Inversely, when Livewire is dehydrating a property, it will use the synth's static `match()` function to identify if this particular synthesizer is a good candidate to dehydrate the current property (`$target` being the current value of the property):
+Inversely, when Livewire is dehydrating a property, it will use the synth's static `match()` function to identify if this particular Synthesizer is a good candidate to dehydrate the current property (`$target` being the current value of the property):
 
 ```php
 static function match($target) {
@@ -88,7 +88,7 @@ static function match($target) {
 }
 ```
 
-If `match()` returns true, the `dehydrate()` method will be used to take the property's PHP value as input and return the JSONable metadata tuple:
+If `match()` returns true, the `dehydrate()` method will be used to take the property's PHP value as input and return the JSONable [metadata](/docs/hydration#deeply-nested-tuples) tuple:
 
 ```php
 function dehydrate($target) {
@@ -96,7 +96,7 @@ function dehydrate($target) {
 }
 ```
 
-Now, at the beginning of the next request, after this synthesizer has been matched by the `{ s: 'str' }` key in the tuple, the `hydrate()` method will be called and passed the raw JSON representation of the property with the expectation that it returns the full PHP-compatible value to be assigned to the property.
+Now, at the beginning of the next request, after this Synthesizer has been matched by the `{ s: 'str' }` key in the tuple, the `hydrate()` method will be called and passed the raw JSON representation of the property with the expectation that it returns the full PHP-compatible value to be assigned to the property.
 
 ```php
 function hydrate($value) {
@@ -104,9 +104,9 @@ function hydrate($value) {
 }
 ```
 
-## Registering a custom synthesizer
+## Registering a custom Synthesizer
 
-To demonstrate how you might author your own synthesizer to support a custom property, we will use the following example `UpdateProperty` component:
+To demonstrate how you might author your own Synthesizer to support a custom property, we will use the following example `UpdateProperty` component:
 
 ```php
 class UpdateProperty extends Component

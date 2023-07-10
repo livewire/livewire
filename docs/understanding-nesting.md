@@ -1,7 +1,7 @@
 
 Like many other component-based frameworks, Livewire components are nestable—meaning one component can render multiple components within itself.
 
-However, because Livewire's nesting system is built differently than other framework's, there are certain implications and constraints that are important to be aware of.
+However, because Livewire's nesting system is built differently than other frameworks, there are certain implications and constraints that are important to be aware of.
 
 > [!tip] Make sure you understand hydration first
 > Before understanding Livewire's nesting system, it's helpful to fully understand how Livewire hydrates components first. You can learn more by reading the [hydration documentation](/docs/hydration).
@@ -9,8 +9,6 @@ However, because Livewire's nesting system is built differently than other frame
 ## Every component is an island
 
 In Livewire, every component on a page tracks its state and makes updates independantly of other components.
-
-Even nested components are only loosely aware of their parents and children.
 
 For example, consider the following `Posts` and nested `ShowPost` component:
 
@@ -117,11 +115,9 @@ Here's the HTML that would get sent back:
 </div>
 ```
 
-Along with a new snapshot of the component...
-
 The important thing to note here is that when an update is triggered on a child component, only THAT component's data is sent to the server, and only THAT component is re-rendered.
 
-Now let's look at the less intuitive scenario.
+Now let's look at the less intuitive scenario: updating a parent component.
 
 ### Updating the parent
 
@@ -171,9 +167,9 @@ Here is an example of what the rendered HTML for the `Posts` component might be 
 </div>
 ```
 
-As you can see, only one child has been rendered because `postLimit` was updated to "1", however, you will also notice that instead of the full child component, there is only an empty `<div></div>` with the matching `wire:key` attribute.
+As you can see, only one child has been rendered because `postLimit` was updated to "1". However, you will also notice that instead of the full child component, there is only an empty `<div></div>` with the matching `wire:id` attribute.
 
-When this HTML is received in the frontend, Livewire will _morph_ the old HTML on for this component into this new HTML, but intelligently skip any child component placeholders.
+When this HTML is received on the frontend, Livewire will _morph_ the old HTML on for this component into this new HTML, but intelligently skip any child component placeholders.
 
 The effect is that, after _morphing_, the final DOM content of the parent `Posts` component will be the following:
 

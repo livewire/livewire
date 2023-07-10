@@ -9,7 +9,7 @@ trait HandlesPagination
     public function queryStringHandlesPagination()
     {
         return collect($this->paginators)->mapWithKeys(function ($page, $pageName) {
-            return ['paginators.'.$pageName => ['use' => 'push', 'as' => $pageName, 'alwaysShow' => false]];
+            return ['paginators.'.$pageName => ['history' => true, 'as' => $pageName, 'keep' => false]];
         })->toArray();
     }
 

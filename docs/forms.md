@@ -26,9 +26,8 @@ class CreatePost extends Component
             $this->only('title', 'content')
         );
 
-        return $this->redirect(
-            ShowPosts::class
-        )->with('status', 'Post successfully created.');
+        return $this->redirect('/posts')
+            ->with('status', 'Post successfully created.');
     }
 
     public function render()
@@ -86,9 +85,7 @@ class CreatePost extends Component
             $this->only('title', 'content')
         );
 
-        return $this->redirect(
-            ShowPosts::class
-        );
+        return $this->redirect('/posts');
     }
 
     public function render()
@@ -103,10 +100,14 @@ We'll also modify our Blade template to show any validation errors on the page.
 ```blade
 <form wire:submit="save">
     <input type="text" wire:model="title">
-    @error('title') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    <div>
+        @error('title') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    </div>
 
     <input type="text" wire:model="content">
-    @error('content') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    <div>
+        @error('content') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    </div>
 
     <button type="submit">Save</button>
 </form>
@@ -160,9 +161,7 @@ class CreatePost extends Component
             $this->form->all()
         );
 
-        return $this->redirect(
-            ShowPosts::class
-        );
+        return $this->redirect('/posts');
     }
 
     public function render()
@@ -175,10 +174,14 @@ class CreatePost extends Component
 ```blade
 <form wire:submit="save">
     <input type="text" wire:model="form.title">
-    @error('form.title') <span class="error">{{ $message }}</span> @enderror
+    <div>
+        @error('form.title') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
     <input type="text" wire:model="form.content">
-    @error('form.content') <span class="error">{{ $message }}</span> @enderror
+    <div>
+        @error('form.content') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
     <button type="submit">Save</button>
 </form>
@@ -220,9 +223,7 @@ class CreatePost extends Component
     {
         $this->form->store();
 
-        return $this->redirect(
-            ShowPosts::class
-        );
+        return $this->redirect('/posts');
     }
 
     // ...
@@ -255,9 +256,7 @@ class UpdatePost extends Component
     {
         $this->form->update();
 
-        return $this->redirect(
-            ShowPosts::class
-        );
+        return $this->redirect('/posts');
     }
 
     public function render()
@@ -367,7 +366,9 @@ Livewire handles this sort of thing automatically. By using `.live` or `.blur` o
 ```blade
 <input type="text" wire:model.blur="title">
 
-@error('title') <span class="error">{{ $message }}</span> @enderror
+<div>
+    @error('title') <span class="error">{{ $message }}</span> @enderror
+</div>
 ```
 
 ```php
@@ -423,10 +424,14 @@ class UpdatePost extends Component
 ```blade
 <form wire:submit.prevent>
     <input type="text" wire:model.blur="title">
-    @error('title') <span class="error">{{ $message }}</span> @enderror
+    <div>
+        @error('title') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
     <input type="text" wire:model.blur="content">
-    @error('content') <span class="error">{{ $message }}</span> @enderror
+    <div>
+        @error('content') <span class="error">{{ $message }}</span> @enderror
+    </div>
 </form>
 ```
 
@@ -494,11 +499,15 @@ For example, below is the original Blade template from the `CreatePost` componen
 
 ```blade
 <form wire:submit="save">
-    <input type="text" wire:model="title"> <!-- [tl! highlight] -->
-    @error('title') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    <input type="text" wire:model="title"> <!-- [tl! highlight:3] -->
+    <div>
+        @error('title') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
-    <input type="text" wire:model="content"> <!-- [tl! highlight] -->
-    @error('content') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    <input type="text" wire:model="content"> <!-- [tl! highlight:3] -->
+    <div>
+        @error('content') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
     <button type="submit">Save</button>
 </form>
@@ -525,7 +534,9 @@ Next, here's the source for the `x-input-text` component:
 
 <input type="text" name="{{ $name }}" {{ $attributes }}>
 
-@error($name) <span class="error">{{ $message }}</span> @enderror
+<div>
+    @error($name) <span class="error">{{ $message }}</span> @enderror
+</div>
 ```
 
 As you can see, we took the repetitive HTML and placed it inside a dedicated Blade component.

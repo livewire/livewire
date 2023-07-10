@@ -55,7 +55,7 @@ use App\Models\User;
 
 class ShowUsers extends Component
 {
-    #[Url]
+    #[Url] // [tl! highlight]
     public $search = '';
 
     public function render()

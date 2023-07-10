@@ -28,8 +28,6 @@ Below is an example of using `@teleport` to render a modal dialog's contents at 
 > [!info]
 > The `@teleport` selector can be any string you would normally pass into something like `document.querySelector()`.
 >
-> &nbsp;
->
 > [Read more about `document.querySelector()`](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector)
 
 Now, when the above Livewire template is rendered on the page, the _contents_ portion of the modal will be rendered at the end of `<body>`:

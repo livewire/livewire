@@ -1,4 +1,4 @@
-Livewire actions are methods on your components that can be triggered by frontend interactions like clicking a button or submitting a form. They provide the developer experience of being able to call a PHP method directly from the browser, allowing you to focus on the logic of your application without getting bogged down writing boilerplate code connecting your application's frontend and backend.
+Livewire actions are methods on your component that can be triggered by frontend interactions like clicking a button or submitting a form. They provide the developer experience of being able to call a PHP method directly from the browser, allowing you to focus on the logic of your application without getting bogged down writing boilerplate code connecting your application's frontend and backend.
 
 Let's explore a basic example of calling a `save` action on a `CreatePost` component:
 
@@ -57,6 +57,7 @@ Livewire supports a variety of event listeners, allowing you to respond to vario
 | `wire:submit`   | Triggered when a form is submitted        |
 | `wire:keydown`  | Triggered when a key is pressed down      |
 | `wire:mouseenter`| Triggered when the mouse enters an element |
+| `wire:*`| Whatever text follows `wire:` will be used as the event name of the listener |
 
 Because the event name after `wire:` can be anything, Livewire supports any browser event you might need to listen for. For example, to listen for `transitionend`, you can use `wire:transitionend`.
 
@@ -247,7 +248,7 @@ class ShowPosts extends Component
     {
 		$post = Post::findOrFail($id);
 
-		Auth::user()->can('update', $post);
+        $this->authorize('update', $post);
 
 		$post->delete();
     }
@@ -302,7 +303,7 @@ class ShowPosts extends Component
 {
     public function delete(Post $post) // [tl! highlight]
     {
-		Auth::user()->can('update', $post);
+        $this->authorize('update', $post);
 
 		$post->delete();
     }
@@ -552,12 +553,12 @@ The `$toggle` action is used to toggle the value of a boolean property in your L
 
 In this example, when the button is clicked, the `sortAsc` property in the component will toggle between `true` and `false`.
 
-### `$emit`
+### `$dispatch`
 
-The `$emit` action allows you to emit a Livewire event directly from the browser. Below is an example of a button that, when clicked, will emit the `post-deleted` event:
+The `$dispatch` action allows you to dispatch a Livewire event directly in the browser. Below is an example of a button that, when clicked, will dispatch the `post-deleted` event:
 
 ```blade
-<button type="submit" wire:click="$emit('post-deleted')">Delete Post</button>
+<button type="submit" wire:click="$dispatch('post-deleted')">Delete Post</button>
 ```
 
 ### `$event`
@@ -734,9 +735,7 @@ class ShowPosts extends Component
     {
 		$post = Post::find($id);
 
-		if (! Auth::user()->can('update', $post)) { // [tl! highlight:2]
-			abort(403);
-		}
+        $this->authorize('update', $post); // [tl! highlight]
 
 		$post->delete();
     }

@@ -105,17 +105,16 @@ php artisan livewire:layout
 This command will generate a file called `resources/views/components/layout.blade.php` with the following contents:
 
 ```blade
-<html>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
         <title>{{ $title ?? 'Page Title' }}</title>
     </head>
-
     <body>
-
-    <!-- // -->
-
-    {{ $slot }}
-
+        {{ $slot }}
     </body>
 </html>
 ```

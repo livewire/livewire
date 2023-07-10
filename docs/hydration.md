@@ -9,8 +9,6 @@ It does this by taking "snapshots" of the PHP component after each server-side u
 
 You'll hear us refer to the process of taking the snapshot as "dehydration" and the process of re-creating a component from a snapshot as "hydration".
 
-Hydrating and dehydrating components using snapshots is one of the most fundamental things to understand when becoming an advanced user.
-
 ## Dehydrating
 
 When Livewire _dehydrates_ a server-side component, it does two things:
@@ -208,7 +206,7 @@ As you can see, Livewire uses the metadata associated with the state to derive t
 
 One distinct advantage of an approach like this, is the ability to both dehydrate and hydrate deeply nested properties.
 
-For example, consider the above `Todos` example, except now with a [Laravel Stringables](https://laravel.com/docs/helpers#method-str) instead of a plain string for the third item in the collection:
+For example, consider the above `Todos` example, except now with a [Laravel Stringable](https://laravel.com/docs/helpers#method-str) instead of a plain string for the third item in the collection:
 
 ```php
 class Todos extends Component

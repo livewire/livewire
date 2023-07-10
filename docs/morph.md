@@ -1,7 +1,7 @@
 
 When a Livewire component update's the browser's DOM, it does so in an intelligent way we call "morphing".
 
-The term _morph_ is in comparison with _replace_.
+The term _morph_ is in contrast with a word like _replace_.
 
 Instead of _replacing_ a component's HTML with newly rendered HTML every time a component is updated, Livewire dynamically compares the current HTML with the new HTML, identifies differences, and makes surgical changes to the HTML only in the places where changes are needed.
 
@@ -18,7 +18,7 @@ class Todos extends Component
 
     public $todos = [
         'first',
-        'third',
+        'second',
     ];
 
     public function add()
@@ -48,7 +48,7 @@ The initial render of this component will output the following HTML:
         <li>first</li>
 
         <li>second</li>
-    <!-- </ul> -->
+    </ul>
 
     <input wire:model="todo">
 </form>
@@ -115,8 +115,8 @@ To re-iterate what's happening more explicitly:
 
 This scenario is at the root of almost all morph-related bugs.
 
-To name a few problematic impacts:
-* Event listenrs and element state are lost between updates
+Here are a few specific problematic impacts of these bugs:
+* Event listeners and element state are lost between updates
 * Event listeners and state are misplaced across the wrong elements
 * Entire Livewire components can be reset or duplicated as Livewire components are also simply elements in the DOM tree
 * Alpine components and state can be lost or misplaced
@@ -147,9 +147,7 @@ Here's an example of the previous Blade template but with Livewire's injected ma
 <div>
 ```
 
-With these markers injected into the template, Livewire can now more easily detect the difference between a change and an addition. Here's a visualization to better understand this behavior:
-
-// Visualization
+With these markers injected into the template, Livewire can now more easily detect the difference between a change and an addition.
 
 This feature is extremely beneficial to Livewire applications, but because it requires parsing templates via regex, it can sometimes fail to properly detect conditionals. If this feature is more of a hinderance than a help to your application, you can disable it with the following configuration in `config/livewire.php`:
 
@@ -178,9 +176,9 @@ For example, here's the above Blade template rewritten with wrapping `<div>`s:
     </div>
 
     <div> <!-- [tl! highlight] -->
-    @if (@error('title'))
-        <div>Error: {{ $message }}</div>
-    @endif
+        @if (@error('title'))
+            <div>Error: {{ $message }}</div>
+        @endif
     </div> <!-- [tl! highlight] -->
 
     <div>

@@ -1,6 +1,8 @@
 After a user performs some action—like submiting a form—you may want to redirect them to another page in your application.
 
-Because Livewire requests aren't standard full-page browser requests, standard HTTP redirects won't work. Instead, you need to trigger redirects via JavaScript. Fortunately, Livewire hides this complexity by allowing you to use [Laravel's built-in redirect utilties](https://laravel.com/docs/responses#redirects) within your components. Internally, Livewire will handle the process of redirecting on the frontend.
+Because Livewire requests aren't standard full-page browser requests, standard HTTP redirects won't work. Instead, you need to trigger redirects via JavaScript. Fortunately, Livewire exposes a simple `$this->redirect()` helper method to use within your components. Internally, Livewire will handle the process of redirecting on the frontend.
+
+If you prefer, you can use [Laravel's built-in redirect utilties](https://laravel.com/docs/responses#redirects) within your components as well.
 
 ## Basic usage
 
@@ -27,7 +29,7 @@ class CreatePost extends Component
 			'content' => $this->content,
 		]);
 
-		return redirect()->to('/posts'); // [tl! highlight]
+		return $this->redirect('/posts'); // [tl! highlight]
     }
 
     public function render()
@@ -51,18 +53,16 @@ use App\Livewire\ShowPosts;
 Route::get('/posts', ShowPosts::class);
 ```
 
-You can redirect to the component by providing the component name to the `redirect()->action()` method:
+You can redirect to the component by providing the component name to the `redirect()` method:
 
 ```php
 public function save()
 {
     // ...
 
-    return redirect()->action(ShowPage::class);
+    return $this->redirect(ShowPage::class);
 }
 ```
-
-This is possible because Livewire components are also [single-action controllers](https://laravel.com/docs/controllers#single-action-controllers), so Laravel's native `->action()` redirector method will work seamlessly.
 
 ## Flash messages
 
@@ -81,7 +81,7 @@ class UpdatePost extends Component
     {
         // ...
 
-		return redirect('/posts')->with('status', 'Post updated!');
+		return $this->redirect('/posts')->with('status', 'Post updated!');
     }
 }
 ```

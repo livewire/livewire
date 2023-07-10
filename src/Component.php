@@ -20,6 +20,7 @@ use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Str;
 use BadMethodCallException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 /**
  * @todo - add Facade-esque method signatures to this file (from triggered __get and __call)
@@ -29,6 +30,7 @@ abstract class Component
 {
     use Macroable { __call as macroCall; }
 
+    use AuthorizesRequests;
     use InteractsWithProperties;
     use HandlesEvents;
     use HandlesRedirects;

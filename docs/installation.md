@@ -3,7 +3,7 @@ Livewire is a Laravel package, so you will need to have a Laravel application up
 To install Livewire, open your terminal and navigate to your Laravel application directory, then run the following command:
 
 ```shell
-composer require livewire/livewire
+composer require livewire/livewire:^3.0@beta
 ```
 
 That's it—really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
@@ -83,4 +83,48 @@ Now, Livewire will load its JavaScript like so:
 
 ```blade
 <script src="/custom/livewire/livewire.js" ...
+```
+
+## Manually bundling Livewire and Alpine
+
+By default, Alpine and Livewire are loaded using the `<script src="livewire.js">` tag, which means you have no control over the order in which these libraries are loaded. Consequently, importing and registering Alpine plugins, as shown in the example below, will no longer function:
+
+```js
+// Warning: This snippet demonstrates what NOT to do...
+
+import Alpine from 'alpinejs'
+import mask from '@alpinejs/mask'
+
+Alpine.plugin(mask)
+Alpine.start()
+```
+
+To address this issue, we need to inform Livewire that we want to use the ESM (ECMAScript module) version ourselves and prevent the injection of the `livewire.js` script tag. To achieve this, we must add the `@livewireScriptConfig` directive to our layout file (`resources/views/components/layouts/app.blade.php`):
+
+```blade
+<html>
+<head>
+    <!-- ... -->
+
+    @vite(['resources/js/app.js'])
+</head>
+<body>
+    {{ $slot }}
+
+    @livewireScriptConfig <!-- [tl! highlight] -->
+</body>
+</html>
+```
+
+When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it.
+
+The final step involves importing Alpine and Livewire in our `app.js` file, allowing us to register any custom resources, and ultimately starting Livewire and Alpine:
+
+```js
+import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
+import mask from '@alpinejs/mask'
+
+Alpine.plugin(mask)
+
+Livewire.start()
 ```

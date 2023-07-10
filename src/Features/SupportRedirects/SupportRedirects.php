@@ -2,17 +2,18 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use function Livewire\short;
 use function Livewire\store;
-use function Livewire\after;
-use function Livewire\before;
+use function Livewire\short;
 use function Livewire\on;
+use function Livewire\before;
+use function Livewire\after;
 
-use Livewire\ComponentHook;
+use Synthetic\ShortcircuitResponse;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\Mechanisms\DataStore;
-use Livewire\Mechanisms\HandleRequests\HandleRequests;
-use Synthetic\ShortcircuitResponse;
+use Livewire\ComponentHook;
+use Livewire\Component;
 
 class SupportRedirects extends ComponentHook
 {
@@ -41,6 +42,10 @@ class SupportRedirects extends ComponentHook
 
         $to = $this->storeGet('redirect');
         $usingNavigate = $this->storeGet('redirectUsingNavigate');
+
+        if (is_subclass_of($to, Component::class)) {
+            $to = url()->action($to);
+        }
 
         if ($to && ! app(HandleRequests::class)->isLivewireRequest()) {
             abort(redirect($to));

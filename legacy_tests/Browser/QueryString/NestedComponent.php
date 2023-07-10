@@ -9,7 +9,7 @@ class NestedComponent extends BaseComponent
 {
     public $baz = 'bop';
 
-    protected $queryString = ['baz' => ['use' => 'push', 'alwaysShow' => true]];
+    protected $queryString = ['baz' => ['history' => true, 'keep' => true]];
 
     public function render()
     {
