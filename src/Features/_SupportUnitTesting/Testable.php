@@ -11,6 +11,7 @@ use Livewire\Features\SupportEvents\TestsEvents;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Arr;
+use Livewire\Drawer\Utils;
 use Livewire\Features\SupportRedirects\TestsRedirects;
 
 use function Livewire\store;
@@ -76,22 +77,12 @@ class Testable extends BaseTestable
 
         $html = app('livewire')->mount($name, $params);
 
-        $snapshot = static::extractAttributeDataFromHtml($html, 'wire:snapshot');
-        $effects = static::extractAttributeDataFromHtml($html, 'wire:effects');
+        $snapshot = Utils::extractAttributeDataFromHtml($html, 'wire:snapshot');
+        $effects = Utils::extractAttributeDataFromHtml($html, 'wire:effects');
 
         store($component)->set('testing.html', $html);
 
         return new static($snapshot, $effects, $component);
-    }
-
-    static function extractAttributeDataFromHtml($html, $attribute)
-    {
-        $data = (string) str($html)->betweenFirst($attribute.'="', '"');
-
-        return json_decode(
-            htmlspecialchars_decode($data, ENT_QUOTES|ENT_SUBSTITUTE),
-            associative: true,
-        );
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)

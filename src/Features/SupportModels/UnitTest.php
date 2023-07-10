@@ -64,7 +64,7 @@ class UnitTest extends \Tests\TestCase
             public function render() { return <<<'HTML'
                 <div>{{ $post->title }}</div>
             HTML; }
-        })->canonical;
+        })->getData();
 
         $this->assertNull($data['post']);
     }

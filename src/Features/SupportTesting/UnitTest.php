@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportUnitTesting;
+namespace Livewire\Features\SupportTesting;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;

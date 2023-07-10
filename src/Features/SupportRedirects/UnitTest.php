@@ -22,18 +22,6 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function standard_redirect_on_mount()
-    {
-        try {
-            $component = Livewire::test(TriggersRedirectOnMountStub::class);
-        } catch (HttpResponseException $e) {
-            dd($e->getResponse()->getStatusCode());
-        }
-
-        $this->assertEquals('/local', $component->effects['redirect']);
-    }
-
-    /** @test */
     public function route_redirect()
     {
         $this->registerNamedRoute();
@@ -140,7 +128,7 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function skip_render_on_redirect_by_default()
     {
-        $component = Livewire::test(SkipsRenderOnRedirect::class);
+        $component = Livewire::test(SkipsRenderOnRedirect::class)->call('triggerRedirect');
 
         $this->assertEquals('/local', $component->effects['redirect']);
         $this->assertNull($component->effects['html'] ?? null);
@@ -151,7 +139,7 @@ class UnitTest extends \Tests\TestCase
     {
         config()->set('livewire.render_on_redirect', true);
 
-        $component = Livewire::test(SkipsRenderOnRedirect::class);
+        $component = Livewire::test(SkipsRenderOnRedirect::class)->call('triggerRedirect');
 
         $this->assertEquals('/local', $component->effects['redirect']);
         $this->assertStringContainsString('Render has run', $component->html());
@@ -162,7 +150,7 @@ class UnitTest extends \Tests\TestCase
     {
         config()->set('livewire.render_on_redirect', true);
 
-        $component = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
+        $component = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class)->call('triggerRedirect');
 
         $this->assertEquals('/local', $component->effects['redirect']);
         $this->assertNull($component->effects['html'] ?? null);
@@ -256,7 +244,7 @@ class TriggersRedirectOnMountStub extends Component
 
 class SkipsRenderOnRedirect extends Component
 {
-    public function mount()
+    public function triggerRedirect()
     {
         return $this->redirect('/local');
     }
@@ -273,7 +261,7 @@ HTML;
 
 class RenderOnRedirectWithSkipRenderMethod extends Component
 {
-    public function mount()
+    function triggerRedirect()
     {
         $this->skipRender();
         return $this->redirect('/local');

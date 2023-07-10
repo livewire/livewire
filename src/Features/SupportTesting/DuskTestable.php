@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportUnitTesting;
+namespace Livewire\Features\SupportTesting;
 
 use function Livewire\invade;
 use function Livewire\on;

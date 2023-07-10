@@ -86,7 +86,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
             \Livewire\Features\SupportJsEvaluation\SupportJsEvaluation::class,
             \Livewire\Features\SupportQueryString\SupportQueryString::class,
-            \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
             \Livewire\Features\SupportFileUploads\SupportFileUploads::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
@@ -100,6 +99,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportNavigate\SupportNavigate::class,
             \Livewire\Features\SupportEntangle\SupportEntangle::class,
             \Livewire\Features\SupportLocales\SupportLocales::class,
+            \Livewire\Features\SupportTesting\SupportTesting::class,
             \Livewire\Features\SupportModels\SupportModels::class,
             \Livewire\Features\SupportEvents\SupportEvents::class,
 
