@@ -12,11 +12,11 @@ use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Mechanisms\ComponentRegistry;
-use Livewire\Features\SupportUnitTesting\DuskTestable;
+use Livewire\Features\SupportTesting\TestingBroker;
+use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
 use Livewire\ComponentHookRegistry;
 use Livewire\ComponentHook;
-use Livewire\Features\SupportTesting\TestingBroker;
 
 class LivewireManager
 {
