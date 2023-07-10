@@ -2,20 +2,16 @@
 
 namespace Livewire\Features\SupportTesting;
 
-use Livewire\Drawer\Utils;
-
-use function Livewire\on;
-
-class TestingSubsequentRender
+class SubsequentRender extends Render
 {
     function __construct(
-        protected $requester,
-        protected $lastState,
+        protected RequestBroker $requestBroker,
+        protected ComponentState $lastState,
     ) {}
 
-    static function make($requester, $lastState, $calls = [], $updates = [])
+    static function make($requestBroker, $lastState, $calls = [], $updates = [])
     {
-        $instance = new static($requester, $lastState);
+        $instance = new static($requestBroker, $lastState);
 
         return $instance->renameme($calls, $updates);
     }
@@ -35,26 +31,13 @@ class TestingSubsequentRender
             ],
         ];
 
-        $componentInstance = null;
-        $componentView = null;
-
-        $offA = on('dehydrate', function ($component) use (&$componentInstance) {
-            $componentInstance = $component;
-        });
-
-        $offB = on('render', function ($component, $view) use (&$componentView) {
-            return function () use ($view, &$componentView) {
-                $componentView = $view;
-            };
-        });
-
-        $response = $this->requester->temporarilyDisableExceptionHandlingAndMiddleware(function ($requester) use ($uri, $payload) {
-            return $requester->withHeaders(['X-Livewire' => true])->post($uri, $payload);
+        [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $payload) {
+            return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $payload) {
+                return $requestBroker->withHeaders(['X-Livewire' => true])->post($uri, $payload);
+            });
         });
 
         app('livewire')->flushState();
-
-        $offA(); $offB();
 
         $json = $response->json();
 
@@ -68,7 +51,7 @@ class TestingSubsequentRender
         $html = $effects['html'] ?? $this->lastState->getHtml(stripInitialData: true);
         $view = $componentView ?? $this->lastState->getView();
 
-        return new TestingState(
+        return new ComponentState(
             $componentInstance,
             $response,
             $view,

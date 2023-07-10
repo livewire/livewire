@@ -2,10 +2,9 @@
 
 namespace Livewire\Features\SupportTesting;
 
-use function Livewire\invade;
-use function Livewire\on;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
+use function Livewire\{ invade, on };
+use Illuminate\Support\Arr;
 use Tests\TestCase;
 
 class DuskTestable
@@ -58,7 +57,7 @@ class DuskTestable
             throw new class ($components) extends \Exception {
                 public $components;
                 public $isDuskShortcircuit = true;
-                public function __construct($components) {
+                function __construct($components) {
                     $this->components = $components;
                 }
             };
@@ -156,7 +155,7 @@ class DuskTestable
         file_exists($tmp) && unlink($tmp);
     }
 
-    public function breakIntoATinkerShell($browsers, $e)
+    function breakIntoATinkerShell($browsers, $e)
     {
         $sh = new \Psy\Shell();
 

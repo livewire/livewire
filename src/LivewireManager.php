@@ -12,7 +12,7 @@ use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Mechanisms\ComponentRegistry;
-use Livewire\Features\SupportTesting\TestingBroker;
+use Livewire\Features\SupportTesting\Testable;
 use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
 use Livewire\ComponentHookRegistry;
@@ -144,7 +144,7 @@ class LivewireManager
 
     function test($name, $params = [])
     {
-        return TestingBroker::create($name, $params, $this->queryParamsForTesting);
+        return Testable::create($name, $params, $this->queryParamsForTesting);
     }
 
     function visit($name)
@@ -154,7 +154,7 @@ class LivewireManager
 
     function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
     {
-         TestingBroker::actingAs($user, $driver);
+         Testable::actingAs($user, $driver);
 
          return $this;
     }

@@ -5,8 +5,6 @@ namespace Tests;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
-use function Livewire\trigger;
-
 class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 {
     public function setUp(): void

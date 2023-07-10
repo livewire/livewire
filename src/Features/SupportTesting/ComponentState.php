@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportTesting;
 
 use Livewire\Drawer\Utils;
 
-class TestingState
+class ComponentState
 {
     function __construct(
         protected $component,

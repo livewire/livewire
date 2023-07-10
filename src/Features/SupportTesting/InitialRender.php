@@ -4,22 +4,20 @@ namespace Livewire\Features\SupportTesting;
 
 use Livewire\Drawer\Utils;
 
-use function Livewire\on;
-
-class TestingInitialRender
+class InitialRender extends Render
 {
     function __construct(
-        protected $requester,
+        protected RequestBroker $requestBroker,
     ) {}
 
-    static function make($requester, $name, $params = [], $fromQueryString = [])
+    static function make($requestBroker, $name, $params = [], $fromQueryString = [])
     {
-        $instance = new static($requester);
+        $instance = new static($requestBroker);
 
-        return $instance->renameme($name, $params, $fromQueryString);
+        return $instance->makeInitialRequest($name, $params, $fromQueryString);
     }
 
-    function renameme($name, $params, $fromQueryString = []) {
+    function makeInitialRequest($name, $params, $fromQueryString = []) {
         $uri = '/livewire-unit-test-endpoint/'.str()->random(20);
 
         $this->registerRouteBeforeExistingRoutes($uri, function () use ($name, $params) {
@@ -29,33 +27,20 @@ class TestingInitialRender
             ]);
         });
 
-        $componentInstance = null;
-        $componentView = null;
-
-        $offA = on('dehydrate', function ($component) use (&$componentInstance) {
-            $componentInstance = $component;
-        });
-
-        $offB = on('render', function ($component, $view) use (&$componentView) {
-            return function () use ($view, &$componentView) {
-                $componentView = $view;
-            };
-        });
-
-        $response = $this->requester->temporarilyDisableExceptionHandlingAndMiddleware(function ($requester) use ($uri, $fromQueryString) {
-            return $requester->call('GET', $uri, $fromQueryString);
+        [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $fromQueryString) {
+            return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $fromQueryString) {
+                return $requestBroker->call('GET', $uri, $fromQueryString);
+            });
         });
 
         app('livewire')->flushState();
-
-        $offA(); $offB();
 
         $html = $response->getContent();
 
         $snapshot = Utils::extractAttributeDataFromHtml($html, 'wire:snapshot');
         $effects = Utils::extractAttributeDataFromHtml($html, 'wire:effects');
 
-        return new TestingState($componentInstance, $response, $componentView, $html, $snapshot, $effects);
+        return new ComponentState($componentInstance, $response, $componentView, $html, $snapshot, $effects);
     }
 
     private function registerRouteBeforeExistingRoutes($path, $closure)

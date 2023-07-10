@@ -2,13 +2,12 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
 use Livewire\Features\SupportValidation\TestsValidation;
 use Livewire\Features\SupportRedirects\TestsRedirects;
-use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
 use Livewire\Features\SupportEvents\TestsEvents;
-use Livewire\Drawer\Utils;
 
-class TestingBroker
+class Testable
 {
     use MakesAssertions,
         TestsEvents,
@@ -17,11 +16,27 @@ class TestingBroker
         TestsFileDownloads;
 
     protected function __construct(
-        protected $requester,
-        protected $lastState,
+        protected RequestBroker $requestBroker,
+        protected ComponentState $lastState,
     ) {}
 
     static function create($name, $params = [], $fromQueryString = [])
+    {
+        $name = static::normalizeAndRegisterComponentName($name);
+
+        $requestBroker = new RequestBroker(app());
+
+        $initialState = InitialRender::make(
+            $requestBroker,
+            $name,
+            $params,
+            $fromQueryString,
+        );
+
+        return new static($requestBroker, $initialState);
+    }
+
+    static function normalizeAndRegisterComponentName($name)
     {
         if (is_array($otherComponents = $name)) {
             $name = array_shift($otherComponents);
@@ -40,16 +55,7 @@ class TestingBroker
             app('livewire')->component($name);
         }
 
-        $requester = new TestingRequestBroker(app());
-
-        $initialState = TestingInitialRender::make(
-            $requester,
-            $name,
-            $params,
-            $fromQueryString,
-        );
-
-        return new static($requester, $initialState);
+        return $name;
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
@@ -80,6 +86,20 @@ class TestingBroker
     function updateProperty($name, $value = null)
     {
         return $this->set($name, $value);
+    }
+
+    function fill($values)
+    {
+        foreach ($values as $name => $value) {
+            $this->set($name, $value);
+        }
+
+        return $this;
+    }
+
+    function toggle($name)
+    {
+        return $this->set($name, ! $this->get($name));
     }
 
     function set($name, $value = null)
@@ -137,8 +157,8 @@ class TestingBroker
 
     function update($calls = [], $updates = [])
     {
-        $newState = TestingSubsequentRender::make(
-            $this->requester,
+        $newState = SubsequentRender::make(
+            $this->requestBroker,
             $this->lastState,
             $calls,
             $updates,
@@ -150,7 +170,7 @@ class TestingBroker
     }
 
     /** @todo Move me outta here and into the file upload folder somehow... */
-    public function upload($name, $files, $isMultiple = false)
+    function upload($name, $files, $isMultiple = false)
     {
         // This methhod simulates the calls Livewire's JavaScript
         // normally makes for file uploads.
@@ -211,6 +231,25 @@ class TestingBroker
         return $this->lastState->getComponent();
     }
 
+    function dump()
+    {
+        dump($this->lastState->getHtml());
+
+        return $this;
+    }
+
+    function dd()
+    {
+        dd($this->lastState->getHtml());
+    }
+
+    function tap($callback)
+    {
+        $callback($this);
+
+        return $this;
+    }
+
     function __get($property)
     {
         if ($property === 'effects') return $this->lastState->getEffects();
@@ -222,41 +261,8 @@ class TestingBroker
 
     function __call($method, $params)
     {
-        return $this->lastState->getResponse()->{$method}(...$params);
+        $this->lastState->getResponse()->{$method}(...$params);
+
+        return $this;
     }
-
-    // function setProperty($key, $value)
-    // {
-    //     if ($value instanceof \Illuminate\Http\UploadedFile) {
-    //         return $this->upload($key, [$value]);
-    //     } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof \Illuminate\Http\UploadedFile) {
-    //         return $this->upload($key, $value, $isMultiple = true);
-    //     }
-
-    //     $newTargetInstance = null;
-
-    //     $off = on('dehydrate', function ($component) use (&$newTargetInstance) {
-    //         $newTargetInstance = $component;
-    //     });
-
-    //     [ $snapshot, $effects ] = app('livewire')->update($this->snapshot, [$key => $value], $calls = []);
-
-    //     $off();
-
-    //     // Find a way to get the target instance...
-    //     $this->target = $newTargetInstance;
-    //     $this->effects = $effects;
-    //     $this->snapshot = $snapshot;
-    //     $this->canonical = $this->extractData($this->snapshot['data']);
-
-    //     return $this;
-    // }
 }
-
-// The unified broker to other parts
-
-// The parts
-    // - Assertion provider
-    // - Last commit
-    // - (Last request)?
-    // - ???
