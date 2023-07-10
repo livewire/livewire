@@ -1,24 +1,20 @@
 <?php
 
-namespace Livewire\Features\SupportUnitTesting;
+namespace Livewire\Features\SupportTesting;
 
-use function Livewire\store;
-use function Livewire\on;
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
-use Livewire\Mechanisms\DataStore;
+use Illuminate\Validation\ValidationException;
 use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\ComponentHook;
 use Livewire\Component;
-use Illuminate\Validation\ValidationException;
 
-class SupportUnitTesting extends ComponentHook
+class SupportTesting extends ComponentHook
 {
     static function provide()
     {
         if (! app()->environment('testing')) return;
 
         if (class_exists('Laravel\Dusk\Browser')) {
-            \Livewire\Features\SupportUnitTesting\DuskTestable::provide();
+            DuskTestable::provide();
         }
 
         static::registerTestingMacros();
@@ -33,15 +29,6 @@ class SupportUnitTesting extends ComponentHook
         if (! $errors->isEmpty()) {
             $this->storeSet('testing.errors', $errors);
         }
-    }
-
-    function render($view, $data)
-    {
-        return function ($html) use ($view) {
-            $this->storeSet('testing.view', $view);
-            $this->storeSet('testing.html', $html);
-            Testable::$htmlById[$this->component->getId()] = $html;
-        };
     }
 
     function hydrate()
@@ -62,7 +49,6 @@ class SupportUnitTesting extends ComponentHook
             if (is_subclass_of($component, Component::class)) {
                 $component = app(ComponentRegistry::class)->getName($component);
             }
-
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringContainsString(
@@ -79,7 +65,6 @@ class SupportUnitTesting extends ComponentHook
             if (is_subclass_of($component, Component::class)) {
                 $component = app(ComponentRegistry::class)->getName($component);
             }
-
             $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
             \PHPUnit\Framework\Assert::assertStringNotContainsString(
@@ -96,7 +81,6 @@ class SupportUnitTesting extends ComponentHook
                 if (is_subclass_of($component, Component::class)) {
                     $component = app(ComponentRegistry::class)->getName($component);
                 }
-
                 $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
                 \PHPUnit\Framework\Assert::assertStringContainsString(
@@ -112,7 +96,6 @@ class SupportUnitTesting extends ComponentHook
                 if (is_subclass_of($component, Component::class)) {
                     $component = app(ComponentRegistry::class)->getName($component);
                 }
-
                 $escapedComponentName = trim(htmlspecialchars(json_encode(['name' => $component])), '{}');
 
                 \PHPUnit\Framework\Assert::assertStringNotContainsString(

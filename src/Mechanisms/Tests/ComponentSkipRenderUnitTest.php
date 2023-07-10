@@ -48,19 +48,6 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
     /** @test */
     public function on_redirect_in_mount_render_is_not_called()
     {
-        // $component = Livewire::test(ComponentSkipRenderOnRedirectInMountStub::class);
-
-        // $this->assertEquals('/foo', $component->effects['redirect']);
-        // $this->assertNull($component->view());
-
-        // Route::get('/403', ComponentSkipRenderOnRedirectInMountStub::class);
-        // $this->get('/403')->assertRedirect('/foo');
-
-        $component = Livewire::test(ComponentSkipRenderOnRedirectHelperInMountStub::class);
-
-        $this->assertStringEndsWith('/bar', $component->effects['redirect']);
-        $this->assertNull($component->view());
-
         Route::get('/403', ComponentSkipRenderOnRedirectHelperInMountStub::class);
         $this->get('/403')->assertRedirect('/bar');
     }

@@ -9,6 +9,8 @@ use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidation
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
+use function Livewire\invade;
+
 class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 {
     use Concerns\EnableLegacyModels;
@@ -82,7 +84,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(ComponentWithModelProperty::class, ['model' => $model]);
 
-        $component->snapshot['data']['model'][0]['id'] = 2;
+        invade(invade($component)->lastState)->snapshot['data']['model'][1]['key'] = 2;
 
         $component->call('$refresh');
     }

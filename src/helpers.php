@@ -31,22 +31,24 @@ function invade($obj)
 
         public function &__get($name)
         {
-            $property = $this->reflected->getProperty($name);
+            $getProperty = function &() use ($name) {
+                return $this->{$name};
+            };
 
-            $property->setAccessible(true);
+            $getProperty = $getProperty->bindTo($this->obj, get_class($this->obj));
 
-            $value = $property->getValue($this->obj);
-
-            return $value;
+            return $getProperty();
         }
 
         public function __set($name, $value)
         {
-            $property = $this->reflected->getProperty($name);
+            $setProperty = function () use ($name, &$value) {
+                $this->{$name} = $value;
+            };
 
-            $property->setAccessible(true);
+            $setProperty = $setProperty->bindTo($this->obj, get_class($this->obj));
 
-            $property->setValue($this->obj, $value);
+            $setProperty();
         }
 
         public function __call($name, $params)
