@@ -7,6 +7,8 @@ use Livewire\Features\SupportValidation\TestsValidation;
 use Livewire\Features\SupportRedirects\TestsRedirects;
 use Livewire\Features\SupportEvents\TestsEvents;
 
+/** @mixin \Illuminate\Testing\TestResponse */
+
 class Testable
 {
     use MakesAssertions,

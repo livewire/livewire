@@ -74,6 +74,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         foreach([
             \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
+            \Livewire\Features\SupportMultipleRootElementDetection\SupportMultipleRootElementDetection::class,
             \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
