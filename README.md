@@ -18,7 +18,7 @@
 - [ ] Add proper old site redirects
 - [ ] Rethink Alpine bundling and JS extension/upgrade path
 - [ ] Add relevant docblocks
-- [ ] Resolve "PSR-4" not compliant artisan messages
+- [x] Resolve "PSR-4" not compliant artisan messages
 - [ ] Support `->assertStatus()`
 - [ ] Work through `@todo` comments
 - [ ] Work through `->markTestSkipped()` statements
