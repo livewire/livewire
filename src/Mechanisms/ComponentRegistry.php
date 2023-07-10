@@ -92,7 +92,7 @@ class ComponentRegistry
             if(! class_exists($class)) {
                 foreach ($this->missingComponentResolvers as $resolve) {
                     if ($resolved = $resolve($nameOrClass)) {
-                        $this->register($nameOrClass, $resolved);
+                        $this->component($nameOrClass, $resolved);
 
                         $class = $this->aliases[$nameOrClass];
 
