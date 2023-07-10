@@ -10,6 +10,8 @@ class SupportMultipleRootElementDetection extends ComponentHook
 {
     static function provide() {
         on('mount', function ($component) {
+            if (! config('app.debug')) return;
+
             return function ($html) use ($component) {
                 (new static)->warnAgainstMoreThanOneRootElement($component, $html);
 
