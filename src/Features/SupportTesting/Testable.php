@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Illuminate\Support\Traits\Macroable;
 use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
 use Livewire\Features\SupportValidation\TestsValidation;
 use Livewire\Features\SupportRedirects\TestsRedirects;
@@ -16,6 +17,8 @@ class Testable
         TestsRedirects,
         TestsValidation,
         TestsFileDownloads;
+
+    use Macroable { Macroable::__call as macroCall; }
 
     protected function __construct(
         protected RequestBroker $requestBroker,
@@ -263,6 +266,10 @@ class Testable
 
     function __call($method, $params)
     {
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $params);
+        }
+
         $this->lastState->getResponse()->{$method}(...$params);
 
         return $this;
