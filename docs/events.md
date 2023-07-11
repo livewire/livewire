@@ -245,7 +245,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Livewire\Dashboard;
 use Livewire\Livewire;
 
-class DashbaordTest extends TestCase
+class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 

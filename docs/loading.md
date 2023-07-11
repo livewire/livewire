@@ -133,7 +133,7 @@ Consider the following example where a form input named `username` uses `wire:mo
 </form>
 ```
 
-The "Checking availibility..." message will show when the server is updated with the new username as the user types into the input field.
+The "Checking availability..." message will show when the server is updated with the new username as the user types into the input field.
 
 ## Customizing CSS display property
 

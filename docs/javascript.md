@@ -143,7 +143,7 @@ Livewire.stop()
 Livewire.rescan()
 ```
 
-## Object shemas
+## Object schemas
 
 When extending Livewire's JavaScript system, it's important to understand the different objects you might encounter.
 
@@ -264,7 +264,7 @@ You can learn more about `$wire` in [Livewire's documentation on accessing prope
 
 ### The `snapshot` object
 
-Between each network request, Livewire seralizes the PHP component into an object that can be consumed in JavaScript. This snapshot is used to unserialize the component back into a PHP object and therefore has mechanisms built in to prevent tampering.
+Between each network request, Livewire serializes the PHP component into an object that can be consumed in JavaScript. This snapshot is used to unserialize the component back into a PHP object and therefore has mechanisms built in to prevent tampering.
 
 ```js
 let snapshot = {

@@ -82,7 +82,7 @@ The following are scenarios where morphing algorithms fail to correctly identify
 
 ### Inserting intermediate elements
 
-Consider the following Livewire Blade template for a fictitous `CreatePost` component:
+Consider the following Livewire Blade template for a fictitious `CreatePost` component:
 
 ```blade
 <form wire:submit="save">
@@ -110,7 +110,7 @@ To re-iterate what's happening more explicitly:
 
 * Livewire encounters the first `<div>` in both trees. They are the same, so it continues.
 * Livewire encounters the second `<div>` in both trees and thinks they are the same `<div>`, just one has changed contents. So instead of inserting the error message as a new element, it changes the `<button>` into an error message.
-* Livewire then, after mistakenly modifying the previous elemjent, notices an additional element at the end of the comparison. It then creates and appends the element after the previous one.
+* Livewire then, after mistakenly modifying the previous element, notices an additional element at the end of the comparison. It then creates and appends the element after the previous one.
 * Therefore destroying, then re-creating an element that otherwise should have been simply moved.
 
 This scenario is at the root of almost all morph-related bugs.
@@ -149,7 +149,7 @@ Here's an example of the previous Blade template but with Livewire's injected ma
 
 With these markers injected into the template, Livewire can now more easily detect the difference between a change and an addition.
 
-This feature is extremely beneficial to Livewire applications, but because it requires parsing templates via regex, it can sometimes fail to properly detect conditionals. If this feature is more of a hinderance than a help to your application, you can disable it with the following configuration in `config/livewire.php`:
+This feature is extremely beneficial to Livewire applications, but because it requires parsing templates via regex, it can sometimes fail to properly detect conditionals. If this feature is more of a hindrance than a help to your application, you can disable it with the following configuration in `config/livewire.php`:
 
 ```php
 'inject_morph_markers' => false,
@@ -187,7 +187,7 @@ For example, here's the above Blade template rewritten with wrapping `<div>`s:
 <div>
 ```
 
-Now that the conditional has been wrapped in a persistant element, Livewire will morph the two different HTML trees properly.
+Now that the conditional has been wrapped in a persistent element, Livewire will morph the two different HTML trees properly.
 
 Here's a visualization to better demonstrate:
 

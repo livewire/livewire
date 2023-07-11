@@ -185,7 +185,7 @@ class CreatePost extends Component
 }
 ```
 
-As you can see, instead of listing out each property individually, we can retreive all the property values using the `->all()` method on the form object.
+As you can see, instead of listing out each property individually, we can retrieve all the property values using the `->all()` method on the form object.
 
 Also, when referencing the property names in the template, you must prepend `form.` to each instance:
 

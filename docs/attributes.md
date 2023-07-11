@@ -15,7 +15,7 @@ Current:
 #[Layout]
 ```
 
-Imparative:
+Imperative:
 ```php
 Should: #[Track]
 Should: #[Lock]
