@@ -41,8 +41,8 @@ By including these assets manually on a page, Livewire knows to not inject the a
 
 Though rarely required, you may disable Livewire's auto-injecting asset behavior by updating the `inject_assets` [configuration option](#publishing-config) in your application's `config/livewire.php` file:
 
-```json
-'inject_assets': false,
+```php
+'inject_assets' => false,
 ```
 
 ## Configuring Livewire's update endpoint
