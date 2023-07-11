@@ -50,7 +50,7 @@ class UnitTest extends \Tests\TestCase
     {
         $output = $this->compile(<<<HTML
         <div>
-            <div @class(['foo(bar)']) />
+            <div @class(['foo(bar)'])></div>
 
             <div>
                 @if (true)
