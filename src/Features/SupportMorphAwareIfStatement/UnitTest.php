@@ -67,6 +67,27 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function it_adds_conditional_markers_correctly_after_class_directive_containing_square_brackets()
+    {
+        $output = $this->compile(<<<HTML
+        <div>
+            <div @class(['foo[bar]'])></div>
+
+            <div>
+                @if (true)
+                    <div foo="{
+                        'bar': 'baz',
+                    }"></div>
+                @endif
+            </div>
+        </div>
+        HTML);
+
+        $this->assertOccurrences(1, '__BLOCK__', $output);
+        $this->assertOccurrences(1, '__ENDBLOCK__', $output);
+    }
+
+    /** @test */
     public function it_only_adds_conditional_markers_to_any_for_each_that_is_not_inside_a_html_tag()
     {
         $output = $this->compile(<<<'HTML'
