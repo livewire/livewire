@@ -8671,7 +8671,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   window.Livewire = Livewire;
   window.Alpine = module_default;
   if (window.livewireScriptConfig === void 0) {
-    Livewire.start();
+    document.addEventListener("DOMContentLoaded", () => {
+      Livewire.start();
+    });
   }
 })();
 /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress

@@ -9444,7 +9444,9 @@ if (window.Alpine)
 window.Livewire = Livewire;
 window.Alpine = import_alpinejs15.default;
 if (window.livewireScriptConfig === void 0) {
-  Livewire.start();
+  document.addEventListener("DOMContentLoaded", () => {
+    Livewire.start();
+  });
 }
 var export_Alpine = import_alpinejs15.default;
 export {
