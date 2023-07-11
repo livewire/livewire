@@ -18,7 +18,7 @@ Livewire now requires that your application is running on PHP version 8.1 or gre
 
 ### Update composer version
 
-Run the following composer command to upgrade your application's Livewire dependancy from version 2 to 3.
+Run the following composer command to upgrade your application's Livewire dependency from version 2 to 3.
 
 ```shell
 composer require livewire/livewire:3.0.0-beta.1
@@ -30,11 +30,11 @@ The above command will lock you to the current beta version. If you want to rece
 composer require livewire/livewire:^3.0@beta
 ```
 
-### Update other dependancies
+### Update other dependencies
 
 Any other packages in your application that depend on Livewire will need to be upgraded to a version that supports V3.
 
-Below is a list of dependancies and their corresponding version with support for V3:
+Below is a list of dependencies and their corresponding version with support for V3:
 
 * `spatie/laravel-ignition` - ?
 
