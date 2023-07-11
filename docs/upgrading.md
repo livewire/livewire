@@ -38,7 +38,7 @@ Below is a list of dependancies and their corresponding version with support for
 
 * `spatie/laravel-ignition` - ?
 
-> [!warning] Some packages aren't V3 compatable yet
+> [!warning] Some packages aren't V3 compatible yet
 > Most of the major third-party Livewire packages either currently support V3 or are working on adding support soon. However, there may be some packages that will take much longer to upgrade.
 
 ### Clear artisan cache
@@ -127,7 +127,7 @@ In version 2, Livewire components were generated and recognized automatically un
 
 V3 has changed this default to simply: `App\Livewire`.
 
-You can either move and edit all your components to the new location or add the following confugration to your `config/livewire.php` file to use the old default:
+You can either move and edit all your components to the new location or add the following configuration to your `config/livewire.php` file to use the old default:
 
 ```php
 'class_namespace' => 'App\\Http\\Livewire',
@@ -399,7 +399,7 @@ protected $queryString = [
 ];
 ```
 
-If you'd like to rever to the V2 behavior of always showing a property in the query string no matter what it's value is, you can use the `"keep"` option:
+If you'd like to refer to the V2 behavior of always showing a property in the query string no matter what it's value is, you can use the `"keep"` option:
 
 ```php
 public $search = '';
