@@ -93,9 +93,9 @@ By default, Alpine and Livewire are loaded using the `<script src="livewire.js">
 // Warning: This snippet demonstrates what NOT to do...
 
 import Alpine from 'alpinejs'
-import mask from '@alpinejs/mask'
+import Clipboard from '@ryangjchandler/alpine-clipboard'
 
-Alpine.plugin(mask)
+Alpine.plugin(Clipboard)
 Alpine.start()
 ```
 
@@ -122,9 +122,9 @@ The final step involves importing Alpine and Livewire in our `app.js` file, allo
 
 ```js
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
-import mask from '@alpinejs/mask'
+import Clipboard from '@ryangjchandler/alpine-clipboard'
 
-Alpine.plugin(mask)
+Alpine.plugin(Clipboard)
 
 Livewire.start()
 ```
