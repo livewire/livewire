@@ -26,14 +26,7 @@ class ChangeDefaultNamespace extends UpgradeStep
             if($choice == 'keep') {
                 $console->line('Keeping the old namespace...');
 
-                if($this->filesystem()->missing('config/livewire.php')) {
-                    $console->line('Publishing Livewire config file...');
-                    $console->newLine();
-
-                    $console->call('vendor:publish', [
-                        '--tag' => 'livewire:config',
-                    ]);
-                }
+                $this->publishConfigIfMissing($console);
 
                 $console->line('Setting the default namespace to "App\\Http\\Livewire"...');
 

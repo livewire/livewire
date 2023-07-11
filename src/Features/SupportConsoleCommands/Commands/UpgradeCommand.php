@@ -3,10 +3,10 @@
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Facades\Pipeline;
+use Illuminate\Pipeline\Pipeline;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToEntangleDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToWireModelDirectives;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultLayoutView;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultNamespace;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeLazyToBlurModifierOnWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ClearViewCache;
@@ -24,9 +24,11 @@ class UpgradeCommand extends Command
 
     public function handle()
     {
-        Pipeline::send($this)->through([
+
+        app(Pipeline::class)->send($this)->through([
             ShowUpgradeIntroduction::class,
             ChangeDefaultNamespace::class,
+            ChangeDefaultLayoutView::class,
             AddLiveModifierToWireModelDirectives::class,
             RemoveDeferModifierFromWireModelDirectives::class,
             ChangeLazyToBlurModifierOnWireModelDirectives::class,

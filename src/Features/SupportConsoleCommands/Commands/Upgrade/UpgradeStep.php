@@ -15,6 +15,22 @@ abstract class UpgradeStep
         ]);
     }
 
+    public function publishConfigIfMissing($console): bool
+    {
+        if($this->filesystem()->missing('config/livewire.php')) {
+            $console->line('Publishing Livewire config file...');
+            $console->newLine();
+
+            $console->call('vendor:publish', [
+                '--tag' => 'livewire:config',
+            ]);
+
+            return true;
+        }
+
+        return false;
+    }
+
     public function interactiveReplacement($console, $title, $before, $after, $pattern, $replacement, $directories = ['resources/views'])
     {
         $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> {$title} </>");
@@ -34,28 +50,28 @@ abstract class UpgradeStep
         $console->newLine(4);
     }
 
-    public function patternReplacement($pattern, $replacement, $directories = ['resources/views'])
+    public function patternReplacement($pattern, $replacement, $directories = 'resources/views')
     {
-        return collect($directories)->map(function($directory) use ($pattern, $replacement) {
+        return collect(\Arr::wrap($directories))->map(function($directory) use ($pattern, $replacement) {
             return collect($this->filesystem()->allFiles($directory))
-                ->map(function ($viewPath) {
+                ->map(function ($path) {
                     return [
-                        'path' => $viewPath,
-                        'content' => $this->filesystem()->get($viewPath),
+                        'path' => $path,
+                        'content' => $this->filesystem()->get($path),
                     ];
-                })->map(function($view) use ($pattern, $replacement) {
-                    $view['content'] = preg_replace($pattern, $replacement, $view['content'], -1, $count);
-                    $view['occurrences'] = $count;
+                })->map(function($file) use ($pattern, $replacement) {
+                    $file['content'] = preg_replace($pattern, $replacement, $file['content'], -1, $count);
+                    $file['occurrences'] = $count;
 
-                    return $count > 0 ? $view : null;
+                    return $count > 0 ? $file : null;
                 })
                 ->filter()
                 ->values()
-                ->map(function($view) {
-                    $this->filesystem()->put($view['path'], $view['content']);
+                ->map(function($file) {
+                    $this->filesystem()->put($file['path'], $file['content']);
 
                     return [
-                        $view['path'], $view['occurrences'],
+                        $file['path'], $file['occurrences'],
                     ];
                 });
         })->flatten(1);
