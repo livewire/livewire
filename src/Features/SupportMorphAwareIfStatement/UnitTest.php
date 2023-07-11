@@ -27,7 +27,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function it_only_adds_condtional_markers_to_any_if_that_is_not_inside_a_html_tag()
+    public function it_only_adds_conditional_markers_to_any_if_that_is_not_inside_a_html_tag()
     {
         $output = $this->compile(<<<HTML
         <div @if (true) other @endif>
@@ -46,7 +46,28 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function it_only_adds_condtional_markers_to_any_for_each_that_is_not_inside_a_html_tag()
+    public function it_adds_conditional_markers_correctly_after_class_directive_containing_parentheses()
+    {
+        $output = $this->compile(<<<HTML
+        <div>
+            <div @class(['foo(bar)']) />
+
+            <div>
+                @if (true)
+                    <div foo="{
+                        'bar': 'baz',
+                    }"></div>
+                @endif
+            </div>
+        </div>
+        HTML);
+
+        $this->assertOccurrences(1, '__BLOCK__', $output);
+        $this->assertOccurrences(1, '__ENDBLOCK__', $output);
+    }
+
+    /** @test */
+    public function it_only_adds_conditional_markers_to_any_for_each_that_is_not_inside_a_html_tag()
     {
         $output = $this->compile(<<<'HTML'
         <div @foreach(range(1,4) as $key => $value) {{ $key }}="{{ $value }}" @endforeach>
@@ -65,7 +86,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function it_does_not_add_condtional_markers_around_an_attribute_name_containing_a_greater_than_symbol()
+    public function it_does_not_add_conditional_markers_around_an_attribute_name_containing_a_greater_than_symbol()
     {
         $output = $this->compile(<<<'HTML'
         <div
@@ -85,7 +106,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function it_does_not_add_condtional_markers_around_an_attribute_value_containing_a_greater_than_symbol()
+    public function it_does_not_add_conditional_markers_around_an_attribute_value_containing_a_greater_than_symbol()
     {
         $output = $this->compile(<<<'HTML'
         <div
@@ -105,7 +126,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function it_does_not_add_condtional_markers_around_an_condition_containing_a_greater_than_symbol()
+    public function it_does_not_add_conditional_markers_around_an_condition_containing_a_greater_than_symbol()
     {
         $output = $this->compile(<<<'HTML'
         <div
@@ -163,7 +184,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function it_does_not_add_condtional_markers_around_an_attribute_if_a_class_helper_with_conditions_appears()
+    public function it_does_not_add_conditional_markers_around_an_attribute_if_a_class_helper_with_conditions_appears()
     {
         $output = $this->compile(<<<'BLADE'
             <div
