@@ -9,6 +9,6 @@ trait EnableLegacyModels
     {
         parent::getEnvironmentSetUp($app);
 
-        $app['config']->set('livewire.model_binding', true);
+        $app['config']->set('livewire.legacy_model_binding', true);
     }
 }

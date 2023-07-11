@@ -35,9 +35,11 @@ import './directives/index'
 window.Livewire = Livewire
 window.Alpine = Alpine
 
-if(window.livewireScriptConfig === undefined) {
-    // Start Livewire...
-    Livewire.start()
+if (window.livewireScriptConfig === undefined) {
+    document.addEventListener('DOMContentLoaded', () => {
+        // Start Livewire...
+        Livewire.start()
+    })
 }
 
 export { Livewire, Alpine };

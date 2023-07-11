@@ -8,6 +8,7 @@ import intersect from '@alpinejs/intersect'
 import navigate from '@alpinejs/navigate'
 import history from '@alpinejs/history'
 import morph from '@alpinejs/morph'
+import mask from '@alpinejs/mask'
 import Alpine from 'alpinejs'
 import { dispatch } from './utils'
 
@@ -22,6 +23,7 @@ export function start() {
     Alpine.plugin(focus)
     Alpine.plugin(persist)
     Alpine.plugin(navigate)
+    Alpine.plugin(mask)
 
     Alpine.addRootSelector(() => '[wire\\:id]')
 
