@@ -89,6 +89,27 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function rule_attribute_supports_custom_attribute_as_alias()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Rule('required|min:3', as: 'The Foo')]
+            public $foo = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('foo', 'te')
+            ->assertHasErrors()
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+
+                $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+            })
+            ;
+    }
+
+    /** @test */
     public function rule_attribute_supports_custom_messages()
     {
         Livewire::test(new class extends TestComponent {
