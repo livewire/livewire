@@ -49,6 +49,11 @@ class Form implements Arrayable
         return $this->component->validate($filteredRules)[$this->propertyName];
     }
 
+    public function all()
+    {
+        return $this->toArray();
+    }
+
     public function toArray()
     {
         return Utils::getPublicProperties($this);

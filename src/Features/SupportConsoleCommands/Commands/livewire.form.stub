@@ -1,20 +1,11 @@
 <?php
 
-namespace App\Forms;
+namespace App\Livewire\Forms;
 
+use Livewire\Attributes\Rule;
 use Livewire\Form;
-use {modelNamespace};
 
 class DummyClass extends Form
 {
-    #[Rule('required|min:3')]
-    public $name = '';
-
-    #[Rule('required|email')]
-    public $email = '';
-
-    public function store()
-    {
-        {createExample}
-    }
+    //
 }
