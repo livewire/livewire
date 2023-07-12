@@ -1,7 +1,7 @@
 import { findComponent } from "../store";
 import { on } from '@/events'
 
-on('commit.prepare', (component) => {
+on('commit.prepare', ({ component }) => {
     component.children.forEach(child => {
         let childMeta = child.snapshot.memo
         let props = childMeta.props

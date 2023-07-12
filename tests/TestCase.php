@@ -5,8 +5,6 @@ namespace Tests;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
-use function Livewire\trigger;
-
 class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 {
     public function setUp(): void
@@ -35,7 +33,7 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
     protected function getPackageProviders($app)
     {
         return [
-            \Livewire\ServiceProvider::class,
+            \Livewire\LivewireServiceProvider::class,
         ];
     }
 
@@ -63,7 +61,7 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 
     protected function livewireClassesPath($path = '')
     {
-        return app_path('Http/Livewire'.($path ? '/'.$path : ''));
+        return app_path('Livewire'.($path ? '/'.$path : ''));
     }
 
     protected function livewireViewsPath($path = '')

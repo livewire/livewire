@@ -9,7 +9,7 @@ Consider the following example:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -39,7 +39,7 @@ For example:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -76,7 +76,7 @@ Let's use the `wire:model` directive to bind the `todo` property in a `TodoList`
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -106,7 +106,7 @@ class TodoList extends Component
 	<ul>
 		@foreach($todos as $todo)
 			<li>{{ $todo }}</li>
-		@endoreach
+		@endforeach
 	</ul>
 </div>
 ```
@@ -124,7 +124,7 @@ In the example below, we can avoid code duplication by using `$this->reset()` to
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -176,7 +176,7 @@ class TodoList extends Component
 
     public $showTodos = false; // Boolean
 
-    public $todoFilter; // null
+    public $todoFilter; // Null
 }
 ```
 
@@ -220,7 +220,7 @@ Livewire allows your application to support custom types through two powerful me
 * Wireables
 * Synthesizers
 
-Wireables are simple and easy to use for most applications, so we'll explore them below. If you're an advanced user or package author wanting more flexibility, [Synthesizers are the way to go](/docs/extending).
+Wireables are simple and easy to use for most applications, so we'll explore them below. If you're an advanced user or package author wanting more flexibility, [Synthesizers are the way to go](/docs/synthesizers).
 
 #### Wireables
 
@@ -292,7 +292,7 @@ class Customer implements Wireable
 
 Now you can freely set `Customer` objects on your Livewire components and Livewire will know how to convert these objects into JSON and back into PHP.
 
-As mentioned earlier, if you want to support types more globally and powerfully, Livewire offers Synthesizers, its advanced internal mechanism for handling different property types. [Learn more about Synthesizers](/docs/extending).
+As mentioned earlier, if you want to support types more globally and powerfully, Livewire offers Synthesizers, its advanced internal mechanism for handling different property types. [Learn more about Synthesizers](/docs/synthesizers).
 
 ## Accessing properties from JavaScript
 
@@ -353,7 +353,7 @@ On the subsequent request, the server-side value of `$todo` will be updated and 
 If you prefer, you can also use the more explicit `.set()` method for setting properties client-side. However, you should note that using `.set()` immediately triggers a network request and synchronizes the state with the server. If that is desired, then this is an excellent API:
 
 ```blade
-<button x-on:click="$wire.todo.set('todo', '')">Clear</button>
+<button x-on:click="$wire.set('todo', '')">Clear</button>
 ```
 
 ## Security concerns
@@ -369,7 +369,7 @@ To demonstrate how neglecting to authorize and validate properties can introduce
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -447,7 +447,7 @@ public function update()
 {
 	$post = Post::findOrFail($this->id);
 
-	Auth::user()->can('update', $post); // [tl! highlight]
+    $this->authorize('update', $post); // [tl! highlight]
 
 	$post->update(...);
 }
@@ -485,7 +485,7 @@ When an Eloquent model is assigned to a Livewire component property, Livewire wi
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -581,7 +581,7 @@ To demonstrate, consider the following `ShowTodos` component with a `select()` c
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -617,14 +617,14 @@ Here's the above example re-written using a computed property:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 class ShowTodos extends Component
 {
-	#[Computed]
+	#[Computed] // [tl! highlight]
 	public function todos()
 	{
 		return Auth::user()
@@ -657,7 +657,7 @@ You can also access `$todos` from inside your class. For example, if you had a `
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -673,7 +673,7 @@ class ShowTodos extends Component
 			->get();
 	}
 
-	public function markAllComplete()
+	public function markAllComplete() // [tl! highlight:3]
 	{
 		$this->todos->each->complete();
 	}

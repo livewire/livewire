@@ -27,7 +27,7 @@ class LivewireDirectiveUnitTest extends \LegacyTests\Unit\TestCase
         Artisan::call('make:livewire', ['name' => 'foo']);
 
         $output = view('render-component', [
-            'component' => \App\Http\Livewire\Foo::class,
+            'component' => \App\Livewire\Foo::class,
         ])->render();
 
         $this->assertStringContainsString('div', $output);

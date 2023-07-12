@@ -37,9 +37,14 @@ class BaseUtils
             ->mapWithKeys(function ($property) use ($target) {
                 // Ensures typed property is initialized in PHP >=7.4, if so, return its value,
                 // if not initialized, return null (as expected in earlier PHP Versions)
-                $value = method_exists($property, 'isInitialized') && !$property->isInitialized($target)
-                    ? null
-                    : $property->getValue($target);
+                if (method_exists($property, 'isInitialized') && !$property->isInitialized($target)) {
+                    // If a type of `array` is given with no value, let's assume users want
+                    // it prefilled with an empty array...
+                    $value = (method_exists($property->getType(), 'getName') && $property->getType()->getName() === 'array')
+                        ? [] : null;
+                } else {
+                    $value = $property->getValue($target);
+                }
 
                 return [$property->getName() => $value];
             })

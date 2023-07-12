@@ -1,8 +1,8 @@
 import { on } from '@/events'
 
-on('commit', (component) => {
-    return () => {
-        let download = component.effects.download
+on('commit', ({ component, succeed }) => {
+    succeed(({ effects }) => {
+        let download = effects.download
 
         if (! download) return
 
@@ -26,7 +26,7 @@ on('commit', (component) => {
         setTimeout(function() {
             urlObject.revokeObjectURL(url)
         }, 0);
-    }
+    })
 })
 
 function base64toBlob(b64Data, contentType = '', sliceSize = 512) {

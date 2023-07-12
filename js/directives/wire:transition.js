@@ -6,7 +6,7 @@ on('morph.added', el => {
     el.__addedByMorph = true
 })
 
-directive('transition', (el, directive, { component, cleanup }) => {
+directive('transition', ({ el, directive, component, cleanup }) => {
     let visibility = Alpine.reactive({ state: false })
 
     // We're going to control the element's transition with Alpine transitions...
@@ -20,7 +20,7 @@ directive('transition', (el, directive, { component, cleanup }) => {
 
     let cleanups = []
 
-    cleanups.push(on('morph.removing', (el, skip) => {
+    cleanups.push(on('morph.removing', ({ el, skip }) => {
         // Here we interupt morphdom from removing an element...
         skip()
 
@@ -33,7 +33,7 @@ directive('transition', (el, directive, { component, cleanup }) => {
         // Now we can trigger a transition:
         visibility.state = false
 
-        cleanups.push(on('morph', (from, to, morphComponent) => {
+        cleanups.push(on('morph', ({ component: morphComponent }) => {
             if (morphComponent !== component) return
 
             // While this element is transitioning out, a new morph is about to occur.

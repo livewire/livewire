@@ -12,7 +12,7 @@ Below is an example of a `ShowInvoice` component that contains a "Download" butt
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Invoice;
@@ -28,7 +28,7 @@ class ShowInvoice extends Component
 
     public function download()
     {
-        return response()->download(
+        return response()->download( // [tl! highlight:2]
             $this->invoice->file_path, 'invoice.pdf'
         );
     }
@@ -47,7 +47,7 @@ class ShowInvoice extends Component
     <span>{{ $invoice->date }}</span>
     <span>{{ $invoice->amount }}</span>
 
-    <button type="button" wire:click="download">Download</button>
+    <button type="button" wire:click="download">Download</button> <!-- [tl! highlight] -->
 </div>
 ```
 

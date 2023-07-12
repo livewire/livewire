@@ -2,12 +2,23 @@
 
 namespace Livewire\Features\SupportRedirects;
 
+use Livewire\Component;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 trait TestsRedirects
 {
     public function assertRedirect($uri = null)
     {
+        if (is_subclass_of($uri, Component::class)) {
+            $uri = url()->action($uri);
+        }
+
+        if (! app('livewire')->isLivewireRequest()) {
+            $this->lastState->getResponse()->assertRedirect($uri);
+
+            return $this;
+        }
+
         PHPUnit::assertArrayHasKey(
             'redirect',
             $this->effects,
@@ -23,6 +34,12 @@ trait TestsRedirects
 
     public function assertNoRedirect()
     {
+        if (! app('livewire')->isLivewireRequest()) {
+            $this->lastState->getResponse()->assertNoRedirect();
+
+            return $this;
+        }
+
         PHPUnit::assertTrue(! isset($this->effects['redirect']));
 
         return $this;

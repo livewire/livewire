@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -17,18 +18,6 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(TriggersRedirectStub::class);
 
         $component->runAction('triggerRedirect');
-
-        $this->assertEquals('/local', $component->effects['redirect']);
-    }
-
-    /** @test */
-    public function standard_redirect_on_mount()
-    {
-        try {
-            $component = Livewire::test(TriggersRedirectOnMountStub::class);
-        } catch (HttpResponseException $e) {
-            dd($e->getResponse()->getStatusCode());
-        }
 
         $this->assertEquals('/local', $component->effects['redirect']);
     }
@@ -55,6 +44,22 @@ class UnitTest extends \Tests\TestCase
         $component->runAction('triggerRedirectAction');
 
         $this->assertEquals('http://localhost/foo', $component->effects['redirect']);
+    }
+
+    /** @test */
+    public function can_redirect_to_other_component_from_redirect_method()
+    {
+        Route::get('/test', TriggersRedirectStub::class);
+
+        Livewire::test(new class extends TestComponent {
+            function triggerRedirect()
+            {
+                $this->redirect(TriggersRedirectStub::class);
+            }
+        })
+        ->call('triggerRedirect')
+        ->assertRedirect(TriggersRedirectStub::class)
+        ->assertRedirect('/test');
     }
 
     /** @test */
@@ -140,7 +145,7 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function skip_render_on_redirect_by_default()
     {
-        $component = Livewire::test(SkipsRenderOnRedirect::class);
+        $component = Livewire::test(SkipsRenderOnRedirect::class)->call('triggerRedirect');
 
         $this->assertEquals('/local', $component->effects['redirect']);
         $this->assertNull($component->effects['html'] ?? null);
@@ -151,7 +156,7 @@ class UnitTest extends \Tests\TestCase
     {
         config()->set('livewire.render_on_redirect', true);
 
-        $component = Livewire::test(SkipsRenderOnRedirect::class);
+        $component = Livewire::test(SkipsRenderOnRedirect::class)->call('triggerRedirect');
 
         $this->assertEquals('/local', $component->effects['redirect']);
         $this->assertStringContainsString('Render has run', $component->html());
@@ -162,7 +167,7 @@ class UnitTest extends \Tests\TestCase
     {
         config()->set('livewire.render_on_redirect', true);
 
-        $component = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
+        $component = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class)->call('triggerRedirect');
 
         $this->assertEquals('/local', $component->effects['redirect']);
         $this->assertNull($component->effects['html'] ?? null);
@@ -256,7 +261,7 @@ class TriggersRedirectOnMountStub extends Component
 
 class SkipsRenderOnRedirect extends Component
 {
-    public function mount()
+    public function triggerRedirect()
     {
         return $this->redirect('/local');
     }
@@ -273,7 +278,7 @@ HTML;
 
 class RenderOnRedirectWithSkipRenderMethod extends Component
 {
-    public function mount()
+    function triggerRedirect()
     {
         $this->skipRender();
         return $this->redirect('/local');

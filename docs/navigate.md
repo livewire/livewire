@@ -10,9 +10,9 @@ While most PHP applications have traditionally been multi-page applications, Liv
 Let's explore an example of using `wire:navigate`. Below is a typical Laravel routes file (`routes/web.php`) with three Livewire components defined as routes:
 
 ```php
-use App\Http\Livewire\Dashboard;
-use App\Http\Livewire\ShowPosts;
-use App\Http\Livewire\ShowUsers;
+use App\Livewire\Dashboard;
+use App\Livewire\ShowPosts;
+use App\Livewire\ShowUsers;
 
 Route::get('/', Dashboard::class);
 

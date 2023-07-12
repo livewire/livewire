@@ -21,12 +21,12 @@ php artisan make:livewire Posts\\CreatePost
 php artisan make:livewire posts.create-post
 ```
 
-After running this command, Livewire will create two new files in your application. The first will be the component's class: `app/Http/Livewire/CreatePost.php`
+After running this command, Livewire will create two new files in your application. The first will be the component's class: `app/Livewire/CreatePost.php`
 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -54,7 +54,7 @@ If your component is fairly small, you may want to create an _inline_ component.
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -84,7 +84,7 @@ To reduce boilerplate in your components, you can omit the `render()` method ent
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -122,7 +122,7 @@ To add a property to a Livewire component, declare a public property in your com
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -164,7 +164,7 @@ To pass data to the view in the `render()` method, you can use the `with()` meth
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -222,7 +222,7 @@ To learn more about actions, let's add a `save` action to the `CreatePost` compo
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -231,7 +231,7 @@ class CreatePost extends Component
 {
     public $title;
 
-    public function save()
+    public function save() // [tl! highlight:8]
     {
 		$post = Post::create([
 			'title' => $this->title
@@ -251,7 +251,7 @@ class CreatePost extends Component
 Next, let's call the `save` action from the component's Blade view by adding the `wire:submit` directive to the `<form>` element:
 
 ```blade
-<form wire:submit="save">
+<form wire:submit="save"> <!-- [tl! highlight] -->
     <label for="title">Title:</label>
 
     <input type="text" id="title" wire:model="title">
@@ -304,7 +304,7 @@ Data passed into components is received through the `mount()` lifecycle hook as 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -330,7 +330,7 @@ To reduce boilerplate code in your components, you can alternatively omit the `m
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -357,7 +357,7 @@ To create a full-page component, define a route in your `routes/web.php` file an
 You can accomplish this by adding the following line to your `routes/web.php` file:
 
 ```php
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 
 Route::get('/post/create', CreatePost::class);
 ```
@@ -373,14 +373,17 @@ Ensure you have created a Blade file at this location and included a `{{ $slot }
 ```blade
 <!-- resources/views/components/layout.blade.php -->
 
-<html>
-	<head>
-	    <title>Page Title</title>
-	</head>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<body>
-		{{ $slot }}
-	</body>
+        <title>{{ $title ?? 'Page Title' }}</title>
+    </head>
+    <body>
+        {{ $slot }}
+    </body>
 </html>
 ```
 
@@ -401,7 +404,7 @@ To use a different layout for a specific component, you can place Livewire's `#[
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -415,6 +418,23 @@ class CreatePost extends Component
 	{
 	    return view('livewire.create-post');
 	}
+}
+```
+
+Or if you prefer, you can use this attribute above the class declaration:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+#[Layout('layouts.app')] // [tl! highlight]
+class CreatePost extends Component
+{
+	// ...
 }
 ```
 
@@ -432,18 +452,12 @@ public function render()
 
 Assigning unique page titles to each page in your application is helpful for both users and search engines.
 
-To set a custom page title for a full-page component, first, update your layout file to include a dynamic title:
+To set a custom page title for a full-page component, first, make sure your layout file includes a dynamic title:
 
 ```blade
-<html>
-	<head>
-	    <title>{{ $title ?? 'Default Page Title' }}</title> <!-- [tl! highlight] -->
-	</head>
-
-	<body>
-		{{ $slot }}
-	</body>
-</html>
+<head>
+    <title>{{ $title ?? 'Page Title' }}</title>
+</head>
 ```
 
 Next, above your Livewire component's `render()` method, add the `#[Title]` attribute and pass it your page title:
@@ -451,7 +465,7 @@ Next, above your Livewire component's `render()` method, add the `#[Title]` attr
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -466,10 +480,26 @@ class CreatePost extends Component
 	    return view('livewire.create-post');
 	}
 }
-
 ```
 
 This will set the page title for the `CreatePost` Livewire component. In this example, the page title will be "Create Post" when the component is rendered.
+
+If you prefer, you can use this attribute above the class declaration:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\Title;
+use Livewire\Component;
+
+#[Title('Create Post')] // [tl! highlight]
+class CreatePost extends Component
+{
+	// ...
+}
+```
 
 If you need to pass a dynamic title, such as a title that uses a component property, you can use the `->title()` fluent method in `render()`:
 
@@ -488,7 +518,7 @@ When working with full-page components, you may need to access route parameters 
 To demonstrate, first, define a route with a parameter in your `routes/web.php` file:
 
 ```php
-use App\Http\Livewire\ShowPost;
+use App\Livewire\ShowPost;
 
 Route::get('/post/{id}', ShowPost::class);
 ```
@@ -500,7 +530,7 @@ Next, update your Livewire component to accept the route parameter in the `mount
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Models\Post;
 use Livewire\Component;
@@ -509,7 +539,7 @@ class ShowPost extends Component
 {
     public Post $post;
 
-    public function mount($id)
+    public function mount($id) // [tl! highlight]
     {
         $this->post = Post::findOrFail($id);
     }
@@ -530,7 +560,7 @@ Laravel's route model binding allows you to automatically resolve Eloquent model
 After defining a route with a model parameter in your `routes/web.php` file:
 
 ```php
-use App\Http\Livewire\ShowPost;
+use App\Livewire\ShowPost;
 
 Route::get('/post/{post}', ShowPost::class);
 ```
@@ -540,7 +570,7 @@ You can now accept the route model parameter through the `mount()` method of you
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Models\Post;
 use Livewire\Component;
@@ -549,7 +579,7 @@ class ShowPost extends Component
 {
     public Post $post;
 
-    public function mount(Post $post)
+    public function mount(Post $post) // [tl! highlight]
     {
         $this->post = $post;
     }
@@ -568,7 +598,7 @@ Like before, you can reduce boilerplate by omitting the `mount()` method:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;

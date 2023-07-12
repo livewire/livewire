@@ -2,7 +2,9 @@ import { contentIsFromDump } from '@/utils'
 import { directive } from '@/directives'
 import { on, trigger } from '@/events'
 
-directive('stream', (el, { expression, modifiers }, { component, cleanup }) => {
+directive('stream', ({el, directive, component, cleanup }) => {
+    let { expression, modifiers } = directive
+
     let off = on('stream', ({ name, content, append }) => {
         if (name !== expression) return
 
@@ -16,11 +18,13 @@ directive('stream', (el, { expression, modifiers }, { component, cleanup }) => {
     cleanup(off)
 })
 
-on('fetch', () => {
-    return response => {
-        if (! response.headers.has('X-Livewire-Stream')) return response
+on('request', ({ respond }) => {
+    respond(mutableObject => {
+        let response = mutableObject.response
 
-        return {
+        if (! response.headers.has('X-Livewire-Stream')) return
+
+        mutableObject.response = {
             ok: true,
             redirected: false,
             status: 200,
@@ -37,7 +41,7 @@ on('fetch', () => {
                 return finalResponse
             }
         }
-    }
+    })
 })
 
 async function interceptStreamAndReturnFinalResponse(response, callback) {

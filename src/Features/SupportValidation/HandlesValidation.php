@@ -22,10 +22,22 @@ trait HandlesValidation
     protected $withValidatorCallback;
 
     protected $rulesFromOutside = [];
+    protected $messagesFromOutside = [];
+    protected $validationAttributesFromOutside = [];
 
     public function addRulesFromOutside($rules)
     {
         $this->rulesFromOutside = array_merge($this->rulesFromOutside, $rules);
+    }
+
+    public function addMessagesFromOutside($messages)
+    {
+        $this->messagesFromOutside = array_merge($this->messagesFromOutside, $messages);
+    }
+
+    public function addValidationAttributesFromOutside($validationAttributes)
+    {
+        $this->validationAttributesFromOutside = array_merge($this->validationAttributesFromOutside, $validationAttributes);
     }
 
     public function getErrorBag()
@@ -100,18 +112,22 @@ trait HandlesValidation
 
     protected function getMessages()
     {
-        if (method_exists($this, 'messages')) return $this->messages();
-        if (property_exists($this, 'messages')) return $this->messages;
+        $messages = [];
 
-        return [];
+        if (method_exists($this, 'messages')) $messages = $this->messages();
+        elseif (property_exists($this, 'messages')) $messages = $this->messages;
+
+        return array_merge($messages, $this->messagesFromOutside);
     }
 
     protected function getValidationAttributes()
     {
-        if (method_exists($this, 'validationAttributes')) return $this->validationAttributes();
-        if (property_exists($this, 'validationAttributes')) return $this->validationAttributes;
+        $validationAttributes = [];
 
-        return [];
+        if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
+        elseif (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
+
+        return array_merge($validationAttributes, $this->validationAttributesFromOutside);
     }
 
     protected function getValidationCustomValues()

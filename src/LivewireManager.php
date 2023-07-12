@@ -12,17 +12,17 @@ use Livewire\Mechanisms\HandleComponents\ComponentContext;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Mechanisms\ComponentRegistry;
-use Livewire\Features\SupportUnitTesting\Testable;
-use Livewire\Features\SupportUnitTesting\DuskTestable;
+use Livewire\Features\SupportTesting\Testable;
+use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
 use Livewire\ComponentHookRegistry;
 use Livewire\ComponentHook;
 
-class Manager
+class LivewireManager
 {
-    protected ServiceProvider $provider;
+    protected LivewireServiceProvider $provider;
 
-    function setProvider(ServiceProvider $provider)
+    function setProvider(LivewireServiceProvider $provider)
     {
         $this->provider = $provider;
     }
@@ -34,7 +34,7 @@ class Manager
 
     function component($name, $class = null)
     {
-        app(ComponentRegistry::class)->register($name, $class);
+        app(ComponentRegistry::class)->component($name, $class);
     }
 
     function componentHook($hook)
@@ -197,5 +197,36 @@ class Manager
     function getJsFeatures()
     {
         return $this->jsFeatures;
+    }
+
+    function originalUrl()
+    {
+        if ($this->isLivewireRequest()) {
+            return url()->to($this->originalPath());
+        }
+
+        return url()->current();
+    }
+
+    function originalPath()
+    {
+        if ($this->isLivewireRequest()) {
+            $snapshot = json_decode(request('components.0.snapshot'), true);
+
+            return data_get($snapshot, 'memo.path', 'POST');
+        }
+
+        return request()->path();
+    }
+
+    function originalMethod()
+    {
+        if ($this->isLivewireRequest()) {
+            $snapshot = json_decode(request('components.0.snapshot'), true);
+
+            return data_get($snapshot, 'memo.method', 'POST');
+        }
+
+        return request()->method();
     }
 }

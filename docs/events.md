@@ -213,7 +213,7 @@ To test events emitted by your component, use the `assertDispatched()` method in
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 
 class CreatePostTest extends TestCase
@@ -242,7 +242,7 @@ To test event listeners, you can emit events from the test environment and asser
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Http\Livewire\Dashboard;
+use App\Livewire\Dashboard;
 use Livewire\Livewire;
 
 class DashbaordTest extends TestCase
@@ -321,7 +321,7 @@ Below is an example of an `OrderTracker` component that is listening for the `Or
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -345,7 +345,7 @@ If you have Echo channels with variables embedded in them (such as a Order ID), 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -384,7 +384,7 @@ You may also listen to events broadcast to private and presence channels:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\On;
 use Livewire\Component;

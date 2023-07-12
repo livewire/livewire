@@ -23,10 +23,13 @@ class PersistentMiddleware
     protected $path;
     protected $method;
 
-    function boot()
+    function register()
     {
         app()->singleton($this::class, fn () => $this);
+    }
 
+    function boot()
+    {
         on('dehydrate', function ($component, $context) {
             [$path, $method] = $this->extractPathAndMethodFromRequest();
 
@@ -95,7 +98,7 @@ class PersistentMiddleware
         // Only send through pipeline if there are middleware found
         if (is_null($middleware)) return;
 
-        return Utils::applyMiddleware($request, $middleware);
+        Utils::applyMiddleware($request, $middleware);
     }
 
     protected function makeFakeRequest()

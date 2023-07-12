@@ -101,6 +101,9 @@
     if (document.querySelector("[data-csrf]")) {
       return document.querySelector("[data-csrf]").getAttribute("data-csrf");
     }
+    if (window.livewireScriptConfig["csrf"] ?? false) {
+      return window.livewireScriptConfig["csrf"];
+    }
     throw "Livewire: No CSRF token detected";
   }
   function contentIsFromDump(content) {
@@ -184,7 +187,7 @@
   }
 
   // js/request.js
-  var updateUri = document.querySelector("[data-uri]").getAttribute("data-uri");
+  var updateUri = document.querySelector("[data-uri]")?.getAttribute("data-uri") ?? window.livewireScriptConfig["uri"] ?? null;
   function triggerSend() {
     bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
       sendRequestToServer();
@@ -200,6 +203,7 @@
     }, 5);
   }
   async function sendRequestToServer() {
+    prepareCommitPayloads();
     await queueNewRequestAttemptsWhile(async () => {
       let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
       let options = {
@@ -213,23 +217,44 @@
           "X-Livewire": ""
         }
       };
+      let succeedCallbacks = [];
+      let failCallbacks = [];
+      let respondCallbacks = [];
+      let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+      let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
+      let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
       let finishProfile = trigger("request.profile", options);
-      let finishRequestHook = trigger("request", updateUri, options);
+      trigger("request", {
+        url: updateUri,
+        options,
+        payload: options.body,
+        respond: (i) => respondCallbacks.push(i),
+        succeed: (i) => succeedCallbacks.push(i),
+        fail: (i) => failCallbacks.push(i)
+      });
       let response = await fetch(updateUri, options);
-      response = finishRequestHook(response);
+      let mutableObject = {
+        status: response.status,
+        response
+      };
+      respond(mutableObject);
+      response = mutableObject.response;
       let content = await response.text();
       if (!response.ok) {
         finishProfile({ content: "{}", failed: true });
         let preventDefault = false;
-        trigger("request.error", response, content, () => preventDefault = true);
+        handleFailure();
+        fail({
+          status: response.status,
+          content,
+          preventDefault: () => preventDefault = true
+        });
         if (preventDefault)
-          return await fail();
+          return;
         if (response.status === 419) {
           handlePageExpiry();
-          return await fail();
         }
-        handleFailure();
-        await fail();
+        return showFailureModal(content);
       }
       if (response.redirected) {
         window.location.href = response.url;
@@ -243,26 +268,34 @@
       }
       let { components: components2 } = JSON.parse(content);
       handleSuccess(components2);
+      succeed({ status: response.status, json: JSON.parse(content) });
     });
+  }
+  function prepareCommitPayloads() {
+    let commits = getCommits();
+    commits.forEach((i) => i.prepare());
   }
   function compileCommitPayloads() {
     let commits = getCommits();
-    commits.forEach((i) => i.prepare());
     let commitPayloads = [];
     let successReceivers = [];
     let failureReceivers = [];
     flushCommits((commit) => {
-      let [payload, succeed2, fail3] = commit.toRequestPayload();
+      let [payload, succeed2, fail2] = commit.toRequestPayload();
       commitPayloads.push(payload);
       successReceivers.push(succeed2);
-      failureReceivers.push(fail3);
+      failureReceivers.push(fail2);
     });
     let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
-    let fail2 = () => failureReceivers.forEach((receiver) => receiver());
-    return [commitPayloads, succeed, fail2];
+    let fail = () => failureReceivers.forEach((receiver) => receiver());
+    return [commitPayloads, succeed, fail];
   }
   function handlePageExpiry() {
     confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+  }
+  function showFailureModal(content) {
+    let html = content;
+    showHtmlModal(html);
   }
   var sendingRequest = false;
   var afterSendStack = [];
@@ -341,12 +374,12 @@
       });
     }
     prepare() {
-      trigger("commit.prepare", this.component);
+      trigger("commit.prepare", { component: this.component });
     }
     toRequestPayload() {
       let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
       let payload = {
-        snapshot: this.component.encodedSnapshot,
+        snapshot: this.component.snapshotEncoded,
         updates: propertiesDiff,
         calls: this.calls.map((i) => ({
           path: i.path,
@@ -354,9 +387,28 @@
           params: i.params
         }))
       };
-      let finishTarget = trigger("commit", this.component, payload);
+      let succeedCallbacks = [];
+      let failCallbacks = [];
+      let respondCallbacks = [];
+      let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+      let fail = () => failCallbacks.forEach((i) => i());
+      let respond = () => respondCallbacks.forEach((i) => i());
+      let finishTarget = trigger("commit", {
+        component: this.component,
+        commit: payload,
+        succeed: (callback) => {
+          succeedCallbacks.push(callback);
+        },
+        fail: (callback) => {
+          failCallbacks.push(callback);
+        },
+        respond: (callback) => {
+          respondCallbacks.push(callback);
+        }
+      });
       let handleResponse = (response) => {
         let { snapshot, effects } = response;
+        respond();
         this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
         processEffects(this.component, this.component.effects);
         if (effects["returns"]) {
@@ -366,12 +418,14 @@
             handleReturn(returns[index]);
           });
         }
-        finishTarget({ snapshot, effects });
+        let parsedSnapshot = JSON.parse(snapshot);
+        finishTarget({ snapshot: parsedSnapshot, effects });
         this.resolvers.forEach((i) => i());
+        succeed(response);
       };
       let handleFailure = () => {
-        let failed = true;
-        finishTarget(failed);
+        respond();
+        fail();
       };
       return [payload, handleResponse, handleFailure];
     }
@@ -416,7 +470,7 @@
     flushing = false;
   }
   var reactive;
-  var effect2;
+  var effect;
   var release;
   var raw;
   var shouldSchedule = true;
@@ -428,7 +482,7 @@
   function setReactivityEngine(engine) {
     reactive = engine.reactive;
     release = engine.release;
-    effect2 = (callback) => engine.effect(callback, { scheduler: (task) => {
+    effect = (callback) => engine.effect(callback, { scheduler: (task) => {
       if (shouldSchedule) {
         scheduler(task);
       } else {
@@ -438,13 +492,13 @@
     raw = engine.raw;
   }
   function overrideEffect(override) {
-    effect2 = override;
+    effect = override;
   }
   function elementBoundEffect(el) {
     let cleanup22 = () => {
     };
     let wrappedEffect = (callback) => {
-      let effectReference = effect2(callback);
+      let effectReference = effect(callback);
       if (!el._x_effects) {
         el._x_effects = /* @__PURE__ */ new Set();
         el._x_runEffects = () => {
@@ -1561,7 +1615,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     initTree(el, shallowWalker);
   }
   function dontRegisterReactiveSideEffects(callback) {
-    let cache = effect2;
+    let cache = effect;
     overrideEffect((callback2, el) => {
       let storedEffect = cache(callback2);
       release(storedEffect);
@@ -1742,7 +1796,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
     let firstRun = true;
     let outerHash, innerHash, outerHashLatest, innerHashLatest;
-    let reference = effect2(() => {
+    let reference = effect(() => {
       let outer, inner;
       if (firstRun) {
         outer = outerGet();
@@ -1859,7 +1913,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return release;
     },
     get effect() {
-      return effect2;
+      return effect;
     },
     get raw() {
       return raw;
@@ -1963,7 +2017,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
-  function effect22(fn, options = EMPTY_OBJ) {
+  function effect2(fn, options = EMPTY_OBJ) {
     if (isEffect(fn)) {
       fn = fn.raw;
     }
@@ -1991,7 +2045,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!effectStack.includes(effect32)) {
         cleanup(effect32);
         try {
-          enableTracking2();
+          enableTracking();
           effectStack.push(effect32);
           activeEffect = effect32;
           return fn();
@@ -2022,11 +2076,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var shouldTrack = true;
   var trackStack = [];
-  function pauseTracking2() {
+  function pauseTracking() {
     trackStack.push(shouldTrack);
     shouldTrack = false;
   }
-  function enableTracking2() {
+  function enableTracking() {
     trackStack.push(shouldTrack);
     shouldTrack = true;
   }
@@ -2157,7 +2211,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
     const method = Array.prototype[key];
     arrayInstrumentations[key] = function(...args) {
-      pauseTracking2();
+      pauseTracking();
       const res = method.apply(this, args);
       resetTracking();
       return res;
@@ -3336,7 +3390,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   alpine_default.setEvaluator(normalEvaluator);
-  alpine_default.setReactivityEngine({ reactive: reactive2, effect: effect22, release: stop, raw: toRaw });
+  alpine_default.setReactivityEngine({ reactive: reactive2, effect: effect2, release: stop, raw: toRaw });
   var src_default = alpine_default;
   var module_default = src_default;
 
@@ -3613,12 +3667,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function wireFallback(callback) {
     fallback = callback;
   }
+  var aliases = {
+    "get": "$get",
+    "set": "$set",
+    "call": "$call",
+    "watch": "$watch",
+    "entangle": "$entangle",
+    "dispatch": "$dispatch",
+    "dispatchTo": "$dispatchTo",
+    "dispatchSelf": "$dispatchSelf",
+    "upload": "$upload",
+    "uploadMultiple": "$uploadMultiple",
+    "removeUpload": "$removeUpload"
+  };
   function generateWireObject(component, state) {
     return new Proxy({}, {
       get(target, property) {
         if (property === "__instance")
           return component;
-        if (property in properties) {
+        if (property in aliases) {
+          return getProperty(component, aliases[property]);
+        } else if (property in properties) {
           return getProperty(component, property);
         } else if (property in state) {
           return state[property];
@@ -3630,6 +3699,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (property in state) {
           state[property] = value;
         }
+        return true;
       }
     });
   }
@@ -3641,41 +3711,54 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   module_default.magic("wire", (el) => closestComponent(el).$wire);
   wireProperty("__instance", (component) => component);
-  wireProperty("get", (component) => (property, reactive4 = true) => dataGet(reactive4 ? component.reactive : component.ephemeral, property));
-  wireProperty("set", (component) => async (property, value, live = true) => {
+  wireProperty("$get", (component) => (property, reactive4 = true) => dataGet(reactive4 ? component.reactive : component.ephemeral, property));
+  wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
     return live ? await requestCommit(component) : Promise.resolve();
   });
-  wireProperty("call", (component) => async (method, ...params) => {
+  wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
   });
-  wireProperty("entangle", (component) => (name, live = false) => {
+  wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
-  });
-  wireProperty("$set", (component) => (...params) => {
-    return component.$wire.set(...params);
   });
   wireProperty("$toggle", (component) => (name) => {
     return component.$wire.set(name, !component.$wire.get(name));
   });
   wireProperty("$watch", (component) => (path, callback) => {
     let firstTime = true;
-    let old = void 0;
-    effect(() => {
+    let oldValue = void 0;
+    module_default.effect(() => {
       let value = dataGet(component.reactive, path);
-      if (firstTime) {
-        firstTime = false;
-        return;
+      JSON.stringify(value);
+      if (!firstTime) {
+        queueMicrotask(() => {
+          callback(value, oldValue);
+          oldValue = value;
+        });
+      } else {
+        oldValue = value;
       }
-      pauseTracking();
-      callback(value, old);
-      old = value;
-      enableTracking();
+      firstTime = false;
     });
   });
-  wireProperty("$watchEffect", (component) => (callback) => effect(callback));
-  wireProperty("$refresh", (component) => async () => await requestCommit(component));
+  wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => await requestCommit(component));
+  wireProperty("$on", (component) => (...params) => listen(component, ...params));
+  wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
+  wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
+  wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(component, ...params));
+  wireProperty("$upload", (component) => (...params) => upload(component, ...params));
+  wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
+  wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
+  var parentMemo;
+  wireProperty("$parent", (component) => {
+    if (parentMemo)
+      return parentMemo.$wire;
+    let parent = closestComponent(component.el.parentElement);
+    parentMemo = parent;
+    return parent.$wire;
+  });
   var overriddenMethods = /* @__PURE__ */ new WeakMap();
   function overrideMethod(component, method, callback) {
     if (!overriddenMethods.has(component)) {
@@ -3697,24 +3780,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return await requestCall(component, property, params);
   });
-  var parentMemo;
-  wireProperty("$parent", (component) => {
-    if (parentMemo)
-      return parentMemo.$wire;
-    let parent = closestComponent(component.el.parentElement);
-    parentMemo = parent;
-    return parent.$wire;
-  });
-  wireProperty("$on", (component) => (...params) => listen(component, ...params));
-  wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
-  wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
-  wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(component, ...params));
-  wireProperty("dispatch", (component) => (...params) => dispatch3(component, ...params));
-  wireProperty("dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
-  wireProperty("dispatchTo", (component) => (...params) => dispatchTo(component, ...params));
-  wireProperty("upload", (component) => (...params) => upload(component, ...params));
-  wireProperty("uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
-  wireProperty("removeUpload", (component) => (...params) => removeUpload(component, ...params));
 
   // js/component.js
   var Component = class {
@@ -3722,12 +3787,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (el.__livewire)
         throw "Component already initialized";
       el.__livewire = this;
-      this.symbol = Symbol();
       this.el = el;
       this.id = el.getAttribute("wire:id");
       this.__livewireId = this.id;
-      this.encodedSnapshot = el.getAttribute("wire:snapshot");
-      this.snapshot = JSON.parse(this.encodedSnapshot);
+      this.snapshotEncoded = el.getAttribute("wire:snapshot");
+      this.snapshot = JSON.parse(this.snapshotEncoded);
+      if (!this.snapshot) {
+        throw new `Snapshot missing on Livewire component with id: `() + this.id;
+      }
       this.name = this.snapshot.memo.name;
       this.effects = JSON.parse(el.getAttribute("wire:effects"));
       this.canonical = extractData(deepClone(this.snapshot.data));
@@ -3736,19 +3803,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.$wire = generateWireObject(this, this.reactive);
       processEffects(this, this.effects);
     }
-    mergeNewSnapshot(encodedSnapshot, effects, updates = {}) {
-      let snapshot = JSON.parse(encodedSnapshot);
+    mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
+      let snapshot = JSON.parse(snapshotEncoded);
       let oldCanonical = deepClone(this.canonical);
       let updatedOldCanonical = this.applyUpdates(oldCanonical, updates);
       let newCanonical = extractData(deepClone(snapshot.data));
       let dirty = diff(updatedOldCanonical, newCanonical);
-      this.encodedSnapshot = encodedSnapshot;
+      this.snapshotEncoded = snapshotEncoded;
       this.snapshot = snapshot;
       this.effects = effects;
       this.canonical = extractData(deepClone(snapshot.data));
       let newData = extractData(deepClone(snapshot.data));
       Object.entries(dirty).forEach(([key, value]) => {
-        dataSet(this.reactive, key, value);
+        let rootKey = key.split(".")[0];
+        this.reactive[rootKey] = newData[rootKey];
       });
       return dirty;
     }
@@ -3776,7 +3844,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let component = new Component(el);
     if (components[component.id])
       throw "Component already registered";
-    trigger("component.init", component);
+    trigger("component.init", { component });
     components[component.id] = component;
     return component;
   }
@@ -3816,6 +3884,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function first() {
     return Object.values(components)[0].$wire;
   }
+  function all() {
+    return Object.values(components);
+  }
 
   // js/features/supportEvents.js
   on("effects", (component, effects) => {
@@ -3851,7 +3922,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function dispatchEvent(target, name, params, bubbles = true) {
     let e = new CustomEvent(name, { bubbles, detail: params });
     e.__livewire = { name, params, receivedBy: [] };
-    trigger("dispatch", e);
     target.dispatchEvent(e);
   }
   function dispatch3(component, name, params) {
@@ -3891,7 +3961,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let elDirectives = getDirectives(el);
     Object.entries(directives2).forEach(([name, callback]) => {
       elDirectives.directives.filter(({ value }) => value === name).forEach((directive4) => {
-        callback(el, directive4, {
+        callback({
+          el,
+          directive: directive4,
           component,
           cleanup: (callback2) => {
             module_default.onAttributeRemoved(el, "wire:".directive, callback2);
@@ -3929,7 +4001,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   };
   var Directive = class {
     constructor(value, modifiers, rawName, el) {
-      this.rawName = rawName;
+      this.rawName = this.raw = rawName;
       this.el = el;
       this.eventContext;
       this.value = value;
@@ -3962,7 +4034,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.esm.js
+  // ../alpine/packages/collapse/dist/module.esm.js
   function src_default2(Alpine4) {
     Alpine4.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -5966,11 +6038,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getElementBoundUtilities2(el) {
     let cleanups = [];
     let cleanup3 = (callback) => cleanups.push(callback);
-    let [effect23, cleanupEffect] = elementBoundEffect2(el);
+    let [effect22, cleanupEffect] = elementBoundEffect2(el);
     cleanups.push(cleanupEffect);
     let utilities = {
       Alpine: alpine_default2,
-      effect: effect23,
+      effect: effect22,
       cleanup: cleanup3,
       evaluateLater: evaluateLater2.bind(evaluateLater2, el),
       evaluate: evaluate2.bind(evaluate2, el)
@@ -7602,8 +7674,166 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default7;
 
+  // ../alpine/packages/mask/dist/module.esm.js
+  function src_default8(Alpine4) {
+    Alpine4.directive("mask", (el, { value, expression }, { effect: effect4, evaluateLater: evaluateLater3 }) => {
+      let templateFn = () => expression;
+      let lastInputValue = "";
+      queueMicrotask(() => {
+        if (["function", "dynamic"].includes(value)) {
+          let evaluator = evaluateLater3(expression);
+          effect4(() => {
+            templateFn = (input) => {
+              let result;
+              Alpine4.dontAutoEvaluateFunctions(() => {
+                evaluator((value2) => {
+                  result = typeof value2 === "function" ? value2(input) : value2;
+                }, { scope: {
+                  $input: input,
+                  $money: formatMoney.bind({ el })
+                } });
+              });
+              return result;
+            };
+            processInputValue(el, false);
+          });
+        } else {
+          processInputValue(el, false);
+        }
+        if (el._x_model)
+          el._x_model.set(el.value);
+      });
+      el.addEventListener("input", () => processInputValue(el));
+      el.addEventListener("blur", () => processInputValue(el, false));
+      function processInputValue(el2, shouldRestoreCursor = true) {
+        let input = el2.value;
+        let template = templateFn(input);
+        if (!template || template === "false")
+          return false;
+        if (lastInputValue.length - el2.value.length === 1) {
+          return lastInputValue = el2.value;
+        }
+        let setInput = () => {
+          lastInputValue = el2.value = formatInput(input, template);
+        };
+        if (shouldRestoreCursor) {
+          restoreCursorPosition(el2, template, () => {
+            setInput();
+          });
+        } else {
+          setInput();
+        }
+      }
+      function formatInput(input, template) {
+        if (input === "")
+          return "";
+        let strippedDownInput = stripDown(template, input);
+        let rebuiltInput = buildUp(template, strippedDownInput);
+        return rebuiltInput;
+      }
+    }).before("model");
+  }
+  function restoreCursorPosition(el, template, callback) {
+    let cursorPosition = el.selectionStart;
+    let unformattedValue = el.value;
+    callback();
+    let beforeLeftOfCursorBeforeFormatting = unformattedValue.slice(0, cursorPosition);
+    let newPosition = buildUp(template, stripDown(template, beforeLeftOfCursorBeforeFormatting)).length;
+    el.setSelectionRange(newPosition, newPosition);
+  }
+  function stripDown(template, input) {
+    let inputToBeStripped = input;
+    let output = "";
+    let regexes = {
+      "9": /[0-9]/,
+      a: /[a-zA-Z]/,
+      "*": /[a-zA-Z0-9]/
+    };
+    let wildcardTemplate = "";
+    for (let i = 0; i < template.length; i++) {
+      if (["9", "a", "*"].includes(template[i])) {
+        wildcardTemplate += template[i];
+        continue;
+      }
+      for (let j = 0; j < inputToBeStripped.length; j++) {
+        if (inputToBeStripped[j] === template[i]) {
+          inputToBeStripped = inputToBeStripped.slice(0, j) + inputToBeStripped.slice(j + 1);
+          break;
+        }
+      }
+    }
+    for (let i = 0; i < wildcardTemplate.length; i++) {
+      let found = false;
+      for (let j = 0; j < inputToBeStripped.length; j++) {
+        if (regexes[wildcardTemplate[i]].test(inputToBeStripped[j])) {
+          output += inputToBeStripped[j];
+          inputToBeStripped = inputToBeStripped.slice(0, j) + inputToBeStripped.slice(j + 1);
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        break;
+    }
+    return output;
+  }
+  function buildUp(template, input) {
+    let clean = Array.from(input);
+    let output = "";
+    for (let i = 0; i < template.length; i++) {
+      if (!["9", "a", "*"].includes(template[i])) {
+        output += template[i];
+        continue;
+      }
+      if (clean.length === 0)
+        break;
+      output += clean.shift();
+    }
+    return output;
+  }
+  function formatMoney(input, delimiter = ".", thousands, precision = 2) {
+    if (input === "-")
+      return "-";
+    if (/^\D+$/.test(input))
+      return "9";
+    thousands = thousands ?? (delimiter === "," ? "." : ",");
+    let addThousands = (input2, thousands2) => {
+      let output = "";
+      let counter = 0;
+      for (let i = input2.length - 1; i >= 0; i--) {
+        if (input2[i] === thousands2)
+          continue;
+        if (counter === 3) {
+          output = input2[i] + thousands2 + output;
+          counter = 0;
+        } else {
+          output = input2[i] + output;
+        }
+        counter++;
+      }
+      return output;
+    };
+    let minus = input.startsWith("-") ? "-" : "";
+    let strippedInput = input.replaceAll(new RegExp(`[^0-9\\${delimiter}]`, "g"), "");
+    let template = Array.from({ length: strippedInput.split(delimiter)[0].length }).fill("9").join("");
+    template = `${minus}${addThousands(template, thousands)}`;
+    if (precision > 0 && input.includes(delimiter))
+      template += `${delimiter}` + "9".repeat(precision);
+    queueMicrotask(() => {
+      if (this.el.value.endsWith(delimiter))
+        return;
+      if (this.el.value[this.el.selectionStart - 1] === delimiter) {
+        this.el.setSelectionRange(this.el.selectionStart - 1, this.el.selectionStart - 1);
+      }
+    });
+    return template;
+  }
+  var module_default9 = src_default8;
+
   // js/lifecycle.js
   function start3() {
+    dispatch(document, "livewire:init");
+    dispatch(document, "livewire:initializing");
     module_default.plugin(module_default8);
     module_default.plugin(module_default7);
     module_default.plugin(module_default5);
@@ -7611,6 +7841,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.plugin(module_default3);
     module_default.plugin(module_default4);
     module_default.plugin(module_default6);
+    module_default.plugin(module_default9);
     module_default.addRootSelector(() => "[wire\\:id]");
     module_default.interceptInit(module_default.skipDuringClone((el) => {
       if (el.hasAttribute("wire:id")) {
@@ -7622,15 +7853,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let component = closestComponent(el, false);
       if (component) {
         initDirectives(el, component);
-        trigger("element.init", el, component);
+        trigger("element.init", { el, component });
       }
     }));
     module_default.start();
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
+    dispatch(document, "livewire:initialized");
+  }
+  function stop2() {
+  }
+  function rescan() {
   }
 
   // js/features/supportWireModelingNestedComponents.js
-  on("commit.prepare", (component) => {
+  on("commit.prepare", ({ component }) => {
     component.children.forEach((child2) => {
       let childMeta = child2.snapshot.memo;
       let bindings = childMeta.bindings;
@@ -7641,7 +7877,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportDisablingFormsDuringRequest.js
   var cleanupStackByComponentId = {};
-  on("element.init", (el, component) => {
+  on("element.init", ({ el, component }) => {
     let directives4 = getDirectives(el);
     if (directives4.missing("submit"))
       return;
@@ -7664,10 +7900,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   });
-  on("commit", (component) => {
-    return () => {
+  on("commit", ({ component, respond }) => {
+    respond(() => {
       cleanup2(component);
-    };
+    });
   });
   function cleanup2(component) {
     if (!cleanupStackByComponentId[component.id])
@@ -7678,9 +7914,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportFileDownloads.js
-  on("commit", (component) => {
-    return () => {
-      let download = component.effects.download;
+  on("commit", ({ component, succeed }) => {
+    succeed(({ effects }) => {
+      let download = effects.download;
       if (!download)
         return;
       let urlObject = window.webkitURL || window.URL;
@@ -7694,7 +7930,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       setTimeout(function() {
         urlObject.revokeObjectURL(url);
       }, 0);
-    };
+    });
   });
   function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
     const byteCharacters = atob(b64Data);
@@ -7720,27 +7956,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (js) {
       Object.entries(js).forEach(([method, body]) => {
         overrideMethod(component, method, () => {
-          let func = new Function([], body);
-          func.bind(component.$wire)();
+          let func = new Function(["$wire"], body);
+          func.bind(component.$wire)(component.$wire);
         });
       });
     }
     if (xjs) {
       xjs.forEach((expression) => {
-        let func = new Function([], expression);
-        func.bind(component.$wire)();
+        let func = new Function(["$wire"], expression);
+        func.bind(component.$wire)(component.$wire);
       });
     }
   });
 
   // js/features/supportQueryString.js
-  on("component.init", (component) => {
+  on("component.init", ({ component }) => {
     let effects = component.effects;
     let queryString = effects["url"];
     if (!queryString)
       return;
     Object.entries(queryString).forEach(([key, value]) => {
       let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value);
+      if (!as)
+        as = name;
       let initialValue = dataGet(component.ephemeral, name);
       let { initial, replace: replace2, push: push2, pop } = track2(as, initialValue, alwaysShow);
       if (use === "replace") {
@@ -7748,14 +7986,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           replace2(dataGet(component.reactive, name));
         });
       } else if (use === "push") {
-        on("commit", (component2, payload) => {
+        on("commit", ({ component: component2, succeed }) => {
           let beforeValue = dataGet(component2.canonical, name);
-          return () => {
+          succeed(() => {
             let afterValue = dataGet(component2.canonical, name);
             if (JSON.stringify(beforeValue) === JSON.stringify(afterValue))
               return;
             push2(afterValue);
-          };
+          });
         });
         pop(async (newValue) => {
           await component.$wire.set(name, newValue);
@@ -7813,11 +8051,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     parentComponent && (wrapper.__livewire = parentComponent);
     let to = wrapper.firstElementChild;
     to.__livewire = component;
-    trigger("morph", el, to, component);
+    trigger("morph", { el, toEl: to, component });
     module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip) => {
         if (isntElement(el2))
           return;
+        trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
         if (el2.__livewire_ignore === true)
           return skip();
         if (el2.__livewire_ignore_self === true)
@@ -7830,18 +8069,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       updated: (el2, toEl) => {
         if (isntElement(el2))
           return;
+        trigger("morph.updated", { el: el2, component });
       },
       removing: (el2, skip) => {
         if (isntElement(el2))
           return;
-        trigger("morph.removing", el2, skip);
+        trigger("morph.removing", { el: el2, component, skip });
       },
       removed: (el2) => {
         if (isntElement(el2))
           return;
+        trigger("morph.removed", { el: el2, component });
       },
       adding: (el2) => {
-        trigger("morph.adding", el2);
+        trigger("morph.adding", { el: el2, component });
       },
       added: (el2) => {
         if (isntElement(el2))
@@ -7887,7 +8128,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportProps.js
-  on("commit.prepare", (component) => {
+  on("commit.prepare", ({ component }) => {
     component.children.forEach((child2) => {
       let childMeta = child2.snapshot.memo;
       let props = childMeta.props;
@@ -7900,7 +8141,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on("morph.added", (el) => {
     el.__addedByMorph = true;
   });
-  directive2("transition", (el, directive4, { component, cleanup: cleanup3 }) => {
+  directive2("transition", ({ el, directive: directive4, component, cleanup: cleanup3 }) => {
     let visibility = module_default.reactive({ state: false });
     module_default.bind(el, {
       [directive4.rawName.replace("wire:", "x-")]: "",
@@ -7910,13 +8151,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     el.__addedByMorph && setTimeout(() => visibility.state = true);
     let cleanups = [];
-    cleanups.push(on("morph.removing", (el2, skip) => {
+    cleanups.push(on("morph.removing", ({ el: el2, skip }) => {
       skip();
       el2.addEventListener("transitionend", () => {
         el2.remove();
       });
       visibility.state = false;
-      cleanups.push(on("morph", (from, to, morphComponent) => {
+      cleanups.push(on("morph", ({ component: morphComponent }) => {
         if (morphComponent !== component)
           return;
         el2.remove();
@@ -7938,7 +8179,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire:wildcard.js
-  on("element.init", (el, component) => {
+  on("element.init", ({ el, component }) => {
     getDirectives(el).all().forEach((directive4) => {
       if (["model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive4.type))
         return;
@@ -7996,7 +8237,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var onlineHandlers = /* @__PURE__ */ new Set();
   window.addEventListener("offline", () => offlineHandlers.forEach((i) => i()));
   window.addEventListener("online", () => onlineHandlers.forEach((i) => i()));
-  directive2("offline", (el, directive4, { cleanup: cleanup3 }) => {
+  directive2("offline", ({ el, directive: directive4, cleanup: cleanup3 }) => {
     let setOffline = () => toggleBooleanStateDirective(el, directive4, true);
     let setOnline = () => toggleBooleanStateDirective(el, directive4, false);
     offlineHandlers.add(setOffline);
@@ -8008,7 +8249,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire:loading.js
-  directive2("loading", (el, directive4, { component }) => {
+  directive2("loading", ({ el, directive: directive4, component }) => {
     let targets = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive4);
     toggleBooleanStateDirective(el, directive4, false);
@@ -8058,15 +8299,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     ];
   }
   function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
-    on("commit", (iComponent, payload) => {
+    on("commit", ({ component: iComponent, commit: payload, respond }) => {
       if (iComponent !== component)
         return;
       if (targets.length > 0 && !containsTargets(payload, targets))
         return;
       startLoading();
-      return () => {
+      respond(() => {
         endLoading();
-      };
+      });
     });
   }
   function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
@@ -8134,7 +8375,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire:stream.js
-  directive2("stream", (el, { expression, modifiers }, { component, cleanup: cleanup3 }) => {
+  directive2("stream", ({ el, directive: directive4, component, cleanup: cleanup3 }) => {
+    let { expression, modifiers } = directive4;
     let off = on("stream", ({ name, content, append }) => {
       if (name !== expression)
         return;
@@ -8146,11 +8388,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     cleanup3(off);
   });
-  on("fetch", () => {
-    return (response) => {
+  on("request", ({ respond }) => {
+    respond((mutableObject) => {
+      let response = mutableObject.response;
       if (!response.headers.has("X-Livewire-Stream"))
-        return response;
-      return {
+        return;
+      mutableObject.response = {
         ok: true,
         redirected: false,
         status: 200,
@@ -8164,7 +8407,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return finalResponse;
         }
       };
-    };
+    });
   });
   async function interceptStreamAndReturnFinalResponse(response, callback) {
     let reader = response.body.getReader();
@@ -8184,8 +8427,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire:ignore.js
-  directive2("ignore", (el, { modifiers }) => {
-    if (modifiers.includes("self")) {
+  directive2("ignore", ({ el, directive: directive4 }) => {
+    if (directive4.modifiers.includes("self")) {
       el.__livewire_ignore_self = true;
     } else {
       el.__livewire_ignore = true;
@@ -8194,14 +8437,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire:dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
-  on("commit", (component) => {
-    return () => {
+  on("commit", ({ component, respond }) => {
+    respond(() => {
       setTimeout(() => {
         refreshDirtyStatesByComponent.each(component, (i) => i(false));
       });
-    };
+    });
   });
-  directive2("dirty", (el, directive4, { component }) => {
+  directive2("dirty", ({ el, directive: directive4, component }) => {
     let targets = dirtyTargets(el);
     let dirty = Alpine.reactive({ state: false });
     let oldIsDirty = false;
@@ -8253,12 +8496,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       timeout = setTimeout(later, wait);
     };
   }
-  directive2("model", (el, { expression, modifiers }, { component, cleanup: cleanup3 }) => {
+  directive2("model", ({ el, directive: directive4, component, cleanup: cleanup3 }) => {
+    let { expression, modifiers } = directive4;
     if (!expression) {
       return console.warn("Livewire: [wire:model] is missing a value.", el);
     }
     if (componentIsMissingProperty(component, expression)) {
-      return console.warn('Livewire: [wire:model="' + expression + '"] property does not exist.', el);
+      return console.warn('Livewire: [wire:model="' + expression + '"] property does not exist on component: [' + component.name + "]", el);
     }
     if (el.type && el.type.toLowerCase() === "file") {
       return handleFileUpload(el, expression, component, cleanup3);
@@ -8302,18 +8546,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
   }
   function componentIsMissingProperty(component, property) {
+    if (property.startsWith("$parent")) {
+      let parent = closestComponent(component.el.parentElement, false);
+      if (!parent)
+        return true;
+      return componentIsMissingProperty(parent, property.split("$parent.")[1]);
+    }
     let baseProperty = property.split(".")[0];
     return !Object.keys(component.canonical).includes(baseProperty);
   }
 
   // js/directives/wire:init.js
-  directive2("init", (el, directive4) => {
+  directive2("init", ({ el, directive: directive4 }) => {
     let fullMethod = directive4.expression ?? "$refresh";
     module_default.evaluate(el, `$wire.${fullMethod}`);
   });
 
   // js/directives/wire:poll.js
-  directive2("poll", (el, directive4, { component }) => {
+  directive2("poll", ({ el, directive: directive4, component }) => {
     let interval = extractDurationFrom(directive4.modifiers, 2e3);
     let { start: start4, pauseWhile, throttleWhile, stopWhen } = poll(() => {
       triggerComponentRequest(el, directive4);
@@ -8386,9 +8636,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function theTabIsInTheBackground() {
     return inBackground;
   }
-  function theDirectiveIsMissingKeepAlive(directive4) {
-    return !directive4.modifiers.includes("keep-alive");
-  }
   function theDirectiveIsOffTheElement(el) {
     return !getDirectives(el).has("poll");
   }
@@ -8421,10 +8668,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire = {
     directive: directive2,
     dispatchTo,
-    getByName,
     start: start3,
+    stop: stop2,
+    rescan,
     first,
     find,
+    getByName,
+    all,
     hook: on,
     trigger,
     dispatch: dispatchGlobal,
@@ -8436,9 +8686,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     console.warn("Detected multiple instances of Alpine running");
   window.Livewire = Livewire;
   window.Alpine = module_default;
-  dispatch(document, "livewire:init");
-  Livewire.start();
-  dispatch(document, "livewire:initialized");
+  if (window.livewireScriptConfig === void 0) {
+    document.addEventListener("DOMContentLoaded", () => {
+      Livewire.start();
+    });
+  }
 })();
 /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
  * @license MIT */

@@ -79,13 +79,6 @@ class SupportPagination extends ComponentHook
 
         $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
 
-        // As the page name key didn't exist when query string was initialised earlier,
-        // we need to initalise it now so the page name gets added to the querystring.
-        $key = 'paginators.' . $pageName;
-        $alias = $queryStringDetails['as'];
-        $use = $queryStringDetails['use'];
-        $alwaysShow = $queryStringDetails['alwaysShow'];
-
         $this->addUrlHook($pageName, $queryStringDetails);
     }
 
@@ -94,8 +87,8 @@ class SupportPagination extends ComponentHook
         $pageNameQueryString = data_get($this->getQueryString(), 'paginators.' . $pageName);
 
         $pageNameQueryString['as'] ??= $pageName;
-        $pageNameQueryString['use'] ??= 'push';
-        $pageNameQueryString['alwaysShow'] ??= false;
+        $pageNameQueryString['history'] ??= true;
+        $pageNameQueryString['keep'] ??= false;
 
         return $pageNameQueryString;
     }
@@ -109,11 +102,11 @@ class SupportPagination extends ComponentHook
     {
         $key = 'paginators.' . $pageName;
         $alias = $queryStringDetails['as'];
-        $use = $queryStringDetails['use'];
-        $alwaysShow = $queryStringDetails['alwaysShow'];
+        $history = $queryStringDetails['history'];
+        $keep = $queryStringDetails['keep'];
 
         // @todo: make this work...
-        $this->component->setPropertyAttribute($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
+        $this->component->setPropertyAttribute($key, new Url(as: $alias, history: $history, keep: $keep));
     }
 
     protected function paginationView()

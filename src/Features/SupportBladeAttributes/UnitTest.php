@@ -47,9 +47,11 @@ class ComponentWithEntangleDirectiveUsedWithinBladeComponent extends Component
     public function render()
     {
         return <<<'HTML'
-        <x-input wire:model="foo"/>
+        <div>
+            <x-input wire:model="foo"/>
 
-        <x-input wire:model.live="bar"/>
+            <x-input wire:model.live="bar"/>
+        </div>
         HTML;
     }
 }

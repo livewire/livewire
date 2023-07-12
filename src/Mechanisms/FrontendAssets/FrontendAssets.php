@@ -16,15 +16,19 @@ class FrontendAssets
 
     public $scriptTagAttributes = [];
 
-    public function boot()
+    public function register()
     {
         app()->singleton($this::class);
+    }
 
+    public function boot()
+    {
         app($this::class)->setScriptRoute(function ($handle) {
             return Route::get('/livewire/livewire.js', $handle);
         });
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
+        Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
         Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
     }
 
@@ -45,6 +49,11 @@ class FrontendAssets
     public static function livewireScripts($expression)
     {
         return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts('.$expression.') !!}';
+    }
+
+    public static function livewireScriptConfig($expression)
+    {
+        return '{!! \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scriptConfig('.$expression.') !!}';
     }
 
     public static function livewireStyles($expression)
@@ -143,6 +152,22 @@ class FrontendAssets
 
         return <<<HTML
         <script src="{$url}" {$nonce} data-csrf="{$token}" data-uri="{$updateUri}" {$extraAttributes}></script>
+        HTML;
+    }
+
+    public static function scriptConfig($options = [])
+    {
+        app(static::class)->hasRenderedScripts = true;
+
+        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
+
+        $attributes = json_encode([
+            'csrf' => app()->has('session.store') ? csrf_token() : '',
+            'uri' => app('livewire')->getUpdateUri(),
+        ]);
+
+        return <<<HTML
+        <script {{ $nonce }} data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
         HTML;
     }
 

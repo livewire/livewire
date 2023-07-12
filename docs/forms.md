@@ -9,7 +9,7 @@ Let's start by looking at a very simple form in a `CreatePost` component. This f
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -26,9 +26,8 @@ class CreatePost extends Component
             $this->only('title', 'content')
         );
 
-        return $this->redirect(
-            ShowPosts::class
-        )->with('status', 'Post successfully created.');
+        return $this->redirect('/posts')
+            ->with('status', 'Post successfully created.');
     }
 
     public function render()
@@ -67,7 +66,7 @@ Let's add some basic validation rules to the `$title` and `$content` properties 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -86,9 +85,7 @@ class CreatePost extends Component
             $this->only('title', 'content')
         );
 
-        return $this->redirect(
-            ShowPosts::class
-        );
+        return $this->redirect('/posts');
     }
 
     public function render()
@@ -103,10 +100,14 @@ We'll also modify our Blade template to show any validation errors on the page.
 ```blade
 <form wire:submit="save">
     <input type="text" wire:model="title">
-    @error('title') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    <div>
+        @error('title') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    </div>
 
     <input type="text" wire:model="content">
-    @error('content') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    <div>
+        @error('content') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    </div>
 
     <button type="submit">Save</button>
 </form>
@@ -127,7 +128,7 @@ Let's rewrite the `CreatePost` component to use a `PostForm` class:
 ```php
 <?php
 
-namespace App\Forms;
+namespace App\Livewire\Forms;
 
 use Livewire\Form;
 
@@ -144,11 +145,11 @@ class PostForm extends Form
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
-use App\Forms\PostForm;
+use App\Livewire\Forms\PostForm;
 
 class CreatePost extends Component
 {
@@ -160,9 +161,7 @@ class CreatePost extends Component
             $this->form->all()
         );
 
-        return $this->redirect(
-            ShowPosts::class
-        );
+        return $this->redirect('/posts');
     }
 
     public function render()
@@ -175,10 +174,14 @@ class CreatePost extends Component
 ```blade
 <form wire:submit="save">
     <input type="text" wire:model="form.title">
-    @error('form.title') <span class="error">{{ $message }}</span> @enderror
+    <div>
+        @error('form.title') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
     <input type="text" wire:model="form.content">
-    @error('form.content') <span class="error">{{ $message }}</span> @enderror
+    <div>
+        @error('form.content') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
     <button type="submit">Save</button>
 </form>
@@ -189,7 +192,7 @@ If you'd like, you can also extract the post creation logic into the form object
 ```php
 <?php
 
-namespace App\Forms;
+namespace App\Livewire\Forms;
 
 use Livewire\Form;
 use App\Models\Post;
@@ -220,9 +223,7 @@ class CreatePost extends Component
     {
         $this->form->store();
 
-        return $this->redirect(
-            ShowPosts::class
-        );
+        return $this->redirect('/posts');
     }
 
     // ...
@@ -236,10 +237,10 @@ Here's what it would look like to use this same form object for an `UpdatePost` 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
-use App\Forms\PostForm;
+use App\Livewire\Forms\PostForm;
 use App\Models\Post;
 
 class UpdatePost extends Component
@@ -255,9 +256,7 @@ class UpdatePost extends Component
     {
         $this->form->update();
 
-        return $this->redirect(
-            ShowPosts::class
-        );
+        return $this->redirect('/posts');
     }
 
     public function render()
@@ -270,7 +269,7 @@ class UpdatePost extends Component
 ```php
 <?php
 
-namespace App\Forms;
+namespace App\Livewire\Forms;
 
 use Livewire\Form;
 use App\Models\Post;
@@ -367,7 +366,9 @@ Livewire handles this sort of thing automatically. By using `.live` or `.blur` o
 ```blade
 <input type="text" wire:model.blur="title">
 
-@error('title') <span class="error">{{ $message }}</span> @enderror
+<div>
+    @error('title') <span class="error">{{ $message }}</span> @enderror
+</div>
 ```
 
 ```php
@@ -386,7 +387,7 @@ If you want to automatically save a form as the user fills it out rather than wa
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -423,10 +424,14 @@ class UpdatePost extends Component
 ```blade
 <form wire:submit.prevent>
     <input type="text" wire:model.blur="title">
-    @error('title') <span class="error">{{ $message }}</span> @enderror
+    <div>
+        @error('title') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
     <input type="text" wire:model.blur="content">
-    @error('content') <span class="error">{{ $message }}</span> @enderror
+    <div>
+        @error('content') <span class="error">{{ $message }}</span> @enderror
+    </div>
 </form>
 ```
 
@@ -494,11 +499,15 @@ For example, below is the original Blade template from the `CreatePost` componen
 
 ```blade
 <form wire:submit="save">
-    <input type="text" wire:model="title"> <!-- [tl! highlight] -->
-    @error('title') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    <input type="text" wire:model="title"> <!-- [tl! highlight:3] -->
+    <div>
+        @error('title') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
-    <input type="text" wire:model="content"> <!-- [tl! highlight] -->
-    @error('content') <span class="error">{{ $message }}</span> @enderror <!-- [tl! highlight] -->
+    <input type="text" wire:model="content"> <!-- [tl! highlight:3] -->
+    <div>
+        @error('content') <span class="error">{{ $message }}</span> @enderror
+    </div>
 
     <button type="submit">Save</button>
 </form>
@@ -525,7 +534,9 @@ Next, here's the source for the `x-input-text` component:
 
 <input type="text" name="{{ $name }}" {{ $attributes }}>
 
-@error($name) <span class="error">{{ $message }}</span> @enderror
+<div>
+    @error($name) <span class="error">{{ $message }}</span> @enderror
+</div>
 ```
 
 As you can see, we took the repetitive HTML and placed it inside a dedicated Blade component.

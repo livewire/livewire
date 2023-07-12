@@ -7,7 +7,7 @@ Below is a `ShowUsers` component that allows you to search users by their name v
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -47,7 +47,7 @@ To preserve the search value across page loads so that a visitor can refresh the
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -55,7 +55,7 @@ use App\Models\User;
 
 class ShowUsers extends Component
 {
-    #[Url]
+    #[Url] // [tl! highlight]
     public $search = '';
 
     public function render()

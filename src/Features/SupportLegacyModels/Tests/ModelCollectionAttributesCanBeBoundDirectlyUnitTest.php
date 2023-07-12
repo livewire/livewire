@@ -10,6 +10,8 @@ use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Sushi\Sushi;
 
+use function Livewire\invade;
+
 class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 {
     use Concerns\EnableLegacyModels;
@@ -120,7 +122,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
 
         $component = Livewire::test(ComponentWithModelCollectionProperty::class);
 
-        $component->snapshot['data']['models'][0]['id'] = 2;
+        invade(invade($component)->lastState)->snapshot['data']['models'][0]['id'] = 2;
 
         $component->call('$refresh');
     }

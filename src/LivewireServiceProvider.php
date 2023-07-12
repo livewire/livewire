@@ -2,13 +2,14 @@
 
 namespace Livewire;
 
-class ServiceProvider extends \Illuminate\Support\ServiceProvider
+class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     public function register()
     {
         $this->registerLivewireSingleton();
         $this->registerConfig();
         $this->bootEventBus();
+        $this->registerMechanisms();
     }
 
     public function boot()
@@ -19,9 +20,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function registerLivewireSingleton()
     {
-        $this->app->alias(Manager::class, 'livewire');
+        $this->app->alias(LivewireManager::class, 'livewire');
 
-        $this->app->singleton(Manager::class);
+        $this->app->singleton(LivewireManager::class);
 
         app('livewire')->setProvider($this);
     }
@@ -40,9 +41,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         (new \Livewire\EventBus)->boot();
     }
 
-    protected function bootMechanisms()
+    protected function getMechanisms()
     {
-        foreach ([
+        return [
             \Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware::class,
             \Livewire\Mechanisms\HandleComponents\HandleComponents::class,
             \Livewire\Mechanisms\HandleRequests\HandleRequests::class,
@@ -52,7 +53,19 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Mechanisms\ComponentRegistry::class,
             \Livewire\Mechanisms\RenderComponent::class,
             \Livewire\Mechanisms\DataStore::class,
-        ] as $mechanism) {
+        ];
+    }
+
+    protected function registerMechanisms()
+    {
+        foreach ($this->getMechanisms() as $mechanism) {
+            (new $mechanism)->register($this);
+        }
+    }
+
+    protected function bootMechanisms()
+    {
+        foreach ($this->getMechanisms() as $mechanism) {
             (new $mechanism)->boot($this);
         }
     }
@@ -61,6 +74,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         foreach([
             \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
+            \Livewire\Features\SupportMultipleRootElementDetection\SupportMultipleRootElementDetection::class,
             \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
@@ -73,7 +87,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
             \Livewire\Features\SupportJsEvaluation\SupportJsEvaluation::class,
             \Livewire\Features\SupportQueryString\SupportQueryString::class,
-            \Livewire\Features\SupportUnitTesting\SupportUnitTesting::class,
             \Livewire\Features\SupportFileUploads\SupportFileUploads::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
@@ -87,6 +100,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportNavigate\SupportNavigate::class,
             \Livewire\Features\SupportEntangle\SupportEntangle::class,
             \Livewire\Features\SupportLocales\SupportLocales::class,
+            \Livewire\Features\SupportTesting\SupportTesting::class,
             \Livewire\Features\SupportModels\SupportModels::class,
             \Livewire\Features\SupportEvents\SupportEvents::class,
 
@@ -98,12 +112,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         }
 
         ComponentHookRegistry::boot();
-
-        // V3 Todo:
-        // \Livewire\Features\SupportChecksumErrorDebugging\SupportChecksumErrorDebugging::class,
-        // \Livewire\Features\SupportPersistedLayouts\SupportPersistedLayouts::class,
-        // \Livewire\Features\SupportHotReloading\SupportHotReloading::class,
-        // \Livewire\Features\SupportJavaScriptOrderedArrays\SupportJavaScriptOrderedArrays::class, @todo: there might be a better way than this...
     }
 }
 

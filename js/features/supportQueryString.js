@@ -3,7 +3,7 @@ import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { track } from '@alpinejs/history'
 
-on('component.init', component => {
+on('component.init', ({ component }) => {
     let effects = component.effects
     let queryString = effects['url']
 
@@ -11,6 +11,8 @@ on('component.init', component => {
 
     Object.entries(queryString).forEach(([key, value]) => {
         let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value)
+
+        if (! as) as = name
 
         let initialValue = dataGet(component.ephemeral, name)
 
@@ -21,16 +23,16 @@ on('component.init', component => {
                 replace(dataGet(component.reactive, name))
             })
         } else if (use === 'push') {
-            on('commit', (component, payload) => {
+            on('commit', ({ component, succeed }) => {
                 let beforeValue = dataGet(component.canonical, name)
 
-                return () => {
+                succeed(() => {
                     let afterValue = dataGet(component.canonical, name)
 
                     if (JSON.stringify(beforeValue) === JSON.stringify(afterValue)) return
 
                     push(afterValue)
-                }
+                })
             })
 
             pop(async newValue => {

@@ -5,7 +5,7 @@ Here's an example `CreatePost` component that demonstrates the most basic valida
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -18,7 +18,7 @@ class CreatePost extends Component
 
     public function save()
     {
-        $validated = $this->validate([
+        $validated = $this->validate([ // [tl! highlight:3]
 			'title' => 'required|min:3',
 			'content' => 'required|min:3',
         ]);
@@ -66,10 +66,10 @@ use App\Models\Post;
 
 class CreatePost extends Component
 {
-    #[Rule('required|min:3')]
+    #[Rule('required|min:3')] // [tl! highlight]
 	public $title = '';
 
-    #[Rule('required|min:3')]
+    #[Rule('required|min:3')] // [tl! highlight]
     public $content = '';
 
     public function save()
@@ -86,7 +86,7 @@ class CreatePost extends Component
 }
 ```
 
-If you prefer more control over when the properties are validated, you can pass a `realTime: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validated()` method:
+If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validated()` method:
 
 ```php
 use Livewire\Attributes\Rule;
@@ -95,10 +95,10 @@ use App\Models\Post;
 
 class CreatePost extends Component
 {
-    #[Rule('required|min:3'), realTime: false]
+    #[Rule('required|min:3', onUpdate: false)]
 	public $title = '';
 
-    #[Rule('required|min:3'), realTime: false]
+    #[Rule('required|min:3', onUpdate: false)]
     public $content = '';
 
     public function save()
@@ -143,7 +143,7 @@ Below is the same `CreatePost` example, but now the properties and rules have be
 ```php
 <?php
 
-namespace App\Forms;
+namespace App\Livewire\Forms;
 
 use Livewire\Form;
 
@@ -162,10 +162,10 @@ The `PostForm` above can now be defined as a property on the `CreatePost` compon
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
+use App\Livewire\Forms\PostForm;
 use Livewire\Component;
-use App\Forms\PostForm;
 use App\Models\Post;
 
 class CreatePost extends Component
@@ -201,7 +201,7 @@ Also, when referencing the property names in the template, you must prepend `for
 </form>
 ```
 
-When using form objects, `#[Rule]` attribute validation will be run every time a property is updated. However, if you disable this behavior by specifying `realTime: false` on the attribute, you can manually run a form object's validation using `$this->form->validate()`:
+When using form objects, `#[Rule]` attribute validation will be run every time a property is updated. However, if you disable this behavior by specifying `onUpdate: false` on the attribute, you can manually run a form object's validation using `$this->form->validate()`:
 
 ```php
 public function save()
@@ -284,11 +284,11 @@ use Livewire\Attributes\Rule;
 #[Rule([
     'titles' => 'required',
     'titles.*' => 'required|min:5',
-], messages: [
+], message: [
     'required' => 'The :attribute is missing.',
     'titles.required' => 'The :attribute are missing.',
     'min' => 'The :attribute is too short.',
-], attributes: [
+], attribute: [
     'titles.*' => 'title',
 ])]
 public $titles = [];
@@ -397,7 +397,7 @@ Below is a basic test case that ensures validation errors are thrown if no input
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use Tests\TestCase;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Tests;
+namespace Livewire\Features\SupportPagination;
 
 use Livewire\Component;
 use Livewire\Livewire;

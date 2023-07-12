@@ -195,4 +195,14 @@ PHP;
                 return new \Illuminate\Http\Response();
             });
     }
+
+    static function extractAttributeDataFromHtml($html, $attribute)
+    {
+        $data = (string) str($html)->betweenFirst($attribute.'="', '"');
+
+        return json_decode(
+            htmlspecialchars_decode($data, ENT_QUOTES|ENT_SUBSTITUTE),
+            associative: true,
+        );
+    }
 }

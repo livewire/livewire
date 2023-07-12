@@ -24,17 +24,17 @@ php artisan make:livewire counter
 ```
 
 This command will generate two new files in your project:
-* `app\Http\Livewire\Counter.php`
+* `App\Livewire\Counter.php`
 * `resources/views/livewire/counter.blade.php`
 
 ## Writing the class
 
-Open `app/Http/Livewire/Counter.php` and replace its contents with the following:
+Open `app/Livewire/Counter.php` and replace its contents with the following:
 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -85,7 +85,7 @@ This code will display the value of the `$count` property and two buttons that i
 Open the `routes/web.php` file in your Laravel application and add the following code:
 
 ```php
-use App\Http\Livewire\Counter;
+use App\Livewire\Counter;
 
 Route::get('/counter', Counter::class);
 ```
@@ -105,17 +105,16 @@ php artisan livewire:layout
 This command will generate a file called `resources/views/components/layout.blade.php` with the following contents:
 
 ```blade
-<html>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
         <title>{{ $title ?? 'Page Title' }}</title>
     </head>
-
     <body>
-
-    <!-- // -->
-
-    {{ $slot }}
-
+        {{ $slot }}
     </body>
 </html>
 ```

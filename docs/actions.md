@@ -1,11 +1,11 @@
-Livewire actions are methods on your components that can be triggered by frontend interactions like clicking a button or submitting a form. They provide the developer experience of being able to call a PHP method directly from the browser, allowing you to focus on the logic of your application without getting bogged down writing boilerplate code connecting your application's frontend and backend.
+Livewire actions are methods on your component that can be triggered by frontend interactions like clicking a button or submitting a form. They provide the developer experience of being able to call a PHP method directly from the browser, allowing you to focus on the logic of your application without getting bogged down writing boilerplate code connecting your application's frontend and backend.
 
 Let's explore a basic example of calling a `save` action on a `CreatePost` component:
 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -57,6 +57,7 @@ Livewire supports a variety of event listeners, allowing you to respond to vario
 | `wire:submit`   | Triggered when a form is submitted        |
 | `wire:keydown`  | Triggered when a key is pressed down      |
 | `wire:mouseenter`| Triggered when the mouse enters an element |
+| `wire:*`| Whatever text follows `wire:` will be used as the event name of the listener |
 
 Because the event name after `wire:` can be anything, Livewire supports any browser event you might need to listen for. For example, to listen for `transitionend`, you can use `wire:transitionend`.
 
@@ -236,7 +237,7 @@ For example, let's imagine you have a `ShowPosts` component that allows users to
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -247,7 +248,7 @@ class ShowPosts extends Component
     {
 		$post = Post::findOrFail($id);
 
-		Auth::user()->can('update', $post);
+        $this->authorize('update', $post);
 
 		$post->delete();
     }
@@ -293,7 +294,7 @@ As an added convenience, you may automatically resolve Eloquent models by a corr
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -302,7 +303,7 @@ class ShowPosts extends Component
 {
     public function delete(Post $post) // [tl! highlight]
     {
-		Auth::user()->can('update', $post);
+        $this->authorize('update', $post);
 
 		$post->delete();
     }
@@ -323,7 +324,7 @@ You can take advantage of [Laravel's dependency injection](https://laravel.com/d
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Repositories\PostRepository;
@@ -434,7 +435,7 @@ For example:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -485,7 +486,7 @@ For example, here is an example of a `CreatePost` component that triggers a clie
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -552,12 +553,12 @@ The `$toggle` action is used to toggle the value of a boolean property in your L
 
 In this example, when the button is clicked, the `sortAsc` property in the component will toggle between `true` and `false`.
 
-### `$emit`
+### `$dispatch`
 
-The `$emit` action allows you to emit a Livewire event directly from the browser. Below is an example of a button that, when clicked, will emit the `post-deleted` event:
+The `$dispatch` action allows you to dispatch a Livewire event directly in the browser. Below is an example of a button that, when clicked, will dispatch the `post-deleted` event:
 
 ```blade
-<button type="submit" wire:click="$emit('post-deleted')">Delete Post</button>
+<button type="submit" wire:click="$dispatch('post-deleted')">Delete Post</button>
 ```
 
 ### `$event`
@@ -587,7 +588,7 @@ To demonstrate, in the `ShowPost` component below, the "view count" is logged wh
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Renderless;
 use Livewire\Component;
@@ -633,7 +634,7 @@ If you prefer to not utilize method attributes or need to conditionally skip ren
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -680,7 +681,7 @@ Here is a vulnerable version of component:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -723,7 +724,7 @@ To protect against this, we need to authorize that the user owns the post about 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -734,9 +735,7 @@ class ShowPosts extends Component
     {
 		$post = Post::find($id);
 
-		if (! Auth::user()->can('update', $post)) { // [tl! highlight:2]
-			abort(403);
-		}
+        $this->authorize('update', $post); // [tl! highlight]
 
 		$post->delete();
     }
@@ -759,7 +758,7 @@ Consider the following `BrowsePosts` component where any user can view all the p
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -804,7 +803,7 @@ To patch this vulnerability, we need to authorize the action on the server like 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -842,7 +841,7 @@ Consider the `BrowsePosts` example that we previously discussed, where users can
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -894,7 +893,7 @@ To remedy this, we can mark the method as `protected` or `private`. Once the met
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -938,7 +937,7 @@ If there are specific middleware that you would like to apply to a specific acti
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Http\Middleware\LogPostCreation;
 use Livewire\Component;

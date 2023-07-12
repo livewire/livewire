@@ -6,7 +6,7 @@ import { getCommits, flushCommits } from './commit'
 /**
  * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
  */
-let updateUri = document.querySelector('[data-uri]').getAttribute('data-uri')
+let updateUri = document.querySelector('[data-uri]')?.getAttribute('data-uri') ?? window.livewireScriptConfig['uri'] ?? null
 
 export function triggerSend() {
     bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
@@ -32,6 +32,8 @@ function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callb
  * store a new snapshot, and handle any side effects.
  */
 async function sendRequestToServer() {
+    prepareCommitPayloads()
+
     await queueNewRequestAttemptsWhile(async () => {
         let [payload, handleSuccess, handleFailure] = compileCommitPayloads()
 
@@ -47,12 +49,35 @@ async function sendRequestToServer() {
             },
         }
 
+        let succeedCallbacks = []
+        let failCallbacks = []
+        let respondCallbacks = []
+
+        let succeed = (fwd) => succeedCallbacks.forEach(i => i(fwd))
+        let fail = (fwd) => failCallbacks.forEach(i => i(fwd))
+        let respond = (fwd) => respondCallbacks.forEach(i => i(fwd))
+
         let finishProfile = trigger('request.profile', options)
-        let finishRequestHook = trigger('request', updateUri, options)
+
+        trigger('request', {
+            url: updateUri,
+            options,
+            payload: options.body,
+            respond: i => respondCallbacks.push(i),
+            succeed: i => succeedCallbacks.push(i),
+            fail: i => failCallbacks.push(i),
+        })
 
         let response = await fetch(updateUri, options)
 
-        response = finishRequestHook(response)
+        let mutableObject = {
+            status: response.status,
+            response,
+        }
+
+        respond(mutableObject)
+
+        response = mutableObject.response
 
         let content = await response.text()
 
@@ -61,18 +86,22 @@ async function sendRequestToServer() {
             finishProfile({ content: '{}', failed: true })
 
             let preventDefault = false
-            trigger('request.error', response, content, () => preventDefault = true)
-            if (preventDefault) return await fail()
-
-            if (response.status === 419) {
-                handlePageExpiry()
-
-                return await fail()
-            }
 
             handleFailure()
 
-            await fail()
+            fail({
+                status: response.status,
+                content,
+                preventDefault: () => preventDefault = true,
+            })
+
+            if (preventDefault) return
+
+            if (response.status === 419) {
+                handlePageExpiry()
+            }
+
+            return showFailureModal(content)
         }
 
         /**
@@ -103,15 +132,21 @@ async function sendRequestToServer() {
         let { components } = JSON.parse(content)
 
         handleSuccess(components)
+
+        succeed({ status: response.status, json: JSON.parse(content) })
     })
 }
 
-function compileCommitPayloads() {
+function prepareCommitPayloads() {
     let commits = getCommits()
 
     // Give each commit a chance to do any last-minute prep
     // before being sent to the server.
     commits.forEach(i => i.prepare())
+}
+
+function compileCommitPayloads() {
+    let commits = getCommits()
 
     let commitPayloads = []
 
@@ -139,7 +174,7 @@ function handlePageExpiry() {
     ) && window.location.reload()
 }
 
-function handleFailure(content) {
+function showFailureModal(content) {
     let html = content
 
     showHtmlModal(html)

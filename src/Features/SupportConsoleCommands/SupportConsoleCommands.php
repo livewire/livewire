@@ -20,6 +20,7 @@ class SupportConsoleCommands extends ComponentHook
             \Livewire\Features\SupportConsoleCommands\Commands\CopyCommand::class,         // livewire:copy
             \Livewire\Features\SupportConsoleCommands\Commands\CpCommand::class,           // livewire:cp
             \Livewire\Features\SupportConsoleCommands\Commands\DeleteCommand::class,       // livewire:delete
+            \Livewire\Features\SupportConsoleCommands\Commands\LayoutCommand::class,       // livewire:layout
             \Livewire\Features\SupportConsoleCommands\Commands\RmCommand::class,           // livewire:rm
             \Livewire\Features\SupportConsoleCommands\Commands\MoveCommand::class,         // livewire:move
             \Livewire\Features\SupportConsoleCommands\Commands\MvCommand::class,           // livewire:mv

@@ -9,8 +9,13 @@ use function Livewire\wrap;
 #[\Attribute]
 class Rule extends LivewireAttribute
 {
+    // @todo: support custom messages...
     function __construct(
         public $rule,
+        protected $attribute = null,
+        protected $as = null,
+        protected $message = null,
+        protected $onUpdate = true,
     ) {}
 
     function boot()
@@ -25,11 +30,37 @@ class Rule extends LivewireAttribute
             $rules[$this->getName()] = $this->rule;
         }
 
+        if ($this->attribute) {
+            if (is_array($this->attribute)) {
+                $this->component->addValidationAttributesFromOutside($this->attribute);
+            } else {
+                $this->component->addValidationAttributesFromOutside([$this->getName() => $this->attribute]);
+            }
+        }
+
+        if ($this->as) {
+            if (is_array($this->as)) {
+                $this->component->addValidationAttributesFromOutside($this->as);
+            } else {
+                $this->component->addValidationAttributesFromOutside([$this->getName() => $this->as]);
+            }
+        }
+
+        if ($this->message) {
+            if (is_array($this->message)) {
+                $this->component->addMessagesFromOutside($this->message);
+            } else {
+                $this->component->addMessagesFromOutside([$this->getName() => $this->message]);
+            }
+        }
+
         $this->component->addRulesFromOutside($rules);
     }
 
     function update($fullPath, $newValue)
     {
+        if ($this->onUpdate === false) return;
+
         return function () {
             wrap($this->component)->validateOnly($this->getName());
         };

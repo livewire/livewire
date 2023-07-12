@@ -1,7 +1,7 @@
 import { directive, getDirectives } from "@/directives"
 import Alpine from 'alpinejs'
 
-directive('poll', (el, directive, { component }) => {
+directive('poll', ({ el, directive, component }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
@@ -89,10 +89,6 @@ document.addEventListener('visibilitychange', () => { inBackground = document.hi
 
 function theTabIsInTheBackground() {
     return inBackground
-}
-
-function theDirectiveIsMissingKeepAlive(directive) {
-    return ! directive.modifiers.includes('keep-alive')
 }
 
 function theDirectiveIsOffTheElement(el) {

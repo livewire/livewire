@@ -9,7 +9,7 @@ trait TestsEvents
 {
     public function dispatch($event, ...$parameters)
     {
-        return parent::call('__dispatch', $event, $parameters);
+        return $this->call('__dispatch', $event, $parameters);
     }
 
     public function fireEvent($event, ...$parameters)

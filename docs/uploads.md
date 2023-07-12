@@ -7,7 +7,7 @@ Here's an example of a simple component that handles uploading a photo:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -185,7 +185,7 @@ Below is a complete example of testing the `UploadPhoto` component with Livewire
 namespace Tests\Feature\Livewire;
 
 use Illuminate\Support\Facades\Storage;
-use App\Http\Livewire\UploadPhoto;
+use App\Livewire\UploadPhoto;
 use Livewire\Livewire;
 use Tests\TestCase;
 

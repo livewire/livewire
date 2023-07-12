@@ -135,12 +135,14 @@ class DuskBrowserMacros
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('request', () => {
+                "window.Livewire.hook('request', ({ respond }) => {
                     window.duskIsWaitingForLivewireRequest{$id} = true
 
-                    return () => {
-                        delete window.duskIsWaitingForLivewireRequest{$id}
-                    }
+                    respond(() => {
+                        queueMicrotask(() => {
+                            delete window.duskIsWaitingForLivewireRequest{$id}
+                        })
+                    })
                 })",
             ]);
 
@@ -156,7 +158,7 @@ class DuskBrowserMacros
             return new class($this, $id) {
                 protected $browser;
                 protected $id;
-                
+
                 public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
 
                 public function __call($method, $params)

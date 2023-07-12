@@ -36,6 +36,12 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('title', function ($title) {
+            if (! isset($this->layoutConfig)) {
+                $this->layoutConfig = [
+                    'params' => [],
+                ];
+            }
+
             $this->layoutConfig['params'] = array_merge($this->layoutConfig['params'], ['title' => $title]);
 
             return $this;

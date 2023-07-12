@@ -24,10 +24,10 @@ class SupportQueryString extends ComponentHook
         foreach ($queryString as $key => $value) {
             $key = is_string($key) ? $key : $value;
             $alias = $value['as'] ?? $key;
-            $use = $value['use'] ?? 'push';
-            $alwaysShow = $value['alwaysShow'] ?? false;
+            $history = $value['history'] ?? true;
+            $keep = $value['keep'] ?? false;
 
-            $this->component->setPropertyAttribute($key, new Url(as: $alias, use: $use, alwaysShow: $alwaysShow));
+            $this->component->setPropertyAttribute($key, new Url(as: $alias, history: $history, keep: $keep));
         }
     }
 

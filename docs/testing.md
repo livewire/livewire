@@ -14,7 +14,7 @@ In addition to generating the component files themselves, the above command will
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -44,7 +44,7 @@ Livewire provides an `assertHasLivewire()` method that can be used from any Lara
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Tests\TestCase;
 
 class CreatePostTest extends TestCase
@@ -72,7 +72,7 @@ Below is an example of using `assertSee()` to ensure that all posts in the datab
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\ShowPosts;
+use App\Livewire\ShowPosts;
 use Livewire\Livewire;
 use App\Models\Post;
 use Tests\TestCase;
@@ -103,7 +103,7 @@ Here's the same test as above, but testing the view data rather than the rendere
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\ShowPosts;
+use App\Livewire\ShowPosts;
 use Livewire\Livewire;
 use App\Models\Post;
 use Tests\TestCase;
@@ -145,7 +145,7 @@ Below is an example of a test where multiple users have posts, yet the authentic
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\ShowPosts;
+use App\Livewire\ShowPosts;
 use Livewire\Livewire;
 use App\Models\User;
 use App\Models\Post;
@@ -186,7 +186,7 @@ Below is an example of using `set()` to update the `$title` property of a `Creat
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -211,7 +211,7 @@ Often, Livewire components receive data being passed in from a parent component 
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\UpdatePost;
+use App\Livewire\UpdatePost;
 use Livewire\Livewire;
 use App\Models\Post;
 use Tests\TestCase;
@@ -236,7 +236,7 @@ The underlying component being tested (`UpdatePost`) will receive `$post` throug
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
@@ -267,7 +267,7 @@ Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/doc
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\With\Url;
@@ -275,7 +275,7 @@ use App\Models\Post;
 
 class SearchPosts extends Component
 {
-    #[Url]
+    #[Url] // [tl! highlight]
     public $search = '';
 
     public function render()
@@ -296,7 +296,7 @@ Below is an example of how you would simulate the scenario of loading this compo
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\SearchPosts;
+use App\Livewire\SearchPosts;
 use Livewire\Livewire;
 use App\Models\Post;
 use Tests\TestCase;
@@ -330,7 +330,7 @@ Below is an example of a `CreatePosts` component using the `call()` method to tr
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use App\Models\Post;
 use Tests\TestCase;
@@ -369,7 +369,7 @@ To test that a validation error has been thrown, you can use Livewire's `assertH
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -401,7 +401,7 @@ Authorizing actions relying on untrusted input in your Livewire components is [e
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\UpdatePost;
+use App\Livewire\UpdatePost;
 use Livewire\Livewire;
 use App\Models\User;
 use App\Models\Post;
@@ -441,7 +441,7 @@ You can test that a Livewire action performed a redirect using the `assertRedire
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -474,7 +474,7 @@ To assert that an event was dispatched from within your component, you can use t
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\CreatePost;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -499,8 +499,8 @@ It is often helpful to test that two components can communicate with each other 
 
 namespace Tests\Feature\Livewire;
 
-use App\Http\Livewire\PostCountBadge;
-use App\Http\Livewire\CreatePost;
+use App\Livewire\PostCountBadge;
+use App\Livewire\CreatePost;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -545,7 +545,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `call('remove', $post->id)`                      | Call the `remove` method and pass the `$post->id` as the first parameter (Accepts subsequent parameters as well) |
 | `refresh()`                      | Trigger a component re-render |
 | `dispatch('post-created')`                      | Dispatch the `post-created` event from the component  |
-| `dispatch('post-created', $post->id)`                      | Dispatch the `post-created` event with `$post->id` as an additional parameter (`$event.detail` from Alpine) |
+| `dispatch('post-created', postId: $post->id)`                      | Dispatch the `post-created` event with `$post->id` as an additional parameter (`$event.detail` from Alpine) |
 
 ### Assertions
 | Method                                                  | Description                                                                                                      |

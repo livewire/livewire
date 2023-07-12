@@ -147,8 +147,10 @@ class UnitTest extends TestCase
                 $noop = $this->bob;
 
                 return <<<'HTML'
+                <div>
                     <div>foo{{ $this->foo }}</div>
                     <div>bob{{ $this->bob }}</div>
+                </div>
                 HTML;
             }
         })

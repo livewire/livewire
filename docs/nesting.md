@@ -13,7 +13,7 @@ To nest a Livewire component within a parent component, simply include it in the
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -34,7 +34,7 @@ class Dashboard extends Component
 </div>
 ```
 
-On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/understanding-nesting).
+On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/understanding-nesting#every-component-is-an-island).
 
 ## Passing props to children
 
@@ -45,7 +45,7 @@ For example, let's check out a `TodoList` component that passes a collection of 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -75,7 +75,7 @@ Now that `$todos` has been passed to the child component, you can receive that d
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -170,7 +170,7 @@ When passing PHP variables into a component, the variable name and the prop name
 
 Developers new to Livewire expect that props are "reactive" by default. In other words, they expect that when a parent changes the value of a prop being passed into a child component, the child component will automatically be updated. However, by default, Livewire props are not reactive.
 
-When using Livewire, [every component is an island](/docs/understanding-nesting). This means that when an update is triggered on the parent and a network request is dispatched, only the parent component's state is sent to the server to re-render - not the child component's. The intention behind this behavior is to only send the minimal amount of data back and forth between the server and client, making updates as performant as possible.
+When using Livewire, [every component is an island](/docs/understanding-nesting#every-component-is-an-island). This means that when an update is triggered on the parent and a network request is dispatched, only the parent component's state is sent to the server to re-render - not the child component's. The intention behind this behavior is to only send the minimal amount of data back and forth between the server and client, making updates as performant as possible.
 
 But, if you want or need a prop to be reactive, you can easily enable this behavior using the `#[Reactive]` attribute parameter.
 
@@ -191,7 +191,7 @@ Now let's add `#[Reactive]` to the `$todos` prop in the `TodoCount` component. O
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Attributes\Reactive;
 use Livewire\Component;
@@ -199,7 +199,7 @@ use App\Models\Todo;
 
 class TodoCount extends Component
 {
-    #[Reactive]
+    #[Reactive] // [tl! highlight]
     public $todos;
 
     public function render()
@@ -224,7 +224,7 @@ Below is an example of a parent `TodoList` component that contains a `$todo` pro
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -236,8 +236,10 @@ class TodoList extends Component
     public function add()
     {
         Todo::create([
-            'content' => $this->reset('todo'),
+            'content' => $this->todo,
         ]);
+
+        $this->reset('todo');
     }
 
     public function render()
@@ -274,13 +276,13 @@ Below is the `TodoInput` component with the `#[Modelable]` attribute added above
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
 class TodoInput extends Component
 {
-    #[Modelable]
+    #[Modelable] // [tl! highlight]
     public $value = '';
 
     public function render()
@@ -309,7 +311,7 @@ Consider a `TodoList` component with functionality to show and remove todos:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -320,9 +322,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        if (! Auth::user()->can('update', $todo)) {
-            abort(403);
-        }
+        $this->authorize('update', $todo);
 
         $todo->delete();
     }
@@ -349,7 +349,7 @@ To call `remove()` from inside the child `TodoItem` components, you can add an e
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -361,9 +361,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        if (! Auth::user()->can('update', $todo)) {
-            abort(403);
-        }
+        $this->authorize('update', $todo);
 
         $todo->delete();
     }
@@ -382,7 +380,7 @@ Once the attribute has been added to the action, you can dispatch the `remove-to
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -393,7 +391,7 @@ class TodoItem extends Component
 
     public function remove()
     {
-        $this->dispatch('remove-todo', $this->todo->id); // [tl! highlight]
+        $this->dispatch('remove-todo', todoId: $this->todo->id); // [tl! highlight]
     }
 
     public function render()
@@ -427,7 +425,7 @@ You can avoid the first request entirely by dispatching the `remove-todo` event 
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Todo;
@@ -447,7 +445,7 @@ class TodoItem extends Component
 <div>
     <span>{{ $todo->content }}</span>
 
-    <button wire:click="$dispatch('remove-todo', {{ $todo->id }})">Remove</button>
+    <button wire:click="$dispatch('remove-todo', { todoId: {{ $todo->id }} })">Remove</button>
 </div>
 ```
 
@@ -484,7 +482,7 @@ Dynamic child components are useful in a variety of different scenarios, but bel
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -525,7 +523,7 @@ Now, if the `Steps` component's `$current` prop is set to "step-1", Livewire wil
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 
@@ -547,7 +545,7 @@ Imagine a survey which contains a `SurveyQuestion` component that can have sub-q
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Question;
@@ -571,7 +569,7 @@ class SurveyQuestion extends Component
 
     @foreach ($subQuestions as $subQuestion)
         <livewire:survey-question :question="$subQuestion" />
-    @endforeaach
+    @endforeach
 </div>
 ```
 
@@ -604,7 +602,7 @@ When the parent component is rendering and encounters a child component like the
 'children' => ['lska'],
 ```
 
-Livewire uses this list for reference on subsequent renders in order to detect if a child component has already been rendered in a previous request. If it has already been rendered, the component is skipped. Remember, [nested components are islands](/docs/understanding-nesting). However, if the child key is not in the list, meaning it hasn't been rendered already, Livewire will create a new instance of the component and render it in place.
+Livewire uses this list for reference on subsequent renders in order to detect if a child component has already been rendered in a previous request. If it has already been rendered, the component is skipped. Remember, [nested components are islands](/docs/understanding-nesting#every-component-is-an-island). However, if the child key is not in the list, meaning it hasn't been rendered already, Livewire will create a new instance of the component and render it in place.
 
 These nuances are all behind-the-scenes behavior that most users don't need to be aware of; however, the concept of setting a key on a child is a powerful tool for controlling child rendering.
 

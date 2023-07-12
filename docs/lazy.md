@@ -5,7 +5,7 @@ For example, imagine you have a `Revenue` component which contains a slow databa
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Transaction;
@@ -43,18 +43,6 @@ To enable lazy loading, you can pass the `lazy` parameter into the component:
 
 Now, instead of loading the component right away, Livewire will skip this component, loading the page without it. Then, after loading the rest of the page, Livewire will make a network request to fully load this component on the page.
 
-## Triggering the load immediately
-
-By default, Livewire will use Alpine's [`x-intersect`](https://alpinejs.dev/plugins/intersect) internally to only load the component when it enters the user's viewport.
-
-For example, if the lazy loaded component is located at the bottom of the page, Livewire won't fully load the component until the user scrolls to the component.
-
-If you would rather load the component immediately after the page load, even if it's out of sight for the user, you can add the `on-load` attribute to the component:
-
-```blade
-<livewire:revenue lazy on-load />
-```
-
 ## Rendering placeholder HTML
 
 By default, Livewire will insert an empty `<div></div>` for your component before it is fully loaded. As the component will initially be invisible to users, it can be jarring when the component suddenly appears on the page.
@@ -64,7 +52,7 @@ To signal to your users that the component is being loaded, you can define a `pl
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Transaction;
@@ -116,7 +104,7 @@ You can accept this data in `mount()` just like any other component:
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Transaction;

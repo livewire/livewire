@@ -7,7 +7,7 @@ use Livewire\Drawer\ImplicitlyBoundMethod;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
-use Livewire\Manager;
+use Livewire\LivewireManager;
 use Throwable;
 
 use function Livewire\on;
@@ -17,10 +17,13 @@ use function Livewire\wrap;
 
 class RenderComponent
 {
-    function boot()
+    function register()
     {
         app()->singleton($this::class);
+    }
 
+    function boot()
+    {
         Blade::directive('livewire', [static::class, 'livewire']);
     }
 
@@ -38,12 +41,12 @@ class RenderComponent
         // If we are inside a Livewire component, we know we're rendering a child.
         // Therefore, we must create a more deterministic view cache key so that
         // Livewire children are properly tracked across load balancers.
-        // if (Manager::$currentCompilingViewPath !== null) {
+        // if (LivewireManager::$currentCompilingViewPath !== null) {
         //     // $key = '[hash of Blade view path]-[current @livewire directive count]'
-        //     $key = "'l" . crc32(Manager::$currentCompilingViewPath) . "-" . Manager::$currentCompilingChildCounter . "'";
+        //     $key = "'l" . crc32(LivewireManager::$currentCompilingViewPath) . "-" . LivewireManager::$currentCompilingChildCounter . "'";
 
         //     // We'll increment count, so each cache key inside a compiled view is unique.
-        //     Manager::$currentCompilingChildCounter++;
+        //     LivewireManager::$currentCompilingChildCounter++;
         // }
 
         return <<<EOT

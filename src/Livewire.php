@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static void component($alias, $viewClass)
- * @method static \Livewire\Features\SupportUnitTesting\Testable test($name, $params = [])
+ * @method static \Livewire\Features\SupportTesting\Testable test($name, $params = [])
  * @method static \Livewire\LivewireManager actingAs($user, $driver = null)
  * @method static \Livewire\LivewireManager withQueryParams($queryParams)
  *
- * @see \Livewire\Manager
+ * @see \Livewire\LivewireManager
  */
 class Livewire extends Facade
 {

@@ -8,16 +8,22 @@ However, when you use pagination inside a Livewire component, users can navigate
 
 Below is the most basic example of using pagination inside a `ShowPosts` component to only show ten posts at a time:
 
+> [!warning] You must use the `WithPagination` trait
+> To take advantage of Livewire's pagination features, each component containing pagination must use the `Livewire\WithPagination` trait.
+
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
+use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Post;
 
 class ShowPosts extends Component
 {
+    use WithPagination;
+
     public function render()
     {
         return view('show-posts', [
@@ -29,9 +35,11 @@ class ShowPosts extends Component
 
 ```blade
 <div>
-    @foreach ($posts as $post)
-        <!-- ... -->
-    @endforeach
+    <div>
+        @foreach ($posts as $post)
+            <!-- ... -->
+        @endforeach
+    </div>
 
     {{ $posts->links() }}
 </div>
@@ -52,13 +60,16 @@ The following component demonstrates using this method to reset the page after a
 ```php
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
+use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Post;
 
 class SearchPosts extends Component
 {
+    use WithPagination;
+
     public $query = '';
 
     public function search()
@@ -83,9 +94,11 @@ class SearchPosts extends Component
         <button type="submit">Search posts</button>
     </form>
 
-    @foreach ($posts as $post)
-        <!-- ... -->
-    @endforeach
+    <div>
+        @foreach ($posts as $post)
+            <!-- ... -->
+        @endforeach
+    </div>
 
     {{ $posts->links() }}
 </div>
@@ -111,11 +124,14 @@ Because both Laravel and Livewire use URL query string parameters to store and t
 To demonstrate the problem more clearly, consider the following `ShowClients` component:
 
 ```php
+use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Client;
 
 class ShowClients extends Component
 {
+    use WithPagination;
+
     public function render()
     {
         return view('show-clients', [
@@ -134,11 +150,14 @@ http://application.test/?page=2`
 Suppose the page also contains a `ShowInvoices` component that also uses pagination. To independently track each paginator's current page, you need to specify a name for the second paginator like so:
 
 ```php
+use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Invoices;
 
 class ShowInvoices extends Component
 {
+    use WithPagination;
+
     public function render()
     {
         return view('show-invoices', [
@@ -171,8 +190,12 @@ $this->previousPage(pageName: 'invoice-page');
 Livewire allows you to execute code before and after a page is updated by defining either of the following methods inside your component:
 
 ```php
+use Livewire\WithPagination;
+
 class ShowPosts extends Component
 {
+    use WithPagination;
+
     public function updatingPage($page)
     {
         // Runs before the page is updated for this component...
@@ -183,7 +206,7 @@ class ShowPosts extends Component
         // Runs after the page is updated for this component...
     }
 
-    pubic function render()
+    public function render()
     {
         return view('show-posts', [
             'posts' => Post::paginate(10),
@@ -228,7 +251,7 @@ You can use Laravel's `simplePaginate()` method instead of `paginate()` for adde
 When paginating results using this method, only *next* and *previous* navigation links will be shown to the user instead of individual links for each page number:
 
 ```php
-pubic function render()
+public function render()
 {
     return view('show-posts', [
         'posts' => Post::simplePaginate(10),
@@ -243,7 +266,7 @@ For more information on simple pagination, check out [Laravel's "simplePaginator
 Livewire also supports using Laravel's cursor pagination—a faster pagination method useful in large datasets:
 
 ```php
-pubic function render()
+public function render()
 {
     return view('show-posts', [
         'posts' => Post::cursorPaginate(10),

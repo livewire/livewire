@@ -135,12 +135,14 @@ class DuskBrowserMacros
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('request', () => {
+                "window.Livewire.hook('request', ({ respond }) => {
                     window.duskIsWaitingForLivewireRequest{$id} = true
 
-                    return () => {
-                        delete window.duskIsWaitingForLivewireRequest{$id}
-                    }
+                    respond(() => {
+                        queueMicrotask(() => {
+                            delete window.duskIsWaitingForLivewireRequest{$id}
+                        })
+                    })
                 })",
             ]);
 

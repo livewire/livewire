@@ -6,8 +6,11 @@ use Livewire\ComponentHook;
 
 class SupportMorphAwareIfStatement extends ComponentHook
 {
+    // @todo: exempt @class and support @error?
     static function provide()
     {
+        if (! config('livewire.inject_morph_markers', true)) return;
+
         static::registerPrecompilers(
             app('livewire')->precompiler(...)
         );
@@ -16,7 +19,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
     static function registerPrecompilers($precompile)
     {
         $outsideOfHtmlTag = function ($directive) {
-            $htmlTag = '<[^>]*("[^"]*"|\'[^\']*\'|\{\{[^}]*\}\}|@if[^(]*\([^)]*\)[^@]*@endif|@foreach[^(]*\([^)]*\)[^@]*@endforeach|[^>])*?>';
+            $htmlTag = '<[^>]*("[^"]*"|\'[^\']*\'|\{\{[^}]*\}\}|@class[^\[]*\[[^\]]*\]|@if[^(]*\([^)]*\)[^@]*@endif|@foreach[^(]*\([^)]*\)[^@]*@endforeach|[^>])*?>';
             $bladeEchoExpression = '\{\{[^}]*\}\}';
             $bladeParameters = '\([^)]*\)';
             $ignoreIfInsideHtmlTagOrExpression = "({$htmlTag}|{$bladeEchoExpression}|{$bladeParameters})(*SKIP)(*FAIL)|";

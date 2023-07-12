@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportUnitTesting\Tests;
+namespace Livewire\Features\SupportTesting\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
@@ -8,7 +8,7 @@ use Livewire\Livewire;
 class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
 {
     /** @test */
-    public function can_assert_basic_property_value()
+    function can_assert_basic_property_value()
     {
         Livewire::test(PropertyTestingComponent::class)
             ->assertSet('foo', 'bar')
@@ -17,21 +17,21 @@ class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function can_assert_computed_property_value()
+    function can_assert_computed_property_value()
     {
         Livewire::test(PropertyTestingComponent::class)
             ->assertSet('bob', 'lob');
     }
 
     /** @test */
-    public function swallows_property_not_found_exceptions()
+    function swallows_property_not_found_exceptions()
     {
         Livewire::test(PropertyTestingComponent::class)
             ->assertSet('nonExistentProperty', null);
     }
 
     /** @test */
-    public function throws_non_property_not_found_exceptions()
+    function throws_non_property_not_found_exceptions()
     {
         $this->markTestSkipped('In V2 computed properties are "LAZY", what should we do in V3?');
 
@@ -46,12 +46,12 @@ class PropertyTestingComponent extends Component
 {
     public $foo = 'bar';
 
-    public function getBobProperty()
+    function getBobProperty()
     {
         return 'lob';
     }
 
-    public function render()
+    function render()
     {
         return '<div></div>';
     }
@@ -59,12 +59,12 @@ class PropertyTestingComponent extends Component
 
 class ComputedPropertyWithExceptionTestingComponent extends Component
 {
-    public function getThrowsExceptionProperty()
+    function getThrowsExceptionProperty()
     {
         throw new \Exception('Test exception');
     }
 
-    public function render()
+    function render()
     {
         return '<div></div>';
     }
