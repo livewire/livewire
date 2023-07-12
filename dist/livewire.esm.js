@@ -8805,11 +8805,12 @@ function morph2(component, el, html) {
   parentComponent && (wrapper.__livewire = parentComponent);
   let to = wrapper.firstElementChild;
   to.__livewire = component;
-  trigger("morph", el, to, component);
+  trigger("morph", { el, toEl: to, component });
   import_alpinejs8.default.morph(el, to, {
     updating: (el2, toEl, childrenOnly, skip) => {
       if (isntElement(el2))
         return;
+      trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
       if (el2.__livewire_ignore === true)
         return skip();
       if (el2.__livewire_ignore_self === true)
@@ -8822,18 +8823,20 @@ function morph2(component, el, html) {
     updated: (el2, toEl) => {
       if (isntElement(el2))
         return;
+      trigger("morph.updated", { el: el2, component });
     },
     removing: (el2, skip) => {
       if (isntElement(el2))
         return;
-      trigger("morph.removing", el2, skip);
+      trigger("morph.removing", { el: el2, component, skip });
     },
     removed: (el2) => {
       if (isntElement(el2))
         return;
+      trigger("morph.removed", { el: el2, component });
     },
     adding: (el2) => {
-      trigger("morph.adding", el2);
+      trigger("morph.adding", { el: el2, component });
     },
     added: (el2) => {
       if (isntElement(el2))
@@ -8903,13 +8906,13 @@ directive("transition", ({ el, directive: directive2, component, cleanup }) => {
   });
   el.__addedByMorph && setTimeout(() => visibility.state = true);
   let cleanups = [];
-  cleanups.push(on("morph.removing", (el2, skip) => {
+  cleanups.push(on("morph.removing", ({ el: el2, skip }) => {
     skip();
     el2.addEventListener("transitionend", () => {
       el2.remove();
     });
     visibility.state = false;
-    cleanups.push(on("morph", (from, to, morphComponent) => {
+    cleanups.push(on("morph", ({ component: morphComponent }) => {
       if (morphComponent !== component)
         return;
       el2.remove();

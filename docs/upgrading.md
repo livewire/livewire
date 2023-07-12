@@ -364,14 +364,14 @@ $this->dispatch('post-created', postId: $post->id); // [tl! add]
 ```
 
 ```html
-<button wire:click="$emit('post-created')">...</button>
-<button wire:click="$dispatch('post-created')">...</button>
+<button wire:click="$emit('post-created')">...</button> <!-- [tl! remove] -->
+<button wire:click="$dispatch('post-created')">...</button> <!-- [tl! add] -->
 
-<button wire:click="$emit('post-created', 1)">...</button>
-<button wire:click="$dispatch('post-created', { postId: 1 })">...</button>
+<button wire:click="$emit('post-created', 1)">...</button> <!-- [tl! remove] -->
+<button wire:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
 
-<button x-on:click="$wire.emit('post-created', 1)">...</button>
-<button x-on:click="$dispatch('post-created', { postId: 1 })">...</button>
+<button x-on:click="$wire.emit('post-created', 1)">...</button> <!-- [tl! remove] -->
+<button x-on:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
 ```
 
 #### `emitUp()`
@@ -411,56 +411,194 @@ protected $queryString = [
 
 ### Pagination
 
-- Republish pagination views if you have previously published them.
-- Can no longer access `$page` directly -> `$paginators['page']` or `getPage()`
+The pagination system has been updated in version 3 to better support multiple paginators within the same component.
+
+#### Re-publish pagination views
+
+If you've published them, you can find the new one here: ??
+
+#### Accessing `$this->page` directly
+
+Because Livewire now supports multiple paginators per component, it has removed the `$page` property from the component class and replaced it with a `$paginators` property that stores an array of paginators.
+
+```php
+$this->page = 2; // [tl! remove]
+$this->paginators['page'] = 2; // [tl! add]
+```
+
+However, it is recommended that you use the provided getters and setters for modifying and accessing the current page:
+
+```php
+// Getter
+$this->getPage();
+
+// Setter
+$this->setPage(2);
+```
 
 ### `wire:click.prefetch`
 
-Removed
+Livewire's action prefetching feature: `wire:click.prefetching`, has been removed entirely. If you depended on this feature, fortunately you're application will still work, it will just be slightly less performant in the areas you were using `.prefetch`.
+
+```html
+<button wire:click.prefetch=""> <!-- [tl! remove] -->
+<button wire:click="..."> <!-- [tl! add] -->
+```
 
 ### Component class
 
-- The component ID is no longer a public property ($id), please use $this->id() or $this->getId() to get the component id.
-- Can no longer use same names for properties and methods
+The following changes have been made to Livewire's base `Livewire\Component` class that your app level components may have relied on.
 
-### JavaScript
+#### The component `$id` property
 
-* prepend `$` to everything (`$watch`, `$upload`, etc...)
-* Changed lifecycle hooks
-* Removed page expired hook
-* 'livewire:load' => 'livewire:init'
+If you accessed the component's ID directly through the `$id` property via `$this->id`, you will have to instead use `$this->getId()`.
+
+```php
+$this->id; // [tl! remove]
+
+$this->getId(); // [tl! add]
+```
+
+#### Duplicate method and property names
+
+PHP allows you to use the same name for both a class property and method. In Livewire version 3, this will cause problems when calling methods from the frontend via `wire:click`.
+
+It is strongly suggested that you use distinct names for all public methods and properties in a component.
+
+```php
+public $search = ''; // [tl! remove:4]
+
+public function search() {
+    // ...
+}
+
+public $query = ''; // [tl! add:4]
+
+public function search() {
+    // ...
+}
+```
+
+### JavaScript API
+
+#### `livewire:init`
+
+In previous versions of Livewire, you would listen for the `livewire:load` event to execute JavaScript code after immediately before Livewire initialized a page.
+
+In version 3, that event name has been changed to `livewire:init` to match Alpine's `alpine:init`:
+
+```js
+document.addEventListener('livewire:load', () => {...}) // [tl! remove]
+
+document.addEventListener('livewire:init', () => {...}) // [tl! add]
+```
+
+#### Page expired hook
+
+In version 2, Livewire exposed a dedicated JavaScript method for customizing the page expiration behavior: `Livewire.onPageExpired()`. This method has been removed in version 3 in favor of using Livewire 3's more powerful `request` hooks directly.
+
+```js
+Livewire.onPageExpired(() => {...}) // [tl! remove]
+
+Livewire.hook('request', ({ fail }) => { // [tl! add:8]
+    fail(({ status, preventDefault }) => {
+        if (status === 419) {
+            confirm('Your custom page expiration behavior...')
+
+            preventDefault()
+        }
+    })
+})
+```
+
+#### Modified lifecycle hooks
+
+Livewire's internal JavaScript lifecycle hooks for intercepting network requests have changed to allow for multiple component updates per request in version 3.
+
+```js
+Livewire.hook('component.initialized', (component) => {}) // [tl! remove]
+Livewire.hook('component.init', ({ component }) => {}) // [tl! add]
+
+Livewire.hook('element.initialized', (el, component) => {}) // [tl! remove]
+Livewire.hook('element.init', ({ el, component }) => {}) // [tl! add]
+
+Livewire.hook('element.updating', (fromEl, toEl, component) => {}) // [tl! remove]
+Livewire.hook('morph.updating', ({ el, toEl, component }) => {}) // [tl! add]
+
+Livewire.hook('element.updated', (el, component) => {}) // [tl! remove]
+Livewire.hook('morph.updated', ({ el, component }) => {}) // [tl! add]
+
+Livewire.hook('element.removed', (el, component) => {}) // [tl! remove]
+Livewire.hook('morph.removed', ({ el, component }) => {}) // [tl! add]
+
+Livewire.hook('message.sent', (message, component) => {}) // [tl! remove]
+Livewire.hook('message.failed', (message, component) => {}) // [tl! remove]
+Livewire.hook('message.received', (message, component) => {}) // [tl! remove]
+Livewire.hook('message.processed', (message, component) => {}) // [tl! remove]
+
+Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => { // [tl! add:14]
+    // Equivelant of 'message.sent'
+
+    succeed(({ snapshot, effect }) => {
+        // Equivelant of 'message.received'
+
+        queueMicrotask(() => {
+            // Equivelant of 'message.processed'
+        })
+    })
+
+    fail(() => {
+        // Equivelant of 'message.failed'
+    })
+})
+```
+
+Read through the new [JavaScript hook documentation](???) for a complete understanding of the new system.
 
 ### Eloquent models
 
-- model binding has been disabled
-* You must set the config "livewire.legacy_model_binding" to true
+Livewire version 2 supported `wire:model` binding directly to Eloquent model properties. For example, the following was a common pattern in Livewire 2 apps:
+
+```php
+public Post $post;
+
+protected $rules = [
+    'post.title' => 'required',
+    'post.description' => 'required',
+];
+```
+
+```html
+<input wire:model="post.title">
+<input wire:model="post.description">
+```
+
+In Livewire 3, binding directly to Eloquent models has been disabled in favor of using [Form Objects](???) as an intermediate abstraction layer.
+
+However, because this behavior is so heavily relied upon in Livewire applications, version 3 maintains support for this behavior via a configuration item in `config/livewire.php`:
+
+```php
+'legacy_model_binding' => true,
+```
+
+By setting `legacy_model_binding` to `true`, Livewire will handle Eloquent model properties exactly as it did in version 2.
 
 ### Localization
 
-Livewire 2 included support for a locale prefix.
+If your application uses a locale prefix in the URI such as `https://example.com/en/...`, version 2 automatically preserved this URL prefix when making component update network requests (`https://example.com/en/livewire/update`).
 
-In Livewire 3 this automatic prefix has been removed. Instead, you will need to add a custom Livewire update route to your `routes/web.php` file inside your route group that applies localization.
-
-For example, here is how you would use a custom Livewire update route along with the `mcamara/laravel-localization` package:
+Version 3 has stopped supporting this behavior automatically. Instead, you are encouraged to add any URI prefixes by customizing Livewire's update endpoint via the new `setUpdateRoute()` API:
 
 ```php
-use Illuminate\Support\Facades\Route;
-use Livewire\Livewire;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+Route::group(['prefix' => LaravelLocalization::setLocale()], function ()
+{
+    // Your other localized routes...
 
-Route::prefix(LaravelLocalization::setLocale())
-    ->group(function () {
-        ... // Your other localized routes.
-
-        Livewire::setUpdateRoute(function ($handle) {
-            return Route::post('livewire/update', $handle);
-        });
+    Livewire::setUpdateRoute(function ($handle) {
+        return Route::post('/livewire/update', $handle);
     });
+});
 ```
 
-See [[installation#Configuring Livewire's update endpoint]] for more details on creating a custom Livewire update endpoint.
+For more information, read the [documentation on configuring Livewire's update endpoint](???).
 
----
-
-## `wire:submit.prevent` no longer needed
-- Change `wire:submit.prevent` to `wire:submit`

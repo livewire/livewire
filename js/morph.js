@@ -18,13 +18,13 @@ export function morph(component, el, html) {
 
     to.__livewire = component
 
-    trigger('morph', el, to, component)
+    trigger('morph', { el, toEl: to, component })
 
     Alpine.morph(el, to, {
         updating: (el, toEl, childrenOnly, skip) => {
             if (isntElement(el)) return
 
-            // trigger('element.updating', el, toEl, this)
+            trigger('morph.updating', { el, toEl, component, skip, childrenOnly })
 
             if (el.__livewire_ignore === true) return skip()
             if (el.__livewire_ignore_self === true) childrenOnly()
@@ -41,27 +41,23 @@ export function morph(component, el, html) {
         updated: (el, toEl) => {
             if (isntElement(el)) return
 
-            // trigger('element.updated', el, component)
+            trigger('morph.updated', { el, component })
         },
 
         removing: (el, skip) => {
             if (isntElement(el)) return
 
-            trigger('morph.removing', el, skip)
+            trigger('morph.removing', { el, component, skip })
         },
 
         removed: (el) => {
             if (isntElement(el)) return
 
-            // trigger('element.removed', el, component)
-
-            // if (el.__livewire) {
-            //     store.removeComponent(el.__livewire)
-            // }
+            trigger('morph.removed', { el, component })
         },
 
         adding: (el) => {
-            trigger('morph.adding', el)
+            trigger('morph.adding', { el, component })
         },
 
         added: (el) => {

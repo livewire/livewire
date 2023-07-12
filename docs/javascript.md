@@ -76,7 +76,7 @@ Livewire allows you to hook into various parts of it's internal lifecycle using 
 
 ```js
 // Register a callback to execute on a given internal Livewire hook...
-Livewire.hook('component.init', () => {
+Livewire.hook('component.init', ({ component }) => {
     // ...
 })
 ```
