@@ -9,6 +9,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToW
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultLayoutView;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultNamespace;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeLazyToBlurModifierOnWireModelDirectives;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeTestAssertionMethods;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeWireLoadDirectiveToWireInit;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ClearViewCache;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromEntanglelDirectives;
@@ -40,6 +41,7 @@ class UpgradeCommand extends Command
             RemovePrefetchModifierFromWireClickDirective::class,
             ChangeWireLoadDirectiveToWireInit::class,
             RepublishNavigation::class,
+            ChangeTestAssertionMethods::class,
 
             ClearViewCache::class,
         ])->thenReturn();
