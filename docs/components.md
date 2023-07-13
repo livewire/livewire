@@ -238,7 +238,7 @@ class CreatePost extends Component
 		]);
 
 		return redirect()->to('/posts')
-			 ->with('status', 'Post created!');;
+			 ->with('status', 'Post created!');
     }
 
     public function render()
