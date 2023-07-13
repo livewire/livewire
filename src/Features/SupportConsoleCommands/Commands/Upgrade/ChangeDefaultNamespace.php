@@ -13,7 +13,7 @@ class ChangeDefaultNamespace extends UpgradeStep
     {
         if($this->hasOldNamespace())
         {
-            $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> The Livewire namespace has has changed. </>");
+            $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> The Livewire namespace has changed. </>");
             $console->newLine();
 
             $console->line('The <options=underscore>App\\Http\\Livewire</> namespace was detected and is no longer the default in Livewire v3. Livewire v3 now uses the <options=underscore>App\\Livewire</> namespace.');

@@ -10,7 +10,7 @@ class ChangeLazyToBlurModifierOnWireModelDirectives extends UpgradeStep
     {
         $this->interactiveReplacement(
             console: $console,
-            title: 'The wire:model.lazy is now wire:model.blur.',
+            title: 'The wire:model.lazy modifier is now wire:model.blur.',
             before: 'wire:model.lazy',
             after: 'wire:model.blur',
             pattern: '/wire:model.lazy/',
