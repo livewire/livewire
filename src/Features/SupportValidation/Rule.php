@@ -13,6 +13,7 @@ class Rule extends LivewireAttribute
     function __construct(
         public $rule,
         protected $attribute = null,
+        protected $as = null,
         protected $message = null,
         protected $onUpdate = true,
     ) {}
@@ -34,6 +35,14 @@ class Rule extends LivewireAttribute
                 $this->component->addValidationAttributesFromOutside($this->attribute);
             } else {
                 $this->component->addValidationAttributesFromOutside([$this->getName() => $this->attribute]);
+            }
+        }
+
+        if ($this->as) {
+            if (is_array($this->as)) {
+                $this->component->addValidationAttributesFromOutside($this->as);
+            } else {
+                $this->component->addValidationAttributesFromOutside([$this->getName() => $this->as]);
             }
         }
 

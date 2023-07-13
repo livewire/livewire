@@ -193,7 +193,7 @@ Now you may access the `$author` from the component's Blade view:
 
 ### Binding inputs to properties
 
-One of Livewire's most powerful feautures is "data binding": the ability to automatically keep properties in-sync with form inputs on the page.
+One of Livewire's most powerful features is "data binding": the ability to automatically keep properties in-sync with form inputs on the page.
 
 Let's bind the `$title` property from the `CreatePost` component to a text input using the `wire:model` directive:
 
@@ -238,7 +238,7 @@ class CreatePost extends Component
 		]);
 
 		return redirect()->to('/posts')
-			 ->with('status', 'Post created!');;
+			 ->with('status', 'Post created!');
     }
 
     public function render()

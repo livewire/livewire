@@ -15,6 +15,7 @@ class SupportConsoleCommands extends ComponentHook
         static::commands([
             \Livewire\Features\SupportConsoleCommands\Commands\MakeLivewireCommand::class, // make:livewire
             \Livewire\Features\SupportConsoleCommands\Commands\MakeCommand::class,         // livewire:make
+            \Livewire\Features\SupportConsoleCommands\Commands\FormCommand::class,         // livewire:form
             \Livewire\Features\SupportConsoleCommands\Commands\TouchCommand::class,        // livewire:touch
             \Livewire\Features\SupportConsoleCommands\Commands\CopyCommand::class,         // livewire:copy
             \Livewire\Features\SupportConsoleCommands\Commands\CpCommand::class,           // livewire:cp

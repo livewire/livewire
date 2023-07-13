@@ -574,7 +574,7 @@ class SurveyQuestion extends Component
 ```
 
 > [!warning]
-> Of course, the standard rules of recursion apply to recursive components. Most importantly, you should have logic in your template to ensure the template doesn't recurse indefinitely. In the exmaple above, if a `$subQuestion` contained the original question as its own `$subQuestion`, an infinite loop would occur.
+> Of course, the standard rules of recursion apply to recursive components. Most importantly, you should have logic in your template to ensure the template doesn't recurse indefinitely. In the example above, if a `$subQuestion` contained the original question as its own `$subQuestion`, an infinite loop would occur.
 
 ## Forcing a child component to re-render
 

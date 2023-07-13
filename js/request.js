@@ -87,6 +87,8 @@ async function sendRequestToServer() {
 
             let preventDefault = false
 
+            handleFailure()
+
             fail({
                 status: response.status,
                 content,

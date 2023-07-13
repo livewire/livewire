@@ -53,7 +53,7 @@ Fundamentals:
 	* Resetting properties ($this->reset())
 	* Data binding (Basic introduction with link to other documentation page)
 	* Supported property types
-		* (Brief expalantion of hydration/dehydration and why every possible type isn't supported)
+		* (Brief explanation of hydration/dehydration and why every possible type isn't supported)
 		* Primitives types (strings, int, boolean, etc...)
 		* Common PHP types (Collection, DateTime, etc...)
 		* Supporting custom types (explain how users can add support for types specific to their application)
@@ -186,7 +186,7 @@ There's the granularity problem: how much do we want to break this up?
 
 There's the ordering problem: "do I go simple to complex? or most real-world to least real-world?"
 
-The repitition problem: do you repeat yourself in multiple pages? or isolate one feature to a single file? This one is answered: repeat yourself.
+The repetition problem: do you repeat yourself in multiple pages? or isolate one feature to a single file? This one is answered: repeat yourself.
 
 ### Code examples are hard
 How much non-crucial context to include? (include < ?php include class? namespace? use? render?)

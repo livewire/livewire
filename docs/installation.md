@@ -41,8 +41,8 @@ By including these assets manually on a page, Livewire knows to not inject the a
 
 Though rarely required, you may disable Livewire's auto-injecting asset behavior by updating the `inject_assets` [configuration option](#publishing-config) in your application's `config/livewire.php` file:
 
-```json
-'inject_assets': false,
+```php
+'inject_assets' => false,
 ```
 
 ## Configuring Livewire's update endpoint
@@ -60,6 +60,15 @@ Livewire::setUpdateRoute(function ($handle) {
 ```
 
 Now, instead of using `/livewire/update`, Livewire will send component updates to `/custom/livewire/update`.
+
+Because Livewire allows you to register your own update route, you can declare any additional middleware you want Livewire to use directly inside `setUpdateRoute()`:
+
+```php
+Livewire::setUpdateRoute(function ($handle) {
+	return Route::post('/custom/livewire/update', $handle)
+        ->middleware([...]); // [tl! highlight]
+});
+```
 
 ## Customizing the asset URL
 
@@ -93,9 +102,9 @@ By default, Alpine and Livewire are loaded using the `<script src="livewire.js">
 // Warning: This snippet demonstrates what NOT to do...
 
 import Alpine from 'alpinejs'
-import mask from '@alpinejs/mask'
+import Clipboard from '@ryangjchandler/alpine-clipboard'
 
-Alpine.plugin(mask)
+Alpine.plugin(Clipboard)
 Alpine.start()
 ```
 
@@ -122,9 +131,9 @@ The final step involves importing Alpine and Livewire in our `app.js` file, allo
 
 ```js
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
-import mask from '@alpinejs/mask'
+import Clipboard from '@ryangjchandler/alpine-clipboard'
 
-Alpine.plugin(mask)
+Alpine.plugin(Clipboard)
 
 Livewire.start()
 ```
