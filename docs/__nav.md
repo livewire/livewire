@@ -44,7 +44,7 @@ Concepts:
     Anatomy Of A Request: { uri: /docs/ }
     DOM diff-patch: { uri: /docs/ }
 UI Components:
-    Dopdown: { uri: /docs/dropdown, file: /dropdown.md }
+    Dropdown: { uri: /docs/dropdown, file: /dropdown.md }
     Modal: { uri: /docs/modal, file: /modal.md }
     Tabs: { uri: /docs/tabs, file: /tabs.md }
 Extending:

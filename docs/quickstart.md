@@ -40,22 +40,22 @@ use Livewire\Component;
 
 class Counter extends Component
 {
-    public $count = 1;
+    public $count = 1;
 
-    public function increment()
-    {
-        $this->count++;
-    }
+    public function increment()
+    {
+        $this->count++;
+    }
 
-    public function decrement()
-    {
-        $this->count--;
-    }
+    public function decrement()
+    {
+        $this->count--;
+    }
 
-    public function render()
-    {
-        return view('livewire.counter');
-    }
+    public function render()
+    {
+        return view('livewire.counter');
+    }
 }
 ```
 
@@ -70,11 +70,11 @@ Open the `resources/views/livewire/counter.blade.php` file and replace its conte
 
 ```blade
 <div>
-    <h1>{{ $count }}</h1>
+    <h1>{{ $count }}</h1>
 
-    <button wire:click="increment">+</button>
+    <button wire:click="increment">+</button>
 
-    <button wire:click="decrement">-</button>
+    <button wire:click="decrement">-</button>
 </div>
 ```
 

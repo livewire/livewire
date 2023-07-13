@@ -8,7 +8,7 @@ However, because Livewire's nesting system is built differently than other frame
 
 ## Every component is an island
 
-In Livewire, every component on a page tracks its state and makes updates independantly of other components.
+In Livewire, every component on a page tracks its state and makes updates independently of other components.
 
 For example, consider the following `Posts` and nested `ShowPost` component:
 
@@ -87,7 +87,7 @@ Here's what the HTML for the entire component tree might look like on initial pa
 
 Notice that the parent component contains both it's rendered template, and the rendered templates of all the components nested within it.
 
-Because each is its own independant component they each have their own IDs and snapshots (`wire:id` and `wire:snapshot`) embedded in their HTML for Livewire's JavaScript core to extract and track.
+Because each is its own independent component they each have their own IDs and snapshots (`wire:id` and `wire:snapshot`) embedded in their HTML for Livewire's JavaScript core to extract and track.
 
 Let's consider a few different update scenarios to see the differences in how Livewire handles different levels of nesting.
 
@@ -191,9 +191,9 @@ The effect is that, after _morphing_, the final DOM content of the parent `Posts
 
 This "island" architecture can have both positive and negative implications for your application.
 
-An advantage of this architecture is it allows you to isolate expensive portions of your application. For example, you can quarantine a slow database query to its own independant component, and its performance overhead won't impact the rest of the page.
+An advantage of this architecture is it allows you to isolate expensive portions of your application. For example, you can quarantine a slow database query to its own independent component, and its performance overhead won't impact the rest of the page.
 
-However, the biggest drawback of this approach is that, because components are entirely seperate, any inter-component communication/dependancies becomes more difficult.
+However, the biggest drawback of this approach is that, because components are entirely separate, any inter-component communication/dependencies becomes more difficult.
 
 For example, if you had a property passed down from the above parent `Posts` component to the nested `ShowPost` component, it wouldn't be "reactive". Because each component is an island, if a request to the parent component changed the value of the property being passed into `ShowPost`, it wouldn't update inside `ShowPost`.
 

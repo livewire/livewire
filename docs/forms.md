@@ -315,7 +315,7 @@ Form objects are not required when working with Livewire, but they do offer a ni
 
 By default, Livewire will automatically disable submit buttons and mark inputs as `readonly` while a form is being submitted, preventing the user from submitting the form again while the first submission is being handled.
 
-However, it can be difficult for users to detect this "loading" state without extra affordances in your appliation's UI.
+However, it can be difficult for users to detect this "loading" state without extra affordances in your application's UI.
 
 Here's an example of adding a small loading spinner to the "Save" button via `wire:loading` so that a user understands that the form is being submitted:
 

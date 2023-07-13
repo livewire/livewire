@@ -33,7 +33,6 @@ composer require livewire/livewire:^3.0@beta
 ```
 
 <!-- @todo after launch:
-
 ### Update composer dependancies
 
 Any other packages in your application that depends on Livewire will need to be upgraded to a version that supports v3.

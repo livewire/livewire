@@ -1,5 +1,5 @@
 
-Because Livewire components are dehydrated (serialized) into JSON, then hydrated (unserialized) back into PHP components between requests, their properties need to be JSON-serializeable.
+Because Livewire components are dehydrated (serialized) into JSON, then hydrated (unserialized) back into PHP components between requests, their properties need to be JSON-serializable.
 
 Natively, PHP serializes most primitive values into JSON easily. However, in order for Livewire component's to support more sophisticated property types (like models, collections, carbon instances, and stringables), a more robust system is needed.
 
