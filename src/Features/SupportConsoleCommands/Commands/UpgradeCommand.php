@@ -15,6 +15,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifie
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePrefetchModifierFromWireClickDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePreventModifierFromWireSubmitDirective;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RepublishNavigation;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ShowUpgradeIntroduction;
 
 class UpgradeCommand extends Command
@@ -38,6 +39,7 @@ class UpgradeCommand extends Command
             RemovePreventModifierFromWireSubmitDirective::class,
             RemovePrefetchModifierFromWireClickDirective::class,
             ChangeWireLoadDirectiveToWireInit::class,
+            RepublishNavigation::class,
 
             ClearViewCache::class,
         ])->thenReturn();
