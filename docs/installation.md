@@ -61,6 +61,15 @@ Livewire::setUpdateRoute(function ($handle) {
 
 Now, instead of using `/livewire/update`, Livewire will send component updates to `/custom/livewire/update`.
 
+Because Livewire allows you to register your own update route, you can declare any additional middleware you want Livewire to use directly inside `setUpdateRoute()`:
+
+```php
+Livewire::setUpdateRoute(function ($handle) {
+	return Route::post('/custom/livewire/update', $handle)
+        ->middleware([...]); // [tl! highlight]
+});
+```
+
 ## Customizing the asset URL
 
 By default, Livewire will serve its JavaScript assets from the following URL: `https://example.com/livewire/livewire.js`. Additionally, Livewire will reference this asset from a script tag like so:
