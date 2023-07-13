@@ -121,7 +121,7 @@ Here are a few specific problematic impacts of these bugs:
 
 Fortunately, Livewire has worked hard to mitigate these problems using the following approaches:
 
-#### Internal look-ahead
+### Internal look-ahead
 
 Livewire has an additional step in its morphing algorithm that checks subsequent elements and their contents before changing an element.
 
@@ -131,7 +131,7 @@ Here is a visualization of the "look-ahead" algorithm in action:
 
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/844600800?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="morph_lookahead"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
 
-#### Injecting morph markers
+### Injecting morph markers
 
 On the backend, Livewire automatically detects conditional inside Blade templates and wraps them in markers that Livewire's JavaScript can use as a guide when morphing.
 
