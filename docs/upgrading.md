@@ -33,7 +33,6 @@ composer require livewire/livewire:^3.0@beta
 ```
 
 <!-- @todo after launch:
-
 ### Update composer dependancies
 
 Any other packages in your application that depends on Livewire will need to be upgraded to a version that supports v3.
@@ -415,7 +414,20 @@ You can remove any instances of `$this->emitUp(...)` or `$emitUp(...)` from your
 
 ### Testing events
 
-Livewire has also changed event assertions to match. `assertEmitted()` has been replaced with `assertDispatched()`
+Livewire has also changed event assertions to match:
+
+```php
+Livewire::test(Component::class)->assertEmitted('post-created'); // [tl! remove]
+Livewire::test(Component::class)->assertDispatched('post-created'); // [tl! add]
+
+Livewire::test(Component::class)->assertEmittedTo(Foo::class, 'post-created'); // [tl! remove]
+Livewire::test(Component::class)->assertDispatchedTo(Foo:class, 'post-created'); // [tl! add]
+
+Livewire::test(Component::class)->assertNotEmitted('post-created'); // [tl! remove]
+Livewire::test(Component::class)->assertNotDispatched('post-created'); // [tl! add]
+
+Livewire::test(Component::class)->assertEmittedUp() // [tl! remove]
+```
 
 ### URL query string
 

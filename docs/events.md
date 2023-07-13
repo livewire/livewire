@@ -245,7 +245,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Livewire\Dashboard;
 use Livewire\Livewire;
 
-class DashbaordTest extends TestCase
+class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -267,7 +267,7 @@ In this example, the test dispatches the `post-created` event, then checks that 
 Livewire pairs nicely with [Laravel Echo](https://laravel.com/docs/broadcasting#client-side-installation) to provide real-time functionality on your web-pages using WebSockets.
 
 > [!warning] Installing Laravel Echo is a prerequisite
-> This feature assumes you have installed Laravel Echo and the `window.Echo` object is globally available in your application. For more information on installing echo, check out the [Laravel Echo documentation](https://laravel.com/docs/broadcasting#client-side-installation).
+> This feature assumes you have installed Laravel Echo and the `window.Echo` object is globally available in your application. For more information on installing echo, check out the [Laravel Echo documentation](https://laravel.com/docs/broadcasting#client-side-installation).
 
 ### Listening for Echo events
 
