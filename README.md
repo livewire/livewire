@@ -22,6 +22,7 @@
 - [ ] Build v3 launch command/experience
 - [ ] Put old site on new URL: 'v2.laravel-livewire.com'
 - [ ] Add proper old site redirects
+- [ ] Add "livewire 3 beta is available" banner to v2 site
 - [ ] Add relevant docblocks
 - [ ] Work through `@todo` comments
 - [ ] Work through `->markTestSkipped()` statements
