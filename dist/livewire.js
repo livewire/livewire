@@ -8377,13 +8377,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire:stream.js
   directive2("stream", ({ el, directive: directive4, component, cleanup: cleanup3 }) => {
     let { expression, modifiers } = directive4;
-    let off = on("stream", ({ name, content, append }) => {
+    let off = on("stream", ({ name, content, replace: replace2 }) => {
       if (name !== expression)
         return;
-      if (modifiers.includes("append") || append) {
-        el.innerHTML = el.innerHTML + content;
-      } else {
+      if (modifiers.includes("replace") || replace2) {
         el.innerHTML = content;
+      } else {
+        el.innerHTML = el.innerHTML + content;
       }
     });
     cleanup3(off);

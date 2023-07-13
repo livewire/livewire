@@ -9147,13 +9147,13 @@ function quickHash(subject) {
 // js/directives/wire:stream.js
 directive("stream", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
   let { expression, modifiers } = directive2;
-  let off = on("stream", ({ name, content, append }) => {
+  let off = on("stream", ({ name, content, replace }) => {
     if (name !== expression)
       return;
-    if (modifiers.includes("append") || append) {
-      el.innerHTML = el.innerHTML + content;
-    } else {
+    if (modifiers.includes("replace") || replace) {
       el.innerHTML = content;
+    } else {
+      el.innerHTML = el.innerHTML + content;
     }
   });
   cleanup2(off);

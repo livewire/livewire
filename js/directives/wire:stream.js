@@ -2,16 +2,18 @@ import { contentIsFromDump } from '@/utils'
 import { directive } from '@/directives'
 import { on, trigger } from '@/events'
 
+// Warning: this API is in beta and is subject to change...
+
 directive('stream', ({el, directive, component, cleanup }) => {
     let { expression, modifiers } = directive
 
-    let off = on('stream', ({ name, content, append }) => {
+    let off = on('stream', ({ name, content, replace }) => {
         if (name !== expression) return
 
-        if (modifiers.includes('append') || append) {
-            el.innerHTML = el.innerHTML + content
-        } else {
+        if (modifiers.includes('replace') || replace) {
             el.innerHTML = content
+        } else {
+            el.innerHTML = el.innerHTML + content
         }
     })
 
