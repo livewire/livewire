@@ -44,7 +44,16 @@ abstract class UpgradeStep
             $console->line("Changing all occurrences of <options=underscore>{$before}</> to <options=underscore>{$after}</>.");
             $console->newLine();
 
-            $console->table(['File', 'Occurrences'], $this->patternReplacement($pattern, $replacement, $directories));
+            $replacements = $this->patternReplacement($pattern, $replacement, $directories);
+
+            if($replacements->isEmpty())
+            {
+                $console->line("No occurrences of <options=underscore>{$before}</> were found.");
+            }
+
+            if($replacements->isNotEmpty()) {
+                $console->table(['File', 'Occurrences'], $replacements);
+            }
         }
 
         $console->newLine(4);
