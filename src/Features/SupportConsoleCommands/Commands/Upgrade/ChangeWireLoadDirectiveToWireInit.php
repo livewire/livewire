@@ -15,6 +15,7 @@ class ChangeWireLoadDirectiveToWireInit extends UpgradeStep
             after: 'livewire:init',
             pattern: '/livewire:load/',
             replacement: 'livewire:init',
+            directories: ['resources/views', 'resources/js']
         );
 
         return $next($console);
