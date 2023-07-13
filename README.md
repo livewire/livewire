@@ -3,7 +3,7 @@
 - [ ] New site ready
 - [ ] Livewire 3 beta "good enough"
 - [ ] Talk as good and polished as possible
-- [ ] Have cool swag
+- [x] Have cool swag
 
 ## Todo:
 - [x] Get testimonials
@@ -14,11 +14,11 @@
 - [x] Write morphing documentation
 - [x] Rethink Alpine bundling and JS extension/upgrade path
 - [x] Detect multiple root elements
-- [ ] Finish upgrade guide
-- [ ] Review advanced documentation
+- [x] Finish upgrade guide
+- [x] Review advanced documentation
 - [ ] Write and practice talk
 - [ ] Finish landing page copy
-- [ ] Fix bug where submit form disabling isn't re-enabled on failure
+- [x] Fix bug where submit form disabling isn't re-enabled on failure
 - [ ] Build v3 launch command/experience
 - [ ] Put old site on new URL: 'v2.laravel-livewire.com'
 - [ ] Add proper old site redirects
