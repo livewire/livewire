@@ -159,7 +159,7 @@ class FrontendAssets
     {
         app(static::class)->hasRenderedScripts = true;
 
-        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
+        $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
 
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',
@@ -167,7 +167,7 @@ class FrontendAssets
         ]);
 
         return <<<HTML
-        <script {{ $nonce }} data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
+        <script{$nonce} data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
         HTML;
     }
 
