@@ -4,11 +4,13 @@ namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
 use Illuminate\Console\Command;
 
-class ShowUpgradeIntroduction extends UpgradeStep
+class UpgradeIntroduction extends UpgradeStep
 {
     public function handle(Command $console, \Closure $next)
     {
         $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> LIVEWIRE v2 to v3 UPGRADE 🚀 </>");
+        $console->newLine();
+        $console->comment('!! Please be aware that Livewire 3 is still in beta. Additional breaking changes may be introduced before the final release. !!');
         $console->newLine();
         $console->line('This command will help you upgrade from Livewire v2 to v3.');
         $console->newLine();

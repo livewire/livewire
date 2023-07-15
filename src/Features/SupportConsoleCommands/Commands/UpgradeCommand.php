@@ -17,7 +17,10 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifie
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePrefetchModifierFromWireClickDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePreventModifierFromWireSubmitDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RepublishNavigation;
-use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ShowUpgradeIntroduction;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeAlpineInstructions;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeConfigInstructions;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeEmitInstructions;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeIntroduction;
 
 class UpgradeCommand extends Command
 {
@@ -29,7 +32,9 @@ class UpgradeCommand extends Command
     {
 
         app(Pipeline::class)->send($this)->through([
-            ShowUpgradeIntroduction::class,
+            UpgradeIntroduction::class,
+
+            // Automated steps
             ChangeDefaultNamespace::class,
             ChangeDefaultLayoutView::class,
             AddLiveModifierToWireModelDirectives::class,
@@ -42,6 +47,11 @@ class UpgradeCommand extends Command
             ChangeWireLoadDirectiveToWireInit::class,
             RepublishNavigation::class,
             ChangeTestAssertionMethods::class,
+
+            // Manual steps
+            UpgradeConfigInstructions::class,
+            UpgradeAlpineInstructions::class,
+            UpgradeEmitInstructions::class,
 
             ClearViewCache::class,
         ])->thenReturn();
