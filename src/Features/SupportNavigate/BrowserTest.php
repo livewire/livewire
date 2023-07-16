@@ -166,6 +166,23 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test');
         });
     }
+
+    /** @test */
+    function script_runs_on_initial_page_visit()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('window.foo', 'bar')
+                ->assertScript('return window._lw_dusk_test');
+        });
+    }
 }
 
 class FirstPage extends Component
@@ -223,6 +240,8 @@ class SecondPage extends Component
                     <button x-on:click="count++" dusk="increment">+</button>
                 </div>
             @endpersist
+
+            <script data-navigate-once>window.foo = 'bar';</script>
         </div>
         HTML;
     }
