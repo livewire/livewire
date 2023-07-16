@@ -12,9 +12,9 @@
     "require": {
         "php": "^8.1",
         "symfony/http-kernel": "^5.0|^6.0",
-        "illuminate/support": "^9.0|^10.0",
-        "illuminate/database": "^9.0|^10.0",
-        "illuminate/validation": "^9.0|^10.0",
+        "illuminate/support": "^9.0|^10.0|^11.0",
+        "illuminate/database": "^9.0|^10.0|^11.0",
+        "illuminate/validation": "^9.0|^10.0|^11.0",
         "league/mime-type-detection": "^1.9"
     },
     "require-dev": {
