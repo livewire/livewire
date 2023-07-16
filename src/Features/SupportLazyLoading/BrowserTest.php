@@ -58,11 +58,12 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         })
-            ->assertSee('Loading...')
-            ->assertDontSee('Hello World')
-            ->waitFor('#page')
-            ->assertDontSee('Loading...')
-            ->assertSee('Hello World');
+        ->assertSee('Loading...')
+        ->assertDontSee('Hello World')
+        ->waitFor('#page')
+        ->assertDontSee('Loading...')
+        ->assertSee('Hello World')
+        ;
     }
 
     /** @test */
