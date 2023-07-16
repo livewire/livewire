@@ -63,12 +63,18 @@ class Utils extends BaseUtils
             ]);
         }
 
-        return response()->file($file, [
+        $headers = [
             'Content-Type' => "$mimeType; charset=utf-8",
             'Expires' => static::httpDate($expires),
             'Cache-Control' => $cacheControl,
             'Last-Modified' => static::httpDate($lastModified),
-        ]);
+        ];
+
+        if (str($file)->endsWith('.br')) {
+            $headers['Content-Encoding'] = 'br';
+        }
+
+        return response()->file($file, $headers);
     }
 
     static function matchesCache($lastModified)

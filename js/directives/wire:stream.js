@@ -56,12 +56,32 @@ async function interceptStreamAndReturnFinalResponse(response, callback) {
         let decoder = new TextDecoder
         let output = decoder.decode(chunk)
 
-        if (output && output.startsWith('{"stream":true')) {
-            callback(JSON.parse(output).body)
-        } else {
-            finalResponse = finalResponse + output
-        }
+        let [ streams, remaining ] = extractStreamObjects(output)
+
+        streams.forEach(stream => {
+            callback(stream)
+        })
+
+        finalResponse = finalResponse + remaining
 
         if (done) return finalResponse
     }
+}
+
+function extractStreamObjects(raw) {
+    let regex = /({"stream":true.*?"endStream":true})/g
+
+    let matches = raw.match(regex)
+
+    let parsed = []
+
+    if (matches) {
+        for (let i = 0; i < matches.length; i++) {
+            parsed.push(JSON.parse(matches[i]).body)
+        }
+    }
+
+    let remaining = raw.replace(regex, '');
+
+    return [ parsed, remaining ];
 }

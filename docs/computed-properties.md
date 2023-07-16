@@ -164,6 +164,22 @@ Livewire caches persisted values for 3600 seconds (one hour). You can override t
 > [!tip] Calling `unset()` will bust this cache
 > As previously discussed, you can clear a computed property's cache using PHP's `unset()` method. This also applies to the `persist: true` parameter. When calling `unset()` on a cached computed property, Livewire will clear not only the computed property cache but also the underlying cached value in the Laravel cache.
 
+## Caching across all components
+
+Instead of caching a the value of a computed property for the duration of a single component's lifecycle, you can cache the value of a computed across all components in your application using the `cache: true` parameter:
+
+```php
+use Livewire\Attributes\Computed;
+use App\Models\Post;
+
+#[Computed(cache: true)]
+public function posts()
+{
+    return Post::all();
+}
+```
+
+In the above example, until the cache expires or is busted, every instance of that component in your application will share the same cached value for `$this->posts`.
 
 ## When to use computed properties?
 

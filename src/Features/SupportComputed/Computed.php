@@ -17,6 +17,7 @@ class Computed extends Attribute
     function __construct(
         public $persist = false,
         public $seconds = 3600, // 1 hour...
+        public $cache = false,
     ) {}
 
     function boot()
@@ -47,6 +48,12 @@ class Computed extends Attribute
             return;
         }
 
+        if ($this->cache) {
+            $returnValue($this->handleCachedGet());
+
+            return;
+        }
+
         $returnValue(
             $this->requestCachedValue ??= $this->evaluateComputed()
         );
@@ -63,12 +70,27 @@ class Computed extends Attribute
             return;
         }
 
+        if ($this->cache) {
+            $this->handleCachedUnset();
+
+            return;
+        }
+
         unset($this->requestCachedValue);
     }
 
     protected function handlePersistedGet()
     {
-        $key = $this->generateCacheKey();
+        $key = $this->generatePersistedKey();
+
+        return Cache::remember($key, $this->seconds, function () {
+            return $this->evaluateComputed();
+        });
+    }
+
+    protected function handleCachedGet()
+    {
+        $key = $this->generateCachedKey();
 
         return Cache::remember($key, $this->seconds, function () {
             return $this->evaluateComputed();
@@ -77,14 +99,26 @@ class Computed extends Attribute
 
     protected function handlePersistedUnset()
     {
-        $key = $this->generateCacheKey();
+        $key = $this->generatePersistedKey();
 
         Cache::forget($key);
     }
 
-    protected function generateCacheKey()
+    protected function handleCachedUnset()
+    {
+        $key = $this->generateCachedKey();
+
+        Cache::forget($key);
+    }
+
+    protected function generatePersistedKey()
     {
         return 'lw_computed.'.$this->component->getId().'.'.$this->getName();
+    }
+
+    protected function generateCachedKey()
+    {
+        return 'lw_computed.'.$this->component->getName().'.'.$this->getName();
     }
 
     protected function evaluateComputed()

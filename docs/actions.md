@@ -447,8 +447,8 @@ class SearchPosts extends Component
     #[JS] // [tl! highlight:6]
     public function reset()
     {
-        return <<<JS
-			this.query = '';
+        return <<<'JS'
+			$wire.query = '';
         JS;
     }
 
@@ -505,7 +505,7 @@ class CreatePost extends Component
 
 The JavaScript expression `alert('Post saved!')`, will now be executed on the client after the post has been saved to the database on the server.
 
-Similar to `#[Js]` methods, you can access the current component's `$wire` object as `this` inside the expression.
+Similar to `#[Js]` methods, you can access the current component's `$wire` object inside the expression.
 
 ## Magic actions
 
