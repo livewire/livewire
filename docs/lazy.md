@@ -147,3 +147,23 @@ For example, you might want to pass in an Eloquent model to the `Revenue` compon
 In a normal component, the actual PHP in-memory `$user` model would be passed into the `mount()` method of `Revenue`. However, because we won't run `mount()` until the next network request, Livewire will internally serialize `$user` to JSON and then re-query it from the database before the next request is handled.
 
 Typically, this serialization should not cause any behavioral differences in your application.
+
+## Always lazy load and lazy load full page components
+
+You can also choose to always lazy load a component by importing the `HandlesLazyLoading` trait.
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\Features\SupportLazyLoading\HandlesLazyLoading;
+
+class Revenue extends Component
+{
+    use HandlesLazyLoading;
+
+    // ...
+}
+```
