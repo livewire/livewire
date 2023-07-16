@@ -150,7 +150,7 @@ Typically, this serialization should not cause any behavioral differences in you
 
 ## Always lazy load and lazy load full page components
 
-You can also choose to always lazy load a component by importing the `HandlesLazyLoading` trait.
+You can also choose to always lazy load a component by importing the `WithLazyLoading` trait.
 
 ```php
 <?php
@@ -158,11 +158,11 @@ You can also choose to always lazy load a component by importing the `HandlesLaz
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\Features\SupportLazyLoading\HandlesLazyLoading;
+use Livewire\WithLazyLoading;
 
 class Revenue extends Component
 {
-    use HandlesLazyLoading;
+    use WithLazyLoading;
 
     // ...
 }

@@ -1,8 +1,8 @@
 <?php
 
-namespace Livewire\Features\SupportLazyLoading;
+namespace Livewire;
 
-trait HandlesLazyLoading
+trait WithLazyLoading
 {
     public function placeholder()
     {
