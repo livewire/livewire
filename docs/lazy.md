@@ -167,6 +167,23 @@ class Revenue extends Component
 }
 ```
 
+Or you can use the `[#Lazy]` attribute:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Attributes\Lazy;
+use Livewire\Component;
+
+#[Lazy]
+class Revenue extends Component
+{
+    // ...
+}
+```
+
 If you want to override lazy loading you can set the `lazy` parameter to `false`:
 
 ```blade

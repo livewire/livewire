@@ -39,7 +39,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function can_lazy_load_full_page_component()
+    public function can_lazy_load_full_page_component_using_trait()
     {
         Livewire::visit(new class extends Component {
             use WithLazyLoading;
@@ -69,7 +69,35 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function can_lazy_load_via_route_component()
+    public function can_lazy_load_full_page_component_using_attribute()
+    {
+        Livewire::visit(new #[\Livewire\Attributes\Lazy] class extends Component {
+            public function mount() {
+                sleep(1);
+            }
+
+            public function placeholder() { return <<<HTML
+                <div id="loading">
+                    Loading...
+                </div>
+                HTML; }
+
+            public function render() { return <<<HTML
+                <div id="page">
+                    Hello World
+                </div>
+                HTML; }
+        })
+        ->assertSee('Loading...')
+        ->assertDontSee('Hello World')
+        ->waitFor('#page')
+        ->assertDontSee('Loading...')
+        ->assertSee('Hello World')
+        ;
+    }
+
+    /** @test */
+    public function can_lazy_load_component_using_route()
     {
         $this->tweakApplication(function() {
             Livewire::component('page', Page::class);

@@ -25,7 +25,19 @@ class SupportLazyLoading extends ComponentHook
 
     public function mount($params)
     {
-        if (($params['lazy'] ?? in_array(WithLazyLoading::class, get_declared_traits(), true) ?? false) === false) return;
+        $reflectionClass = new \ReflectionClass($this->component);
+        $hasLazyProperty = isset($params['lazy']);
+        $lazyProperty = $params['lazy'] ?? false;
+        $hasLazyAttribute = count($reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)) > 0;
+        $hasLazyTrait = in_array(WithLazyLoading::class, get_declared_traits(), true);
+
+        if ($hasLazyProperty && !$lazyProperty) {
+            return;
+        }
+
+        if (!$hasLazyProperty && !$hasLazyAttribute && !$hasLazyTrait) {
+            return;
+        }
 
         $this->component->skipMount();
 
