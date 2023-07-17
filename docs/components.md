@@ -193,9 +193,11 @@ Now you may access the `$author` from the component's Blade view:
 
 ### Adding `wire:key` to `@foreach` loops
 
-When looping through data in a Livewire template using `@foreach`, you must add a unique `wire:key` attribute to the root element. Otherwise, Livewire won't be able to properly track changes.
+When looping through data in a Livewire template using `@foreach`, you must add a unique `wire:key` attribute to the root element rendered by the loop.
 
-Here's an example of setting `wire:key` in a list of posts to each one's unique ID:
+Without a `wire:key` attribute present within a Blade loop, Livewire won't be able to properly match old elements to their new positions when the loop changes. This can cause many hard to diagnose issues in your application.
+
+For example, if you are looping through an array of posts, you may set the `wire:key` attribute to the post's ID:
 
 ```blade
 <div>
@@ -206,9 +208,6 @@ Here's an example of setting `wire:key` in a list of posts to each one's unique 
     @endforeach
 </div>
 ```
-
-> [!warning] Adding `wire:key` is extremely important
-> Without a `wire:key` attribute present within a Blade loop, Livewire won't be able to properly match old elements to their new positions when the loop changes. This can cause many hard to diagnose issues in your application.
 
 ### Binding inputs to properties
 

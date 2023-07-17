@@ -17,7 +17,7 @@ class TodoList extends Component
 {
     public $todos = [];
 
-	public $todo = '';
+    public $todo = '';
 
     public function mount()
     {
@@ -46,22 +46,22 @@ use App\Models\Post;
 
 class UpdatePost extends Component
 {
-	public $post;
+    public $post;
 
-	public $title;
+    public $title;
 
-	public $description;
+    public $description;
 
-	public function mount(Post $post)
-	{
-		$this->post = $post;
+    public function mount(Post $post)
+    {
+        $this->post = $post;
 
-		$this->fill( // [tl! highlight]
-			$post->only('title', 'description'), // [tl! highlight]
-		); // [tl! highlight]
-	}
+        $this->fill( // [tl! highlight]
+            $post->only('title', 'description'), // [tl! highlight]
+        ); // [tl! highlight]
+    }
 
-	// ...
+    // ...
 }
 ```
 
@@ -82,32 +82,32 @@ use Livewire\Component;
 
 class TodoList extends Component
 {
-	public $todos = [];
+    public $todos = [];
 
-	public $todo = '';
+    public $todo = '';
 
-	public function add()
-	{
-		$this->todos[] = $this->todo;
+    public function add()
+    {
+        $this->todos[] = $this->todo;
 
-		$this->todo = '';
-	}
+        $this->todo = '';
+    }
 
-	// ...
+    // ...
 }
 ```
 
 ```blade
 <div>
-	<input type="text" wire:model="todo" placeholder="Todo..."> <!-- [tl! highlight] -->
+    <input type="text" wire:model="todo" placeholder="Todo..."> <!-- [tl! highlight] -->
 
-	<button wire:click="add">Add Todo</button>
+    <button wire:click="add">Add Todo</button>
 
-	<ul>
-		@foreach($todos as $todo)
-			<li>{{ $todo }}</li>
-		@endforeach
-	</ul>
+    <ul>
+        @foreach($todos as $todo)
+            <li>{{ $todo }}</li>
+        @endforeach
+    </ul>
 </div>
 ```
 
@@ -130,18 +130,18 @@ use Livewire\Component;
 
 class ManageTodos extends Controller
 {
-	public $todos = [];
+    public $todos = [];
 
-	public $todo = '';
+    public $todo = '';
 
-	public function addTodo()
-	{
-		$this->todos[] = $this->todo;
+    public function addTodo()
+    {
+        $this->todos[] = $this->todo;
 
-		$this->reset('todo'); // [tl! highlight]
-	}
+        $this->reset('todo'); // [tl! highlight]
+    }
 
-	// ...
+    // ...
 }
 ```
 
@@ -170,9 +170,9 @@ class TodoList extends Component
 {
     public $todos = []; // Array
 
-	public $todo = ''; // String
+    public $todo = ''; // String
 
-	public $maxTodos = 10; // Integer
+    public $maxTodos = 10; // Integer
 
     public $showTodos = false; // Boolean
 
@@ -199,17 +199,17 @@ Here's a quick example of setting properties as these various types:
 ```php
 public function mount()
 {
-	$this->todos = collect([]); // Collection
+    $this->todos = collect([]); // Collection
 
-	$this->todos = Todos::all(); // Eloquent Collection
+    $this->todos = Todos::all(); // Eloquent Collection
 
-	$this->todo = Todos::first(); // Model
+    $this->todo = Todos::first(); // Model
 
-	$this->date = new DateTime('now'); // DateTime
+    $this->date = new DateTime('now'); // DateTime
 
-	$this->date = new Carbon('now'); // Carbon
+    $this->date = new Carbon('now'); // Carbon
 
-	$this->todo = str(''); // Stringable
+    $this->todo = str(''); // Stringable
 }
 ```
 
@@ -282,8 +282,8 @@ class Customer implements Wireable
 
     public static function fromLivewire($data)
     {
-		$name = $data['name'];
-		$age = $data['age'];
+        $name = $data['name'];
+        $age = $data['age'];
 
         return new static($name, $age);
     }
@@ -314,9 +314,9 @@ For example, we can use `$wire` to show a live character count of the `todo` inp
 
 ```blade
 <div>
-	<input type="text" wire:model="todo">
+    <input type="text" wire:model="todo">
 
-	Todo character length: <h2 x-text="$wire.todo.length"></h2>
+    Todo character length: <h2 x-text="$wire.todo.length"></h2>
 </div>
 ```
 
@@ -326,9 +326,9 @@ If you prefer, you can use the more explicit `.get()` method to accomplish the s
 
 ```blade
 <div>
-	<input type="text" wire:model="todo">
+    <input type="text" wire:model="todo">
 
-	Todo character length: <h2 x-text="$wire.get('todo').length"></h2>
+    Todo character length: <h2 x-text="$wire.get('todo').length"></h2>
 </div>
 ```
 
@@ -340,9 +340,9 @@ For example, let's add a "Clear" button to the `TodoList` component to allow the
 
 ```blade
 <div>
-	<input type="text" wire:model="todo">
+    <input type="text" wire:model="todo">
 
-	<button x-on:click="$wire.todo = ''">Clear</button>
+    <button x-on:click="$wire.todo = ''">Clear</button>
 </div>
 ```
 
@@ -392,8 +392,8 @@ class UpdatePost extends Component
         $post = Post::findOrFail($this->id);
 
         $post->update([
-			'title' => $this->title,
-			'content' => $this->content,
+            'title' => $this->title,
+            'content' => $this->content,
         ]);
 
         session()->flash('message', 'Post updated successfully!');
@@ -408,10 +408,10 @@ class UpdatePost extends Component
 
 ```blade
 <form wire:submit="update">
-	<input type="text" wire:model="title">
-	<input type="text" wire:model="content">
+    <input type="text" wire:model="title">
+    <input type="text" wire:model="content">
 
-	<button type="submit">Update</button>
+    <button type="submit">Update</button>
 </form>
 ```
 
@@ -423,11 +423,11 @@ It doesn't matter that we didn't write an input with `wire:model="id"`. A malici
 
 ```blade
 <form wire:submit="update">
-	<input type="text" wire:model="id"> <!-- [tl! highlight] -->
-	<input type="text" wire:model="title">
-	<input type="text" wire:model="content">
+    <input type="text" wire:model="id"> <!-- [tl! highlight] -->
+    <input type="text" wire:model="title">
+    <input type="text" wire:model="content">
 
-	<button type="submit">Update</button>
+    <button type="submit">Update</button>
 </form>
 ```
 
@@ -445,11 +445,11 @@ Because `$id` can be manipulated client-side with something like `wire:model`, j
 ```php
 public function update()
 {
-	$post = Post::findOrFail($this->id);
+    $post = Post::findOrFail($this->id);
 
     $this->authorize('update', $post); // [tl! highlight]
 
-	$post->update(...);
+    $post->update(...);
 }
 ```
 
@@ -465,10 +465,10 @@ use Livewire\Component;
 
 class UpdatePost extends Component
 {
-	#[Locked] // [tl! highlight]
+    #[Locked] // [tl! highlight]
     public $id;
 
-	// ...
+    // ...
 }
 ```
 
@@ -506,8 +506,8 @@ class UpdatePost extends Component
     public function update()
     {
         $this->post->update([
-			'title' => $this->title,
-			'content' => $this->content,
+            'title' => $this->title,
+            'content' => $this->content,
         ]);
 
         session()->flash('message', 'Post updated successfully!');
@@ -624,14 +624,14 @@ use Livewire\Component;
 
 class ShowTodos extends Component
 {
-	#[Computed] // [tl! highlight]
-	public function todos()
-	{
-		return Auth::user()
-			->todos()
-			->select('content')
-			->get();
-	}
+    #[Computed] // [tl! highlight]
+    public function todos()
+    {
+        return Auth::user()
+            ->todos()
+            ->select('content')
+            ->get();
+    }
 
     public function render()
     {
@@ -644,9 +644,9 @@ Here's how you would access these _todos_ from the Blade view:
 
 ```blade
 <ul>
-	@foreach ($this->todos as $todo)
-		<li>{{ $todo }}</li>
-	@endforeach
+    @foreach ($this->todos as $todo)
+        <li>{{ $todo }}</li>
+    @endforeach
 </ul>
 ```
 
@@ -664,19 +664,19 @@ use Livewire\Component;
 
 class ShowTodos extends Component
 {
-	#[Computed]
-	public function todos()
-	{
-		return Auth::user()
-			->todos()
-			->select('content')
-			->get();
-	}
+    #[Computed]
+    public function todos()
+    {
+        return Auth::user()
+            ->todos()
+            ->select('content')
+            ->get();
+    }
 
-	public function markAllComplete() // [tl! highlight:3]
-	{
-		$this->todos->each->complete();
-	}
+    public function markAllComplete() // [tl! highlight:3]
+    {
+        $this->todos->each->complete();
+    }
 
     public function render()
     {
@@ -687,6 +687,6 @@ class ShowTodos extends Component
 
 You might wonder, why not just call `$this->todos()` as a method directly where you need to? Why use `#[Computed]` in the first place?
 
-The reason is that computed properties have a performance advantage; they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once so that you don't run an expensive query multiple times in the same request.
+The reason is that computed properties have a performance advantage since they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once so that you don't run an expensive query multiple times in the same request.
 
 For more information, [visit the computed properties documentation](/docs/computed-properties).

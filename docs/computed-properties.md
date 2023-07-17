@@ -47,10 +47,10 @@ class ShowUser extends Component
 </div>
 ```
 
-Because the `#[Computed]` attribute has been added to the `user()` method, the value is accessible in other methods in the component and the Blade template.
+Because the `#[Computed]` attribute has been added to the `user()` method, the value is accessible in other methods in the component and within the Blade template.
 
 > [!info] Must use `$this` in your template
-> Unlike normal properties, computed properties aren't directly available inside your component's template. Instead, you must access them on the `$this` object. For example, a computed property called `posts()` must be accessed via `$this->posts` inside your template.
+> Unlike normal properties, computed properties aren't directly available inside your component's template. Instead, you must access them on the `$this` object. For example, a computed property named `posts()` must be accessed via `$this->posts` inside your template.
 
 ## Performance advantage
 
@@ -72,7 +72,7 @@ Consider the following problematic scenario:
 
 To clear, or "bust", the stored cache, you can use PHP's `unset()` function.
 
-Below is an example of an action called `createPost()` that, by creating a new post in the application, makes the `posts()` computed stale—meaning the `posts` computed needs to be re-computed to include the newly added post:
+Below is an example of an action called `createPost()` that, by creating a new post in the application, makes the `posts()` computed stale—meaning the `posts` computed property needs to be re-computed to include the newly added post:
 
 ```php
 <?php
@@ -140,7 +140,7 @@ class ShowUser extends Component
 
 Because each unique instance of a Livewire component has a unique ID, we can use `$this->getId()` to generate a unique cache key that will only be applied to future requests for this same component instance.
 
-Because most of this added code is boilerplate in that it's predictable and can easily be abstracted, Livewire provides a helpful `persist` parameter. By applying `[Computed(persist: true)]` to a method, you can achieve the same result without any extra code:
+But, as you may have noticed, most of this code is predictable and can easily be abstracted. Because of this, Livewire's `#[Computed]` attribute provides a helpful `persist` parameter. By applying `[Computed(persist: true)]` to a method, you can achieve the same result without any extra code:
 
 ```php
 use Livewire\Attributes\Computed;
@@ -162,11 +162,11 @@ Livewire caches persisted values for 3600 seconds (one hour). You can override t
 ```
 
 > [!tip] Calling `unset()` will bust this cache
-> As previously discussed, you can clear a computed property's cache using PHP's `unset()` method. This also applies to the `persist: true` parameter. When calling `unset()` on a cached computed property, Livewire will clear not only the computed property cache but also the underlying cached value in the Laravel cache.
+> As previously discussed, you can clear a computed property's cache using PHP's `unset()` method. This also applies to computed properties using the `persist: true` parameter. When calling `unset()` on a cached computed property, Livewire will clear not only the computed property cache but also the underlying cached value in the Laravel cache.
 
 ## Caching across all components
 
-Instead of caching a the value of a computed property for the duration of a single component's lifecycle, you can cache the value of a computed across all components in your application using the `cache: true` parameter:
+Instead of caching a the value of a computed property for the duration of a single component's lifecycle, you can cache the value of a computed across all components in your application using the `cache: true` parameter provided by the `#[Computed]` attribute:
 
 ```php
 use Livewire\Attributes\Computed;
@@ -179,7 +179,7 @@ public function posts()
 }
 ```
 
-In the above example, until the cache expires or is busted, every instance of that component in your application will share the same cached value for `$this->posts`.
+In the above example, until the cache expires or is busted, every instance of this component in your application will share the same cached value for `$this->posts`.
 
 ## When to use computed properties?
 
@@ -292,7 +292,7 @@ In the above example, without a computed property, we would have no way to expli
 
 ### Omitting the render method
 
-In Livewire, another way to cut down on boilerplate in your components is by omitting the `render()` method entirely. Livewire will use its own `render()` method returning the corresponding Blade view by convention.
+In Livewire, another way to cut down on boilerplate in your components is by omitting the `render()` method entirely. When omitted, Livewire will use its own `render()` method returning the corresponding Blade view by convention.
 
 In these case, you obviously don't have a `render()` method from which you can pass data into a Blade view.
 
