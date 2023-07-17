@@ -27,6 +27,7 @@ class SupportConsoleCommands extends ComponentHook
             \Livewire\Features\SupportConsoleCommands\Commands\StubsCommand::class,        // livewire:stubs
             \Livewire\Features\SupportConsoleCommands\Commands\S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
             \Livewire\Features\SupportConsoleCommands\Commands\PublishCommand::class,      // livewire:publish
+            \Livewire\Features\SupportConsoleCommands\Commands\UpgradeCommand::class,      // livewire:upgrade
         ]);
     }
 
