@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
+use Illuminate\Support\Facades\Route;
 use Livewire\WithLazyLoading;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
@@ -42,21 +43,22 @@ class BrowserTest extends BrowserTestCase
     {
         Livewire::visit(new class extends Component {
             use WithLazyLoading;
+
             public function mount() {
                 sleep(1);
             }
 
             public function placeholder() { return <<<HTML
-            <div id="loading">
-                Loading...
-            </div>
-            HTML; }
+                <div id="loading">
+                    Loading...
+                </div>
+                HTML; }
 
             public function render() { return <<<HTML
-            <div id="page">
-                Hello World
-            </div>
-            HTML; }
+                <div id="page">
+                    Hello World
+                </div>
+                HTML; }
         })
         ->assertSee('Loading...')
         ->assertDontSee('Hello World')
@@ -64,6 +66,27 @@ class BrowserTest extends BrowserTestCase
         ->assertDontSee('Loading...')
         ->assertSee('Hello World')
         ;
+    }
+
+    /** @test */
+    public function can_lazy_load_via_route_component()
+    {
+        $this->tweakApplication(function() {
+            Livewire::component('page', Page::class);
+            Route::get('/', Page::class)->lazyLoad()->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('Loading...')
+                ->assertDontSee('Hello World')
+                ->waitFor('#page')
+                ->assertDontSee('Loading...')
+                ->assertSee('Hello World');
+        });
     }
 
     /** @test */
@@ -176,4 +199,22 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Count: 3')
         ;
     }
+}
+
+class Page extends Component {
+    public function mount() {
+        sleep(1);
+    }
+
+    public function placeholder() { return <<<HTML
+            <div id="loading">
+                Loading...
+            </div>
+            HTML; }
+
+    public function render() { return <<<HTML
+            <div id="page">
+                Hello World
+            </div>
+            HTML; }
 }

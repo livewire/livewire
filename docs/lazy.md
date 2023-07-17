@@ -148,9 +148,8 @@ In a normal component, the actual PHP in-memory `$user` model would be passed in
 
 Typically, this serialization should not cause any behavioral differences in your application.
 
-## Always lazy load and lazy load full page components
-
-You can also choose to always lazy load a component by importing the `WithLazyLoading` trait.
+## Lazy load by default
+If you want to lazy load components by default you can add the `WithLazyLoading` trait:
 
 ```php
 <?php
@@ -167,3 +166,34 @@ class Revenue extends Component
     // ...
 }
 ```
+
+If you want to override lazy loading you can set the `lazy` parameter to `false`:
+
+```blade
+<livewire:revenue :lazy="false" />
+```
+
+## Full-page lazy loading
+
+You may want to lazy load full-page Livewire components or disable lazy loading. You can do this by calling `->lazyLoad()` on the route like so:
+
+```php
+Route::get('/users', \App\Livewire\Users::class)->lazyLoad();
+Route::get('/users', \App\Livewire\Users::class)->lazyLoad(enabled: false);
+````
+
+## Default placeholder
+
+If you want to set a default placeholder for all your components you can do so by defining the view in the `livewire` config file:
+
+```php
+'lazy_loading_placeholder' => 'livewire::lazy-load-placeholder',
+```
+
+An alternative would be to publish the view and edit it directly:
+
+```bash
+php artisan livewire:publish --lazy-loading
+```
+
+

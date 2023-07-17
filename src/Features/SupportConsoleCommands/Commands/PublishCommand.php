@@ -9,7 +9,9 @@ class PublishCommand extends Command
     protected $signature = 'livewire:publish
         { --assets : Indicates if Livewire\'s front-end assets should be published }
         { --config : Indicates if Livewire\'s config file should be published }
-        { --pagination : Indicates if Livewire\'s pagination views should be published }';
+        { --pagination : Indicates if Livewire\'s pagination views should be published }
+        { --lazy-loading : Indicates if Livewire\'s lazy-loading placeholder view should be published }
+        ';
 
     protected $description = 'Publish Livewire configuration';
 
@@ -21,6 +23,8 @@ class PublishCommand extends Command
             $this->publishConfig();
         } elseif ($this->option('pagination')) {
             $this->publishPagination();
+        } elseif ($this->option('placeholder')) {
+            $this->publishPlaceholder();
         } else {
             $this->publishAssets();
             $this->publishConfig();
@@ -41,5 +45,10 @@ class PublishCommand extends Command
     public function publishPagination()
     {
         $this->call('vendor:publish', ['--tag' => 'livewire:pagination', '--force' => true]);
+    }
+
+    public function publishPlaceholder()
+    {
+        $this->call('vendor:publish', ['--tag' => 'livewire:lazy-loading', '--force' => true]);
     }
 }

@@ -8,11 +8,21 @@ use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
 use Livewire\Component;
-use Illuminate\Support\Str;
-use Closure;
 
 class SupportLazyLoading extends ComponentHook
 {
+    static function provide()
+    {
+        app('livewire')->provide(function () {
+            $this->loadViewsFrom(__DIR__.'/views', 'livewire');
+
+            $paths = [__DIR__.'/views' => resource_path('views/vendor/livewire')];
+
+            $this->publishes($paths, 'livewire');
+            $this->publishes($paths, 'livewire:lazy-loading');
+        });
+    }
+
     public function mount($params)
     {
         if (($params['lazy'] ?? in_array(WithLazyLoading::class, get_declared_traits(), true) ?? false) === false) return;
@@ -69,7 +79,7 @@ class SupportLazyLoading extends ComponentHook
         $encoded = base64_encode(json_encode($snapshot));
 
         $placeholder = wrap($this->component)
-            ->withFallback('<div></div>')
+            ->withFallback(view(config('livewire.lazy_loading_placeholder'))->render())
             ->placeholder();
 
         $html = Utils::insertAttributesIntoHtmlRoot($placeholder, [
