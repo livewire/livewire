@@ -23,8 +23,8 @@ class PublishCommand extends Command
             $this->publishConfig();
         } elseif ($this->option('pagination')) {
             $this->publishPagination();
-        } elseif ($this->option('placeholder')) {
-            $this->publishPlaceholder();
+        } elseif ($this->option('lazy-loading')) {
+            $this->publishLazyLoadingPlaceholder();
         } else {
             $this->publishAssets();
             $this->publishConfig();
@@ -47,7 +47,7 @@ class PublishCommand extends Command
         $this->call('vendor:publish', ['--tag' => 'livewire:pagination', '--force' => true]);
     }
 
-    public function publishPlaceholder()
+    public function publishLazyLoadingPlaceholder()
     {
         $this->call('vendor:publish', ['--tag' => 'livewire:lazy-loading', '--force' => true]);
     }
