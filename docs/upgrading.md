@@ -12,7 +12,10 @@ After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version
 php artisan livewire:upgrade
 ```
 
-Although the above command can upgrade much of your application, the only way to ensure a complete upgrade is to follow the step-by-step guide below:
+Although the above command can upgrade much of your application, the only way to ensure a complete upgrade is to follow the step-by-step guide on this page.
+
+> [!tip] Hire us to upgrade your app instead
+> If you have a large Livewire application or just don't want to deal with upgrading from version 2 to version 3, you can hire us to handle it for you. [Learn more about our upgrade service here.](/jumpstart)
 
 ## Upgrade PHP
 
