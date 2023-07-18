@@ -72,9 +72,9 @@ class ChangeDefaultNamespace extends UpgradeStep
             $console->table(
                 ['Status', 'Component', 'Remark'], $results
             );
-
-            return $next($console);
         }
+
+        return $next($console);
     }
 
     protected function hasOldNamespace()
