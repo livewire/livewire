@@ -90,19 +90,6 @@ Here is an example of an `<audio>` player element being persisted across pages u
 
 If the above HTML appears on both pages—the current page, and the next one—the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
-## Showing active link states
-
-Typically, you can use standard Blade utilities to detect the current page and show a corresponding visual indication that the page is "active":
-
-```blade
-<nav>
-    <a href="/" wire:navigate class="{{ request()->is('/') && 'active' }}">Dashboard</a>
-
-    <a href="/posts" wire:navigate class="{{ request()->is('/posts') && 'active' }}">Posts</a>
-
-    <a href="/users" wire:navigate class="{{ request()->is('/users') && 'active' }}">Users</a>
-</nav>
-```
 
 ## Script evaluation
 
