@@ -89,7 +89,7 @@ Consider the following Livewire Blade template for a fictitious `CreatePost` com
     </div>
 
     @if ($errors->has('title'))
-        <div>{{ $$errors->first('title) }}</div>
+        <div>{{ $$errors->first('title') }}</div>
     @endif
 
     <div>
