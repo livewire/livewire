@@ -22,7 +22,7 @@ class ChangeDefaultNamespace extends UpgradeStep
                 'keep',
             ], 'migrate');
 
-            if($choice == 'keep') {
+            if($choice === 'keep') {
                 $console->line('Keeping the old namespace...');
 
                 $this->publishConfigIfMissing($console);

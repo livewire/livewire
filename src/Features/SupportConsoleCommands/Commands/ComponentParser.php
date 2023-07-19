@@ -130,7 +130,7 @@ class ComponentParser
     public function viewName()
     {
         return collect()
-            ->when(config('livewire.view_path') != resource_path(), function ($collection) {
+            ->when(config('livewire.view_path') !== resource_path(), function ($collection) {
                 return $collection->concat(explode('/',str($this->baseViewPath)->after(resource_path('views'))));
             })
             ->filter()
