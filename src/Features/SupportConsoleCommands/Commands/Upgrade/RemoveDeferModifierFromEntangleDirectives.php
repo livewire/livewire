@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
 use Livewire\Features\SupportConsoleCommands\Commands\UpgradeCommand;
 
-class RemoveDeferModifierFromEntanglelDirectives extends UpgradeStep
+class RemoveDeferModifierFromEntangleDirectives extends UpgradeStep
 {
     public function handle(UpgradeCommand $console, \Closure $next)
     {
