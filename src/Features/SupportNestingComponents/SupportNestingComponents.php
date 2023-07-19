@@ -67,7 +67,7 @@ class SupportNestingComponents extends ComponentHook
     static function setParentChild($parent, $key, $tag, $id) { store($parent)->push('children', [$tag, $id], $key); }
     static function setPreviouslyRenderedChildren($component, $children) { store($component)->set('previousChildren', $children); }
     static function hasPreviouslyRenderedChild($parent, $key) {
-        return in_array($key, array_keys(store($parent)->get('previousChildren', [])));
+        return array_key_exists($key, store($parent)->get('previousChildren', []));
     }
 
     static function getPreviouslyRenderedChild($parent, $key)

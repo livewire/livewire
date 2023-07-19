@@ -35,8 +35,6 @@ class SupportConsoleCommands extends ComponentHook
     {
         $commands = is_array($commands) ? $commands : func_get_args();
 
-        Artisan::starting(function ($artisan) use ($commands) {
-            $artisan->resolveCommands($commands);
-        });
+        Artisan::starting(fn(Artisan $artisan) => $artisan->resolveCommands($commands));
     }
 }
