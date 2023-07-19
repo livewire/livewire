@@ -9,7 +9,7 @@ use Illuminate\Contracts\Support\Responsable;
 
 class SupportFileDownloads extends ComponentHook
 {
-    function call($method)
+    function call()
     {
         return function ($return) {
             if ($return instanceof Responsable){
