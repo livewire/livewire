@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportEvents;
 
-use Livewire\Component;
 use Livewire\Mechanisms\ComponentRegistry;
 
 class Event

@@ -3,10 +3,6 @@
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\GeneratorCommand;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class FormCommand extends GeneratorCommand
 {

@@ -2,8 +2,6 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
-use Illuminate\Support\Stringable as SupportStringable;
-
 class EnumSynth extends Synth {
     public static $key = 'enm';
 

@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportConsoleCommands;
 
 use Illuminate\Console\Application as Artisan;
-use LegacyTests\Browser\Actions\Component;
 use Livewire\ComponentHook;
 
 class SupportConsoleCommands extends ComponentHook

@@ -2,16 +2,7 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use function Livewire\store;
-use function Livewire\short;
-use function Livewire\on;
-use function Livewire\before;
-use function Livewire\after;
-
-use Synthetic\ShortcircuitResponse;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
-use Livewire\Mechanisms\DataStore;
 use Livewire\ComponentHook;
 use Livewire\Component;
 

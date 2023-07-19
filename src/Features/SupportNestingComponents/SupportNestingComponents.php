@@ -5,8 +5,6 @@ namespace Livewire\Features\SupportNestingComponents;
 use function Livewire\trigger;
 use function Livewire\store;
 use function Livewire\on;
-
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 

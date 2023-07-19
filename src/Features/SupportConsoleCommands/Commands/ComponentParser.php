@@ -15,7 +15,6 @@ class ComponentParser
     protected $baseViewPath;
     protected $baseTestPath;
     protected $stubDirectory;
-    protected $appPath;
     protected $viewPath;
     protected $component;
     protected $componentClass;
@@ -23,7 +22,6 @@ class ComponentParser
 
     public function __construct($classNamespace, $viewPath, $rawCommand, $stubSubDirectory = '')
     {
-
         $this->baseClassNamespace = $classNamespace;
         $this->baseTestNamespace = 'Tests\Feature\Livewire';
 

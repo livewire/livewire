@@ -2,13 +2,8 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use Synthetic\SyntheticValidation;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
-use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Database\ModelIdentifier;
-use Exception;
 
 class FileUploadSynth extends Synth {
     public static $key = 'fil';

@@ -3,8 +3,6 @@
 namespace Livewire\Features\SupportReactiveProps;
 
 use function Livewire\on;
-
-use ReflectionObject;
 use Livewire\ComponentHook;
 
 class SupportReactiveProps extends ComponentHook

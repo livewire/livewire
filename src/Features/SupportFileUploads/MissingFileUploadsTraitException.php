@@ -2,9 +2,12 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-class MissingFileUploadsTraitException extends \Exception
+use Exception;
+use Livewire\Exceptions\BypassViewHandler;
+
+class MissingFileUploadsTraitException extends Exception
 {
-    use \Livewire\Exceptions\BypassViewHandler;
+    use BypassViewHandler;
 
     public function __construct($component)
     {

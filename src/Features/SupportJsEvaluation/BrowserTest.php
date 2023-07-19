@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportJsEvaluation;
 
-use Illuminate\Database\Eloquent\Model;
-use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase

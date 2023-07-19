@@ -2,15 +2,9 @@
 
 namespace Livewire\Features\SupportValidation;
 
-use function Livewire\on;
-use function Livewire\invade;
-use Livewire\Mechanisms\DataStore;
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\Drawer\Utils;
-use Livewire\Component;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\ViewErrorBag;
-use Illuminate\Support\MessageBag;
 use Livewire\ComponentHook;
 
 class SupportValidation extends ComponentHook

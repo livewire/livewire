@@ -4,8 +4,6 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Livewire\Livewire;
 use Livewire\Component;
-use Laravel\Dusk\Browser;
-use Illuminate\Support\Facades\Blade;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {

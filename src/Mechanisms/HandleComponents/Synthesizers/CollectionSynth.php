@@ -4,8 +4,6 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
 use Illuminate\Support\Collection;
 
-use function Livewire\invade;
-
 class CollectionSynth extends ArraySynth {
     public static $key = 'clctn';
 

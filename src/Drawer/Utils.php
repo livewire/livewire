@@ -2,7 +2,6 @@
 
 namespace Livewire\Drawer;
 
-use DOMDocument;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 
 use function Livewire\invade;

@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Livewire\Component;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use LogicException;
 
