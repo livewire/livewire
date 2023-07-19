@@ -107,12 +107,6 @@ class EloquentCollectionSynth extends Synth
         if (is_null($key)) return [];
 
         return SupportLegacyModels::getRulesFor($context->component, $key);
-
-        if (isset($context->dataFromParent['rules'])) {
-            return $context->dataFromParent['rules'];
-        }
-
-        return [];
     }
 
     protected function getConnection(EloquentCollection $collection)

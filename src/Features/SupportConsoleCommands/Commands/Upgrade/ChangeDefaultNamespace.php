@@ -54,8 +54,6 @@ class ChangeDefaultNamespace extends UpgradeStep
 
                 if ($this->filesystem()->exists($newParser->relativeClassPath())) {
                     return ['Skipped', $component, 'Already exists'];
-
-                    return false;
                 }
 
                 if($this->filesystem()->directoryMissing(dirname($newParser->relativeClassPath()))) {
