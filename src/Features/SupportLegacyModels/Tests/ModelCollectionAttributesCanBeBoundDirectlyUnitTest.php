@@ -20,7 +20,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
     public function can_set_a_model_attribute_inside_a_models_collection_and_save()
     {
         // Reset Sushi model.
-        (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
+        ModelForBinding::resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
         (new ModelForBinding)->migrate();
 
         Livewire::test(ComponentWithModelCollectionProperty::class)
@@ -43,7 +43,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
     public function can_set_non_persisted_models_in_model_collection()
     {
         // Reset Sushi model.
-        (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
+        ModelForBinding::resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
         (new ModelForBinding)->migrate();
 
         Livewire::test(ComponentWithModelCollectionProperty::class)
@@ -101,7 +101,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
     public function cant_set_a_model_attribute_that_isnt_present_in_rules_array()
     {
         // Reset Sushi model.
-        (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
+        ModelForBinding::resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
         (new ModelForBinding)->migrate();
 
         $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
@@ -115,7 +115,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
     public function an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
     {
         // Reset Sushi model.
-        (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
+        ModelForBinding::resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
         (new ModelForBinding)->migrate();
 
         $this->expectException(CorruptComponentPayloadException::class);

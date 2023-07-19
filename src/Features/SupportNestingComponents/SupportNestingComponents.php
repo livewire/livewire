@@ -49,7 +49,7 @@ class SupportNestingComponents extends ComponentHook
     {
         $children = $memo['children'];
 
-        $this->setPreviouslyRenderedChildren($this->component, $children);
+        static::setPreviouslyRenderedChildren($this->component, $children);
     }
 
     function dehydrate($context)
