@@ -185,7 +185,7 @@ JS;
                 $b->script($script);
             })
             ->waitForText('response-ready: ')
-            ->assertDontSee('Protected Content');
+            ->assertDontSee('Protected Content')
         ;
     }
 }
