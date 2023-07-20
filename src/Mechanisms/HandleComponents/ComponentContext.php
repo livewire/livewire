@@ -3,7 +3,6 @@
 namespace Livewire\Mechanisms\HandleComponents;
 
 use AllowDynamicProperties;
-use Livewire\Drawer\Utils;
 
 #[AllowDynamicProperties]
 class ComponentContext

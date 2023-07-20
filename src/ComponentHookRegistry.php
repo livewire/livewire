@@ -4,8 +4,6 @@ namespace Livewire;
 
 use WeakMap;
 use Livewire\Drawer\Utils;
-use Livewire\ComponentHook;
-use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 class ComponentHookRegistry
 {

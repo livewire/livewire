@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportTesting;
 
 use PHPUnit\Framework\ExpectationFailedException;
-use PHPUnit\Framework\AssertionFailedError;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;

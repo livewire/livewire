@@ -2,8 +2,6 @@
 
 namespace Livewire;
 
-use Livewire\ImplicitlyBoundMethod;
-
 class Wrapped
 {
     protected $fallback;

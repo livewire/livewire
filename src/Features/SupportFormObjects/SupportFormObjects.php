@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportFormObjects;
 
 use ReflectionClass;
 use Livewire\ComponentHook;
-use Livewire\Features\SupportAttributes\AttributeCollection;
 use ReflectionNamedType;
 
 class SupportFormObjects extends ComponentHook

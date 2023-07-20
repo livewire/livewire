@@ -2,11 +2,6 @@
 
 namespace Livewire\Features\SupportAttributes;
 
-use ReflectionObject;
-use ReflectionAttribute;
-use Livewire\Features\SupportAttributes\AttributeLevel;
-use Attribute;
-
 trait HandlesAttributes
 {
     protected AttributeCollection $attributes;
