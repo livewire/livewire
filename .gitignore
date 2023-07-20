@@ -1,0 +1,24 @@
+/vendor/
+/node_modules/
+_runtime_components.json
+SCRATCH.md
+COMMIT_MSG.aim.txt
+composer.lock
+.phpunit.result.cache
+.idea
+phpunit.xml
+
+# Files used to upload zips for early access folks
+upload-bin.sh
+main.zip
+
+# OS generated files
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Obsidian files for documentation editin
+docs/.obsidian/workspace.json

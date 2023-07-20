@@ -1,0 +1,25 @@
+{
+    "main": "dist/livewire.js",
+    "name": "laravel-livewire",
+    "scripts": {
+        "build": "node ./scripts/build.js",
+        "watch": "node ./scripts/build.js --watch"
+    },
+    "author": "Caleb Porzio",
+    "license": "MIT",
+    "devDependencies": {
+        "brotli-size": "^4.0.0",
+        "esbuild": "^0.14.49"
+    },
+    "dependencies": {
+        "@alpinejs/morph": "^3.10.5",
+        "@alpinejs/collapse": "^3.10.5",
+        "@alpinejs/focus": "^3.10.5",
+        "@alpinejs/persist": "^3.10.5",
+        "@alpinejs/intersect": "^3.10.5",
+        "@alpinejs/mask": "^3.10.5",
+        "@alpinejs/history": "^3.10.5",
+        "@vue/reactivity": "^3.2.45",
+        "alpinejs": "^3.10.5"
+    }
+}

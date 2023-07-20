@@ -1,0 +1,10 @@
+{
+	"id": "obsidian-languagetool-plugin",
+	"name": "LanguageTool Integration",
+	"version": "0.3.3",
+	"minAppVersion": "0.15.2",
+	"description": "Inofficial LanguageTool plugin",
+	"author": "Clemens Ertle",
+	"authorUrl": "https://github.com/Clemens-E",
+	"isDesktopOnly": false
+}
