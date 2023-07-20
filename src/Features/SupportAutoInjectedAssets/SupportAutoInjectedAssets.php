@@ -37,9 +37,10 @@ class SupportAutoInjectedAssets extends ComponentHook
 
     static function injectAssets($html)
     {
-        $replacement = Blade::render('@livewireScripts').'</html>';
-        $html = str($html)->replaceLast('</html>', $replacement);
-
-        return Blade::render('@livewireStyles').$html;
+        return str($html)
+            ->replaceLast('</head>', Blade::render('@livewireStyles').'</head>')
+            ->replaceLast('</body>', Blade::render('@livewireScripts').'</body>')
+            ->toString()
+        ;
     }
 }
