@@ -28,10 +28,10 @@ class UnitTest extends TestCase
         $this->assertEquals(<<<HTML
             <!doctype html>
             <html>
-                <head>
+                <head>$livewireStyles
                     <meta charset="utf-8"/>
                     <title></title>
-                $livewireStyles</head>
+                </head>
                 <body>
                 $livewireScripts</body>
             </html>
