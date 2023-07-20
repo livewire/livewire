@@ -1,2 +1,0 @@
-@livewireStyles
-@livewireScripts($options)
