@@ -2,7 +2,7 @@ import { debounceByComponent } from '@/debounce'
 import { directive } from '@/directives'
 import { on } from '@/events'
 import { handleFileUpload } from '@/features/supportFileUploads'
-import { closestComponent } from '@/store'
+import { closestComponent } from '@/Store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 

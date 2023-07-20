@@ -1,7 +1,7 @@
 import { dataSet, deepClone, deeplyEqual, diff, extractData} from './utils'
 import { processEffects } from './commit'
 import { generateWireObject } from './$wire'
-import { findComponent } from './store';
+import { findComponent } from './Store';
 
 export class Component {
     constructor(el) {

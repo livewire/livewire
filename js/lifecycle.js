@@ -1,4 +1,4 @@
-import { closestComponent, destroyComponent, initComponent } from './store'
+import { closestComponent, destroyComponent, initComponent } from './Store'
 import { initDirectives } from './directives'
 import { trigger } from './events'
 import collapse from '@alpinejs/collapse'

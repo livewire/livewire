@@ -1,6 +1,6 @@
 import { dispatchGlobal as dispatch, dispatchTo, on } from './features/supportEvents'
 import { directive } from './directives'
-import { find, first, getByName, all } from './store'
+import { find, first, getByName, all } from './Store'
 import { on as hook, trigger } from './events'
 import { dispatch as doDispatch } from './utils'
 import { start, stop, rescan } from './lifecycle'

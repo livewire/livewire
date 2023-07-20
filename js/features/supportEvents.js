@@ -1,4 +1,4 @@
-import { componentsByName, findComponent } from '@/store'
+import { componentsByName, findComponent } from '@/Store'
 import { on as hook, trigger } from '@/events'
 import Alpine from 'alpinejs'
 
