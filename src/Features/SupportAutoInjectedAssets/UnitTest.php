@@ -39,6 +39,64 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    public function it_injects_livewire_assets_html_only()
+    {
+        $manipulatedHtml = SupportAutoInjectedAssets::injectAssets(<<<'HTML'
+            <html>
+                <yolo />
+            </html>
+        HTML);
+
+        $livewireStyles = Blade::render('@livewireStyles');
+        $livewireScripts = Blade::render('@livewireScripts');
+
+        $this->assertEquals(<<<HTML
+            <html>$livewireStyles
+                <yolo />
+            $livewireScripts</html>
+        HTML, $manipulatedHtml);
+    }
+
+    /** @test */
+    public function it_injects_livewire_assets_wired_formated_html()
+    {
+        $manipulatedHtml = SupportAutoInjectedAssets::injectAssets(<<<'HTML'
+            <!doctype html>
+            <html
+                lang="en"
+            >
+                <head
+                >
+                    <meta charset="utf-8"/>
+                    <title></title>
+                </head>
+                <body>
+                </body
+                >
+            </html>
+        HTML);
+
+        $livewireStyles = Blade::render('@livewireStyles');
+        $livewireScripts = Blade::render('@livewireScripts');
+
+        $this->assertEquals(<<<HTML
+            <!doctype html>
+            <html
+                lang="en"
+            >
+                <head
+                >$livewireStyles
+                    <meta charset="utf-8"/>
+                    <title></title>
+                </head>
+                <body>
+                $livewireScripts</body
+                >
+            </html>
+        HTML, $manipulatedHtml);
+    }
+
+    /** @test */
     public function can_disable_auto_injection_using_global_method()
     {
         $this->markTestIncomplete();

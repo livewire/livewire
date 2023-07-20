@@ -37,10 +37,16 @@ class SupportAutoInjectedAssets extends ComponentHook
 
     static function injectAssets($html)
     {
+        if (str($html)->isMatch(['/<\s*head[^>]*>/', '/<\s*body[^>]*>/'])) {
+            return str($html)
+                ->replaceMatches('/(<\s*head[^>]*>)/', '$1'.Blade::render('@livewireStyles'))
+                ->replaceMatches('/(<\s*\/\s*body\s*>)/', Blade::render('@livewireScripts').'$1')
+                ->toString();
+        }
+
         return str($html)
-            ->replaceFirst('<head>', '<head>'.Blade::render('@livewireStyles'))
-            ->replaceLast('</body>', Blade::render('@livewireScripts').'</body>')
-            ->toString()
-        ;
+            ->replaceMatches('/(<\s*html[^>]*>)/', '$1'.Blade::render('@livewireStyles'))
+            ->replaceMatches('/(<\s*\/\s*html\s*>)/', Blade::render('@livewireScripts').'$1')
+            ->toString();
     }
 }
