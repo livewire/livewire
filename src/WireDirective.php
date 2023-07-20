@@ -3,18 +3,16 @@
 namespace Livewire;
 
 use Stringable;
-use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\View\ComponentAttributeBag;
+use Illuminate\Contracts\Support\Htmlable;
 
-#[\AllowDynamicProperties]
 class WireDirective implements Htmlable, Stringable
 {
-    public function __construct($name, $directive, $value)
-    {
-        $this->name = $name;
-        $this->directive = $directive;
-        $this->value = $value;
-    }
+    public function __construct(
+        public $name,
+        public $directive,
+        public $value,
+    ) {}
 
     public function name()
     {

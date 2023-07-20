@@ -11,10 +11,13 @@
          convertWarningsToExceptions="true">
     <testsuites>
         <testsuite name="Unit">
-            <directory suffix="Test.php">./tests/Unit</directory>
+            <directory suffix="UnitTest.php">./src</directory>
         </testsuite>
         <testsuite name="Browser">
-            <directory suffix="Test.php">./tests/Browser</directory>
+            <directory suffix="BrowserTest.php">./src</directory>
+        </testsuite>
+        <testsuite name="LegacyBrowser">
+            <directory suffix="Test.php">./legacy_tests/Browser</directory>
         </testsuite>
     </testsuites>
 </phpunit>

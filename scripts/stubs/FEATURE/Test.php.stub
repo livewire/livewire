@@ -1,0 +1,12 @@
+<?php
+
+namespace Livewire\Features\[FEATURE];
+
+class Test extends \Tests\TestCase
+{
+    /** @test */
+    public function can_()
+    {
+        $this->assertTrue(true);
+    }
+}

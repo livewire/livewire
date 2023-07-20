@@ -1,0 +1,32 @@
+#!/usr/bin/env php
+<?php
+
+[$name, $command, $run] = require __DIR__.'/laravel.php';
+
+$name('Livewire Admin Console', '1.0.0');
+
+/**
+ * Make a new feature...
+ */
+use Illuminate\Support\Facades\File;
+
+$command('make:feature {name}', function ($name) {
+    $name = (string) str($name)->studly();
+    $fullname = 'Support'.$name;
+    $stubDir = __DIR__.'/stubs/FEATURE';
+    $featuresDir = __DIR__.'/../src/Features';
+    $featureDir = $featuresDir.'/'.$fullname;
+
+    // Create the stub directory...
+    File::copyDirectory($stubDir, $featureDir);
+
+    // Rename the files...
+    File::move($featureDir.'/FEATURE.php.stub', $php = $featureDir.'/'.$fullname.'.php');
+    File::move($featureDir.'/Test.php.stub', $test = $featureDir.'/Test.php');
+
+    // Replace stub contents...
+    File::put($php, str(File::get($php))->replace('[FEATURE]', $fullname));
+    File::put($test, str(File::get($test))->replace('[FEATURE]', $fullname));
+})->purpose('Scaffold a new feature');
+
+$run();
