@@ -1,1 +1,0 @@
-<span>{{ $this->name }}</span>

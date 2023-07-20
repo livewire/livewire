@@ -14,13 +14,6 @@ If you prefer kebab-cased names, you can use them as well:
 php artisan make:livewire create-post
 ```
 
-You may use namespace syntax or dot-notation to create your components in sub-directories. For example, the following commands will create a `CreatePost` component in the `Posts` sub-directory:
-
-```shell
-php artisan make:livewire Posts\\CreatePost
-php artisan make:livewire posts.create-post
-```
-
 After running this command, Livewire will create two new files in your application. The first will be the component's class: `app/Livewire/CreatePost.php`
 
 ```php
@@ -45,6 +38,13 @@ The second will be the component's Blade view: `resources/views/livewire/create-
 <div>
 	{{-- ... --}}
 </div>
+```
+
+You may use namespace syntax or dot-notation to create your components in sub-directories. For example, the following commands will create a `CreatePost` component in the `Posts` sub-directory:
+
+```shell
+php artisan make:livewire Posts\\CreatePost
+php artisan make:livewire posts.create-post
 ```
 
 ### Inline components
@@ -151,7 +151,7 @@ The rendered output of this component would be:
 
 ```blade
 <div>
-    <h1>Title: "Post title...""</h1>
+    <h1>Title: "Post title..."</h1>
 </div>
 ```
 
