@@ -151,7 +151,7 @@ The rendered output of this component would be:
 
 ```blade
 <div>
-    <h1>Title: "Post title...""</h1>
+    <h1>Title: "Post title..."</h1>
 </div>
 ```
 
