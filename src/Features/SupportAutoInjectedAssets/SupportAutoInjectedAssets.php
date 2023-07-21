@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Livewire\ComponentHook;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
