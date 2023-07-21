@@ -211,8 +211,6 @@ class Test extends TestCase
 
     public function test_entangle_works_with_turbo()
     {
-        $this->markTestSkipped();
-
         $this->browse(function ($browser) {
             $browser->visit(route('entangle-turbo', [], false))
                 ->assertSeeIn('@page.title', 'Testing Entangle with Turbo')
