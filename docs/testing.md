@@ -37,7 +37,7 @@ Before reading further, you may wish to familiarize yourself with [Laravel's own
 
 The simplest Livewire test you can write is asserting that a given endpoint in your application includes and successfully renders a given Livewire component.
 
-Livewire provides an `assertHasLivewire()` method that can be used from any Laravel test:
+Livewire provides an `assertSeeLivewire()` method that can be used from any Laravel test:
 
 ```php
 <?php
@@ -53,7 +53,7 @@ class CreatePostTest extends TestCase
     public function component_exists_on_the_page()
     {
         $this->get('/post/create')
-            ->assertHasLivewire(CreatePost::class);
+            ->assertSeeLivewire(CreatePost::class);
     }
 }
 ```
