@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Illuminate\Support\Facades\Blade;
+use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 use Tests\TestCase;
 
 class UnitTest extends TestCase
@@ -10,7 +10,10 @@ class UnitTest extends TestCase
     /** @test */
     public function it_injects_livewire_assets_before_closing_tags(): void
     {
-        $manipulatedHtml = SupportAutoInjectedAssets::injectAssets(<<<'HTML'
+        $livewireStyles = FrontendAssets::styles();
+        $livewireScripts = FrontendAssets::scripts();
+
+        $this->compare(<<<'HTML'
             <!doctype html>
             <html>
                 <head>
@@ -20,12 +23,7 @@ class UnitTest extends TestCase
                 <body>
                 </body>
             </html>
-        HTML);
-
-        $livewireStyles = Blade::render('@livewireStyles');
-        $livewireScripts = Blade::render('@livewireScripts');
-
-        $this->assertEquals(<<<HTML
+        HTML, <<<HTML
             <!doctype html>
             <html>
                 <head>$livewireStyles
@@ -35,32 +33,33 @@ class UnitTest extends TestCase
                 <body>
                 $livewireScripts</body>
             </html>
-        HTML, $manipulatedHtml);
+        HTML);
     }
 
     /** @test */
-    public function it_injects_livewire_assets_html_only()
+    public function it_injects_livewire_assets_html_only(): void
     {
-        $manipulatedHtml = SupportAutoInjectedAssets::injectAssets(<<<'HTML'
+        $livewireStyles = FrontendAssets::styles();
+        $livewireScripts = FrontendAssets::scripts();
+
+        $this->compare(<<<'HTML'
             <html>
                 <yolo />
             </html>
-        HTML);
-
-        $livewireStyles = Blade::render('@livewireStyles');
-        $livewireScripts = Blade::render('@livewireScripts');
-
-        $this->assertEquals(<<<HTML
+        HTML, <<<HTML
             <html>$livewireStyles
                 <yolo />
             $livewireScripts</html>
-        HTML, $manipulatedHtml);
+        HTML);
     }
 
     /** @test */
-    public function it_injects_livewire_assets_wired_formated_html()
+    public function it_injects_livewire_assets_weirdly_formatted_html(): void
     {
-        $manipulatedHtml = SupportAutoInjectedAssets::injectAssets(<<<'HTML'
+        $livewireStyles = FrontendAssets::styles();
+        $livewireScripts = FrontendAssets::scripts();
+
+        $this->compare(<<<'HTML'
             <!doctype html>
             <html
                 lang="en"
@@ -74,12 +73,7 @@ class UnitTest extends TestCase
                 </body
                 >
             </html>
-        HTML);
-
-        $livewireStyles = Blade::render('@livewireStyles');
-        $livewireScripts = Blade::render('@livewireScripts');
-
-        $this->assertEquals(<<<HTML
+        HTML, <<<HTML
             <!doctype html>
             <html
                 lang="en"
@@ -93,36 +87,41 @@ class UnitTest extends TestCase
                 $livewireScripts</body
                 >
             </html>
-        HTML, $manipulatedHtml);
+        HTML);
     }
 
     /** @test */
-    public function can_disable_auto_injection_using_global_method()
+    public function can_disable_auto_injection_using_global_method(): void
     {
         $this->markTestIncomplete();
     }
 
     /** @test */
-    public function can_disable_auto_injection_using_config()
+    public function can_disable_auto_injection_using_config(): void
     {
         $this->markTestIncomplete();
     }
 
     /** @test */
-    public function only_auto_injects_when_a_livewire_component_was_rendered_on_the_page()
+    public function only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
         $this->markTestIncomplete();
     }
 
     /** @test */
-    public function only_injects_on_full_page_loads()
+    public function only_injects_on_full_page_loads(): void
     {
         $this->markTestIncomplete();
     }
 
     /** @test */
-    public function only_inject_when_dev_doesnt_use_livewire_scripts_or_livewire_styles()
+    public function only_inject_when_dev_doesnt_use_livewire_scripts_or_livewire_styles(): void
     {
         $this->markTestIncomplete();
+    }
+
+    protected function compare(string $original, string $expected): void
+    {
+        $this->assertEquals($expected, SupportAutoInjectedAssets::injectAssets($original));
     }
 }
