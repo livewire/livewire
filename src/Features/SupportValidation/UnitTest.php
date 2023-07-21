@@ -81,7 +81,11 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-                $this->assertStringContainsString('The Foo', $messages['foo'][0]);
+                if (version_compare(app()->version(), '10', '>=')) {
+                    $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                } else {
+                    $this->assertEquals('The The Foo must be at least 3 characters.', $messages['foo'][0]);
+                }
             })
             ;
     }
@@ -102,8 +106,11 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-
-                $this->assertStringContainsString('The Foo', $messages['foo'][0]);
+                if (version_compare(app()->version(), '10', '>=')) {
+                    $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                } else {
+                    $this->assertEquals('The The Foo must be at least 3 characters.', $messages['foo'][0]);
+                }
             })
             ;
     }
