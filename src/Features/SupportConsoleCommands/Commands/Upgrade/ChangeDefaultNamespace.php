@@ -36,9 +36,15 @@ class ChangeDefaultNamespace extends UpgradeStep
                 return $next($console);
             }
 
+            $componentNames = [];
+
             $results = collect($this->filesystem()->allFiles('app/Http/Livewire'))->map(function($file) {
                 return str($file)->after('app/Http/Livewire/')->before('.php')->__toString();
-            })->map(function($component) {
+            })->map(function($component) use (&$componentNames) {
+
+                // Track component names to update namespace references later on.
+                $componentNames[] = $component;
+
                 $parser = new ComponentParser(
                     'App\\Http\\Livewire',
                     config('livewire.view_path'),
@@ -66,12 +72,36 @@ class ChangeDefaultNamespace extends UpgradeStep
                 return ['Migrated', $component];
             });
 
+            foreach($componentNames as $name) {
+                $name = str($name)->replace('/', '\\\\')->toString();
+
+                // Update any namespace references
+                $this->patternReplacement(
+                    pattern: "/App\\\Http\\\Livewire\\\({$name})/",
+                    replacement: 'App\Livewire\\\$1',
+                    directories: [
+                        'app',
+                        'resources/views',
+                        'routes',
+                        'tests',
+                    ]
+                );
+            }
+
+            // Update vite config
+            $this->patternReplacement(
+                pattern: '/App\/Http\/Livewire/',
+                replacement: 'App/Livewire',
+                mode: 'manual',
+                files: 'vite.config.js'
+            );
+
             $console->table(
                 ['Status', 'Component', 'Remark'], $results
             );
-
-            return $next($console);
         }
+
+        return $next($console);
     }
 
     protected function hasOldNamespace()

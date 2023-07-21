@@ -36,6 +36,7 @@ class ChangeDefaultLayoutView extends UpgradeStep
 
             $this->patternReplacement('/layouts\.app/', 'components.layouts.app', 'config');
         }
+
         return $next($console);
     }
 

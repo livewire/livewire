@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Livewire\ComponentHook;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
@@ -36,9 +35,21 @@ class SupportAutoInjectedAssets extends ComponentHook
 
     static function injectAssets($html)
     {
-        $replacement = Blade::render('@livewireScripts').'</html>';
-        $html = str($html)->replaceLast('</html>', $replacement);
+        $livewireStyles = FrontendAssets::styles();
+        $livewireScripts = FrontendAssets::scripts();
 
-        return Blade::render('@livewireStyles').$html;
+        $html = str($html);
+
+        if ($html->test('/<\s*head[^>]*>/') && $html->test('/<\s*body[^>]*>/')) {
+            return $html
+                ->replaceMatches('/(<\s*head[^>]*>)/', '$1'.$livewireStyles)
+                ->replaceMatches('/(<\s*\/\s*body\s*>)/', $livewireScripts.'$1')
+                ->toString();
+        }
+
+        return $html
+            ->replaceMatches('/(<\s*html[^>]*>)/', '$1'.$livewireStyles)
+            ->replaceMatches('/(<\s*\/\s*html\s*>)/', $livewireScripts.'$1')
+            ->toString();
     }
 }

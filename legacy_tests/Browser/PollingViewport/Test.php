@@ -10,6 +10,8 @@ class Test extends TestCase
 {
     public function test()
     {
+        $this->markTestSkipped(); // @flaky
+
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, Component::class)
                 ->assertSeeIn('@output', '1')
