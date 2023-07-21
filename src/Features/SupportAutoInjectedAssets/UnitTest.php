@@ -8,7 +8,7 @@ use Tests\TestCase;
 class UnitTest extends TestCase
 {
     /** @test */
-    public function it_injects_livewire_assets_before_closing_tags()
+    public function it_injects_livewire_assets_before_closing_tags(): void
     {
         $manipulatedHtml = SupportAutoInjectedAssets::injectAssets(<<<'HTML'
             <!doctype html>
