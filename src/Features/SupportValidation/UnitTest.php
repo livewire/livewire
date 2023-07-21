@@ -14,8 +14,6 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    // @todo: test that this supports email_validation rules (dependant validation rule in attribute)
-
     /** @test */
     public function update_triggers_rule_attribute()
     {
@@ -83,7 +81,11 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-                $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                if (version_compare(app()->version(), '10', '>=')) {
+                    $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                } else {
+                    $this->assertEquals('The The Foo must be at least 3 characters.', $messages['foo'][0]);
+                }
             })
             ;
     }
@@ -104,7 +106,11 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-                $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                if (version_compare(app()->version(), '10', '>=')) {
+                    $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                } else {
+                    $this->assertEquals('The The Foo must be at least 3 characters.', $messages['foo'][0]);
+                }
             })
             ;
     }

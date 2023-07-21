@@ -190,7 +190,7 @@ let $wire = {
     $parent,
 
     // Get the value of a property by name...
-    // Usage: $wire.$set('count')
+    // Usage: $wire.$get('count')
     $get(name) { ... },
 
     // Set a property on the component by name...

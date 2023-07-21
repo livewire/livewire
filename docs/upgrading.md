@@ -382,11 +382,11 @@ Here are the "find and replace" differences that should be applied to your appli
 $this->emit('post-created'); // [tl! remove]
 $this->dispatch('post-created'); // [tl! add]
 
-$this->emitTo('post-created'); // [tl! remove]
-$this->dispatchTo('post-created'); // [tl! add]
+$this->emitTo('foo', 'post-created'); // [tl! remove]
+$this->dispatch('post-created')->to('foo'); // [tl! add]
 
 $this->emitSelf('post-created'); // [tl! remove]
-$this->dispatchSelf('post-created'); // [tl! add]
+$this->dispatch('post-created')->self(); // [tl! add]
 
 $this->emit('post-created', $post->id); // [tl! remove]
 $this->dispatch('post-created', postId: $post->id); // [tl! add]
