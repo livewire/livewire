@@ -157,7 +157,7 @@ The rendered output of this component would be:
 
 ### Sharing additional data with the view
 
-In addition to accessing properties from the view, you can explicitly pass data to the view from the `render()` method like you might typically do from a controller. This can be useful when you want to pass additional data without first storing it as a property—because properties have [specific performance and security implications](https://livewire.laravel.com/docs/properties#security-concerns).
+In addition to accessing properties from the view, you can explicitly pass data to the view from the `render()` method like you might typically do from a controller. This can be useful when you want to pass additional data without first storing it as a property—because properties have [specific performance and security implications](/docs/properties#security-concerns).
 
 To pass data to the view in the `render()` method, you can use the `with()` method on the view instance. For example, let's say you want to pass the post author's name to the view. In this case, the post's author is the currently authenticated user:
 
@@ -226,10 +226,10 @@ Let's bind the `$title` property from the `CreatePost` component to a text input
 Any changes made to the text input will be automatically synchronized with the `$title` property in your Livewire component.
 
 > [!warning] "Why isn't my component live updating as I type?"
-> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](https://livewire.laravel.com/docs/properties#data-binding).
+> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/properties#data-binding).
 
 
-Livewire properties are extremely powerful and are an important concept to understand. For more information, check out the [Livewire properties documentation](https://livewire.laravel.com/docs/properties).
+Livewire properties are extremely powerful and are an important concept to understand. For more information, check out the [Livewire properties documentation](/docs/properties).
 
 ## Calling actions
 
@@ -280,7 +280,7 @@ Next, let's call the `save` action from the component's Blade view by adding the
 
 When the "Save" button is clicked, the `save` method in your Livewire component will be executed and your component will re-render.
 
-To keep learning about Livewire actions, visit the [actions documentation](https://livewire.laravel.com/docs/actions).
+To keep learning about Livewire actions, visit the [actions documentation](/docs/actions).
 
 ## Rendering components
 
@@ -341,7 +341,7 @@ class CreatePost extends Component
 
 In this example, the `title` property will be initialized with the value "Initial Title".
 
-You can think of the `mount()` method as a class constructor. It runs on the initial load of the component, but not on subsequent requests within a page. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](https://livewire.laravel.com/docs/lifecycle-hooks).
+You can think of the `mount()` method as a class constructor. It runs on the initial load of the component, but not on subsequent requests within a page. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](/docs/lifecycle-hooks).
 
 To reduce boilerplate code in your components, you can alternatively omit the `mount()` method and Livewire will automatically set any properties on your component with names matching the passed in values:
 
