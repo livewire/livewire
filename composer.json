@@ -46,7 +46,7 @@
         "Livewire\\LivewireServiceProvider"
       ],
       "aliases": {
-        "Livewire": "Livewire\\LivewireManager"
+        "Livewire": "Livewire\\Livewire"
       }
     }
   },
