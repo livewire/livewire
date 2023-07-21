@@ -125,7 +125,7 @@ Fortunately, Livewire has worked hard to mitigate these problems using the follo
 
 Livewire has an additional step in its morphing algorithm that checks subsequent elements and their contents before changing an element.
 
-The prevents the above scenario from happening in many cases.
+This prevents the above scenario from happening in many cases.
 
 Here is a visualization of the "look-ahead" algorithm in action:
 
