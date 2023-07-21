@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
+use Arr;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 
@@ -59,30 +60,49 @@ abstract class UpgradeStep
         $console->newLine(4);
     }
 
-    public function patternReplacement($pattern, $replacement, $directories = 'resources/views')
+    public function patternReplacement(
+        $pattern,
+        $replacement,
+        $directories = 'resources/views',
+        $files = [],
+        $mode = 'auto')
     {
-        return collect(\Arr::wrap($directories))->map(function($directory) use ($pattern, $replacement) {
-            return collect($this->filesystem()->allFiles($directory))
-                ->map(function ($path) {
+        // If the mode is auto, we'll just get all the files in the directories
+        if($mode == 'auto') {
+            $files = collect(Arr::wrap($directories))->map(function($directory) {
+                return collect($this->filesystem()->allFiles($directory))->map(function ($path) {
                     return [
                         'path' => $path,
                         'content' => $this->filesystem()->get($path),
                     ];
-                })->map(function($file) use ($pattern, $replacement) {
-                    $file['content'] = preg_replace($pattern, $replacement, $file['content'], -1, $count);
-                    $file['occurrences'] = $count;
-
-                    return $count > 0 ? $file : null;
-                })
-                ->filter()
-                ->values()
-                ->map(function($file) {
-                    $this->filesystem()->put($file['path'], $file['content']);
-
-                    return [
-                        $file['path'], $file['occurrences'],
-                    ];
                 });
-        })->flatten(1);
+            })->flatten(1);
+        }
+
+        // If the mode is manual, we'll just use the files passed in
+        if($mode == 'manual') {
+            $files = collect(Arr::wrap($files))->map(function($path) {
+                return [
+                    'path' => $path,
+                    'content' => $this->filesystem()->get($path),
+                ];
+            });
+        }
+
+        return $files->map(function($file) use ($pattern, $replacement) {
+            $file['content'] = preg_replace($pattern, $replacement, $file['content'], -1, $count);
+            $file['occurrences'] = $count;
+
+            return $count > 0 ? $file : null;
+        })
+        ->filter()
+        ->values()
+        ->map(function($file) {
+            $this->filesystem()->put($file['path'], $file['content']);
+
+            return [
+                $file['path'], $file['occurrences'],
+            ];
+        });
     }
 }
