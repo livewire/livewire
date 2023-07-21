@@ -86,6 +86,5 @@ trait TestsEvents
             return $item['name'] === $value
                 && $item['to'] === $name;
         });
-
     }
 }

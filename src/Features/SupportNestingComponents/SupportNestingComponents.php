@@ -5,8 +5,6 @@ namespace Livewire\Features\SupportNestingComponents;
 use function Livewire\trigger;
 use function Livewire\store;
 use function Livewire\on;
-
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 
@@ -51,7 +49,7 @@ class SupportNestingComponents extends ComponentHook
     {
         $children = $memo['children'];
 
-        $this->setPreviouslyRenderedChildren($this->component, $children);
+        static::setPreviouslyRenderedChildren($this->component, $children);
     }
 
     function dehydrate($context)
@@ -69,7 +67,7 @@ class SupportNestingComponents extends ComponentHook
     static function setParentChild($parent, $key, $tag, $id) { store($parent)->push('children', [$tag, $id], $key); }
     static function setPreviouslyRenderedChildren($component, $children) { store($component)->set('previousChildren', $children); }
     static function hasPreviouslyRenderedChild($parent, $key) {
-        return in_array($key, array_keys(store($parent)->get('previousChildren', [])));
+        return array_key_exists($key, store($parent)->get('previousChildren', []));
     }
 
     static function getPreviouslyRenderedChild($parent, $key)

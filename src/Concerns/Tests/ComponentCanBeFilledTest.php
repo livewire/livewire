@@ -6,7 +6,6 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
-use Synthetic\Testing\FauxJsTarget;
 
 class ComponentCanBeFilledTest extends \Tests\TestCase
 {

@@ -6,7 +6,6 @@ use Livewire\Wireable;
 use Livewire\Livewire;
 use Livewire\Exceptions\MissingRulesException;
 use Livewire\Component;
-
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Collection;

@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
-use Illuminate\Support\Facades\File;
 use Livewire\Features\SupportConsoleCommands\Commands\ComponentParser;
 use Livewire\Features\SupportConsoleCommands\Commands\ComponentParserFromExistingComponent;
 use Livewire\Features\SupportConsoleCommands\Commands\UpgradeCommand;
@@ -23,7 +22,7 @@ class ChangeDefaultNamespace extends UpgradeStep
                 'keep',
             ], 'migrate');
 
-            if($choice == 'keep') {
+            if($choice === 'keep') {
                 $console->line('Keeping the old namespace...');
 
                 $this->publishConfigIfMissing($console);
@@ -61,8 +60,6 @@ class ChangeDefaultNamespace extends UpgradeStep
 
                 if ($this->filesystem()->exists($newParser->relativeClassPath())) {
                     return ['Skipped', $component, 'Already exists'];
-
-                    return false;
                 }
 
                 if($this->filesystem()->directoryMissing(dirname($newParser->relativeClassPath()))) {

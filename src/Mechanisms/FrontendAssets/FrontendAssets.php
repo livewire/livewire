@@ -3,7 +3,6 @@
 namespace Livewire\Mechanisms\FrontendAssets;
 
 use Livewire\Drawer\Utils;
-use Illuminate\Support\Js;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 

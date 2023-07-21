@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportReactiveProps;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
-
 use function Livewire\store;
 
 #[\Attribute]

@@ -12,7 +12,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeLazyToBlurMo
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeTestAssertionMethods;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeWireLoadDirectiveToWireInit;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ClearViewCache;
-use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromEntanglelDirectives;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromEntangleDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePrefetchModifierFromWireClickDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePreventModifierFromWireSubmitDirective;
@@ -41,7 +41,7 @@ class UpgradeCommand extends Command
             RemoveDeferModifierFromWireModelDirectives::class,
             ChangeLazyToBlurModifierOnWireModelDirectives::class,
             AddLiveModifierToEntangleDirectives::class,
-            RemoveDeferModifierFromEntanglelDirectives::class,
+            RemoveDeferModifierFromEntangleDirectives::class,
             RemovePreventModifierFromWireSubmitDirective::class,
             RemovePrefetchModifierFromWireClickDirective::class,
             ChangeWireLoadDirectiveToWireInit::class,

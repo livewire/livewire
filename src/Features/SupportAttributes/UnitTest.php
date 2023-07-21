@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportAttributes;
 
-use Livewire\Component;
 use Livewire\Livewire;
 use Tests\TestComponent;
 
