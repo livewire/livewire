@@ -14,8 +14,6 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    // @todo: test that this supports email_validation rules (dependant validation rule in attribute)
-
     /** @test */
     public function update_triggers_rule_attribute()
     {
