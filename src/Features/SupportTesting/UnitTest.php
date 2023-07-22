@@ -351,7 +351,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     function assert_dont_see_multiple()
     {
         Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
-            ->assertDontSee(['no', 'one', 'really']);
+            ->assertDontSee(['nobody', 'really', 'knows']);
     }
 
     /** @test */
