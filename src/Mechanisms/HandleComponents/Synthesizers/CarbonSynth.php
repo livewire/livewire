@@ -29,7 +29,7 @@ class CarbonSynth extends Synth {
 
     function dehydrate($target) {
         return [
-            $target->format(DateTimeInterface::ISO8601),
+            $target->format(DateTimeInterface::ATOM),
             ['type' => array_search(get_class($target), static::$types)],
         ];
     }
