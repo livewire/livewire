@@ -18,6 +18,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-page', FirstPage::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
+            Livewire::component('third-page', ThirdPage::class);
             Livewire::component('first-asset-page', FirstAssetPage::class);
             Livewire::component('second-asset-page', SecondAssetPage::class);
             Livewire::component('third-asset-page', ThirdAssetPage::class);
@@ -27,6 +28,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/first', FirstPage::class)->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/second', SecondPage::class)->middleware('web');
+            Route::get('/third', ThirdPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
@@ -38,6 +40,37 @@ class BrowserTest extends \Tests\BrowserTestCase
                 return Utils::pretendResponseIsFile(__DIR__.'/test-views/test-navigate-asset.js');
             });
         };
+    }
+
+    /** @test */
+    function can_configure_loading_indicator()
+    {
+        config(['livewire.navigate.show_progress_bar' => true]);
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.third')
+                ->waitFor('#nprogress')
+                ->waitForText('Done loading...');
+        });
+
+        config(['livewire.navigate.show_progress_bar' => false]);
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.third')
+                ->pause(500)
+                ->assertMissing('#nprogress')
+                ->waitForText('Done loading...');
+        });
     }
 
     /** @test */
@@ -181,6 +214,7 @@ class FirstPage extends Component
             <div>On first</div>
 
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
+            <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
 
             @persist('foo')
@@ -222,6 +256,23 @@ class SecondPage extends Component
                     <button x-on:click="count++" dusk="increment">+</button>
                 </div>
             @endpersist
+        </div>
+        HTML;
+    }
+}
+
+class ThirdPage extends Component
+{
+    public function mount()
+    {
+        sleep(1);
+    }
+
+    function render()
+    {
+        return <<<'HTML'
+        <div>
+            Done loading...
         </div>
         HTML;
     }
