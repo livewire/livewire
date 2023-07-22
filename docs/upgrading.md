@@ -23,7 +23,7 @@ Livewire now requires that your application is running on PHP version 8.1 or gre
 
 ## Update Livewire to version 3
 
-Run the following composer command to upgrade your application's Livewire dependancy from version 2 to 3:
+Run the following composer command to upgrade your application's Livewire dependency from version 2 to 3:
 
 ```shell
 composer require livewire/livewire:3.0.0-beta.1
