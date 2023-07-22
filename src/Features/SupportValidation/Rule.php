@@ -2,11 +2,12 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use Attribute;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use function Livewire\wrap;
 
-#[\Attribute]
+#[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_ALL)]
 class Rule extends LivewireAttribute
 {
     // @todo: support custom messages...
