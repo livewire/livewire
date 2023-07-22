@@ -260,7 +260,7 @@ Alpine.start()
 You can remove them entirely because Livewire includes Alpine and many popular Alpine plugins by default.
 
 > [!warning] "Livewire V3 (beta) with Laravel Breeze or Laravel Jetstream"
-> If you are trying to try Livewire V3 beta with solutions like Laravel Breeze or Laravel JetStream, you will need to offload Alpine as demonstrated above. Also, you can remove Alpine from your NPM dependencies as well. The Laravel Breeze and Laravel JetStream are not ready for Livewire V3 yet by default.
+> If you are trying the Livewire V3 beta with the Laravel Breeze or Laravel JetStream, you will need to unload the Alpine as demonstrated above. Also, you can remove Alpine and any other Alpine plugins from your NPM dependencies as well. The Laravel Breeze and Laravel JetStream are not ready for Livewire V3 yet by default.
 
 #### Accessing Alpine via JS bundle
 
