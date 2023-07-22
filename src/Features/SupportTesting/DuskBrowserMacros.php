@@ -1,6 +1,6 @@
 <?php
 
-namespace LegacyTests\Browser;
+namespace Livewire\Features\SupportTesting;
 
 use function Livewire\str;
 use Facebook\WebDriver\WebDriverBy;
@@ -156,6 +156,9 @@ class DuskBrowserMacros
 
             // If no callback is passed, make ->waitForLivewire a higher-order method.
             return new class($this, $id) {
+                protected $browser;
+                protected $id;
+
                 public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
 
                 public function __call($method, $params)
