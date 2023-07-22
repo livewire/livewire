@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace Livewire\Features\SupportTesting;
 
 use function Livewire\str;
 use Facebook\WebDriver\WebDriverBy;

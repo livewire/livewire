@@ -65,7 +65,7 @@ class TestCase extends BaseTestCase
             DuskOptions::withoutUI();
         }
 
-        Browser::mixin(new \Tests\DuskBrowserMacros);
+        Browser::mixin(new \Livewire\Features\SupportTesting\DuskBrowserMacros);
 
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();
