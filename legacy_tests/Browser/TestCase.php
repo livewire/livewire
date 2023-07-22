@@ -11,7 +11,6 @@ use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Livewire\LivewireServiceProvider;
 use Livewire\Livewire;
 use Livewire\Component;
-use LegacyTests\Browser\DuskBrowserMacros;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
