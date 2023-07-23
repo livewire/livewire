@@ -8,7 +8,7 @@ use Illuminate\Routing\Route;
 use Laravel\SerializableClosure\SerializableClosure;
 use Tests\TestCase;
 
-class LivewireRoutCacheTest extends TestCase
+class LivewireRouteCachingTest extends TestCase
 {
     /** @test */
     public function livewire_script_route_is_cacheable(): void
