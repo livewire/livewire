@@ -13,6 +13,8 @@ class Form implements Arrayable
         protected $propertyName
     ) {
         $this->addValidationRulesToComponent();
+        $this->addValidationAttributesToComponent();
+        $this->addMessagesToComponent();
     }
 
     public function getComponent() { return $this->component; }
