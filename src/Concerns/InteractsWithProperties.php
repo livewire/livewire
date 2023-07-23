@@ -59,6 +59,25 @@ trait InteractsWithProperties
         }
     }
 
+    public function resetSafety(...$properties)
+    {
+        if (count($properties) && is_array($properties[0])) {
+            $properties = $properties[0];
+        }
+
+        $keys = array_intersect_key($this->all(), array_flip($properties));
+
+        $values = [];
+
+        foreach ($keys as $key => $value) {
+            $values[$key] = $value;
+        }
+
+        $this->reset($properties);
+
+        return [...array_values($values)];
+    }
+
     protected function resetExcept(...$properties)
     {
         if (count($properties) && is_array($properties[0])) {
