@@ -78,6 +78,86 @@ class UnitTest extends \Tests\TestCase
         ->call('save')
         ;
     }
+
+    /** @test */
+    function can_validate_a_form_object_with_dynamic_validation_attribute_method()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormDynamicValidationAttributeStub $form;
+
+            function save()
+            {
+                $this->form->validate();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $errors }}</div>
+            HTML; }
+        })
+            ->call('save')
+            ->assertSee('Title')
+            ->assertSee('Content')
+        ;
+    }
+
+    /** @test */
+    function can_validate_a_form_object_with_dynamic_messages_method()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormDynamicMessageAttributeStub $form;
+
+            function save()
+            {
+                $this->form->validate();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $errors }}</div>
+            HTML; }
+        })
+            ->set('form.title', '')
+            ->set('form.content', '')
+            ->call('save')
+            ->assertSee('Field title is must')
+            ->assertSee('This field is required in this form')
+            ->set('form.content', 'Hello')
+            ->assertSee('Need at least 10 letters')
+        ;
+    }
+
+    /** @test */
+    function can_validate_multiple_form_object_without_interfering_between()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormDynamicMessageAttributeStub $withMessagesForm;
+            public PostFormDynamicValidationAttributeStub $withValidationAttributesForm;
+
+            function saveWithMessages()
+            {
+                $this->withMessagesForm->validate();
+            }
+
+            function saveWithValidationAttributes()
+            {
+                $this->withValidationAttributesForm->validate();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $errors }}</div>
+            HTML; }
+        })
+            ->call('saveWithMessages')
+            ->assertSee('title')
+            ->assertSee('Field title is must')
+            ->assertSee('content')
+            ->assertSee('This field is required in this form')
+            ->call('saveWithValidationAttributes')
+            ->assertSee('Title')
+            ->assertSee('The Title field is required')
+            ->assertSee('Content')
+            ->assertSee('The Content field is required')
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -106,4 +186,38 @@ class PostFormRuleAttributeStub extends Form
 
     #[\Livewire\Attributes\Rule('required')]
     public $content = '';
+}
+
+class PostFormDynamicValidationAttributeStub extends Form
+{
+    #[\Livewire\Attributes\Rule('required', 'title')]
+    public $title = '';
+
+    #[\Livewire\Attributes\Rule('required', 'content')]
+    public $content = '';
+
+    public function validationAttributes() {
+        return [
+            'title' => 'Title',
+            'content' => 'Content',
+        ];
+    }
+}
+
+class PostFormDynamicMessageAttributeStub extends Form
+{
+    #[\Livewire\Attributes\Rule('required', 'title')]
+    public $title = '';
+
+    #[\Livewire\Attributes\Rule(['required', 'min:10'], 'content')]
+    public $content = '';
+
+    public function messages()
+    {
+        return [
+            'title' => 'Field :attribute is must',
+            'content.required' => 'This field is required in this form',
+            'content.min' => 'Need at least 10 letters',
+        ];
+    }
 }
