@@ -18,6 +18,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-page', FirstPage::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
+            Livewire::component('iframe-page', iframePage::class);
             Livewire::component('first-asset-page', FirstAssetPage::class);
             Livewire::component('second-asset-page', SecondAssetPage::class);
             Livewire::component('third-asset-page', ThirdAssetPage::class);
@@ -27,6 +28,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/first', FirstPage::class)->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/second', SecondPage::class)->middleware('web');
+            Route::get('/iframe', iframePage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
@@ -113,6 +115,27 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSeeIn('@count', '2')
                 ->click('@increment')
                 ->assertSeeIn('@count', '3')
+                ->assertScript('return window._lw_dusk_test');
+        });
+    }
+
+    /** @test */
+    function can_persist_iframes_across_pages()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/iframe')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->waitFor('iframe#player')
+                ->tap(fn ($b) => $b->script('window.player.mute();window.player.seekTo(30);window.player.playVideo();'))
+                ->waitUntil('window.player.getPlayerState() == 1', 60)
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->waitFor('iframe#player')
+                ->pause(500)
+                ->assertScript('window.player.getPlayerState()', 1)
+                ->assertScript('window.player.getCurrentTime() > 30')
                 ->assertScript('return window._lw_dusk_test');
         });
     }
@@ -222,6 +245,42 @@ class SecondPage extends Component
                     <button x-on:click="count++" dusk="increment">+</button>
                 </div>
             @endpersist
+        </div>
+        HTML;
+    }
+}
+
+class iframePage extends Component
+{
+    function render()
+    {
+        return <<<'HTML'
+        <div>
+            <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
+
+            @persist('foo')
+                <div id="player"></div>
+            @endpersist
+
+            <script data-navigate-once>
+              var tag = document.createElement('script');
+
+              tag.src = "https://www.youtube.com/iframe_api";
+              var firstScriptTag = document.getElementsByTagName('script')[0];
+              firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+              function onYouTubeIframeAPIReady() {
+                window.player = new YT.Player('player', {
+                  height: '390',
+                  width: '640',
+                  videoId: 'mH7cgoX3K0g',
+                  mute: true,
+                  playerVars: {
+                    'playsinline': 1
+                  }
+                });
+              }
+            </script>
         </div>
         HTML;
     }
