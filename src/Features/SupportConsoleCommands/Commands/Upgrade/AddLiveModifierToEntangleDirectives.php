@@ -13,7 +13,7 @@ class AddLiveModifierToEntangleDirectives extends UpgradeStep
             title: 'The @entangle(...) directive is now deferred by default.',
             before: '@entangle(...)',
             after: '@entangle(...).live',
-            pattern: '/@entangle\((.*)\)(?!\.(?:defer|live))/',
+            pattern: '/@entangle\(((?:[^)(]|\((?:[^)(]|\((?:[^)(]|\([^)(]*\))*\))*\))*)\)(?!\.(?:defer|live))/',
             replacement: '@entangle($1).live',
         );
 
@@ -22,7 +22,7 @@ class AddLiveModifierToEntangleDirectives extends UpgradeStep
             title: 'The $wire.entangle function is now deferred by default and has been changed to $wire.$entangle.',
             before: '$wire.entangle(...)',
             after: '$wire.$entangle(..., true)',
-            pattern: '/\$wire\.entangle\((.*)\)(?!\.(?:defer))/',
+            pattern: '/\$wire\.entangle\(((?:[^)(]|\((?:[^)(]|\((?:[^)(]|\([^)(]*\))*\))*\))*)\)(?!\.(?:defer))/',
             replacement: '$wire.$entangle($1, true)',
             directories: ['resources/views', 'resources/js']
         );

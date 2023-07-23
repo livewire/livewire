@@ -13,7 +13,7 @@ class RemoveDeferModifierFromEntangleDirectives extends UpgradeStep
             title: 'The @entangle(...) directive is now deferred by default.',
             before: '@entangle(...).defer',
             after: '@entangle(...)',
-            pattern: '/@entangle\((.*)\)\.defer/',
+            pattern: '/@entangle\(((?:[^)(]|\((?:[^)(]|\((?:[^)(]|\([^)(]*\))*\))*\))*)\)\.defer/',
             replacement: '@entangle($1)',
         );
 
