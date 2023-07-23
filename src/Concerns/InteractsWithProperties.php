@@ -59,7 +59,7 @@ trait InteractsWithProperties
         }
     }
 
-    public function resetSafety(...$properties)
+    public function resetSafe(...$properties)
     {
         if (count($properties) && is_array($properties[0])) {
             $properties = $properties[0];

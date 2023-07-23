@@ -72,12 +72,13 @@ class ResetPropertiesTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function can_reset_safety_properties()
+    public function can_reset_safe_properties()
     {
         Livewire::test(ResetPropertiesComponent::class)
             ->assertSet('foo', 'bar')
             ->assertSet('bob', 'lob')
             ->assertSet('mwa', 'hah')
+            ->assertSet('safe', [])
             ->set('foo', 'baz')
             ->set('bob', 'law')
             ->set('mwa', 'aha')
@@ -85,11 +86,11 @@ class ResetPropertiesTest extends \Tests\TestCase
             ->assertSet('bob', 'law')
             ->assertSet('mwa', 'aha')
             // Reset foo and bob safety.
-            ->call('resetPropertiesSafety', ['foo', 'bob'])
+            ->call('resetKeysSafe', ['foo', 'bob'])
             ->assertSet('foo', 'bar')
             ->assertSet('bob', 'lob')
             ->assertSet('mwa', 'aha')
-            ->assertSet('safety', [
+            ->assertSet('safe', [
                 'baz',
                 'law',
             ]);
@@ -102,7 +103,7 @@ class ResetPropertiesComponent extends Component
     public $bob = 'lob';
     public $mwa = 'hah';
 
-    public $safety = [];
+    public $safe = [];
 
     public function resetAll()
     {
@@ -119,9 +120,9 @@ class ResetPropertiesComponent extends Component
         $this->resetExcept($keys);
     }
 
-    public function resetPropertiesSafety($keys)
+    public function resetKeysSafe($keys)
     {
-        $this->safety = $this->resetSafety($keys);
+        $this->safe = $this->resetSafe($keys);
     }
 
     public function render()
