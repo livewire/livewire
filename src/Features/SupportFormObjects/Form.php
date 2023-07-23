@@ -13,6 +13,8 @@ class Form implements Arrayable
         protected $propertyName
     ) {
         $this->addValidationRulesToComponent();
+        $this->addValidationAttributesToComponent();
+        $this->addMessagesToComponent();
     }
 
     public function getComponent() { return $this->component; }
@@ -25,13 +27,33 @@ class Form implements Arrayable
         if (method_exists($this, 'rules')) $rules = $this->rules();
         else if (property_exists($this, 'rules')) $rules = $this->rules;
 
-        $rulesWithPrefixedKeys = [];
+        $this->component->addRulesFromOutside(
+            $this->getAttributesWithPrefixedKeys($rules)
+        );
+    }
 
-        foreach ($rules as $key => $value) {
-            $rulesWithPrefixedKeys[$this->propertyName . '.' . $key] = $value;
-        }
+    public function addValidationAttributesToComponent()
+    {
+        $validationAttributes = [];
 
-        $this->component->addRulesFromOutside($rulesWithPrefixedKeys);
+        if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
+        else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
+
+        $this->component->addValidationAttributesFromOutside(
+            $this->getAttributesWithPrefixedKeys($validationAttributes)
+        );
+    }
+
+    public function addMessagesToComponent()
+    {
+        $messages = [];
+
+        if (method_exists($this, 'messages')) $messages = $this->messages();
+        else if (property_exists($this, 'messages')) $messages = $this->messages;
+
+        $this->component->addMessagesFromOutside(
+            $this->getAttributesWithPrefixedKeys($messages)
+        );
     }
 
     public function validate()
@@ -57,5 +79,16 @@ class Form implements Arrayable
     public function toArray()
     {
         return Utils::getPublicProperties($this);
+    }
+
+    protected function getAttributesWithPrefixedKeys($attributes)
+    {
+        $attributesWithPrefixedKeys = [];
+
+        foreach ($attributes as $key => $value) {
+            $attributesWithPrefixedKeys[$this->propertyName . '.' . $key] = $value;
+        }
+
+        return $attributesWithPrefixedKeys;
     }
 }
