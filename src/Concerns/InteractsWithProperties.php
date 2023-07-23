@@ -75,6 +75,10 @@ trait InteractsWithProperties
 
         $this->reset($properties);
 
+        if (count($values) === 1) {
+            return array_values($values)[0];
+        }
+
         return [...array_values($values)];
     }
 

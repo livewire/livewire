@@ -167,7 +167,7 @@ class ManageTodos extends Component
 
     public function addTodo()
     {
-        [$title] = $this->resetSafe('todo'); // [tl! highlight]
+        $title = $this->resetSafe('todo'); // [tl! highlight]
         
         $this->todos[] = $title;
     }
