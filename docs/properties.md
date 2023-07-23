@@ -128,7 +128,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 
-class ManageTodos extends Controller
+class ManageTodos extends Component
 {
     public $todos = [];
 
@@ -150,6 +150,31 @@ In the above example, after a user clicks "Add Todo", the input field holding th
 > [!warning] `reset()` won't work on values set in `mount()`
 > `reset()` will reset a property to its state before the `mount` method was called. If you initialized the property in `mount()` to a different value, you will need to reset the property manually.
 
+Since `reset` permanently resets the property, you can use `resetSafe` to reset properties while also getting the current values of the properties before they were reset:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+
+class ManageTodos extends Component
+{
+    public $todos = [];
+
+    public $todo = '';
+
+    public function addTodo()
+    {
+        [$title] = $this->resetSafe('todo'); // [tl! highlight]
+        
+        $this->todos[] = $title;
+    }
+
+    // ...
+}
+```
 
 ## Supported property types
 
