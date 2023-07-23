@@ -5,6 +5,7 @@ namespace Livewire\Tests;
 use Error;
 use Exception;
 use Illuminate\Routing\Route;
+use Laravel\SerializableClosure\SerializableClosure;
 use Tests\TestCase;
 
 class LivewireRoutCacheTest extends TestCase
@@ -41,6 +42,8 @@ class LivewireRoutCacheTest extends TestCase
     {
         try {
             $route->prepareForSerialization();
+
+            $this->assertStringContainsString(SerializableClosure::class, $route->getAction('uses'));
         } catch (Error|Exception) {
             $this->fail($message);
         }
