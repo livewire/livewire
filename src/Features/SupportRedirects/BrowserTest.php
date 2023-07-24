@@ -24,7 +24,7 @@ class BrowserTest extends BrowserTestCase
             HTML; }
         }])
         ->waitForText('Redirect to Livewire')
-        ->click('@button')
+        ->waitForLivewire()->click('@button')
         ->assertUrlIs('https://livewire.laravel.com/')
         ;
     }
