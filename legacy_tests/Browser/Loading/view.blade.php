@@ -17,11 +17,15 @@
     <h1 wire:loading wire:target="foo" dusk="targeting">Loading...</h1>
     <h1 wire:loading wire:target="foo, bar" dusk="targeting-both">Loading...</h1>
     <h1 wire:loading wire:target="foo('bar')" dusk="targeting-param">Param Loading...</h1>
+    <h1 wire:loading wire:target="foo(@js('bar'))" dusk="targeting-js-param">Param Loading...</h1>
+    <h1 wire:loading wire:target="foo(@js(['bar' => 'baz']))" dusk="targeting-js-object-param">Param Loading...</h1>
+    <h1 wire:loading wire:target="foo(@js(['baz' => 'bar']))" dusk="targeting-js-wrong-object-param">Param Loading...</h1>
 
     <h1 wire:loading.delay dusk="show-w-delay">Loading with delay...</h1>
 
     <button wire:click="foo" dusk="target-button">targeted button</button>
     <button wire:click="foo('bar')" dusk="target-button-w-param">targeted button with param</button>
+    <button wire:click="foo(@js(['bar' => 'baz']))" dusk="target-button-w-js-object-param">targeted button with JS object param</button>
 
     <button wire:click="bar" wire:loading.class="foo" dusk="self-target-button">self-targeted button</button>
 
