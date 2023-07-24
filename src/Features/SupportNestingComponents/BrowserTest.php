@@ -4,41 +4,40 @@ namespace Livewire\Features\SupportNestingComponents;
 
 use Livewire\Livewire;
 use Livewire\Component;
-use Illuminate\Support\Facades\Route;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    public static function tweakApplicationHook() {
-        return function() {
-            Livewire::component('page', Page::class);
-            Livewire::component('first-component', FirstComponent::class);
-            Livewire::component('second-component', SecondComponent::class);
-            Livewire::component('third-component', ThirdComponent::class);
-
-            Route::get('/', Page::class)->middleware('web');
-        };
-    }
-
     /** @test */
     function can_add_new_components()
     {
-        $this->browse(function ($browser) {
-            $browser
-                ->visit('/')
-                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
-                ->assertScript('return window._lw_dusk_test')
-                ->assertSee('Page')
-                ->click('@add-first')
-                ->waitForText('First Component Rendered')
-                ->click('@add-second')
-                ->waitForText('Second Component Rendered')
-                ->click('@add-third')
-                ->waitForText('Third Component Rendered')
-                ->click('@remove-second')
-                ->waitUntilMissingText('Second Component Rendered')
-                ->assertSee('First Component Rendered')
-                ->assertSee('Third Component Rendered');
-        });
+        Livewire::visit([
+            Page::class,
+            'first-component' => FirstComponent::class,
+            'second-component' => SecondComponent::class,
+            'third-component' => ThirdComponent::class,
+        ])
+            ->assertSee('Page')
+
+            ->waitForLivewire()->click('@add-first')
+            ->assertSee('First Component Rendered')
+            ->assertDontSee('Second Component Rendered')
+            ->assertDontSee('Third Component Rendered')
+
+            ->waitForLivewire()->click('@add-second')
+            ->assertSee('First Component Rendered')
+            ->assertSee('Second Component Rendered')
+            ->assertDontSee('Third Component Rendered')
+
+            ->waitForLivewire()->click('@add-third')
+            ->assertSee('First Component Rendered')
+            ->assertSee('Second Component Rendered')
+            ->assertSee('Third Component Rendered')
+
+            ->waitForLivewire()->click('@remove-second')
+            ->assertSee('First Component Rendered')
+            ->assertDontSee('Second Component Rendered')
+            ->assertSee('Third Component Rendered')
+            ;
     }
 }
 
