@@ -125,7 +125,7 @@ Boolean values may be provided to components by only specifying the key. For exa
 ```
 
 > [!tip]
-> If the name of the the property and variable you are passing into the child component match, you can use the following shorter, alternative syntax:
+> If the name of the property and variable you are passing into the child component match, you can use the following shorter, alternative syntax:
 >
 > ```blade
 > <livewire:todo-count :todos="$todos" /> <!-- [tl! remove] -->

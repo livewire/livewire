@@ -73,7 +73,7 @@ class EventBus
                 $result = $finisher($forward, ...$extras);
 
                 // Only overwrite previous "forward" if something is returned from the callback.
-                $forward = $result === null ? $forward : $result;
+                $forward = $result ?? $forward;
             }
 
             return $forward;

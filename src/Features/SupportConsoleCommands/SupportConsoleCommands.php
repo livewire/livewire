@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportConsoleCommands;
 
 use Illuminate\Console\Application as Artisan;
-use LegacyTests\Browser\Actions\Component;
 use Livewire\ComponentHook;
 
 class SupportConsoleCommands extends ComponentHook
@@ -36,8 +35,6 @@ class SupportConsoleCommands extends ComponentHook
     {
         $commands = is_array($commands) ? $commands : func_get_args();
 
-        Artisan::starting(function ($artisan) use ($commands) {
-            $artisan->resolveCommands($commands);
-        });
+        Artisan::starting(fn(Artisan $artisan) => $artisan->resolveCommands($commands));
     }
 }

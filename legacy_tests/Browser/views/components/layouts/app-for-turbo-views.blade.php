@@ -1,19 +1,17 @@
 <html>
 <head>
+    @livewireStyles
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <script src="https://unpkg.com/alpinejs@3.4.1/dist/cdn.min.js" defer></script>
 
-    <script type="module">
-        import hotwiredTurbo from 'https://cdn.skypack.dev/@hotwired/turbo';
-    </script>
-
-    @livewireStyles
 </head>
 <body>
     {{ $slot }}
 
     @livewireScripts
+    <script type="module">
+        import hotwiredTurbo from 'https://cdn.skypack.dev/@hotwired/turbo';
+    </script>
     <script src="https://cdn.jsdelivr.net/gh/livewire/turbolinks@v0.1.4/dist/livewire-turbolinks.js" data-turbolinks-eval="false" data-turbo-eval="false"></script>
     <script data-turbo-eval="false">
         document.addEventListener('turbo:before-render', () => {

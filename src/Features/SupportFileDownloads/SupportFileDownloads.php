@@ -2,18 +2,14 @@
 
 namespace Livewire\Features\SupportFileDownloads;
 
-use function Livewire\store;
-use function Livewire\on;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
-use Livewire\Mechanisms\DataStore;
 use Livewire\ComponentHook;
 use Illuminate\Contracts\Support\Responsable;
 
 class SupportFileDownloads extends ComponentHook
 {
-    function call($method)
+    function call()
     {
         return function ($return) {
             if ($return instanceof Responsable){

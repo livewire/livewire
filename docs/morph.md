@@ -88,9 +88,9 @@ Consider the following Livewire Blade template for a fictitious `CreatePost` com
         <input wire:model="title">
     </div>
 
-    @error('title')
-        <div>{{ $message }}</div>
-    @enderror
+    @if ($errors->has('title'))
+        <div>{{ $errors->first('title') }}</div>
+    @endif
 
     <div>
         <button>Save</button>
@@ -125,7 +125,7 @@ Fortunately, Livewire has worked hard to mitigate these problems using the follo
 
 Livewire has an additional step in its morphing algorithm that checks subsequent elements and their contents before changing an element.
 
-The prevents the above scenario from happening in many cases.
+This prevents the above scenario from happening in many cases.
 
 Here is a visualization of the "look-ahead" algorithm in action:
 
@@ -144,8 +144,8 @@ Here's an example of the previous Blade template but with Livewire's injected ma
     </div>
 
     <!-- __BLOCK__ --> <!-- [tl! highlight] -->
-    @if (@error('title'))
-        <div>Error: {{ $message }}</div>
+    @if ($errors->has('title'))
+        <div>Error: {{ $errors->first('title') }}</div>
     @endif
     <!-- ENDBLOCK --> <!-- [tl! highlight] -->
 
@@ -176,8 +176,8 @@ For example, here's the above Blade template rewritten with wrapping `<div>` ele
     </div>
 
     <div> <!-- [tl! highlight] -->
-        @if (@error('title'))
-            <div>{{ $message }}</div>
+        @if ($errors->has('title'))
+            <div>{{ $errors->first('title') }}</div>
         @endif
     </div> <!-- [tl! highlight] -->
 

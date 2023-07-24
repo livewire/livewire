@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Livewire\Mechanisms\ComponentRegistry;
 
 use function Livewire\str;
 

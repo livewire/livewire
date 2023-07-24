@@ -6,13 +6,16 @@
 
 To save you time upgrading, we've included an Artisan command to automate as many parts of the upgrade process as possible.
 
-After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version-3), run the following command and you will be receive prompts to upgrade each breaking change automatically:
+After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version-3), run the following command and you will receive prompts to upgrade each breaking change automatically:
 
 ```shell
 php artisan livewire:upgrade
 ```
 
-Although the above command can upgrade much of your application, the only way to ensure a complete upgrade is to follow the step-by-step guide below:
+Although the above command can upgrade much of your application, the only way to ensure a complete upgrade is to follow the step-by-step guide on this page.
+
+> [!tip] Hire us to upgrade your app instead
+> If you have a large Livewire application or just don't want to deal with upgrading from version 2 to version 3, you can hire us to handle it for you. [Learn more about our upgrade service here.](/jumpstart)
 
 ## Upgrade PHP
 
@@ -20,7 +23,7 @@ Livewire now requires that your application is running on PHP version 8.1 or gre
 
 ## Update Livewire to version 3
 
-Run the following composer command to upgrade your application's Livewire dependancy from version 2 to 3:
+Run the following composer command to upgrade your application's Livewire dependency from version 2 to 3:
 
 ```shell
 composer require livewire/livewire:3.0.0-beta.1
@@ -379,11 +382,11 @@ Here are the "find and replace" differences that should be applied to your appli
 $this->emit('post-created'); // [tl! remove]
 $this->dispatch('post-created'); // [tl! add]
 
-$this->emitTo('post-created'); // [tl! remove]
-$this->dispatchTo('post-created'); // [tl! add]
+$this->emitTo('foo', 'post-created'); // [tl! remove]
+$this->dispatch('post-created')->to('foo'); // [tl! add]
 
 $this->emitSelf('post-created'); // [tl! remove]
-$this->dispatchSelf('post-created'); // [tl! add]
+$this->dispatch('post-created')->self(); // [tl! add]
 
 $this->emit('post-created', $post->id); // [tl! remove]
 $this->dispatch('post-created', postId: $post->id); // [tl! add]
@@ -621,4 +624,3 @@ Route::group(['prefix' => LaravelLocalization::setLocale()], function ()
 ```
 
 For more information, please consult our documentation on [configuring Livewire's update endpoint](/docs/installation#configuring-livewires-update-endpoint).
-

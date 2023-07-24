@@ -4,13 +4,10 @@ namespace Livewire\Features\SupportPageComponents;
 
 use function Livewire\on;
 use function Livewire\off;
-use Livewire\Mechanisms\DataStore;
 use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\ComponentHook;
 use Illuminate\View\View;
 use Illuminate\View\AnonymousComponent;
-
-use Illuminate\Support\Facades\View as ViewFacade;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 

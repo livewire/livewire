@@ -2,9 +2,12 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-class S3DoesntSupportMultipleFileUploads extends \Exception
+use Exception;
+use Livewire\Exceptions\BypassViewHandler;
+
+class S3DoesntSupportMultipleFileUploads extends Exception
 {
-    use \Livewire\Exceptions\BypassViewHandler;
+    use BypassViewHandler;
 
     public function __construct()
     {

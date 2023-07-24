@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportFormObjects;
 
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Features\SupportAttributes\AttributeCollection;
-use Livewire\Drawer\Utils;
 
 class FormObjectSynth extends Synth {
     public static $key = 'form';

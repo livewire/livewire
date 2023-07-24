@@ -7,7 +7,6 @@ use Livewire\Drawer\Utils;
 use function Livewire\on;
 use function Livewire\store;
 
-
 class SupportWireModelingNestedComponents extends ComponentHook
 {
     protected static $outersByComponentId = [];

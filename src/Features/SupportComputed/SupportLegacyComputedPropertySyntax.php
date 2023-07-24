@@ -3,8 +3,6 @@
 namespace Livewire\Features\SupportComputed;
 
 use Livewire\ComponentHook;
-use Livewire\Drawer\ImplicitlyBoundMethod;
-use Livewire\Mechanisms\DataStore;
 use Livewire\Drawer\Utils as SyntheticUtils;
 
 use function Livewire\on;

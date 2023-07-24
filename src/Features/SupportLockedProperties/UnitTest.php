@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportLockedProperties;
 
 use Livewire\Livewire;
 use Livewire\Component;
-use ReflectionObject;
 
 class UnitTest extends \Tests\TestCase
 {

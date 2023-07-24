@@ -3,13 +3,9 @@
 namespace Livewire\Features\SupportEvents;
 
 use function Livewire\invade;
-use function Livewire\on;
 use function Livewire\store;
 use function Livewire\wrap;
-
 use Livewire\ComponentHook;
-use Livewire\Mechanisms\DataStore;
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 
 class SupportEvents extends ComponentHook
 {
