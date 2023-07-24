@@ -6837,7 +6837,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
       setTimeout(() => {
-        fireEventForOtherLibariesToHookInto();
+        fireEventForOtherLibariesToHookInto(true);
       });
     }
     function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -6854,8 +6854,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
     }
-    function fireEventForOtherLibariesToHookInto() {
-      document.dispatchEvent(new CustomEvent("alpine:navigated", { bubbles: true }));
+    function fireEventForOtherLibariesToHookInto(init = false) {
+      document.dispatchEvent(new CustomEvent("alpine:navigated", { bubbles: true, detail: { init } }));
     }
     function nowInitializeAlpineOnTheNewPage(Alpine22) {
       Alpine22.initTree(document.body, void 0, (el, skip) => {
@@ -8911,7 +8911,9 @@ function normalizeQueryStringEntry(key, value) {
 
 // js/features/supportNavigate.js
 var isNavigating = false;
-window.addEventListener("alpine:navigated", () => {
+window.addEventListener("alpine:navigated", (e) => {
+  if (e.detail && e.detail.init)
+    return;
   isNavigating = true;
   window.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
 });
