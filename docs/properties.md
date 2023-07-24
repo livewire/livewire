@@ -128,7 +128,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 
-class ManageTodos extends Component
+class ManageTodos extends Controller
 {
     public $todos = [];
 
