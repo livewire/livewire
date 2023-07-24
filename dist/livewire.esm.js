@@ -1645,8 +1645,8 @@ var require_module_cjs = __commonJS({
     function tryCatch(el, expression, callback, ...args) {
       try {
         return callback(...args);
-      } catch (e) {
-        handleError(e, el, expression);
+      } catch (e2) {
+        handleError(e2, el, expression);
       }
     }
     function handleError(error2, el, expression = void 0) {
@@ -2270,9 +2270,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               delete el2._x_hideChildren;
               return carry;
             };
-            hideAfterChildren(el).catch((e) => {
-              if (!e.isFromCancelledTransition)
-                throw e;
+            hideAfterChildren(el).catch((e2) => {
+              if (!e2.isFromCancelledTransition)
+                throw e2;
             });
           });
         }
@@ -2914,9 +2914,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       clone2._x_teleportBack = el;
       if (el._x_forwardEvents) {
         el._x_forwardEvents.forEach((eventName) => {
-          clone2.addEventListener(eventName, (e) => {
-            e.stopPropagation();
-            el.dispatchEvent(new e.constructor(e.type, e));
+          clone2.addEventListener(eventName, (e2) => {
+            e2.stopPropagation();
+            el.dispatchEvent(new e2.constructor(e2.type, e2));
           });
         });
       }
@@ -2946,9 +2946,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive2("effect", (el, { expression }, { effect: effect3 }) => effect3(evaluateLater(el, expression)));
     function on3(el, event, modifiers, callback) {
       let listenerTarget = el;
-      let handler4 = (e) => callback(e);
+      let handler4 = (e2) => callback(e2);
       let options = {};
-      let wrapHandler = (callback2, wrapper) => (e) => wrapper(callback2, e);
+      let wrapHandler = (callback2, wrapper) => (e2) => wrapper(callback2, e2);
       if (modifiers.includes("dot"))
         event = dotSyntax(event);
       if (modifiers.includes("camel"))
@@ -2972,46 +2972,46 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         handler4 = throttle(handler4, wait);
       }
       if (modifiers.includes("prevent"))
-        handler4 = wrapHandler(handler4, (next, e) => {
-          e.preventDefault();
-          next(e);
+        handler4 = wrapHandler(handler4, (next, e2) => {
+          e2.preventDefault();
+          next(e2);
         });
       if (modifiers.includes("stop"))
-        handler4 = wrapHandler(handler4, (next, e) => {
-          e.stopPropagation();
-          next(e);
+        handler4 = wrapHandler(handler4, (next, e2) => {
+          e2.stopPropagation();
+          next(e2);
         });
       if (modifiers.includes("self"))
-        handler4 = wrapHandler(handler4, (next, e) => {
-          e.target === el && next(e);
+        handler4 = wrapHandler(handler4, (next, e2) => {
+          e2.target === el && next(e2);
         });
       if (modifiers.includes("away") || modifiers.includes("outside")) {
         listenerTarget = document;
-        handler4 = wrapHandler(handler4, (next, e) => {
-          if (el.contains(e.target))
+        handler4 = wrapHandler(handler4, (next, e2) => {
+          if (el.contains(e2.target))
             return;
-          if (e.target.isConnected === false)
+          if (e2.target.isConnected === false)
             return;
           if (el.offsetWidth < 1 && el.offsetHeight < 1)
             return;
           if (el._x_isShown === false)
             return;
-          next(e);
+          next(e2);
         });
       }
       if (modifiers.includes("once")) {
-        handler4 = wrapHandler(handler4, (next, e) => {
-          next(e);
+        handler4 = wrapHandler(handler4, (next, e2) => {
+          next(e2);
           listenerTarget.removeEventListener(event, handler4, options);
         });
       }
-      handler4 = wrapHandler(handler4, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e2) => {
         if (isKeyEvent(event)) {
-          if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
+          if (isListeningForASpecificKeyThatHasntBeenPressed(e2, modifiers)) {
             return;
           }
         }
-        next(e);
+        next(e2);
       });
       listenerTarget.addEventListener(event, handler4, options);
       return () => {
@@ -3035,7 +3035,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function isKeyEvent(event) {
       return ["keydown", "keyup"].includes(event);
     }
-    function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
+    function isListeningForASpecificKeyThatHasntBeenPressed(e2, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
         return !["window", "document", "prevent", "stop", "once", "capture"].includes(i);
       });
@@ -3049,7 +3049,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       if (keyModifiers.length === 0)
         return false;
-      if (keyModifiers.length === 1 && keyToModifiers(e.key).includes(keyModifiers[0]))
+      if (keyModifiers.length === 1 && keyToModifiers(e2.key).includes(keyModifiers[0]))
         return false;
       const systemKeyModifiers = ["ctrl", "shift", "alt", "meta", "cmd", "super"];
       const selectedSystemKeyModifiers = systemKeyModifiers.filter((modifier) => keyModifiers.includes(modifier));
@@ -3058,10 +3058,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         const activelyPressedKeyModifiers = selectedSystemKeyModifiers.filter((modifier) => {
           if (modifier === "cmd" || modifier === "super")
             modifier = "meta";
-          return e[`${modifier}Key`];
+          return e2[`${modifier}Key`];
         });
         if (activelyPressedKeyModifiers.length === selectedSystemKeyModifiers.length) {
-          if (keyToModifiers(e.key).includes(keyModifiers[0]))
+          if (keyToModifiers(e2.key).includes(keyModifiers[0]))
             return false;
         }
       }
@@ -3133,8 +3133,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
       let removeListener = isCloning ? () => {
-      } : on3(el, event, modifiers, (e) => {
-        setValue(getInputValue(el, modifiers, e, getValue()));
+      } : on3(el, event, modifiers, (e2) => {
+        setValue(getInputValue(el, modifiers, e2, getValue()));
       });
       if (modifiers.includes("fill")) {
         if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
@@ -3146,7 +3146,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_removeModelListeners["default"] = removeListener;
       cleanup2(() => el._x_removeModelListeners["default"]());
       if (el.form) {
-        let removeResetListener = on3(el.form, "reset", [], (e) => {
+        let removeResetListener = on3(el.form, "reset", [], (e2) => {
           nextTick(() => el._x_model && el._x_model.set(el.value));
         });
         cleanup2(() => removeResetListener());
@@ -3570,9 +3570,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!el._x_forwardEvents.includes(value))
           el._x_forwardEvents.push(value);
       }
-      let removeListener = on3(el, value, modifiers, (e) => {
+      let removeListener = on3(el, value, modifiers, (e2) => {
         evaluate2(() => {
-        }, { scope: { "$event": e }, params: [e] });
+        }, { scope: { "$event": e2 }, params: [e2] });
       });
       cleanup2(() => removeListener());
     }));
@@ -4010,11 +4010,11 @@ var require_module_cjs3 = __commonJS({
       var isSelectableInput = function isSelectableInput2(node) {
         return node.tagName && node.tagName.toLowerCase() === "input" && typeof node.select === "function";
       };
-      var isEscapeEvent = function isEscapeEvent2(e) {
-        return e.key === "Escape" || e.key === "Esc" || e.keyCode === 27;
+      var isEscapeEvent = function isEscapeEvent2(e2) {
+        return e2.key === "Escape" || e2.key === "Esc" || e2.keyCode === 27;
       };
-      var isTabEvent = function isTabEvent2(e) {
-        return e.key === "Tab" || e.keyCode === 9;
+      var isTabEvent = function isTabEvent2(e2) {
+        return e2.key === "Tab" || e2.keyCode === 9;
       };
       var delay = function delay2(fn) {
         return setTimeout(fn, 0);
@@ -4141,52 +4141,52 @@ var require_module_cjs3 = __commonJS({
           var node = getNodeForOption("setReturnFocus");
           return node ? node : previousActiveElement;
         };
-        var checkPointerDown = function checkPointerDown2(e) {
-          if (containersContain(e.target)) {
+        var checkPointerDown = function checkPointerDown2(e2) {
+          if (containersContain(e2.target)) {
             return;
           }
-          if (valueOrHandler(config.clickOutsideDeactivates, e)) {
+          if (valueOrHandler(config.clickOutsideDeactivates, e2)) {
             trap.deactivate({
-              returnFocus: config.returnFocusOnDeactivate && !tabbable.isFocusable(e.target)
+              returnFocus: config.returnFocusOnDeactivate && !tabbable.isFocusable(e2.target)
             });
             return;
           }
-          if (valueOrHandler(config.allowOutsideClick, e)) {
+          if (valueOrHandler(config.allowOutsideClick, e2)) {
             return;
           }
-          e.preventDefault();
+          e2.preventDefault();
         };
-        var checkFocusIn = function checkFocusIn2(e) {
-          var targetContained = containersContain(e.target);
-          if (targetContained || e.target instanceof Document) {
+        var checkFocusIn = function checkFocusIn2(e2) {
+          var targetContained = containersContain(e2.target);
+          if (targetContained || e2.target instanceof Document) {
             if (targetContained) {
-              state.mostRecentlyFocusedNode = e.target;
+              state.mostRecentlyFocusedNode = e2.target;
             }
           } else {
-            e.stopImmediatePropagation();
+            e2.stopImmediatePropagation();
             tryFocus(state.mostRecentlyFocusedNode || getInitialFocusNode());
           }
         };
-        var checkTab = function checkTab2(e) {
+        var checkTab = function checkTab2(e2) {
           updateTabbableNodes();
           var destinationNode = null;
           if (state.tabbableGroups.length > 0) {
             var containerIndex = findIndex(state.tabbableGroups, function(_ref) {
               var container = _ref.container;
-              return container.contains(e.target);
+              return container.contains(e2.target);
             });
             if (containerIndex < 0) {
-              if (e.shiftKey) {
+              if (e2.shiftKey) {
                 destinationNode = state.tabbableGroups[state.tabbableGroups.length - 1].lastTabbableNode;
               } else {
                 destinationNode = state.tabbableGroups[0].firstTabbableNode;
               }
-            } else if (e.shiftKey) {
+            } else if (e2.shiftKey) {
               var startOfGroupIndex = findIndex(state.tabbableGroups, function(_ref2) {
                 var firstTabbableNode = _ref2.firstTabbableNode;
-                return e.target === firstTabbableNode;
+                return e2.target === firstTabbableNode;
               });
-              if (startOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
+              if (startOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e2.target) {
                 startOfGroupIndex = containerIndex;
               }
               if (startOfGroupIndex >= 0) {
@@ -4197,9 +4197,9 @@ var require_module_cjs3 = __commonJS({
             } else {
               var lastOfGroupIndex = findIndex(state.tabbableGroups, function(_ref3) {
                 var lastTabbableNode = _ref3.lastTabbableNode;
-                return e.target === lastTabbableNode;
+                return e2.target === lastTabbableNode;
               });
-              if (lastOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
+              if (lastOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e2.target) {
                 lastOfGroupIndex = containerIndex;
               }
               if (lastOfGroupIndex >= 0) {
@@ -4212,33 +4212,33 @@ var require_module_cjs3 = __commonJS({
             destinationNode = getNodeForOption("fallbackFocus");
           }
           if (destinationNode) {
-            e.preventDefault();
+            e2.preventDefault();
             tryFocus(destinationNode);
           }
         };
-        var checkKey = function checkKey2(e) {
-          if (isEscapeEvent(e) && valueOrHandler(config.escapeDeactivates) !== false) {
-            e.preventDefault();
+        var checkKey = function checkKey2(e2) {
+          if (isEscapeEvent(e2) && valueOrHandler(config.escapeDeactivates) !== false) {
+            e2.preventDefault();
             trap.deactivate();
             return;
           }
-          if (isTabEvent(e)) {
-            checkTab(e);
+          if (isTabEvent(e2)) {
+            checkTab(e2);
             return;
           }
         };
-        var checkClick = function checkClick2(e) {
-          if (valueOrHandler(config.clickOutsideDeactivates, e)) {
+        var checkClick = function checkClick2(e2) {
+          if (valueOrHandler(config.clickOutsideDeactivates, e2)) {
             return;
           }
-          if (containersContain(e.target)) {
+          if (containersContain(e2.target)) {
             return;
           }
-          if (valueOrHandler(config.allowOutsideClick, e)) {
+          if (valueOrHandler(config.allowOutsideClick, e2)) {
             return;
           }
-          e.preventDefault();
-          e.stopImmediatePropagation();
+          e2.preventDefault();
+          e2.stopImmediatePropagation();
         };
         var addListeners = function addListeners2() {
           if (!state.active) {
@@ -5037,8 +5037,8 @@ var require_module_cjs6 = __commonJS({
       replaceUrl(url, document.documentElement.outerHTML);
     }
     function whenTheBackOrForwardButtonIsClicked(callback) {
-      window.addEventListener("popstate", (e) => {
-        let state = e.state || {};
+      window.addEventListener("popstate", (e2) => {
+        let state = e2.state || {};
         let alpine = state.alpine || {};
         if (!alpine._html)
           return;
@@ -5115,12 +5115,12 @@ var require_module_cjs6 = __commonJS({
       }
     }
     function whenThisLinkIsPressed(el, callback) {
-      el.addEventListener("click", (e) => e.preventDefault());
-      el.addEventListener("mousedown", (e) => {
-        e.preventDefault();
+      el.addEventListener("click", (e2) => e2.preventDefault());
+      el.addEventListener("mousedown", (e2) => {
+        e2.preventDefault();
         callback((whenReleased) => {
-          let handler = (e2) => {
-            e2.preventDefault();
+          let handler = (e22) => {
+            e22.preventDefault();
             whenReleased();
             el.removeEventListener("mouseup", handler);
           };
@@ -5129,7 +5129,7 @@ var require_module_cjs6 = __commonJS({
       });
     }
     function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
-      el.addEventListener("mouseenter", (e) => {
+      el.addEventListener("mouseenter", (e2) => {
         let timeout = setTimeout(() => {
         }, ms);
         let handler = () => {
@@ -5137,7 +5137,7 @@ var require_module_cjs6 = __commonJS({
           el.removeEventListener("mouseleave", handler);
         };
         el.addEventListener("mouseleave", handler);
-        callback(e);
+        callback(e2);
       });
     }
     function extractDestinationFromLink(linkEl) {
@@ -5561,8 +5561,8 @@ var require_module_cjs6 = __commonJS({
     function tryCatch(el, expression, callback, ...args) {
       try {
         return callback(...args);
-      } catch (e) {
-        handleError(e, el, expression);
+      } catch (e2) {
+        handleError(e2, el, expression);
       }
     }
     function handleError(error2, el, expression = void 0) {
@@ -6180,9 +6180,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               delete el2._x_hideChildren;
               return carry;
             };
-            hideAfterChildren(el).catch((e) => {
-              if (!e.isFromCancelledTransition)
-                throw e;
+            hideAfterChildren(el).catch((e2) => {
+              if (!e2.isFromCancelledTransition)
+                throw e2;
             });
           });
         }
@@ -6965,10 +6965,10 @@ var require_module_cjs7 = __commonJS({
           update(push, newValue);
         },
         pop(receiver) {
-          window.addEventListener("popstate", (e) => {
-            if (!e.state || !e.state.alpine)
+          window.addEventListener("popstate", (e2) => {
+            if (!e2.state || !e2.state.alpine)
               return;
-            Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
+            Object.entries(e2.state.alpine).forEach(([iName, { value: newValue }]) => {
               if (iName !== name)
                 return;
               lock = true;
@@ -7776,8 +7776,8 @@ function showHtmlModal(html) {
   iframe.contentWindow.document.close();
   modal.addEventListener("click", () => hideHtmlModal(modal));
   modal.setAttribute("tabindex", 0);
-  modal.addEventListener("keydown", (e) => {
-    if (e.key === "Escape")
+  modal.addEventListener("keydown", (e2) => {
+    if (e2.key === "Escape")
       hideHtmlModal(modal);
   });
   modal.focus();
@@ -8133,14 +8133,14 @@ function handleFileUpload(el, property, component, cleanup2) {
       detail: { progress: percentCompleted }
     }));
   };
-  let eventHandler = (e) => {
-    if (e.target.files.length === 0)
+  let eventHandler = (e2) => {
+    if (e2.target.files.length === 0)
       return;
     start2();
-    if (e.target.multiple) {
-      manager.uploadMultiple(property, e.target.files, finish, error2, progress);
+    if (e2.target.multiple) {
+      manager.uploadMultiple(property, e2.target.files, finish, error2, progress);
     } else {
-      manager.upload(property, e.target.files[0], finish, error2, progress);
+      manager.upload(property, e2.target.files[0], finish, error2, progress);
     }
   };
   el.addEventListener("change", eventHandler);
@@ -8232,10 +8232,10 @@ var UploadManager = class {
     Object.entries(headers).forEach(([key, value]) => {
       request.setRequestHeader(key, value);
     });
-    request.upload.addEventListener("progress", (e) => {
-      e.detail = {};
-      e.detail.progress = Math.round(e.loaded * 100 / e.total);
-      this.uploadBag.first(name).progressCallback(e);
+    request.upload.addEventListener("progress", (e2) => {
+      e2.detail = {};
+      e2.detail.progress = Math.round(e2.loaded * 100 / e2.total);
+      this.uploadBag.first(name).progressCallback(e2);
     });
     request.addEventListener("load", () => {
       if ((request.status + "")[0] === "2") {
@@ -8572,17 +8572,17 @@ on("effects", (component, effects) => {
 });
 function registerListeners(component, listeners2) {
   listeners2.forEach((name) => {
-    window.addEventListener(name, (e) => {
-      if (e.__livewire)
-        e.__livewire.receivedBy.push(component);
-      component.$wire.call("__dispatch", name, e.detail || {});
+    window.addEventListener(name, (e2) => {
+      if (e2.__livewire)
+        e2.__livewire.receivedBy.push(component);
+      component.$wire.call("__dispatch", name, e2.detail || {});
     });
-    component.el.addEventListener(name, (e) => {
-      if (e.__livewire && e.bubbles)
+    component.el.addEventListener(name, (e2) => {
+      if (e2.__livewire && e2.bubbles)
         return;
-      if (e.__livewire)
-        e.__livewire.receivedBy.push(component.id);
-      component.$wire.call("__dispatch", name, e.detail || {});
+      if (e2.__livewire)
+        e2.__livewire.receivedBy.push(component.id);
+      component.$wire.call("__dispatch", name, e2.detail || {});
     });
   });
 }
@@ -8597,9 +8597,9 @@ function dispatchEvents(component, dispatches) {
   });
 }
 function dispatchEvent(target, name, params, bubbles = true) {
-  let e = new CustomEvent(name, { bubbles, detail: params });
-  e.__livewire = { name, params, receivedBy: [] };
-  target.dispatchEvent(e);
+  let e2 = new CustomEvent(name, { bubbles, detail: params });
+  e2.__livewire = { name, params, receivedBy: [] };
+  target.dispatchEvent(e2);
 }
 function dispatch2(component, name, params) {
   dispatchEvent(component.el, name, params);
@@ -8617,15 +8617,15 @@ function dispatchTo(component, componentName, name, params) {
   });
 }
 function listen(component, name, callback) {
-  component.el.addEventListener(name, (e) => {
-    callback(e.detail);
+  component.el.addEventListener(name, (e2) => {
+    callback(e2.detail);
   });
 }
 function on2(eventName, callback) {
-  window.addEventListener(eventName, (e) => {
-    if (!e.__livewire)
+  window.addEventListener(eventName, (e2) => {
+    if (!e2.__livewire)
       return;
-    callback(e.detail);
+    callback(e2.detail);
   });
 }
 
@@ -8913,6 +8913,8 @@ function normalizeQueryStringEntry(key, value) {
 // js/features/supportNavigate.js
 var isNavigating = false;
 document.addEventListener("alpine:navigated", () => {
+  if (e.detail && e.detail.init)
+    return;
   isNavigating = true;
   document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
 });
@@ -8943,7 +8945,7 @@ function morph2(component, el, html) {
   let parentComponent;
   try {
     parentComponent = closestComponent(el.parentElement);
-  } catch (e) {
+  } catch (e2) {
   }
   parentComponent && (wrapper.__livewire = parentComponent);
   let to = wrapper.firstElementChild;
@@ -9087,9 +9089,9 @@ on("element.init", ({ el, component }) => {
       attribute = attribute + ".prevent";
     }
     import_alpinejs11.default.bind(el, {
-      [attribute](e) {
+      [attribute](e2) {
         callAndClearComponentDebounces(component, () => {
-          import_alpinejs11.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
+          import_alpinejs11.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e2 } });
         });
       }
     });
@@ -9211,26 +9213,26 @@ function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoadi
   });
 }
 function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
-  let eventMismatch = (e) => {
-    let { id, property } = e.detail;
+  let eventMismatch = (e2) => {
+    let { id, property } = e2.detail;
     if (id !== component.id)
       return true;
     if (targets.length > 0 && !targets.map((i) => i.target).includes(property))
       return true;
     return false;
   };
-  window.addEventListener("livewire-upload-start", (e) => {
-    if (eventMismatch(e))
+  window.addEventListener("livewire-upload-start", (e2) => {
+    if (eventMismatch(e2))
       return;
     startLoading();
   });
-  window.addEventListener("livewire-upload-finish", (e) => {
-    if (eventMismatch(e))
+  window.addEventListener("livewire-upload-finish", (e2) => {
+    if (eventMismatch(e2))
       return;
     endLoading();
   });
-  window.addEventListener("livewire-upload-error", (e) => {
-    if (eventMismatch(e))
+  window.addEventListener("livewire-upload-error", (e2) => {
+    if (eventMismatch(e2))
       return;
     endLoading();
   });

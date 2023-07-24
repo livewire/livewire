@@ -48,7 +48,7 @@ class DuskTestable
             \Orchestra\Testbench\Dusk\Options::withoutUI();
         }
 
-        \Laravel\Dusk\Browser::mixin(new \Tests\DuskBrowserMacros);
+        \Laravel\Dusk\Browser::mixin(new DuskBrowserMacros);
     }
 
     static function create($components, $params = [], $queryParams = [])

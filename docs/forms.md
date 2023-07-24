@@ -422,7 +422,7 @@ class UpdatePost extends Component
 ```
 
 ```blade
-<form wire:submit.prevent>
+<form wire:submit>
     <input type="text" wire:model.blur="title">
     <div>
         @error('title') <span class="error">{{ $message }}</span> @enderror

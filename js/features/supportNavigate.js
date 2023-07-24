@@ -3,6 +3,8 @@ import { on, trigger } from "@/events"
 let isNavigating = false
 
 document.addEventListener('alpine:navigated', () => {
+    if (e.detail && e.detail.init) return
+
     isNavigating = true
 
     // Forward a "livewire" version of the Alpine event...
