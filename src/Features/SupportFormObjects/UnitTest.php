@@ -83,19 +83,21 @@ class UnitTest extends \Tests\TestCase
     function validation_can_show_a_form_object_dynamic_validation_attributes()
     {
         Livewire::test(new class extends Component {
-            public PostFormDynamicValidationAttributeStub $form;
+            public PostFormDynamicValidationAttributeStub $withDynamicAttributesForm;
 
             function save()
             {
-                $this->form->validate();
+                $this->withDynamicAttributesForm->validate();
             }
 
             public function render() { return <<<'HTML'
-                <div>{{ $errors }}</div>
+                <div>
+                    {{ $errors }}
+                </div>
             HTML; }
         })
-            ->set('form.title', '')
-            ->set('form.content', '')
+            ->set('withDynamicAttributesForm.title', '')
+            ->set('withDynamicAttributesForm.content', '')
             ->call('save')
             ->assertSee('Custom Title')
             ->assertSee('Custom Content')
@@ -103,7 +105,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function validation_showing_a_form_object_dymanic_messages()
+    function validation_showing_a_form_object_dynamic_messages()
     {
         Livewire::test(new class extends Component {
             public PostFormDynamicMessageAttributeStub $form;
