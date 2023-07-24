@@ -2,11 +2,11 @@ import { on, trigger } from "@/events"
 
 let isNavigating = false
 
-window.addEventListener('alpine:navigated', () => {
+document.addEventListener('alpine:navigated', () => {
     isNavigating = true
 
     // Forward a "livewire" version of the Alpine event...
-    window.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
+    document.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
 })
 
 export function shouldRedirectUsingNavigateOr(effects, url, or) {

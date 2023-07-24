@@ -178,7 +178,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSee('Query: 0')
                 ->click('@link.with.query.1')
                 ->assertSee('Query: 1')
-                ->click('@link.with.query.2')
+                ->waitForNavigate()->click('@link.with.query.2')
                 ->assertSee('Query: 2');
         });
     }
