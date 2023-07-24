@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportNavigate;
 
+use Livewire\Attributes\Url;
 use Livewire\Livewire;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
@@ -15,6 +16,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         return function() {
             View::addNamespace('test-views', __DIR__.'/test-views');
 
+            Livewire::component('query-page', QueryPage::class);
             Livewire::component('first-page', FirstPage::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
@@ -24,6 +26,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-tracked-asset-page', FirstTrackedAssetPage::class);
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
 
+            Route::get('/query-page', QueryPage::class)->middleware('web');
             Route::get('/first', FirstPage::class)->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/second', SecondPage::class)->middleware('web');
@@ -165,6 +168,20 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test');
         });
     }
+
+    /** @test */
+    function can_navigate_to_component_with_url_attribute_and_update_correctly()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/query-page')
+                ->assertSee('Query: 0')
+                ->click('@link.with.query.1')
+                ->assertSee('Query: 1')
+                ->waitForNavigate()->click('@link.with.query.2')
+                ->assertSee('Query: 2');
+        });
+    }
 }
 
 class FirstPage extends Component
@@ -259,5 +276,22 @@ class SecondTrackedAssetPage extends Component {
     #[\Livewire\Attributes\Layout('test-views::changed-tracked-layout')]
     function render() {
         return '<div>On second asset page</div>';
+    }
+}
+
+class QueryPage extends Component
+{
+    #[Url]
+    public $query = 0;
+
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                <div>Query: {{ $query }}</div>
+                <a href="/query-page?query=1" dusk="link.with.query.1">Link with query 1</a>
+                <a href="/query-page?query=2" wire:navigate dusk="link.with.query.2">Link with query 2</a>
+            </div>
+        HTML;
     }
 }
