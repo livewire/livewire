@@ -43,8 +43,8 @@ var require_module_cjs = __commonJS({
     };
     var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_shared_cjs_prod = __commonJS2({
-      "node_modules/@vue/shared/dist/shared.cjs.prod.js"(exports2) {
+    var require_shared_cjs = __commonJS2({
+      "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         function makeMap(str, expectsLowerCase) {
@@ -318,8 +318,8 @@ var require_module_cjs = __commonJS({
           "optionalChaining",
           "nullishCoalescingOperator"
         ];
-        var EMPTY_OBJ = {};
-        var EMPTY_ARR = [];
+        var EMPTY_OBJ = Object.freeze({});
+        var EMPTY_ARR = Object.freeze([]);
         var NOOP = () => {
         };
         var NO = () => false;
@@ -452,23 +452,23 @@ var require_module_cjs = __commonJS({
     var require_shared = __commonJS2({
       "node_modules/@vue/shared/index.js"(exports2, module2) {
         "use strict";
-        if (true) {
-          module2.exports = require_shared_cjs_prod();
-        } else {
+        if (false) {
           module2.exports = null;
+        } else {
+          module2.exports = require_shared_cjs();
         }
       }
     });
-    var require_reactivity_cjs_prod = __commonJS2({
-      "node_modules/@vue/reactivity/dist/reactivity.cjs.prod.js"(exports2) {
+    var require_reactivity_cjs = __commonJS2({
+      "node_modules/@vue/reactivity/dist/reactivity.cjs.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         var shared = require_shared();
         var targetMap = /* @__PURE__ */ new WeakMap();
         var effectStack = [];
         var activeEffect;
-        var ITERATE_KEY = Symbol("");
-        var MAP_KEY_ITERATE_KEY = Symbol("");
+        var ITERATE_KEY = Symbol("iterate");
+        var MAP_KEY_ITERATE_KEY = Symbol("Map key iterate");
         function isEffect(fn) {
           return fn && fn._isEffect === true;
         }
@@ -558,6 +558,14 @@ var require_module_cjs = __commonJS({
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
             activeEffect.deps.push(dep);
+            if (activeEffect.options.onTrack) {
+              activeEffect.options.onTrack({
+                effect: activeEffect,
+                target,
+                type,
+                key
+              });
+            }
           }
         }
         function trigger2(target, type, key, newValue, oldValue, oldTarget) {
@@ -614,6 +622,17 @@ var require_module_cjs = __commonJS({
             }
           }
           const run = (effect4) => {
+            if (effect4.options.onTrigger) {
+              effect4.options.onTrigger({
+                effect: effect4,
+                target,
+                key,
+                type,
+                newValue,
+                oldValue,
+                oldTarget
+              });
+            }
             if (effect4.options.scheduler) {
               effect4.options.scheduler(effect4);
             } else {
@@ -707,7 +726,7 @@ var require_module_cjs = __commonJS({
               if (!hadKey) {
                 trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value);
+                trigger2(target, "set", key, value, oldValue);
               }
             }
             return result;
@@ -715,10 +734,10 @@ var require_module_cjs = __commonJS({
         }
         function deleteProperty(target, key) {
           const hadKey = shared.hasOwn(target, key);
-          target[key];
+          const oldValue = target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
@@ -743,9 +762,15 @@ var require_module_cjs = __commonJS({
         var readonlyHandlers = {
           get: readonlyGet,
           set(target, key) {
+            {
+              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
+            }
             return true;
           },
           deleteProperty(target, key) {
+            {
+              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
+            }
             return true;
           }
         };
@@ -812,13 +837,15 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
+          } else {
+            checkIdentityKeys(target, has2, key);
           }
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
             trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value);
+            trigger2(target, "set", key, value, oldValue);
           }
           return this;
         }
@@ -829,20 +856,23 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
+          } else {
+            checkIdentityKeys(target, has2, key);
           }
-          get3 ? get3.call(target, key) : void 0;
+          const oldValue = get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
         function clear2() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
+          const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0);
+            trigger2(target, "clear", void 0, void 0, oldTarget);
           }
           return result;
         }
@@ -884,6 +914,10 @@ var require_module_cjs = __commonJS({
         }
         function createReadonlyMethod(type) {
           return function(...args) {
+            {
+              const key = args[0] ? `on key "${args[0]}" ` : ``;
+              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
+            }
             return type === "delete" ? false : this;
           };
         }
@@ -988,6 +1022,13 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
+        function checkIdentityKeys(target, has2, key) {
+          const rawKey = toRaw2(key);
+          if (rawKey !== key && has2.call(target, rawKey)) {
+            const type = shared.toRawType(target);
+            console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+          }
+        }
         var reactiveMap = /* @__PURE__ */ new WeakMap();
         var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
         var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -1026,6 +1067,9 @@ var require_module_cjs = __commonJS({
         }
         function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
           if (!shared.isObject(target)) {
+            {
+              console.warn(`value cannot be made reactive: ${String(target)}`);
+            }
             return target;
           }
           if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
@@ -1099,7 +1143,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", void 0);
+          trigger2(toRaw2(ref2), "set", "value", ref2.value);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1137,6 +1181,9 @@ var require_module_cjs = __commonJS({
           return new CustomRefImpl(factory);
         }
         function toRefs(object) {
+          if (!isProxy(object)) {
+            console.warn(`toRefs() expects a reactive object but received a plain one.`);
+          }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
           for (const key in object) {
             ret[key] = toRef(object, key);
@@ -1193,7 +1240,9 @@ var require_module_cjs = __commonJS({
           let setter;
           if (shared.isFunction(getterOrOptions)) {
             getter = getterOrOptions;
-            setter = shared.NOOP;
+            setter = () => {
+              console.warn("Write operation failed: computed value is readonly");
+            };
           } else {
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
@@ -1232,10 +1281,10 @@ var require_module_cjs = __commonJS({
     var require_reactivity = __commonJS2({
       "node_modules/@vue/reactivity/index.js"(exports2, module2) {
         "use strict";
-        if (true) {
-          module2.exports = require_reactivity_cjs_prod();
-        } else {
+        if (false) {
           module2.exports = null;
+        } else {
+          module2.exports = require_reactivity_cjs();
         }
       }
     });
@@ -1645,8 +1694,8 @@ var require_module_cjs = __commonJS({
     function tryCatch(el, expression, callback, ...args) {
       try {
         return callback(...args);
-      } catch (e2) {
-        handleError(e2, el, expression);
+      } catch (e) {
+        handleError(e, el, expression);
       }
     }
     function handleError(error2, el, expression = void 0) {
@@ -2270,9 +2319,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               delete el2._x_hideChildren;
               return carry;
             };
-            hideAfterChildren(el).catch((e2) => {
-              if (!e2.isFromCancelledTransition)
-                throw e2;
+            hideAfterChildren(el).catch((e) => {
+              if (!e.isFromCancelledTransition)
+                throw e;
             });
           });
         }
@@ -2914,9 +2963,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       clone2._x_teleportBack = el;
       if (el._x_forwardEvents) {
         el._x_forwardEvents.forEach((eventName) => {
-          clone2.addEventListener(eventName, (e2) => {
-            e2.stopPropagation();
-            el.dispatchEvent(new e2.constructor(e2.type, e2));
+          clone2.addEventListener(eventName, (e) => {
+            e.stopPropagation();
+            el.dispatchEvent(new e.constructor(e.type, e));
           });
         });
       }
@@ -2946,9 +2995,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive2("effect", (el, { expression }, { effect: effect3 }) => effect3(evaluateLater(el, expression)));
     function on3(el, event, modifiers, callback) {
       let listenerTarget = el;
-      let handler4 = (e2) => callback(e2);
+      let handler4 = (e) => callback(e);
       let options = {};
-      let wrapHandler = (callback2, wrapper) => (e2) => wrapper(callback2, e2);
+      let wrapHandler = (callback2, wrapper) => (e) => wrapper(callback2, e);
       if (modifiers.includes("dot"))
         event = dotSyntax(event);
       if (modifiers.includes("camel"))
@@ -2972,46 +3021,46 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         handler4 = throttle(handler4, wait);
       }
       if (modifiers.includes("prevent"))
-        handler4 = wrapHandler(handler4, (next, e2) => {
-          e2.preventDefault();
-          next(e2);
+        handler4 = wrapHandler(handler4, (next, e) => {
+          e.preventDefault();
+          next(e);
         });
       if (modifiers.includes("stop"))
-        handler4 = wrapHandler(handler4, (next, e2) => {
-          e2.stopPropagation();
-          next(e2);
+        handler4 = wrapHandler(handler4, (next, e) => {
+          e.stopPropagation();
+          next(e);
         });
       if (modifiers.includes("self"))
-        handler4 = wrapHandler(handler4, (next, e2) => {
-          e2.target === el && next(e2);
+        handler4 = wrapHandler(handler4, (next, e) => {
+          e.target === el && next(e);
         });
       if (modifiers.includes("away") || modifiers.includes("outside")) {
         listenerTarget = document;
-        handler4 = wrapHandler(handler4, (next, e2) => {
-          if (el.contains(e2.target))
+        handler4 = wrapHandler(handler4, (next, e) => {
+          if (el.contains(e.target))
             return;
-          if (e2.target.isConnected === false)
+          if (e.target.isConnected === false)
             return;
           if (el.offsetWidth < 1 && el.offsetHeight < 1)
             return;
           if (el._x_isShown === false)
             return;
-          next(e2);
+          next(e);
         });
       }
       if (modifiers.includes("once")) {
-        handler4 = wrapHandler(handler4, (next, e2) => {
-          next(e2);
+        handler4 = wrapHandler(handler4, (next, e) => {
+          next(e);
           listenerTarget.removeEventListener(event, handler4, options);
         });
       }
-      handler4 = wrapHandler(handler4, (next, e2) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         if (isKeyEvent(event)) {
-          if (isListeningForASpecificKeyThatHasntBeenPressed(e2, modifiers)) {
+          if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
             return;
           }
         }
-        next(e2);
+        next(e);
       });
       listenerTarget.addEventListener(event, handler4, options);
       return () => {
@@ -3035,7 +3084,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function isKeyEvent(event) {
       return ["keydown", "keyup"].includes(event);
     }
-    function isListeningForASpecificKeyThatHasntBeenPressed(e2, modifiers) {
+    function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
         return !["window", "document", "prevent", "stop", "once", "capture"].includes(i);
       });
@@ -3049,7 +3098,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       if (keyModifiers.length === 0)
         return false;
-      if (keyModifiers.length === 1 && keyToModifiers(e2.key).includes(keyModifiers[0]))
+      if (keyModifiers.length === 1 && keyToModifiers(e.key).includes(keyModifiers[0]))
         return false;
       const systemKeyModifiers = ["ctrl", "shift", "alt", "meta", "cmd", "super"];
       const selectedSystemKeyModifiers = systemKeyModifiers.filter((modifier) => keyModifiers.includes(modifier));
@@ -3058,10 +3107,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         const activelyPressedKeyModifiers = selectedSystemKeyModifiers.filter((modifier) => {
           if (modifier === "cmd" || modifier === "super")
             modifier = "meta";
-          return e2[`${modifier}Key`];
+          return e[`${modifier}Key`];
         });
         if (activelyPressedKeyModifiers.length === selectedSystemKeyModifiers.length) {
-          if (keyToModifiers(e2.key).includes(keyModifiers[0]))
+          if (keyToModifiers(e.key).includes(keyModifiers[0]))
             return false;
         }
       }
@@ -3133,8 +3182,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
       let removeListener = isCloning ? () => {
-      } : on3(el, event, modifiers, (e2) => {
-        setValue(getInputValue(el, modifiers, e2, getValue()));
+      } : on3(el, event, modifiers, (e) => {
+        setValue(getInputValue(el, modifiers, e, getValue()));
       });
       if (modifiers.includes("fill")) {
         if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
@@ -3146,7 +3195,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_removeModelListeners["default"] = removeListener;
       cleanup2(() => el._x_removeModelListeners["default"]());
       if (el.form) {
-        let removeResetListener = on3(el.form, "reset", [], (e2) => {
+        let removeResetListener = on3(el.form, "reset", [], (e) => {
           nextTick(() => el._x_model && el._x_model.set(el.value));
         });
         cleanup2(() => removeResetListener());
@@ -3570,9 +3619,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!el._x_forwardEvents.includes(value))
           el._x_forwardEvents.push(value);
       }
-      let removeListener = on3(el, value, modifiers, (e2) => {
+      let removeListener = on3(el, value, modifiers, (e) => {
         evaluate2(() => {
-        }, { scope: { "$event": e2 }, params: [e2] });
+        }, { scope: { "$event": e }, params: [e] });
       });
       cleanup2(() => removeListener());
     }));
@@ -4010,11 +4059,11 @@ var require_module_cjs3 = __commonJS({
       var isSelectableInput = function isSelectableInput2(node) {
         return node.tagName && node.tagName.toLowerCase() === "input" && typeof node.select === "function";
       };
-      var isEscapeEvent = function isEscapeEvent2(e2) {
-        return e2.key === "Escape" || e2.key === "Esc" || e2.keyCode === 27;
+      var isEscapeEvent = function isEscapeEvent2(e) {
+        return e.key === "Escape" || e.key === "Esc" || e.keyCode === 27;
       };
-      var isTabEvent = function isTabEvent2(e2) {
-        return e2.key === "Tab" || e2.keyCode === 9;
+      var isTabEvent = function isTabEvent2(e) {
+        return e.key === "Tab" || e.keyCode === 9;
       };
       var delay = function delay2(fn) {
         return setTimeout(fn, 0);
@@ -4141,52 +4190,52 @@ var require_module_cjs3 = __commonJS({
           var node = getNodeForOption("setReturnFocus");
           return node ? node : previousActiveElement;
         };
-        var checkPointerDown = function checkPointerDown2(e2) {
-          if (containersContain(e2.target)) {
+        var checkPointerDown = function checkPointerDown2(e) {
+          if (containersContain(e.target)) {
             return;
           }
-          if (valueOrHandler(config.clickOutsideDeactivates, e2)) {
+          if (valueOrHandler(config.clickOutsideDeactivates, e)) {
             trap.deactivate({
-              returnFocus: config.returnFocusOnDeactivate && !tabbable.isFocusable(e2.target)
+              returnFocus: config.returnFocusOnDeactivate && !tabbable.isFocusable(e.target)
             });
             return;
           }
-          if (valueOrHandler(config.allowOutsideClick, e2)) {
+          if (valueOrHandler(config.allowOutsideClick, e)) {
             return;
           }
-          e2.preventDefault();
+          e.preventDefault();
         };
-        var checkFocusIn = function checkFocusIn2(e2) {
-          var targetContained = containersContain(e2.target);
-          if (targetContained || e2.target instanceof Document) {
+        var checkFocusIn = function checkFocusIn2(e) {
+          var targetContained = containersContain(e.target);
+          if (targetContained || e.target instanceof Document) {
             if (targetContained) {
-              state.mostRecentlyFocusedNode = e2.target;
+              state.mostRecentlyFocusedNode = e.target;
             }
           } else {
-            e2.stopImmediatePropagation();
+            e.stopImmediatePropagation();
             tryFocus(state.mostRecentlyFocusedNode || getInitialFocusNode());
           }
         };
-        var checkTab = function checkTab2(e2) {
+        var checkTab = function checkTab2(e) {
           updateTabbableNodes();
           var destinationNode = null;
           if (state.tabbableGroups.length > 0) {
             var containerIndex = findIndex(state.tabbableGroups, function(_ref) {
               var container = _ref.container;
-              return container.contains(e2.target);
+              return container.contains(e.target);
             });
             if (containerIndex < 0) {
-              if (e2.shiftKey) {
+              if (e.shiftKey) {
                 destinationNode = state.tabbableGroups[state.tabbableGroups.length - 1].lastTabbableNode;
               } else {
                 destinationNode = state.tabbableGroups[0].firstTabbableNode;
               }
-            } else if (e2.shiftKey) {
+            } else if (e.shiftKey) {
               var startOfGroupIndex = findIndex(state.tabbableGroups, function(_ref2) {
                 var firstTabbableNode = _ref2.firstTabbableNode;
-                return e2.target === firstTabbableNode;
+                return e.target === firstTabbableNode;
               });
-              if (startOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e2.target) {
+              if (startOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
                 startOfGroupIndex = containerIndex;
               }
               if (startOfGroupIndex >= 0) {
@@ -4197,9 +4246,9 @@ var require_module_cjs3 = __commonJS({
             } else {
               var lastOfGroupIndex = findIndex(state.tabbableGroups, function(_ref3) {
                 var lastTabbableNode = _ref3.lastTabbableNode;
-                return e2.target === lastTabbableNode;
+                return e.target === lastTabbableNode;
               });
-              if (lastOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e2.target) {
+              if (lastOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
                 lastOfGroupIndex = containerIndex;
               }
               if (lastOfGroupIndex >= 0) {
@@ -4212,33 +4261,33 @@ var require_module_cjs3 = __commonJS({
             destinationNode = getNodeForOption("fallbackFocus");
           }
           if (destinationNode) {
-            e2.preventDefault();
+            e.preventDefault();
             tryFocus(destinationNode);
           }
         };
-        var checkKey = function checkKey2(e2) {
-          if (isEscapeEvent(e2) && valueOrHandler(config.escapeDeactivates) !== false) {
-            e2.preventDefault();
+        var checkKey = function checkKey2(e) {
+          if (isEscapeEvent(e) && valueOrHandler(config.escapeDeactivates) !== false) {
+            e.preventDefault();
             trap.deactivate();
             return;
           }
-          if (isTabEvent(e2)) {
-            checkTab(e2);
+          if (isTabEvent(e)) {
+            checkTab(e);
             return;
           }
         };
-        var checkClick = function checkClick2(e2) {
-          if (valueOrHandler(config.clickOutsideDeactivates, e2)) {
+        var checkClick = function checkClick2(e) {
+          if (valueOrHandler(config.clickOutsideDeactivates, e)) {
             return;
           }
-          if (containersContain(e2.target)) {
+          if (containersContain(e.target)) {
             return;
           }
-          if (valueOrHandler(config.allowOutsideClick, e2)) {
+          if (valueOrHandler(config.allowOutsideClick, e)) {
             return;
           }
-          e2.preventDefault();
-          e2.stopImmediatePropagation();
+          e.preventDefault();
+          e.stopImmediatePropagation();
         };
         var addListeners = function addListeners2() {
           if (!state.active) {
@@ -5037,8 +5086,8 @@ var require_module_cjs6 = __commonJS({
       replaceUrl(url, document.documentElement.outerHTML);
     }
     function whenTheBackOrForwardButtonIsClicked(callback) {
-      window.addEventListener("popstate", (e2) => {
-        let state = e2.state || {};
+      window.addEventListener("popstate", (e) => {
+        let state = e.state || {};
         let alpine = state.alpine || {};
         if (!alpine._html)
           return;
@@ -5115,12 +5164,12 @@ var require_module_cjs6 = __commonJS({
       }
     }
     function whenThisLinkIsPressed(el, callback) {
-      el.addEventListener("click", (e2) => e2.preventDefault());
-      el.addEventListener("mousedown", (e2) => {
-        e2.preventDefault();
+      el.addEventListener("click", (e) => e.preventDefault());
+      el.addEventListener("mousedown", (e) => {
+        e.preventDefault();
         callback((whenReleased) => {
-          let handler = (e22) => {
-            e22.preventDefault();
+          let handler = (e2) => {
+            e2.preventDefault();
             whenReleased();
             el.removeEventListener("mouseup", handler);
           };
@@ -5129,7 +5178,7 @@ var require_module_cjs6 = __commonJS({
       });
     }
     function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
-      el.addEventListener("mouseenter", (e2) => {
+      el.addEventListener("mouseenter", (e) => {
         let timeout = setTimeout(() => {
         }, ms);
         let handler = () => {
@@ -5137,7 +5186,7 @@ var require_module_cjs6 = __commonJS({
           el.removeEventListener("mouseleave", handler);
         };
         el.addEventListener("mouseleave", handler);
-        callback(e2);
+        callback(e);
       });
     }
     function extractDestinationFromLink(linkEl) {
@@ -5561,8 +5610,8 @@ var require_module_cjs6 = __commonJS({
     function tryCatch(el, expression, callback, ...args) {
       try {
         return callback(...args);
-      } catch (e2) {
-        handleError(e2, el, expression);
+      } catch (e) {
+        handleError(e, el, expression);
       }
     }
     function handleError(error2, el, expression = void 0) {
@@ -6180,9 +6229,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               delete el2._x_hideChildren;
               return carry;
             };
-            hideAfterChildren(el).catch((e2) => {
-              if (!e2.isFromCancelledTransition)
-                throw e2;
+            hideAfterChildren(el).catch((e) => {
+              if (!e.isFromCancelledTransition)
+                throw e;
             });
           });
         }
@@ -6965,10 +7014,10 @@ var require_module_cjs7 = __commonJS({
           update(push, newValue);
         },
         pop(receiver) {
-          window.addEventListener("popstate", (e2) => {
-            if (!e2.state || !e2.state.alpine)
+          window.addEventListener("popstate", (e) => {
+            if (!e.state || !e.state.alpine)
               return;
-            Object.entries(e2.state.alpine).forEach(([iName, { value: newValue }]) => {
+            Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
               if (iName !== name)
                 return;
               lock = true;
@@ -7776,8 +7825,8 @@ function showHtmlModal(html) {
   iframe.contentWindow.document.close();
   modal.addEventListener("click", () => hideHtmlModal(modal));
   modal.setAttribute("tabindex", 0);
-  modal.addEventListener("keydown", (e2) => {
-    if (e2.key === "Escape")
+  modal.addEventListener("keydown", (e) => {
+    if (e.key === "Escape")
       hideHtmlModal(modal);
   });
   modal.focus();
@@ -8133,14 +8182,14 @@ function handleFileUpload(el, property, component, cleanup2) {
       detail: { progress: percentCompleted }
     }));
   };
-  let eventHandler = (e2) => {
-    if (e2.target.files.length === 0)
+  let eventHandler = (e) => {
+    if (e.target.files.length === 0)
       return;
     start2();
-    if (e2.target.multiple) {
-      manager.uploadMultiple(property, e2.target.files, finish, error2, progress);
+    if (e.target.multiple) {
+      manager.uploadMultiple(property, e.target.files, finish, error2, progress);
     } else {
-      manager.upload(property, e2.target.files[0], finish, error2, progress);
+      manager.upload(property, e.target.files[0], finish, error2, progress);
     }
   };
   el.addEventListener("change", eventHandler);
@@ -8232,10 +8281,10 @@ var UploadManager = class {
     Object.entries(headers).forEach(([key, value]) => {
       request.setRequestHeader(key, value);
     });
-    request.upload.addEventListener("progress", (e2) => {
-      e2.detail = {};
-      e2.detail.progress = Math.round(e2.loaded * 100 / e2.total);
-      this.uploadBag.first(name).progressCallback(e2);
+    request.upload.addEventListener("progress", (e) => {
+      e.detail = {};
+      e.detail.progress = Math.round(e.loaded * 100 / e.total);
+      this.uploadBag.first(name).progressCallback(e);
     });
     request.addEventListener("load", () => {
       if ((request.status + "")[0] === "2") {
@@ -8572,17 +8621,17 @@ on("effects", (component, effects) => {
 });
 function registerListeners(component, listeners2) {
   listeners2.forEach((name) => {
-    window.addEventListener(name, (e2) => {
-      if (e2.__livewire)
-        e2.__livewire.receivedBy.push(component);
-      component.$wire.call("__dispatch", name, e2.detail || {});
+    window.addEventListener(name, (e) => {
+      if (e.__livewire)
+        e.__livewire.receivedBy.push(component);
+      component.$wire.call("__dispatch", name, e.detail || {});
     });
-    component.el.addEventListener(name, (e2) => {
-      if (e2.__livewire && e2.bubbles)
+    component.el.addEventListener(name, (e) => {
+      if (e.__livewire && e.bubbles)
         return;
-      if (e2.__livewire)
-        e2.__livewire.receivedBy.push(component.id);
-      component.$wire.call("__dispatch", name, e2.detail || {});
+      if (e.__livewire)
+        e.__livewire.receivedBy.push(component.id);
+      component.$wire.call("__dispatch", name, e.detail || {});
     });
   });
 }
@@ -8597,9 +8646,9 @@ function dispatchEvents(component, dispatches) {
   });
 }
 function dispatchEvent(target, name, params, bubbles = true) {
-  let e2 = new CustomEvent(name, { bubbles, detail: params });
-  e2.__livewire = { name, params, receivedBy: [] };
-  target.dispatchEvent(e2);
+  let e = new CustomEvent(name, { bubbles, detail: params });
+  e.__livewire = { name, params, receivedBy: [] };
+  target.dispatchEvent(e);
 }
 function dispatch2(component, name, params) {
   dispatchEvent(component.el, name, params);
@@ -8617,15 +8666,15 @@ function dispatchTo(component, componentName, name, params) {
   });
 }
 function listen(component, name, callback) {
-  component.el.addEventListener(name, (e2) => {
-    callback(e2.detail);
+  component.el.addEventListener(name, (e) => {
+    callback(e.detail);
   });
 }
 function on2(eventName, callback) {
-  window.addEventListener(eventName, (e2) => {
-    if (!e2.__livewire)
+  window.addEventListener(eventName, (e) => {
+    if (!e.__livewire)
       return;
-    callback(e2.detail);
+    callback(e.detail);
   });
 }
 
@@ -8912,7 +8961,7 @@ function normalizeQueryStringEntry(key, value) {
 
 // js/features/supportNavigate.js
 var isNavigating = false;
-document.addEventListener("alpine:navigated", () => {
+document.addEventListener("alpine:navigated", (e) => {
   if (e.detail && e.detail.init)
     return;
   isNavigating = true;
@@ -8945,7 +8994,7 @@ function morph2(component, el, html) {
   let parentComponent;
   try {
     parentComponent = closestComponent(el.parentElement);
-  } catch (e2) {
+  } catch (e) {
   }
   parentComponent && (wrapper.__livewire = parentComponent);
   let to = wrapper.firstElementChild;
@@ -9089,9 +9138,9 @@ on("element.init", ({ el, component }) => {
       attribute = attribute + ".prevent";
     }
     import_alpinejs11.default.bind(el, {
-      [attribute](e2) {
+      [attribute](e) {
         callAndClearComponentDebounces(component, () => {
-          import_alpinejs11.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e2 } });
+          import_alpinejs11.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
         });
       }
     });
@@ -9213,26 +9262,26 @@ function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoadi
   });
 }
 function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
-  let eventMismatch = (e2) => {
-    let { id, property } = e2.detail;
+  let eventMismatch = (e) => {
+    let { id, property } = e.detail;
     if (id !== component.id)
       return true;
     if (targets.length > 0 && !targets.map((i) => i.target).includes(property))
       return true;
     return false;
   };
-  window.addEventListener("livewire-upload-start", (e2) => {
-    if (eventMismatch(e2))
+  window.addEventListener("livewire-upload-start", (e) => {
+    if (eventMismatch(e))
       return;
     startLoading();
   });
-  window.addEventListener("livewire-upload-finish", (e2) => {
-    if (eventMismatch(e2))
+  window.addEventListener("livewire-upload-finish", (e) => {
+    if (eventMismatch(e))
       return;
     endLoading();
   });
-  window.addEventListener("livewire-upload-error", (e2) => {
-    if (eventMismatch(e2))
+  window.addEventListener("livewire-upload-error", (e) => {
+    if (eventMismatch(e))
       return;
     endLoading();
   });

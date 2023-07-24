@@ -145,8 +145,8 @@
     iframe.contentWindow.document.close();
     modal.addEventListener("click", () => hideHtmlModal(modal));
     modal.setAttribute("tabindex", 0);
-    modal.addEventListener("keydown", (e2) => {
-      if (e2.key === "Escape")
+    modal.addEventListener("keydown", (e) => {
+      if (e.key === "Escape")
         hideHtmlModal(modal);
     });
     modal.focus();
@@ -836,8 +836,8 @@
   function tryCatch(el, expression, callback, ...args) {
     try {
       return callback(...args);
-    } catch (e2) {
-      handleError(e2, el, expression);
+    } catch (e) {
+      handleError(e, el, expression);
     }
   }
   function handleError(error2, el, expression = void 0) {
@@ -1461,9 +1461,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             delete el2._x_hideChildren;
             return carry;
           };
-          hideAfterChildren(el).catch((e2) => {
-            if (!e2.isFromCancelledTransition)
-              throw e2;
+          hideAfterChildren(el).catch((e) => {
+            if (!e.isFromCancelledTransition)
+              throw e;
           });
         });
       }
@@ -1994,8 +1994,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = false ? Object.freeze({}) : {};
-  var EMPTY_ARR = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ = true ? Object.freeze({}) : {};
+  var EMPTY_ARR = true ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2028,8 +2028,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2119,7 +2119,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (false) {
+      if (activeEffect.options.onTrack) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2183,7 +2183,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect32) => {
-      if (false) {
+      if (effect32.options.onTrigger) {
         effect32.options.onTrigger({
           effect: effect32,
           target,
@@ -2320,13 +2320,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2388,7 +2388,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get32.call(target, key);
@@ -2407,7 +2407,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get32 ? get32.call(target, key) : void 0;
@@ -2420,7 +2420,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear2() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2465,7 +2465,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2567,6 +2567,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
+  function checkIdentityKeys(target, has2, key) {
+    const rawKey = toRaw(key);
+    if (rawKey !== key && has2.call(target, rawKey)) {
+      const type = toRawType(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2599,7 +2606,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -2745,9 +2752,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     clone22._x_teleportBack = el;
     if (el._x_forwardEvents) {
       el._x_forwardEvents.forEach((eventName) => {
-        clone22.addEventListener(eventName, (e2) => {
-          e2.stopPropagation();
-          el.dispatchEvent(new e2.constructor(e2.type, e2));
+        clone22.addEventListener(eventName, (e) => {
+          e.stopPropagation();
+          el.dispatchEvent(new e.constructor(e.type, e));
         });
       });
     }
@@ -2777,9 +2784,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("effect", (el, { expression }, { effect: effect32 }) => effect32(evaluateLater(el, expression)));
   function on2(el, event, modifiers, callback) {
     let listenerTarget = el;
-    let handler4 = (e2) => callback(e2);
+    let handler4 = (e) => callback(e);
     let options = {};
-    let wrapHandler = (callback2, wrapper) => (e2) => wrapper(callback2, e2);
+    let wrapHandler = (callback2, wrapper) => (e) => wrapper(callback2, e);
     if (modifiers.includes("dot"))
       event = dotSyntax(event);
     if (modifiers.includes("camel"))
@@ -2803,46 +2810,46 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       handler4 = throttle(handler4, wait);
     }
     if (modifiers.includes("prevent"))
-      handler4 = wrapHandler(handler4, (next, e2) => {
-        e2.preventDefault();
-        next(e2);
+      handler4 = wrapHandler(handler4, (next, e) => {
+        e.preventDefault();
+        next(e);
       });
     if (modifiers.includes("stop"))
-      handler4 = wrapHandler(handler4, (next, e2) => {
-        e2.stopPropagation();
-        next(e2);
+      handler4 = wrapHandler(handler4, (next, e) => {
+        e.stopPropagation();
+        next(e);
       });
     if (modifiers.includes("self"))
-      handler4 = wrapHandler(handler4, (next, e2) => {
-        e2.target === el && next(e2);
+      handler4 = wrapHandler(handler4, (next, e) => {
+        e.target === el && next(e);
       });
     if (modifiers.includes("away") || modifiers.includes("outside")) {
       listenerTarget = document;
-      handler4 = wrapHandler(handler4, (next, e2) => {
-        if (el.contains(e2.target))
+      handler4 = wrapHandler(handler4, (next, e) => {
+        if (el.contains(e.target))
           return;
-        if (e2.target.isConnected === false)
+        if (e.target.isConnected === false)
           return;
         if (el.offsetWidth < 1 && el.offsetHeight < 1)
           return;
         if (el._x_isShown === false)
           return;
-        next(e2);
+        next(e);
       });
     }
     if (modifiers.includes("once")) {
-      handler4 = wrapHandler(handler4, (next, e2) => {
-        next(e2);
+      handler4 = wrapHandler(handler4, (next, e) => {
+        next(e);
         listenerTarget.removeEventListener(event, handler4, options);
       });
     }
-    handler4 = wrapHandler(handler4, (next, e2) => {
+    handler4 = wrapHandler(handler4, (next, e) => {
       if (isKeyEvent(event)) {
-        if (isListeningForASpecificKeyThatHasntBeenPressed(e2, modifiers)) {
+        if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
           return;
         }
       }
-      next(e2);
+      next(e);
     });
     listenerTarget.addEventListener(event, handler4, options);
     return () => {
@@ -2866,7 +2873,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isKeyEvent(event) {
     return ["keydown", "keyup"].includes(event);
   }
-  function isListeningForASpecificKeyThatHasntBeenPressed(e2, modifiers) {
+  function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
     let keyModifiers = modifiers.filter((i) => {
       return !["window", "document", "prevent", "stop", "once", "capture"].includes(i);
     });
@@ -2880,7 +2887,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     if (keyModifiers.length === 0)
       return false;
-    if (keyModifiers.length === 1 && keyToModifiers(e2.key).includes(keyModifiers[0]))
+    if (keyModifiers.length === 1 && keyToModifiers(e.key).includes(keyModifiers[0]))
       return false;
     const systemKeyModifiers = ["ctrl", "shift", "alt", "meta", "cmd", "super"];
     const selectedSystemKeyModifiers = systemKeyModifiers.filter((modifier) => keyModifiers.includes(modifier));
@@ -2889,10 +2896,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       const activelyPressedKeyModifiers = selectedSystemKeyModifiers.filter((modifier) => {
         if (modifier === "cmd" || modifier === "super")
           modifier = "meta";
-        return e2[`${modifier}Key`];
+        return e[`${modifier}Key`];
       });
       if (activelyPressedKeyModifiers.length === selectedSystemKeyModifiers.length) {
-        if (keyToModifiers(e2.key).includes(keyModifiers[0]))
+        if (keyToModifiers(e.key).includes(keyModifiers[0]))
           return false;
       }
     }
@@ -2964,8 +2971,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
     let removeListener = isCloning ? () => {
-    } : on2(el, event, modifiers, (e2) => {
-      setValue(getInputValue(el, modifiers, e2, getValue()));
+    } : on2(el, event, modifiers, (e) => {
+      setValue(getInputValue(el, modifiers, e, getValue()));
     });
     if (modifiers.includes("fill")) {
       if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
@@ -2977,7 +2984,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el._x_removeModelListeners["default"] = removeListener;
     cleanup22(() => el._x_removeModelListeners["default"]());
     if (el.form) {
-      let removeResetListener = on2(el.form, "reset", [], (e2) => {
+      let removeResetListener = on2(el.form, "reset", [], (e) => {
         nextTick(() => el._x_model && el._x_model.set(el.value));
       });
       cleanup22(() => removeResetListener());
@@ -3400,9 +3407,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_forwardEvents.includes(value))
         el._x_forwardEvents.push(value);
     }
-    let removeListener = on2(el, value, modifiers, (e2) => {
+    let removeListener = on2(el, value, modifiers, (e) => {
       evaluate22(() => {
-      }, { scope: { "$event": e2 }, params: [e2] });
+      }, { scope: { "$event": e }, params: [e] });
     });
     cleanup22(() => removeListener());
   }));
@@ -3482,14 +3489,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         detail: { progress: percentCompleted }
       }));
     };
-    let eventHandler = (e2) => {
-      if (e2.target.files.length === 0)
+    let eventHandler = (e) => {
+      if (e.target.files.length === 0)
         return;
       start4();
-      if (e2.target.multiple) {
-        manager.uploadMultiple(property, e2.target.files, finish, error2, progress);
+      if (e.target.multiple) {
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress);
       } else {
-        manager.upload(property, e2.target.files[0], finish, error2, progress);
+        manager.upload(property, e.target.files[0], finish, error2, progress);
       }
     };
     el.addEventListener("change", eventHandler);
@@ -3581,10 +3588,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       Object.entries(headers).forEach(([key, value]) => {
         request.setRequestHeader(key, value);
       });
-      request.upload.addEventListener("progress", (e2) => {
-        e2.detail = {};
-        e2.detail.progress = Math.round(e2.loaded * 100 / e2.total);
-        this.uploadBag.first(name).progressCallback(e2);
+      request.upload.addEventListener("progress", (e) => {
+        e.detail = {};
+        e.detail.progress = Math.round(e.loaded * 100 / e.total);
+        this.uploadBag.first(name).progressCallback(e);
       });
       request.addEventListener("load", () => {
         if ((request.status + "")[0] === "2") {
@@ -3920,17 +3927,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function registerListeners(component, listeners2) {
     listeners2.forEach((name) => {
-      window.addEventListener(name, (e2) => {
-        if (e2.__livewire)
-          e2.__livewire.receivedBy.push(component);
-        component.$wire.call("__dispatch", name, e2.detail || {});
+      window.addEventListener(name, (e) => {
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component);
+        component.$wire.call("__dispatch", name, e.detail || {});
       });
-      component.el.addEventListener(name, (e2) => {
-        if (e2.__livewire && e2.bubbles)
+      component.el.addEventListener(name, (e) => {
+        if (e.__livewire && e.bubbles)
           return;
-        if (e2.__livewire)
-          e2.__livewire.receivedBy.push(component.id);
-        component.$wire.call("__dispatch", name, e2.detail || {});
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component.id);
+        component.$wire.call("__dispatch", name, e.detail || {});
       });
     });
   }
@@ -3945,9 +3952,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function dispatchEvent(target, name, params, bubbles = true) {
-    let e2 = new CustomEvent(name, { bubbles, detail: params });
-    e2.__livewire = { name, params, receivedBy: [] };
-    target.dispatchEvent(e2);
+    let e = new CustomEvent(name, { bubbles, detail: params });
+    e.__livewire = { name, params, receivedBy: [] };
+    target.dispatchEvent(e);
   }
   function dispatch3(component, name, params) {
     dispatchEvent(component.el, name, params);
@@ -3965,15 +3972,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function listen(component, name, callback) {
-    component.el.addEventListener(name, (e2) => {
-      callback(e2.detail);
+    component.el.addEventListener(name, (e) => {
+      callback(e.detail);
     });
   }
   function on3(eventName, callback) {
-    window.addEventListener(eventName, (e2) => {
-      if (!e2.__livewire)
+    window.addEventListener(eventName, (e) => {
+      if (!e.__livewire)
         return;
-      callback(e2.detail);
+      callback(e.detail);
     });
   }
 
@@ -4400,11 +4407,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var isSelectableInput = function isSelectableInput2(node) {
     return node.tagName && node.tagName.toLowerCase() === "input" && typeof node.select === "function";
   };
-  var isEscapeEvent = function isEscapeEvent2(e2) {
-    return e2.key === "Escape" || e2.key === "Esc" || e2.keyCode === 27;
+  var isEscapeEvent = function isEscapeEvent2(e) {
+    return e.key === "Escape" || e.key === "Esc" || e.keyCode === 27;
   };
-  var isTabEvent = function isTabEvent2(e2) {
-    return e2.key === "Tab" || e2.keyCode === 9;
+  var isTabEvent = function isTabEvent2(e) {
+    return e.key === "Tab" || e.keyCode === 9;
   };
   var delay = function delay2(fn) {
     return setTimeout(fn, 0);
@@ -4531,52 +4538,52 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       var node = getNodeForOption("setReturnFocus");
       return node ? node : previousActiveElement;
     };
-    var checkPointerDown = function checkPointerDown2(e2) {
-      if (containersContain(e2.target)) {
+    var checkPointerDown = function checkPointerDown2(e) {
+      if (containersContain(e.target)) {
         return;
       }
-      if (valueOrHandler(config.clickOutsideDeactivates, e2)) {
+      if (valueOrHandler(config.clickOutsideDeactivates, e)) {
         trap.deactivate({
-          returnFocus: config.returnFocusOnDeactivate && !isFocusable(e2.target)
+          returnFocus: config.returnFocusOnDeactivate && !isFocusable(e.target)
         });
         return;
       }
-      if (valueOrHandler(config.allowOutsideClick, e2)) {
+      if (valueOrHandler(config.allowOutsideClick, e)) {
         return;
       }
-      e2.preventDefault();
+      e.preventDefault();
     };
-    var checkFocusIn = function checkFocusIn2(e2) {
-      var targetContained = containersContain(e2.target);
-      if (targetContained || e2.target instanceof Document) {
+    var checkFocusIn = function checkFocusIn2(e) {
+      var targetContained = containersContain(e.target);
+      if (targetContained || e.target instanceof Document) {
         if (targetContained) {
-          state.mostRecentlyFocusedNode = e2.target;
+          state.mostRecentlyFocusedNode = e.target;
         }
       } else {
-        e2.stopImmediatePropagation();
+        e.stopImmediatePropagation();
         tryFocus(state.mostRecentlyFocusedNode || getInitialFocusNode());
       }
     };
-    var checkTab = function checkTab2(e2) {
+    var checkTab = function checkTab2(e) {
       updateTabbableNodes();
       var destinationNode = null;
       if (state.tabbableGroups.length > 0) {
         var containerIndex = findIndex(state.tabbableGroups, function(_ref) {
           var container = _ref.container;
-          return container.contains(e2.target);
+          return container.contains(e.target);
         });
         if (containerIndex < 0) {
-          if (e2.shiftKey) {
+          if (e.shiftKey) {
             destinationNode = state.tabbableGroups[state.tabbableGroups.length - 1].lastTabbableNode;
           } else {
             destinationNode = state.tabbableGroups[0].firstTabbableNode;
           }
-        } else if (e2.shiftKey) {
+        } else if (e.shiftKey) {
           var startOfGroupIndex = findIndex(state.tabbableGroups, function(_ref2) {
             var firstTabbableNode = _ref2.firstTabbableNode;
-            return e2.target === firstTabbableNode;
+            return e.target === firstTabbableNode;
           });
-          if (startOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e2.target) {
+          if (startOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
             startOfGroupIndex = containerIndex;
           }
           if (startOfGroupIndex >= 0) {
@@ -4587,9 +4594,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         } else {
           var lastOfGroupIndex = findIndex(state.tabbableGroups, function(_ref3) {
             var lastTabbableNode = _ref3.lastTabbableNode;
-            return e2.target === lastTabbableNode;
+            return e.target === lastTabbableNode;
           });
-          if (lastOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e2.target) {
+          if (lastOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
             lastOfGroupIndex = containerIndex;
           }
           if (lastOfGroupIndex >= 0) {
@@ -4602,33 +4609,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         destinationNode = getNodeForOption("fallbackFocus");
       }
       if (destinationNode) {
-        e2.preventDefault();
+        e.preventDefault();
         tryFocus(destinationNode);
       }
     };
-    var checkKey = function checkKey2(e2) {
-      if (isEscapeEvent(e2) && valueOrHandler(config.escapeDeactivates) !== false) {
-        e2.preventDefault();
+    var checkKey = function checkKey2(e) {
+      if (isEscapeEvent(e) && valueOrHandler(config.escapeDeactivates) !== false) {
+        e.preventDefault();
         trap.deactivate();
         return;
       }
-      if (isTabEvent(e2)) {
-        checkTab(e2);
+      if (isTabEvent(e)) {
+        checkTab(e);
         return;
       }
     };
-    var checkClick = function checkClick2(e2) {
-      if (valueOrHandler(config.clickOutsideDeactivates, e2)) {
+    var checkClick = function checkClick2(e) {
+      if (valueOrHandler(config.clickOutsideDeactivates, e)) {
         return;
       }
-      if (containersContain(e2.target)) {
+      if (containersContain(e.target)) {
         return;
       }
-      if (valueOrHandler(config.allowOutsideClick, e2)) {
+      if (valueOrHandler(config.allowOutsideClick, e)) {
         return;
       }
-      e2.preventDefault();
-      e2.stopImmediatePropagation();
+      e.preventDefault();
+      e.stopImmediatePropagation();
     };
     var addListeners = function addListeners2() {
       if (!state.active) {
@@ -5365,8 +5372,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     replaceUrl(url, document.documentElement.outerHTML);
   }
   function whenTheBackOrForwardButtonIsClicked(callback) {
-    window.addEventListener("popstate", (e2) => {
-      let state = e2.state || {};
+    window.addEventListener("popstate", (e) => {
+      let state = e.state || {};
       let alpine = state.alpine || {};
       if (!alpine._html)
         return;
@@ -5443,12 +5450,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function whenThisLinkIsPressed(el, callback) {
-    el.addEventListener("click", (e2) => e2.preventDefault());
-    el.addEventListener("mousedown", (e2) => {
-      e2.preventDefault();
+    el.addEventListener("click", (e) => e.preventDefault());
+    el.addEventListener("mousedown", (e) => {
+      e.preventDefault();
       callback((whenReleased) => {
-        let handler4 = (e22) => {
-          e22.preventDefault();
+        let handler4 = (e2) => {
+          e2.preventDefault();
           whenReleased();
           el.removeEventListener("mouseup", handler4);
         };
@@ -5457,7 +5464,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
-    el.addEventListener("mouseenter", (e2) => {
+    el.addEventListener("mouseenter", (e) => {
       let timeout = setTimeout(() => {
       }, ms);
       let handler4 = () => {
@@ -5465,7 +5472,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el.removeEventListener("mouseleave", handler4);
       };
       el.addEventListener("mouseleave", handler4);
-      callback(e2);
+      callback(e);
     });
   }
   function extractDestinationFromLink(linkEl) {
@@ -5889,8 +5896,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function tryCatch2(el, expression, callback, ...args) {
     try {
       return callback(...args);
-    } catch (e2) {
-      handleError2(e2, el, expression);
+    } catch (e) {
+      handleError2(e, el, expression);
     }
   }
   function handleError2(error2, el, expression = void 0) {
@@ -6508,9 +6515,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             delete el2._x_hideChildren;
             return carry;
           };
-          hideAfterChildren(el).catch((e2) => {
-            if (!e2.isFromCancelledTransition)
-              throw e2;
+          hideAfterChildren(el).catch((e) => {
+            if (!e.isFromCancelledTransition)
+              throw e;
           });
         });
       }
@@ -7266,10 +7273,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         update(push, newValue);
       },
       pop(receiver) {
-        window.addEventListener("popstate", (e2) => {
-          if (!e2.state || !e2.state.alpine)
+        window.addEventListener("popstate", (e) => {
+          if (!e.state || !e.state.alpine)
             return;
-          Object.entries(e2.state.alpine).forEach(([iName, { value: newValue }]) => {
+          Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
             if (iName !== name)
               return;
             lock = true;
@@ -8059,7 +8066,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportNavigate.js
   var isNavigating = false;
-  document.addEventListener("alpine:navigated", () => {
+  document.addEventListener("alpine:navigated", (e) => {
     if (e.detail && e.detail.init)
       return;
     isNavigating = true;
@@ -8091,7 +8098,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let parentComponent;
     try {
       parentComponent = closestComponent(el.parentElement);
-    } catch (e2) {
+    } catch (e) {
     }
     parentComponent && (wrapper.__livewire = parentComponent);
     let to = wrapper.firstElementChild;
@@ -8233,9 +8240,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         attribute = attribute + ".prevent";
       }
       module_default.bind(el, {
-        [attribute](e2) {
+        [attribute](e) {
           callAndClearComponentDebounces(component, () => {
-            module_default.evaluate(el, "$wire." + directive4.expression, { scope: { $event: e2 } });
+            module_default.evaluate(el, "$wire." + directive4.expression, { scope: { $event: e } });
           });
         }
       });
@@ -8356,26 +8363,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
-    let eventMismatch = (e2) => {
-      let { id, property } = e2.detail;
+    let eventMismatch = (e) => {
+      let { id, property } = e.detail;
       if (id !== component.id)
         return true;
       if (targets.length > 0 && !targets.map((i) => i.target).includes(property))
         return true;
       return false;
     };
-    window.addEventListener("livewire-upload-start", (e2) => {
-      if (eventMismatch(e2))
+    window.addEventListener("livewire-upload-start", (e) => {
+      if (eventMismatch(e))
         return;
       startLoading();
     });
-    window.addEventListener("livewire-upload-finish", (e2) => {
-      if (eventMismatch(e2))
+    window.addEventListener("livewire-upload-finish", (e) => {
+      if (eventMismatch(e))
         return;
       endLoading();
     });
-    window.addEventListener("livewire-upload-error", (e2) => {
-      if (eventMismatch(e2))
+    window.addEventListener("livewire-upload-error", (e) => {
+      if (eventMismatch(e))
         return;
       endLoading();
     });

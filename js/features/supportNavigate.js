@@ -2,7 +2,7 @@ import { on, trigger } from "@/events"
 
 let isNavigating = false
 
-document.addEventListener('alpine:navigated', () => {
+document.addEventListener('alpine:navigated', e => {
     if (e.detail && e.detail.init) return
 
     isNavigating = true
