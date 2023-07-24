@@ -858,7 +858,7 @@ class BrowsePosts extends Component
         $this->delete($id); // [tl! highlight]
     }
 
-    public function delete($postId)  // [tl! highlight:5]
+    private function delete($postId)  // [tl! highlight:5]
     {
         $post = Post::find($postId);
 
