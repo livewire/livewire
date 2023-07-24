@@ -302,7 +302,7 @@ Below are all the available methods for manipulating the validation errors in yo
 
 Method | Description
 --- | ---
-`$this->addError([key], [message])` | Manually add a validation message to the error bag
+`$this->addError([key], [message])` | Manually add a validation message to the error bag (when used in forms, key will be prefixed with 'form.')
 `$this->resetValidation([?key])` | Reset the validation errors for the provided key, or reset all errors if no key is supplied
 `$this->getErrorBag()` | Retrieve the underlying Laravel error bag used in the Livewire component
 
