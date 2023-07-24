@@ -7383,7 +7383,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var dom = {
     replace(children, old, replacement) {
       let index = children.indexOf(old);
-      let replacementIndex = children.indexOf(old);
+      let replacementIndex = children.indexOf(replacement);
       if (index === -1)
         throw "Cant find element in children";
       old.replaceWith(replacement);
@@ -7585,18 +7585,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           }
           patchChildren(newFromChildren, newToChildren, (node) => appendPoint.before(node));
           continue;
-        }
-        if (currentFrom.nodeType === 1 && lookahead) {
-          let nextToElementSibling = dom.next(toChildren, currentTo);
-          let found = false;
-          while (!found && nextToElementSibling) {
-            if (currentFrom.isEqualNode(nextToElementSibling)) {
-              found = true;
-              [fromChildren, currentFrom] = addNodeBefore(fromChildren, currentTo, currentFrom);
-              fromKey = getKey(currentFrom);
-            }
-            nextToElementSibling = dom.next(toChildren, nextToElementSibling);
-          }
         }
         if (toKey !== fromKey) {
           if (!toKey && fromKey) {
