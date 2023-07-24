@@ -4,7 +4,7 @@ To begin your Livewire journey, we will create a simple "counter" component and 
 
 Before we start, make sure you have the following installed:
 
-- Laravel version 10 or later
+- Laravel version 9 or later
 - PHP version 8.1 or later
 
 ## Install Livewire
