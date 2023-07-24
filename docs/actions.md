@@ -840,7 +840,7 @@ Every public method inside your Livewire component is callable from the client. 
 Consider the `BrowsePosts` example that we previously discussed, where users can view all posts in your application, but only administrators can delete posts. In the [Always authorize server-side](/docs/actions#always-authorize-server-side) section, we made the action secure by adding server-side authorization. Now imagine we refactor the actual deletion of the post into a dedicated method like you might do in order to simplify your code:
 
 ```php
-// Warning: this is an example of what not to do
+// Warning: This snippet demonstrates what NOT to do...
 <?php
 
 namespace App\Livewire;
