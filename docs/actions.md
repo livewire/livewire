@@ -241,9 +241,12 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ShowPosts extends Component
 {
+    use AuthorizesRequests;
+    
     public function delete($id)
     {
         $post = Post::findOrFail($id);
@@ -298,9 +301,12 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ShowPosts extends Component
 {
+    use AuthorizesRequests;
+    
     public function delete(Post $post) // [tl! highlight]
     {
         $this->authorize('update', $post);
@@ -729,9 +735,12 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Post;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ShowPosts extends Component
 {
+    use AuthorizesRequests;
+    
     public function delete($id)
     {
         $post = Post::find($id);
