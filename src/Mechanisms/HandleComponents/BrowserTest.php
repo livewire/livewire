@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Livewire\Attributes\Computed;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -65,4 +66,70 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Subsequent request')
         ;
     }
+
+    /** @test */
+    public function it_converts_empty_strings_to_null_for_integer_properties()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public ?int $number = 5;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="text" wire:model.live="number" dusk="numberInput" />
+                    <div dusk="number">{{ $number }}</div>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@number', 5)
+        ->waitForLivewire()->keys('@numberInput', '{backspace}')
+        ->assertSeeIn('@number', '')
+        ;
+    }
+
+    /** @test */
+    public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public Suit $selected;
+
+            #[Computed]
+            public function cases()
+            {
+                return Suit::cases();
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <select wire:model.live="selected" dusk="selectInput">
+                        @foreach($this->cases() as $suit)
+                            <option value="{{ $suit->value }}">{{ $suit }}</option>
+                        @endforeach
+                    </select>
+
+                    <span dusk="selected">{{ $selected }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeNothingIn('@selected')
+        ->waitForLivewire()->select('@selectInput', 'D')
+        ->assertSeeIn('@selected', 'D')
+        ;
+    }
+}
+
+enum Suit: string
+{
+    case Hearts = 'H';
+
+    case Diamonds = 'D';
+
+    case Clubs = 'C';
+
+    case Spades = 'S';
 }
