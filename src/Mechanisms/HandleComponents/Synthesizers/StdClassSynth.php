@@ -3,8 +3,6 @@
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
 use stdClass;
-use Synthetic\Component;
-use Livewire\Drawer\Utils;
 
 class StdClassSynth extends Synth {
     public static $key = 'std';

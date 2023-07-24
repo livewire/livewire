@@ -7,8 +7,5 @@ use Livewire\Mechanisms\HandleComponents\Renderless as BaseRenderless;
 #[\Attribute]
 class Renderless extends BaseRenderless
 {
-    function call()
-    {
-        $this->component->skipRender();
-    }
+    //
 }

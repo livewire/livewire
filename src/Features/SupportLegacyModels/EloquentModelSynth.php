@@ -6,7 +6,6 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Livewire\Component;
 
 class EloquentModelSynth extends Synth
 {

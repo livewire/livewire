@@ -14,13 +14,6 @@ If you prefer kebab-cased names, you can use them as well:
 php artisan make:livewire create-post
 ```
 
-You may use namespace syntax or dot-notation to create your components in sub-directories. For example, the following commands will create a `CreatePost` component in the `Posts` sub-directory:
-
-```shell
-php artisan make:livewire Posts\\CreatePost
-php artisan make:livewire posts.create-post
-```
-
 After running this command, Livewire will create two new files in your application. The first will be the component's class: `app/Livewire/CreatePost.php`
 
 ```php
@@ -45,6 +38,13 @@ The second will be the component's Blade view: `resources/views/livewire/create-
 <div>
 	{{-- ... --}}
 </div>
+```
+
+You may use namespace syntax or dot-notation to create your components in sub-directories. For example, the following commands will create a `CreatePost` component in the `Posts` sub-directory:
+
+```shell
+php artisan make:livewire Posts\\CreatePost
+php artisan make:livewire posts.create-post
 ```
 
 ### Inline components
@@ -151,13 +151,13 @@ The rendered output of this component would be:
 
 ```blade
 <div>
-    <h1>Title: "Post title...""</h1>
+    <h1>Title: "Post title..."</h1>
 </div>
 ```
 
 ### Sharing additional data with the view
 
-In addition to accessing properties from the view, you can explicitly pass data to the view from the `render()` method like you might typically do from a controller. This can be useful when you want to pass additional data without first storing it as a property—because properties have [specific performance and security implications](http://livewire-next-docs.test/docs/properties#security-concerns).
+In addition to accessing properties from the view, you can explicitly pass data to the view from the `render()` method like you might typically do from a controller. This can be useful when you want to pass additional data without first storing it as a property—because properties have [specific performance and security implications](/docs/properties#security-concerns).
 
 To pass data to the view in the `render()` method, you can use the `with()` method on the view instance. For example, let's say you want to pass the post author's name to the view. In this case, the post's author is the currently authenticated user:
 
@@ -191,6 +191,24 @@ Now you may access the `$author` from the component's Blade view:
 </div>
 ```
 
+### Adding `wire:key` to `@foreach` loops
+
+When looping through data in a Livewire template using `@foreach`, you must add a unique `wire:key` attribute to the root element rendered by the loop.
+
+Without a `wire:key` attribute present within a Blade loop, Livewire won't be able to properly match old elements to their new positions when the loop changes. This can cause many hard to diagnose issues in your application.
+
+For example, if you are looping through an array of posts, you may set the `wire:key` attribute to the post's ID:
+
+```blade
+<div>
+    @foreach ($posts as $post)
+        <div wire:key="{{ $post->id }}"> <!-- [tl! highlight] -->
+            <!-- ... -->
+        </div>
+    @endforeach
+</div>
+```
+
 ### Binding inputs to properties
 
 One of Livewire's most powerful features is "data binding": the ability to automatically keep properties in-sync with form inputs on the page.
@@ -208,7 +226,7 @@ Let's bind the `$title` property from the `CreatePost` component to a text input
 Any changes made to the text input will be automatically synchronized with the `$title` property in your Livewire component.
 
 > [!warning] "Why isn't my component live updating as I type?"
-> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](http://livewire-next-docs.test/docs/properties#data-binding).
+> If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/properties#data-binding).
 
 
 Livewire properties are extremely powerful and are an important concept to understand. For more information, check out the [Livewire properties documentation](/docs/properties).
@@ -262,7 +280,7 @@ Next, let's call the `save` action from the component's Blade view by adding the
 
 When the "Save" button is clicked, the `save` method in your Livewire component will be executed and your component will re-render.
 
-To keep learning about Livewire actions, visit the [actions documentation](http://livewire-next-docs.test/docs/actions).
+To keep learning about Livewire actions, visit the [actions documentation](/docs/actions).
 
 ## Rendering components
 
@@ -323,7 +341,7 @@ class CreatePost extends Component
 
 In this example, the `title` property will be initialized with the value "Initial Title".
 
-You can think of the `mount()` method as a class constructor. It runs on the initial load of the component, but not on subsequent requests within a page. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](http://livewire-next-docs.test/docs/lifecycle-hooks).
+You can think of the `mount()` method as a class constructor. It runs on the initial load of the component, but not on subsequent requests within a page. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](/docs/lifecycle-hooks).
 
 To reduce boilerplate code in your components, you can alternatively omit the `mount()` method and Livewire will automatically set any properties on your component with names matching the passed in values:
 

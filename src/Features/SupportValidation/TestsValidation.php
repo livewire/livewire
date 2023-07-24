@@ -2,13 +2,11 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use function Livewire\store;
 use PHPUnit\Framework\Assert as PHPUnit;
-use Livewire\Mechanisms\DataStore;
 use Illuminate\Support\Str;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Arr;
-
-use function Livewire\store;
 
 trait TestsValidation
 {

@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Livewire\Component;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use LogicException;
 
@@ -108,12 +107,6 @@ class EloquentCollectionSynth extends Synth
         if (is_null($key)) return [];
 
         return SupportLegacyModels::getRulesFor($context->component, $key);
-
-        if (isset($context->dataFromParent['rules'])) {
-            return $context->dataFromParent['rules'];
-        }
-
-        return [];
     }
 
     protected function getConnection(EloquentCollection $collection)
@@ -152,8 +145,6 @@ class EloquentCollectionSynth extends Synth
 
     protected function loadCollection($meta)
     {
-        $modelClass = $meta['modelClass'];
-
         if (isset($meta['keys']) && count($meta['keys']) >= 0) {
             $model = new $meta['modelClass'];
 

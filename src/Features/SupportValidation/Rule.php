@@ -30,6 +30,14 @@ class Rule extends LivewireAttribute
             $rules[$this->getName()] = $this->rule;
         }
 
+        // @todo: make this more robust (account for FormObjects that
+        // aren't named "form")...
+        if (str($this->getName())->startsWith('form.')) {
+            $name = (string) str($this->getName())->after('form.');
+
+            $this->component->addValidationAttributesFromOutside([$this->getName() => $name]);
+        }
+
         if ($this->attribute) {
             if (is_array($this->attribute)) {
                 $this->component->addValidationAttributesFromOutside($this->attribute);

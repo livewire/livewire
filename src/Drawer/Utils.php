@@ -2,7 +2,6 @@
 
 namespace Livewire\Drawer;
 
-use DOMDocument;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 
 use function Livewire\invade;
@@ -63,12 +62,18 @@ class Utils extends BaseUtils
             ]);
         }
 
-        return response()->file($file, [
+        $headers = [
             'Content-Type' => "$mimeType; charset=utf-8",
             'Expires' => static::httpDate($expires),
             'Cache-Control' => $cacheControl,
             'Last-Modified' => static::httpDate($lastModified),
-        ]);
+        ];
+
+        if (str($file)->endsWith('.br')) {
+            $headers['Content-Encoding'] = 'br';
+        }
+
+        return response()->file($file, $headers);
     }
 
     static function matchesCache($lastModified)
@@ -85,7 +90,7 @@ class Utils extends BaseUtils
 
     static function containsDots($subject)
     {
-        return strpos($subject, '.') !== false;
+        return str_contains($subject, '.');
     }
 
     static function dotSegments($subject)

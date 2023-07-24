@@ -3,14 +3,9 @@
 namespace Livewire\Mechanisms\HandleComponents;
 
 use function Livewire\{ store, trigger, wrap };
-use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
-use Illuminate\Foundation\Http\Middleware\TrimStrings;
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Exception;
 use Illuminate\Support\Facades\View;
 
 class HandleComponents

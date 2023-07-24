@@ -12,18 +12,18 @@ use App\Models\Post;
 
 class CreatePost extends Component
 {
-	public $title = '';
+    public $title = '';
 
     public $content = '';
 
     public function save()
     {
-		Post::create([
-			'title' => $this->title,
-			'content' => $this->content,
-		]);
+        Post::create([
+            'title' => $this->title,
+            'content' => $this->content,
+        ]);
 
-		return redirect()->to('/posts');
+        return redirect()->to('/posts');
     }
 
     public function render()
@@ -35,11 +35,11 @@ class CreatePost extends Component
 
 ```blade
 <form wire:submit="save"> <!-- [tl! highlight] -->
-	<input type="text" wire:model="title">
+    <input type="text" wire:model="title">
 
-	<textarea wire:model="content"></textarea>
+    <textarea wire:model="content"></textarea>
 
-	<button type="submit">Save</button>
+    <button type="submit">Save</button>
 </form>
 ```
 
@@ -139,13 +139,13 @@ For example, let's imagine you're using the [Trix](https://trix-editor.org/) ric
 
 ```blade
 <form wire:submit="save">
-	<!-- ... -->
+    <!-- ... -->
 
     <trix-editor
-	    wire:trix-change="setPostContent($event.target.value)"
-	></trix-editor>
+        wire:trix-change="setPostContent($event.target.value)"
+    ></trix-editor>
 
-	<!-- ... -->
+    <!-- ... -->
 </form>
 ```
 
@@ -171,8 +171,8 @@ If your application dispatches custom events from Alpine, you can also listen fo
 ```blade
 <div wire:custom-event="...">
 
-	<!-- Deeply nested within this component: -->
-	<button x-on:click="$dispatch('custom-event')">...</button>
+    <!-- Deeply nested within this component: -->
+    <button x-on:click="$dispatch('custom-event')">...</button>
 
 </div>
 ```
@@ -183,7 +183,7 @@ If you want to listen for an event dispatched somewhere else in your application
 
 ```blade
 <div wire:custom-event.window="...">
-	<!-- ... -->
+    <!-- ... -->
 </div>
 
 <!-- Dispatched somewhere on the page outside the component: -->
@@ -196,11 +196,11 @@ Consider the `CreatePost` example we previously discussed:
 
 ```blade
 <form wire:submit="save">
-	<input wire:model="title">
+    <input wire:model="title">
 
-	<textarea wire:model="content"></textarea>
+    <textarea wire:model="content"></textarea>
 
-	<button type="submit">Save</button>
+    <button type="submit">Save</button>
 </form>
 ```
 
@@ -218,11 +218,11 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 
 ```blade
 <form wire:submit="save">
-	<textarea wire:submit="content"></textarea>
+    <textarea wire:submit="content"></textarea>
 
-	<button type="submit">Save</button>
+    <button type="submit">Save</button>
 
-	<span wire:loading>Saving...</span> <!-- [tl! highlight] -->
+    <span wire:loading>Saving...</span> <!-- [tl! highlight] -->
 </form>
 ```
 
@@ -246,17 +246,17 @@ class ShowPosts extends Component
 {
     public function delete($id)
     {
-		$post = Post::findOrFail($id);
+        $post = Post::findOrFail($id);
 
         $this->authorize('update', $post);
 
-		$post->delete();
+        $post->delete();
     }
 
     public function render()
     {
         return view('livewire.show-posts', [
-			'posts' => Auth::user()->posts,
+            'posts' => Auth::user()->posts,
         ]);
     }
 }
@@ -264,14 +264,14 @@ class ShowPosts extends Component
 
 ```blade
 <div>
-	@foreach ($posts as $post)
-		<div>
-			<h1>{{ $post->title }}</h1>
-			<span>{{ $post->content }}</span>
+    @foreach ($posts as $post)
+        <div>
+            <h1>{{ $post->title }}</h1>
+            <span>{{ $post->content }}</span>
 
-			<button wire:click="delete({{ $post->id }})">Delete</button> <!-- [tl! highlight] -->
-		</div>
-	@endforeach
+            <button wire:click="delete({{ $post->id }})">Delete</button> <!-- [tl! highlight] -->
+        </div>
+    @endforeach
 </div>
 ```
 
@@ -305,13 +305,13 @@ class ShowPosts extends Component
     {
         $this->authorize('update', $post);
 
-		$post->delete();
+        $post->delete();
     }
 
     public function render()
     {
         return view('livewire.show-posts', [
-			'posts' => Auth::user()->posts,
+            'posts' => Auth::user()->posts,
         ]);
     }
 }
@@ -333,13 +333,13 @@ class ShowPosts extends Component
 {
     public function delete(PostRepository $posts, $postId) // [tl! highlight]
     {
-		$posts->deletePost($postId);
+        $posts->deletePost($postId);
     }
 
     public function render()
     {
         return view('livewire.show-posts', [
-			'posts' => Auth::user()->posts,
+            'posts' => Auth::user()->posts,
         ]);
     }
 }
@@ -347,14 +347,14 @@ class ShowPosts extends Component
 
 ```blade
 <div>
-	@foreach ($posts as $post)
-		<div>
-			<h1>{{ $post->title }}</h1>
-			<span>{{ $post->content }}</span>
+    @foreach ($posts as $post)
+        <div>
+            <h1>{{ $post->title }}</h1>
+            <span>{{ $post->content }}</span>
 
-			<button wire:click="delete({{ $post->id }})">Delete</button> <!-- [tl! highlight] -->
-		</div>
-	@endforeach
+            <button wire:click="delete({{ $post->id }})">Delete</button> <!-- [tl! highlight] -->
+        </div>
+    @endforeach
 </div>
 ```
 
@@ -410,7 +410,7 @@ use App\Models\Post;
 
 public function getPostCount()
 {
-	return Post::count();
+    return Post::count();
 }
 ```
 
@@ -428,7 +428,7 @@ Alpine knowledge is not required when using Livewire; however, it's an extremely
 
 Sometimes there are actions in your component that don't need to communicate with the server and can be more efficiently written using only JavaScript.
 
-In these cases, rather than writing the actions inside your Blade template or another file, your component action may return the JavaScript function as a string. If the action is marked with the `#[JS]` attribute, it will be callable from your application's frontend:
+In these cases, rather than writing the actions inside your Blade template or another file, your component action may return the JavaScript function as a string. If the action is marked with the `#[Js]` attribute, it will be callable from your application's frontend:
 
 For example:
 
@@ -437,25 +437,26 @@ For example:
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Js;
 use Livewire\Component;
 use App\Models\Post;
 
 class SearchPosts extends Component
 {
-	public $query = '';
+    public $query = '';
 
-    #[JS] // [tl! highlight:6]
+    #[Js] // [tl! highlight:6]
     public function reset()
     {
-        return <<<JS
-			this.query = '';
+        return <<<'JS'
+            $wire.query = '';
         JS;
     }
 
     public function render()
     {
         return view('livewire.search-posts', [
-			'posts' => Post::whereTitle($this->query)->get(),
+            'posts' => Post::whereTitle($this->query)->get(),
         ]);
     }
 }
@@ -463,13 +464,13 @@ class SearchPosts extends Component
 
 ```blade
 <div>
-	<input wire:model.live="query">
+    <input wire:model.live="query">
 
-	<button wire:click="reset">Reset Search</button> <!-- [tl! highlight] -->
+    <button wire:click="reset">Reset Search</button> <!-- [tl! highlight] -->
 
-	@foreach ($posts as $post)
-		<!-- ... -->
-	@endforeach
+    @foreach ($posts as $post)
+        <!-- ... -->
+    @endforeach
 </div>
 ```
 
@@ -492,7 +493,7 @@ use Livewire\Component;
 
 class CreatePost extends Component
 {
-	public $title = '';
+    public $title = '';
 
     public function save()
     {
@@ -503,9 +504,9 @@ class CreatePost extends Component
 }
 ```
 
-The JavaScript expression `alert('Post saved!')`, will now be executed on the client after the post has been saved to the database on the server.
+The JavaScript expression `alert('Post saved!')` will now be executed on the client after the post has been saved to the database on the server.
 
-Similar to `#[Js]` methods, you can access the current component's `$wire` object as `this` inside the expression.
+Just like `#[Js]` methods, you can access the current component's `$wire` object inside the expression.
 
 ## Magic actions
 
@@ -547,7 +548,7 @@ The `$toggle` action is used to toggle the value of a boolean property in your L
 
 ```blade
 <button wire:click="$toggle('sortAsc')">
-	Sort {{ $sortAsc ? 'Descending' : 'Ascending' }}
+    Sort {{ $sortAsc ? 'Descending' : 'Ascending' }}
 </button>
 ```
 
@@ -596,32 +597,32 @@ use App\Models\Post;
 
 class ShowPost extends Component
 {
-	public Post $post;
+    public Post $post;
 
-	public function mount(Post $post)
-	{
-		$this->post = $post;
-	}
+    public function mount(Post $post)
+    {
+        $this->post = $post;
+    }
 
-	#[Renderless] // [tl! highlight]
-	public function incrementViewCount()
-	{
-		$this->post->incrementViewCount();
-	}
+    #[Renderless] // [tl! highlight]
+    public function incrementViewCount()
+    {
+        $this->post->incrementViewCount();
+    }
 
-	public function render()
-	{
-		return view('livewire.show-post');
-	}
+    public function render()
+    {
+        return view('livewire.show-post');
+    }
 }
 ```
 
 ```blade
 <div>
-	<h1>{{ $post->title }}</h1>
-	<p>{{ $post->content }}</p>
+    <h1>{{ $post->title }}</h1>
+    <p>{{ $post->content }}</p>
 
-	<div x-intersect="$wire.incrementViewCount()"></div>
+    <div x-intersect="$wire.incrementViewCount()"></div>
 </div>
 ```
 
@@ -641,24 +642,24 @@ use App\Models\Post;
 
 class ShowPost extends Component
 {
-	public Post $post;
+    public Post $post;
 
-	public function mount(Post $post)
-	{
-		$this->post = $post;
-	}
+    public function mount(Post $post)
+    {
+        $this->post = $post;
+    }
 
-	public function incrementViewCount()
-	{
-		$this->post->incrementViewCount();
+    public function incrementViewCount()
+    {
+        $this->post->incrementViewCount();
 
-		$this->skipRender(); // [tl! highlight]
-	}
+        $this->skipRender(); // [tl! highlight]
+    }
 
-	public function render()
-	{
-		return view('livewire.show-post');
-	}
+    public function render()
+    {
+        return view('livewire.show-post');
+    }
 }
 ```
 
@@ -690,30 +691,30 @@ class ShowPosts extends Component
 {
     public function delete($id)
     {
-		$post = Post::find($id);
+        $post = Post::find($id);
 
-		$post->delete();
+        $post->delete();
     }
 
-	public function render()
-	{
-		return view('livewire.show-posts', [
-			'posts' => Auth::user()->posts,
-		]);
-	}
+    public function render()
+    {
+        return view('livewire.show-posts', [
+            'posts' => Auth::user()->posts,
+        ]);
+    }
 }
 ```
 
 ```blade
 <div>
-	@foreach ($posts as $post)
-		<div>
-			<h1>{{ $post->title }}</h1>
-			<span>{{ $post->content }}</span>
+    @foreach ($posts as $post)
+        <div>
+            <h1>{{ $post->title }}</h1>
+            <span>{{ $post->content }}</span>
 
-			<button wire:click="delete({{ $post->id }})">Delete</button>
-		</div>
-	@endforeach
+            <button wire:click="delete({{ $post->id }})">Delete</button>
+        </div>
+    @endforeach
 </div>
 ```
 
@@ -733,19 +734,19 @@ class ShowPosts extends Component
 {
     public function delete($id)
     {
-		$post = Post::find($id);
+        $post = Post::find($id);
 
         $this->authorize('update', $post); // [tl! highlight]
 
-		$post->delete();
+        $post->delete();
     }
 
-	public function render()
-	{
-		return view('livewire.show-posts', [
-			'posts' => Auth::user()->posts,
-		]);
-	}
+    public function render()
+    {
+        return view('livewire.show-posts', [
+            'posts' => Auth::user()->posts,
+        ]);
+    }
 }
 ```
 
@@ -767,32 +768,32 @@ class BrowsePosts extends Component
 {
     public function deletePost($id)
     {
-		$post = Post::find($id);
+        $post = Post::find($id);
 
-		$post->delete();
+        $post->delete();
     }
 
-	public function render()
-	{
-		return view('livewire.browse-posts', [
-			'posts' => Post::all(),
-		]);
-	}
+    public function render()
+    {
+        return view('livewire.browse-posts', [
+            'posts' => Post::all(),
+        ]);
+    }
 }
 ```
 
 ```blade
 <div>
-	@foreach ($posts as $post)
-		<div>
-			<h1>{{ $post->title }}</h1>
-			<span>{{ $post->content }}</span>
+    @foreach ($posts as $post)
+        <div>
+            <h1>{{ $post->title }}</h1>
+            <span>{{ $post->content }}</span>
 
-			@if (Auth::user()->isAdmin())
-				<button wire:click="deletePost({{ $post->id }})">Delete</button>
-			@endif
-		</div>
-	@endforeach
+            @if (Auth::user()->isAdmin())
+                <button wire:click="deletePost({{ $post->id }})">Delete</button>
+            @endif
+        </div>
+    @endforeach
 </div>
 ```
 
@@ -812,21 +813,21 @@ class BrowsePosts extends Component
 {
     public function deletePost($id)
     {
-		if (! Auth::user()->isAdmin) { // [tl! highlight:2]
-			abort(403);
-		}
+        if (! Auth::user()->isAdmin) { // [tl! highlight:2]
+            abort(403);
+        }
 
-		$post = Post::find($id);
+        $post = Post::find($id);
 
-		$post->delete();
+        $post->delete();
     }
 
-	public function render()
-	{
-		return view('livewire.browse-posts', [
-			'posts' => Post::all(),
-		]);
-	}
+    public function render()
+    {
+        return view('livewire.browse-posts', [
+            'posts' => Post::all(),
+        ]);
+    }
 }
 ```
 
@@ -839,6 +840,7 @@ Every public method inside your Livewire component is callable from the client. 
 Consider the `BrowsePosts` example that we previously discussed, where users can view all posts in your application, but only administrators can delete posts. In the [Always authorize server-side](/docs/actions#always-authorize-server-side) section, we made the action secure by adding server-side authorization. Now imagine we refactor the actual deletion of the post into a dedicated method like you might do in order to simplify your code:
 
 ```php
+// Warning: This snippet demonstrates what NOT to do...
 <?php
 
 namespace App\Livewire;
@@ -850,39 +852,39 @@ class BrowsePosts extends Component
 {
     public function deletePost($id)
     {
-		if (! Auth::user()->isAdmin) {
-			abort(403);
-		}
+        if (! Auth::user()->isAdmin) {
+            abort(403);
+        }
 
-		$this->delete($id); // [tl! highlight]
+        $this->delete($id); // [tl! highlight]
     }
 
-	public function delete($postId)  // [tl! highlight:5]
-	{
-		$post = Post::find($postId);
+    public function delete($postId)  // [tl! highlight:5]
+    {
+        $post = Post::find($postId);
 
-		$post->delete();
-	}
+        $post->delete();
+    }
 
-	public function render()
-	{
-		return view('livewire.browse-posts', [
-			'posts' => Post::all(),
-		]);
-	}
+    public function render()
+    {
+        return view('livewire.browse-posts', [
+            'posts' => Post::all(),
+        ]);
+    }
 }
 ```
 
 ```blade
 <div>
-	@foreach ($posts as $post)
-	<div>
-		<h1>{{ $post->title }}</h1>
-		<span>{{ $post->content }}</span>
+    @foreach ($posts as $post)
+    <div>
+        <h1>{{ $post->title }}</h1>
+        <span>{{ $post->content }}</span>
 
-		<button wire:click="deletePost({{ $post->id }})">Delete</button>
-	</div>
-	@endforeach
+        <button wire:click="deletePost({{ $post->id }})">Delete</button>
+    </div>
+    @endforeach
 </div>
 ```
 
@@ -902,26 +904,26 @@ class BrowsePosts extends Component
 {
     public function deletePost($id)
     {
-		if (! Auth::user()->isAdmin) {
-			abort(403);
-		}
+        if (! Auth::user()->isAdmin) {
+            abort(403);
+        }
 
-		$this->delete($id);
+        $this->delete($id);
     }
 
-	protected function delete($postId) // [tl! highlight]
-	{
-		$post = Post::find($postId);
+    protected function delete($postId) // [tl! highlight]
+    {
+        $post = Post::find($postId);
 
-		$post->delete();
-	}
+        $post->delete();
+    }
 
-	public function render()
-	{
-		return view('livewire.browse-posts', [
-			'posts' => Post::all(),
-		]);
-	}
+    public function render()
+    {
+        return view('livewire.browse-posts', [
+            'posts' => Post::all(),
+        ]);
+    }
 }
 ```
 
@@ -954,7 +956,7 @@ class CreatePost extends Component
         // Create the post...
     }
 
-	// ...
+    // ...
 }
 ```
 

@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportConsoleCommands;
 
 use Illuminate\Console\Application as Artisan;
-use LegacyTests\Browser\Actions\Component;
 use Livewire\ComponentHook;
 
 class SupportConsoleCommands extends ComponentHook
@@ -16,6 +15,7 @@ class SupportConsoleCommands extends ComponentHook
             \Livewire\Features\SupportConsoleCommands\Commands\MakeLivewireCommand::class, // make:livewire
             \Livewire\Features\SupportConsoleCommands\Commands\MakeCommand::class,         // livewire:make
             \Livewire\Features\SupportConsoleCommands\Commands\FormCommand::class,         // livewire:form
+            \Livewire\Features\SupportConsoleCommands\Commands\AttributeCommand::class,    // livewire:attribute
             \Livewire\Features\SupportConsoleCommands\Commands\TouchCommand::class,        // livewire:touch
             \Livewire\Features\SupportConsoleCommands\Commands\CopyCommand::class,         // livewire:copy
             \Livewire\Features\SupportConsoleCommands\Commands\CpCommand::class,           // livewire:cp
@@ -27,6 +27,7 @@ class SupportConsoleCommands extends ComponentHook
             \Livewire\Features\SupportConsoleCommands\Commands\StubsCommand::class,        // livewire:stubs
             \Livewire\Features\SupportConsoleCommands\Commands\S3CleanupCommand::class,    // livewire:configure-s3-upload-cleanup
             \Livewire\Features\SupportConsoleCommands\Commands\PublishCommand::class,      // livewire:publish
+            \Livewire\Features\SupportConsoleCommands\Commands\UpgradeCommand::class,      // livewire:upgrade
         ]);
     }
 
@@ -34,8 +35,6 @@ class SupportConsoleCommands extends ComponentHook
     {
         $commands = is_array($commands) ? $commands : func_get_args();
 
-        Artisan::starting(function ($artisan) use ($commands) {
-            $artisan->resolveCommands($commands);
-        });
+        Artisan::starting(fn(Artisan $artisan) => $artisan->resolveCommands($commands));
     }
 }

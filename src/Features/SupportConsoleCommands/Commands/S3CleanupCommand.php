@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use function Livewire\invade;
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
-use League\Flysystem\Cached\CachedAdapter;
 use Illuminate\Console\Command;
 
 class S3CleanupCommand extends Command
@@ -24,29 +23,13 @@ class S3CleanupCommand extends Command
         $driver = FileUploadConfiguration::storage()->getDriver();
 
         // Flysystem V2+ doesn't allow direct access to adapter, so we need to invade instead.
-        if (method_exists($driver, 'getAdapter')) {
-            $adapter = $driver->getAdapter();
-        } else {
-            $adapter = invade($driver)->adapter;
-        }
-
-        if ($adapter instanceof CachedAdapter) {
-            $adapter = $adapter->getAdapter();
-        }
+        $adapter = invade($driver)->adapter;
 
         // Flysystem V2+ doesn't allow direct access to client, so we need to invade instead.
-        if (method_exists($adapter, 'getClient')) {
-            $client = $adapter->getClient();
-        } else {
-            $client = invade($adapter)->client;
-        }
+        $client = invade($adapter)->client;
 
         // Flysystem V2+ doesn't allow direct access to bucket, so we need to invade instead.
-        if (method_exists($adapter, 'getBucket')) {
-            $bucket = $adapter->getBucket();
-        } else {
-            $bucket = invade($adapter)->bucket;
-        }
+        $bucket = invade($adapter)->bucket;
 
         $client->putBucketLifecycleConfiguration([
             'Bucket' => $bucket,

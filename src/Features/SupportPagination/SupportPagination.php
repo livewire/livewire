@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportPagination;
 
+use function Livewire\invade;
 use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\Paginator;
@@ -9,10 +10,6 @@ use Livewire\ComponentHook;
 use Livewire\ComponentHookRegistry;
 use Livewire\Features\SupportQueryString\SupportQueryString;
 use Livewire\Features\SupportQueryString\Url;
-
-use function Livewire\invade;
-use function Livewire\on;
-use function Livewire\wrap;
 
 class SupportPagination extends ComponentHook
 {

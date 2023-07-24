@@ -2,18 +2,8 @@
 
 namespace Livewire\Mechanisms;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Livewire\Drawer\ImplicitlyBoundMethod;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
-use Livewire\Drawer\Utils;
-use Livewire\LivewireManager;
-use Throwable;
-
-use function Livewire\on;
-use function Livewire\trigger;
-use function Livewire\store;
-use function Livewire\wrap;
 
 class RenderComponent
 {

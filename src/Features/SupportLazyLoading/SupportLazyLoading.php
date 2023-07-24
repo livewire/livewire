@@ -2,13 +2,11 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
-use function Livewire\{ on, pipe, wrap };
+use function Livewire\wrap;
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
 use Livewire\Component;
-use Illuminate\Support\Str;
-use Closure;
 
 class SupportLazyLoading extends ComponentHook
 {
