@@ -58,7 +58,7 @@ If you want to opt-out of this behavior and keep polling continuously, even when
 
 ##  Viewport throttling
 
-Another measure you can take to only poll when necessary is to add the `.visible` modifier to `wire:poll`. The `.visible` modifier instructs Livewire to only poll the component when it is visible on the page:
+Another measure you can take to only poll when necessary, is to add the `.visible` modifier to `wire:poll`. The `.visible` modifier instructs Livewire to only poll the component when it is visible on the page:
 
 ```blade
 <div wire:poll.visible>
