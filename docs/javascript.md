@@ -365,7 +365,7 @@ When an action is performed on a Livewire component in the browser, a network re
 
 The term "commit" was chosen as a helpful way to think about Livewire's relationship between frontend and backend. A component is rendered and manipulated on the frontend until an action is performed that requires it to "commit" its state and updates to the backend.
 
-You will recognize this schema from the payload in the network tab of your browser's devtools, or [Livewire's JavaScript hooks](#javascript-hooks):
+You will recognize this schema from the payload in the network tab of your browser's DevTools, or [Livewire's JavaScript hooks](#javascript-hooks):
 
 ```js
 let commit = {
