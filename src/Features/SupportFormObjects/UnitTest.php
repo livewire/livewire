@@ -77,14 +77,14 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_reset_a_form_object_inside_form_object()
+    function can_reset_a_form_object_inside_the_class()
     {
         Livewire::test(new class extends Component {
-            public PostFormValidateStub $form;
+            public PostFormStoreStub $form;
 
             function save()
             {
-                $this->form->reset('title', 'content');
+                $this->form->store();
             }
 
             public function render() {
@@ -101,10 +101,10 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_reset_all_properties_of_form_object_inside_form_object()
+    function can_reset_all_properties_of_form_object_inside_the_class()
     {
         Livewire::test(new class extends Component {
-            public PostFormValidateStub $form;
+            public PostFormStub $form;
 
             function save()
             {
@@ -125,10 +125,10 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_reset_specific_properties_of_form_object_inside_form_object()
+    function can_reset_specific_properties_of_form_object_inside_the_class()
     {
         Livewire::test(new class extends Component {
-            public PostFormValidateStub $form;
+            public PostFormStub $form;
 
             function save()
             {
@@ -182,6 +182,18 @@ class PostFormStub extends Form
     public $title = '';
 
     public $content = '';
+}
+
+class PostFormStoreStub extends Form
+{
+    public $title = '';
+
+    public $content = '';
+
+    public function store()
+    {
+        $this->reset();
+    }
 }
 
 class PostFormValidateStub extends Form
