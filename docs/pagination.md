@@ -170,7 +170,7 @@ class ShowInvoices extends Component
 Now, because of the `pageName` parameter that has been added to the `paginate` method, when a user visits page `2` of the *invoices*, the URL will contain the following:
 
 ```
-`https://application.test/customers?page=2&invoice-page=2`
+https://application.test/customers?page=2&invoice-page=2
 ```
 
 When using Livewire's page navigation methods on a named paginator, you must provide the page name as an additional parameter:
