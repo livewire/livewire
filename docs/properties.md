@@ -159,7 +159,7 @@ Each property in a Livewire component is serialized or "dehydrated" into JSON be
 
 This two-way conversion process has certain limitations, restricting the types of properties Livewire can work with.
 
-### Primitives types
+### Primitive types
 
 Livewire supports primitive types such as strings, integers, etc. These types can be easily converted to and from JSON, making them ideal for use as properties in Livewire components.
 
