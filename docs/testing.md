@@ -524,6 +524,67 @@ class PostCountBadgeTest extends TestCase
 }
 ```
 
+Sometimes it may come in handy to assert that an event was dispatched with one or more parameters. Let's have a look at a component called `PostsTable` that dispatches an event called `banner-message` with parameters `message` and `style`:
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\PostsTable;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class PostsTableTest extends TestCase
+{
+    /** @test */
+    public function banner_event_is_dispatched_when_deleting_a_post()
+    {
+        Livewire::test(PostsTable::class)
+            ->set('postIndexToDelete', 3)
+            ->call('delete')
+            ->assertDispatched('banner-message',
+                message: __('The post was deleted'),
+                style: BannerStyle::SUCCESS->value
+            );
+    }
+}
+```
+
+If your component dispatches an event of which the parameter values must be asserted conditionally, you can pass in a closure as the second argument to the `assertDispatched` method like below. It receives the event name as the first argument, and an array containing the parameters as the second argument. Make sure the closure returns a boolean.
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\PostsTable;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class PostsTableTest extends TestCase
+{
+    /** @test */
+    public function banner_event_is_dispatched_when_deleting_a_post()
+    {
+        Livewire::test(PostsTable::class)
+            ->set('postIndexToDelete', 3)
+            ->call('delete')
+            ->assertDispatched('banner-message', function(string $eventName, array $params) {
+                if($params['style'] ?? '' === BannerStyle::SUCCESS->value) {
+                    return $params['message'] ?? '' === __('The post was deleted');
+                }
+
+                if($params['style'] ?? '' === BannerStyle::DANGER->value) {
+                    return $params['message'] ?? '' === __('The post could not be deleted');
+                }
+
+                return false;
+            })
+    }
+}
+```
+
 ## All available testing utilities
 
 Livewire provides many more testing utilities. Below is a comprehensive list of every testing method available to you, with a short description of how it's intended to be used:
