@@ -38,7 +38,7 @@ class UploadPhoto extends Component
 ```
 
 > [!warning] The term "upload" is reserved
-> The term "upload" is reserved in Livewire. You cannot use it as a method or property name.
+> The term "upload" is reserved by Livewire. You cannot use it as a method or property name.
 
 From the developer's perspective, handling file inputs is no different than handling any other input type: Add `wire:model` to the `<input>` tag and everything else is taken care of for you.
 
